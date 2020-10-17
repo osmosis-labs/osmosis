@@ -1,0 +1,4 @@
+
+
+proto:
+	./scripts/protocgen.sh
