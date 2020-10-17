@@ -1,0 +1,21 @@
+syntax = "proto3";
+package osmosis.gamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
+
+// TODO: 해당 컨트랙트 메소드 로직 이해하고 메세지 정의 작업하기
+//* JoinPool
+//* ExitPool
+//* SwapExactAmountIn
+//* SwapExactAmountOut
+//* JoinSwapExternAmountIn
+//* JoinSwapPoolAmountOut
+//* ExitSwapPoolAmountIn
+//* ExitSwapExternAmountOut
+message MsgSwap {}
+message MsgJoinPool {}
+message MsgExitPool {}
+message MsgCreatePool {}
