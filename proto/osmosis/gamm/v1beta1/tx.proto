@@ -83,7 +83,7 @@ message TokenInfo {
     ];
     string amount = 3 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags)   = "yaml:\"ratio\"",
+        (gogoproto.moretags)   = "yaml:\"amount\"",
         (gogoproto.nullable)   = false
     ];
 }
@@ -103,5 +103,79 @@ message MsgCreatePool {
     repeated TokenInfo tokenInfo = 3 [
         (gogoproto.moretags) = "yaml:\"token_info\"",
         (gogoproto.nullable) = false
+    ];
+}
+
+// ===================== MsgSwapExactAmountIn
+message MsgSwapExactAmountIn {
+    bytes sender = 1 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"sender\""
+    ];
+    bytes targetPool = 2 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"target_pool\""
+    ];
+    cosmos.base.v1beta1.Coin tokenIn = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+        (gogoproto.moretags)   = "yaml:\"token_in\"",
+        (gogoproto.nullable)   = false
+    ];
+    string tokenAmountIn = 4 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"token_amount_in\"",
+        (gogoproto.nullable)   = false
+    ];
+    cosmos.base.v1beta1.Coin tokenOut = 5 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+        (gogoproto.moretags)   = "yaml:\"token_out\"",
+        (gogoproto.nullable)   = false
+    ];
+    string minAmountOut = 6 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"min_amount_out\"",
+        (gogoproto.nullable)   = false
+    ];
+    string maxPrice = 7 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"max_price\"",
+        (gogoproto.nullable)   = false
+    ];
+}
+
+// ===================== MsgSwapExactAmountOut
+message MsgSwapExactAmountOut {
+    bytes sender = 1 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"sender\""
+    ];
+    bytes targetPool = 2 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"target_pool\""
+    ];
+    cosmos.base.v1beta1.Coin tokenIn = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+        (gogoproto.moretags)   = "yaml:\"token_in\"",
+        (gogoproto.nullable)   = false
+    ];
+    string maxAmountIn = 4 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"max_amount_in\"",
+        (gogoproto.nullable)   = false
+    ];
+    cosmos.base.v1beta1.Coin tokenOut = 5 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+        (gogoproto.moretags)   = "yaml:\"token_out\"",
+        (gogoproto.nullable)   = false
+    ];
+    string tokenAmountOut = 6 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"token_amount_out\"",
+        (gogoproto.nullable)   = false
+    ];
+    string maxPrice = 7 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"max_price\"",
+        (gogoproto.nullable)   = false
     ];
 }
