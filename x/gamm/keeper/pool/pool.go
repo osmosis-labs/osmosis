@@ -8,7 +8,6 @@ import (
 )
 
 type Pool interface {
-	Sender
 	Viewer
 }
 
