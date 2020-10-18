@@ -81,8 +81,9 @@ func (p poolService) JoinPool(
 	if err != nil {
 		return err
 	}
+	lpToken := pool.Token
 
-	poolTotal := pool.Token.TotalSupply.ToDec()
+	poolTotal := lpToken.TotalSupply.ToDec()
 	poolRatio := poolAmountOut.ToDec().Quo(poolTotal)
 	if poolRatio.Equal(sdk.NewDec(0)) {
 		return sdkerrors.Wrapf(types.ErrMathApprox, "calc poolRatio")
@@ -90,17 +91,22 @@ func (p poolService) JoinPool(
 
 	var sendTargets sdk.Coins
 	for _, maxAmountIn := range maxAmountsIn {
-		record := pool.Records[maxAmountIn.Denom]
-		tokenAmountIn := poolRatio.Mul(record.Balance.ToDec()).TruncateInt()
+		var (
+			tokenDenom    = maxAmountIn.Denom
+			record        = pool.Records[tokenDenom]
+			tokenAmountIn = poolRatio.Mul(record.Balance.ToDec()).TruncateInt()
+		)
 		if tokenAmountIn.Equal(sdk.NewInt(0)) {
 			return sdkerrors.Wrapf(types.ErrMathApprox, "calc tokenAmountIn")
 		}
 		if tokenAmountIn.GT(maxAmountIn.MaxAmount) {
-			return sdkerrors.Wrapf(types.ErrLimitExceed, "limit exceeded")
+			return sdkerrors.Wrapf(types.ErrLimitExceed, "max amount limited")
 		}
 		record.Balance = record.Balance.Add(tokenAmountIn)
+		pool.Records[tokenDenom] = record // update record
+
 		sendTargets = append(sendTargets, sdk.Coin{
-			Denom:  maxAmountIn.Denom,
+			Denom:  tokenDenom,
 			Amount: tokenAmountIn,
 		})
 	}
@@ -115,8 +121,8 @@ func (p poolService) JoinPool(
 		return err
 	}
 
-	poolShare := lp{
-		denom:      pool.Token.Name,
+	poolShare := lpService{
+		denom:      lpToken.Name,
 		bankKeeper: p.bankKeeper,
 	}
 	if err := poolShare.mintPoolShare(ctx, poolAmountOut); err != nil {
@@ -125,6 +131,11 @@ func (p poolService) JoinPool(
 	if err := poolShare.pushPoolShare(ctx, sender, poolAmountOut); err != nil {
 		return err
 	}
+
+	// save changes
+	lpToken.TotalSupply = lpToken.TotalSupply.Add(poolAmountOut)
+	pool.Token = lpToken
+	p.store.StorePool(ctx, pool)
 	return nil
 }
 
@@ -135,5 +146,64 @@ func (p poolService) ExitPool(
 	poolAmountIn sdk.Int,
 	minAmountsOut []types.MinAmountOut,
 ) error {
+	pool, err := p.store.FetchPool(ctx, targetPoolId)
+	if err != nil {
+		return err
+	}
+	lpToken := pool.Token
+
+	poolTotal := lpToken.TotalSupply.ToDec()
+	poolRatio := poolAmountIn.ToDec().Quo(poolTotal)
+	if poolRatio.Equal(sdk.NewDec(0)) {
+		return sdkerrors.Wrapf(types.ErrMathApprox, "calc poolRatio")
+	}
+
+	poolShare := lpService{
+		denom:      lpToken.Name,
+		bankKeeper: p.bankKeeper,
+	}
+	if err := poolShare.pullPoolShare(ctx, sender, poolAmountIn); err != nil {
+		return err
+	}
+	if err := poolShare.burnPoolShare(ctx, poolAmountIn); err != nil {
+		return err
+	}
+
+	var sendTargets sdk.Coins
+	for _, minAmountOut := range minAmountsOut {
+		var (
+			tokenDenom     = minAmountOut.Denom
+			record         = pool.Records[tokenDenom]
+			tokenAmountOut = poolRatio.Mul(record.Balance.ToDec()).TruncateInt()
+		)
+		if tokenAmountOut.Equal(sdk.NewInt(0)) {
+			return sdkerrors.Wrapf(types.ErrMathApprox, "calc tokenAmountOut")
+		}
+		if tokenAmountOut.LT(minAmountOut.MinAmount) {
+			return sdkerrors.Wrapf(types.ErrLimitExceed, "min amount limited")
+		}
+		record.Balance = record.Balance.Sub(tokenAmountOut)
+		pool.Records[tokenDenom] = record
+
+		sendTargets = append(sendTargets, sdk.Coin{
+			Denom:  tokenDenom,
+			Amount: tokenAmountOut,
+		})
+	}
+
+	err = p.bankKeeper.SendCoinsFromModuleToAccount(
+		ctx,
+		types.ModuleName,
+		sender,
+		sendTargets,
+	)
+	if err != nil {
+		return err
+	}
+
+	// save changes
+	lpToken.TotalSupply = lpToken.TotalSupply.Sub(poolAmountIn)
+	pool.Token = lpToken
+	p.store.StorePool(ctx, pool)
 	return nil
 }
