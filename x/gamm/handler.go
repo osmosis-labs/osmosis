@@ -13,8 +13,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case *types.MsgSwap:
-			return handleSwap(ctx, k, msg)
+		case *types.MsgSwapExactAmountIn:
+			return handleSwapExactAmountIn(ctx, k, msg)
+		case *types.MsgSwapExactAmountOut:
+			return handleSwapExactAmountOut(ctx, k, msg)
 		case *types.MsgJoinPool:
 			return handleJoinPool(ctx, k, msg)
 		case *types.MsgExitPool:
@@ -27,7 +29,15 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-func handleSwap(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSwap) (*sdk.Result, error) {
+func handleCreatePool(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreatePool) (*sdk.Result, error) {
+	return nil, sdkerrors.Wrapf(sdkerrors.ErrPanic, "unimplemented")
+}
+
+func handleSwapExactAmountIn(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSwapExactAmountIn) (*sdk.Result, error) {
+	return nil, sdkerrors.Wrapf(sdkerrors.ErrPanic, "unimplemented")
+}
+
+func handleSwapExactAmountOut(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSwapExactAmountOut) (*sdk.Result, error) {
 	return nil, sdkerrors.Wrapf(sdkerrors.ErrPanic, "unimplemented")
 }
 
@@ -36,9 +46,5 @@ func handleJoinPool(ctx sdk.Context, k keeper.Keeper, msg *types.MsgJoinPool) (*
 }
 
 func handleExitPool(ctx sdk.Context, k keeper.Keeper, msg *types.MsgExitPool) (*sdk.Result, error) {
-	return nil, sdkerrors.Wrapf(sdkerrors.ErrPanic, "unimplemented")
-}
-
-func handleCreatePool(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreatePool) (*sdk.Result, error) {
 	return nil, sdkerrors.Wrapf(sdkerrors.ErrPanic, "unimplemented")
 }
