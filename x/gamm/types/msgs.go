@@ -21,15 +21,16 @@ var (
 	_ sdk.Msg = &MsgExitPool{}
 )
 
-type MsgCreatePool struct {
-	Sender  sdk.AccAddress `json:"sender"`
-	SwapFee sdk.Dec        `json:"swap_fee"`
+type TokenInfo struct {
+	Token  sdk.Coin `json:"token"`
+	Ratio  sdk.Dec  `json:"ratio"`
+	Amount sdk.Int  `json:"amount"`
+}
 
-	TokenInfo []struct {
-		Token  sdk.Coin `json:"token"`
-		Ratio  sdk.Dec  `json:"ratio"`
-		Amount sdk.Int  `json:"amount"`
-	} `json:"token_info"`
+type MsgCreatePool struct {
+	Sender    sdk.AccAddress `json:"sender"`
+	SwapFee   sdk.Dec        `json:"swap_fee"`
+	TokenInfo []TokenInfo    `json:"token_info"`
 }
 
 func (m MsgCreatePool) Reset()         { panic("implement me") }
@@ -94,14 +95,16 @@ func (m MsgSwapExactAmountOut) GetSignBytes() []byte {
 }
 func (m MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
+type MaxAmountIn struct {
+	Token     string  `json:"token"`
+	MaxAmount sdk.Int `json:"max_amount"`
+}
+
 type MsgJoinPool struct {
 	Sender        sdk.AccAddress `json:"sender"`
 	TargetPool    sdk.AccAddress `json:"target_pool"`
 	PoolAmountOut sdk.Int        `json:"pool_amount_out"`
-	MaxAmountsIn  struct {
-		Token     string  `json:"token"`
-		MaxAmount sdk.Int `json:"max_amount"`
-	} `json:"max_amounts_in"`
+	MaxAmountsIn  []MaxAmountIn  `json:"max_amounts_in"`
 }
 
 func (m MsgJoinPool) Reset()         { panic("implement me") }
@@ -118,14 +121,16 @@ func (m MsgJoinPool) GetSignBytes() []byte {
 }
 func (m MsgJoinPool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
+type MinAmountOut struct {
+	Token     string  `json:"token"`
+	MinAmount sdk.Int `json:"min_amount"`
+}
+
 type MsgExitPool struct {
 	Sender        sdk.AccAddress `json:"sender"`
 	TargetPool    sdk.AccAddress `json:"target_pool"`
 	PoolAmountIn  sdk.Int        `json:"pool_amount_out"`
-	MinAmountsOut struct {
-		Token     string  `json:"token"`
-		MinAmount sdk.Int `json:"min_amount"`
-	} `json:"min_amounts_out"`
+	MinAmountsOut []MinAmountOut `json:"min_amounts_out"`
 }
 
 func (m MsgExitPool) Reset()         { panic("implement me") }
