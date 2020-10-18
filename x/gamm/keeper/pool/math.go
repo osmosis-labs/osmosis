@@ -1,59 +1,59 @@
-package keeper
+package pool
 
-////  sP
-//func calcSpotPrice(
-//	tokenBalanceIn,
-//	tokenWeightIn,
-//	tokenBalanceOut,
-//	tokenWeightOut,
-//	swapFee sdk.Dec,
-//) sdk.Dec {
-//	number := tokenBalanceIn.Quo(tokenWeightIn)
-//	denom := tokenBalanceOut.Quo(tokenWeightOut)
-//	ratio := number.Quo(denom)
-//	scale := sdk.OneDec().Quo(sdk.OneDec().Sub(swapFee))
-//
-//	return ratio.Mul(scale)
-//}
-//
-//// aO
-//func calcOutGivenIn(
-//	tokenBalanceIn,
-//	tokenWeightIn,
-//	tokenBalanceOut,
-//	tokenWeightOut,
-//	tokenAmountIn,
-//	swapFee sdk.Dec,
-//) sdk.Dec {
-//	weightRatio := tokenWeightIn.Quo(tokenWeightOut)
-//	adjustedIn := sdk.OneDec().Sub(swapFee)
-//	adjustedIn := tokenAmountIn.Mul(adjustedIn)
-//	y := tokenBalanceIn.Quo(tokenBalanceIn.Add(adjustedIn))
-//	foo := y.Power(weightRatio)
-//	bar := sdk.OneDec().Sub(foo)
-//	return tokenBalanceOut.Mul(bar)
-//}
-//
-//// aI
-//func calcInGivenOut(
-//	tokenBalanceIn,
-//	tokenWeightIn,
-//	tokenBalanceOut,
-//	tokenWeightOut,
-//	tokenAmountOut,
-//	swapFee sdk.Dec,
-//) sdk.Dec {
-//	weightRatio := tokenWeightOut.Quo(tokenWeightIn)
-//	diff := tokenBalanceOut.Sub(tokenAmountOut)
-//	y := tokenBalanceOut.Quo(diff)
-//	foo := y.Power(weightRatio)
-//	foo := foo.Sub(sdk.OneDec())
-//	tokenAmountIn := sdk.OneDec().Sub(swapFee)
-//	return (tokenBalanceIn.Mul(foo)).Quo(tokenAmountIn)
-//
-//}
-//
-//// pAo
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
+//  sP
+func CalcSpotPrice(
+	tokenBalanceIn,
+	tokenWeightIn,
+	tokenBalanceOut,
+	tokenWeightOut,
+	swapFee sdk.Dec,
+) sdk.Dec {
+	number := tokenBalanceIn.Quo(tokenWeightIn)
+	denom := tokenBalanceOut.Quo(tokenWeightOut)
+	ratio := number.Quo(denom)
+	scale := sdk.OneDec().Quo(sdk.OneDec().Sub(swapFee))
+	return ratio.Mul(scale)
+}
+
+// aO
+func CalcOutGivenIn(
+	tokenBalanceIn,
+	tokenWeightIn,
+	tokenBalanceOut,
+	tokenWeightOut,
+	tokenAmountIn,
+	swapFee sdk.Dec,
+) sdk.Dec {
+	weightRatio := tokenWeightIn.Quo(tokenWeightOut).BigInt().Uint64()
+	adjustedIn := sdk.OneDec().Sub(swapFee)
+	adjustedIn = tokenAmountIn.Mul(adjustedIn)
+	y := tokenBalanceIn.Quo(tokenBalanceIn.Add(adjustedIn))
+	foo := y.Power(weightRatio)
+	bar := sdk.OneDec().Sub(foo)
+	return tokenBalanceOut.Mul(bar)
+}
+
+// aI
+func CalcInGivenOut(
+	tokenBalanceIn,
+	tokenWeightIn,
+	tokenBalanceOut,
+	tokenWeightOut,
+	tokenAmountOut,
+	swapFee sdk.Dec,
+) sdk.Dec {
+	weightRatio := tokenWeightOut.Quo(tokenWeightIn).BigInt().Uint64()
+	diff := tokenBalanceOut.Sub(tokenAmountOut)
+	y := tokenBalanceOut.Quo(diff)
+	foo := y.Power(weightRatio)
+	foo = foo.Sub(sdk.OneDec())
+	tokenAmountIn := sdk.OneDec().Sub(swapFee)
+	return (tokenBalanceIn.Mul(foo)).Quo(tokenAmountIn)
+}
+
+// pAo
 //func calcPoolOutGivenSingleIn(
 //	tokenBalanceIn,
 //	tokenWeightIn,
@@ -74,8 +74,8 @@ package keeper
 //	newPoolSupply := poolRatio.Mul(poolSupply)
 //	return newPoolSupply.Sub(poolSupply)
 //}
-//
-////tAi
+
+//tAi
 //func calcSingleInGivenPoolOut(
 //	tokenBalanceIn,
 //	tokenWeightIn,
@@ -99,8 +99,8 @@ package keeper
 //	zar := (sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee)
 //	return tokenAmountInAfterFee.Quo(sdk.OneDec().Sub(zar))
 //}
-//
-//// tAo
+
+// tAo
 //func calcSingleOutGivenPoolIn(
 //	tokenBalanceOut,
 //	tokenWeightOut,
@@ -129,8 +129,8 @@ package keeper
 //	tokenAmountOut := tokenAmountOutBeforeSwapFee.Mul(sdk.OneDec().Sub(zaz))
 //	return tokenAmountOut
 //}
-//
-//// pAi
+
+// pAi
 //func calcPoolInGivenSingleOut(
 //	tokenBalanceOut,
 //	tokenWeightOut,
@@ -158,43 +158,39 @@ package keeper
 //	// pAi = pAiAfterExitFee/(1-exitFee)
 //	return poolAmountInAfterExitFee.Quo(sdk.OneDec())
 //}
-//
-//
-//
-///*
-//function bsubSign(uint a, uint b)
-//internal pure
-//returns (uint, bool)
-//{
-//if (a >= b) {
-//return (a - b, false);
-//} else {
-//return (b - a, true);
-//}
-//}
-//*/
-//
-//
-//
-///* DSMath.wpow
-//function bpowi(uint a, uint n)
-//internal pure
-//returns (uint)
-//{
-//uint z = n % 2 != 0 ? a : BONE;
-//
-//for (n /= 2; n != 0; n /= 2) {
-//a = bmul(a, a);
-//
-//if (n % 2 != 0) {
-//z = bmul(z, a);
-//}
-//}
-//return z;
-//}
-//*/
-//
-//// Power returns a the result of raising to a positive integer power
+
+/*
+function bsubSign(uint a, uint b)
+internal pure
+returns (uint, bool)
+{
+if (a >= b) {
+return (a - b, false);
+} else {
+return (b - a, true);
+}
+}
+*/
+
+/* DSMath.wpow
+function bpowi(uint a, uint n)
+internal pure
+returns (uint)
+{
+uint z = n % 2 != 0 ? a : BONE;
+
+for (n /= 2; n != 0; n /= 2) {
+a = bmul(a, a);
+
+if (n % 2 != 0) {
+z = bmul(z, a);
+}
+}
+return z;
+}
+*/
+
+// Power returns a the result of raising to a positive integer power
 //func (d Dec) Power(power uint64) Dec {
 //	if power == 0 {
 //		return OneDec()
@@ -211,8 +207,7 @@ package keeper
 //	}
 //	return d.Mul(tmp)
 //}
-//
-//
+
 //func approxPoweri(base sdk.Dec, exp sdk.Uint) sdk.Dec {
 //
 //	if exp.Mod(sdk.NewUint(2)).Equal(sdk.ZeroUint())
@@ -234,55 +229,54 @@ package keeper
 //	}
 //	return z;
 //}
-//
+
 //func approxPower(base sdk.Dec, exp sdk.Dec) (sdk.Dec, error) {
 //
 //	if base.LTE(sdk.ZeroDec()) || exp.LTE(sdk.ZeroDec()) {
 //		return sdk.Dec{}, errors.New("base and exp can't be less than equal zero")
 //	}
 //}
-//
-//
-///*
-//function bpowApprox(uint base, uint exp, uint precision)
-//internal pure
-//returns (uint)
-//{
-//// term 0:
-//uint a     = exp;
-//(uint x, bool xneg)  = bsubSign(base, BONE);
-//uint term = BONE;
-//uint sum   = term;
-//bool negative = false;
-//
-//
-//// term(k) = numer / denom
-////         = (product(a - i - 1, i=1-->k) * x^k) / (k!)
-//// each iteration, multiply previous term by (a-(k-1)) * x / k
-//// continue until term is less than precision
-//for (uint i = 1; term >= precision; i++) {
-//uint bigK = i * BONE;
-//(uint c, bool cneg) = bsubSign(a, bsub(bigK, BONE));
-//term = bmul(term, bmul(c, x));
-//term = bdiv(term, bigK);
-//if (term == 0) break;
-//
-//if (xneg) negative = !negative;
-//if (cneg) negative = !negative;
-//if (negative) {
-//sum = bsub(sum, term);
-//} else {
-//sum = badd(sum, term);
-//}
-//}
-//
-//return sum;
-//}
-//
-//}
-//
-//*/
-//
+
+/*
+function bpowApprox(uint base, uint exp, uint precision)
+internal pure
+returns (uint)
+{
+// term 0:
+uint a     = exp;
+(uint x, bool xneg)  = bsubSign(base, BONE);
+uint term = BONE;
+uint sum   = term;
+bool negative = false;
+
+
+// term(k) = numer / denom
+//         = (product(a - i - 1, i=1-->k) * x^k) / (k!)
+// each iteration, multiply previous term by (a-(k-1)) * x / k
+// continue until term is less than precision
+for (uint i = 1; term >= precision; i++) {
+uint bigK = i * BONE;
+(uint c, bool cneg) = bsubSign(a, bsub(bigK, BONE));
+term = bmul(term, bmul(c, x));
+term = bdiv(term, bigK);
+if (term == 0) break;
+
+if (xneg) negative = !negative;
+if (cneg) negative = !negative;
+if (negative) {
+sum = bsub(sum, term);
+} else {
+sum = badd(sum, term);
+}
+}
+
+return sum;
+}
+
+}
+
+*/
+
 //func bpowApprox(dec sdk.Dec base, uint exp, uint precision)
 //returns (sdk.Dec)
 //{
