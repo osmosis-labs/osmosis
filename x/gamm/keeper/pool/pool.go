@@ -9,9 +9,34 @@ import (
 
 type Pool interface {
 	Viewer
+
+	CreatePool(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		swapFee sdk.Dec,
+		tokenInfo []types.TokenInfo,
+	) error
+
+	JoinPool(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPool sdk.AccAddress,
+		poolAmountOut sdk.Int,
+		maxAmountsIn []types.MaxAmountIn,
+	) error
+
+	ExitPool(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPool sdk.AccAddress,
+		poolAmountIn sdk.Int,
+		minAmountsOut []types.MinAmountOut,
+	) error
 }
 
 type pool struct {
+	viewer
+
 	cdc           codec.BinaryMarshaler
 	storeKey      sdk.StoreKey
 	accountKeeper types.AccountKeeper
@@ -25,9 +50,42 @@ func NewPool(
 	bankKeeper bankkeeper.Keeper,
 ) Pool {
 	return pool{
+		viewer: viewer{
+			cdc:      cdc,
+			storeKey: storeKey,
+		},
 		cdc:           cdc,
 		storeKey:      storeKey,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 	}
+}
+
+func (p pool) CreatePool(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	swapFee sdk.Dec,
+	tokenInfo []types.TokenInfo,
+) error {
+	return nil
+}
+
+func (p pool) JoinPool(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	targetPool sdk.AccAddress,
+	poolAmountOut sdk.Int,
+	maxAmountsIn []types.MaxAmountIn,
+) error {
+	return nil
+}
+
+func (p pool) ExitPool(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	targetPool sdk.AccAddress,
+	poolAmountIn sdk.Int,
+	minAmountsOut []types.MinAmountOut,
+) error {
+	return nil
 }
