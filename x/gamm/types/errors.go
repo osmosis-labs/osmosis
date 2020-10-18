@@ -8,4 +8,5 @@ var (
 	ErrMathApprox     = sdkerrors.Register(ModuleName, 3, "math approx error")
 	ErrLimitExceed    = sdkerrors.Register(ModuleName, 4, "limit exceeded")
 	ErrInvalidRequest = sdkerrors.Register(ModuleName, 5, "bad request")
+	ErrNotBound       = sdkerrors.Register(ModuleName, 6, "not bound")
 )
