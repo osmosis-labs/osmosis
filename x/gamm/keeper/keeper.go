@@ -11,11 +11,11 @@ import (
 var _ Keeper = (*keeper)(nil)
 
 type Keeper interface {
-	pool.Pool
+	pool.Service
 }
 
 type keeper struct {
-	pool.Pool
+	pool.Service
 
 	cdc           codec.BinaryMarshaler
 	storeKey      sdk.StoreKey
@@ -25,7 +25,7 @@ type keeper struct {
 
 func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) Keeper {
 	return keeper{
-		Pool: pool.NewPool(cdc, storeKey, accountKeeper, bankKeeper),
+		Service: pool.NewService(cdc, storeKey, accountKeeper, bankKeeper),
 
 		cdc:           cdc,
 		storeKey:      storeKey,
