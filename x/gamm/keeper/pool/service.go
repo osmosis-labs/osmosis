@@ -47,7 +47,7 @@ func (p poolService) CreatePool(
 	records := make(map[string]types.Record, len(tokenInfo))
 	for _, info := range tokenInfo {
 		records[info.Denom] = types.Record{
-			DenormalizedWeight: info.Ratio,
+			DenormalizedWeight: info.Weight,
 			Balance:            info.Amount,
 		}
 	}

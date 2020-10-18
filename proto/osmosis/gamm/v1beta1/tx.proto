@@ -75,9 +75,9 @@ message TokenInfo {
     string denom = 1 [
         (gogoproto.moretags) = "yaml:\"denom\""
     ];
-    string ratio = 2 [
+    string weight = 2 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-        (gogoproto.moretags) = "yaml:\"ratio\"",
+        (gogoproto.moretags) = "yaml:\"weight\"",
         (gogoproto.nullable) = false
     ];
     string amount = 3 [
