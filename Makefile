@@ -1,4 +1,5 @@
 
+.PHONY: message
 
-proto:
+message:
 	./scripts/protocgen.sh

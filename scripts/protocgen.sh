@@ -8,12 +8,12 @@ proto_dirs=$(find . -path ./third_party -prune -o -name '*.proto' -print0 | xarg
 for dir in $proto_dirs; do
   protoc \
   -I "proto" \
-  -I "third_party/proto" \
-  -I "$cosmos_sdk_dir" \
+  -I "$cosmos_sdk_dir/third_party/proto" \
+  -I "$cosmos_sdk_dir/proto" \
   --gocosmos_out=plugins=interfacetype+grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   $(find "${dir}" -name '*.proto')
 done
 
 cp -r github.com/c-osmosis/osmosis/* ./
-#rm -rf github.com
+rm -rf github.com
