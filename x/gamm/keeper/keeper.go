@@ -23,7 +23,7 @@ type keeper struct {
 	bankKeeper    bankkeeper.Keeper
 }
 
-func NewBaseKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) Keeper {
 	return keeper{
 		Pool: pool.NewPool(cdc, storeKey, accountKeeper, bankKeeper),
 
