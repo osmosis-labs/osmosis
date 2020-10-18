@@ -1,6 +1,8 @@
-package pool
+package math
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -177,10 +179,12 @@ func subSign(a, b sdk.Dec) (sdk.Dec, bool) {
 }
 
 func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
-
-	// TODO: MIN_BPOW_BASE, MAX_BPOW_BASE identification required
-	// require(base >= MIN_BPOW_BASE, "ERR_BPOW_BASE_TOO_LOW");
-	// require(base <= MAX_BPOW_BASE, "ERR_BPOW_BASE_TOO_HIGH");
+	if base.LTE(sdk.ZeroDec()) {
+		panic(fmt.Errorf("base have to be greater than zero"))
+	}
+	if base.GTE(sdk.OneDec().MulInt64(2)) {
+		panic(fmt.Errorf("base have to be lesser than two"))
+	}
 
 	whole := exp.TruncateDec()
 	remain := exp.Sub(whole)
@@ -197,10 +201,17 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 }
 
 func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
+	if base.LTE(sdk.ZeroDec()) {
+		panic(fmt.Errorf("base have to be greater than zero"))
+	}
+	if base.GTE(sdk.OneDec().MulInt64(2)) {
+		panic(fmt.Errorf("base have to be lesser than two"))
+	}
+
 	a := exp
 	x, xneg := subSign(base, sdk.OneDec())
 	term := sdk.OneDec()
-	sum := term
+	sum := sdk.OneDec()
 	negative := false
 
 	for i := 1; term.GTE(precision); i++ {
@@ -212,7 +223,6 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 		if term.IsZero() {
 			break
 		}
-
 		if xneg {
 			negative = !negative
 		}
