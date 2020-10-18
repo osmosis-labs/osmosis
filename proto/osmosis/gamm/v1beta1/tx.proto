@@ -9,10 +9,8 @@ option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
 
 // ===================== MsgJoinPool
 message MaxAmountIn {
-    cosmos.base.v1beta1.Coin token = 1 [
-        (gogoproto.moretags)   = "yaml:\"token\"",
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
-        (gogoproto.nullable)   = false
+    string denom = 1 [
+        (gogoproto.moretags)   = "yaml:\"denom\""
     ];
     string maxAmount = 2 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -26,8 +24,7 @@ message MsgJoinPool {
         (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
-    bytes targetPool = 2 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    uint64 targetPool = 2 [
         (gogoproto.moretags) = "yaml:\"target_pool\""
     ];
     string poolAmountOut = 3 [
@@ -44,10 +41,8 @@ message MsgJoinPool {
 
 // ===================== MsgExitPool
 message MinAmountOut {
-    cosmos.base.v1beta1.Coin token = 1 [
-        (gogoproto.moretags)   = "yaml:\"token\"",
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
-        (gogoproto.nullable)   = false
+    string denom = 1 [
+        (gogoproto.moretags)   = "yaml:\"denom\""
     ];
     string minAmount = 2 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -61,8 +56,7 @@ message MsgExitPool {
         (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
-    bytes targetPool = 2 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    uint64 targetPool = 2 [
         (gogoproto.moretags) = "yaml:\"target_pool\""
     ];
     string poolAmountIn = 3 [
@@ -79,10 +73,8 @@ message MsgExitPool {
 
 // ===================== MsgCreatePool
 message TokenInfo {
-    cosmos.base.v1beta1.Coin token = 1 [
-        (gogoproto.moretags)   = "yaml:\"token\"",
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
-        (gogoproto.nullable)   = false
+    string denom = 1 [
+        (gogoproto.moretags)   = "yaml:\"denom\""
     ];
     string ratio = 2 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
