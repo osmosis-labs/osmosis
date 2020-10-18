@@ -6,16 +6,110 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
 
-// TODO: 해당 컨트랙트 메소드 로직 이해하고 메세지 정의 작업하기
-//* JoinPool
-//* ExitPool
-//* SwapExactAmountIn
-//* SwapExactAmountOut
-//* JoinSwapExternAmountIn
-//* JoinSwapPoolAmountOut
-//* ExitSwapPoolAmountIn
-//* ExitSwapExternAmountOut
-message MsgSwap {}
-message MsgJoinPool {}
-message MsgExitPool {}
-message MsgCreatePool {}
+
+// ===================== MsgJoinPool
+message MaxAmountIn {
+    cosmos.base.v1beta1.Coin token = 1 [
+        (gogoproto.moretags)   = "yaml:\"token\"",
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+        (gogoproto.nullable)   = false
+    ];
+    string maxAmount = 2 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"max_amount\"",
+        (gogoproto.nullable)   = false
+    ];
+}
+
+message MsgJoinPool {
+    bytes sender = 1 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"sender\""
+    ];
+    bytes targetPool = 2 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"target_pool\""
+    ];
+    string poolAmountOut = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"pool_amount_out\"",
+        (gogoproto.nullable)   = false
+    ];
+
+    repeated MaxAmountIn maxAmountsIn = 4 [
+        (gogoproto.moretags) = "yaml:\"max_amounts_in\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+// ===================== MsgExitPool
+message MinAmountOut {
+    cosmos.base.v1beta1.Coin token = 1 [
+        (gogoproto.moretags)   = "yaml:\"token\"",
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+        (gogoproto.nullable)   = false
+    ];
+    string minAmount = 2 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"min_amount\"",
+        (gogoproto.nullable)   = false
+    ];
+}
+
+message MsgExitPool {
+    bytes sender = 1 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"sender\""
+    ];
+    bytes targetPool = 2 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"target_pool\""
+    ];
+    string poolAmountIn = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"pool_amount_in\"",
+        (gogoproto.nullable)   = false
+    ];
+
+    repeated MinAmountOut minAmountsOut = 4 [
+        (gogoproto.moretags) = "yaml:\"min_amounts_out\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+// ===================== MsgCreatePool
+message TokenInfo {
+    cosmos.base.v1beta1.Coin token = 1 [
+        (gogoproto.moretags)   = "yaml:\"token\"",
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+        (gogoproto.nullable)   = false
+    ];
+    string ratio = 2 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.moretags)   = "yaml:\"ratio\"",
+        (gogoproto.nullable)   = false
+    ];
+    string amount = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags)   = "yaml:\"ratio\"",
+        (gogoproto.nullable)   = false
+    ];
+}
+
+message MsgCreatePool {
+    bytes sender = 1 [
+        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+        (gogoproto.moretags) = "yaml:\"sender\""
+    ];
+
+    string swapFee = 2 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.moretags)   = "yaml:\"swap_fee\"",
+        (gogoproto.nullable)   = false
+    ];
+
+    repeated TokenInfo tokenInfo = 3 [
+        (gogoproto.moretags) = "yaml:\"token_info\"",
+        (gogoproto.nullable) = false
+    ];
+}

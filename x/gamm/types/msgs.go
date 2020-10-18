@@ -12,30 +12,7 @@ const (
 	TypeMsgExitPool           = "exit_pool"
 )
 
-// TODO: 일단 이 메세지 타입들을 사용하되, proto 정의가 완성되면 그것을 사용한다.
-var (
-	_ sdk.Msg = &MsgCreatePool{}
-	_ sdk.Msg = &MsgSwapExactAmountIn{}
-	_ sdk.Msg = &MsgSwapExactAmountOut{}
-	_ sdk.Msg = &MsgJoinPool{}
-	_ sdk.Msg = &MsgExitPool{}
-)
-
-type TokenInfo struct {
-	Token  sdk.Coin `json:"token"`
-	Ratio  sdk.Dec  `json:"ratio"`
-	Amount sdk.Int  `json:"amount"`
-}
-
-type MsgCreatePool struct {
-	Sender    sdk.AccAddress `json:"sender"`
-	SwapFee   sdk.Dec        `json:"swap_fee"`
-	TokenInfo []TokenInfo    `json:"token_info"`
-}
-
-func (m MsgCreatePool) Reset()         { panic("implement me") }
-func (m MsgCreatePool) String() string { panic("implement me") }
-func (m MsgCreatePool) ProtoMessage()  { panic("implement me") }
+var _ sdk.Msg = &MsgCreatePool{}
 
 func (m MsgCreatePool) Route() string { return RouterKey }
 func (m MsgCreatePool) Type() string  { return TypeMsgCreatePool }
@@ -46,6 +23,8 @@ func (m MsgCreatePool) GetSignBytes() []byte {
 	return nil // TODO
 }
 func (m MsgCreatePool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
+
+var _ sdk.Msg = &MsgSwapExactAmountIn{}
 
 type MsgSwapExactAmountIn struct {
 	Sender        sdk.AccAddress `json:"sender"`
@@ -71,6 +50,8 @@ func (m MsgSwapExactAmountIn) GetSignBytes() []byte {
 }
 func (m MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
+var _ sdk.Msg = &MsgSwapExactAmountOut{}
+
 type MsgSwapExactAmountOut struct {
 	Sender         sdk.AccAddress `json:"sender"`
 	TargetPool     sdk.AccAddress `json:"target_pool"`
@@ -95,21 +76,7 @@ func (m MsgSwapExactAmountOut) GetSignBytes() []byte {
 }
 func (m MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
-type MaxAmountIn struct {
-	Token     string  `json:"token"`
-	MaxAmount sdk.Int `json:"max_amount"`
-}
-
-type MsgJoinPool struct {
-	Sender        sdk.AccAddress `json:"sender"`
-	TargetPool    sdk.AccAddress `json:"target_pool"`
-	PoolAmountOut sdk.Int        `json:"pool_amount_out"`
-	MaxAmountsIn  []MaxAmountIn  `json:"max_amounts_in"`
-}
-
-func (m MsgJoinPool) Reset()         { panic("implement me") }
-func (m MsgJoinPool) String() string { panic("implement me") }
-func (m MsgJoinPool) ProtoMessage()  { panic("implement me") }
+var _ sdk.Msg = &MsgJoinPool{}
 
 func (m MsgJoinPool) Route() string { return RouterKey }
 func (m MsgJoinPool) Type() string  { return TypeMsgJoinPool }
@@ -121,21 +88,7 @@ func (m MsgJoinPool) GetSignBytes() []byte {
 }
 func (m MsgJoinPool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
-type MinAmountOut struct {
-	Token     string  `json:"token"`
-	MinAmount sdk.Int `json:"min_amount"`
-}
-
-type MsgExitPool struct {
-	Sender        sdk.AccAddress `json:"sender"`
-	TargetPool    sdk.AccAddress `json:"target_pool"`
-	PoolAmountIn  sdk.Int        `json:"pool_amount_out"`
-	MinAmountsOut []MinAmountOut `json:"min_amounts_out"`
-}
-
-func (m MsgExitPool) Reset()         { panic("implement me") }
-func (m MsgExitPool) String() string { panic("implement me") }
-func (m MsgExitPool) ProtoMessage()  { panic("implement me") }
+var _ sdk.Msg = &MsgExitPool{}
 
 func (m MsgExitPool) Route() string { return RouterKey }
 func (m MsgExitPool) Type() string  { return TypeMsgExitPool }
