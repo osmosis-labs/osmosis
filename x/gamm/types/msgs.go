@@ -26,20 +26,6 @@ func (m MsgCreatePool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}
 
-type MsgSwapExactAmountIn struct {
-	Sender        sdk.AccAddress `json:"sender"`
-	TargetPool    sdk.AccAddress `json:"target_pool"`
-	TokenIn       sdk.Coin       `json:"token_in"`
-	TokenAmountIn sdk.Int        `json:"token_amount_in"`
-	TokenOut      sdk.Coin       `json:"token_out"`
-	MinAmountOut  sdk.Int        `json:"min_amount_out"`
-	MaxPrice      sdk.Int        `json:"max_price"`
-}
-
-func (m MsgSwapExactAmountIn) Reset()         { panic("implement me") }
-func (m MsgSwapExactAmountIn) String() string { panic("implement me") }
-func (m MsgSwapExactAmountIn) ProtoMessage()  { panic("implement me") }
-
 func (m MsgSwapExactAmountIn) Route() string { return RouterKey }
 func (m MsgSwapExactAmountIn) Type() string  { return TypeMsgSwapExactAmountIn }
 func (m MsgSwapExactAmountIn) ValidateBasic() error {
@@ -51,20 +37,6 @@ func (m MsgSwapExactAmountIn) GetSignBytes() []byte {
 func (m MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
 var _ sdk.Msg = &MsgSwapExactAmountOut{}
-
-type MsgSwapExactAmountOut struct {
-	Sender         sdk.AccAddress `json:"sender"`
-	TargetPool     sdk.AccAddress `json:"target_pool"`
-	TokenIn        sdk.Coin       `json:"token_in"`
-	MaxAmountIn    sdk.Int        `json:"max_amount_in"`
-	TokenOut       sdk.Coin       `json:"token_out"`
-	TokenAmountOut sdk.Int        `json:"token_amount_out"`
-	MaxPrice       sdk.Int        `json:"max_price"`
-}
-
-func (m MsgSwapExactAmountOut) Reset()         { panic("implement me") }
-func (m MsgSwapExactAmountOut) String() string { panic("implement me") }
-func (m MsgSwapExactAmountOut) ProtoMessage()  { panic("implement me") }
 
 func (m MsgSwapExactAmountOut) Route() string { return RouterKey }
 func (m MsgSwapExactAmountOut) Type() string  { return TypeMsgSwapExactAmountOut }
