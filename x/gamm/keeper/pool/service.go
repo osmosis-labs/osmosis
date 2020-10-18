@@ -415,9 +415,13 @@ func (p poolService) SwapExactAmountIn(
 		return sdk.Dec{}, sdk.Dec{}, types.ErrMathApprox
 	}
 
-	pool.Records[tokenIn.Denom].Balance.Add(tokenAmountIn)
-	pool.Records[tokenOut.Denom].Balance.Sub(sdk.Int(tokenAmountOut))
-	p.store.SetStore(ctx, pool)
+	inRecord.Balance = inRecord.Balance.Add(tokenAmountIn)
+	pool.Records[tokenIn.Denom] = inRecord
+
+	outRecord.Balance = outRecord.Balance.Sub(sdk.Int(tokenAmountOut))
+	pool.Records[tokenOut.Denom] = outRecord
+
+	p.store.StorePool(ctx, pool)
 
 	return tokenAmountOut, spotPriceAfter, nil
 }
@@ -489,9 +493,13 @@ func (p poolService) SwapExactAmountOut(
 		return sdk.Dec{}, sdk.Dec{}, types.ErrMathApprox
 	}
 
-	pool.Records[tokenIn.Denom].Balance.Add(sdk.Int(tokenAmountIn))
-	pool.Records[tokenOut.Denom].Balance.Sub(tokenAmountOut)
-	p.store.SetStore(ctx, pool)
+	inRecord.Balance = inRecord.Balance.Add(sdk.Int(tokenAmountIn))
+	pool.Records[tokenIn.Denom] = inRecord
+
+	outRecord.Balance = outRecord.Balance.Sub(tokenAmountOut)
+	pool.Records[tokenOut.Denom] = outRecord
+
+	p.store.StorePool(ctx, pool)
 
 	return tokenAmountIn, spotPriceAfter, nil
 }
