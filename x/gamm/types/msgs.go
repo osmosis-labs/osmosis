@@ -50,6 +50,7 @@ func (m MsgCreatePool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m
 
 type MsgSwapExactAmountIn struct {
 	Sender        sdk.AccAddress `json:"sender"`
+	TargetPool    sdk.AccAddress `json:"target_pool"`
 	TokenIn       sdk.Coin       `json:"token_in"`
 	TokenAmountIn sdk.Int        `json:"token_amount_in"`
 	TokenOut      sdk.Coin       `json:"token_out"`
@@ -73,6 +74,7 @@ func (m MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress { return []sdk.AccAd
 
 type MsgSwapExactAmountOut struct {
 	Sender         sdk.AccAddress `json:"sender"`
+	TargetPool     sdk.AccAddress `json:"target_pool"`
 	TokenIn        sdk.Coin       `json:"token_in"`
 	MaxAmountIn    sdk.Int        `json:"max_amount_in"`
 	TokenOut       sdk.Coin       `json:"token_out"`
@@ -96,6 +98,7 @@ func (m MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress { return []sdk.AccA
 
 type MsgJoinPool struct {
 	Sender        sdk.AccAddress `json:"sender"`
+	TargetPool    sdk.AccAddress `json:"target_pool"`
 	PoolAmountOut sdk.Int        `json:"pool_amount_out"`
 	MaxAmountsIn  struct {
 		Token     string  `json:"token"`
@@ -119,6 +122,7 @@ func (m MsgJoinPool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.S
 
 type MsgExitPool struct {
 	Sender        sdk.AccAddress `json:"sender"`
+	TargetPool    sdk.AccAddress `json:"target_pool"`
 	PoolAmountIn  sdk.Int        `json:"pool_amount_out"`
 	MinAmountsOut struct {
 		Token     string  `json:"token"`
