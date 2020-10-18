@@ -71,7 +71,16 @@ message MsgExitPool {
 }
 
 // ===================== MsgCreatePool
-message TokenInfo {
+message LPTokenInfo {
+    string denom = 1 [
+        (gogoproto.moretags) = "yaml:\"denom\""
+    ];
+    string description = 2 [
+        (gogoproto.moretags) = "yaml:\"description\""
+    ];
+}
+
+message BindTokenInfo {
     string denom = 1 [
         (gogoproto.moretags) = "yaml:\"denom\""
     ];
@@ -99,7 +108,12 @@ message MsgCreatePool {
         (gogoproto.nullable) = false
     ];
 
-    repeated TokenInfo tokenInfo = 3 [
+    LPTokenInfo lpToken = 3 [
+        (gogoproto.moretags) = "yaml:\"lp_token\"",
+        (gogoproto.nullable) = false
+    ];
+
+    repeated BindTokenInfo bindTokens = 4 [
         (gogoproto.moretags) = "yaml:\"token_info\"",
         (gogoproto.nullable) = false
     ];

@@ -20,10 +20,13 @@ message Record {
 }
 
 message LP {
-    string name = 1 [
-        (gogoproto.moretags) = "yaml:\"name\""
+    string denom = 1 [
+        (gogoproto.moretags) = "yaml:\"denom\""
     ];
-    string totalSupply = 2 [
+    string description = 2 [
+        (gogoproto.moretags) = "yaml:\"description\""
+    ];
+    string totalSupply = 3 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
         (gogoproto.moretags) = "yaml:\"total_supply\"",
         (gogoproto.nullable) = false
