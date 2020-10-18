@@ -10,25 +10,35 @@ import (
 
 var _ Keeper = (*keeper)(nil)
 
+// type alias
+type poolService = pool.Service
+
 type Keeper interface {
-	pool.Service
+	poolService
 }
 
 type keeper struct {
-	pool.Service
+	poolService
 
-	cdc           codec.BinaryMarshaler
-	storeKey      sdk.StoreKey
+	// stores
+	poolStore pool.Store
+
+	// keepers
 	accountKeeper types.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 }
 
 func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) Keeper {
+	var (
+		poolStore   = pool.NewStore(cdc, storeKey)
+		poolService = pool.NewService(poolStore, accountKeeper, bankKeeper)
+	)
 	return keeper{
-		Service: pool.NewService(cdc, storeKey, accountKeeper, bankKeeper),
+		// pool
+		poolService: poolService,
+		poolStore:   poolStore,
 
-		cdc:           cdc,
-		storeKey:      storeKey,
+		// keepers
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 	}

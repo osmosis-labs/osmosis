@@ -9,3 +9,8 @@ const (
 
 	QuerierRoute = ModuleName
 )
+
+var (
+	PoolPrefix       = []byte("gmm_liquidity_pool")
+	GlobalPoolNumber = []byte("gmm_global_pool_number")
+)

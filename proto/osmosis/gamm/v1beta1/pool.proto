@@ -1,0 +1,55 @@
+syntax = "proto3";
+package osmosis.gamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
+
+message Record {
+    string denormalizedWeight = 1 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.moretags) = "yaml:\"denormalized_weight\"",
+        (gogoproto.nullable) = false
+    ];
+    string balance = 2 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags) = "yaml:\"balance\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+message LP {
+    string name = 1 [
+        (gogoproto.moretags)   = "yaml:\"name\""
+    ];
+    string totalSupply = 2 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags) = "yaml:\"total_supply\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+message Pool {
+    uint64 id = 1 [
+        (gogoproto.moretags) = "yaml:\"id\""
+    ];
+    string swapFee = 2 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.moretags) = "yaml:\"swap_fee\"",
+        (gogoproto.nullable) = false
+    ];
+    string totalWeight = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags) = "yaml:\"total_weight\"",
+        (gogoproto.nullable) = false
+    ];
+    LP token = 4 [
+        (gogoproto.moretags) = "yaml:\"token\"",
+        (gogoproto.nullable) = false
+    ];
+    map<string, Record> records = 5 [
+        (gogoproto.moretags) = "yaml:\"records\"",
+        (gogoproto.nullable) = false
+    ];
+}
