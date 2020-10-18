@@ -127,6 +127,8 @@ func (p poolService) CreatePool(
 	poolId := p.store.GetNextPoolNumber(ctx)
 	if lpToken.Denom == "" {
 		lpToken.Denom = fmt.Sprintf("osmosis/pool/%d", poolId)
+	} else {
+		lpToken.Denom = fmt.Sprintf("osmosis/custom/%s", lpToken.Denom)
 	}
 
 	pool := types.Pool{
