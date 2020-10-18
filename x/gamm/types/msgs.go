@@ -25,7 +25,7 @@ type MsgCreatePool struct {
 	Sender  sdk.AccAddress `json:"sender"`
 	SwapFee sdk.Dec        `json:"swap_fee"`
 
-	TokenInfo struct {
+	TokenInfo []struct {
 		Token  sdk.Coin `json:"token"`
 		Ratio  sdk.Dec  `json:"ratio"`
 		Amount sdk.Int  `json:"amount"`
