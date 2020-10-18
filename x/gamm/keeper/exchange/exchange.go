@@ -1,4 +1,4 @@
-package keeper
+package exchange
 
 import (
 	"github.com/c-osmosis/osmosis/x/gamm/types"
@@ -7,17 +7,25 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
-type ExchangeKeeper interface{}
+type Exchange interface {
+	Sender
+	Viewer
+}
 
-type exchangeKeeper struct {
+type exchange struct {
 	cdc           codec.BinaryMarshaler
 	storeKey      sdk.StoreKey
 	accountKeeper types.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 }
 
-func NewExchangeKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) ExchangeKeeper {
-	return exchangeKeeper{
+func NewExchange(
+	cdc codec.BinaryMarshaler,
+	storeKey sdk.StoreKey,
+	accountKeeper types.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+) Exchange {
+	return exchange{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		accountKeeper: accountKeeper,

@@ -1,4 +1,4 @@
-package keeper
+package pool
 
 import (
 	"github.com/c-osmosis/osmosis/x/gamm/types"
@@ -7,17 +7,25 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
-type PoolKeeper interface{}
+type Pool interface {
+	Sender
+	Viewer
+}
 
-type poolKeeper struct {
+type pool struct {
 	cdc           codec.BinaryMarshaler
 	storeKey      sdk.StoreKey
 	accountKeeper types.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 }
 
-func NewPoolKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) PoolKeeper {
-	return poolKeeper{
+func NewPool(
+	cdc codec.BinaryMarshaler,
+	storeKey sdk.StoreKey,
+	accountKeeper types.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+) Pool {
+	return pool{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		accountKeeper: accountKeeper,
