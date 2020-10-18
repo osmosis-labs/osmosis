@@ -12,6 +12,8 @@ import (
 type Store interface {
 	GetNextPoolNumber(sdk.Context) uint64
 
+	SetStore(sdk.Context, types.Pool)
+
 	StorePool(sdk.Context, types.Pool)
 	FetchPool(sdk.Context, uint64) (types.Pool, error)
 	DeletePool(sdk.Context, uint64)
@@ -31,6 +33,12 @@ func NewStore(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey) Store {
 
 func (ps poolStore) getStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(ps.storeKey), types.PoolPrefix)
+}
+
+func (ps poolStore) SetStore(ctx sdk.Context, pool types.Pool) {
+	store := ctx.KVStore(ps.storeKey)
+	bz := ps.cdc.MustMarshalBinaryBare(&pool)
+	store.Set(utils.Uint64ToBytes(pool.Id), bz)
 }
 
 func (ps poolStore) GetNextPoolNumber(ctx sdk.Context) uint64 {
