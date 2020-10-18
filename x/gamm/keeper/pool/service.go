@@ -11,6 +11,8 @@ type Service interface {
 	CreatePool(sdk.Context, sdk.AccAddress, sdk.Dec, []types.TokenInfo) error
 	JoinPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MaxAmountIn) error
 	ExitPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MinAmountOut) error
+	SwapExactAmountIn(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
+	SwapExactAmountOut(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
 }
 
 type poolService struct {
@@ -217,4 +219,153 @@ func (p poolService) ExitPool(
 	pool.Token = lpToken
 	p.store.StorePool(ctx, pool)
 	return nil
+}
+
+func (p poolService) SwapExactAmountIn(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	targetPoolId uint64,
+	tokenIn sdk.Coin,
+	tokenAmountIn sdk.Int,
+	tokenOut sdk.Coin,
+	minAmountOut sdk.Int,
+	maxPrice sdk.Int) (tokenAmountOut sdk.Dec, spotPriceAfter sdk.Dec, err error) {
+
+	pool, err := p.store.FetchPool(ctx, targetPoolId)
+	if err != nil {
+		return sdk.Dec{}, sdk.Dec{}, err
+	}
+	inRecord := pool.Records[tokenIn.Denom]
+	outRecord := pool.Records[tokenOut.Denom]
+
+	// todo: require(tokenAmountIn <= bmul(inRecord.balance, MAX_IN_RATIO), "ERR_MAX_IN_RATIO");
+	if true /* todo: bmul(inRecord.balance, MAX_IN_RATIO) sdk.Dec.GTE(tokenAmountIn.ToDec()) */ {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrMaxInRatio
+	}
+
+	// 1.
+	spotPriceBefore := calcSpotPrice(
+		inRecord.Balance.ToDec(),
+		inRecord.DenormalizedWeight,
+		outRecord.Balance.ToDec(),
+		outRecord.DenormalizedWeight,
+		pool.SwapFee,
+	)
+	if maxPrice.ToDec().GTE(spotPriceBefore) {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrBadLimitPrice
+	}
+
+	// 2.
+	tokenAmountOut = calcOutGivenIn(
+		inRecord.Balance.ToDec(),
+		inRecord.DenormalizedWeight,
+		outRecord.Balance.ToDec(),
+		outRecord.DenormalizedWeight,
+		tokenAmountIn.ToDec(),
+		pool.SwapFee,
+	)
+	if tokenAmountOut.GTE(minAmountOut.ToDec()) {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrLimitOut
+	}
+
+	//todo: inRecord.balance = badd(inRecord.balance, tokenAmountIn);
+	//todo: outRecord.balance = bsub(outRecord.balance, tokenAmountOut);
+
+	// 3.
+	spotPriceAfter = calcSpotPrice(
+		inRecord.Balance.ToDec(),
+		inRecord.DenormalizedWeight,
+		outRecord.Balance.ToDec(),
+		outRecord.DenormalizedWeight,
+		pool.SwapFee,
+	)
+	if spotPriceAfter.GTE(spotPriceBefore) {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrMathApprox
+	}
+	if maxPrice.ToDec().GTE(spotPriceAfter) {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrLimitPrice
+	}
+	if /* todo: bdiv(tokenAmountIn, tokenAmountOut).GTE(spotPriceBefore) */ true {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrMathApprox
+	}
+
+	pool.Records[tokenIn.Denom].Balance.Add(tokenAmountIn)
+	pool.Records[tokenOut.Denom].Balance.Sub(sdk.Int(tokenAmountOut))
+	p.store.SetStore(ctx, pool)
+
+	return tokenAmountOut, spotPriceAfter, nil
+}
+
+func (p poolService) SwapExactAmountOut(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	targetPoolId uint64,
+	tokenIn sdk.Coin,
+	maxAmountIn sdk.Int,
+	tokenOut sdk.Coin,
+	tokenAmountOut sdk.Int,
+	maxPrice sdk.Int) (tokenAmountIn sdk.Dec, spotPriceAfter sdk.Dec, err error) {
+
+	pool, err := p.store.FetchPool(ctx, targetPoolId)
+	if err != nil {
+		return sdk.Dec{}, sdk.Dec{}, err
+	}
+	inRecord := pool.Records[tokenIn.Denom]
+	outRecord := pool.Records[tokenOut.Denom]
+
+	if true /*sdk.Dec{}.GTE(tokenAmountOut.ToDec())*/ {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrMaxOutRatio
+	}
+
+	// 1.
+	spotPriceBefore := calcSpotPrice(
+		inRecord.Balance.ToDec(),
+		inRecord.DenormalizedWeight,
+		outRecord.Balance.ToDec(),
+		outRecord.DenormalizedWeight,
+		pool.SwapFee,
+	)
+	if maxPrice.ToDec().GTE(spotPriceBefore) {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrBadLimitPrice
+	}
+
+	// 2.
+	tokenAmountIn = calcInGivenOut(
+		inRecord.Balance.ToDec(),
+		inRecord.DenormalizedWeight,
+		outRecord.Balance.ToDec(),
+		outRecord.DenormalizedWeight,
+		tokenAmountOut.ToDec(),
+		pool.SwapFee,
+	)
+	if maxAmountIn.ToDec().GTE(tokenAmountIn) {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrLimitIn
+	}
+
+	// todo: inRecord.balance = badd(inRecord.balance, tokenAmountIn);
+	// todo: outRecord.balance = bsub(outRecord.balance, tokenAmountOut);
+
+	// 3.
+	spotPriceAfter = calcSpotPrice(
+		inRecord.Balance.ToDec(),
+		inRecord.DenormalizedWeight,
+		outRecord.Balance.ToDec(),
+		outRecord.DenormalizedWeight,
+		pool.SwapFee,
+	)
+	if spotPriceAfter.GTE(spotPriceBefore) {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrMathApprox
+	}
+	if maxPrice.ToDec().GTE(spotPriceAfter) {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrLimitPrice
+	}
+	if true /* todo: bdiv(tokenAmountIn, tokenAmountOut).GTE(spotPriceBefore) */ {
+		return sdk.Dec{}, sdk.Dec{}, types.ErrMathApprox
+	}
+
+	pool.Records[tokenIn.Denom].Balance.Add(sdk.Int(tokenAmountIn))
+	pool.Records[tokenOut.Denom].Balance.Sub(tokenAmountOut)
+	p.store.SetStore(ctx, pool)
+
+	return tokenAmountIn, spotPriceAfter, nil
 }
