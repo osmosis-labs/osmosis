@@ -4,14 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type MessageType string
-
 const (
-	TypeMsgCreatePool         MessageType = "create_pool"
-	TypeMsgSwapExactAmountIn  MessageType = "swap_exact_amount_in"
-	TypeMsgSwapExactAmountOut MessageType = "swap_exact_amount_out"
-	TypeMsgJoinPool           MessageType = "join_pool"
-	TypeMsgExitPool           MessageType = "exit_pool"
+	TypeMsgCreatePool         = "create_pool"
+	TypeMsgSwapExactAmountIn  = "swap_exact_amount_in"
+	TypeMsgSwapExactAmountOut = "swap_exact_amount_out"
+	TypeMsgJoinPool           = "join_pool"
+	TypeMsgExitPool           = "exit_pool"
 )
 
 // TODO: 일단 이 메세지 타입들을 사용하되, proto 정의가 완성되면 그것을 사용한다.
@@ -39,7 +37,7 @@ func (m MsgCreatePool) String() string { panic("implement me") }
 func (m MsgCreatePool) ProtoMessage()  { panic("implement me") }
 
 func (m MsgCreatePool) Route() string { return RouterKey }
-func (m MsgCreatePool) Type() string  { return string(TypeMsgCreatePool) }
+func (m MsgCreatePool) Type() string  { return TypeMsgCreatePool }
 func (m MsgCreatePool) ValidateBasic() error {
 	return nil // TODO
 }
@@ -63,7 +61,7 @@ func (m MsgSwapExactAmountIn) String() string { panic("implement me") }
 func (m MsgSwapExactAmountIn) ProtoMessage()  { panic("implement me") }
 
 func (m MsgSwapExactAmountIn) Route() string { return RouterKey }
-func (m MsgSwapExactAmountIn) Type() string  { return string(TypeMsgSwapExactAmountIn) }
+func (m MsgSwapExactAmountIn) Type() string  { return TypeMsgSwapExactAmountIn }
 func (m MsgSwapExactAmountIn) ValidateBasic() error {
 	return nil // TODO
 }
@@ -87,7 +85,7 @@ func (m MsgSwapExactAmountOut) String() string { panic("implement me") }
 func (m MsgSwapExactAmountOut) ProtoMessage()  { panic("implement me") }
 
 func (m MsgSwapExactAmountOut) Route() string { return RouterKey }
-func (m MsgSwapExactAmountOut) Type() string  { return string(TypeMsgSwapExactAmountOut) }
+func (m MsgSwapExactAmountOut) Type() string  { return TypeMsgSwapExactAmountOut }
 func (m MsgSwapExactAmountOut) ValidateBasic() error {
 	panic("implement me")
 }
@@ -111,7 +109,7 @@ func (m MsgJoinPool) String() string { panic("implement me") }
 func (m MsgJoinPool) ProtoMessage()  { panic("implement me") }
 
 func (m MsgJoinPool) Route() string { return RouterKey }
-func (m MsgJoinPool) Type() string  { return string(TypeMsgJoinPool) }
+func (m MsgJoinPool) Type() string  { return TypeMsgJoinPool }
 func (m MsgJoinPool) ValidateBasic() error {
 	return nil // TODO
 }
@@ -135,7 +133,7 @@ func (m MsgExitPool) String() string { panic("implement me") }
 func (m MsgExitPool) ProtoMessage()  { panic("implement me") }
 
 func (m MsgExitPool) Route() string { return RouterKey }
-func (m MsgExitPool) Type() string  { return string(TypeMsgExitPool) }
+func (m MsgExitPool) Type() string  { return TypeMsgExitPool }
 func (m MsgExitPool) ValidateBasic() error {
 	return nil // TODO
 }
