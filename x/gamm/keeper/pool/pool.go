@@ -10,28 +10,9 @@ import (
 type Pool interface {
 	Viewer
 
-	CreatePool(
-		ctx sdk.Context,
-		sender sdk.AccAddress,
-		swapFee sdk.Dec,
-		tokenInfo []types.TokenInfo,
-	) error
-
-	JoinPool(
-		ctx sdk.Context,
-		sender sdk.AccAddress,
-		targetPool sdk.AccAddress,
-		poolAmountOut sdk.Int,
-		maxAmountsIn []types.MaxAmountIn,
-	) error
-
-	ExitPool(
-		ctx sdk.Context,
-		sender sdk.AccAddress,
-		targetPool sdk.AccAddress,
-		poolAmountIn sdk.Int,
-		minAmountsOut []types.MinAmountOut,
-	) error
+	CreatePool(sdk.Context, sdk.AccAddress, sdk.Dec, []types.TokenInfo) error
+	JoinPool(sdk.Context, sdk.AccAddress, sdk.AccAddress, sdk.Int, []types.MaxAmountIn) error
+	ExitPool(sdk.Context, sdk.AccAddress, sdk.AccAddress, sdk.Int, []types.MinAmountOut) error
 }
 
 type pool struct {
