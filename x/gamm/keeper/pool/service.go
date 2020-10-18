@@ -37,6 +37,13 @@ func (p poolService) CreatePool(
 	swapFee sdk.Dec,
 	tokenInfo []types.TokenInfo,
 ) error {
+	if len(tokenInfo) < 2 {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidRequest,
+			"token info length should be at least 2",
+		)
+	}
+
 	records := make(map[string]types.Record, len(tokenInfo))
 	for _, info := range tokenInfo {
 		records[info.Denom] = types.Record{
@@ -61,6 +68,10 @@ func (p poolService) CreatePool(
 			Amount: record.Balance,
 		})
 	}
+	if coins == nil {
+		panic("oh my god")
+	}
+	coins = coins.Sort()
 
 	return p.bankKeeper.SendCoinsFromAccountToModule(
 		ctx,
