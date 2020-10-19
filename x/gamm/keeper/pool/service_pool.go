@@ -407,8 +407,48 @@ func (p poolService) ExitPoolWithPoolAmountIn(
 	poolAmountIn sdk.Int,
 	minAmountOut sdk.Int,
 ) (sdk.Int, error) {
-	// TODO
-	return sdk.Int{}, nil
+	pool, err := p.store.FetchPool(ctx, targetPoolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	record, ok := pool.Records[tokenOut]
+	if !ok {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrNotBound,
+			"token %s is not bound to this pool", tokenOut,
+		)
+	}
+
+	tokenAmountOut := calcSingleOutGivenPoolIn(
+		record.Balance.ToDec(),
+		record.DenormalizedWeight,
+		pool.Token.TotalSupply.ToDec(),
+		pool.TotalWeight.ToDec(),
+		poolAmountIn.ToDec(),
+		pool.SwapFee,
+	).TruncateInt()
+	if tokenAmountOut.LT(minAmountOut) {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrLimitOut,
+			"tokenAmount minimum limit has exceeded",
+		)
+	}
+
+	// TODO:
+	// require(tokenAmountOut <= bmul(_records[tokenOut].balance, MAX_OUT_RATIO), "ERR_MAX_OUT_RATIO");
+
+	if err := p.exitPool(
+		ctx,
+		sender,
+		pool,
+		poolAmountIn,
+		sdk.Coins{{tokenOut, tokenAmountOut}},
+	); err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tokenAmountOut, nil
 }
 
 func (p poolService) ExitPoolWithExternAmountOut(
@@ -419,6 +459,52 @@ func (p poolService) ExitPoolWithExternAmountOut(
 	tokenAmountOut sdk.Int,
 	maxPoolAmountIn sdk.Int,
 ) (sdk.Int, error) {
-	// TODO
-	return sdk.Int{}, nil
+	pool, err := p.store.FetchPool(ctx, targetPoolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	record, ok := pool.Records[tokenOut]
+	if !ok {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrNotBound,
+			"token %s is not bound to this pool", tokenOut,
+		)
+	}
+
+	// TOOD:
+	// require(tokenAmountOut <= bmul(_records[tokenOut].balance, MAX_OUT_RATIO), "ERR_MAX_OUT_RATIO");
+
+	poolAmountIn := calcPoolInGivenSingleOut(
+		record.Balance.ToDec(),
+		record.DenormalizedWeight,
+		pool.Token.TotalSupply.ToDec(),
+		pool.TotalWeight.ToDec(),
+		tokenAmountOut.ToDec(),
+		pool.SwapFee,
+	).TruncateInt()
+	if poolAmountIn.Equal(sdk.NewInt(0)) {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrMathApprox,
+			"calculate poolAmountIn",
+		)
+	}
+	if poolAmountIn.GT(maxPoolAmountIn) {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrLimitIn,
+			"poolAmount maximum limit has exceeded",
+		)
+	}
+
+	if err := p.exitPool(
+		ctx,
+		sender,
+		pool,
+		poolAmountIn,
+		sdk.Coins{{tokenOut, tokenAmountOut}},
+	); err != nil {
+		return sdk.Int{}, err
+	}
+
+	return poolAmountIn, nil
 }
