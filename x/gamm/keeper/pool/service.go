@@ -9,8 +9,9 @@ import (
 
 type Service interface {
 	// Viewer
-	GetPoolShareInfo(sdk.Context, uint64) (types.LP, error)
-	GetPoolTokenBalance(sdk.Context, uint64) (sdk.Coins, error)
+	GetSwapFee(sdk.Context, uint64) (sdk.Dec, error)
+	GetShareInfo(sdk.Context, uint64) (types.LP, error)
+	GetTokenBalance(sdk.Context, uint64) (sdk.Coins, error)
 	GetSpotPrice(sdk.Context, uint64, string, string) (sdk.Int, error)
 
 	// Sender
@@ -43,7 +44,15 @@ func NewService(
 	}
 }
 
-func (p poolService) GetPoolShareInfo(ctx sdk.Context, poolId uint64) (types.LP, error) {
+func (p poolService) GetSwapFee(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+	pool, err := p.store.FetchPool(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	return pool.SwapFee, nil
+}
+
+func (p poolService) GetShareInfo(ctx sdk.Context, poolId uint64) (types.LP, error) {
 	pool, err := p.store.FetchPool(ctx, poolId)
 	if err != nil {
 		return types.LP{}, err
@@ -51,7 +60,7 @@ func (p poolService) GetPoolShareInfo(ctx sdk.Context, poolId uint64) (types.LP,
 	return pool.Token, nil
 }
 
-func (p poolService) GetPoolTokenBalance(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+func (p poolService) GetTokenBalance(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
 	pool, err := p.store.FetchPool(ctx, poolId)
 	if err != nil {
 		return nil, err
