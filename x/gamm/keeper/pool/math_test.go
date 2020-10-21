@@ -136,32 +136,113 @@ func TestCalcInGivenOut(t *testing.T) {
 	)
 }
 
-/*
 func TestCalcPoolOutGivenSingleIn(t *testing.T) {
 
-	poolAmountOut, err := sdk.NewDecFromStr("")
+	tokenBalanceIn, err := sdk.NewDecFromStr("100")
 	require.NoError(t, err)
-	tokenAmountIn, err := sdk.NewDecFromStr("")
+	tokenWeightIn, err := sdk.NewDecFromStr("0.2")
 	require.NoError(t, err)
-	tokenWeightIn, err := sdk.NewDecFromStr("")
+	poolSupply, err := sdk.NewDecFromStr("300")
 	require.NoError(t, err)
-	tokenBalanceIn, err := sdk.NewDecFromStr("")
+	totalWeight, err := sdk.NewDecFromStr("1")
 	require.NoError(t, err)
-	poolSupply, err := sdk.NewDecFromStr("")
+	tokenAmountIn, err := sdk.NewDecFromStr("40")
 	require.NoError(t, err)
-	swapFee, err := sdk.NewDecFromStr("")
+	swapFee, err := sdk.NewDecFromStr("0.15")
 	require.NoError(t, err)
 
-	s := calcPoolOutGivenSingleIn(poolAmountOut, tokenAmountIn, tokenWeightIn, tokenBalanceIn, poolSupply, swapFee)
+	s := calcPoolOutGivenSingleIn(tokenBalanceIn, tokenWeightIn, poolSupply, totalWeight, tokenAmountIn, swapFee)
 
-	expectedDec, err := sdk.NewDecFromStr("")
+	expectedDec, err := sdk.NewDecFromStr("18.6519592")
 	require.NoError(t, err)
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10)),
-		"expected value & actual value's difference should less than precision*10",
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
+		"expected value & actual value's difference should less than precision*10000",
 	)
 }
 
+/*
+func TestCalcSingleInGivenPoolOut(t *testing.T) {
+
+	tokenBalanceIn, err := sdk.NewDecFromStr("100")
+	require.NoError(t, err)
+	tokenWeightIn, err := sdk.NewDecFromStr("0.2")
+	require.NoError(t, err)
+	poolSupply, err := sdk.NewDecFromStr("300")
+	require.NoError(t, err)
+	totalWeight, err := sdk.NewDecFromStr("1")
+	require.NoError(t, err)
+	poolAmountOut, err := sdk.NewDecFromStr("70")
+	require.NoError(t, err)
+	swapFee, err := sdk.NewDecFromStr("0.15")
+	require.NoError(t, err)
+
+	s := calcSingleInGivenPoolOut(tokenBalanceIn, tokenWeightIn, poolSupply, totalWeight, poolAmountOut, swapFee)
+
+	fmt.Println(s)
+	expectedDec, err := sdk.NewDecFromStr(".")
+	require.NoError(t, err)
+
+	require.True(
+		t,
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
+		"expected value & actual value's difference should less than precision*10000",
+	)
+}
 */
+
+func TestCalcSingleOutGivenPoolIn(t *testing.T) {
+
+	tokenBalanceOut, err := sdk.NewDecFromStr("200")
+	require.NoError(t, err)
+	tokenWeightOut, err := sdk.NewDecFromStr("0.8")
+	require.NoError(t, err)
+	poolSupply, err := sdk.NewDecFromStr("300")
+	require.NoError(t, err)
+	totalWeight, err := sdk.NewDecFromStr("1")
+	require.NoError(t, err)
+	poolAmountIn, err := sdk.NewDecFromStr("40")
+	require.NoError(t, err)
+	swapFee, err := sdk.NewDecFromStr("0.15")
+	require.NoError(t, err)
+
+	s := calcSingleOutGivenPoolIn(tokenBalanceOut, tokenWeightOut, poolSupply, totalWeight, poolAmountIn, swapFee)
+
+	expectedDec, err := sdk.NewDecFromStr("31.77534976")
+	require.NoError(t, err)
+
+	require.True(
+		t,
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
+		"expected value & actual value's difference should less than precision*10000",
+	)
+}
+
+func TestCalcPoolInGivenSingleOut(t *testing.T) {
+
+	tokenBalanceOut, err := sdk.NewDecFromStr("200")
+	require.NoError(t, err)
+	tokenWeightOut, err := sdk.NewDecFromStr("0.8")
+	require.NoError(t, err)
+	poolSupply, err := sdk.NewDecFromStr("300")
+	require.NoError(t, err)
+	totalWeight, err := sdk.NewDecFromStr("1")
+	require.NoError(t, err)
+	tokenAmountOut, err := sdk.NewDecFromStr("70")
+	require.NoError(t, err)
+	swapFee, err := sdk.NewDecFromStr("0.15")
+	require.NoError(t, err)
+
+	s := calcPoolInGivenSingleOut(tokenBalanceOut, tokenWeightOut, poolSupply, totalWeight, tokenAmountOut, swapFee)
+
+	expectedDec, err := sdk.NewDecFromStr("90.29092777")
+	require.NoError(t, err)
+
+	require.True(
+		t,
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
+		"expected value & actual value's difference should less than precision*10000",
+	)
+}
