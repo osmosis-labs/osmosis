@@ -9,18 +9,14 @@ import (
 
 type Service interface {
 	// Viewer
-	GetPoolShareInfo(sdk.Context, uint64) (types.LP, error)
-	GetPoolTokenBalance(sdk.Context, uint64) (sdk.Coins, error)
+	GetPool(sdk.Context, uint64) (types.Pool, error)
+	GetSwapFee(sdk.Context, uint64) (sdk.Dec, error)
+	GetShareInfo(sdk.Context, uint64) (types.LP, error)
+	GetTokenBalance(sdk.Context, uint64) (sdk.Coins, error)
 	GetSpotPrice(sdk.Context, uint64, string, string) (sdk.Int, error)
 
 	// Sender
-	CreatePool(sdk.Context, sdk.AccAddress, sdk.Dec, types.LPTokenInfo, []types.BindTokenInfo) error
-	JoinPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MaxAmountIn) error
-	JoinPoolWithExternAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	JoinPoolWithPoolAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	ExitPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MinAmountOut) error
-	ExitPoolWithPoolAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	ExitPoolWithExternAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
+	LiquidityPoolTransactor
 	SwapExactAmountIn(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
 	SwapExactAmountOut(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
 }
@@ -43,7 +39,23 @@ func NewService(
 	}
 }
 
-func (p poolService) GetPoolShareInfo(ctx sdk.Context, poolId uint64) (types.LP, error) {
+func (p poolService) GetPool(ctx sdk.Context, poolId uint64) (types.Pool, error) {
+	pool, err := p.store.FetchPool(ctx, poolId)
+	if err != nil {
+		return types.Pool{}, nil
+	}
+	return pool, nil
+}
+
+func (p poolService) GetSwapFee(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+	pool, err := p.store.FetchPool(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	return pool.SwapFee, nil
+}
+
+func (p poolService) GetShareInfo(ctx sdk.Context, poolId uint64) (types.LP, error) {
 	pool, err := p.store.FetchPool(ctx, poolId)
 	if err != nil {
 		return types.LP{}, err
@@ -51,7 +63,7 @@ func (p poolService) GetPoolShareInfo(ctx sdk.Context, poolId uint64) (types.LP,
 	return pool.Token, nil
 }
 
-func (p poolService) GetPoolTokenBalance(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+func (p poolService) GetTokenBalance(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
 	pool, err := p.store.FetchPool(ctx, poolId)
 	if err != nil {
 		return nil, err

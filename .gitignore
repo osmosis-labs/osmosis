@@ -2,6 +2,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/intellij,vscode,macos,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=intellij,vscode,macos,windows
 
+build
+
 ### Go ###
 # Binaries for programs and plugins
 *.exe

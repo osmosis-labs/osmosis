@@ -1,0 +1,115 @@
+syntax = "proto3";
+package osmosis.gamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/gamm/v1beta1/pool.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
+
+service Query {
+    rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+        option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}";
+    }
+    rpc SwapFee(QuerySwapFeeRequest) returns (QuerySwapFeeResponse) {
+        option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/swap_fee";
+    }
+    rpc ShareInfo(QueryShareInfoRequest) returns (QueryShareInfoResponse) {
+        option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/share";
+    }
+    rpc TokenBalance(QueryTokenBalanceRequest) returns (QueryTokenBalanceResponse) {
+        option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/tokens";
+    }
+    rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
+        option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/prices";
+    }
+}
+
+//=============================== Pool
+message QueryPoolRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+}
+message QueryPoolResponse {
+    Pool pool = 1 [
+        (gogoproto.moretags) = "yaml:\"pool\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+//=============================== SwapFee
+message QuerySwapFeeRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+}
+message QuerySwapFeeResponse {
+    string swapFee = 1 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.moretags) = "yaml:\"swap_fee\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+//=============================== ShareInfo
+message QueryShareInfoRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+}
+message QueryShareInfoResponse {
+    LP shareInfo = 1 [
+        (gogoproto.moretags) = "yaml:\"share_info\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+//=============================== TokenBalance
+message QueryTokenBalanceRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+}
+message QueryTokenBalanceResponse {
+    repeated cosmos.base.v1beta1.Coin tokens = 1 [
+        (gogoproto.moretags) = "yaml\"tokens\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+//=============================== SpotPrice
+message QuerySpotPriceRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+    string tokenIn = 2 [
+        (gogoproto.moretags) = "yaml:\"token_in\""
+    ];
+    string tokenOut = 3 [
+        (gogoproto.moretags) = "yaml:\"token_out\""
+    ];
+}
+message QuerySpotPriceResponse {
+    string spotPrice = 1 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags) = "yaml:\"spot_price\"",
+        (gogoproto.nullable) = false
+    ];
+}

@@ -15,6 +15,8 @@ type poolService = pool.Service
 
 type Keeper interface {
 	poolService
+
+	types.QueryServer
 }
 
 type keeper struct {

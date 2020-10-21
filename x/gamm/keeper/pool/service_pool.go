@@ -8,15 +8,27 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+type LiquidityPoolTransactor interface {
+	CreatePool(sdk.Context, sdk.AccAddress, sdk.Dec, types.LPTokenInfo, []types.BindTokenInfo) (uint64, error)
+	JoinPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MaxAmountIn) error
+	JoinPoolWithExternAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
+	JoinPoolWithPoolAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
+	ExitPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MinAmountOut) error
+	ExitPoolWithPoolAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
+	ExitPoolWithExternAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
+}
+
+var _ LiquidityPoolTransactor = poolService{}
+
 func (p poolService) CreatePool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	swapFee sdk.Dec,
 	lpToken types.LPTokenInfo,
 	bindTokens []types.BindTokenInfo,
-) error {
+) (uint64, error) {
 	if len(bindTokens) < 2 {
-		return sdkerrors.Wrapf(
+		return 0, sdkerrors.Wrapf(
 			types.ErrInvalidRequest,
 			"token info length should be at least 2",
 		)
@@ -69,7 +81,7 @@ func (p poolService) CreatePool(
 		types.ModuleName,
 		coins,
 	); err != nil {
-		return err
+		return 0, err
 	}
 
 	initialSupply := sdk.NewIntWithDecimal(100, 18)
@@ -78,12 +90,12 @@ func (p poolService) CreatePool(
 		bankKeeper: p.bankKeeper,
 	}
 	if err := lp.mintPoolShare(ctx, initialSupply); err != nil {
-		return err
+		return 0, err
 	}
 	if err := lp.pushPoolShare(ctx, sender, initialSupply); err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return pool.Id, nil
 }
 
 func (p poolService) joinPool(
