@@ -1,7 +1,7 @@
 
-.PHONY: clean buildpath osmosis message
+.PHONY: clean buildpath osmosis proto
 
-all: osmosis message
+all: osmosis proto
 
 clean:
 	rm -rf ./build
@@ -18,11 +18,11 @@ osmosis: clean buildpath
 	@echo "=========== Build Complete ==============="
 	@echo
 
-message:
+proto:
 	@echo
-	@echo "=========== Generate Protobuf ============"
+	@echo "=========== Generate Message ============"
 	@echo
-	./scripts/protocgen.sh
+	./scripts/generate-proto.sh
 	@echo
 	@echo "=========== Generate Complete ============"
 	@echo

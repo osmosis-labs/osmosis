@@ -13,6 +13,13 @@ for dir in $proto_dirs; do
   --gocosmos_out=plugins=interfacetype+grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   $(find "${dir}" -name '*.proto')
+
+  protoc \
+  -I "proto" \
+  -I "$cosmos_sdk_dir/third_party/proto" \
+  -I "$cosmos_sdk_dir/proto" \
+  --grpc-gateway_out=logtostderr=true:. \
+  $(find "${dir}" -maxdepth 1 -name '*.proto')
 done
 
 cp -r github.com/c-osmosis/osmosis/* ./
