@@ -1,5 +1,7 @@
 
-.PHONY: osmosis message
+.PHONY: clean buildpath osmosis message
+
+all: osmosis message
 
 clean:
 	rm -rf ./build
