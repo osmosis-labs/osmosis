@@ -84,7 +84,7 @@ func (app *OsmosisApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 	// withdraw all delegator rewards
 	dels := app.StakingKeeper.GetAllDelegations(ctx)
 	for _, delegation := range dels {
-		_, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
+		_, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
 		if err != nil {
 			panic(err)
 		}
@@ -114,8 +114,8 @@ func (app *OsmosisApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 
 	// reinitialize all delegations
 	for _, del := range dels {
-		app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, del.DelegatorAddress, del.ValidatorAddress)
-		app.DistrKeeper.Hooks().AfterDelegationModified(ctx, del.DelegatorAddress, del.ValidatorAddress)
+		app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, del.GetDelegatorAddr(), del.GetValidatorAddr())
+		app.DistrKeeper.Hooks().AfterDelegationModified(ctx, del.GetDelegatorAddr(), del.GetValidatorAddr())
 	}
 
 	// reset context height
