@@ -14,9 +14,9 @@ func (p poolService) CreatePool(
 	swapFee sdk.Dec,
 	lpToken types.LPTokenInfo,
 	bindTokens []types.BindTokenInfo,
-) error {
+) (uint64, error) {
 	if len(bindTokens) < 2 {
-		return sdkerrors.Wrapf(
+		return 0, sdkerrors.Wrapf(
 			types.ErrInvalidRequest,
 			"token info length should be at least 2",
 		)
@@ -69,7 +69,7 @@ func (p poolService) CreatePool(
 		types.ModuleName,
 		coins,
 	); err != nil {
-		return err
+		return 0, err
 	}
 
 	initialSupply := sdk.NewIntWithDecimal(100, 18)
@@ -78,12 +78,12 @@ func (p poolService) CreatePool(
 		bankKeeper: p.bankKeeper,
 	}
 	if err := lp.mintPoolShare(ctx, initialSupply); err != nil {
-		return err
+		return 0, err
 	}
 	if err := lp.pushPoolShare(ctx, sender, initialSupply); err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return pool.Id, nil
 }
 
 func (p poolService) joinPool(

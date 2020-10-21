@@ -15,7 +15,7 @@ type Service interface {
 	GetSpotPrice(sdk.Context, uint64, string, string) (sdk.Int, error)
 
 	// Sender
-	CreatePool(sdk.Context, sdk.AccAddress, sdk.Dec, types.LPTokenInfo, []types.BindTokenInfo) error
+	CreatePool(sdk.Context, sdk.AccAddress, sdk.Dec, types.LPTokenInfo, []types.BindTokenInfo) (uint64, error)
 	JoinPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MaxAmountIn) error
 	JoinPoolWithExternAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
 	JoinPoolWithPoolAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
