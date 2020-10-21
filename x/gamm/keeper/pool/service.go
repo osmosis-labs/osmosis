@@ -9,19 +9,14 @@ import (
 
 type Service interface {
 	// Viewer
+	GetPool(sdk.Context, uint64) (types.Pool, error)
 	GetSwapFee(sdk.Context, uint64) (sdk.Dec, error)
 	GetShareInfo(sdk.Context, uint64) (types.LP, error)
 	GetTokenBalance(sdk.Context, uint64) (sdk.Coins, error)
 	GetSpotPrice(sdk.Context, uint64, string, string) (sdk.Int, error)
 
 	// Sender
-	CreatePool(sdk.Context, sdk.AccAddress, sdk.Dec, types.LPTokenInfo, []types.BindTokenInfo) (uint64, error)
-	JoinPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MaxAmountIn) error
-	JoinPoolWithExternAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	JoinPoolWithPoolAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	ExitPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MinAmountOut) error
-	ExitPoolWithPoolAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	ExitPoolWithExternAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
+	LiquidityPoolTransactor
 	SwapExactAmountIn(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
 	SwapExactAmountOut(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
 }
@@ -42,6 +37,14 @@ func NewService(
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 	}
+}
+
+func (p poolService) GetPool(ctx sdk.Context, poolId uint64) (types.Pool, error) {
+	pool, err := p.store.FetchPool(ctx, poolId)
+	if err != nil {
+		return types.Pool{}, nil
+	}
+	return pool, nil
 }
 
 func (p poolService) GetSwapFee(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {

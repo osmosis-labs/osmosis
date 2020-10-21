@@ -27,7 +27,11 @@ service Query {
 }
 
 //=============================== Pool
-message QueryPoolRequest {}
+message QueryPoolRequest {
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+}
 message QueryPoolResponse {
     Pool pool = 1 [
         (gogoproto.moretags) = "yaml:\"pool\"",
@@ -36,7 +40,11 @@ message QueryPoolResponse {
 }
 
 //=============================== SwapFee
-message QuerySwapFeeRequest {}
+message QuerySwapFeeRequest {
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+}
 message QuerySwapFeeResponse {
     string swapFee = 1 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -46,7 +54,11 @@ message QuerySwapFeeResponse {
 }
 
 //=============================== ShareInfo
-message QueryShareInfoRequest {}
+message QueryShareInfoRequest {
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+}
 message QueryShareInfoResponse {
     LP shareInfo = 1 [
         (gogoproto.moretags) = "yaml:\"share_info\"",
@@ -55,7 +67,11 @@ message QueryShareInfoResponse {
 }
 
 //=============================== TokenBalance
-message QueryTokenBalanceRequest {}
+message QueryTokenBalanceRequest {
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+}
 message QueryTokenBalanceResponse {
     repeated cosmos.base.v1beta1.Coin tokens = 1 [
         (gogoproto.moretags) = "yaml\"tokens\"",
@@ -65,10 +81,13 @@ message QueryTokenBalanceResponse {
 
 //=============================== SpotPrice
 message QuerySpotPriceRequest {
-    string tokenIn = 1 [
+    uint64 poolId = 1 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+    string tokenIn = 2 [
         (gogoproto.moretags) = "yaml:\"token_in\""
     ];
-    string tokenOut = 2 [
+    string tokenOut = 3 [
         (gogoproto.moretags) = "yaml:\"token_out\""
     ];
 }
