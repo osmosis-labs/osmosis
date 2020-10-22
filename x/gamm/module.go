@@ -58,15 +58,17 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCRoutes(context client.Context, serveMux *runtime.ServeMux) {
-	panic("implement me")
+	// TODO
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	panic("implement me")
+	// TODO
+	return nil
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	panic("implement me")
+	// TODO
+	return nil
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.

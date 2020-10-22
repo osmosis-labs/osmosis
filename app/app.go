@@ -80,6 +80,10 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/c-osmosis/osmosis/x/gamm"
+	gammkeeper "github.com/c-osmosis/osmosis/x/gamm/keeper"
+	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
+
 	appparams "github.com/c-osmosis/osmosis/app/params"
 )
 
@@ -110,6 +114,7 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
+		gamm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -121,6 +126,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		gammtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -162,6 +168,7 @@ type OsmosisApp struct {
 	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
+	GAMMKeeper       gammkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -203,7 +210,7 @@ func NewOsmosisApp(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, gammtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -297,6 +304,8 @@ func NewOsmosisApp(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
+	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 
@@ -320,6 +329,7 @@ func NewOsmosisApp(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
+		gamm.NewAppModule(appCodec, app.GAMMKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
