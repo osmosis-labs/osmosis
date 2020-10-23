@@ -1,5 +1,5 @@
 
-.PHONY: clean buildpath osmosis proto
+.PHONY: clean buildpath osmosis proto docs
 
 all: osmosis proto
 
@@ -23,6 +23,15 @@ proto:
 	@echo "=========== Generate Message ============"
 	@echo
 	./scripts/generate-proto.sh
+	@echo
+	@echo "=========== Generate Complete ============"
+	@echo
+
+docs:
+	@echo
+	@echo "=========== Generate Message ============"
+	@echo
+	./scripts/generate-docs.sh
 	@echo
 	@echo "=========== Generate Complete ============"
 	@echo
