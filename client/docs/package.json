@@ -4,9 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "combine": "swagger-combine ./config.json -o swagger/swagger.yaml -f yaml --continueOnConflictingPaths --includeDefinitions",
-    "convert": "swagger2openapi swagger/swagger.yaml --outfile openapi/openapi.yaml --yaml",
-    "build": "redoc-cli bundle openapi/openapi.yaml --output ./openapi/redoc-static.html"
+    "combine": "swagger-combine ./config.json -o static/swagger/swagger.yaml -f yaml --continueOnConflictingPaths --includeDefinitions",
+    "convert": "swagger2openapi static/swagger/swagger.yaml --outfile static/openapi/openapi.yaml --yaml",
+    "build": "redoc-cli bundle static/openapi/openapi.yaml --output ./static/openapi/index.html"
   },
   "dependencies": {
     "redoc-cli": "^0.9.12",
