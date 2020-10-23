@@ -7,7 +7,7 @@
   },
   "apis": [
     {
-      "url": "./tmp-swagger-gen/osmosis/gamm/v1beta1/query.swagger.json",
+      "url": "../../tmp-swagger-gen/osmosis/gamm/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "GAMMParams"

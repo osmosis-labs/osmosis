@@ -23,17 +23,11 @@ for dir in $proto_dirs; do
   fi
 done
 
-swagger-combine \
-  ./client/docs/config.json \
-  -o ./client/docs/spec/swagger.yaml \
-  -f yaml \
-  --continueOnConflictingPaths true \
-  --includeDefinitions true
-
-swagger2openapi \
-  ./client/docs/spec/swagger.yaml \
-  --outfile ./client/docs/spec/openapi.yaml \
-  --yaml
+cd ./client/docs
+yarn combine
+yarn convert
+yarn build
+cd ../../
 
 # clean swagger files
 rm -rf ./tmp-swagger-gen
