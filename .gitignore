@@ -3,6 +3,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=intellij,vscode,macos,windows
 
 build
+**/*/node_modules
 
 ### Go ###
 # Binaries for programs and plugins
