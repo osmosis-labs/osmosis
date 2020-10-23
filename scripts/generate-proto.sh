@@ -6,6 +6,7 @@ set -eo pipefail
 cosmos_sdk_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/cosmos-sdk)
 proto_dirs=$(find . -path ./third_party -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
+  # generate protobuf bind
   protoc \
   -I "proto" \
   -I "$cosmos_sdk_dir/third_party/proto" \
@@ -14,6 +15,7 @@ for dir in $proto_dirs; do
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   $(find "${dir}" -name '*.proto')
 
+  # generate grpc gateway
   protoc \
   -I "proto" \
   -I "$cosmos_sdk_dir/third_party/proto" \
@@ -22,5 +24,5 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
 done
 
-cp -r github.com/c-osmosis/osmosis/* ./
-rm -rf github.com
+cp -r ./github.com/c-osmosis/osmosis/* ./
+rm -rf ./github.com
