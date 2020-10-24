@@ -1,6 +1,7 @@
 package gamm
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 
@@ -57,8 +58,8 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 	rest.RegisterHandlers(ctx, r)
 }
 
-func (b AppModuleBasic) RegisterGRPCRoutes(context client.Context, serveMux *runtime.ServeMux) {
-	// TODO
+func (b AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -83,7 +84,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterQueryService(server grpc.Server) {
-	return
+	types.RegisterQueryServer(server, am.keeper)
 }
 
 func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
