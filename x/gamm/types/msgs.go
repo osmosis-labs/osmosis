@@ -20,7 +20,7 @@ func (m MsgCreatePool) ValidateBasic() error {
 	return nil // TODO
 }
 func (m MsgCreatePool) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgCreatePool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
@@ -32,7 +32,7 @@ func (m MsgSwapExactAmountIn) ValidateBasic() error {
 	return nil // TODO
 }
 func (m MsgSwapExactAmountIn) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
@@ -41,10 +41,10 @@ var _ sdk.Msg = &MsgSwapExactAmountOut{}
 func (m MsgSwapExactAmountOut) Route() string { return RouterKey }
 func (m MsgSwapExactAmountOut) Type() string  { return TypeMsgSwapExactAmountOut }
 func (m MsgSwapExactAmountOut) ValidateBasic() error {
-	panic("implement me")
+	return nil // TODO
 }
 func (m MsgSwapExactAmountOut) GetSignBytes() []byte {
-	panic("implement me")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
@@ -68,6 +68,6 @@ func (m MsgExitPool) ValidateBasic() error {
 	return nil // TODO
 }
 func (m MsgExitPool) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgExitPool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
