@@ -22,7 +22,10 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(NewCreatePoolCmd())
+	txCmd.AddCommand(
+		NewCreatePoolCmd(),
+		NewJoinPoolCmd(),
+	)
 
 	return txCmd
 }
@@ -56,6 +59,39 @@ func NewCreatePoolCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagPoolBindTokens)
 	_ = cmd.MarkFlagRequired(FlagPoolBindTokenWeights)
 	_ = cmd.MarkFlagRequired(FlagSwapFee)
+
+	return cmd
+}
+
+func NewJoinPoolCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "join-pool",
+		Short: "join a new pool and provide the liquidity to it",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildJoinPoolMsg(clientCtx, txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetJoinPool())
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagPoolAmountOut)
+	_ = cmd.MarkFlagRequired(FlagMaxAountsIn)
 
 	return cmd
 }
@@ -135,6 +171,58 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 			Description: description,
 		},
 		BindTokens: bindTokens,
+	}
+
+	return txf, msg, nil
+}
+
+func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolId, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	poolAmountOutStr, err := fs.GetString(FlagPoolAmountOut)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	poolAmountOut, ok := sdk.NewIntFromString(poolAmountOutStr)
+	if !ok {
+		return txf, nil, fmt.Errorf("invalid pool amount out")
+	}
+
+	maxAmountsInStrs, err := fs.GetStringArray(FlagMaxAountsIn)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	maxAountsInSdk := sdk.Coins{}
+	for i := 0; i < len(maxAmountsInStrs); i++ {
+		parsed, err := sdk.ParseCoin(maxAmountsInStrs[i])
+		if err != nil {
+			return txf, nil, err
+		}
+		maxAountsInSdk = append(maxAountsInSdk, parsed)
+	}
+
+	var maxAmountsIn []types.MaxAmountIn
+	for i := 0; i < len(maxAountsInSdk); i++ {
+		maxAmountInSdk := maxAountsInSdk[i]
+
+		maxAmountIn := types.MaxAmountIn{
+			Denom:     maxAmountInSdk.Denom,
+			MaxAmount: maxAmountInSdk.Amount,
+		}
+
+		maxAmountsIn = append(maxAmountsIn, maxAmountIn)
+	}
+
+	msg := &types.MsgJoinPool{
+		Sender:        clientCtx.GetFromAddress(),
+		TargetPoolId:  poolId,
+		PoolAmountOut: poolAmountOut,
+		MaxAmountsIn:  maxAmountsIn,
 	}
 
 	return txf, msg, nil
