@@ -42,7 +42,7 @@ func NewService(
 func (p poolService) GetPool(ctx sdk.Context, poolId uint64) (types.Pool, error) {
 	pool, err := p.store.FetchPool(ctx, poolId)
 	if err != nil {
-		return types.Pool{}, nil
+		return types.Pool{}, err
 	}
 	return pool, nil
 }
