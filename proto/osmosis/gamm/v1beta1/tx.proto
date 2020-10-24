@@ -23,8 +23,8 @@ message MsgJoinPool {
         (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
-    uint64 targetPool = 2 [
-        (gogoproto.moretags) = "yaml:\"target_pool\""
+    uint64 targetPoolId = 2 [
+        (gogoproto.moretags) = "yaml:\"target_pool_id\""
     ];
     string poolAmountOut = 3 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -55,8 +55,8 @@ message MsgExitPool {
         (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
-    uint64 targetPool = 2 [
-        (gogoproto.moretags) = "yaml:\"target_pool\""
+    uint64 targetPoolId = 2 [
+        (gogoproto.moretags) = "yaml:\"target_pool_id\""
     ];
     string poolAmountIn = 3 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -125,9 +125,8 @@ message MsgSwapExactAmountIn {
         (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
-    bytes targetPool = 2 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-        (gogoproto.moretags) = "yaml:\"target_pool\""
+    uint64 targetPoolId = 2 [
+        (gogoproto.moretags) = "yaml:\"target_pool_id\""
     ];
     cosmos.base.v1beta1.Coin tokenIn = 3 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
@@ -162,9 +161,8 @@ message MsgSwapExactAmountOut {
         (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
-    bytes targetPool = 2 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-        (gogoproto.moretags) = "yaml:\"target_pool\""
+    uint64 targetPoolId = 2 [
+        (gogoproto.moretags) = "yaml:\"target_pool_id\""
     ];
     cosmos.base.v1beta1.Coin tokenIn = 3 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",

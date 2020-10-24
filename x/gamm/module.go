@@ -1,6 +1,7 @@
 package gamm
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/c-osmosis/osmosis/x/gamm/client/cli"
 	"github.com/c-osmosis/osmosis/x/gamm/client/rest"
 	"github.com/c-osmosis/osmosis/x/gamm/keeper"
 	"github.com/c-osmosis/osmosis/x/gamm/types"
@@ -57,13 +59,12 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 	rest.RegisterHandlers(ctx, r)
 }
 
-func (b AppModuleBasic) RegisterGRPCRoutes(context client.Context, serveMux *runtime.ServeMux) {
-	// TODO
+func (b AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	// TODO
-	return nil
+	return cli.NewTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
@@ -83,7 +84,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterQueryService(server grpc.Server) {
-	return
+	types.RegisterQueryServer(server, am.keeper)
 }
 
 func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
