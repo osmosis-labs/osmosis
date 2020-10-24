@@ -22,10 +22,6 @@ func (k keeper) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid poolId")
-	}
-
 	pool, err := k.poolService.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -42,10 +38,6 @@ func (k keeper) SwapFee(
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid poolId")
-	}
 
 	swapFee, err := k.poolService.GetSwapFee(sdkCtx, req.PoolId)
 	if err != nil {
@@ -64,10 +56,6 @@ func (k keeper) ShareInfo(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid poolId")
-	}
-
 	shareInfo, err := k.poolService.GetShareInfo(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -84,10 +72,6 @@ func (k keeper) TokenBalance(
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid poolId")
-	}
 
 	tokens, err := k.poolService.GetTokenBalance(sdkCtx, req.PoolId)
 	if err != nil {
@@ -106,9 +90,6 @@ func (k keeper) SpotPrice(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid poolId")
-	}
 	if req.TokenIn == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid tokenIn")
 	}
