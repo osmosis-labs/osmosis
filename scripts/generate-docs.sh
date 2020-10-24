@@ -6,7 +6,7 @@ mkdir -p ./tmp-swagger-gen
 
 # Get the path of the cosmos-sdk repo from go/pkg/mod
 cosmos_sdk_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/cosmos-sdk)
-proto_dirs=$(find . -path ./third_party -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
+proto_dirs=$(find . $cosmos_sdk_dir -path $cosmos_sdk_dir/third_party -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
   # generate swagger files (filter query files)
   query_file=$(find "${dir}" -maxdepth 1 -name 'query.proto')
@@ -24,6 +24,7 @@ for dir in $proto_dirs; do
 done
 
 cd ./client/docs
+yarn install
 yarn combine
 yarn convert
 yarn build
