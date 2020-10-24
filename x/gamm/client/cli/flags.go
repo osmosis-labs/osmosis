@@ -16,6 +16,11 @@ const (
 	FlagPoolAmountOut = "pool-amount-out"
 	// List of coin
 	FlagMaxAountsIn = "pool-max-amounts-in"
+
+	// This is string, because it is parsed as sdk.Int
+	FlagPoolAmountIn = "pool-amount-in"
+	// List of coin
+	FlagMinAmountsOut = "pool-min-amounts-out"
 )
 
 func FlagSetCreatePool() *flag.FlagSet {
@@ -38,6 +43,19 @@ func FlagSetJoinPool() *flag.FlagSet {
 	fs.String(FlagPoolAmountOut, "", "TODO: add description")
 	// TODO: 어떻게 설명해야하지...
 	fs.StringArray(FlagMaxAountsIn, []string{""}, "TODO: add description")
+
+	return fs
+}
+
+func FlagSetExitPool() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.Uint64(FlagPoolId, 0, "The id of pool")
+	// This is string, because it is parsed as sdk.Int
+	// TODO: 어떻게 설명해야하지...
+	fs.String(FlagPoolAmountIn, "", "TODO: add description")
+	// TODO: 어떻게 설명해야하지...
+	fs.StringArray(FlagMinAmountsOut, []string{""}, "TODO: add description")
 
 	return fs
 }

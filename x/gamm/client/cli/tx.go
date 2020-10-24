@@ -25,6 +25,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		NewCreatePoolCmd(),
 		NewJoinPoolCmd(),
+		NewExitPoolCmd(),
 	)
 
 	return txCmd
@@ -92,6 +93,39 @@ func NewJoinPoolCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 	_ = cmd.MarkFlagRequired(FlagPoolAmountOut)
 	_ = cmd.MarkFlagRequired(FlagMaxAountsIn)
+
+	return cmd
+}
+
+func NewExitPoolCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exit-pool",
+		Short: "exit a new pool and withdraw the liquidity from it",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildExitPoolMsg(clientCtx, txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetExitPool())
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagPoolAmountIn)
+	_ = cmd.MarkFlagRequired(FlagMinAmountsOut)
 
 	return cmd
 }
@@ -223,6 +257,58 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		TargetPoolId:  poolId,
 		PoolAmountOut: poolAmountOut,
 		MaxAmountsIn:  maxAmountsIn,
+	}
+
+	return txf, msg, nil
+}
+
+func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolId, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	poolAmountInStr, err := fs.GetString(FlagPoolAmountIn)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	poolAmountIn, ok := sdk.NewIntFromString(poolAmountInStr)
+	if !ok {
+		return txf, nil, fmt.Errorf("invalid pool amount in")
+	}
+
+	minAmountsOutStrs, err := fs.GetStringArray(FlagMinAmountsOut)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	minAountsOutSdk := sdk.Coins{}
+	for i := 0; i < len(minAmountsOutStrs); i++ {
+		parsed, err := sdk.ParseCoin(minAmountsOutStrs[i])
+		if err != nil {
+			return txf, nil, err
+		}
+		minAountsOutSdk = append(minAountsOutSdk, parsed)
+	}
+
+	var minAmountsOut []types.MinAmountOut
+	for i := 0; i < len(minAountsOutSdk); i++ {
+		minAmountOutSdk := minAountsOutSdk[i]
+
+		minAmountOut := types.MinAmountOut{
+			Denom:     minAmountOutSdk.Denom,
+			MinAmount: minAmountOutSdk.Amount,
+		}
+
+		minAmountsOut = append(minAmountsOut, minAmountOut)
+	}
+
+	msg := &types.MsgExitPool{
+		Sender:        clientCtx.GetFromAddress(),
+		TargetPoolId:  poolId,
+		PoolAmountIn:  poolAmountIn,
+		MinAmountsOut: minAmountsOut,
 	}
 
 	return txf, msg, nil
