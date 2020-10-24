@@ -7,19 +7,23 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
-type Service interface {
-	// Viewer
-	GetPool(sdk.Context, uint64) (types.Pool, error)
-	GetSwapFee(sdk.Context, uint64) (sdk.Dec, error)
-	GetShareInfo(sdk.Context, uint64) (types.LP, error)
-	GetTokenBalance(sdk.Context, uint64) (sdk.Coins, error)
-	GetSpotPrice(sdk.Context, uint64, string, string) (sdk.Int, error)
+type (
+	Service interface {
+		// Viewer
+		GetPool(sdk.Context, uint64) (types.Pool, error)
+		// TODO: handle the pagination. For now, just returns the all pools.
+		GetPools(sdk.Context) ([]types.Pool, error)
+		GetSwapFee(sdk.Context, uint64) (sdk.Dec, error)
+		GetShareInfo(sdk.Context, uint64) (types.LP, error)
+		GetTokenBalance(sdk.Context, uint64) (sdk.Coins, error)
+		GetSpotPrice(sdk.Context, uint64, string, string) (sdk.Int, error)
 
-	// Sender
-	LiquidityPoolTransactor
-	SwapExactAmountIn(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
-	SwapExactAmountOut(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
-}
+		// Sender
+		LiquidityPoolTransactor
+		SwapExactAmountIn(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
+		SwapExactAmountOut(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, sdk.Int, sdk.Coin, sdk.Int, sdk.Int) (sdk.Dec, sdk.Dec, error)
+	}
+)
 
 type poolService struct {
 	store         Store
@@ -45,6 +49,14 @@ func (p poolService) GetPool(ctx sdk.Context, poolId uint64) (types.Pool, error)
 		return types.Pool{}, err
 	}
 	return pool, nil
+}
+
+func (p poolService) GetPools(ctx sdk.Context) ([]types.Pool, error) {
+	pools, err := p.store.FetchAllPools(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return pools, nil
 }
 
 func (p poolService) GetSwapFee(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {

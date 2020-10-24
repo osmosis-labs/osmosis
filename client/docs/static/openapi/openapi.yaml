@@ -4,6 +4,73 @@ info:
   description: A REST interface for state queries, legacy transactions
   version: 1.0.0
 paths:
+  /osmosis/gamm/v1beta1/pools/all:
+    get:
+      operationId: Pools
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  pools:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uint64
+                        swapFee:
+                          type: string
+                        totalWeight:
+                          type: string
+                        token:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            description:
+                              type: string
+                            totalSupply:
+                              type: string
+                        records:
+                          type: object
+                          additionalProperties:
+                            type: object
+                            properties:
+                              denormalizedWeight:
+                                type: string
+                              balance:
+                                type: string
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      tags:
+        - Query
   "/osmosis/gamm/v1beta1/{poolId}":
     get:
       operationId: Pool
@@ -8246,6 +8313,39 @@ components:
                     type: string
                   balance:
                     type: string
+    osmosis.gamm.v1beta1.QueryPoolsResponse:
+      type: object
+      properties:
+        pools:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uint64
+              swapFee:
+                type: string
+              totalWeight:
+                type: string
+              token:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  description:
+                    type: string
+                  totalSupply:
+                    type: string
+              records:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    denormalizedWeight:
+                      type: string
+                    balance:
+                      type: string
     osmosis.gamm.v1beta1.QueryShareInfoResponse:
       type: object
       properties:

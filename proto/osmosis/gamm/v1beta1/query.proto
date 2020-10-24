@@ -12,6 +12,10 @@ service Query {
     rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
         option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}";
     }
+    rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
+        // 이거 /osmosis/gamm/v1beta1/pools로 하면 위의 /osmosis/gamm/v1beta1/{poolId}랑 겹쳐서 안됨;
+        option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/all";
+    }
     rpc SwapFee(QuerySwapFeeRequest) returns (QuerySwapFeeResponse) {
         option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/swap_fee";
     }
@@ -37,6 +41,20 @@ message QueryPoolRequest {
 }
 message QueryPoolResponse {
     Pool pool = 1 [
+        (gogoproto.moretags) = "yaml:\"pool\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
+//=============================== Pools
+message QueryPoolsRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+
+    // TODO: handle the pagination.
+}
+message QueryPoolsResponse {
+    repeated Pool pools = 1 [
         (gogoproto.moretags) = "yaml:\"pool\"",
         (gogoproto.nullable) = false
     ];

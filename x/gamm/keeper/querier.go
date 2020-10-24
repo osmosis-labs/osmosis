@@ -29,6 +29,23 @@ func (k keeper) Pool(
 	return &types.QueryPoolResponse{Pool: pool}, nil
 }
 
+func (k keeper) Pools(
+	ctx context.Context,
+	req *types.QueryPoolsRequest,
+) (*types.QueryPoolsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	pools, err := k.poolService.GetPools(sdkCtx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryPoolsResponse{Pools: pools}, nil
+}
+
 func (k keeper) SwapFee(
 	ctx context.Context,
 	req *types.QuerySwapFeeRequest,

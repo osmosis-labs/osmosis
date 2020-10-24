@@ -14,6 +14,7 @@ type Store interface {
 
 	StorePool(sdk.Context, types.Pool)
 	FetchPool(sdk.Context, uint64) (types.Pool, error)
+	FetchAllPools(sdk.Context) ([]types.Pool, error)
 	DeletePool(sdk.Context, uint64)
 }
 
@@ -74,6 +75,30 @@ func (ps poolStore) FetchPool(ctx sdk.Context, poolId uint64) (types.Pool, error
 	var pool types.Pool
 	ps.cdc.MustUnmarshalBinaryBare(bz, &pool)
 	return pool, nil
+}
+
+func (ps poolStore) FetchAllPools(ctx sdk.Context) ([]types.Pool, error) {
+	store := ps.getStore(ctx)
+	var pools []types.Pool
+	iter := store.Iterator([]byte{0}, []byte{255})
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		bz := iter.Value()
+		if bz == nil {
+			return nil, types.ErrPoolNotFound
+		}
+
+		var pool types.Pool
+		ps.cdc.MustUnmarshalBinaryBare(bz, &pool)
+
+		pools = append(pools, pool)
+	}
+
+	if len(pools) == 0 {
+		return nil, types.ErrPoolNotFound
+	}
+
+	return pools, nil
 }
 
 func (ps poolStore) DeletePool(ctx sdk.Context, poolId uint64) {
