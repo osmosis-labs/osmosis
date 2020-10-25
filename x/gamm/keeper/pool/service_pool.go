@@ -9,13 +9,65 @@ import (
 )
 
 type LiquidityPoolTransactor interface {
-	CreatePool(sdk.Context, sdk.AccAddress, sdk.Dec, types.LPTokenInfo, []types.BindTokenInfo) (uint64, error)
-	JoinPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MaxAmountIn) error
-	JoinPoolWithExternAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	JoinPoolWithPoolAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	ExitPool(sdk.Context, sdk.AccAddress, uint64, sdk.Int, []types.MinAmountOut) error
-	ExitPoolWithPoolAmountIn(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
-	ExitPoolWithExternAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Int) (sdk.Int, error)
+	CreatePool(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		swapFee sdk.Dec,
+		lpToken types.LPTokenInfo,
+		bindTokens []types.BindTokenInfo,
+	) (poolId uint64, err error)
+
+	JoinPool(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPoolId uint64,
+		poolAmountOut sdk.Int,
+		maxAmountsIn []types.MaxAmountIn,
+	) (err error)
+
+	JoinPoolWithExternAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPoolId uint64,
+		tokenIn string,
+		tokenAmountIn sdk.Int,
+		minPoolAmountOut sdk.Int,
+	) (poolAmount sdk.Int, err error)
+
+	JoinPoolWithPoolAmountOut(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPoolId uint64,
+		tokenIn string,
+		poolAmountOut sdk.Int,
+		maxAmountIn sdk.Int,
+	) (poolAmount sdk.Int, err error)
+
+	ExitPool(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPoolId uint64,
+		poolAmountIn sdk.Int,
+		minAmountsOut []types.MinAmountOut,
+	) (err error)
+
+	ExitPoolWithPoolAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPoolId uint64,
+		tokenOut string,
+		poolAmountIn sdk.Int,
+		minAmountOut sdk.Int,
+	) (tokenAmount sdk.Int, err error)
+
+	ExitPoolWithExternAmountOut(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPoolId uint64,
+		tokenOut string,
+		tokenAmountOut sdk.Int,
+		maxPoolAmountIn sdk.Int,
+	) (tokenAmount sdk.Int, err error)
 }
 
 var _ LiquidityPoolTransactor = poolService{}

@@ -7,8 +7,25 @@ import (
 )
 
 type LiquiditySwapTransactor interface {
-	SwapExactAmountIn(sdk.Context, sdk.AccAddress, uint64, sdk.Coin, string, sdk.Int, sdk.Int) (sdk.Int, sdk.Dec, error)
-	SwapExactAmountOut(sdk.Context, sdk.AccAddress, uint64, string, sdk.Int, sdk.Coin, sdk.Int) (sdk.Int, sdk.Dec, error)
+	SwapExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPoolId uint64,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		minAmountOut sdk.Int,
+		maxPrice sdk.Int,
+	) (tokenAmountOutInt sdk.Int, spotPriceAfter sdk.Dec, err error)
+
+	SwapExactAmountOut(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		targetPoolId uint64,
+		tokenInDenom string,
+		maxAmountIn sdk.Int,
+		tokenOut sdk.Coin,
+		maxPrice sdk.Int,
+	) (tokenAmountInInt sdk.Int, spotPriceAfter sdk.Dec, err error)
 }
 
 var _ LiquiditySwapTransactor = poolService{}
@@ -20,7 +37,8 @@ func (p poolService) SwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	minAmountOut sdk.Int,
-	maxPrice sdk.Int) (tokenAmountOutInt sdk.Int, spotPriceAfter sdk.Dec, err error) {
+	maxPrice sdk.Int,
+) (tokenAmountOutInt sdk.Int, spotPriceAfter sdk.Dec, err error) {
 
 	pool, err := p.store.FetchPool(ctx, targetPoolId)
 	if err != nil {
@@ -115,7 +133,8 @@ func (p poolService) SwapExactAmountOut(
 	tokenInDenom string,
 	maxAmountIn sdk.Int,
 	tokenOut sdk.Coin,
-	maxPrice sdk.Int) (tokenAmountInInt sdk.Int, spotPriceAfter sdk.Dec, err error) {
+	maxPrice sdk.Int,
+) (tokenAmountInInt sdk.Int, spotPriceAfter sdk.Dec, err error) {
 
 	pool, err := p.store.FetchPool(ctx, targetPoolId)
 	if err != nil {
