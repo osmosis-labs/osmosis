@@ -17,6 +17,7 @@ type (
 		GetShareInfo(ctx sdk.Context, poolId uint64) (lp types.LP, err error)
 		GetTokenBalance(ctx sdk.Context, poolId uint64) (tokenBalance sdk.Coins, err error)
 		GetSpotPrice(ctx sdk.Context, poolId uint64, string, token string) (spotPrice sdk.Int, err error)
+		GetMaxSwappableLP(ctx sdk.Context, poolId uint64, tokens sdk.Coins) (maxLP sdk.Int, err error)
 
 		// Sender
 		LiquidityPoolTransactor
@@ -95,7 +96,11 @@ func (p poolService) GetTokenBalance(ctx sdk.Context, poolId uint64) (sdk.Coins,
 	return coins, nil
 }
 
-func (p poolService) GetSpotPrice(ctx sdk.Context, poolId uint64, tokenIn, tokenOut string) (sdk.Int, error) {
+func (p poolService) GetSpotPrice(
+	ctx sdk.Context,
+	poolId uint64,
+	tokenIn, tokenOut string,
+) (sdk.Int, error) {
 	pool, err := p.store.FetchPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
@@ -125,4 +130,38 @@ func (p poolService) GetSpotPrice(ctx sdk.Context, poolId uint64, tokenIn, token
 	).TruncateInt()
 
 	return spotPrice, nil
+}
+
+func (p poolService) GetMaxSwappableLP(
+	ctx sdk.Context,
+	poolId uint64,
+	tokens sdk.Coins,
+) (sdk.Int, error) {
+	pool, err := p.store.FetchPool(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	minPoolAmountOut := sdk.NewInt(0)
+	for _, token := range tokens {
+		record, ok := pool.Records[token.Denom]
+		if !ok {
+			return sdk.Int{}, sdkerrors.Wrapf(
+				types.ErrInvalidRequest,
+				"token %s is not bound to this pool", token.Denom,
+			)
+		}
+		// (lpOut / lpTotal) * record.Balance = tokenAmountIn
+		// (tokenAmountIn / record.Balance) * lpTotal = lpOut
+		poolAmountOut := token.Amount.ToDec().
+			Quo(record.Balance.ToDec()).
+			Mul(pool.Token.TotalSupply.ToDec()).
+			TruncateInt()
+		if minPoolAmountOut.Equal(sdk.NewInt(0)) ||
+			minPoolAmountOut.GT(poolAmountOut) {
+			minPoolAmountOut = poolAmountOut
+		}
+	}
+
+	return minPoolAmountOut, nil
 }

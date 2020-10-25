@@ -121,6 +121,20 @@ func (k keeper) SpotPrice(
 	return &types.QuerySpotPriceResponse{SpotPrice: spotPrice}, nil
 }
 
+func (k keeper) MaxSwappableLP(ctx context.Context, req *types.QueryMaxSwappableLPRequest) (*types.QueryMaxSwappableLPResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	maxLP, err := k.GetMaxSwappableLP(sdkCtx, req.PoolId, req.Tokens)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryMaxSwappableLPResponse{MaxLP: maxLP}, nil
+}
+
 func (k keeper) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
