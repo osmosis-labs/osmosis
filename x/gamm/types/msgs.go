@@ -56,7 +56,7 @@ func (m MsgJoinPool) ValidateBasic() error {
 	return nil // TODO
 }
 func (m MsgJoinPool) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgJoinPool) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{m.Sender} }
 
