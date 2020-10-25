@@ -87,6 +87,11 @@ func (p poolService) CreatePool(
 		lpToken.Denom = fmt.Sprintf("osmosis/custom/%s", lpToken.Denom)
 	}
 
+	totalWeight := sdk.NewDec(0)
+	for _, record := range records {
+		totalWeight = totalWeight.Add(record.DenormalizedWeight)
+	}
+
 	pool := types.Pool{
 		Id:      poolId,
 		SwapFee: swapFee,
@@ -95,7 +100,7 @@ func (p poolService) CreatePool(
 			Description: lpToken.Description,
 			TotalSupply: sdk.NewInt(0),
 		},
-		TotalWeight: sdk.NewInt(0),
+		TotalWeight: totalWeight,
 		Records:     records,
 	}
 
@@ -211,7 +216,7 @@ func (p poolService) JoinPoolWithExternAmountIn(
 		record.Balance.ToDec(),
 		record.DenormalizedWeight,
 		pool.Token.TotalSupply.ToDec(),
-		pool.TotalWeight.ToDec(),
+		pool.TotalWeight,
 		tokenAmountIn.ToDec(),
 		pool.SwapFee,
 	).TruncateInt()
@@ -261,7 +266,7 @@ func (p poolService) JoinPoolWithPoolAmountOut(
 		record.Balance.ToDec(),
 		record.DenormalizedWeight,
 		pool.Token.TotalSupply.ToDec(),
-		pool.TotalWeight.ToDec(),
+		pool.TotalWeight,
 		poolAmountOut.ToDec(),
 		pool.SwapFee,
 	).TruncateInt()
@@ -420,7 +425,7 @@ func (p poolService) ExitPoolWithPoolAmountIn(
 		record.Balance.ToDec(),
 		record.DenormalizedWeight,
 		pool.Token.TotalSupply.ToDec(),
-		pool.TotalWeight.ToDec(),
+		pool.TotalWeight,
 		poolAmountIn.ToDec(),
 		pool.SwapFee,
 	).TruncateInt()
@@ -475,7 +480,7 @@ func (p poolService) ExitPoolWithExternAmountOut(
 		record.Balance.ToDec(),
 		record.DenormalizedWeight,
 		pool.Token.TotalSupply.ToDec(),
-		pool.TotalWeight.ToDec(),
+		pool.TotalWeight,
 		tokenAmountOut.ToDec(),
 		pool.SwapFee,
 	).TruncateInt()
