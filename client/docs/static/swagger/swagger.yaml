@@ -245,6 +245,47 @@ paths:
           type: string
       tags:
         - Query
+  '/osmosis/gamm/v1beta1/{poolId}/max_swappable_lp':
+    get:
+      operationId: MaxSwappableLP
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              maxLP:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: poolId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   '/osmosis/gamm/v1beta1/{poolId}/prices':
     get:
       operationId: SpotPrice
@@ -8694,6 +8735,11 @@ definitions:
               type: string
             balance:
               type: string
+  osmosis.gamm.v1beta1.QueryMaxSwappableLPResponse:
+    type: object
+    properties:
+      maxLP:
+        type: string
   osmosis.gamm.v1beta1.QueryPoolResponse:
     type: object
     properties:
