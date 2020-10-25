@@ -208,9 +208,12 @@ func (p poolService) JoinPoolWithExternAmountIn(
 			"token %s is not bound to this pool", tokenIn,
 		)
 	}
-
-	// TODO:
-	// require(tokenAmountIn <= bmul(_records[tokenIn].balance, MAX_IN_RATIO), "ERR_MAX_IN_RATIO");
+	if tokenAmountIn.ToDec().GT(record.Balance.ToDec().Mul(maxInRatio)) {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrMaxInRatio,
+			"tokenAmount exceeds max in ratio",
+		)
+	}
 
 	poolAmountOut := calcPoolOutGivenSingleIn(
 		record.Balance.ToDec(),
@@ -283,8 +286,12 @@ func (p poolService) JoinPoolWithPoolAmountOut(
 		)
 	}
 
-	// TODO:
-	// require(tokenAmountIn <= bmul(_records[tokenIn].balance, MAX_IN_RATIO), "ERR_MAX_IN_RATIO");
+	if tokenAmountIn.ToDec().GT(record.Balance.ToDec().Mul(maxInRatio)) {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrMaxInRatio,
+			"tokenAmount exceeds max in ratio",
+		)
+	}
 
 	if err := p.joinPool(
 		ctx,
@@ -435,9 +442,11 @@ func (p poolService) ExitPoolWithPoolAmountIn(
 			"tokenAmount minimum limit has exceeded",
 		)
 	}
-
-	// TODO:
-	// require(tokenAmountOut <= bmul(_records[tokenOut].balance, MAX_OUT_RATIO), "ERR_MAX_OUT_RATIO");
+	if tokenAmountOut.ToDec().GT(record.Balance.ToDec().Mul(maxOutRatio)) {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrMaxOutRatio,
+			"tokenAmount exceeds max out ratio")
+	}
 
 	if err := p.exitPool(
 		ctx,
@@ -472,9 +481,11 @@ func (p poolService) ExitPoolWithExternAmountOut(
 			"token %s is not bound to this pool", tokenOut,
 		)
 	}
-
-	// TOOD:
-	// require(tokenAmountOut <= bmul(_records[tokenOut].balance, MAX_OUT_RATIO), "ERR_MAX_OUT_RATIO");
+	if tokenAmountOut.ToDec().GT(record.Balance.ToDec().Mul(maxOutRatio)) {
+		return sdk.Int{}, sdkerrors.Wrapf(
+			types.ErrMaxOutRatio,
+			"tokenAmount exceeds max out ratio")
+	}
 
 	poolAmountIn := calcPoolInGivenSingleOut(
 		record.Balance.ToDec(),
