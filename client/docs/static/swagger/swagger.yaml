@@ -134,6 +134,117 @@ paths:
           format: uint64
       tags:
         - Query
+  '/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in':
+    get:
+      summary: Estimate the swap.
+      operationId: EstimateSwapExactAmountIn
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tokenAmountOut:
+                type: string
+              spotPriceAfter:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: poolId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: sender
+          in: query
+          required: false
+          type: string
+        - name: tokenIn
+          in: query
+          required: false
+          type: string
+        - name: tokenOutDenom
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  '/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out':
+    get:
+      operationId: EstimateSwapExactAmountOut
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tokenAmountIn:
+                type: string
+              spotPriceAfter:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: poolId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: sender
+          in: query
+          required: false
+          type: string
+        - name: tokenInDenom
+          in: query
+          required: false
+          type: string
+        - name: tokenOut
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   '/osmosis/gamm/v1beta1/{poolId}/prices':
     get:
       operationId: SpotPrice
@@ -8663,6 +8774,20 @@ definitions:
     type: object
     properties:
       spotPrice:
+        type: string
+  osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse:
+    type: object
+    properties:
+      tokenAmountOut:
+        type: string
+      spotPriceAfter:
+        type: string
+  osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse:
+    type: object
+    properties:
+      tokenAmountIn:
+        type: string
+      spotPriceAfter:
         type: string
   osmosis.gamm.v1beta1.QuerySwapFeeResponse:
     type: object

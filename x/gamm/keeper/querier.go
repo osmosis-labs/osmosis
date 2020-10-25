@@ -120,3 +120,59 @@ func (k keeper) SpotPrice(
 	}
 	return &types.QuerySpotPriceResponse{SpotPrice: spotPrice}, nil
 }
+
+func (k keeper) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	sender, err := sdk.AccAddressFromBech32(req.Sender)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid bech32 address")
+	}
+
+	tokenIn, err := sdk.ParseCoin(req.TokenIn)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid coin format")
+	}
+
+	// TODO: Max price를 제대로 넣으려면 256비트 int의 최대값을 구해야하는데...
+	tokenAmountOut, spotPriceAfter, err := k.SwapExactAmountIn(sdkCtx, sender, req.PoolId, tokenIn, req.TokenOutDenom, sdk.ZeroInt(), sdk.NewIntWithDecimal(1000000, 18))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QuerySwapExactAmountInResponse{
+		TokenAmountOut: tokenAmountOut.String(),
+		SpotPriceAfter: spotPriceAfter.String(),
+	}, nil
+}
+
+func (k keeper) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	sender, err := sdk.AccAddressFromBech32(req.Sender)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid bech32 address")
+	}
+
+	tokenOut, err := sdk.ParseCoin(req.TokenOut)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid coin format")
+	}
+
+	// TODO: Max price를 제대로 넣으려면 256비트 int의 최대값을 구해야하는데...
+	tokenAmountIn, spotPriceAfter, err := k.SwapExactAmountOut(sdkCtx, sender, req.PoolId, req.TokenInDenom, sdk.NewIntWithDecimal(1000000, 18), tokenOut, sdk.NewIntWithDecimal(1000000, 18))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QuerySwapExactAmountOutResponse{
+		TokenAmountIn:  tokenAmountIn.String(),
+		SpotPriceAfter: spotPriceAfter.String(),
+	}, nil
+}

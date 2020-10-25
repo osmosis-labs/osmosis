@@ -28,6 +28,14 @@ service Query {
     rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
         option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/prices";
     }
+
+    // Estimate the swap.
+    rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest) returns (QuerySwapExactAmountInResponse) {
+        option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in";
+    }
+    rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest) returns (QuerySwapExactAmountOutResponse) {
+        option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out";
+    }
 }
 
 //=============================== Pool
@@ -131,3 +139,52 @@ message QuerySpotPriceResponse {
         (gogoproto.nullable) = false
     ];
 }
+
+message QuerySwapExactAmountInRequest {
+    string sender = 1 [
+        (gogoproto.moretags) = "yaml:\"sender\""
+    ];
+    uint64 poolId = 2 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+    string tokenIn = 3 [
+        (gogoproto.moretags) = "yaml:\"token_in\""
+    ];
+    string tokenOutDenom = 4 [
+        (gogoproto.moretags) = "yaml:\"token_out_denom\""
+    ];
+}
+
+message QuerySwapExactAmountInResponse {
+    string tokenAmountOut = 1 [
+        (gogoproto.moretags) = "yaml:\"token_amount_out\""
+    ];
+    string spotPriceAfter = 2 [
+        (gogoproto.moretags) = "yaml:\"spot_price_after\""
+    ];
+}
+
+message QuerySwapExactAmountOutRequest {
+    string sender = 1 [
+        (gogoproto.moretags) = "yaml:\"sender\""
+    ];
+    uint64 poolId = 2 [
+        (gogoproto.moretags) = "yaml:\"pool_id\""
+    ];
+    string tokenInDenom = 3 [
+        (gogoproto.moretags) = "yaml:\"token_in_denom\""
+    ];
+    string tokenOut = 4 [
+        (gogoproto.moretags) = "yaml:\"token_out\""
+    ];
+}
+
+message QuerySwapExactAmountOutResponse {
+    string tokenAmountIn = 1 [
+        (gogoproto.moretags) = "yaml:\"token_amount_in\""
+    ];
+    string spotPriceAfter = 2 [
+        (gogoproto.moretags) = "yaml:\"spot_price_after\""
+    ];
+}
+
