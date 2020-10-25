@@ -52,8 +52,7 @@ func handleCreatePool(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreatePool
 }
 
 func handleSwapExactAmountIn(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSwapExactAmountIn) (*sdk.Result, error) {
-	// TODO: 밑의 메소드에서 실제 자산을 옮기지않음. 자산 처리를 키퍼의 다른 함수나 이 핸들러 안에서 해야됨 일단은 이렇게 놔둠.
-	_, _, err := k.SwapExactAmountIn(ctx, msg.Sender, msg.TargetPoolId, msg.TokenIn, msg.TokenAmountIn, msg.TokenOut, msg.MinAmountOut, msg.MaxPrice)
+	_, _, err := k.SwapExactAmountIn(ctx, msg.Sender, msg.TargetPoolId, msg.TokenIn, msg.TokenOutDenom, msg.MinAmountOut, msg.MaxPrice)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +72,7 @@ func handleSwapExactAmountIn(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSwa
 }
 
 func handleSwapExactAmountOut(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSwapExactAmountOut) (*sdk.Result, error) {
-	// TODO: 밑의 메소드에서 실제 자산을 옮기지않음. 자산 처리를 키퍼의 다른 함수나 이 핸들러 안에서 해야됨 일단은 이렇게 놔둠.
-	_, _, err := k.SwapExactAmountOut(ctx, msg.Sender, msg.TargetPoolId, msg.TokenIn, msg.MaxAmountIn, msg.TokenOut, msg.TokenAmountOut, msg.MaxPrice)
+	_, _, err := k.SwapExactAmountOut(ctx, msg.Sender, msg.TargetPoolId, msg.TokenInDenom, msg.MaxAmountIn, msg.TokenOut, msg.MaxPrice)
 	if err != nil {
 		return nil, err
 	}
