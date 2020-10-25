@@ -10,13 +10,13 @@ import (
 type (
 	Service interface {
 		// Viewer
-		GetPool(sdk.Context, uint64) (types.Pool, error)
+		GetPool(ctx sdk.Context, poolId uint64) (pool types.Pool, err error)
 		// TODO: handle the pagination. For now, just returns the all pools.
-		GetPools(sdk.Context) ([]types.Pool, error)
-		GetSwapFee(sdk.Context, uint64) (sdk.Dec, error)
-		GetShareInfo(sdk.Context, uint64) (types.LP, error)
-		GetTokenBalance(sdk.Context, uint64) (sdk.Coins, error)
-		GetSpotPrice(sdk.Context, uint64, string, string) (sdk.Int, error)
+		GetPools(ctx sdk.Context) (pools []types.Pool, err error)
+		GetSwapFee(ctx sdk.Context, poolId uint64) (swapFee sdk.Dec, err error)
+		GetShareInfo(ctx sdk.Context, poolId uint64) (lp types.LP, err error)
+		GetTokenBalance(ctx sdk.Context, poolId uint64) (tokenBalance sdk.Coins, err error)
+		GetSpotPrice(ctx sdk.Context, poolId uint64, string, token string) (spotPrice sdk.Int, err error)
 
 		// Sender
 		LiquidityPoolTransactor
