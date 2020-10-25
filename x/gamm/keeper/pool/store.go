@@ -41,7 +41,7 @@ func (ps poolStore) GetNextPoolNumber(ctx sdk.Context) uint64 {
 	bz := store.Get(types.GlobalPoolNumber)
 	if bz == nil {
 		// initialize the account numbers
-		poolNumber = 0
+		poolNumber = 1
 	} else {
 		val := gogotypes.UInt64Value{}
 
