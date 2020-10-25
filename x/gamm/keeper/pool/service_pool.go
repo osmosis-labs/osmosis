@@ -20,6 +20,44 @@ type LiquidityPoolTransactor interface {
 
 var _ LiquidityPoolTransactor = poolService{}
 
+func (p poolService) joinPool(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	pool types.Pool,
+	swapTargets sdk.Coins,
+	swapAmount sdk.Int,
+) error {
+	// process token transfers
+	poolShare := lpService{
+		denom:      pool.Token.Denom,
+		bankKeeper: p.bankKeeper,
+	}
+	if err := poolShare.mintPoolShare(ctx, swapAmount); err != nil {
+		return err
+	}
+	if err := poolShare.pushPoolShare(ctx, sender, swapAmount); err != nil {
+		return err
+	}
+	if err := p.bankKeeper.SendCoinsFromAccountToModule(
+		ctx,
+		sender,
+		types.ModuleName,
+		swapTargets,
+	); err != nil {
+		return err
+	}
+
+	// save changes
+	pool.Token.TotalSupply = pool.Token.TotalSupply.Add(swapAmount)
+	for _, target := range swapTargets {
+		record := pool.Records[target.Denom]
+		record.Balance = record.Balance.Add(target.Amount)
+		pool.Records[target.Denom] = record
+	}
+	p.store.StorePool(ctx, pool)
+	return nil
+}
+
 func (p poolService) CreatePool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -75,65 +113,11 @@ func (p poolService) CreatePool(
 	}
 	coins = coins.Sort()
 
-	if err := p.bankKeeper.SendCoinsFromAccountToModule(
-		ctx,
-		sender,
-		types.ModuleName,
-		coins,
-	); err != nil {
-		return 0, err
-	}
-
-	initialSupply := sdk.NewIntWithDecimal(100, 18)
-	lp := lpService{
-		denom:      pool.Token.Denom,
-		bankKeeper: p.bankKeeper,
-	}
-	if err := lp.mintPoolShare(ctx, initialSupply); err != nil {
-		return 0, err
-	}
-	if err := lp.pushPoolShare(ctx, sender, initialSupply); err != nil {
+	initialSupply := sdk.NewIntWithDecimal(100, 6)
+	if err := p.joinPool(ctx, sender, pool, coins, initialSupply); err != nil {
 		return 0, err
 	}
 	return pool.Id, nil
-}
-
-func (p poolService) joinPool(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	pool types.Pool,
-	swapTargets sdk.Coins,
-	swapAmount sdk.Int,
-) error {
-	// process token transfers
-	poolShare := lpService{
-		denom:      pool.Token.Denom,
-		bankKeeper: p.bankKeeper,
-	}
-	if err := poolShare.mintPoolShare(ctx, swapAmount); err != nil {
-		return err
-	}
-	if err := poolShare.pushPoolShare(ctx, sender, swapAmount); err != nil {
-		return err
-	}
-	if err := p.bankKeeper.SendCoinsFromAccountToModule(
-		ctx,
-		sender,
-		types.ModuleName,
-		swapTargets,
-	); err != nil {
-		return err
-	}
-
-	// save changes
-	pool.Token.TotalSupply = pool.Token.TotalSupply.Add(swapAmount)
-	for _, target := range swapTargets {
-		record := pool.Records[target.Denom]
-		record.Balance = record.Balance.Add(target.Amount)
-		pool.Records[target.Denom] = record
-	}
-	p.store.StorePool(ctx, pool)
-	return nil
 }
 
 func (p poolService) JoinPool(
