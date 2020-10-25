@@ -8,6 +8,7 @@ var (
 	ErrMathApprox     = sdkerrors.Register(ModuleName, 3, "math approx error")
 	ErrLimitExceed    = sdkerrors.Register(ModuleName, 4, "limit exceeded")
 	ErrInvalidRequest = sdkerrors.Register(ModuleName, 5, "bad request")
+	ErrDenomNotExist  = sdkerrors.Register(ModuleName, 6, "denom doesn't exist on pool")
 
 	ErrNotBound      = sdkerrors.Register(ModuleName, 100, "ERR_NOT_BOUND")
 	ErrMaxInRatio    = sdkerrors.Register(ModuleName, 101, "ERR_MAX_IN_RATIO")

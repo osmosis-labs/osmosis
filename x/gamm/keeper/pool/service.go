@@ -141,8 +141,14 @@ func (p poolService) SwapExactAmountIn(
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
-	inRecord := pool.Records[tokenIn.Denom]
-	outRecord := pool.Records[tokenOutDenom]
+	inRecord, ok := pool.Records[tokenIn.Denom]
+	if !ok {
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrDenomNotExist, "%s doesn't exist on pool", tokenIn.Denom)
+	}
+	outRecord, ok := pool.Records[tokenOutDenom]
+	if !ok {
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrDenomNotExist, "%s doesn't exist on pool", tokenOutDenom)
+	}
 
 	tokenAmountIn := tokenIn.Amount
 
@@ -230,8 +236,14 @@ func (p poolService) SwapExactAmountOut(
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
-	inRecord := pool.Records[tokenInDenom]
-	outRecord := pool.Records[tokenOut.Denom]
+	inRecord, ok := pool.Records[tokenInDenom]
+	if !ok {
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrDenomNotExist, "%s doesn't exist on pool", tokenInDenom)
+	}
+	outRecord, ok := pool.Records[tokenOut.Denom]
+	if !ok {
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrDenomNotExist, "%s doesn't exist on pool", tokenOut.Denom)
+	}
 
 	if tokenOut.Amount.GT(maxOutRatio.MulInt(outRecord.Balance).TruncateInt()) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrMaxOutRatio
