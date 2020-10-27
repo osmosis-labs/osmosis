@@ -123,6 +123,12 @@ func (p poolService) CreatePool(
 			"token info length should be at least 2",
 		)
 	}
+	if len(bindTokens) > 8 {
+		return 0, sdkerrors.Wrapf(
+			types.ErrInvalidRequest,
+			"token info length should be at maximum 8",
+		)
+	}
 
 	records := make(map[string]types.Record, len(bindTokens))
 	for _, info := range bindTokens {
