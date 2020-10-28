@@ -235,9 +235,6 @@ func (p poolService) JoinPool(
 		if tokenAmountIn.GT(maxAmountIn.MaxAmount) {
 			return sdkerrors.Wrapf(types.ErrLimitExceed, "max amount limited")
 		}
-		record.Balance = record.Balance.Add(tokenAmountIn)
-		pool.Records[tokenDenom] = record // update record
-
 		swapTargets = append(swapTargets, sdk.Coin{
 			Denom:  tokenDenom,
 			Amount: tokenAmountIn,
