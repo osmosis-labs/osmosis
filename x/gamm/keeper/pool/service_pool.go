@@ -142,7 +142,7 @@ func (p poolService) CreatePool(
 	if lpToken.Denom == "" {
 		lpToken.Denom = fmt.Sprintf("osmosis/pool/%d", poolId)
 	} else {
-		lpToken.Denom = fmt.Sprintf("osmosis/custom/%s", lpToken.Denom)
+		lpToken.Denom = fmt.Sprintf("osmosis/custom/%s/%d", lpToken.Denom, poolId)
 	}
 
 	totalWeight := sdk.NewDec(0)
