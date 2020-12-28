@@ -37,8 +37,7 @@ func NewCreatePoolCmd() *cobra.Command {
 		Short: "create a new pool and provide the liquidity to it",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -70,8 +69,7 @@ func NewJoinPoolCmd() *cobra.Command {
 		Short: "join a new pool and provide the liquidity to it",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -103,8 +101,7 @@ func NewExitPoolCmd() *cobra.Command {
 		Short: "exit a new pool and withdraw the liquidity from it",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -149,7 +146,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 
 	bindTokensSdk := sdk.Coins{}
 	for i := 0; i < len(bindTokenStrs); i++ {
-		parsed, err := sdk.ParseCoin(bindTokenStrs[i])
+		parsed, err := sdk.ParseCoinNormalized(bindTokenStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
@@ -233,7 +230,7 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	maxAountsInSdk := sdk.Coins{}
 	for i := 0; i < len(maxAmountsInStrs); i++ {
-		parsed, err := sdk.ParseCoin(maxAmountsInStrs[i])
+		parsed, err := sdk.ParseCoinNormalized(maxAmountsInStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
@@ -285,7 +282,7 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	minAountsOutSdk := sdk.Coins{}
 	for i := 0; i < len(minAmountsOutStrs); i++ {
-		parsed, err := sdk.ParseCoin(minAmountsOutStrs[i])
+		parsed, err := sdk.ParseCoinNormalized(minAmountsOutStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}

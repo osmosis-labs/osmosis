@@ -147,7 +147,7 @@ func (k keeper) EstimateSwapExactAmountIn(ctx context.Context, req *types.QueryS
 		return nil, status.Error(codes.InvalidArgument, "invalid bech32 address")
 	}
 
-	tokenIn, err := sdk.ParseCoin(req.TokenIn)
+	tokenIn, err := sdk.ParseCoinNormalized(req.TokenIn)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid coin format")
 	}
@@ -175,7 +175,7 @@ func (k keeper) EstimateSwapExactAmountOut(ctx context.Context, req *types.Query
 		return nil, status.Error(codes.InvalidArgument, "invalid bech32 address")
 	}
 
-	tokenOut, err := sdk.ParseCoin(req.TokenOut)
+	tokenOut, err := sdk.ParseCoinNormalized(req.TokenOut)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid coin format")
 	}
