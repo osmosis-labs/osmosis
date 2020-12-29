@@ -6,6 +6,18 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
 
+service Msg {
+    rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
+    rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
+    rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+    rpc SwapExactAmountIn(MsgSwapExactAmountIn) returns (MsgSwapExactAmountInResponse);
+    rpc SwapExactAmountOut(MsgSwapExactAmountOut) returns (MsgSwapExactAmountOutResponse);
+    rpc JoinSwapExternAmountIn(MsgJoinSwapExternAmountIn) returns (MsgJoinSwapExternAmountInResponse);
+    rpc JoinSwapPoolAmountOut(MsgJoinSwapPoolAmountOut) returns (MsgJoinSwapPoolAmountOut);
+    rpc ExitSwapExternAmountOut(MsgExitSwapExternAmountOut) returns (MsgExitSwapExternAmountOut);
+    rpc ExitSwapPoolAmountIn(MsgExitSwapPoolAmountIn) returns (MsgExitSwapPoolAmountIn);
+}
+
 // ===================== MsgJoinPool
 message MaxAmountIn {
     string denom = 1 [
@@ -38,6 +50,8 @@ message MsgJoinPool {
     ];
 }
 
+message MsgJoinPoolResponse {}
+
 // ===================== MsgExitPool
 message MinAmountOut {
     string denom = 1 [
@@ -69,6 +83,8 @@ message MsgExitPool {
         (gogoproto.nullable) = false
     ];
 }
+
+message MsgExitPoolResponse {}
 
 // ===================== MsgCreatePool
 message LPTokenInfo {
@@ -119,6 +135,8 @@ message MsgCreatePool {
     ];
 }
 
+message MsgCreatePoolResponse {}
+
 // ===================== MsgSwapExactAmountIn
 message MsgSwapExactAmountIn {
     bytes sender = 1 [
@@ -147,6 +165,8 @@ message MsgSwapExactAmountIn {
         (gogoproto.nullable) = false
     ];
 }
+
+message MsgSwapExactAmountInResponse {}
 
 // ===================== MsgSwapExactAmountOut
 message MsgSwapExactAmountOut {
@@ -177,6 +197,8 @@ message MsgSwapExactAmountOut {
     ];
 }
 
+message MsgSwapExactAmountOutResponse {}
+
 // ===================== MsgJoinSwapExternAmountIn
 message MsgJoinSwapExternAmountIn {
     bytes sender = 1 [
@@ -200,6 +222,8 @@ message MsgJoinSwapExternAmountIn {
         (gogoproto.nullable) = false
     ];
 }
+
+message MsgJoinSwapExternAmountInResponse {}
 
 // ===================== MsgJoinSwapPoolAmountOut
 message MsgJoinSwapPoolAmountOut {
@@ -225,6 +249,8 @@ message MsgJoinSwapPoolAmountOut {
     ];
 }
 
+message MsgJoinSwapPoolAmountOutResponse {}
+
 // ===================== MsgExitSwapExternAmountOut
 message MsgExitSwapExternAmountOut {
     bytes sender = 1 [
@@ -249,6 +275,8 @@ message MsgExitSwapExternAmountOut {
     ];
 }
 
+message MsgExitSwapExternAmountOutResponse {}
+
 // ===================== MsgExitSwapPoolAmountIn
 message MsgExitSwapPoolAmountIn {
     bytes sender = 1 [
@@ -272,3 +300,5 @@ message MsgExitSwapPoolAmountIn {
         (gogoproto.nullable) = false
     ];
 }
+
+message MsgExitSwapPoolAmountInResponse {}

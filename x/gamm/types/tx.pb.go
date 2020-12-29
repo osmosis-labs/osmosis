@@ -4,15 +4,19 @@
 package types
 
 import (
+	context "context"
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
 	_ "github.com/cosmos/cosmos-sdk/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -133,6 +137,42 @@ func (m *MsgJoinPool) GetMaxAmountsIn() []MaxAmountIn {
 	return nil
 }
 
+type MsgJoinPoolResponse struct {
+}
+
+func (m *MsgJoinPoolResponse) Reset()         { *m = MsgJoinPoolResponse{} }
+func (m *MsgJoinPoolResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgJoinPoolResponse) ProtoMessage()    {}
+func (*MsgJoinPoolResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{2}
+}
+func (m *MsgJoinPoolResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgJoinPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgJoinPoolResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgJoinPoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgJoinPoolResponse.Merge(m, src)
+}
+func (m *MsgJoinPoolResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgJoinPoolResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgJoinPoolResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgJoinPoolResponse proto.InternalMessageInfo
+
 // ===================== MsgExitPool
 type MinAmountOut struct {
 	Denom     string                                 `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
@@ -143,7 +183,7 @@ func (m *MinAmountOut) Reset()         { *m = MinAmountOut{} }
 func (m *MinAmountOut) String() string { return proto.CompactTextString(m) }
 func (*MinAmountOut) ProtoMessage()    {}
 func (*MinAmountOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{2}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{3}
 }
 func (m *MinAmountOut) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -190,7 +230,7 @@ func (m *MsgExitPool) Reset()         { *m = MsgExitPool{} }
 func (m *MsgExitPool) String() string { return proto.CompactTextString(m) }
 func (*MsgExitPool) ProtoMessage()    {}
 func (*MsgExitPool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{3}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{4}
 }
 func (m *MsgExitPool) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -240,6 +280,42 @@ func (m *MsgExitPool) GetMinAmountsOut() []MinAmountOut {
 	return nil
 }
 
+type MsgExitPoolResponse struct {
+}
+
+func (m *MsgExitPoolResponse) Reset()         { *m = MsgExitPoolResponse{} }
+func (m *MsgExitPoolResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExitPoolResponse) ProtoMessage()    {}
+func (*MsgExitPoolResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{5}
+}
+func (m *MsgExitPoolResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitPoolResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitPoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitPoolResponse.Merge(m, src)
+}
+func (m *MsgExitPoolResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitPoolResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitPoolResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitPoolResponse proto.InternalMessageInfo
+
 // ===================== MsgCreatePool
 type LPTokenInfo struct {
 	Denom       string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
@@ -250,7 +326,7 @@ func (m *LPTokenInfo) Reset()         { *m = LPTokenInfo{} }
 func (m *LPTokenInfo) String() string { return proto.CompactTextString(m) }
 func (*LPTokenInfo) ProtoMessage()    {}
 func (*LPTokenInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{4}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{6}
 }
 func (m *LPTokenInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -303,7 +379,7 @@ func (m *BindTokenInfo) Reset()         { *m = BindTokenInfo{} }
 func (m *BindTokenInfo) String() string { return proto.CompactTextString(m) }
 func (*BindTokenInfo) ProtoMessage()    {}
 func (*BindTokenInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{5}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{7}
 }
 func (m *BindTokenInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -350,7 +426,7 @@ func (m *MsgCreatePool) Reset()         { *m = MsgCreatePool{} }
 func (m *MsgCreatePool) String() string { return proto.CompactTextString(m) }
 func (*MsgCreatePool) ProtoMessage()    {}
 func (*MsgCreatePool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{6}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{8}
 }
 func (m *MsgCreatePool) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -400,6 +476,42 @@ func (m *MsgCreatePool) GetBindTokens() []BindTokenInfo {
 	return nil
 }
 
+type MsgCreatePoolResponse struct {
+}
+
+func (m *MsgCreatePoolResponse) Reset()         { *m = MsgCreatePoolResponse{} }
+func (m *MsgCreatePoolResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePoolResponse) ProtoMessage()    {}
+func (*MsgCreatePoolResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{9}
+}
+func (m *MsgCreatePoolResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePoolResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePoolResponse.Merge(m, src)
+}
+func (m *MsgCreatePoolResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePoolResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePoolResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePoolResponse proto.InternalMessageInfo
+
 // ===================== MsgSwapExactAmountIn
 type MsgSwapExactAmountIn struct {
 	Sender        github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty" yaml:"sender"`
@@ -414,7 +526,7 @@ func (m *MsgSwapExactAmountIn) Reset()         { *m = MsgSwapExactAmountIn{} }
 func (m *MsgSwapExactAmountIn) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapExactAmountIn) ProtoMessage()    {}
 func (*MsgSwapExactAmountIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{7}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{10}
 }
 func (m *MsgSwapExactAmountIn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -464,6 +576,42 @@ func (m *MsgSwapExactAmountIn) GetTokenOutDenom() string {
 	return ""
 }
 
+type MsgSwapExactAmountInResponse struct {
+}
+
+func (m *MsgSwapExactAmountInResponse) Reset()         { *m = MsgSwapExactAmountInResponse{} }
+func (m *MsgSwapExactAmountInResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSwapExactAmountInResponse) ProtoMessage()    {}
+func (*MsgSwapExactAmountInResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{11}
+}
+func (m *MsgSwapExactAmountInResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSwapExactAmountInResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSwapExactAmountInResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSwapExactAmountInResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSwapExactAmountInResponse.Merge(m, src)
+}
+func (m *MsgSwapExactAmountInResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSwapExactAmountInResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSwapExactAmountInResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSwapExactAmountInResponse proto.InternalMessageInfo
+
 // ===================== MsgSwapExactAmountOut
 type MsgSwapExactAmountOut struct {
 	Sender       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty" yaml:"sender"`
@@ -478,7 +626,7 @@ func (m *MsgSwapExactAmountOut) Reset()         { *m = MsgSwapExactAmountOut{} }
 func (m *MsgSwapExactAmountOut) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapExactAmountOut) ProtoMessage()    {}
 func (*MsgSwapExactAmountOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{8}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{12}
 }
 func (m *MsgSwapExactAmountOut) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -528,6 +676,42 @@ func (m *MsgSwapExactAmountOut) GetTokenInDenom() string {
 	return ""
 }
 
+type MsgSwapExactAmountOutResponse struct {
+}
+
+func (m *MsgSwapExactAmountOutResponse) Reset()         { *m = MsgSwapExactAmountOutResponse{} }
+func (m *MsgSwapExactAmountOutResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSwapExactAmountOutResponse) ProtoMessage()    {}
+func (*MsgSwapExactAmountOutResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{13}
+}
+func (m *MsgSwapExactAmountOutResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSwapExactAmountOutResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSwapExactAmountOutResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSwapExactAmountOutResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSwapExactAmountOutResponse.Merge(m, src)
+}
+func (m *MsgSwapExactAmountOutResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSwapExactAmountOutResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSwapExactAmountOutResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSwapExactAmountOutResponse proto.InternalMessageInfo
+
 // ===================== MsgJoinSwapExternAmountIn
 type MsgJoinSwapExternAmountIn struct {
 	Sender           github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty" yaml:"sender"`
@@ -541,7 +725,7 @@ func (m *MsgJoinSwapExternAmountIn) Reset()         { *m = MsgJoinSwapExternAmou
 func (m *MsgJoinSwapExternAmountIn) String() string { return proto.CompactTextString(m) }
 func (*MsgJoinSwapExternAmountIn) ProtoMessage()    {}
 func (*MsgJoinSwapExternAmountIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{9}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{14}
 }
 func (m *MsgJoinSwapExternAmountIn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -591,6 +775,42 @@ func (m *MsgJoinSwapExternAmountIn) GetTokenIn() string {
 	return ""
 }
 
+type MsgJoinSwapExternAmountInResponse struct {
+}
+
+func (m *MsgJoinSwapExternAmountInResponse) Reset()         { *m = MsgJoinSwapExternAmountInResponse{} }
+func (m *MsgJoinSwapExternAmountInResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgJoinSwapExternAmountInResponse) ProtoMessage()    {}
+func (*MsgJoinSwapExternAmountInResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{15}
+}
+func (m *MsgJoinSwapExternAmountInResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgJoinSwapExternAmountInResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgJoinSwapExternAmountInResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgJoinSwapExternAmountInResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgJoinSwapExternAmountInResponse.Merge(m, src)
+}
+func (m *MsgJoinSwapExternAmountInResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgJoinSwapExternAmountInResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgJoinSwapExternAmountInResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgJoinSwapExternAmountInResponse proto.InternalMessageInfo
+
 // ===================== MsgJoinSwapPoolAmountOut
 type MsgJoinSwapPoolAmountOut struct {
 	Sender        github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty" yaml:"sender"`
@@ -604,7 +824,7 @@ func (m *MsgJoinSwapPoolAmountOut) Reset()         { *m = MsgJoinSwapPoolAmountO
 func (m *MsgJoinSwapPoolAmountOut) String() string { return proto.CompactTextString(m) }
 func (*MsgJoinSwapPoolAmountOut) ProtoMessage()    {}
 func (*MsgJoinSwapPoolAmountOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{10}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{16}
 }
 func (m *MsgJoinSwapPoolAmountOut) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -654,6 +874,42 @@ func (m *MsgJoinSwapPoolAmountOut) GetTokenIn() string {
 	return ""
 }
 
+type MsgJoinSwapPoolAmountOutResponse struct {
+}
+
+func (m *MsgJoinSwapPoolAmountOutResponse) Reset()         { *m = MsgJoinSwapPoolAmountOutResponse{} }
+func (m *MsgJoinSwapPoolAmountOutResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgJoinSwapPoolAmountOutResponse) ProtoMessage()    {}
+func (*MsgJoinSwapPoolAmountOutResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{17}
+}
+func (m *MsgJoinSwapPoolAmountOutResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgJoinSwapPoolAmountOutResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgJoinSwapPoolAmountOutResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgJoinSwapPoolAmountOutResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgJoinSwapPoolAmountOutResponse.Merge(m, src)
+}
+func (m *MsgJoinSwapPoolAmountOutResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgJoinSwapPoolAmountOutResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgJoinSwapPoolAmountOutResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgJoinSwapPoolAmountOutResponse proto.InternalMessageInfo
+
 // ===================== MsgExitSwapExternAmountOut
 type MsgExitSwapExternAmountOut struct {
 	Sender       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty" yaml:"sender"`
@@ -667,7 +923,7 @@ func (m *MsgExitSwapExternAmountOut) Reset()         { *m = MsgExitSwapExternAmo
 func (m *MsgExitSwapExternAmountOut) String() string { return proto.CompactTextString(m) }
 func (*MsgExitSwapExternAmountOut) ProtoMessage()    {}
 func (*MsgExitSwapExternAmountOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{11}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{18}
 }
 func (m *MsgExitSwapExternAmountOut) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -717,6 +973,42 @@ func (m *MsgExitSwapExternAmountOut) GetTokenOut() string {
 	return ""
 }
 
+type MsgExitSwapExternAmountOutResponse struct {
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) Reset()         { *m = MsgExitSwapExternAmountOutResponse{} }
+func (m *MsgExitSwapExternAmountOutResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExitSwapExternAmountOutResponse) ProtoMessage()    {}
+func (*MsgExitSwapExternAmountOutResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{19}
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitSwapExternAmountOutResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitSwapExternAmountOutResponse.Merge(m, src)
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitSwapExternAmountOutResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitSwapExternAmountOutResponse proto.InternalMessageInfo
+
 // ===================== MsgExitSwapPoolAmountIn
 type MsgExitSwapPoolAmountIn struct {
 	Sender          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty" yaml:"sender"`
@@ -730,7 +1022,7 @@ func (m *MsgExitSwapPoolAmountIn) Reset()         { *m = MsgExitSwapPoolAmountIn
 func (m *MsgExitSwapPoolAmountIn) String() string { return proto.CompactTextString(m) }
 func (*MsgExitSwapPoolAmountIn) ProtoMessage()    {}
 func (*MsgExitSwapPoolAmountIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{12}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{20}
 }
 func (m *MsgExitSwapPoolAmountIn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -780,95 +1072,522 @@ func (m *MsgExitSwapPoolAmountIn) GetTokenOut() string {
 	return ""
 }
 
+type MsgExitSwapPoolAmountInResponse struct {
+}
+
+func (m *MsgExitSwapPoolAmountInResponse) Reset()         { *m = MsgExitSwapPoolAmountInResponse{} }
+func (m *MsgExitSwapPoolAmountInResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExitSwapPoolAmountInResponse) ProtoMessage()    {}
+func (*MsgExitSwapPoolAmountInResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{21}
+}
+func (m *MsgExitSwapPoolAmountInResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitSwapPoolAmountInResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitSwapPoolAmountInResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitSwapPoolAmountInResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitSwapPoolAmountInResponse.Merge(m, src)
+}
+func (m *MsgExitSwapPoolAmountInResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitSwapPoolAmountInResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitSwapPoolAmountInResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitSwapPoolAmountInResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MaxAmountIn)(nil), "osmosis.gamm.v1beta1.MaxAmountIn")
 	proto.RegisterType((*MsgJoinPool)(nil), "osmosis.gamm.v1beta1.MsgJoinPool")
+	proto.RegisterType((*MsgJoinPoolResponse)(nil), "osmosis.gamm.v1beta1.MsgJoinPoolResponse")
 	proto.RegisterType((*MinAmountOut)(nil), "osmosis.gamm.v1beta1.MinAmountOut")
 	proto.RegisterType((*MsgExitPool)(nil), "osmosis.gamm.v1beta1.MsgExitPool")
+	proto.RegisterType((*MsgExitPoolResponse)(nil), "osmosis.gamm.v1beta1.MsgExitPoolResponse")
 	proto.RegisterType((*LPTokenInfo)(nil), "osmosis.gamm.v1beta1.LPTokenInfo")
 	proto.RegisterType((*BindTokenInfo)(nil), "osmosis.gamm.v1beta1.BindTokenInfo")
 	proto.RegisterType((*MsgCreatePool)(nil), "osmosis.gamm.v1beta1.MsgCreatePool")
+	proto.RegisterType((*MsgCreatePoolResponse)(nil), "osmosis.gamm.v1beta1.MsgCreatePoolResponse")
 	proto.RegisterType((*MsgSwapExactAmountIn)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountIn")
+	proto.RegisterType((*MsgSwapExactAmountInResponse)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountInResponse")
 	proto.RegisterType((*MsgSwapExactAmountOut)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountOut")
+	proto.RegisterType((*MsgSwapExactAmountOutResponse)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountOutResponse")
 	proto.RegisterType((*MsgJoinSwapExternAmountIn)(nil), "osmosis.gamm.v1beta1.MsgJoinSwapExternAmountIn")
+	proto.RegisterType((*MsgJoinSwapExternAmountInResponse)(nil), "osmosis.gamm.v1beta1.MsgJoinSwapExternAmountInResponse")
 	proto.RegisterType((*MsgJoinSwapPoolAmountOut)(nil), "osmosis.gamm.v1beta1.MsgJoinSwapPoolAmountOut")
+	proto.RegisterType((*MsgJoinSwapPoolAmountOutResponse)(nil), "osmosis.gamm.v1beta1.MsgJoinSwapPoolAmountOutResponse")
 	proto.RegisterType((*MsgExitSwapExternAmountOut)(nil), "osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut")
+	proto.RegisterType((*MsgExitSwapExternAmountOutResponse)(nil), "osmosis.gamm.v1beta1.MsgExitSwapExternAmountOutResponse")
 	proto.RegisterType((*MsgExitSwapPoolAmountIn)(nil), "osmosis.gamm.v1beta1.MsgExitSwapPoolAmountIn")
+	proto.RegisterType((*MsgExitSwapPoolAmountInResponse)(nil), "osmosis.gamm.v1beta1.MsgExitSwapPoolAmountInResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/gamm/v1beta1/tx.proto", fileDescriptor_cfc8fd3ac7df3247) }
 
 var fileDescriptor_cfc8fd3ac7df3247 = []byte{
-	// 1098 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x98, 0x4f, 0x6f, 0x1b, 0x45,
-	0x18, 0xc6, 0xe3, 0xda, 0x49, 0x9a, 0xd7, 0x36, 0x0d, 0x4b, 0xfe, 0xd8, 0x96, 0x6a, 0x97, 0x41,
-	0x2a, 0xe5, 0x10, 0x9b, 0x82, 0x84, 0x10, 0x12, 0x2a, 0x59, 0xb7, 0x05, 0x43, 0xad, 0x46, 0x4b,
-	0x25, 0xa4, 0x22, 0xd5, 0x5a, 0x7b, 0x27, 0xce, 0x2a, 0xde, 0x99, 0xc5, 0x33, 0xc6, 0x2e, 0x9f,
-	0x82, 0x23, 0x7c, 0x92, 0x0a, 0x89, 0x0f, 0x10, 0x6e, 0x3d, 0x22, 0x0e, 0x16, 0x4a, 0x4e, 0x5c,
-	0x7d, 0xe4, 0x00, 0x68, 0x67, 0x66, 0xbd, 0xb3, 0x9b, 0xb4, 0x64, 0x5b, 0xb9, 0x8a, 0x7a, 0xb2,
-	0xe5, 0x99, 0x79, 0x9e, 0xf5, 0xfb, 0xfe, 0xf6, 0x99, 0x9d, 0x85, 0xab, 0x94, 0x79, 0x94, 0xb9,
-	0xac, 0xd1, 0xb7, 0x3d, 0xaf, 0xf1, 0xfd, 0xcd, 0x2e, 0xe6, 0xf6, 0xcd, 0x06, 0x9f, 0xd4, 0xfd,
-	0x21, 0xe5, 0xd4, 0xd8, 0x50, 0xc3, 0xf5, 0x60, 0xb8, 0xae, 0x86, 0x2b, 0x1b, 0x7d, 0xda, 0xa7,
-	0x62, 0x42, 0x23, 0xf8, 0x26, 0xe7, 0x56, 0xaa, 0x3d, 0x31, 0xb9, 0xd1, 0xb5, 0x19, 0x9e, 0x2b,
-	0xf5, 0xa8, 0x4b, 0xe4, 0x38, 0xfa, 0x29, 0x03, 0xf9, 0xb6, 0x3d, 0xd9, 0xf5, 0xe8, 0x88, 0xf0,
-	0x16, 0x31, 0xae, 0xc3, 0xb2, 0x83, 0x09, 0xf5, 0x4a, 0x99, 0x6b, 0x99, 0x1b, 0x6b, 0xe6, 0xfa,
-	0x6c, 0x5a, 0x2b, 0x3c, 0xb6, 0xbd, 0xc1, 0x27, 0x48, 0xfc, 0x8c, 0x2c, 0x39, 0x6c, 0xd8, 0xb0,
-	0xe6, 0x85, 0xcb, 0x4a, 0x97, 0xc4, 0xdc, 0xe6, 0xd1, 0xb4, 0xb6, 0xf4, 0xc7, 0xb4, 0x76, 0xbd,
-	0xef, 0xf2, 0x83, 0x51, 0xb7, 0xde, 0xa3, 0x5e, 0x43, 0xb9, 0xcb, 0x8f, 0x1d, 0xe6, 0x1c, 0x36,
-	0xf8, 0x63, 0x1f, 0xb3, 0x7a, 0x8b, 0xf0, 0xd9, 0xb4, 0xf6, 0xa6, 0x54, 0xf6, 0xec, 0x49, 0xc7,
-	0x16, 0x4a, 0xc8, 0x8a, 0x54, 0xd1, 0x3f, 0x97, 0x20, 0xdf, 0x66, 0xfd, 0x2f, 0xa9, 0x4b, 0xf6,
-	0x28, 0x1d, 0x18, 0x0f, 0x61, 0x85, 0x61, 0xe2, 0xe0, 0xa1, 0xb8, 0xb6, 0x82, 0x69, 0xce, 0xa6,
-	0xb5, 0xa2, 0x54, 0x90, 0xbf, 0xa3, 0xbf, 0xa7, 0xb5, 0x9d, 0x73, 0x98, 0xef, 0xf6, 0x7a, 0xbb,
-	0x8e, 0x33, 0xc4, 0x8c, 0x59, 0x4a, 0xd1, 0xf8, 0x14, 0x0a, 0xdc, 0x1e, 0xf6, 0x31, 0x0f, 0x9c,
-	0x5a, 0x8e, 0xf8, 0x47, 0x39, 0xb3, 0x3c, 0x9b, 0xd6, 0x36, 0xa5, 0x83, 0x1c, 0xed, 0xf8, 0x94,
-	0x0e, 0x3a, 0xae, 0x83, 0xac, 0xd8, 0x74, 0x83, 0x40, 0x31, 0x18, 0x91, 0x17, 0x7e, 0x7f, 0xc4,
-	0x4b, 0x59, 0x51, 0x91, 0x2f, 0x52, 0x57, 0x64, 0x4b, 0xba, 0x09, 0x1b, 0x59, 0x92, 0x0e, 0x1d,
-	0x71, 0x64, 0xc5, 0xe5, 0x0d, 0x07, 0x0a, 0xf3, 0x3a, 0xb1, 0x16, 0x29, 0xe5, 0xae, 0x65, 0x6f,
-	0xe4, 0x3f, 0x78, 0xbb, 0x7e, 0x16, 0x18, 0x75, 0xad, 0xbd, 0xe6, 0xd5, 0xe0, 0x8a, 0xa2, 0x7f,
-	0x15, 0x55, 0x9e, 0x75, 0x5c, 0x82, 0xac, 0x98, 0x2a, 0xfa, 0x39, 0x03, 0x85, 0xb6, 0x4b, 0x22,
-	0xdb, 0x34, 0x70, 0x84, 0xeb, 0x5e, 0x1a, 0x0e, 0x97, 0x68, 0x70, 0x84, 0xaa, 0xe8, 0x5f, 0x09,
-	0xc7, 0x9d, 0x89, 0xcb, 0x2f, 0x3a, 0x1c, 0x87, 0x50, 0x88, 0xba, 0xd7, 0x22, 0x8a, 0x8d, 0xcf,
-	0x53, 0x17, 0x64, 0xf3, 0x34, 0x1b, 0xa2, 0x67, 0xba, 0xb8, 0x71, 0x00, 0xc5, 0x79, 0x91, 0x58,
-	0x40, 0xa2, 0x44, 0x03, 0x3d, 0x03, 0x0d, 0xad, 0xbb, 0x66, 0x55, 0xb1, 0xb1, 0x95, 0x2c, 0x3c,
-	0x53, 0x0c, 0xc6, 0x84, 0x11, 0x85, 0xfc, 0xbd, 0xbd, 0x07, 0xf4, 0x10, 0x93, 0x16, 0xd9, 0xa7,
-	0xe7, 0x66, 0xe3, 0x63, 0xc8, 0x3b, 0x98, 0xf5, 0x86, 0xae, 0xcf, 0x5d, 0x4a, 0x14, 0x1d, 0x5b,
-	0xb3, 0x69, 0xcd, 0x08, 0x67, 0xcf, 0x07, 0x91, 0xa5, 0x4f, 0x45, 0x7f, 0x65, 0xa0, 0x68, 0xba,
-	0xc4, 0x49, 0xef, 0xf9, 0x0d, 0xac, 0x8c, 0xb1, 0xdb, 0x3f, 0x08, 0x61, 0xbc, 0x95, 0xa2, 0xf6,
-	0xb7, 0x71, 0x2f, 0x42, 0x49, 0xaa, 0x20, 0x4b, 0xc9, 0x05, 0xc2, 0xb2, 0x44, 0xaa, 0xa9, 0xb7,
-	0x52, 0x37, 0x55, 0x09, 0x87, 0x84, 0x2b, 0xb9, 0x20, 0xfb, 0x8a, 0x6d, 0xd6, 0x6f, 0x0e, 0xb1,
-	0xcd, 0xf1, 0xc2, 0x01, 0xff, 0x16, 0x56, 0xd9, 0xd8, 0xf6, 0xef, 0x62, 0xac, 0x0a, 0xb4, 0x9b,
-	0xba, 0x40, 0x57, 0xd4, 0xa5, 0x8c, 0x6d, 0xbf, 0xb3, 0x8f, 0x31, 0xb2, 0x42, 0x45, 0xe3, 0x01,
-	0xac, 0x0e, 0x7c, 0xd1, 0x33, 0x51, 0xa4, 0x67, 0xc6, 0x94, 0x06, 0x93, 0xb9, 0xad, 0x50, 0x54,
-	0xaa, 0x03, 0xbf, 0xc3, 0x83, 0x31, 0x64, 0x85, 0x52, 0xc6, 0x23, 0x80, 0x6e, 0xc8, 0x02, 0x53,
-	0x90, 0xbf, 0x73, 0xb6, 0x70, 0x8c, 0x19, 0xb3, 0xac, 0xa4, 0x55, 0xbc, 0x08, 0xdd, 0x8e, 0x4b,
-	0xf6, 0x29, 0xb2, 0x34, 0x45, 0xf4, 0x4b, 0x0e, 0x36, 0xda, 0xac, 0xff, 0xf5, 0xd8, 0xf6, 0xef,
-	0x4c, 0xec, 0x1e, 0x9f, 0xdf, 0x60, 0x17, 0x38, 0x68, 0xc6, 0xb0, 0xca, 0xe5, 0xff, 0x54, 0x95,
-	0x2e, 0xd7, 0xa5, 0x6b, 0x3d, 0xd8, 0xfd, 0xe7, 0xf5, 0x68, 0x52, 0x97, 0x98, 0xa6, 0xea, 0xf0,
-	0xbb, 0xe7, 0xb8, 0xd2, 0x60, 0x41, 0xd4, 0x8c, 0xb0, 0x62, 0xc8, 0x0a, 0xdd, 0x8c, 0xcf, 0xa0,
-	0x28, 0xbe, 0xde, 0x1f, 0xf1, 0xdb, 0xe2, 0x7e, 0xcc, 0x09, 0x8a, 0x2a, 0x51, 0x98, 0xc8, 0x45,
-	0x74, 0xc4, 0x3b, 0xea, 0xce, 0x8c, 0x2f, 0x08, 0x32, 0xd2, 0xd3, 0xb2, 0xa8, 0xb4, 0xfc, 0x72,
-	0x19, 0x19, 0x65, 0x97, 0x8c, 0xae, 0x98, 0xb8, 0xf1, 0x08, 0x2e, 0x7b, 0xf6, 0x64, 0x6f, 0xe8,
-	0xf6, 0x70, 0x69, 0x45, 0x18, 0x99, 0xa9, 0x8d, 0xd6, 0xa3, 0x0d, 0xd4, 0x0f, 0x84, 0x90, 0x35,
-	0xd7, 0x44, 0x4f, 0x72, 0xb0, 0x79, 0x9a, 0x9d, 0xc0, 0xf9, 0x02, 0xc3, 0x13, 0x2c, 0x97, 0xed,
-	0x94, 0x2d, 0x94, 0x81, 0xa6, 0x2f, 0x57, 0x7d, 0x0f, 0x3b, 0x18, 0x9b, 0x6e, 0x1c, 0x40, 0xde,
-	0x8b, 0x9e, 0x33, 0x14, 0x00, 0x77, 0x53, 0x97, 0x75, 0x23, 0xf9, 0x5c, 0x22, 0x40, 0xd3, 0xa5,
-	0x8d, 0x1f, 0xe0, 0x72, 0xc8, 0x8e, 0xc0, 0xe4, 0xb9, 0x98, 0x37, 0xd3, 0x63, 0xbe, 0x9e, 0x20,
-	0x16, 0x59, 0x73, 0xbf, 0x18, 0x39, 0xab, 0x0b, 0x20, 0xe7, 0x28, 0x0b, 0x65, 0xf5, 0xc8, 0x2b,
-	0xe9, 0xe1, 0x78, 0x48, 0x5e, 0x49, 0xf4, 0x7c, 0x04, 0x10, 0xe1, 0xa0, 0xd8, 0xd1, 0x76, 0x65,
-	0x8d, 0x1d, 0x64, 0x69, 0x33, 0x8d, 0x9d, 0x78, 0xe6, 0xac, 0x99, 0x6f, 0x3d, 0x37, 0x29, 0x88,
-	0x4a, 0x8a, 0x04, 0x28, 0x2f, 0xfc, 0xa0, 0x2c, 0x2d, 0x34, 0x54, 0xe2, 0xf2, 0xc6, 0x04, 0xd6,
-	0x3d, 0x79, 0x7c, 0x48, 0x66, 0xcb, 0xbd, 0xd4, 0x96, 0x95, 0x28, 0x5b, 0x4e, 0x3d, 0x9f, 0x9f,
-	0x72, 0x41, 0x4f, 0xb2, 0x50, 0xd2, 0x5a, 0x19, 0x1b, 0x7c, 0x4d, 0x3a, 0x19, 0x3f, 0xf2, 0xe4,
-	0x16, 0x7b, 0xe4, 0x49, 0x04, 0xcc, 0xf2, 0xc2, 0x02, 0x06, 0xfd, 0x9a, 0x85, 0x8a, 0x3a, 0x5a,
-	0x24, 0x6f, 0xc2, 0x8b, 0xda, 0xbb, 0xf7, 0xb5, 0x4c, 0x94, 0xcd, 0xdb, 0xf8, 0x9f, 0x24, 0x4b,
-	0x1e, 0x4a, 0x72, 0x8b, 0x3c, 0x94, 0xbc, 0xca, 0xdd, 0x1d, 0xfd, 0x96, 0x85, 0x6d, 0xad, 0x7d,
-	0x7b, 0xfa, 0x85, 0xbc, 0x1e, 0xbd, 0xfb, 0x0e, 0xde, 0xd0, 0x52, 0x2e, 0xba, 0xf7, 0x5a, 0xa9,
-	0x0b, 0xba, 0x7d, 0x46, 0x8a, 0x0a, 0xb3, 0x84, 0x81, 0x31, 0x82, 0x2b, 0xc1, 0x26, 0xa5, 0x13,
-	0x23, 0x9b, 0xf8, 0x55, 0x6a, 0xcf, 0xb2, 0xb6, 0xff, 0x25, 0xa8, 0x49, 0x7a, 0x98, 0xcd, 0xa3,
-	0xe3, 0x6a, 0xe6, 0xe9, 0x71, 0x35, 0xf3, 0xe7, 0x71, 0x35, 0xf3, 0xe3, 0x49, 0x75, 0xe9, 0xe9,
-	0x49, 0x75, 0xe9, 0xf7, 0x93, 0xea, 0xd2, 0xc3, 0xf7, 0x74, 0xbf, 0x9d, 0xf0, 0x7d, 0x59, 0xf8,
-	0x39, 0x91, 0x6f, 0xce, 0x84, 0x6d, 0x77, 0x45, 0xbc, 0xe9, 0xfa, 0xf0, 0xbf, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xec, 0xe0, 0x0c, 0xfc, 0x56, 0x13, 0x00, 0x00,
+	// 1322 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x99, 0xcf, 0x6f, 0x1b, 0x45,
+	0x14, 0xc7, 0xe3, 0xda, 0xcd, 0x8f, 0x67, 0x9b, 0xa6, 0x5b, 0x27, 0x71, 0x56, 0xc4, 0x4e, 0x26,
+	0xa8, 0xb4, 0x54, 0xb1, 0xdb, 0x54, 0x02, 0x84, 0x84, 0x4a, 0x36, 0x6d, 0xc1, 0x50, 0x2b, 0xd1,
+	0x52, 0x09, 0x54, 0xa4, 0x5a, 0x1b, 0x7b, 0xe3, 0xac, 0x92, 0xdd, 0x59, 0x3c, 0xeb, 0xda, 0x45,
+	0xe2, 0xc2, 0x5f, 0xc0, 0x11, 0xfe, 0x12, 0x84, 0xc4, 0x1f, 0x10, 0x6e, 0x3d, 0x22, 0x0e, 0x16,
+	0x4a, 0x4e, 0x5c, 0x73, 0x83, 0x03, 0xa0, 0x9d, 0x99, 0xdd, 0x9d, 0x5d, 0x7b, 0x13, 0x2f, 0x55,
+	0xaa, 0xa8, 0xa7, 0x44, 0x9e, 0x37, 0xdf, 0x37, 0x7e, 0xdf, 0xcf, 0xbe, 0x9d, 0x19, 0xc3, 0x12,
+	0x26, 0x26, 0x26, 0x06, 0xa9, 0xb6, 0x35, 0xd3, 0xac, 0x3e, 0xbb, 0xb3, 0xa3, 0x3b, 0xda, 0x9d,
+	0xaa, 0xd3, 0xaf, 0xd8, 0x1d, 0xec, 0x60, 0xa9, 0xc0, 0x87, 0x2b, 0xee, 0x70, 0x85, 0x0f, 0xcb,
+	0x85, 0x36, 0x6e, 0x63, 0x1a, 0x50, 0x75, 0xff, 0x63, 0xb1, 0x72, 0xa9, 0x49, 0x83, 0xab, 0x3b,
+	0x1a, 0xd1, 0x7d, 0xa5, 0x26, 0x36, 0x2c, 0x36, 0x8e, 0x7e, 0x48, 0x41, 0xb6, 0xae, 0xf5, 0x37,
+	0x4c, 0xdc, 0xb5, 0x9c, 0x9a, 0x25, 0x5d, 0x87, 0xcb, 0x2d, 0xdd, 0xc2, 0x66, 0x31, 0xb5, 0x9c,
+	0xba, 0x31, 0xa3, 0xcc, 0x9e, 0x0c, 0xca, 0xb9, 0xe7, 0x9a, 0x79, 0xf0, 0x01, 0xa2, 0x1f, 0x23,
+	0x95, 0x0d, 0x4b, 0x1a, 0xcc, 0x98, 0xde, 0xb4, 0xe2, 0x25, 0x1a, 0xbb, 0x79, 0x38, 0x28, 0x4f,
+	0xfc, 0x3e, 0x28, 0x5f, 0x6f, 0x1b, 0xce, 0x5e, 0x77, 0xa7, 0xd2, 0xc4, 0x66, 0x95, 0x67, 0x67,
+	0x7f, 0xd6, 0x48, 0x6b, 0xbf, 0xea, 0x3c, 0xb7, 0x75, 0x52, 0xa9, 0x59, 0xce, 0xc9, 0xa0, 0x7c,
+	0x95, 0x29, 0x9b, 0x5a, 0xbf, 0xa1, 0x51, 0x25, 0xa4, 0x06, 0xaa, 0xe8, 0x9f, 0x4b, 0x90, 0xad,
+	0x93, 0xf6, 0xa7, 0xd8, 0xb0, 0xb6, 0x31, 0x3e, 0x90, 0x9e, 0xc0, 0x24, 0xd1, 0xad, 0x96, 0xde,
+	0xa1, 0x6b, 0xcb, 0x29, 0xca, 0xc9, 0xa0, 0x9c, 0x67, 0x0a, 0xec, 0x73, 0xf4, 0xf7, 0xa0, 0xbc,
+	0x36, 0x46, 0xf2, 0x8d, 0x66, 0x73, 0xa3, 0xd5, 0xea, 0xe8, 0x84, 0xa8, 0x5c, 0x51, 0xfa, 0x10,
+	0x72, 0x8e, 0xd6, 0x69, 0xeb, 0x8e, 0x9b, 0xa9, 0xd6, 0xa2, 0xdf, 0x28, 0xa3, 0x2c, 0x9e, 0x0c,
+	0xca, 0x73, 0x2c, 0x03, 0x1b, 0x6d, 0xd8, 0x18, 0x1f, 0x34, 0x8c, 0x16, 0x52, 0x43, 0xe1, 0x92,
+	0x05, 0x79, 0x77, 0x84, 0x2d, 0x7c, 0xab, 0xeb, 0x14, 0xd3, 0xb4, 0x22, 0x9f, 0x24, 0xae, 0xc8,
+	0x3c, 0xcb, 0x46, 0xd3, 0xb0, 0x92, 0x34, 0x70, 0xd7, 0x41, 0x6a, 0x58, 0x5e, 0x6a, 0x41, 0xce,
+	0xaf, 0x13, 0xa9, 0x59, 0xc5, 0xcc, 0x72, 0xfa, 0x46, 0x76, 0x7d, 0xa5, 0x32, 0x0a, 0x8c, 0x8a,
+	0x60, 0xaf, 0xb2, 0xe4, 0xae, 0x28, 0xf8, 0x56, 0x41, 0xe5, 0x49, 0xc3, 0xb0, 0x90, 0x1a, 0x52,
+	0x45, 0x73, 0x70, 0x4d, 0xa8, 0xbf, 0xaa, 0x13, 0x1b, 0x5b, 0x44, 0x47, 0x3f, 0xa6, 0x20, 0x57,
+	0x37, 0xac, 0x60, 0x35, 0x49, 0x98, 0xf1, 0xe6, 0xbd, 0x34, 0x33, 0x86, 0x25, 0x30, 0xe3, 0xa9,
+	0xa2, 0x7f, 0x19, 0x33, 0x0f, 0xfa, 0x86, 0x73, 0xd1, 0x99, 0xd9, 0x87, 0x5c, 0x60, 0x6a, 0xcd,
+	0xe2, 0xc8, 0x7c, 0x9c, 0xb8, 0x20, 0x73, 0xc3, 0xc8, 0x50, 0x2b, 0x45, 0x71, 0x69, 0x0f, 0xf2,
+	0x7e, 0x91, 0x88, 0x0b, 0x28, 0x23, 0x06, 0xc5, 0x10, 0x23, 0xb8, 0xab, 0x94, 0x38, 0x32, 0xf3,
+	0xd1, 0xc2, 0x13, 0x8e, 0x66, 0x48, 0x98, 0x43, 0xe3, 0x19, 0xe0, 0x43, 0x83, 0x21, 0xfb, 0x68,
+	0xfb, 0x31, 0xde, 0xd7, 0xad, 0x9a, 0xb5, 0x8b, 0xc7, 0x46, 0xe6, 0x7d, 0xc8, 0xb6, 0x74, 0xd2,
+	0xec, 0x18, 0xb6, 0x63, 0x60, 0x8b, 0x43, 0x33, 0x7f, 0x32, 0x28, 0x4b, 0x5e, 0xb4, 0x3f, 0x88,
+	0x54, 0x31, 0x14, 0xfd, 0x99, 0x82, 0xbc, 0x62, 0x58, 0xad, 0xe4, 0x39, 0xbf, 0x80, 0xc9, 0x9e,
+	0x6e, 0xb4, 0xf7, 0x3c, 0x46, 0xef, 0x25, 0xb0, 0xe4, 0xbe, 0xde, 0x0c, 0x08, 0x63, 0x2a, 0x48,
+	0xe5, 0x72, 0xae, 0x30, 0xab, 0x1c, 0xf7, 0xfa, 0x5e, 0x62, 0xaf, 0xb9, 0xb0, 0x07, 0x3e, 0x97,
+	0x73, 0x3b, 0x65, 0xbe, 0x4e, 0xda, 0x9b, 0x1d, 0x5d, 0x73, 0xf4, 0x73, 0xe7, 0xfe, 0x2b, 0x98,
+	0x22, 0x3d, 0xcd, 0x7e, 0xa8, 0xeb, 0xbc, 0x40, 0x1b, 0x89, 0x0b, 0x74, 0x85, 0x2f, 0xa5, 0xa7,
+	0xd9, 0x8d, 0x5d, 0x5d, 0x47, 0xaa, 0xa7, 0x28, 0x3d, 0x86, 0xa9, 0x03, 0x9b, 0x7a, 0x46, 0x8b,
+	0x14, 0xdb, 0xd4, 0x04, 0x98, 0x94, 0x05, 0x4e, 0x28, 0x57, 0x3d, 0xb0, 0x1b, 0x8e, 0x3b, 0x86,
+	0x54, 0x4f, 0x4a, 0x7a, 0x0a, 0xb0, 0xe3, 0xb1, 0x40, 0x38, 0xfb, 0xab, 0xa3, 0x85, 0x43, 0xcc,
+	0x28, 0x8b, 0x5c, 0x9a, 0x77, 0x1d, 0xaa, 0xdb, 0x30, 0xac, 0x5d, 0x8c, 0x54, 0x41, 0x11, 0x2d,
+	0xc0, 0x5c, 0xa8, 0xfe, 0x3e, 0xf6, 0x3f, 0x67, 0xa0, 0x50, 0x27, 0xed, 0xcf, 0x7b, 0x9a, 0xfd,
+	0xa0, 0xaf, 0x35, 0x1d, 0xff, 0x81, 0xbc, 0xc0, 0x8d, 0xa9, 0x07, 0x53, 0x0e, 0x2b, 0x00, 0xb7,
+	0x60, 0xb1, 0xc2, 0xb2, 0x56, 0xdc, 0x4d, 0x84, 0x5f, 0xa8, 0x4d, 0x6c, 0x58, 0x8a, 0xc2, 0xad,
+	0x7f, 0x7b, 0x8c, 0x95, 0xba, 0x13, 0x02, 0x97, 0xbc, 0x52, 0x22, 0xd5, 0xcb, 0x26, 0x7d, 0x04,
+	0x79, 0xfa, 0xef, 0x56, 0xd7, 0xb9, 0x4f, 0x1f, 0xd4, 0x0c, 0xc5, 0x4b, 0x0e, 0x9a, 0x0f, 0x9b,
+	0x84, 0xbb, 0x4e, 0x83, 0x3f, 0xb2, 0xe1, 0x09, 0x6e, 0x4f, 0x35, 0x85, 0xde, 0x55, 0xbc, 0xfc,
+	0x72, 0x3d, 0x35, 0xe8, 0x75, 0xac, 0xd5, 0x85, 0xc4, 0xa5, 0xa7, 0x30, 0x6d, 0x6a, 0xfd, 0xed,
+	0x8e, 0xd1, 0xd4, 0x8b, 0x93, 0x34, 0x91, 0x92, 0x38, 0xd1, 0x6c, 0xf0, 0x1e, 0xb6, 0x5d, 0x21,
+	0xa4, 0xfa, 0x9a, 0xa8, 0x04, 0x6f, 0x8e, 0x42, 0xc7, 0x67, 0xeb, 0xa7, 0x0c, 0xa5, 0x2e, 0x12,
+	0xe0, 0xae, 0xec, 0x02, 0xc3, 0xe5, 0x4e, 0x67, 0x76, 0x33, 0x8b, 0x59, 0x27, 0x14, 0xa7, 0x73,
+	0x2e, 0x3c, 0x87, 0x43, 0xe1, 0xd2, 0x1e, 0x64, 0xcd, 0x60, 0x3b, 0xc3, 0x01, 0x79, 0x98, 0xb8,
+	0xec, 0x85, 0xe8, 0xf6, 0x87, 0x82, 0x28, 0x4a, 0x4b, 0xdf, 0xc0, 0xb4, 0xc7, 0x16, 0xc5, 0xe8,
+	0xd4, 0xc7, 0x60, 0x33, 0xf9, 0x63, 0x30, 0x1b, 0x21, 0x1a, 0xa9, 0x7e, 0xbe, 0x10, 0x59, 0x53,
+	0xe7, 0x40, 0x56, 0x19, 0x96, 0x46, 0x82, 0xe3, 0xa3, 0x75, 0x98, 0x86, 0x45, 0xbe, 0xf5, 0x63,
+	0x51, 0x8e, 0xde, 0xb1, 0x5e, 0x49, 0xef, 0x7a, 0x17, 0x20, 0xe0, 0x85, 0xc3, 0x25, 0xbc, 0xef,
+	0x05, 0xb8, 0x90, 0x2a, 0x44, 0x4a, 0x6b, 0xe1, 0xa6, 0x35, 0xa3, 0x5c, 0x3b, 0xb5, 0xd5, 0x58,
+	0xbc, 0xd5, 0x44, 0x48, 0xfa, 0xdf, 0x1b, 0x76, 0x96, 0x42, 0x60, 0x29, 0x2c, 0x2f, 0xf5, 0x61,
+	0xd6, 0x64, 0xdb, 0xe8, 0x68, 0x73, 0x7a, 0x94, 0x38, 0xa5, 0x1c, 0x34, 0xa7, 0xa1, 0x73, 0xc2,
+	0x50, 0x16, 0xb4, 0x0a, 0x2b, 0xb1, 0x4e, 0x06, 0xad, 0x24, 0x0d, 0x45, 0x21, 0x2a, 0xa4, 0xf0,
+	0x9a, 0xd8, 0x1d, 0x3e, 0x9f, 0x65, 0xce, 0xf7, 0x7c, 0x16, 0x69, 0x53, 0x97, 0xcf, 0xad, 0x4d,
+	0x21, 0x04, 0xcb, 0x71, 0xc6, 0xf9, 0xee, 0xfe, 0x92, 0x06, 0x99, 0xef, 0xc9, 0xa3, 0x0c, 0x5c,
+	0x54, 0x7f, 0x6f, 0x0b, 0xdd, 0x97, 0x19, 0x5c, 0x38, 0xa3, 0x67, 0x46, 0x8f, 0x53, 0x99, 0xf3,
+	0x3c, 0x4e, 0xbd, 0xca, 0x7d, 0x06, 0x7a, 0x0b, 0x50, 0xbc, 0x7b, 0xbe, 0xc9, 0xbf, 0xa6, 0x61,
+	0x41, 0x08, 0xdb, 0x16, 0x97, 0xfb, 0x7a, 0x38, 0xfc, 0x35, 0xbc, 0x21, 0x34, 0xd5, 0xe0, 0x29,
+	0xae, 0x25, 0x2e, 0xfb, 0xc2, 0x88, 0xa6, 0x4d, 0x93, 0x45, 0x12, 0x48, 0x5d, 0xb8, 0xe2, 0xbe,
+	0x34, 0x45, 0xae, 0x98, 0xd5, 0x9f, 0x25, 0xce, 0xb9, 0x28, 0xbc, 0x8f, 0x23, 0x6c, 0x45, 0x73,
+	0xa0, 0x15, 0x28, 0xc7, 0x58, 0xe9, 0xd9, 0xbd, 0xfe, 0xd7, 0x14, 0xa4, 0xeb, 0xa4, 0x2d, 0x7d,
+	0x09, 0xd3, 0xfe, 0x05, 0x59, 0xdc, 0xfd, 0x4f, 0x70, 0x87, 0x23, 0xdf, 0x3c, 0x33, 0xc4, 0xcb,
+	0xe0, 0x2a, 0xfb, 0xd7, 0x28, 0xf1, 0xca, 0x5e, 0xc8, 0x29, 0xca, 0xd1, 0xbb, 0x00, 0xf7, 0x34,
+	0x26, 0x1c, 0x55, 0x57, 0x63, 0x27, 0x06, 0x41, 0xf2, 0xad, 0x31, 0x82, 0x7c, 0x7d, 0x02, 0x57,
+	0x87, 0x0f, 0x5c, 0xef, 0xc4, 0x2a, 0x0c, 0xc5, 0xca, 0xeb, 0xe3, 0xc7, 0xfa, 0x49, 0x9f, 0x81,
+	0x34, 0x62, 0x27, 0x7e, 0x6b, 0x5c, 0xa5, 0xad, 0xae, 0x23, 0xdf, 0x4d, 0x10, 0xec, 0xe7, 0xfd,
+	0x2e, 0x05, 0xf3, 0x31, 0xfb, 0xb4, 0xea, 0xa9, 0x66, 0x0f, 0x4f, 0x90, 0xdf, 0x4b, 0x38, 0xc1,
+	0x5f, 0x44, 0x0f, 0xe6, 0x46, 0xef, 0x1d, 0x2a, 0x67, 0x2a, 0x86, 0xe2, 0xe5, 0x84, 0xf1, 0xd2,
+	0xb7, 0xb0, 0x10, 0xf7, 0x5a, 0xbb, 0x7d, 0x2a, 0x90, 0x23, 0x66, 0xc8, 0x89, 0x67, 0x48, 0x0e,
+	0x14, 0x46, 0x36, 0xdc, 0xb5, 0x33, 0x95, 0xc4, 0x70, 0x39, 0x59, 0xb8, 0xb2, 0x79, 0x78, 0x54,
+	0x4a, 0xbd, 0x38, 0x2a, 0xa5, 0xfe, 0x38, 0x2a, 0xa5, 0xbe, 0x3f, 0x2e, 0x4d, 0xbc, 0x38, 0x2e,
+	0x4d, 0xfc, 0x76, 0x5c, 0x9a, 0x78, 0x72, 0x53, 0x6c, 0x47, 0x6b, 0xde, 0xaf, 0x08, 0xde, 0xdf,
+	0x3e, 0xfb, 0x3d, 0x81, 0x76, 0xa5, 0x9d, 0x49, 0x7a, 0xff, 0x7f, 0xf7, 0xbf, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0x22, 0x27, 0x04, 0xa8, 0x6c, 0x18, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// MsgClient is the client API for Msg service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MsgClient interface {
+	JoinPool(ctx context.Context, in *MsgJoinPool, opts ...grpc.CallOption) (*MsgJoinPoolResponse, error)
+	ExitPool(ctx context.Context, in *MsgExitPool, opts ...grpc.CallOption) (*MsgExitPoolResponse, error)
+	CreatePool(ctx context.Context, in *MsgCreatePool, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error)
+	SwapExactAmountIn(ctx context.Context, in *MsgSwapExactAmountIn, opts ...grpc.CallOption) (*MsgSwapExactAmountInResponse, error)
+	SwapExactAmountOut(ctx context.Context, in *MsgSwapExactAmountOut, opts ...grpc.CallOption) (*MsgSwapExactAmountOutResponse, error)
+	JoinSwapExternAmountIn(ctx context.Context, in *MsgJoinSwapExternAmountIn, opts ...grpc.CallOption) (*MsgJoinSwapExternAmountInResponse, error)
+	JoinSwapPoolAmountOut(ctx context.Context, in *MsgJoinSwapPoolAmountOut, opts ...grpc.CallOption) (*MsgJoinSwapPoolAmountOut, error)
+	ExitSwapExternAmountOut(ctx context.Context, in *MsgExitSwapExternAmountOut, opts ...grpc.CallOption) (*MsgExitSwapExternAmountOut, error)
+	ExitSwapPoolAmountIn(ctx context.Context, in *MsgExitSwapPoolAmountIn, opts ...grpc.CallOption) (*MsgExitSwapPoolAmountIn, error)
+}
+
+type msgClient struct {
+	cc grpc1.ClientConn
+}
+
+func NewMsgClient(cc grpc1.ClientConn) MsgClient {
+	return &msgClient{cc}
+}
+
+func (c *msgClient) JoinPool(ctx context.Context, in *MsgJoinPool, opts ...grpc.CallOption) (*MsgJoinPoolResponse, error) {
+	out := new(MsgJoinPoolResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/JoinPool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ExitPool(ctx context.Context, in *MsgExitPool, opts ...grpc.CallOption) (*MsgExitPoolResponse, error) {
+	out := new(MsgExitPoolResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/ExitPool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreatePool(ctx context.Context, in *MsgCreatePool, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error) {
+	out := new(MsgCreatePoolResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/CreatePool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SwapExactAmountIn(ctx context.Context, in *MsgSwapExactAmountIn, opts ...grpc.CallOption) (*MsgSwapExactAmountInResponse, error) {
+	out := new(MsgSwapExactAmountInResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/SwapExactAmountIn", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SwapExactAmountOut(ctx context.Context, in *MsgSwapExactAmountOut, opts ...grpc.CallOption) (*MsgSwapExactAmountOutResponse, error) {
+	out := new(MsgSwapExactAmountOutResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/SwapExactAmountOut", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) JoinSwapExternAmountIn(ctx context.Context, in *MsgJoinSwapExternAmountIn, opts ...grpc.CallOption) (*MsgJoinSwapExternAmountInResponse, error) {
+	out := new(MsgJoinSwapExternAmountInResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/JoinSwapExternAmountIn", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) JoinSwapPoolAmountOut(ctx context.Context, in *MsgJoinSwapPoolAmountOut, opts ...grpc.CallOption) (*MsgJoinSwapPoolAmountOut, error) {
+	out := new(MsgJoinSwapPoolAmountOut)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/JoinSwapPoolAmountOut", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ExitSwapExternAmountOut(ctx context.Context, in *MsgExitSwapExternAmountOut, opts ...grpc.CallOption) (*MsgExitSwapExternAmountOut, error) {
+	out := new(MsgExitSwapExternAmountOut)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/ExitSwapExternAmountOut", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ExitSwapPoolAmountIn(ctx context.Context, in *MsgExitSwapPoolAmountIn, opts ...grpc.CallOption) (*MsgExitSwapPoolAmountIn, error) {
+	out := new(MsgExitSwapPoolAmountIn)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/ExitSwapPoolAmountIn", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MsgServer is the server API for Msg service.
+type MsgServer interface {
+	JoinPool(context.Context, *MsgJoinPool) (*MsgJoinPoolResponse, error)
+	ExitPool(context.Context, *MsgExitPool) (*MsgExitPoolResponse, error)
+	CreatePool(context.Context, *MsgCreatePool) (*MsgCreatePoolResponse, error)
+	SwapExactAmountIn(context.Context, *MsgSwapExactAmountIn) (*MsgSwapExactAmountInResponse, error)
+	SwapExactAmountOut(context.Context, *MsgSwapExactAmountOut) (*MsgSwapExactAmountOutResponse, error)
+	JoinSwapExternAmountIn(context.Context, *MsgJoinSwapExternAmountIn) (*MsgJoinSwapExternAmountInResponse, error)
+	JoinSwapPoolAmountOut(context.Context, *MsgJoinSwapPoolAmountOut) (*MsgJoinSwapPoolAmountOut, error)
+	ExitSwapExternAmountOut(context.Context, *MsgExitSwapExternAmountOut) (*MsgExitSwapExternAmountOut, error)
+	ExitSwapPoolAmountIn(context.Context, *MsgExitSwapPoolAmountIn) (*MsgExitSwapPoolAmountIn, error)
+}
+
+// UnimplementedMsgServer can be embedded to have forward compatible implementations.
+type UnimplementedMsgServer struct {
+}
+
+func (*UnimplementedMsgServer) JoinPool(ctx context.Context, req *MsgJoinPool) (*MsgJoinPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinPool not implemented")
+}
+func (*UnimplementedMsgServer) ExitPool(ctx context.Context, req *MsgExitPool) (*MsgExitPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExitPool not implemented")
+}
+func (*UnimplementedMsgServer) CreatePool(ctx context.Context, req *MsgCreatePool) (*MsgCreatePoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePool not implemented")
+}
+func (*UnimplementedMsgServer) SwapExactAmountIn(ctx context.Context, req *MsgSwapExactAmountIn) (*MsgSwapExactAmountInResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapExactAmountIn not implemented")
+}
+func (*UnimplementedMsgServer) SwapExactAmountOut(ctx context.Context, req *MsgSwapExactAmountOut) (*MsgSwapExactAmountOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapExactAmountOut not implemented")
+}
+func (*UnimplementedMsgServer) JoinSwapExternAmountIn(ctx context.Context, req *MsgJoinSwapExternAmountIn) (*MsgJoinSwapExternAmountInResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinSwapExternAmountIn not implemented")
+}
+func (*UnimplementedMsgServer) JoinSwapPoolAmountOut(ctx context.Context, req *MsgJoinSwapPoolAmountOut) (*MsgJoinSwapPoolAmountOut, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinSwapPoolAmountOut not implemented")
+}
+func (*UnimplementedMsgServer) ExitSwapExternAmountOut(ctx context.Context, req *MsgExitSwapExternAmountOut) (*MsgExitSwapExternAmountOut, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExitSwapExternAmountOut not implemented")
+}
+func (*UnimplementedMsgServer) ExitSwapPoolAmountIn(ctx context.Context, req *MsgExitSwapPoolAmountIn) (*MsgExitSwapPoolAmountIn, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExitSwapPoolAmountIn not implemented")
+}
+
+func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
+	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_JoinPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgJoinPool)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).JoinPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/JoinPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).JoinPool(ctx, req.(*MsgJoinPool))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ExitPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExitPool)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExitPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/ExitPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExitPool(ctx, req.(*MsgExitPool))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreatePool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreatePool)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreatePool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/CreatePool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreatePool(ctx, req.(*MsgCreatePool))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SwapExactAmountIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSwapExactAmountIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SwapExactAmountIn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/SwapExactAmountIn",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SwapExactAmountIn(ctx, req.(*MsgSwapExactAmountIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SwapExactAmountOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSwapExactAmountOut)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SwapExactAmountOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/SwapExactAmountOut",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SwapExactAmountOut(ctx, req.(*MsgSwapExactAmountOut))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_JoinSwapExternAmountIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgJoinSwapExternAmountIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).JoinSwapExternAmountIn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/JoinSwapExternAmountIn",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).JoinSwapExternAmountIn(ctx, req.(*MsgJoinSwapExternAmountIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_JoinSwapPoolAmountOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgJoinSwapPoolAmountOut)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).JoinSwapPoolAmountOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/JoinSwapPoolAmountOut",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).JoinSwapPoolAmountOut(ctx, req.(*MsgJoinSwapPoolAmountOut))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ExitSwapExternAmountOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExitSwapExternAmountOut)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExitSwapExternAmountOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/ExitSwapExternAmountOut",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExitSwapExternAmountOut(ctx, req.(*MsgExitSwapExternAmountOut))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ExitSwapPoolAmountIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExitSwapPoolAmountIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExitSwapPoolAmountIn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/ExitSwapPoolAmountIn",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExitSwapPoolAmountIn(ctx, req.(*MsgExitSwapPoolAmountIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Msg_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "osmosis.gamm.v1beta1.Msg",
+	HandlerType: (*MsgServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "JoinPool",
+			Handler:    _Msg_JoinPool_Handler,
+		},
+		{
+			MethodName: "ExitPool",
+			Handler:    _Msg_ExitPool_Handler,
+		},
+		{
+			MethodName: "CreatePool",
+			Handler:    _Msg_CreatePool_Handler,
+		},
+		{
+			MethodName: "SwapExactAmountIn",
+			Handler:    _Msg_SwapExactAmountIn_Handler,
+		},
+		{
+			MethodName: "SwapExactAmountOut",
+			Handler:    _Msg_SwapExactAmountOut_Handler,
+		},
+		{
+			MethodName: "JoinSwapExternAmountIn",
+			Handler:    _Msg_JoinSwapExternAmountIn_Handler,
+		},
+		{
+			MethodName: "JoinSwapPoolAmountOut",
+			Handler:    _Msg_JoinSwapPoolAmountOut_Handler,
+		},
+		{
+			MethodName: "ExitSwapExternAmountOut",
+			Handler:    _Msg_ExitSwapExternAmountOut_Handler,
+		},
+		{
+			MethodName: "ExitSwapPoolAmountIn",
+			Handler:    _Msg_ExitSwapPoolAmountIn_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "osmosis/gamm/v1beta1/tx.proto",
 }
 
 func (m *MaxAmountIn) Marshal() (dAtA []byte, err error) {
@@ -970,6 +1689,29 @@ func (m *MsgJoinPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgJoinPoolResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgJoinPoolResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgJoinPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *MinAmountOut) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1066,6 +1808,29 @@ func (m *MsgExitPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExitPoolResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExitPoolResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExitPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -1220,6 +1985,29 @@ func (m *MsgCreatePool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgCreatePoolResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePoolResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *MsgSwapExactAmountIn) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1289,6 +2077,29 @@ func (m *MsgSwapExactAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSwapExactAmountInResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSwapExactAmountInResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSwapExactAmountInResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -1364,6 +2175,29 @@ func (m *MsgSwapExactAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSwapExactAmountOutResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSwapExactAmountOutResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSwapExactAmountOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *MsgJoinSwapExternAmountIn) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1423,6 +2257,29 @@ func (m *MsgJoinSwapExternAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, erro
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgJoinSwapExternAmountInResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgJoinSwapExternAmountInResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgJoinSwapExternAmountInResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -1488,6 +2345,29 @@ func (m *MsgJoinSwapPoolAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgJoinSwapPoolAmountOutResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgJoinSwapPoolAmountOutResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgJoinSwapPoolAmountOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *MsgExitSwapExternAmountOut) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1547,6 +2427,29 @@ func (m *MsgExitSwapExternAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, err
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -1612,6 +2515,29 @@ func (m *MsgExitSwapPoolAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgExitSwapPoolAmountInResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExitSwapPoolAmountInResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExitSwapPoolAmountInResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1662,6 +2588,15 @@ func (m *MsgJoinPool) Size() (n int) {
 	return n
 }
 
+func (m *MsgJoinPoolResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MinAmountOut) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1698,6 +2633,15 @@ func (m *MsgExitPool) Size() (n int) {
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
+	return n
+}
+
+func (m *MsgExitPoolResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -1758,6 +2702,15 @@ func (m *MsgCreatePool) Size() (n int) {
 	return n
 }
 
+func (m *MsgCreatePoolResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgSwapExactAmountIn) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1781,6 +2734,15 @@ func (m *MsgSwapExactAmountIn) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = m.MaxPrice.Size()
 	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgSwapExactAmountInResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -1810,6 +2772,15 @@ func (m *MsgSwapExactAmountOut) Size() (n int) {
 	return n
 }
 
+func (m *MsgSwapExactAmountOutResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgJoinSwapExternAmountIn) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1831,6 +2802,15 @@ func (m *MsgJoinSwapExternAmountIn) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = m.MinPoolAmountOut.Size()
 	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgJoinSwapExternAmountInResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -1858,6 +2838,15 @@ func (m *MsgJoinSwapPoolAmountOut) Size() (n int) {
 	return n
 }
 
+func (m *MsgJoinSwapPoolAmountOutResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgExitSwapExternAmountOut) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1882,6 +2871,15 @@ func (m *MsgExitSwapExternAmountOut) Size() (n int) {
 	return n
 }
 
+func (m *MsgExitSwapExternAmountOutResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgExitSwapPoolAmountIn) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1903,6 +2901,15 @@ func (m *MsgExitSwapPoolAmountIn) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = m.MaxPoolAmountIn.Size()
 	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgExitSwapPoolAmountInResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -2205,6 +3212,59 @@ func (m *MsgJoinPool) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgJoinPoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgJoinPoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgJoinPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MinAmountOut) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2474,6 +3534,59 @@ func (m *MsgExitPool) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExitPoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitPoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -2956,6 +4069,59 @@ func (m *MsgCreatePool) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgCreatePoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgSwapExactAmountIn) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3171,6 +4337,59 @@ func (m *MsgSwapExactAmountIn) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSwapExactAmountInResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSwapExactAmountInResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSwapExactAmountInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -3434,6 +4653,59 @@ func (m *MsgSwapExactAmountOut) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgSwapExactAmountOutResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSwapExactAmountOutResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSwapExactAmountOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgJoinSwapExternAmountIn) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3616,6 +4888,59 @@ func (m *MsgJoinSwapExternAmountIn) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgJoinSwapExternAmountInResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgJoinSwapExternAmountInResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgJoinSwapExternAmountInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -3846,6 +5171,59 @@ func (m *MsgJoinSwapPoolAmountOut) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgJoinSwapPoolAmountOutResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgJoinSwapPoolAmountOutResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgJoinSwapPoolAmountOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgExitSwapExternAmountOut) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4052,6 +5430,59 @@ func (m *MsgExitSwapExternAmountOut) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgExitSwapExternAmountOutResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitSwapExternAmountOutResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitSwapExternAmountOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgExitSwapPoolAmountIn) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4234,6 +5665,59 @@ func (m *MsgExitSwapPoolAmountIn) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExitSwapPoolAmountInResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitSwapPoolAmountInResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitSwapPoolAmountInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
