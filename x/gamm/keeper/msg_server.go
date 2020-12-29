@@ -24,7 +24,12 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.JoinPool(ctx, msg.Sender, msg.TargetPoolId, msg.PoolAmountOut, msg.MaxAmountsIn)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.JoinPool(ctx, sender, msg.TargetPoolId, msg.PoolAmountOut, msg.MaxAmountsIn)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +51,12 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) (*types.MsgExitPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.ExitPool(ctx, msg.Sender, msg.TargetPoolId, msg.PoolAmountIn, msg.MinAmountsOut)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.ExitPool(ctx, sender, msg.TargetPoolId, msg.PoolAmountIn, msg.MinAmountsOut)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +78,12 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	poolId, err := server.keeper.CreatePool(ctx, msg.Sender, msg.SwapFee, msg.LpToken, msg.BindTokens)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	poolId, err := server.keeper.CreatePool(ctx, sender, msg.SwapFee, msg.LpToken, msg.BindTokens)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +96,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePo
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
 
@@ -91,7 +106,12 @@ func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePo
 func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, _, err := server.keeper.SwapExactAmountIn(ctx, msg.Sender, msg.TargetPoolId, msg.TokenIn, msg.TokenOutDenom, msg.MinAmountOut, msg.MaxPrice)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_, _, err = server.keeper.SwapExactAmountIn(ctx, sender, msg.TargetPoolId, msg.TokenIn, msg.TokenOutDenom, msg.MinAmountOut, msg.MaxPrice)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +133,12 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.MsgSwapExactAmountOut) (*types.MsgSwapExactAmountOutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, _, err := server.keeper.SwapExactAmountOut(ctx, msg.Sender, msg.TargetPoolId, msg.TokenInDenom, msg.MaxAmountIn, msg.TokenOut, msg.MaxPrice)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_, _, err = server.keeper.SwapExactAmountOut(ctx, sender, msg.TargetPoolId, msg.TokenInDenom, msg.MaxAmountIn, msg.TokenOut, msg.MaxPrice)
 	if err != nil {
 		return nil, err
 	}

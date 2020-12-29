@@ -31,8 +31,7 @@ message MaxAmountIn {
 }
 
 message MsgJoinPool {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
     uint64 targetPoolId = 2 [
@@ -65,8 +64,7 @@ message MinAmountOut {
 }
 
 message MsgExitPool {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
     uint64 targetPoolId = 2 [
@@ -113,8 +111,7 @@ message BindTokenInfo {
 }
 
 message MsgCreatePool {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
 
@@ -139,8 +136,7 @@ message MsgCreatePoolResponse {}
 
 // ===================== MsgSwapExactAmountIn
 message MsgSwapExactAmountIn {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
     uint64 targetPoolId = 2 [
@@ -170,8 +166,7 @@ message MsgSwapExactAmountInResponse {}
 
 // ===================== MsgSwapExactAmountOut
 message MsgSwapExactAmountOut {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
     uint64 targetPoolId = 2 [
@@ -201,8 +196,7 @@ message MsgSwapExactAmountOutResponse {}
 
 // ===================== MsgJoinSwapExternAmountIn
 message MsgJoinSwapExternAmountIn {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
     uint64 targetPool = 2 [
@@ -227,8 +221,7 @@ message MsgJoinSwapExternAmountInResponse {}
 
 // ===================== MsgJoinSwapPoolAmountOut
 message MsgJoinSwapPoolAmountOut {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
     uint64 targetPool = 2 [
@@ -253,8 +246,7 @@ message MsgJoinSwapPoolAmountOutResponse {}
 
 // ===================== MsgExitSwapExternAmountOut
 message MsgExitSwapExternAmountOut {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
     uint64 targetPool = 2 [
@@ -279,8 +271,7 @@ message MsgExitSwapExternAmountOutResponse {}
 
 // ===================== MsgExitSwapPoolAmountIn
 message MsgExitSwapPoolAmountIn {
-    bytes sender = 1 [
-        (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    string sender = 1 [
         (gogoproto.moretags) = "yaml:\"sender\""
     ];
     uint64 targetPool = 2 [
