@@ -195,7 +195,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 	}
 
 	msg := &types.MsgCreatePool{
-		Sender:  clientCtx.GetFromAddress(),
+		Sender:  clientCtx.GetFromAddress().String(),
 		SwapFee: swapFee,
 		LpToken: types.LPTokenInfo{
 			Denom:       customDenom,
@@ -250,7 +250,7 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	}
 
 	msg := &types.MsgJoinPool{
-		Sender:        clientCtx.GetFromAddress(),
+		Sender:        clientCtx.GetFromAddress().String(),
 		TargetPoolId:  poolId,
 		PoolAmountOut: poolAmountOut,
 		MaxAmountsIn:  maxAmountsIn,
@@ -302,7 +302,7 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	}
 
 	msg := &types.MsgExitPool{
-		Sender:        clientCtx.GetFromAddress(),
+		Sender:        clientCtx.GetFromAddress().String(),
 		TargetPoolId:  poolId,
 		PoolAmountIn:  poolAmountIn,
 		MinAmountsOut: minAmountsOut,
