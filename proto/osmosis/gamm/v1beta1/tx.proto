@@ -255,12 +255,12 @@ message MsgExitSwapExternAmountOut {
     string tokenOut = 3 [
         (gogoproto.moretags) = "yaml:\"token_out\""
     ];
-    string poolAmountIn = 4 [
+    string tokenAmountOut = 4 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
         (gogoproto.moretags) = "yaml:\"pool_amount_in\"",
         (gogoproto.nullable) = false
     ];
-    string minAmountOut = 5 [
+    string maxPoolAmountIn = 5 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
         (gogoproto.moretags) = "yaml:\"min_amount_out\"",
         (gogoproto.nullable) = false
@@ -280,12 +280,12 @@ message MsgExitSwapPoolAmountIn {
     string tokenOut = 3 [
         (gogoproto.moretags) = "yaml:\"token_out\""
     ];
-    string tokenAmountOut = 4 [
+    string poolAmountIn = 4 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
         (gogoproto.moretags) = "yaml:\"token_amount_out\"",
         (gogoproto.nullable) = false
     ];
-    string maxPoolAmountIn = 5 [
+    string minAmountOut = 5 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
         (gogoproto.moretags) = "yaml:\"max_pool_amount_in\"",
         (gogoproto.nullable) = false

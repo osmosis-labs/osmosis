@@ -158,17 +158,109 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 }
 
 func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types.MsgJoinSwapExternAmountIn) (*types.MsgJoinSwapExternAmountInResponse, error) {
-	panic("implement me")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = server.keeper.JoinPoolWithExternAmountIn(ctx, sender, msg.TargetPool, msg.TokenIn, msg.TokenAmountIn, msg.MinPoolAmountOut)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(msg.TargetPool)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
+	return &types.MsgJoinSwapExternAmountInResponse{}, nil
 }
 
 func (server msgServer) JoinSwapPoolAmountOut(goCtx context.Context, msg *types.MsgJoinSwapPoolAmountOut) (*types.MsgJoinSwapPoolAmountOut, error) {
-	panic("implement me")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = server.keeper.JoinPoolWithPoolAmountOut(ctx, sender, msg.TargetPool, msg.TokenIn, msg.PoolAmountOut, msg.MaxAmountIn)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(msg.TargetPool)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
+	return &types.MsgJoinSwapPoolAmountOut{}, nil
 }
 
 func (server msgServer) ExitSwapExternAmountOut(goCtx context.Context, msg *types.MsgExitSwapExternAmountOut) (*types.MsgExitSwapExternAmountOut, error) {
-	panic("implement me")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = server.keeper.ExitPoolWithExternAmountOut(ctx, sender, msg.TargetPool, msg.TokenOut, msg.TokenAmountOut, msg.MaxPoolAmountIn)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(msg.TargetPool)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
+	return &types.MsgExitSwapExternAmountOut{}, nil
 }
 
 func (server msgServer) ExitSwapPoolAmountIn(goCtx context.Context, msg *types.MsgExitSwapPoolAmountIn) (*types.MsgExitSwapPoolAmountIn, error) {
-	panic("implement me")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = server.keeper.ExitPoolWithPoolAmountIn(ctx, sender, msg.TargetPool, msg.TokenOut, msg.PoolAmountIn, msg.MinAmountOut)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(msg.TargetPool)),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
+	return &types.MsgExitSwapPoolAmountIn{}, nil
 }
