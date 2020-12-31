@@ -11,6 +11,7 @@ const (
 )
 
 var (
-	PoolPrefix       = []byte("gmm_liquidity_pool")
-	GlobalPoolNumber = []byte("gmm_global_pool_number")
+	PoolAddressPrefix = []byte("gmm_liquidity_pool")
+	PoolPrefix        = []byte("gmm_liquidity_pool")
+	GlobalPoolNumber  = []byte("gmm_global_pool_number")
 )

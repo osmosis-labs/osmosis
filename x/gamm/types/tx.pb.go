@@ -6,8 +6,8 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -30,24 +30,24 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ===================== MsgJoinPool
-type MaxAmountIn struct {
-	Denom     string                                 `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
-	MaxAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=maxAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"maxAmount" yaml:"max_amount"`
+// ===================== MsgCreatePool
+type BindingToken struct {
+	Token  types.Coin                             `protobuf:"bytes,1,opt,name=token,proto3" json:"token" yaml:"token_in"`
+	Weight github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"weight" yaml:"weight"`
 }
 
-func (m *MaxAmountIn) Reset()         { *m = MaxAmountIn{} }
-func (m *MaxAmountIn) String() string { return proto.CompactTextString(m) }
-func (*MaxAmountIn) ProtoMessage()    {}
-func (*MaxAmountIn) Descriptor() ([]byte, []int) {
+func (m *BindingToken) Reset()         { *m = BindingToken{} }
+func (m *BindingToken) String() string { return proto.CompactTextString(m) }
+func (*BindingToken) ProtoMessage()    {}
+func (*BindingToken) Descriptor() ([]byte, []int) {
 	return fileDescriptor_cfc8fd3ac7df3247, []int{0}
 }
-func (m *MaxAmountIn) XXX_Unmarshal(b []byte) error {
+func (m *BindingToken) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MaxAmountIn) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BindingToken) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MaxAmountIn.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BindingToken.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -57,376 +57,36 @@ func (m *MaxAmountIn) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *MaxAmountIn) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MaxAmountIn.Merge(m, src)
+func (m *BindingToken) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BindingToken.Merge(m, src)
 }
-func (m *MaxAmountIn) XXX_Size() int {
+func (m *BindingToken) XXX_Size() int {
 	return m.Size()
 }
-func (m *MaxAmountIn) XXX_DiscardUnknown() {
-	xxx_messageInfo_MaxAmountIn.DiscardUnknown(m)
+func (m *BindingToken) XXX_DiscardUnknown() {
+	xxx_messageInfo_BindingToken.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MaxAmountIn proto.InternalMessageInfo
+var xxx_messageInfo_BindingToken proto.InternalMessageInfo
 
-func (m *MaxAmountIn) GetDenom() string {
+func (m *BindingToken) GetToken() types.Coin {
 	if m != nil {
-		return m.Denom
+		return m.Token
 	}
-	return ""
-}
-
-type MsgJoinPool struct {
-	Sender        string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	TargetPoolId  uint64                                 `protobuf:"varint,2,opt,name=targetPoolId,proto3" json:"targetPoolId,omitempty" yaml:"target_pool_id"`
-	PoolAmountOut github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=poolAmountOut,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"poolAmountOut" yaml:"pool_amount_out"`
-	MaxAmountsIn  []MaxAmountIn                          `protobuf:"bytes,4,rep,name=maxAmountsIn,proto3" json:"maxAmountsIn" yaml:"max_amounts_in"`
-}
-
-func (m *MsgJoinPool) Reset()         { *m = MsgJoinPool{} }
-func (m *MsgJoinPool) String() string { return proto.CompactTextString(m) }
-func (*MsgJoinPool) ProtoMessage()    {}
-func (*MsgJoinPool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{1}
-}
-func (m *MsgJoinPool) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgJoinPool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgJoinPool.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgJoinPool) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgJoinPool.Merge(m, src)
-}
-func (m *MsgJoinPool) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgJoinPool) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgJoinPool.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgJoinPool proto.InternalMessageInfo
-
-func (m *MsgJoinPool) GetSender() string {
-	if m != nil {
-		return m.Sender
-	}
-	return ""
-}
-
-func (m *MsgJoinPool) GetTargetPoolId() uint64 {
-	if m != nil {
-		return m.TargetPoolId
-	}
-	return 0
-}
-
-func (m *MsgJoinPool) GetMaxAmountsIn() []MaxAmountIn {
-	if m != nil {
-		return m.MaxAmountsIn
-	}
-	return nil
-}
-
-type MsgJoinPoolResponse struct {
-}
-
-func (m *MsgJoinPoolResponse) Reset()         { *m = MsgJoinPoolResponse{} }
-func (m *MsgJoinPoolResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgJoinPoolResponse) ProtoMessage()    {}
-func (*MsgJoinPoolResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{2}
-}
-func (m *MsgJoinPoolResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgJoinPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgJoinPoolResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgJoinPoolResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgJoinPoolResponse.Merge(m, src)
-}
-func (m *MsgJoinPoolResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgJoinPoolResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgJoinPoolResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgJoinPoolResponse proto.InternalMessageInfo
-
-// ===================== MsgExitPool
-type MinAmountOut struct {
-	Denom     string                                 `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
-	MinAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=minAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"minAmount" yaml:"min_amount"`
-}
-
-func (m *MinAmountOut) Reset()         { *m = MinAmountOut{} }
-func (m *MinAmountOut) String() string { return proto.CompactTextString(m) }
-func (*MinAmountOut) ProtoMessage()    {}
-func (*MinAmountOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{3}
-}
-func (m *MinAmountOut) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MinAmountOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MinAmountOut.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MinAmountOut) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MinAmountOut.Merge(m, src)
-}
-func (m *MinAmountOut) XXX_Size() int {
-	return m.Size()
-}
-func (m *MinAmountOut) XXX_DiscardUnknown() {
-	xxx_messageInfo_MinAmountOut.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MinAmountOut proto.InternalMessageInfo
-
-func (m *MinAmountOut) GetDenom() string {
-	if m != nil {
-		return m.Denom
-	}
-	return ""
-}
-
-type MsgExitPool struct {
-	Sender        string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	TargetPoolId  uint64                                 `protobuf:"varint,2,opt,name=targetPoolId,proto3" json:"targetPoolId,omitempty" yaml:"target_pool_id"`
-	PoolAmountIn  github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=poolAmountIn,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"poolAmountIn" yaml:"pool_amount_in"`
-	MinAmountsOut []MinAmountOut                         `protobuf:"bytes,4,rep,name=minAmountsOut,proto3" json:"minAmountsOut" yaml:"min_amounts_out"`
-}
-
-func (m *MsgExitPool) Reset()         { *m = MsgExitPool{} }
-func (m *MsgExitPool) String() string { return proto.CompactTextString(m) }
-func (*MsgExitPool) ProtoMessage()    {}
-func (*MsgExitPool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{4}
-}
-func (m *MsgExitPool) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgExitPool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgExitPool.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgExitPool) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExitPool.Merge(m, src)
-}
-func (m *MsgExitPool) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgExitPool) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExitPool.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgExitPool proto.InternalMessageInfo
-
-func (m *MsgExitPool) GetSender() string {
-	if m != nil {
-		return m.Sender
-	}
-	return ""
-}
-
-func (m *MsgExitPool) GetTargetPoolId() uint64 {
-	if m != nil {
-		return m.TargetPoolId
-	}
-	return 0
-}
-
-func (m *MsgExitPool) GetMinAmountsOut() []MinAmountOut {
-	if m != nil {
-		return m.MinAmountsOut
-	}
-	return nil
-}
-
-type MsgExitPoolResponse struct {
-}
-
-func (m *MsgExitPoolResponse) Reset()         { *m = MsgExitPoolResponse{} }
-func (m *MsgExitPoolResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgExitPoolResponse) ProtoMessage()    {}
-func (*MsgExitPoolResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{5}
-}
-func (m *MsgExitPoolResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgExitPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgExitPoolResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgExitPoolResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExitPoolResponse.Merge(m, src)
-}
-func (m *MsgExitPoolResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgExitPoolResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExitPoolResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgExitPoolResponse proto.InternalMessageInfo
-
-// ===================== MsgCreatePool
-type LPTokenInfo struct {
-	Denom       string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
-}
-
-func (m *LPTokenInfo) Reset()         { *m = LPTokenInfo{} }
-func (m *LPTokenInfo) String() string { return proto.CompactTextString(m) }
-func (*LPTokenInfo) ProtoMessage()    {}
-func (*LPTokenInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{6}
-}
-func (m *LPTokenInfo) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *LPTokenInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LPTokenInfo.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *LPTokenInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LPTokenInfo.Merge(m, src)
-}
-func (m *LPTokenInfo) XXX_Size() int {
-	return m.Size()
-}
-func (m *LPTokenInfo) XXX_DiscardUnknown() {
-	xxx_messageInfo_LPTokenInfo.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LPTokenInfo proto.InternalMessageInfo
-
-func (m *LPTokenInfo) GetDenom() string {
-	if m != nil {
-		return m.Denom
-	}
-	return ""
-}
-
-func (m *LPTokenInfo) GetDescription() string {
-	if m != nil {
-		return m.Description
-	}
-	return ""
-}
-
-type BindTokenInfo struct {
-	Denom  string                                 `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
-	Weight github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"weight" yaml:"weight"`
-	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount" yaml:"amount"`
-}
-
-func (m *BindTokenInfo) Reset()         { *m = BindTokenInfo{} }
-func (m *BindTokenInfo) String() string { return proto.CompactTextString(m) }
-func (*BindTokenInfo) ProtoMessage()    {}
-func (*BindTokenInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{7}
-}
-func (m *BindTokenInfo) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BindTokenInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BindTokenInfo.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BindTokenInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BindTokenInfo.Merge(m, src)
-}
-func (m *BindTokenInfo) XXX_Size() int {
-	return m.Size()
-}
-func (m *BindTokenInfo) XXX_DiscardUnknown() {
-	xxx_messageInfo_BindTokenInfo.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BindTokenInfo proto.InternalMessageInfo
-
-func (m *BindTokenInfo) GetDenom() string {
-	if m != nil {
-		return m.Denom
-	}
-	return ""
+	return types.Coin{}
 }
 
 type MsgCreatePool struct {
-	Sender     string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	SwapFee    github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=swapFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swapFee" yaml:"swap_fee"`
-	LpToken    LPTokenInfo                            `protobuf:"bytes,3,opt,name=lpToken,proto3" json:"lpToken" yaml:"lp_token"`
-	BindTokens []BindTokenInfo                        `protobuf:"bytes,4,rep,name=bindTokens,proto3" json:"bindTokens" yaml:"token_info"`
+	Sender        string         `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolParams    *PoolParams    `protobuf:"bytes,2,opt,name=poolParams,proto3" json:"poolParams,omitempty" yaml:"pool_params"`
+	BindingTokens []BindingToken `protobuf:"bytes,3,rep,name=bindingTokens,proto3" json:"bindingTokens" yaml:"binding_tokens"`
 }
 
 func (m *MsgCreatePool) Reset()         { *m = MsgCreatePool{} }
 func (m *MsgCreatePool) String() string { return proto.CompactTextString(m) }
 func (*MsgCreatePool) ProtoMessage()    {}
 func (*MsgCreatePool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{8}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{1}
 }
 func (m *MsgCreatePool) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -462,16 +122,16 @@ func (m *MsgCreatePool) GetSender() string {
 	return ""
 }
 
-func (m *MsgCreatePool) GetLpToken() LPTokenInfo {
+func (m *MsgCreatePool) GetPoolParams() *PoolParams {
 	if m != nil {
-		return m.LpToken
+		return m.PoolParams
 	}
-	return LPTokenInfo{}
+	return nil
 }
 
-func (m *MsgCreatePool) GetBindTokens() []BindTokenInfo {
+func (m *MsgCreatePool) GetBindingTokens() []BindingToken {
 	if m != nil {
-		return m.BindTokens
+		return m.BindingTokens
 	}
 	return nil
 }
@@ -483,7 +143,7 @@ func (m *MsgCreatePoolResponse) Reset()         { *m = MsgCreatePoolResponse{} }
 func (m *MsgCreatePoolResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgCreatePoolResponse) ProtoMessage()    {}
 func (*MsgCreatePoolResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{9}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{2}
 }
 func (m *MsgCreatePoolResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -512,21 +172,217 @@ func (m *MsgCreatePoolResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreatePoolResponse proto.InternalMessageInfo
 
+// ===================== MsgJoinPool
+type MsgJoinPool struct {
+	Sender            string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	ShareOutAmount    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=shareOutAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareOutAmount" yaml:"pool_amount_out"`
+	TokenInMaxAmounts []types.Coin                           `protobuf:"bytes,4,rep,name=tokenInMaxAmounts,proto3" json:"tokenInMaxAmounts" yaml:"token_in_max_amounts"`
+}
+
+func (m *MsgJoinPool) Reset()         { *m = MsgJoinPool{} }
+func (m *MsgJoinPool) String() string { return proto.CompactTextString(m) }
+func (*MsgJoinPool) ProtoMessage()    {}
+func (*MsgJoinPool) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{3}
+}
+func (m *MsgJoinPool) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgJoinPool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgJoinPool.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgJoinPool) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgJoinPool.Merge(m, src)
+}
+func (m *MsgJoinPool) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgJoinPool) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgJoinPool.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgJoinPool proto.InternalMessageInfo
+
+func (m *MsgJoinPool) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgJoinPool) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *MsgJoinPool) GetTokenInMaxAmounts() []types.Coin {
+	if m != nil {
+		return m.TokenInMaxAmounts
+	}
+	return nil
+}
+
+type MsgJoinPoolResponse struct {
+}
+
+func (m *MsgJoinPoolResponse) Reset()         { *m = MsgJoinPoolResponse{} }
+func (m *MsgJoinPoolResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgJoinPoolResponse) ProtoMessage()    {}
+func (*MsgJoinPoolResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{4}
+}
+func (m *MsgJoinPoolResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgJoinPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgJoinPoolResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgJoinPoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgJoinPoolResponse.Merge(m, src)
+}
+func (m *MsgJoinPoolResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgJoinPoolResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgJoinPoolResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgJoinPoolResponse proto.InternalMessageInfo
+
+// ===================== MsgExitPool
+type MsgExitPool struct {
+	Sender             string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId             uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	ShareInAmount      github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=shareInAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareInAmount" yaml:"share_in_amount"`
+	TokenOutMinAmounts []types.Coin                           `protobuf:"bytes,4,rep,name=tokenOutMinAmounts,proto3" json:"tokenOutMinAmounts" yaml:"token_out_min_amounts"`
+}
+
+func (m *MsgExitPool) Reset()         { *m = MsgExitPool{} }
+func (m *MsgExitPool) String() string { return proto.CompactTextString(m) }
+func (*MsgExitPool) ProtoMessage()    {}
+func (*MsgExitPool) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{5}
+}
+func (m *MsgExitPool) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitPool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitPool.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitPool) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitPool.Merge(m, src)
+}
+func (m *MsgExitPool) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitPool) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitPool.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitPool proto.InternalMessageInfo
+
+func (m *MsgExitPool) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgExitPool) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *MsgExitPool) GetTokenOutMinAmounts() []types.Coin {
+	if m != nil {
+		return m.TokenOutMinAmounts
+	}
+	return nil
+}
+
+type MsgExitPoolResponse struct {
+}
+
+func (m *MsgExitPoolResponse) Reset()         { *m = MsgExitPoolResponse{} }
+func (m *MsgExitPoolResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExitPoolResponse) ProtoMessage()    {}
+func (*MsgExitPoolResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{6}
+}
+func (m *MsgExitPoolResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitPoolResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitPoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitPoolResponse.Merge(m, src)
+}
+func (m *MsgExitPoolResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitPoolResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitPoolResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitPoolResponse proto.InternalMessageInfo
+
 // ===================== MsgSwapExactAmountIn
 type MsgSwapExactAmountIn struct {
-	Sender        string                                  `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	TargetPoolId  uint64                                  `protobuf:"varint,2,opt,name=targetPoolId,proto3" json:"targetPoolId,omitempty" yaml:"target_pool_id"`
-	TokenIn       github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=tokenIn,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"tokenIn" yaml:"token_in"`
-	TokenOutDenom string                                  `protobuf:"bytes,4,opt,name=tokenOutDenom,proto3" json:"tokenOutDenom,omitempty" yaml:"token_out_denom"`
-	MinAmountOut  github_com_cosmos_cosmos_sdk_types.Int  `protobuf:"bytes,5,opt,name=minAmountOut,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"minAmountOut" yaml:"min_amount_out"`
-	MaxPrice      github_com_cosmos_cosmos_sdk_types.Int  `protobuf:"bytes,6,opt,name=maxPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"maxPrice" yaml:"max_price"`
+	Sender            string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	TokenIn           types.Coin                             `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn" yaml:"token_in"`
+	TokenOutDenom     string                                 `protobuf:"bytes,4,opt,name=tokenOutDenom,proto3" json:"tokenOutDenom,omitempty" yaml:"token_out_denom"`
+	TokenOutMinAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=tokenOutMinAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenOutMinAmount" yaml:"token_out_min_amount"`
+	MaxSpotPrice      github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=maxSpotPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"maxSpotPrice" yaml:"max_spot_price"`
 }
 
 func (m *MsgSwapExactAmountIn) Reset()         { *m = MsgSwapExactAmountIn{} }
 func (m *MsgSwapExactAmountIn) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapExactAmountIn) ProtoMessage()    {}
 func (*MsgSwapExactAmountIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{10}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{7}
 }
 func (m *MsgSwapExactAmountIn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -562,11 +418,18 @@ func (m *MsgSwapExactAmountIn) GetSender() string {
 	return ""
 }
 
-func (m *MsgSwapExactAmountIn) GetTargetPoolId() uint64 {
+func (m *MsgSwapExactAmountIn) GetPoolId() uint64 {
 	if m != nil {
-		return m.TargetPoolId
+		return m.PoolId
 	}
 	return 0
+}
+
+func (m *MsgSwapExactAmountIn) GetTokenIn() types.Coin {
+	if m != nil {
+		return m.TokenIn
+	}
+	return types.Coin{}
 }
 
 func (m *MsgSwapExactAmountIn) GetTokenOutDenom() string {
@@ -583,7 +446,7 @@ func (m *MsgSwapExactAmountInResponse) Reset()         { *m = MsgSwapExactAmount
 func (m *MsgSwapExactAmountInResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapExactAmountInResponse) ProtoMessage()    {}
 func (*MsgSwapExactAmountInResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{11}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{8}
 }
 func (m *MsgSwapExactAmountInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -614,19 +477,19 @@ var xxx_messageInfo_MsgSwapExactAmountInResponse proto.InternalMessageInfo
 
 // ===================== MsgSwapExactAmountOut
 type MsgSwapExactAmountOut struct {
-	Sender       string                                  `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	TargetPoolId uint64                                  `protobuf:"varint,2,opt,name=targetPoolId,proto3" json:"targetPoolId,omitempty" yaml:"target_pool_id"`
-	TokenInDenom string                                  `protobuf:"bytes,3,opt,name=tokenInDenom,proto3" json:"tokenInDenom,omitempty" yaml:"token_in_denom"`
-	MaxAmountIn  github_com_cosmos_cosmos_sdk_types.Int  `protobuf:"bytes,4,opt,name=maxAmountIn,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"maxAmountIn" yaml:"max_amount_in"`
-	TokenOut     github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,5,opt,name=tokenOut,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"tokenOut" yaml:"token_out"`
-	MaxPrice     github_com_cosmos_cosmos_sdk_types.Int  `protobuf:"bytes,7,opt,name=maxPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"maxPrice" yaml:"max_price"`
+	Sender           string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId           uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	TokenInDenom     string                                 `protobuf:"bytes,3,opt,name=tokenInDenom,proto3" json:"tokenInDenom,omitempty" yaml:"token_in_denom"`
+	TokenInMaxAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=tokenInMaxAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenInMaxAmount" yaml:"token_in_max_amount"`
+	TokenOut         types.Coin                             `protobuf:"bytes,5,opt,name=tokenOut,proto3" json:"tokenOut" yaml:"token_out"`
+	MaxSpotPrice     github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=maxSpotPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"maxSpotPrice" yaml:"max_spot_price"`
 }
 
 func (m *MsgSwapExactAmountOut) Reset()         { *m = MsgSwapExactAmountOut{} }
 func (m *MsgSwapExactAmountOut) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapExactAmountOut) ProtoMessage()    {}
 func (*MsgSwapExactAmountOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{12}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{9}
 }
 func (m *MsgSwapExactAmountOut) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -662,9 +525,9 @@ func (m *MsgSwapExactAmountOut) GetSender() string {
 	return ""
 }
 
-func (m *MsgSwapExactAmountOut) GetTargetPoolId() uint64 {
+func (m *MsgSwapExactAmountOut) GetPoolId() uint64 {
 	if m != nil {
-		return m.TargetPoolId
+		return m.PoolId
 	}
 	return 0
 }
@@ -676,6 +539,13 @@ func (m *MsgSwapExactAmountOut) GetTokenInDenom() string {
 	return ""
 }
 
+func (m *MsgSwapExactAmountOut) GetTokenOut() types.Coin {
+	if m != nil {
+		return m.TokenOut
+	}
+	return types.Coin{}
+}
+
 type MsgSwapExactAmountOutResponse struct {
 }
 
@@ -683,7 +553,7 @@ func (m *MsgSwapExactAmountOutResponse) Reset()         { *m = MsgSwapExactAmoun
 func (m *MsgSwapExactAmountOutResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapExactAmountOutResponse) ProtoMessage()    {}
 func (*MsgSwapExactAmountOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{13}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{10}
 }
 func (m *MsgSwapExactAmountOutResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -714,18 +584,17 @@ var xxx_messageInfo_MsgSwapExactAmountOutResponse proto.InternalMessageInfo
 
 // ===================== MsgJoinSwapExternAmountIn
 type MsgJoinSwapExternAmountIn struct {
-	Sender           string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	TargetPool       uint64                                 `protobuf:"varint,2,opt,name=targetPool,proto3" json:"targetPool,omitempty" yaml:"target_pool"`
-	TokenIn          string                                 `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn,omitempty" yaml:"token_in"`
-	TokenAmountIn    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=tokenAmountIn,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenAmountIn" yaml:"token_amount_in"`
-	MinPoolAmountOut github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=minPoolAmountOut,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"minPoolAmountOut" yaml:"min_pool_amount_out"`
+	Sender            string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	TokenIn           types.Coin                             `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn" yaml:"token_in"`
+	ShareOutMinAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=shareOutMinAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareOutMinAmount" yaml:"share_out_min_amount"`
 }
 
 func (m *MsgJoinSwapExternAmountIn) Reset()         { *m = MsgJoinSwapExternAmountIn{} }
 func (m *MsgJoinSwapExternAmountIn) String() string { return proto.CompactTextString(m) }
 func (*MsgJoinSwapExternAmountIn) ProtoMessage()    {}
 func (*MsgJoinSwapExternAmountIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{14}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{11}
 }
 func (m *MsgJoinSwapExternAmountIn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -761,18 +630,18 @@ func (m *MsgJoinSwapExternAmountIn) GetSender() string {
 	return ""
 }
 
-func (m *MsgJoinSwapExternAmountIn) GetTargetPool() uint64 {
+func (m *MsgJoinSwapExternAmountIn) GetPoolId() uint64 {
 	if m != nil {
-		return m.TargetPool
+		return m.PoolId
 	}
 	return 0
 }
 
-func (m *MsgJoinSwapExternAmountIn) GetTokenIn() string {
+func (m *MsgJoinSwapExternAmountIn) GetTokenIn() types.Coin {
 	if m != nil {
 		return m.TokenIn
 	}
-	return ""
+	return types.Coin{}
 }
 
 type MsgJoinSwapExternAmountInResponse struct {
@@ -782,7 +651,7 @@ func (m *MsgJoinSwapExternAmountInResponse) Reset()         { *m = MsgJoinSwapEx
 func (m *MsgJoinSwapExternAmountInResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgJoinSwapExternAmountInResponse) ProtoMessage()    {}
 func (*MsgJoinSwapExternAmountInResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{15}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{12}
 }
 func (m *MsgJoinSwapExternAmountInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -813,18 +682,18 @@ var xxx_messageInfo_MsgJoinSwapExternAmountInResponse proto.InternalMessageInfo
 
 // ===================== MsgJoinSwapPoolAmountOut
 type MsgJoinSwapPoolAmountOut struct {
-	Sender        string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	TargetPool    uint64                                 `protobuf:"varint,2,opt,name=targetPool,proto3" json:"targetPool,omitempty" yaml:"target_pool"`
-	TokenIn       string                                 `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn,omitempty" yaml:"token_in"`
-	PoolAmountOut github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=poolAmountOut,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"poolAmountOut" yaml:"pool_amount_out"`
-	MaxAmountIn   github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=maxAmountIn,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"maxAmountIn" yaml:"max_amount_in"`
+	Sender           string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId           uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	TokenInDenom     string                                 `protobuf:"bytes,3,opt,name=tokenInDenom,proto3" json:"tokenInDenom,omitempty" yaml:"token_in_denom"`
+	ShareOutAmount   github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=shareOutAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareOutAmount" yaml:"share_out_amount"`
+	TokenInMaxAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=tokenInMaxAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenInMaxAmount" yaml:"token_in_max_amount"`
 }
 
 func (m *MsgJoinSwapPoolAmountOut) Reset()         { *m = MsgJoinSwapPoolAmountOut{} }
 func (m *MsgJoinSwapPoolAmountOut) String() string { return proto.CompactTextString(m) }
 func (*MsgJoinSwapPoolAmountOut) ProtoMessage()    {}
 func (*MsgJoinSwapPoolAmountOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{16}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{13}
 }
 func (m *MsgJoinSwapPoolAmountOut) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -860,16 +729,16 @@ func (m *MsgJoinSwapPoolAmountOut) GetSender() string {
 	return ""
 }
 
-func (m *MsgJoinSwapPoolAmountOut) GetTargetPool() uint64 {
+func (m *MsgJoinSwapPoolAmountOut) GetPoolId() uint64 {
 	if m != nil {
-		return m.TargetPool
+		return m.PoolId
 	}
 	return 0
 }
 
-func (m *MsgJoinSwapPoolAmountOut) GetTokenIn() string {
+func (m *MsgJoinSwapPoolAmountOut) GetTokenInDenom() string {
 	if m != nil {
-		return m.TokenIn
+		return m.TokenInDenom
 	}
 	return ""
 }
@@ -881,7 +750,7 @@ func (m *MsgJoinSwapPoolAmountOutResponse) Reset()         { *m = MsgJoinSwapPoo
 func (m *MsgJoinSwapPoolAmountOutResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgJoinSwapPoolAmountOutResponse) ProtoMessage()    {}
 func (*MsgJoinSwapPoolAmountOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{17}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{14}
 }
 func (m *MsgJoinSwapPoolAmountOutResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -910,119 +779,20 @@ func (m *MsgJoinSwapPoolAmountOutResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgJoinSwapPoolAmountOutResponse proto.InternalMessageInfo
 
-// ===================== MsgExitSwapExternAmountOut
-type MsgExitSwapExternAmountOut struct {
-	Sender          string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	TargetPool      uint64                                 `protobuf:"varint,2,opt,name=targetPool,proto3" json:"targetPool,omitempty" yaml:"target_pool"`
-	TokenOut        string                                 `protobuf:"bytes,3,opt,name=tokenOut,proto3" json:"tokenOut,omitempty" yaml:"token_out"`
-	TokenAmountOut  github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=tokenAmountOut,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenAmountOut" yaml:"pool_amount_in"`
-	MaxPoolAmountIn github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=maxPoolAmountIn,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"maxPoolAmountIn" yaml:"min_amount_out"`
-}
-
-func (m *MsgExitSwapExternAmountOut) Reset()         { *m = MsgExitSwapExternAmountOut{} }
-func (m *MsgExitSwapExternAmountOut) String() string { return proto.CompactTextString(m) }
-func (*MsgExitSwapExternAmountOut) ProtoMessage()    {}
-func (*MsgExitSwapExternAmountOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{18}
-}
-func (m *MsgExitSwapExternAmountOut) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgExitSwapExternAmountOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgExitSwapExternAmountOut.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgExitSwapExternAmountOut) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExitSwapExternAmountOut.Merge(m, src)
-}
-func (m *MsgExitSwapExternAmountOut) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgExitSwapExternAmountOut) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExitSwapExternAmountOut.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgExitSwapExternAmountOut proto.InternalMessageInfo
-
-func (m *MsgExitSwapExternAmountOut) GetSender() string {
-	if m != nil {
-		return m.Sender
-	}
-	return ""
-}
-
-func (m *MsgExitSwapExternAmountOut) GetTargetPool() uint64 {
-	if m != nil {
-		return m.TargetPool
-	}
-	return 0
-}
-
-func (m *MsgExitSwapExternAmountOut) GetTokenOut() string {
-	if m != nil {
-		return m.TokenOut
-	}
-	return ""
-}
-
-type MsgExitSwapExternAmountOutResponse struct {
-}
-
-func (m *MsgExitSwapExternAmountOutResponse) Reset()         { *m = MsgExitSwapExternAmountOutResponse{} }
-func (m *MsgExitSwapExternAmountOutResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgExitSwapExternAmountOutResponse) ProtoMessage()    {}
-func (*MsgExitSwapExternAmountOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{19}
-}
-func (m *MsgExitSwapExternAmountOutResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgExitSwapExternAmountOutResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgExitSwapExternAmountOutResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgExitSwapExternAmountOutResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExitSwapExternAmountOutResponse.Merge(m, src)
-}
-func (m *MsgExitSwapExternAmountOutResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgExitSwapExternAmountOutResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExitSwapExternAmountOutResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgExitSwapExternAmountOutResponse proto.InternalMessageInfo
-
 // ===================== MsgExitSwapPoolAmountIn
 type MsgExitSwapPoolAmountIn struct {
-	Sender       string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	TargetPool   uint64                                 `protobuf:"varint,2,opt,name=targetPool,proto3" json:"targetPool,omitempty" yaml:"target_pool"`
-	TokenOut     string                                 `protobuf:"bytes,3,opt,name=tokenOut,proto3" json:"tokenOut,omitempty" yaml:"token_out"`
-	PoolAmountIn github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=poolAmountIn,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"poolAmountIn" yaml:"token_amount_out"`
-	MinAmountOut github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=minAmountOut,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"minAmountOut" yaml:"max_pool_amount_in"`
+	Sender            string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	TokenOutDenom     string                                 `protobuf:"bytes,3,opt,name=tokenOutDenom,proto3" json:"tokenOutDenom,omitempty" yaml:"token_out_denom"`
+	ShareInAmount     github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=shareInAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareInAmount" yaml:"share_in_amount"`
+	TokenOutMinAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=tokenOutMinAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenOutMinAmount" yaml:"token_out_min_amount"`
 }
 
 func (m *MsgExitSwapPoolAmountIn) Reset()         { *m = MsgExitSwapPoolAmountIn{} }
 func (m *MsgExitSwapPoolAmountIn) String() string { return proto.CompactTextString(m) }
 func (*MsgExitSwapPoolAmountIn) ProtoMessage()    {}
 func (*MsgExitSwapPoolAmountIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{20}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{15}
 }
 func (m *MsgExitSwapPoolAmountIn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1058,16 +828,16 @@ func (m *MsgExitSwapPoolAmountIn) GetSender() string {
 	return ""
 }
 
-func (m *MsgExitSwapPoolAmountIn) GetTargetPool() uint64 {
+func (m *MsgExitSwapPoolAmountIn) GetPoolId() uint64 {
 	if m != nil {
-		return m.TargetPool
+		return m.PoolId
 	}
 	return 0
 }
 
-func (m *MsgExitSwapPoolAmountIn) GetTokenOut() string {
+func (m *MsgExitSwapPoolAmountIn) GetTokenOutDenom() string {
 	if m != nil {
-		return m.TokenOut
+		return m.TokenOutDenom
 	}
 	return ""
 }
@@ -1079,7 +849,7 @@ func (m *MsgExitSwapPoolAmountInResponse) Reset()         { *m = MsgExitSwapPool
 func (m *MsgExitSwapPoolAmountInResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgExitSwapPoolAmountInResponse) ProtoMessage()    {}
 func (*MsgExitSwapPoolAmountInResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cfc8fd3ac7df3247, []int{21}
+	return fileDescriptor_cfc8fd3ac7df3247, []int{16}
 }
 func (m *MsgExitSwapPoolAmountInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1108,17 +878,113 @@ func (m *MsgExitSwapPoolAmountInResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExitSwapPoolAmountInResponse proto.InternalMessageInfo
 
+// ===================== MsgExitSwapExternAmountOut
+type MsgExitSwapExternAmountOut struct {
+	Sender           string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId           uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	TokenOutDenom    string                                 `protobuf:"bytes,3,opt,name=tokenOutDenom,proto3" json:"tokenOutDenom,omitempty" yaml:"token_out_denom"`
+	TokenOutAmount   github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=tokenOutAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenOutAmount" yaml:"token_out_amount"`
+	ShareInMaxAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=shareInMaxAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareInMaxAmount" yaml:"share_in_max_amount"`
+}
+
+func (m *MsgExitSwapExternAmountOut) Reset()         { *m = MsgExitSwapExternAmountOut{} }
+func (m *MsgExitSwapExternAmountOut) String() string { return proto.CompactTextString(m) }
+func (*MsgExitSwapExternAmountOut) ProtoMessage()    {}
+func (*MsgExitSwapExternAmountOut) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{17}
+}
+func (m *MsgExitSwapExternAmountOut) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitSwapExternAmountOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitSwapExternAmountOut.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitSwapExternAmountOut) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitSwapExternAmountOut.Merge(m, src)
+}
+func (m *MsgExitSwapExternAmountOut) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitSwapExternAmountOut) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitSwapExternAmountOut.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitSwapExternAmountOut proto.InternalMessageInfo
+
+func (m *MsgExitSwapExternAmountOut) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgExitSwapExternAmountOut) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *MsgExitSwapExternAmountOut) GetTokenOutDenom() string {
+	if m != nil {
+		return m.TokenOutDenom
+	}
+	return ""
+}
+
+type MsgExitSwapExternAmountOutResponse struct {
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) Reset()         { *m = MsgExitSwapExternAmountOutResponse{} }
+func (m *MsgExitSwapExternAmountOutResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExitSwapExternAmountOutResponse) ProtoMessage()    {}
+func (*MsgExitSwapExternAmountOutResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cfc8fd3ac7df3247, []int{18}
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitSwapExternAmountOutResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitSwapExternAmountOutResponse.Merge(m, src)
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitSwapExternAmountOutResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitSwapExternAmountOutResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitSwapExternAmountOutResponse proto.InternalMessageInfo
+
 func init() {
-	proto.RegisterType((*MaxAmountIn)(nil), "osmosis.gamm.v1beta1.MaxAmountIn")
-	proto.RegisterType((*MsgJoinPool)(nil), "osmosis.gamm.v1beta1.MsgJoinPool")
-	proto.RegisterType((*MsgJoinPoolResponse)(nil), "osmosis.gamm.v1beta1.MsgJoinPoolResponse")
-	proto.RegisterType((*MinAmountOut)(nil), "osmosis.gamm.v1beta1.MinAmountOut")
-	proto.RegisterType((*MsgExitPool)(nil), "osmosis.gamm.v1beta1.MsgExitPool")
-	proto.RegisterType((*MsgExitPoolResponse)(nil), "osmosis.gamm.v1beta1.MsgExitPoolResponse")
-	proto.RegisterType((*LPTokenInfo)(nil), "osmosis.gamm.v1beta1.LPTokenInfo")
-	proto.RegisterType((*BindTokenInfo)(nil), "osmosis.gamm.v1beta1.BindTokenInfo")
+	proto.RegisterType((*BindingToken)(nil), "osmosis.gamm.v1beta1.BindingToken")
 	proto.RegisterType((*MsgCreatePool)(nil), "osmosis.gamm.v1beta1.MsgCreatePool")
 	proto.RegisterType((*MsgCreatePoolResponse)(nil), "osmosis.gamm.v1beta1.MsgCreatePoolResponse")
+	proto.RegisterType((*MsgJoinPool)(nil), "osmosis.gamm.v1beta1.MsgJoinPool")
+	proto.RegisterType((*MsgJoinPoolResponse)(nil), "osmosis.gamm.v1beta1.MsgJoinPoolResponse")
+	proto.RegisterType((*MsgExitPool)(nil), "osmosis.gamm.v1beta1.MsgExitPool")
+	proto.RegisterType((*MsgExitPoolResponse)(nil), "osmosis.gamm.v1beta1.MsgExitPoolResponse")
 	proto.RegisterType((*MsgSwapExactAmountIn)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountIn")
 	proto.RegisterType((*MsgSwapExactAmountInResponse)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountInResponse")
 	proto.RegisterType((*MsgSwapExactAmountOut)(nil), "osmosis.gamm.v1beta1.MsgSwapExactAmountOut")
@@ -1127,98 +993,88 @@ func init() {
 	proto.RegisterType((*MsgJoinSwapExternAmountInResponse)(nil), "osmosis.gamm.v1beta1.MsgJoinSwapExternAmountInResponse")
 	proto.RegisterType((*MsgJoinSwapPoolAmountOut)(nil), "osmosis.gamm.v1beta1.MsgJoinSwapPoolAmountOut")
 	proto.RegisterType((*MsgJoinSwapPoolAmountOutResponse)(nil), "osmosis.gamm.v1beta1.MsgJoinSwapPoolAmountOutResponse")
-	proto.RegisterType((*MsgExitSwapExternAmountOut)(nil), "osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut")
-	proto.RegisterType((*MsgExitSwapExternAmountOutResponse)(nil), "osmosis.gamm.v1beta1.MsgExitSwapExternAmountOutResponse")
 	proto.RegisterType((*MsgExitSwapPoolAmountIn)(nil), "osmosis.gamm.v1beta1.MsgExitSwapPoolAmountIn")
 	proto.RegisterType((*MsgExitSwapPoolAmountInResponse)(nil), "osmosis.gamm.v1beta1.MsgExitSwapPoolAmountInResponse")
+	proto.RegisterType((*MsgExitSwapExternAmountOut)(nil), "osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut")
+	proto.RegisterType((*MsgExitSwapExternAmountOutResponse)(nil), "osmosis.gamm.v1beta1.MsgExitSwapExternAmountOutResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/gamm/v1beta1/tx.proto", fileDescriptor_cfc8fd3ac7df3247) }
 
 var fileDescriptor_cfc8fd3ac7df3247 = []byte{
-	// 1306 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcf, 0x6f, 0x1b, 0x45,
-	0x18, 0x8d, 0x6b, 0x37, 0x3f, 0x3e, 0xc7, 0x34, 0x99, 0x3a, 0x89, 0xb3, 0x22, 0x76, 0x32, 0x41,
-	0xa5, 0xa1, 0x8a, 0xdd, 0xa6, 0x12, 0x20, 0x24, 0x54, 0xba, 0x69, 0x0b, 0x86, 0x5a, 0x89, 0x96,
-	0x4a, 0x20, 0x90, 0x6a, 0x6d, 0xec, 0x8d, 0xb3, 0x4a, 0x76, 0xc6, 0x78, 0xc7, 0xb5, 0x8b, 0xc4,
-	0x85, 0x03, 0xe2, 0x84, 0xb8, 0x20, 0xe0, 0x3f, 0xea, 0x05, 0xd4, 0x23, 0xe2, 0x60, 0xa1, 0xe4,
-	0xc4, 0x35, 0x37, 0x6e, 0x68, 0x77, 0x66, 0x77, 0x67, 0xd7, 0xde, 0x24, 0xdb, 0x36, 0x51, 0x4f,
-	0x89, 0x3c, 0xef, 0x7b, 0xdf, 0xce, 0xbc, 0xb7, 0x6f, 0x66, 0x16, 0x96, 0xa8, 0x6d, 0x51, 0xdb,
-	0xb4, 0x2b, 0x2d, 0xdd, 0xb2, 0x2a, 0x4f, 0x6e, 0xed, 0x18, 0x4c, 0xbf, 0x55, 0x61, 0xfd, 0x72,
-	0xbb, 0x43, 0x19, 0x45, 0x79, 0x31, 0x5c, 0x76, 0x86, 0xcb, 0x62, 0x58, 0xc9, 0xb7, 0x68, 0x8b,
-	0xba, 0x80, 0x8a, 0xf3, 0x1f, 0xc7, 0x2a, 0xc5, 0x86, 0x0b, 0xae, 0xec, 0xe8, 0xb6, 0xe1, 0x33,
-	0x35, 0xa8, 0x49, 0xf8, 0x38, 0xfe, 0x2d, 0x05, 0xd9, 0x9a, 0xde, 0xbf, 0x6b, 0xd1, 0x2e, 0x61,
-	0x55, 0x82, 0xae, 0xc1, 0xe5, 0xa6, 0x41, 0xa8, 0x55, 0x48, 0x2d, 0xa7, 0xae, 0x4f, 0xa9, 0x33,
-	0xc7, 0x83, 0xd2, 0xf4, 0x53, 0xdd, 0x3a, 0xf8, 0x00, 0xbb, 0x3f, 0x63, 0x8d, 0x0f, 0x23, 0x1d,
-	0xa6, 0x2c, 0xaf, 0xac, 0x70, 0xc9, 0xc5, 0x6e, 0x3e, 0x1b, 0x94, 0xc6, 0xfe, 0x1e, 0x94, 0xae,
-	0xb5, 0x4c, 0xb6, 0xd7, 0xdd, 0x29, 0x37, 0xa8, 0x55, 0x11, 0xdd, 0xf9, 0x9f, 0x75, 0xbb, 0xb9,
-	0x5f, 0x61, 0x4f, 0xdb, 0x86, 0x5d, 0xae, 0x12, 0x76, 0x3c, 0x28, 0xcd, 0x72, 0x66, 0x4b, 0xef,
-	0xd7, 0x75, 0x97, 0x09, 0x6b, 0x01, 0x2b, 0xfe, 0xe3, 0x12, 0x64, 0x6b, 0x76, 0xeb, 0x53, 0x6a,
-	0x92, 0x6d, 0x4a, 0x0f, 0xd0, 0x1a, 0x8c, 0xdb, 0x06, 0x69, 0x1a, 0x1d, 0xf1, 0x6c, 0xb3, 0xc7,
-	0x83, 0x52, 0x8e, 0x33, 0xf0, 0xdf, 0xb1, 0x26, 0x00, 0xe8, 0x43, 0x98, 0x66, 0x7a, 0xa7, 0x65,
-	0x30, 0xa7, 0xb0, 0xda, 0x74, 0x1f, 0x30, 0xa3, 0x2e, 0x1e, 0x0f, 0x4a, 0x73, 0xbc, 0x80, 0x8f,
-	0xd6, 0xdb, 0x94, 0x1e, 0xd4, 0xcd, 0x26, 0xd6, 0x42, 0x70, 0x44, 0x20, 0xe7, 0x8c, 0xf0, 0xe7,
-	0xd8, 0xea, 0xb2, 0x42, 0xda, 0x6d, 0xf8, 0x49, 0xe2, 0x09, 0xce, 0xf3, 0x6e, 0x6e, 0x1b, 0x3e,
-	0xc3, 0x3a, 0xed, 0x32, 0xac, 0x85, 0xe9, 0x51, 0x13, 0xa6, 0xfd, 0x69, 0xdb, 0x55, 0x52, 0xc8,
-	0x2c, 0xa7, 0xaf, 0x67, 0x37, 0x56, 0xca, 0xa3, 0x74, 0x2e, 0x4b, 0x6a, 0xa9, 0x4b, 0xce, 0x13,
-	0x05, 0xb3, 0x0a, 0x16, 0xd2, 0xae, 0x9b, 0x04, 0x6b, 0x21, 0x56, 0x3c, 0x07, 0x57, 0xa5, 0xe5,
-	0xd4, 0x0c, 0xbb, 0x4d, 0x89, 0x6d, 0xe0, 0xdf, 0x53, 0x30, 0x5d, 0x33, 0x49, 0xf0, 0x34, 0x49,
-	0x2c, 0xe0, 0xd5, 0xbd, 0xb4, 0x05, 0x4c, 0x22, 0x59, 0xc0, 0x63, 0xc5, 0x7f, 0x72, 0x0b, 0xdc,
-	0xef, 0x9b, 0xec, 0x82, 0x2d, 0xb0, 0x0f, 0xd3, 0x81, 0x46, 0x55, 0x22, 0x1c, 0xf0, 0x71, 0xe2,
-	0xf9, 0xcd, 0x0d, 0x3b, 0xc0, 0x55, 0x46, 0x26, 0x47, 0x7b, 0x90, 0xf3, 0xe7, 0x6c, 0x3b, 0x7e,
-	0xe3, 0x06, 0xc0, 0x31, 0x06, 0x90, 0xc4, 0x52, 0x8b, 0xc2, 0x01, 0xf3, 0xd1, 0x75, 0xb4, 0x85,
-	0xd3, 0x42, 0xc4, 0xc2, 0x03, 0xde, 0x7a, 0xfa, 0x1e, 0xa0, 0x90, 0x7d, 0xb8, 0xfd, 0x88, 0xee,
-	0x1b, 0xa4, 0x4a, 0x76, 0xe9, 0x99, 0x1d, 0xf0, 0x3e, 0x64, 0x9b, 0x86, 0xdd, 0xe8, 0x98, 0x6d,
-	0x66, 0x52, 0x22, 0x3c, 0x30, 0x7f, 0x3c, 0x28, 0x21, 0x0f, 0xed, 0x0f, 0x62, 0x4d, 0x86, 0xe2,
-	0x7f, 0x53, 0x90, 0x53, 0x4d, 0xd2, 0x4c, 0xde, 0xf3, 0x0b, 0x18, 0xef, 0x19, 0x66, 0x6b, 0xcf,
-	0xb3, 0xdc, 0x9d, 0x04, 0x92, 0xdc, 0x33, 0x1a, 0x81, 0x61, 0x38, 0x0b, 0xd6, 0x04, 0x9d, 0x43,
-	0xcc, 0x57, 0x4e, 0x68, 0x7d, 0x27, 0xb1, 0xd6, 0x82, 0xd8, 0xf3, 0xb1, 0xa0, 0x73, 0x72, 0x2c,
-	0x57, 0xb3, 0x5b, 0x9b, 0x1d, 0x43, 0x67, 0x46, 0x52, 0x1b, 0x7f, 0x0d, 0x13, 0x76, 0x4f, 0x6f,
-	0x3f, 0x30, 0x0c, 0x31, 0xdf, 0xbb, 0x89, 0xe7, 0x7b, 0x45, 0x30, 0xf7, 0xf4, 0x76, 0x7d, 0xd7,
-	0x30, 0xb0, 0xe6, 0x31, 0xa2, 0x47, 0x30, 0x71, 0xd0, 0x76, 0x25, 0x70, 0xe7, 0x1c, 0x1b, 0x39,
-	0x92, 0x37, 0xd4, 0x05, 0x61, 0x38, 0xc1, 0x7a, 0xd0, 0xae, 0x33, 0x67, 0x0c, 0x6b, 0x1e, 0x15,
-	0x7a, 0x0c, 0xb0, 0xe3, 0x49, 0x6b, 0x0b, 0x2b, 0xaf, 0x8e, 0x26, 0x0e, 0x59, 0x40, 0x5d, 0x14,
-	0xd4, 0x22, 0x13, 0x5c, 0xde, 0xba, 0x49, 0x76, 0x29, 0xd6, 0x24, 0x46, 0xbc, 0x00, 0x73, 0xa1,
-	0xe5, 0xf4, 0x5d, 0xfc, 0x63, 0x06, 0xf2, 0x35, 0xbb, 0xf5, 0x79, 0x4f, 0x6f, 0xdf, 0xef, 0xeb,
-	0x0d, 0xe6, 0xbf, 0x5f, 0x17, 0x17, 0x1b, 0x3d, 0x98, 0x60, 0x7c, 0x3e, 0x62, 0x45, 0x17, 0xcb,
-	0x5c, 0x95, 0xb2, 0xb3, 0x01, 0xfb, 0xf3, 0xde, 0xa4, 0x26, 0x51, 0x55, 0xa1, 0xe4, 0xdb, 0x67,
-	0x50, 0xd2, 0x29, 0x08, 0x16, 0xdd, 0x5b, 0x19, 0xac, 0x79, 0xdd, 0xd0, 0x47, 0x90, 0x73, 0xff,
-	0xdd, 0xea, 0xb2, 0x7b, 0xee, 0x6b, 0x94, 0x71, 0x67, 0xaa, 0x04, 0xd1, 0xc0, 0x8b, 0x68, 0x97,
-	0xd5, 0xc5, 0x0b, 0x15, 0x2e, 0x70, 0x12, 0xcf, 0x92, 0x92, 0xa5, 0x70, 0xf9, 0xe5, 0x12, 0x2f,
-	0x48, 0x22, 0x1e, 0x44, 0x21, 0x72, 0xf4, 0x18, 0x26, 0x2d, 0xbd, 0xbf, 0xdd, 0x31, 0x1b, 0x46,
-	0x61, 0xdc, 0x6d, 0xa4, 0x26, 0x6e, 0x34, 0x13, 0x6c, 0x7a, 0x6d, 0x87, 0x08, 0x6b, 0x3e, 0x27,
-	0x2e, 0xc2, 0x9b, 0xa3, 0x9c, 0xe0, 0x5b, 0xe5, 0x87, 0x8c, 0x6b, 0xa2, 0x08, 0xc0, 0x79, 0xb2,
-	0x8b, 0xf3, 0x8a, 0x53, 0xce, 0xd5, 0xe3, 0x8a, 0xf1, 0xd8, 0x91, 0xcb, 0x85, 0xcc, 0x9e, 0x60,
-	0x21, 0x38, 0xda, 0x83, 0xac, 0x15, 0x1c, 0x05, 0x84, 0xde, 0x0f, 0x12, 0xaf, 0x62, 0x3e, 0x7a,
-	0x74, 0x70, 0x7d, 0x25, 0x53, 0xa3, 0x6f, 0x61, 0xd2, 0xb3, 0x8a, 0xeb, 0x8a, 0x13, 0x5d, 0xbd,
-	0x99, 0xdc, 0xd5, 0x33, 0x11, 0x83, 0x62, 0xcd, 0xef, 0x17, 0x32, 0xca, 0xc4, 0x39, 0x18, 0xa5,
-	0x04, 0x4b, 0x23, 0x7d, 0xe0, 0x3b, 0xe5, 0xd7, 0x34, 0x2c, 0x8a, 0x63, 0x13, 0x47, 0x31, 0xa3,
-	0x43, 0x5e, 0x24, 0x59, 0xde, 0x05, 0x08, 0xe4, 0x17, 0x5e, 0x91, 0xf6, 0x4a, 0xc9, 0x2b, 0x58,
-	0x93, 0x90, 0x68, 0x3d, 0x1c, 0x29, 0x53, 0xea, 0xd5, 0x13, 0x83, 0x80, 0x88, 0x20, 0x88, 0x18,
-	0xe3, 0x85, 0xcf, 0xae, 0xbc, 0x85, 0x64, 0x8d, 0x30, 0x3d, 0xea, 0xc3, 0x8c, 0xc5, 0x4f, 0x94,
-	0xd1, 0xe8, 0x78, 0x98, 0xb8, 0xa5, 0x12, 0x44, 0xc7, 0xd0, 0x91, 0x79, 0xa8, 0x0b, 0x5e, 0x85,
-	0x95, 0x58, 0x61, 0x82, 0x17, 0x3d, 0x0d, 0x05, 0x09, 0x15, 0x62, 0x78, 0x3d, 0xd5, 0x0b, 0xdf,
-	0x3c, 0x32, 0xe7, 0x7b, 0xf3, 0x88, 0x84, 0xc8, 0xe5, 0x73, 0x0b, 0x11, 0x8c, 0x61, 0x39, 0x4e,
-	0x07, 0x5f, 0xac, 0x5f, 0xd2, 0xa0, 0x88, 0xe3, 0x69, 0x54, 0xd2, 0x0b, 0x92, 0xeb, 0xa6, 0x14,
-	0x75, 0x5c, 0xaf, 0xfc, 0x29, 0x01, 0x45, 0xe1, 0x0d, 0xe9, 0x85, 0x08, 0x24, 0x7b, 0x65, 0x57,
-	0x85, 0x08, 0x3d, 0xfa, 0x06, 0xae, 0x38, 0xe9, 0x25, 0x5f, 0x4e, 0x5e, 0xf1, 0x56, 0x1d, 0xe5,
-	0xc7, 0x6f, 0x01, 0x8e, 0x97, 0xc5, 0x57, 0xef, 0xa7, 0x34, 0x2c, 0x48, 0x30, 0x99, 0xe1, 0xf5,
-	0x94, 0xce, 0x8a, 0xdc, 0xf1, 0xb8, 0x70, 0xd5, 0xc4, 0xcb, 0xb8, 0x30, 0x22, 0x29, 0xf9, 0x99,
-	0x27, 0x74, 0xcb, 0xa3, 0x23, 0x0f, 0x58, 0x9f, 0x25, 0x6e, 0xb7, 0x28, 0x6d, 0x67, 0xd1, 0x6b,
-	0xa5, 0xdc, 0x00, 0xaf, 0x40, 0x29, 0x46, 0x0f, 0x4f, 0xb3, 0x8d, 0xff, 0x26, 0x20, 0x5d, 0xb3,
-	0x5b, 0xe8, 0x4b, 0x98, 0xf4, 0xbf, 0xb3, 0xc4, 0x7d, 0x77, 0x08, 0xbe, 0x1d, 0x28, 0x6b, 0xa7,
-	0x42, 0xbc, 0x0e, 0x0e, 0xb3, 0x7f, 0x7d, 0x8f, 0x67, 0xf6, 0x20, 0x27, 0x30, 0x47, 0x2f, 0xad,
-	0xce, 0x3d, 0x43, 0xba, 0x53, 0xad, 0xc6, 0x16, 0x06, 0x20, 0xe5, 0xc6, 0x19, 0x40, 0x3e, 0xbf,
-	0x0d, 0xb3, 0xc3, 0x57, 0x89, 0x77, 0x62, 0x19, 0x86, 0xb0, 0xca, 0xc6, 0xd9, 0xb1, 0x7e, 0xd3,
-	0x27, 0x80, 0x46, 0x1c, 0x4a, 0x6f, 0x9c, 0x95, 0x69, 0xab, 0xcb, 0x94, 0xdb, 0x09, 0xc0, 0x7e,
-	0xdf, 0xef, 0x53, 0x30, 0x1f, 0x73, 0xc6, 0xa9, 0x9c, 0x28, 0xf6, 0x70, 0x81, 0xf2, 0x5e, 0xc2,
-	0x02, 0xff, 0x21, 0x7a, 0x30, 0x37, 0x7a, 0xa3, 0x2e, 0x9f, 0xca, 0x18, 0xc2, 0x2b, 0x09, 0xf1,
-	0xe8, 0x3b, 0x58, 0x88, 0xdb, 0x74, 0x6e, 0x9e, 0x68, 0xc8, 0x11, 0x15, 0x4a, 0xe2, 0x0a, 0xc4,
-	0x20, 0x3f, 0x32, 0x35, 0xd7, 0x4f, 0x65, 0x92, 0xe1, 0x4a, 0x32, 0xb8, 0xba, 0xf9, 0xec, 0xb0,
-	0x98, 0x7a, 0x7e, 0x58, 0x4c, 0xfd, 0x73, 0x58, 0x4c, 0xfd, 0x7c, 0x54, 0x1c, 0x7b, 0x7e, 0x54,
-	0x1c, 0xfb, 0xeb, 0xa8, 0x38, 0xf6, 0xd5, 0x9a, 0x9c, 0x45, 0xeb, 0xde, 0xc7, 0x68, 0xef, 0x6f,
-	0x9f, 0x7f, 0x96, 0x76, 0x23, 0x69, 0x67, 0xdc, 0xfd, 0x8c, 0x7c, 0xfb, 0xff, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xb9, 0xf3, 0xb2, 0xd1, 0xb3, 0x16, 0x00, 0x00,
+	// 1142 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0x4d, 0x6f, 0xdc, 0x44,
+	0x18, 0xce, 0xc6, 0x49, 0xda, 0xbe, 0xf9, 0xa0, 0x19, 0xf2, 0xe1, 0xb8, 0xcd, 0x6e, 0x32, 0xa9,
+	0x50, 0xd2, 0x2a, 0x5e, 0x9a, 0x1e, 0x90, 0x90, 0x10, 0xb0, 0x69, 0x45, 0x17, 0x75, 0x95, 0xc8,
+	0x45, 0xa2, 0xe2, 0xc0, 0xca, 0xbb, 0x6b, 0x39, 0x56, 0x62, 0x8f, 0xbb, 0x33, 0xdb, 0x6c, 0x55,
+	0x71, 0xe1, 0x17, 0xf0, 0x07, 0x10, 0x12, 0xff, 0x80, 0x1f, 0xc0, 0x0d, 0xa4, 0x1e, 0x7b, 0x44,
+	0x1c, 0x56, 0x28, 0x11, 0xe2, 0x9e, 0x1b, 0x07, 0x24, 0xe4, 0xf1, 0xd8, 0x6b, 0xaf, 0xed, 0x4d,
+	0x4c, 0xb3, 0x05, 0x4e, 0xbb, 0xb2, 0x9f, 0x79, 0xde, 0x99, 0xe7, 0x79, 0xdf, 0x77, 0x66, 0x0c,
+	0xab, 0x84, 0xda, 0x84, 0x5a, 0xb4, 0x6c, 0xea, 0xb6, 0x5d, 0x7e, 0x76, 0xb7, 0x61, 0x30, 0xfd,
+	0x6e, 0x99, 0x75, 0x55, 0xb7, 0x4d, 0x18, 0x41, 0x0b, 0xe2, 0xb5, 0xea, 0xbd, 0x56, 0xc5, 0x6b,
+	0x65, 0xc1, 0x24, 0x26, 0xe1, 0x80, 0xb2, 0xf7, 0xcf, 0xc7, 0x2a, 0xa5, 0x54, 0x2a, 0x97, 0x90,
+	0x23, 0x01, 0x28, 0x36, 0x39, 0xa2, 0xdc, 0xd0, 0xa9, 0x11, 0xbe, 0x6f, 0x12, 0xcb, 0xf1, 0xdf,
+	0xe3, 0x1f, 0x0a, 0x30, 0x53, 0xb1, 0x9c, 0x96, 0xe5, 0x98, 0x9f, 0x91, 0x43, 0xc3, 0x41, 0x0f,
+	0x61, 0x92, 0x79, 0x7f, 0xe4, 0xc2, 0x5a, 0x61, 0x73, 0x7a, 0x67, 0x45, 0xf5, 0x09, 0x54, 0x8f,
+	0x20, 0x98, 0x8c, 0xba, 0x4b, 0x2c, 0xa7, 0xb2, 0xfc, 0xb2, 0x57, 0x1a, 0x3b, 0xeb, 0x95, 0xde,
+	0x7a, 0xae, 0xdb, 0x47, 0xef, 0x63, 0x3e, 0xaa, 0x6e, 0x39, 0x58, 0xf3, 0x09, 0xd0, 0xe7, 0x30,
+	0x75, 0x6c, 0x58, 0xe6, 0x01, 0x93, 0xc7, 0xd7, 0x0a, 0x9b, 0xd7, 0x2a, 0x1f, 0x7a, 0xf8, 0x5f,
+	0x7b, 0xa5, 0x77, 0x4c, 0x8b, 0x1d, 0x74, 0x1a, 0x6a, 0x93, 0xd8, 0x65, 0x31, 0x3b, 0xff, 0x67,
+	0x9b, 0xb6, 0x0e, 0xcb, 0xec, 0xb9, 0x6b, 0x50, 0xb5, 0xea, 0xb0, 0xb3, 0x5e, 0x69, 0xd6, 0x67,
+	0xf6, 0x59, 0xb0, 0x26, 0xe8, 0xf0, 0x5f, 0x05, 0x98, 0xad, 0x51, 0x73, 0xb7, 0x6d, 0xe8, 0xcc,
+	0xd8, 0x27, 0xe4, 0x08, 0x6d, 0xc1, 0x14, 0x35, 0x9c, 0x96, 0xd1, 0xe6, 0xb3, 0xbe, 0x56, 0x99,
+	0xef, 0x0f, 0xf6, 0x9f, 0x63, 0x4d, 0x00, 0xd0, 0x13, 0x00, 0x4f, 0x9e, 0x7d, 0xbd, 0xad, 0xdb,
+	0x94, 0xcf, 0x6c, 0x7a, 0x67, 0x4d, 0x4d, 0x93, 0x5c, 0xdd, 0x0f, 0x71, 0x95, 0xa5, 0xb3, 0x5e,
+	0x09, 0xf9, 0x84, 0xde, 0xe8, 0xba, 0xcb, 0x1f, 0x63, 0x2d, 0xc2, 0x85, 0x4c, 0x98, 0x6d, 0x44,
+	0x94, 0xa4, 0xb2, 0xb4, 0x26, 0x6d, 0x4e, 0xef, 0xe0, 0x74, 0xf2, 0xa8, 0xe8, 0x95, 0x55, 0x21,
+	0xe5, 0xa2, 0x1f, 0x42, 0xd0, 0xd4, 0xb9, 0x8e, 0x14, 0x6b, 0x71, 0x5e, 0xbc, 0x0c, 0x8b, 0xb1,
+	0xe5, 0x6b, 0x06, 0x75, 0x89, 0x43, 0x0d, 0xfc, 0xd3, 0x38, 0x4c, 0xd7, 0xa8, 0xf9, 0x29, 0xb1,
+	0x9c, 0xbc, 0xb2, 0xdc, 0x86, 0x29, 0x6f, 0x29, 0xd5, 0x16, 0x97, 0x64, 0xa2, 0x82, 0xce, 0x7a,
+	0xa5, 0xb9, 0xc8, 0x82, 0xad, 0x16, 0xd6, 0x04, 0x02, 0xb9, 0x30, 0x47, 0x0f, 0xf4, 0xb6, 0xb1,
+	0xd7, 0x61, 0x1f, 0xdb, 0xa4, 0xe3, 0x30, 0x59, 0xe2, 0xf4, 0x0f, 0x73, 0x1b, 0xbc, 0x14, 0x89,
+	0xa0, 0x73, 0xaa, 0x3a, 0xe9, 0x30, 0xac, 0x0d, 0xf0, 0xa3, 0x23, 0x98, 0xe7, 0x5a, 0x54, 0x9d,
+	0x9a, 0xde, 0xf5, 0x9f, 0x51, 0x79, 0x82, 0xcb, 0x3b, 0x24, 0x41, 0x37, 0x84, 0xaa, 0x37, 0xe2,
+	0x09, 0x5a, 0xb7, 0xf5, 0xae, 0x88, 0x46, 0xb1, 0x96, 0x24, 0xc6, 0x8b, 0xf0, 0x76, 0x44, 0xc5,
+	0x50, 0xdd, 0x9f, 0x7d, 0x75, 0x1f, 0x74, 0x2d, 0x36, 0x4a, 0x75, 0x1d, 0x98, 0xe5, 0xab, 0xaf,
+	0x3a, 0x97, 0x23, 0x2e, 0x27, 0xf3, 0x96, 0xed, 0x2f, 0x19, 0x6b, 0x71, 0x7a, 0x44, 0x00, 0x71,
+	0x09, 0xf6, 0x3a, 0xac, 0x66, 0x39, 0x17, 0x16, 0xf7, 0x96, 0x10, 0xf7, 0x66, 0x54, 0x5c, 0xd2,
+	0x61, 0x75, 0x3b, 0x0c, 0x45, 0xb1, 0x96, 0x42, 0x2d, 0xe4, 0x0d, 0x64, 0x0c, 0xe5, 0xfd, 0x43,
+	0x82, 0x85, 0x1a, 0x35, 0x1f, 0x1f, 0xeb, 0xee, 0x83, 0xae, 0xde, 0x14, 0xd6, 0x57, 0x9d, 0x51,
+	0xe9, 0xfc, 0x08, 0xae, 0x08, 0xeb, 0xb9, 0xc2, 0xff, 0xac, 0xd5, 0x05, 0x14, 0xe8, 0x23, 0x98,
+	0x0d, 0x96, 0x7a, 0xdf, 0x70, 0x88, 0x2d, 0x4f, 0xf0, 0xb9, 0x2a, 0x7d, 0x1f, 0xfa, 0x0a, 0xb5,
+	0x3c, 0x00, 0xd6, 0xe2, 0x03, 0xd0, 0x0b, 0x91, 0xe3, 0x51, 0xb1, 0xe4, 0x49, 0xce, 0x52, 0xcb,
+	0xed, 0xfd, 0x8d, 0x6c, 0x57, 0x82, 0x94, 0x8f, 0xc6, 0x41, 0x87, 0x30, 0x63, 0xeb, 0xdd, 0xc7,
+	0x2e, 0x61, 0xfb, 0x6d, 0xab, 0x69, 0xc8, 0x53, 0x3c, 0xee, 0x27, 0x39, 0xe2, 0xde, 0x37, 0x9a,
+	0xfd, 0x06, 0xe6, 0x55, 0x18, 0x75, 0x09, 0xab, 0xbb, 0x1e, 0x1b, 0xd6, 0x62, 0xe4, 0xb8, 0x08,
+	0x37, 0xd3, 0x8c, 0x0e, 0x33, 0xe1, 0x77, 0x89, 0x37, 0xb8, 0x01, 0xc0, 0x5e, 0x87, 0x8d, 0x2a,
+	0x15, 0x3e, 0x80, 0x19, 0xe1, 0xa3, 0xef, 0x9d, 0x5f, 0x71, 0x2b, 0xfd, 0xf5, 0x84, 0xad, 0x43,
+	0x58, 0x17, 0x83, 0xa3, 0x2e, 0x5c, 0x1f, 0x6c, 0x22, 0xc2, 0xfe, 0x47, 0xb9, 0x8d, 0x53, 0x32,
+	0x7b, 0x15, 0xd6, 0x12, 0x51, 0xd0, 0x1e, 0x5c, 0x0d, 0xbc, 0xe4, 0xa9, 0x32, 0x34, 0x89, 0x65,
+	0x91, 0xc4, 0xd7, 0x07, 0x72, 0x03, 0x6b, 0x21, 0xc9, 0x9b, 0xcd, 0x83, 0x12, 0xac, 0xa6, 0xda,
+	0x1c, 0x26, 0xc2, 0x8f, 0xe3, 0xb0, 0x22, 0x3a, 0xb1, 0x8f, 0x62, 0x46, 0xdb, 0xf9, 0x7f, 0xf5,
+	0x85, 0x17, 0x30, 0x1f, 0xec, 0x65, 0xfd, 0xaa, 0x9e, 0x78, 0xbd, 0xaa, 0xf6, 0x3b, 0x7a, 0xa2,
+	0xaa, 0x13, 0x71, 0xf0, 0x06, 0xac, 0x67, 0xca, 0x17, 0x8a, 0xfc, 0xad, 0x04, 0x72, 0x04, 0xe5,
+	0xf5, 0xe4, 0xff, 0x7a, 0xc1, 0x3d, 0x4d, 0x1c, 0x40, 0x7c, 0x45, 0xab, 0xb9, 0x15, 0x5d, 0x1e,
+	0x54, 0x34, 0x50, 0x73, 0xf0, 0x04, 0x92, 0x56, 0xe3, 0x93, 0x6f, 0xa2, 0xc6, 0x31, 0x86, 0xb5,
+	0x2c, 0x7b, 0x42, 0x0f, 0xbf, 0x93, 0x60, 0x59, 0xec, 0xa9, 0x71, 0xd0, 0xe8, 0xca, 0x24, 0xb1,
+	0xe1, 0x49, 0x79, 0x37, 0xbc, 0xc4, 0x41, 0x67, 0x62, 0xb4, 0x07, 0x9d, 0x7f, 0x73, 0x83, 0xc5,
+	0xeb, 0x50, 0xca, 0x30, 0x28, 0x34, 0xf1, 0x7b, 0x09, 0x94, 0x08, 0x26, 0x5a, 0xae, 0x23, 0x2c,
+	0xc5, 0xd7, 0xf7, 0xf1, 0x29, 0xcc, 0x05, 0x0f, 0x2e, 0xa7, 0x1a, 0xfb, 0x01, 0xc3, 0x6a, 0x8c,
+	0x07, 0xf0, 0xaa, 0x51, 0x78, 0x7b, 0x69, 0xd5, 0x18, 0x66, 0x4f, 0xac, 0x1a, 0x07, 0xa3, 0xe0,
+	0x5b, 0x80, 0xb3, 0x3d, 0x0a, 0xac, 0xdc, 0xf9, 0xf3, 0x0a, 0x48, 0x35, 0x6a, 0xa2, 0x2f, 0x01,
+	0x22, 0xb7, 0xd4, 0x8d, 0xf4, 0x9b, 0x60, 0xec, 0x2e, 0xa7, 0xdc, 0xb9, 0x00, 0x28, 0x88, 0x83,
+	0x9e, 0xc0, 0xd5, 0xf0, 0xb2, 0xb7, 0x9e, 0x39, 0x30, 0x80, 0x28, 0x5b, 0xe7, 0x42, 0xa2, 0xcc,
+	0xe1, 0x45, 0x27, 0x9b, 0x39, 0x80, 0x0c, 0x61, 0x1e, 0x3c, 0xe7, 0x23, 0x0a, 0xf3, 0xc9, 0x33,
+	0xfe, 0xed, 0xcc, 0xf1, 0x09, 0xac, 0xb2, 0x73, 0x71, 0x6c, 0x18, 0xf4, 0x19, 0xa0, 0x94, 0xe3,
+	0xe4, 0x9d, 0x8b, 0x32, 0xed, 0x75, 0x98, 0x72, 0x2f, 0x07, 0x38, 0x8c, 0xfb, 0x75, 0x01, 0x96,
+	0x32, 0x8e, 0x2f, 0xe5, 0xa1, 0x66, 0x24, 0x07, 0x28, 0xef, 0xe5, 0x1c, 0x10, 0x4e, 0xe2, 0x18,
+	0x16, 0xd3, 0x77, 0x77, 0xf5, 0x5c, 0xc6, 0x18, 0x5e, 0xc9, 0x89, 0x47, 0x5f, 0xc1, 0x72, 0x56,
+	0x37, 0x7b, 0x77, 0x68, 0xc2, 0xa4, 0x8c, 0x50, 0x72, 0x8f, 0x40, 0x0c, 0x16, 0x52, 0x77, 0xc4,
+	0xed, 0x73, 0x99, 0xa2, 0x70, 0x25, 0x1f, 0xbc, 0xb2, 0xfb, 0xf2, 0xa4, 0x58, 0x78, 0x75, 0x52,
+	0x2c, 0xfc, 0x76, 0x52, 0x2c, 0x7c, 0x73, 0x5a, 0x1c, 0x7b, 0x75, 0x5a, 0x1c, 0xfb, 0xe5, 0xb4,
+	0x38, 0xf6, 0xc5, 0x56, 0xb4, 0x27, 0x6d, 0x07, 0x5f, 0xee, 0x82, 0xdf, 0xae, 0xff, 0x0d, 0x8f,
+	0xb7, 0xa6, 0xc6, 0x14, 0xff, 0x3a, 0x77, 0xef, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x51, 0x79,
+	0xd3, 0x5d, 0x2b, 0x14, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1233,9 +1089,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
+	CreatePool(ctx context.Context, in *MsgCreatePool, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error)
 	JoinPool(ctx context.Context, in *MsgJoinPool, opts ...grpc.CallOption) (*MsgJoinPoolResponse, error)
 	ExitPool(ctx context.Context, in *MsgExitPool, opts ...grpc.CallOption) (*MsgExitPoolResponse, error)
-	CreatePool(ctx context.Context, in *MsgCreatePool, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error)
 	SwapExactAmountIn(ctx context.Context, in *MsgSwapExactAmountIn, opts ...grpc.CallOption) (*MsgSwapExactAmountInResponse, error)
 	SwapExactAmountOut(ctx context.Context, in *MsgSwapExactAmountOut, opts ...grpc.CallOption) (*MsgSwapExactAmountOutResponse, error)
 	JoinSwapExternAmountIn(ctx context.Context, in *MsgJoinSwapExternAmountIn, opts ...grpc.CallOption) (*MsgJoinSwapExternAmountInResponse, error)
@@ -1252,6 +1108,15 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
+func (c *msgClient) CreatePool(ctx context.Context, in *MsgCreatePool, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error) {
+	out := new(MsgCreatePoolResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/CreatePool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) JoinPool(ctx context.Context, in *MsgJoinPool, opts ...grpc.CallOption) (*MsgJoinPoolResponse, error) {
 	out := new(MsgJoinPoolResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/JoinPool", in, out, opts...)
@@ -1264,15 +1129,6 @@ func (c *msgClient) JoinPool(ctx context.Context, in *MsgJoinPool, opts ...grpc.
 func (c *msgClient) ExitPool(ctx context.Context, in *MsgExitPool, opts ...grpc.CallOption) (*MsgExitPoolResponse, error) {
 	out := new(MsgExitPoolResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/ExitPool", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) CreatePool(ctx context.Context, in *MsgCreatePool, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error) {
-	out := new(MsgCreatePoolResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Msg/CreatePool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1335,9 +1191,9 @@ func (c *msgClient) ExitSwapPoolAmountIn(ctx context.Context, in *MsgExitSwapPoo
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
+	CreatePool(context.Context, *MsgCreatePool) (*MsgCreatePoolResponse, error)
 	JoinPool(context.Context, *MsgJoinPool) (*MsgJoinPoolResponse, error)
 	ExitPool(context.Context, *MsgExitPool) (*MsgExitPoolResponse, error)
-	CreatePool(context.Context, *MsgCreatePool) (*MsgCreatePoolResponse, error)
 	SwapExactAmountIn(context.Context, *MsgSwapExactAmountIn) (*MsgSwapExactAmountInResponse, error)
 	SwapExactAmountOut(context.Context, *MsgSwapExactAmountOut) (*MsgSwapExactAmountOutResponse, error)
 	JoinSwapExternAmountIn(context.Context, *MsgJoinSwapExternAmountIn) (*MsgJoinSwapExternAmountInResponse, error)
@@ -1350,14 +1206,14 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
+func (*UnimplementedMsgServer) CreatePool(ctx context.Context, req *MsgCreatePool) (*MsgCreatePoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePool not implemented")
+}
 func (*UnimplementedMsgServer) JoinPool(ctx context.Context, req *MsgJoinPool) (*MsgJoinPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinPool not implemented")
 }
 func (*UnimplementedMsgServer) ExitPool(ctx context.Context, req *MsgExitPool) (*MsgExitPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExitPool not implemented")
-}
-func (*UnimplementedMsgServer) CreatePool(ctx context.Context, req *MsgCreatePool) (*MsgCreatePoolResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreatePool not implemented")
 }
 func (*UnimplementedMsgServer) SwapExactAmountIn(ctx context.Context, req *MsgSwapExactAmountIn) (*MsgSwapExactAmountInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SwapExactAmountIn not implemented")
@@ -1380,6 +1236,24 @@ func (*UnimplementedMsgServer) ExitSwapPoolAmountIn(ctx context.Context, req *Ms
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_CreatePool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreatePool)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreatePool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.gamm.v1beta1.Msg/CreatePool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreatePool(ctx, req.(*MsgCreatePool))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_JoinPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1414,24 +1288,6 @@ func _Msg_ExitPool_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).ExitPool(ctx, req.(*MsgExitPool))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_CreatePool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreatePool)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).CreatePool(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/osmosis.gamm.v1beta1.Msg/CreatePool",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreatePool(ctx, req.(*MsgCreatePool))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1549,16 +1405,16 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "CreatePool",
+			Handler:    _Msg_CreatePool_Handler,
+		},
+		{
 			MethodName: "JoinPool",
 			Handler:    _Msg_JoinPool_Handler,
 		},
 		{
 			MethodName: "ExitPool",
 			Handler:    _Msg_ExitPool_Handler,
-		},
-		{
-			MethodName: "CreatePool",
-			Handler:    _Msg_CreatePool_Handler,
 		},
 		{
 			MethodName: "SwapExactAmountIn",
@@ -1589,7 +1445,7 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	Metadata: "osmosis/gamm/v1beta1/tx.proto",
 }
 
-func (m *MaxAmountIn) Marshal() (dAtA []byte, err error) {
+func (m *BindingToken) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1599,33 +1455,115 @@ func (m *MaxAmountIn) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MaxAmountIn) MarshalTo(dAtA []byte) (int, error) {
+func (m *BindingToken) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MaxAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BindingToken) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size := m.MaxAmount.Size()
+		size := m.Weight.Size()
 		i -= size
-		if _, err := m.MaxAmount.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.Weight.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x12
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+	{
+		size, err := m.Token.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreatePool) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePool) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BindingTokens) > 0 {
+		for iNdEx := len(m.BindingTokens) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BindingTokens[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.PoolParams != nil {
+		{
+			size, err := m.PoolParams.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreatePoolResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePoolResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -1649,10 +1587,10 @@ func (m *MsgJoinPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.MaxAmountsIn) > 0 {
-		for iNdEx := len(m.MaxAmountsIn) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.TokenInMaxAmounts) > 0 {
+		for iNdEx := len(m.TokenInMaxAmounts) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.MaxAmountsIn[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.TokenInMaxAmounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1664,17 +1602,17 @@ func (m *MsgJoinPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	{
-		size := m.PoolAmountOut.Size()
+		size := m.ShareOutAmount.Size()
 		i -= size
-		if _, err := m.PoolAmountOut.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.ShareOutAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x1a
-	if m.TargetPoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TargetPoolId))
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -1711,46 +1649,6 @@ func (m *MsgJoinPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MinAmountOut) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MinAmountOut) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MinAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size := m.MinAmount.Size()
-		i -= size
-		if _, err := m.MinAmount.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgExitPool) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1771,10 +1669,10 @@ func (m *MsgExitPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.MinAmountsOut) > 0 {
-		for iNdEx := len(m.MinAmountsOut) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.TokenOutMinAmounts) > 0 {
+		for iNdEx := len(m.TokenOutMinAmounts) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.MinAmountsOut[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.TokenOutMinAmounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1786,17 +1684,17 @@ func (m *MsgExitPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	{
-		size := m.PoolAmountIn.Size()
+		size := m.ShareInAmount.Size()
 		i -= size
-		if _, err := m.PoolAmountIn.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.ShareInAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x1a
-	if m.TargetPoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TargetPoolId))
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -1833,180 +1731,6 @@ func (m *MsgExitPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *LPTokenInfo) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *LPTokenInfo) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LPTokenInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Description) > 0 {
-		i -= len(m.Description)
-		copy(dAtA[i:], m.Description)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Description)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *BindTokenInfo) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BindTokenInfo) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BindTokenInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size := m.Amount.Size()
-		i -= size
-		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.Weight.Size()
-		i -= size
-		if _, err := m.Weight.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgCreatePool) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgCreatePool) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgCreatePool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.BindTokens) > 0 {
-		for iNdEx := len(m.BindTokens) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.BindTokens[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x22
-		}
-	}
-	{
-		size, err := m.LpToken.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.SwapFee.Size()
-		i -= size
-		if _, err := m.SwapFee.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if len(m.Sender) > 0 {
-		i -= len(m.Sender)
-		copy(dAtA[i:], m.Sender)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgCreatePoolResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgCreatePoolResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgCreatePoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgSwapExactAmountIn) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2028,9 +1752,9 @@ func (m *MsgSwapExactAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size := m.MaxPrice.Size()
+		size := m.MaxSpotPrice.Size()
 		i -= size
-		if _, err := m.MaxPrice.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.MaxSpotPrice.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
@@ -2038,9 +1762,9 @@ func (m *MsgSwapExactAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i--
 	dAtA[i] = 0x32
 	{
-		size := m.MinAmountOut.Size()
+		size := m.TokenOutMinAmount.Size()
 		i -= size
-		if _, err := m.MinAmountOut.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.TokenOutMinAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
@@ -2055,17 +1779,17 @@ func (m *MsgSwapExactAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x22
 	}
 	{
-		size := m.TokenIn.Size()
-		i -= size
-		if _, err := m.TokenIn.MarshalTo(dAtA[i:]); err != nil {
+		size, err := m.TokenIn.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
 			return 0, err
 		}
+		i -= size
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x1a
-	if m.TargetPoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TargetPoolId))
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -2123,29 +1847,29 @@ func (m *MsgSwapExactAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size := m.MaxPrice.Size()
+		size := m.MaxSpotPrice.Size()
 		i -= size
-		if _, err := m.MaxPrice.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.MaxSpotPrice.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x3a
+	dAtA[i] = 0x32
 	{
-		size := m.TokenOut.Size()
-		i -= size
-		if _, err := m.TokenOut.MarshalTo(dAtA[i:]); err != nil {
+		size, err := m.TokenOut.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
 			return 0, err
 		}
+		i -= size
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x2a
 	{
-		size := m.MaxAmountIn.Size()
+		size := m.TokenInMaxAmount.Size()
 		i -= size
-		if _, err := m.MaxAmountIn.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.TokenInMaxAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
@@ -2159,8 +1883,8 @@ func (m *MsgSwapExactAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if m.TargetPoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TargetPoolId))
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -2218,34 +1942,27 @@ func (m *MsgJoinSwapExternAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	var l int
 	_ = l
 	{
-		size := m.MinPoolAmountOut.Size()
+		size := m.ShareOutMinAmount.Size()
 		i -= size
-		if _, err := m.MinPoolAmountOut.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x2a
-	{
-		size := m.TokenAmountIn.Size()
-		i -= size
-		if _, err := m.TokenAmountIn.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.ShareOutMinAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x22
-	if len(m.TokenIn) > 0 {
-		i -= len(m.TokenIn)
-		copy(dAtA[i:], m.TokenIn)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.TokenIn)))
-		i--
-		dAtA[i] = 0x1a
+	{
+		size, err := m.TokenIn.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	if m.TargetPool != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TargetPool))
+	i--
+	dAtA[i] = 0x1a
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -2303,9 +2020,9 @@ func (m *MsgJoinSwapPoolAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error
 	var l int
 	_ = l
 	{
-		size := m.MaxAmountIn.Size()
+		size := m.TokenInMaxAmount.Size()
 		i -= size
-		if _, err := m.MaxAmountIn.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.TokenInMaxAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
@@ -2313,24 +2030,24 @@ func (m *MsgJoinSwapPoolAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error
 	i--
 	dAtA[i] = 0x2a
 	{
-		size := m.PoolAmountOut.Size()
+		size := m.ShareOutAmount.Size()
 		i -= size
-		if _, err := m.PoolAmountOut.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.ShareOutAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x22
-	if len(m.TokenIn) > 0 {
-		i -= len(m.TokenIn)
-		copy(dAtA[i:], m.TokenIn)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.TokenIn)))
+	if len(m.TokenInDenom) > 0 {
+		i -= len(m.TokenInDenom)
+		copy(dAtA[i:], m.TokenInDenom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.TokenInDenom)))
 		i--
 		dAtA[i] = 0x1a
 	}
-	if m.TargetPool != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TargetPool))
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -2367,91 +2084,6 @@ func (m *MsgJoinSwapPoolAmountOutResponse) MarshalToSizedBuffer(dAtA []byte) (in
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgExitSwapExternAmountOut) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgExitSwapExternAmountOut) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgExitSwapExternAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size := m.MaxPoolAmountIn.Size()
-		i -= size
-		if _, err := m.MaxPoolAmountIn.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x2a
-	{
-		size := m.TokenAmountOut.Size()
-		i -= size
-		if _, err := m.TokenAmountOut.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x22
-	if len(m.TokenOut) > 0 {
-		i -= len(m.TokenOut)
-		copy(dAtA[i:], m.TokenOut)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.TokenOut)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.TargetPool != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TargetPool))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Sender) > 0 {
-		i -= len(m.Sender)
-		copy(dAtA[i:], m.Sender)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgExitSwapExternAmountOutResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgExitSwapExternAmountOutResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgExitSwapExternAmountOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgExitSwapPoolAmountIn) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2473,9 +2105,9 @@ func (m *MsgExitSwapPoolAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	var l int
 	_ = l
 	{
-		size := m.MinAmountOut.Size()
+		size := m.TokenOutMinAmount.Size()
 		i -= size
-		if _, err := m.MinAmountOut.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.TokenOutMinAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
@@ -2483,24 +2115,24 @@ func (m *MsgExitSwapPoolAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	i--
 	dAtA[i] = 0x2a
 	{
-		size := m.PoolAmountIn.Size()
+		size := m.ShareInAmount.Size()
 		i -= size
-		if _, err := m.PoolAmountIn.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.ShareInAmount.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x22
-	if len(m.TokenOut) > 0 {
-		i -= len(m.TokenOut)
-		copy(dAtA[i:], m.TokenOut)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.TokenOut)))
+	if len(m.TokenOutDenom) > 0 {
+		i -= len(m.TokenOutDenom)
+		copy(dAtA[i:], m.TokenOutDenom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.TokenOutDenom)))
 		i--
 		dAtA[i] = 0x1a
 	}
-	if m.TargetPool != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TargetPool))
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -2537,6 +2169,91 @@ func (m *MsgExitSwapPoolAmountInResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgExitSwapExternAmountOut) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExitSwapExternAmountOut) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExitSwapExternAmountOut) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.ShareInMaxAmount.Size()
+		i -= size
+		if _, err := m.ShareInMaxAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.TokenOutAmount.Size()
+		i -= size
+		if _, err := m.TokenOutAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if len(m.TokenOutDenom) > 0 {
+		i -= len(m.TokenOutDenom)
+		copy(dAtA[i:], m.TokenOutDenom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.TokenOutDenom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -2548,18 +2265,48 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MaxAmountIn) Size() (n int) {
+func (m *BindingToken) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Denom)
+	l = m.Token.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.Weight.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgCreatePool) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.MaxAmount.Size()
-	n += 1 + l + sovTx(uint64(l))
+	if m.PoolParams != nil {
+		l = m.PoolParams.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.BindingTokens) > 0 {
+		for _, e := range m.BindingTokens {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgCreatePoolResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -2573,13 +2320,13 @@ func (m *MsgJoinPool) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.TargetPoolId != 0 {
-		n += 1 + sovTx(uint64(m.TargetPoolId))
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
 	}
-	l = m.PoolAmountOut.Size()
+	l = m.ShareOutAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
-	if len(m.MaxAmountsIn) > 0 {
-		for _, e := range m.MaxAmountsIn {
+	if len(m.TokenInMaxAmounts) > 0 {
+		for _, e := range m.TokenInMaxAmounts {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
@@ -2596,21 +2343,6 @@ func (m *MsgJoinPoolResponse) Size() (n int) {
 	return n
 }
 
-func (m *MinAmountOut) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Denom)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.MinAmount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
 func (m *MsgExitPool) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2621,13 +2353,13 @@ func (m *MsgExitPool) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.TargetPoolId != 0 {
-		n += 1 + sovTx(uint64(m.TargetPoolId))
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
 	}
-	l = m.PoolAmountIn.Size()
+	l = m.ShareInAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
-	if len(m.MinAmountsOut) > 0 {
-		for _, e := range m.MinAmountsOut {
+	if len(m.TokenOutMinAmounts) > 0 {
+		for _, e := range m.TokenOutMinAmounts {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
@@ -2636,72 +2368,6 @@ func (m *MsgExitPool) Size() (n int) {
 }
 
 func (m *MsgExitPoolResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *LPTokenInfo) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Denom)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Description)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *BindTokenInfo) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Denom)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.Weight.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = m.Amount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgCreatePool) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Sender)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.SwapFee.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = m.LpToken.Size()
-	n += 1 + l + sovTx(uint64(l))
-	if len(m.BindTokens) > 0 {
-		for _, e := range m.BindTokens {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgCreatePoolResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2720,8 +2386,8 @@ func (m *MsgSwapExactAmountIn) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.TargetPoolId != 0 {
-		n += 1 + sovTx(uint64(m.TargetPoolId))
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
 	}
 	l = m.TokenIn.Size()
 	n += 1 + l + sovTx(uint64(l))
@@ -2729,9 +2395,9 @@ func (m *MsgSwapExactAmountIn) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.MinAmountOut.Size()
+	l = m.TokenOutMinAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = m.MaxPrice.Size()
+	l = m.MaxSpotPrice.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -2755,18 +2421,18 @@ func (m *MsgSwapExactAmountOut) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.TargetPoolId != 0 {
-		n += 1 + sovTx(uint64(m.TargetPoolId))
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
 	}
 	l = len(m.TokenInDenom)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.MaxAmountIn.Size()
+	l = m.TokenInMaxAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
 	l = m.TokenOut.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = m.MaxPrice.Size()
+	l = m.MaxSpotPrice.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -2790,16 +2456,12 @@ func (m *MsgJoinSwapExternAmountIn) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.TargetPool != 0 {
-		n += 1 + sovTx(uint64(m.TargetPool))
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
 	}
-	l = len(m.TokenIn)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.TokenAmountIn.Size()
+	l = m.TokenIn.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = m.MinPoolAmountOut.Size()
+	l = m.ShareOutMinAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -2823,54 +2485,21 @@ func (m *MsgJoinSwapPoolAmountOut) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.TargetPool != 0 {
-		n += 1 + sovTx(uint64(m.TargetPool))
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
 	}
-	l = len(m.TokenIn)
+	l = len(m.TokenInDenom)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.PoolAmountOut.Size()
+	l = m.ShareOutAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = m.MaxAmountIn.Size()
+	l = m.TokenInMaxAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
 func (m *MsgJoinSwapPoolAmountOutResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgExitSwapExternAmountOut) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Sender)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.TargetPool != 0 {
-		n += 1 + sovTx(uint64(m.TargetPool))
-	}
-	l = len(m.TokenOut)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.TokenAmountOut.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = m.MaxPoolAmountIn.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgExitSwapExternAmountOutResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2889,21 +2518,54 @@ func (m *MsgExitSwapPoolAmountIn) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.TargetPool != 0 {
-		n += 1 + sovTx(uint64(m.TargetPool))
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
 	}
-	l = len(m.TokenOut)
+	l = len(m.TokenOutDenom)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.PoolAmountIn.Size()
+	l = m.ShareInAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = m.MinAmountOut.Size()
+	l = m.TokenOutMinAmount.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
 func (m *MsgExitSwapPoolAmountInResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgExitSwapExternAmountOut) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
+	}
+	l = len(m.TokenOutDenom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.TokenOutAmount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.ShareInMaxAmount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgExitSwapExternAmountOutResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2918,7 +2580,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MaxAmountIn) Unmarshal(dAtA []byte) error {
+func (m *BindingToken) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2941,219 +2603,15 @@ func (m *MaxAmountIn) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MaxAmountIn: wiretype end group for non-group")
+			return fmt.Errorf("proto: BindingToken: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MaxAmountIn: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BindingToken: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxAmount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.MaxAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgJoinPool) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgJoinPool: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgJoinPool: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Sender = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetPoolId", wireType)
-			}
-			m.TargetPoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.TargetPoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolAmountOut", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.PoolAmountOut.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxAmountsIn", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3180,609 +2638,9 @@ func (m *MsgJoinPool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MaxAmountsIn = append(m.MaxAmountsIn, MaxAmountIn{})
-			if err := m.MaxAmountsIn[len(m.MaxAmountsIn)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Token.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgJoinPoolResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgJoinPoolResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgJoinPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MinAmountOut) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MinAmountOut: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MinAmountOut: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinAmount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.MinAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgExitPool) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExitPool: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExitPool: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Sender = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetPoolId", wireType)
-			}
-			m.TargetPoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.TargetPoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolAmountIn", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.PoolAmountIn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinAmountsOut", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MinAmountsOut = append(m.MinAmountsOut, MinAmountOut{})
-			if err := m.MinAmountsOut[len(m.MinAmountsOut)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgExitPoolResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExitPoolResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExitPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *LPTokenInfo) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: LPTokenInfo: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: LPTokenInfo: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Description = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BindTokenInfo) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BindTokenInfo: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BindTokenInfo: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -3815,40 +2673,6 @@ func (m *BindTokenInfo) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Weight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3939,9 +2763,9 @@ func (m *MsgCreatePool) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SwapFee", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolParams", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -3951,29 +2775,31 @@ func (m *MsgCreatePool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.SwapFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if m.PoolParams == nil {
+				m.PoolParams = &PoolParams{}
+			}
+			if err := m.PoolParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LpToken", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field BindingTokens", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4000,41 +2826,8 @@ func (m *MsgCreatePool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.LpToken.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BindTokens", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BindTokens = append(m.BindTokens, BindTokenInfo{})
-			if err := m.BindTokens[len(m.BindTokens)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.BindingTokens = append(m.BindingTokens, BindingToken{})
+			if err := m.BindingTokens[len(m.BindingTokens)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4089,6 +2882,456 @@ func (m *MsgCreatePoolResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCreatePoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgJoinPool) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgJoinPool: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgJoinPool: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShareOutAmount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ShareOutAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenInMaxAmounts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TokenInMaxAmounts = append(m.TokenInMaxAmounts, types.Coin{})
+			if err := m.TokenInMaxAmounts[len(m.TokenInMaxAmounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgJoinPoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgJoinPoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgJoinPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExitPool) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitPool: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitPool: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShareInAmount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ShareInAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutMinAmounts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TokenOutMinAmounts = append(m.TokenOutMinAmounts, types.Coin{})
+			if err := m.TokenOutMinAmounts[len(m.TokenOutMinAmounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExitPoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitPoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -4178,9 +3421,9 @@ func (m *MsgSwapExactAmountIn) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetPoolId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
 			}
-			m.TargetPoolId = 0
+			m.PoolId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4190,7 +3433,7 @@ func (m *MsgSwapExactAmountIn) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TargetPoolId |= uint64(b&0x7F) << shift
+				m.PoolId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4262,7 +3505,7 @@ func (m *MsgSwapExactAmountIn) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinAmountOut", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutMinAmount", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4290,13 +3533,13 @@ func (m *MsgSwapExactAmountIn) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MinAmountOut.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.TokenOutMinAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxPrice", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxSpotPrice", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4324,7 +3567,7 @@ func (m *MsgSwapExactAmountIn) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MaxPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.MaxSpotPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4468,9 +3711,9 @@ func (m *MsgSwapExactAmountOut) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetPoolId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
 			}
-			m.TargetPoolId = 0
+			m.PoolId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4480,7 +3723,7 @@ func (m *MsgSwapExactAmountOut) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TargetPoolId |= uint64(b&0x7F) << shift
+				m.PoolId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4519,7 +3762,7 @@ func (m *MsgSwapExactAmountOut) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxAmountIn", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenInMaxAmount", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4547,7 +3790,7 @@ func (m *MsgSwapExactAmountOut) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MaxAmountIn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.TokenInMaxAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4584,9 +3827,9 @@ func (m *MsgSwapExactAmountOut) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxPrice", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxSpotPrice", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4614,7 +3857,7 @@ func (m *MsgSwapExactAmountOut) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MaxPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.MaxSpotPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4758,9 +4001,9 @@ func (m *MsgJoinSwapExternAmountIn) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetPool", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
 			}
-			m.TargetPool = 0
+			m.PoolId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4770,7 +4013,7 @@ func (m *MsgJoinSwapExternAmountIn) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TargetPool |= uint64(b&0x7F) << shift
+				m.PoolId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4779,7 +4022,7 @@ func (m *MsgJoinSwapExternAmountIn) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TokenIn", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4789,61 +4032,28 @@ func (m *MsgJoinSwapExternAmountIn) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TokenIn = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenAmountIn", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TokenAmountIn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.TokenIn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinPoolAmountOut", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ShareOutMinAmount", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4871,7 +4081,7 @@ func (m *MsgJoinSwapExternAmountIn) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MinPoolAmountOut.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ShareOutMinAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5015,9 +4225,9 @@ func (m *MsgJoinSwapPoolAmountOut) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetPool", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
 			}
-			m.TargetPool = 0
+			m.PoolId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -5027,14 +4237,14 @@ func (m *MsgJoinSwapPoolAmountOut) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TargetPool |= uint64(b&0x7F) << shift
+				m.PoolId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenIn", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenInDenom", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5062,11 +4272,11 @@ func (m *MsgJoinSwapPoolAmountOut) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TokenIn = string(dAtA[iNdEx:postIndex])
+			m.TokenInDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolAmountOut", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ShareOutAmount", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5094,13 +4304,13 @@ func (m *MsgJoinSwapPoolAmountOut) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.PoolAmountOut.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ShareOutAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxAmountIn", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenInMaxAmount", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5128,7 +4338,7 @@ func (m *MsgJoinSwapPoolAmountOut) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MaxAmountIn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.TokenInMaxAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5183,263 +4393,6 @@ func (m *MsgJoinSwapPoolAmountOutResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgJoinSwapPoolAmountOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgExitSwapExternAmountOut) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExitSwapExternAmountOut: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExitSwapExternAmountOut: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Sender = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetPool", wireType)
-			}
-			m.TargetPool = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.TargetPool |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenOut", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TokenOut = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenAmountOut", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TokenAmountOut.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolAmountIn", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.MaxPoolAmountIn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgExitSwapExternAmountOutResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExitSwapExternAmountOutResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExitSwapExternAmountOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -5529,9 +4482,9 @@ func (m *MsgExitSwapPoolAmountIn) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetPool", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
 			}
-			m.TargetPool = 0
+			m.PoolId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -5541,14 +4494,14 @@ func (m *MsgExitSwapPoolAmountIn) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TargetPool |= uint64(b&0x7F) << shift
+				m.PoolId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenOut", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutDenom", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5576,11 +4529,11 @@ func (m *MsgExitSwapPoolAmountIn) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TokenOut = string(dAtA[iNdEx:postIndex])
+			m.TokenOutDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolAmountIn", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ShareInAmount", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5608,13 +4561,13 @@ func (m *MsgExitSwapPoolAmountIn) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.PoolAmountIn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ShareInAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinAmountOut", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutMinAmount", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5642,7 +4595,7 @@ func (m *MsgExitSwapPoolAmountIn) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MinAmountOut.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.TokenOutMinAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5697,6 +4650,263 @@ func (m *MsgExitSwapPoolAmountInResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgExitSwapPoolAmountInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExitSwapExternAmountOut) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitSwapExternAmountOut: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitSwapExternAmountOut: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TokenOutDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutAmount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TokenOutAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShareInMaxAmount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ShareInMaxAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExitSwapExternAmountOutResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitSwapExternAmountOutResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitSwapExternAmountOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
