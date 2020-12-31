@@ -24,10 +24,14 @@ type PoolAccountI interface {
 	GetPoolParams() PoolParams
 	GetTotalWeight() sdk.Int
 	GetTotalShare() sdk.Coin
+	AddTotalShare(amt sdk.Int)
+	SubTotalShare(amt sdk.Int)
 	AddRecords(records []Record) error
 	GetRecord(denom string) (Record, error)
 	SetRecord(denom string, record Record) error
 	GetRecords(denoms ...string) ([]Record, error)
+	SetRecords(record []Record) error
+	GetAllRecords() []Record
 	SetTokenWeight(denom string, weight sdk.Int) error
 	GetTokenWeight(denom string) (sdk.Int, error)
 	SetTokenBalance(denom string, amount sdk.Int) error
@@ -48,6 +52,11 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams) PoolAccountI {
 	poolAddr := NewPoolAddress(poolId)
 	baseAcc := authtypes.NewBaseAccountWithAddress(poolAddr)
 
+	err := poolParams.Validate()
+	if err != nil {
+		panic(err)
+	}
+
 	return &PoolAccount{
 		BaseAccount: baseAcc,
 		Id:          poolId,
@@ -56,6 +65,18 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams) PoolAccountI {
 		TotalShare:  sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
 		Records:     nil,
 	}
+}
+
+func (params PoolParams) Validate() error {
+	if params.ExitFee.LT(sdk.NewDec(0)) {
+		return fmt.Errorf("exit fee can't be negative")
+	}
+
+	if params.SwapFee.LT(sdk.NewDec(0)) {
+		return fmt.Errorf("swap fee can't be negative")
+	}
+
+	return nil
 }
 
 func (pa PoolAccount) GetId() uint64 {
@@ -72,6 +93,14 @@ func (pa PoolAccount) GetTotalWeight() sdk.Int {
 
 func (pa PoolAccount) GetTotalShare() sdk.Coin {
 	return pa.TotalShare
+}
+
+func (pa *PoolAccount) AddTotalShare(amt sdk.Int) {
+	pa.TotalShare.Amount = pa.TotalShare.Amount.Add(amt)
+}
+
+func (pa *PoolAccount) SubTotalShare(amt sdk.Int) {
+	pa.TotalShare.Amount = pa.TotalShare.Amount.Sub(amt)
 }
 
 // AddRecords adds the records to the pool. If the same denom's record exists, will return error.
@@ -174,6 +203,47 @@ func (pa *PoolAccount) SetRecord(denom string, record Record) error {
 	return fmt.Errorf("can't find the record (%s)", denom)
 }
 
+func (pa *PoolAccount) SetRecords(records []Record) error {
+	exists := make(map[string]int)
+	for index, record := range pa.Records {
+		exists[record.Token.Denom] = index
+	}
+
+	addingRecordsExists := make(map[string]bool)
+
+	deltaTotalWeight := sdk.ZeroInt()
+
+	for _, record := range records {
+		if record.Token.Amount.LTE(sdk.ZeroInt()) {
+			return fmt.Errorf("can't set the zero or negative balance of token")
+		}
+
+		if record.Weight.LTE(sdk.ZeroInt()) {
+			return fmt.Errorf("can't set the zero or negative weight of token")
+		}
+
+		index, ok := exists[record.Token.Denom]
+		if !ok {
+			return fmt.Errorf("record doesn't exists")
+		}
+
+		if addingRecordsExists[record.Token.Denom] {
+			return fmt.Errorf("adding records duplicated")
+		}
+		addingRecordsExists[record.Token.Denom] = true
+
+		oldRecord := pa.Records[index]
+		deltaTotalWeight = deltaTotalWeight.Add(record.Weight.Sub(oldRecord.Weight))
+
+		pa.Records[index].Weight = record.Weight
+		pa.Records[index].Token = record.Token
+	}
+
+	pa.TotalWeight = pa.TotalWeight.Add(deltaTotalWeight)
+
+	return nil
+}
+
 func (pa PoolAccount) GetRecords(denoms ...string) ([]Record, error) {
 	result := make([]Record, 0, len(denoms))
 
@@ -187,6 +257,12 @@ func (pa PoolAccount) GetRecords(denoms ...string) ([]Record, error) {
 	}
 
 	return result, nil
+}
+
+func (pa PoolAccount) GetAllRecords() []Record {
+	copyslice := make([]Record, len(pa.Records))
+	copy(copyslice, pa.Records)
+	return copyslice
 }
 
 func (pa *PoolAccount) SetTokenWeight(denom string, weight sdk.Int) error {

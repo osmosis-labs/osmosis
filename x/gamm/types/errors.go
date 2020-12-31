@@ -4,18 +4,13 @@ import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 // x/gamm module sentinel errors
 var (
-	ErrPoolNotFound   = sdkerrors.Register(ModuleName, 2, "pool not found")
-	ErrMathApprox     = sdkerrors.Register(ModuleName, 3, "math approx error")
-	ErrLimitExceed    = sdkerrors.Register(ModuleName, 4, "limit exceeded")
-	ErrInvalidRequest = sdkerrors.Register(ModuleName, 5, "bad request")
-	ErrDenomNotExist  = sdkerrors.Register(ModuleName, 6, "denom doesn't exist on pool")
-
-	ErrNotBound      = sdkerrors.Register(ModuleName, 100, "ERR_NOT_BOUND")
-	ErrMaxInRatio    = sdkerrors.Register(ModuleName, 101, "ERR_MAX_IN_RATIO")
-	ErrMaxOutRatio   = sdkerrors.Register(ModuleName, 102, "ERR_MAX_OUT_RATIO")
-	ErrBadLimitPrice = sdkerrors.Register(ModuleName, 103, "ERR_BAD_LIMIT_PRICE")
-	ErrLimitIn       = sdkerrors.Register(ModuleName, 104, "ERR_LIMIT_IN")
-	ErrLimitOut      = sdkerrors.Register(ModuleName, 105, "ERR_LIMIT_OUT")
-	ErrLimitPrice    = sdkerrors.Register(ModuleName, 106, "ERR_LIMIT_PRICE")
-	//ErrMathApprox    = sdkerrors.Register(ModuleName, 104, "ERR_MATH_APPROX")
+	ErrPoolNotFound      = sdkerrors.Register(ModuleName, 1, "pool not found")
+	ErrPoolAlreadyExist  = sdkerrors.Register(ModuleName, 2, "pool already exist")
+	ErrPoolLocked        = sdkerrors.Register(ModuleName, 3, "pool is locked")
+	ErrTooLittleRecords  = sdkerrors.Register(ModuleName, 4, "pool should have at least 2 records")
+	ErrTooManyRecords    = sdkerrors.Register(ModuleName, 5, "pool has too many records")
+	ErrLimitMaxAmount    = sdkerrors.Register(ModuleName, 6, "calculated amount is larger than max amount")
+	ErrLimitMinAmount    = sdkerrors.Register(ModuleName, 7, "calculated amount is lesser than min amount")
+	ErrLimitMaxPrice     = sdkerrors.Register(ModuleName, 8, "spot price exceeds max spot price")
+	ErrInvalidMathApprox = sdkerrors.Register(ModuleName, 9, "invalid calculated result")
 )

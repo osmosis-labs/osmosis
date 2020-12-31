@@ -56,9 +56,10 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetCreatePool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolBindTokens)
-	_ = cmd.MarkFlagRequired(FlagPoolBindTokenWeights)
+	_ = cmd.MarkFlagRequired(FlagPoolRecordTokens)
+	_ = cmd.MarkFlagRequired(FlagPoolRecordTokenWeights)
 	_ = cmd.MarkFlagRequired(FlagSwapFee)
+	_ = cmd.MarkFlagRequired(FlagExitFee)
 
 	return cmd
 }
@@ -89,7 +90,7 @@ func NewJoinPoolCmd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagPoolAmountOut)
+	_ = cmd.MarkFlagRequired(FlagShareAmountOut)
 	_ = cmd.MarkFlagRequired(FlagMaxAountsIn)
 
 	return cmd
@@ -121,45 +122,45 @@ func NewExitPoolCmd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagPoolAmountIn)
+	_ = cmd.MarkFlagRequired(FlagShareAmountIn)
 	_ = cmd.MarkFlagRequired(FlagMinAmountsOut)
 
 	return cmd
 }
 
 func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	bindTokenStrs, err := fs.GetStringArray(FlagPoolBindTokens)
+	recordTokenStrs, err := fs.GetStringArray(FlagPoolRecordTokens)
 	if err != nil {
 		return txf, nil, err
 	}
-	if len(bindTokenStrs) < 2 {
+	if len(recordTokenStrs) < 2 {
 		return txf, nil, fmt.Errorf("bind tokens should be more than 2")
 	}
 
-	bindTokenWeightStrs, err := fs.GetStringArray(FlagPoolBindTokenWeights)
+	recordTokenWeightStrs, err := fs.GetStringArray(FlagPoolRecordTokenWeights)
 	if err != nil {
 		return txf, nil, err
 	}
-	if len(bindTokenStrs) != len(bindTokenWeightStrs) {
-		return txf, nil, fmt.Errorf("bind tokens and token weight should have same length")
+	if len(recordTokenStrs) != len(recordTokenWeightStrs) {
+		return txf, nil, fmt.Errorf("tokens and token weights should have same length")
 	}
 
-	bindTokensSdk := sdk.Coins{}
-	for i := 0; i < len(bindTokenStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(bindTokenStrs[i])
+	recordTokens := sdk.Coins{}
+	for i := 0; i < len(recordTokenStrs); i++ {
+		parsed, err := sdk.ParseCoinNormalized(recordTokenStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		bindTokensSdk = append(bindTokensSdk, parsed)
+		recordTokens = append(recordTokens, parsed)
 	}
 
-	var bindWeights []sdk.Dec
-	for i := 0; i < len(bindTokenWeightStrs); i++ {
-		parsed, err := sdk.NewDecFromStr(bindTokenWeightStrs[i])
-		if err != nil {
-			return txf, nil, err
+	var recordWeights []sdk.Int
+	for i := 0; i < len(recordTokenWeightStrs); i++ {
+		parsed, ok := sdk.NewIntFromString(recordTokenWeightStrs[i])
+		if !ok {
+			return txf, nil, fmt.Errorf("invalid token weight (%s)", recordTokenWeightStrs[i])
 		}
-		bindWeights = append(bindWeights, parsed)
+		recordWeights = append(recordWeights, parsed)
 	}
 
 	swapFeeStr, err := fs.GetString(FlagSwapFee)
@@ -171,37 +172,36 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, err
 	}
 
-	customDenom, err := fs.GetString(FlagPoolTokenCustomDenom)
+	exitFeeStr, err := fs.GetString(FlagExitFee)
+	if err != nil {
+		return txf, nil, err
+	}
+	exitFee, err := sdk.NewDecFromStr(exitFeeStr)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	description, err := fs.GetString(FlagPoolTokenDescription)
-	if err != nil {
-		return txf, nil, err
-	}
+	var records []types.Record
+	for i := 0; i < len(recordTokens); i++ {
+		recordToken := recordTokens[i]
+		recordWeight := recordWeights[i]
 
-	var bindTokens []types.BindTokenInfo
-	for i := 0; i < len(bindTokensSdk); i++ {
-		bindTokenSdk := bindTokensSdk[i]
-
-		bindToken := types.BindTokenInfo{
-			Denom:  bindTokenSdk.Denom,
-			Weight: bindWeights[i],
-			Amount: bindTokenSdk.Amount,
+		record := types.Record{
+			Weight: recordWeight,
+			Token:  recordToken,
 		}
 
-		bindTokens = append(bindTokens, bindToken)
+		records = append(records, record)
 	}
 
 	msg := &types.MsgCreatePool{
-		Sender:  clientCtx.GetFromAddress().String(),
-		SwapFee: swapFee,
-		LpToken: types.LPTokenInfo{
-			Denom:       customDenom,
-			Description: description,
+		Sender: clientCtx.GetFromAddress().String(),
+		PoolParams: types.PoolParams{
+			Lock:    false,
+			SwapFee: swapFee,
+			ExitFee: exitFee,
 		},
-		BindTokens: bindTokens,
+		Records: records,
 	}
 
 	return txf, msg, nil
@@ -213,14 +213,14 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		return txf, nil, err
 	}
 
-	poolAmountOutStr, err := fs.GetString(FlagPoolAmountOut)
+	shareAmountOutStr, err := fs.GetString(FlagShareAmountOut)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	poolAmountOut, ok := sdk.NewIntFromString(poolAmountOutStr)
+	shareAmountOut, ok := sdk.NewIntFromString(shareAmountOutStr)
 	if !ok {
-		return txf, nil, fmt.Errorf("invalid pool amount out")
+		return txf, nil, fmt.Errorf("invalid share amount out")
 	}
 
 	maxAmountsInStrs, err := fs.GetStringArray(FlagMaxAountsIn)
@@ -228,32 +228,20 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		return txf, nil, err
 	}
 
-	maxAountsInSdk := sdk.Coins{}
+	maxAmountsIn := sdk.Coins{}
 	for i := 0; i < len(maxAmountsInStrs); i++ {
 		parsed, err := sdk.ParseCoinNormalized(maxAmountsInStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		maxAountsInSdk = append(maxAountsInSdk, parsed)
-	}
-
-	var maxAmountsIn []types.MaxAmountIn
-	for i := 0; i < len(maxAountsInSdk); i++ {
-		maxAmountInSdk := maxAountsInSdk[i]
-
-		maxAmountIn := types.MaxAmountIn{
-			Denom:     maxAmountInSdk.Denom,
-			MaxAmount: maxAmountInSdk.Amount,
-		}
-
-		maxAmountsIn = append(maxAmountsIn, maxAmountIn)
+		maxAmountsIn = append(maxAmountsIn, parsed)
 	}
 
 	msg := &types.MsgJoinPool{
-		Sender:        clientCtx.GetFromAddress().String(),
-		TargetPoolId:  poolId,
-		PoolAmountOut: poolAmountOut,
-		MaxAmountsIn:  maxAmountsIn,
+		Sender:         clientCtx.GetFromAddress().String(),
+		PoolId:         poolId,
+		ShareOutAmount: shareAmountOut,
+		TokenInMaxs:    maxAmountsIn,
 	}
 
 	return txf, msg, nil
@@ -265,14 +253,14 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		return txf, nil, err
 	}
 
-	poolAmountInStr, err := fs.GetString(FlagPoolAmountIn)
+	shareAmountInStr, err := fs.GetString(FlagShareAmountIn)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	poolAmountIn, ok := sdk.NewIntFromString(poolAmountInStr)
+	shareAmountIn, ok := sdk.NewIntFromString(shareAmountInStr)
 	if !ok {
-		return txf, nil, fmt.Errorf("invalid pool amount in")
+		return txf, nil, fmt.Errorf("invalid share amount in")
 	}
 
 	minAmountsOutStrs, err := fs.GetStringArray(FlagMinAmountsOut)
@@ -280,32 +268,20 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		return txf, nil, err
 	}
 
-	minAountsOutSdk := sdk.Coins{}
+	minAmountsOut := sdk.Coins{}
 	for i := 0; i < len(minAmountsOutStrs); i++ {
 		parsed, err := sdk.ParseCoinNormalized(minAmountsOutStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		minAountsOutSdk = append(minAountsOutSdk, parsed)
-	}
-
-	var minAmountsOut []types.MinAmountOut
-	for i := 0; i < len(minAountsOutSdk); i++ {
-		minAmountOutSdk := minAountsOutSdk[i]
-
-		minAmountOut := types.MinAmountOut{
-			Denom:     minAmountOutSdk.Denom,
-			MinAmount: minAmountOutSdk.Amount,
-		}
-
-		minAmountsOut = append(minAmountsOut, minAmountOut)
+		minAmountsOut = append(minAmountsOut, parsed)
 	}
 
 	msg := &types.MsgExitPool{
 		Sender:        clientCtx.GetFromAddress().String(),
-		TargetPoolId:  poolId,
-		PoolAmountIn:  poolAmountIn,
-		MinAmountsOut: minAmountsOut,
+		PoolId:        poolId,
+		ShareInAmount: shareAmountIn,
+		TokenOutMins:  minAmountsOut,
 	}
 
 	return txf, msg, nil

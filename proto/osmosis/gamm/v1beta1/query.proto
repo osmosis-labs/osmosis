@@ -22,7 +22,7 @@ service Query {
     rpc TotalShare(QueryTotalShareRequest) returns (QueryTotalShareResponse) {
         option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/total_share";
     }
-    rpc TokenBalance(QueryTokenBalanceRequest) returns (QueryTokenBalanceResponse) {
+    rpc Records(QueryRecordsRequest) returns (QueryRecordsResponse) {
         option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/tokens";
     }
     rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
@@ -89,15 +89,14 @@ message QueryTotalShareResponse {
     ];
 }
 
-//=============================== TokenBalance
-message QueryTokenBalanceRequest {
+//=============================== Records
+message QueryRecordsRequest {
     uint64 poolId = 1 [
         (gogoproto.moretags) = "yaml:\"pool_id\""
     ];
 }
-message QueryTokenBalanceResponse {
-    repeated cosmos.base.v1beta1.Coin tokens = 1 [
-        (gogoproto.moretags) = "yaml\"tokens\"",
+message QueryRecordsResponse {
+    repeated Record records = 1 [
         (gogoproto.nullable) = false
     ];
 }
