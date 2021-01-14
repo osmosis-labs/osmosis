@@ -4,31 +4,22 @@ order: 4
 
 # Events
 
-The governance module emits the following events:
-
-## EndBlocker
-
-| Type              | Attribute Key   | Attribute Value  |
-| ----------------- | --------------- | ---------------- |
-| unlock_coins      | period_lock_id  | {periodLockID}   |
-| unlock_coins      | amount          | {amount}         |
-
-Note:
-If we don't do automation of withdraw, Endblocker won't be required.
-
+The lockup module emits the following events:
 ## Handlers
 
 ### MsgLockTokens
 
 | Type                | Attribute Key       | Attribute Value |
 | ------------------- | ------------------- | --------------- |
-| lock_tokens         | proposer            | {proposer}      |
-| lock_tokens         | amount              | {amount}        |
 | lock_tokens         | period_lock_id      | {periodLockID}  |
+| lock_tokens         | owner               | {owner}         |
+| lock_tokens         | amount              | {amount}        |
+| lock_tokens         | duration            | {duration}      |
+| lock_tokens         | unlock_time         | {unlock_time}   |
 
 ### MsgUnlockTokens
 
 | Type          | Attribute Key | Attribute Value |
 | ------------- | ------------- | --------------- |
-| unlock_tokens | proposer      | {proposer}      |
-| unlock_tokens | amount        | {amount}        |
+| unlock_tokens | owner         | {owner}         |
+| unlock_tokens | lock_id       | {lock_id}       |

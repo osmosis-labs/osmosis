@@ -10,10 +10,7 @@ Locked coins are all stored in module account for `lockup` module which is calle
 When user lock coins within `lockup` module, it's moved from user account to `LockPool` and a record (`PeriodLock` struct) is created.
 
 Once the period is over, user can withdraw it at anytime from `LockPool`.
-Note:
-- Do we need automate withdraw from the pool?
-- When querying for full lock amount, unlocked amount but which is in lock pool yet should be queried?
-- Is it needed to withdraw by record or by coins? (Or even withdraw full for unlocked?)
+User can withdraw by PeriodLock ID or withdraw all `UnlockableCoins` at a time.
 
 ### Period Lock
 
@@ -22,28 +19,22 @@ It stores owner, duration, unlock time and the amount of coins locked.
 
 ```go
 type PeriodLock struct {
-	owner      sdk.AccAddress
-	duration   time.Duration
-	unlockTime time.Time
-	coins      sdk.Coins
-}
-
-type UnlockedTokens struct {
-	owner      sdk.AccAddress
-	coins      sdk.Coins
+  ID         uint64         // unique ID of a lock
+	Owner      sdk.AccAddress
+	Duration   time.Duration
+	UnlockTime time.Time
+  Coins      sdk.Coins
+  Withdrawn  bool
 }
 ```
 
 ```protobuf
 message PeriodLock {
-  string owner = 1;
-  google.protobuf.Duration duration = 2;
-  google.protobuf.Timestamp unlock_time = 3;
-  repeated cosmos.base.v1beta1.Coin coins = 4;
-}
-
-message UnlockedTokens {
-  string owner = 1;
-  repeated cosmos.base.v1beta1.Coin coins = 2;
+  uint64 ID = 1;
+  string owner = 2;
+  google.protobuf.Duration duration = 3;
+  google.protobuf.Timestamp unlock_time = 4;
+  repeated cosmos.base.v1beta1.Coin coins = 5;
+  bool withdrawn = 6;
 }
 ```

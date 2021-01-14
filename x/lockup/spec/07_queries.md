@@ -14,17 +14,16 @@ type QueryServer interface {
 	// Return locked balance of the module
 	GetModuleLockedAmount(sdk.Context, *ModuleLockedAmountRequest) (*ModuleLockedAmountResponse, error)
 
-	// Returns whole balance deposited by the user which is not withdrawn yet
-	GetAccountPoolBalance(sdk.Context, *ModuleAccountPoolBalanceRequest) (*ModuleAccountPoolBalanceResponse, error)
-	// Return a locked amount that can't be withdrawn
-	GetAccountLockedAmount(sdk.Context, *ModuleAccountLockedAmountRequest) (*ModuleAccountLockedAmountResponse, error)
+	// Returns whole unlockable coins which are not withdrawn yet
+	GetAccountUnlockableCoins(sdk.Context, sdk.AccAddress) sdk.Coins
+	// Return a locked coins that can't be withdrawn
+	GetAccountLockedCoins(sdk.Context, sdk.AccAddress) sdk.Coins
 
 	// Returns the total number of tokens of an account whose unlock time is beyond timestamp
 	GetAccountLockedPastTime(sdk.Context, *ModuleAccountLockedPastTimeRequest) (*ModuleAccountLockedPastTimeResponse, error)
 	// Same as GetAccountLockedPastTime but denom specific
 	GetAccountLockedPastTimeDenom(sdk.Context, *AccountLockedPastTimeDenomRequest) (*AccountLockedPastTimeDenomResponse, error)
-	// @sunny, single account can have multiple period locks, and it seems to be not valid query
 	// Returns the length of the initial lock time when the lock was created
-	// GetAccountLockPeriod(sdk.Context, *AccountAccountLockPeriodRequest) (*AccountAccountLockPeriodResponse, error) 
+	GetAccountLockPeriod(sdk.Context, *AccountAccountLockPeriodRequest) (*AccountAccountLockPeriodResponse, error) 
 }
 ```

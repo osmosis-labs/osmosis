@@ -9,7 +9,6 @@ The lockup module contains the following parameters:
 | Key                    | Type            | Example |
 | ---------------------- | --------------- | ------- |
 | MinPeriod              | string (uint64) | "86400" |
-| MinAmount              | string (uint64) | "100"   |
 
 Note:
 We need to discuss what parameters would be required for this module.

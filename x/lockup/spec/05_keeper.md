@@ -16,10 +16,10 @@ type Keeper interface {
 	// Return locked balance of the module
 	GetModuleLockedAmount(sdk.Context) sdk.Coins
 
-	// Returns whole balance deposited by the user which is not withdrawn yet
-	GetAccountPoolBalance(sdk.Context, sdk.AccAddress) sdk.Coins
-	// Return a locked amount that can't be withdrawn
-	GetAccountLockedAmount(sdk.Context, sdk.AccAddress) sdk.Coins
+	// Returns whole unlockable coins which are not withdrawn yet
+	GetAccountUnlockableCoins(sdk.Context, sdk.AccAddress) sdk.Coins
+	// Return a locked coins that can't be withdrawn
+	GetAccountLockedCoins(sdk.Context, sdk.AccAddress) sdk.Coins
 
 	// Returns the total number of tokens of an account whose unlock time is beyond timestamp
 	GetAccountLockedPastTime(sdk.AccAddress, timestamp time.Time) (sdk.Coins | []types.PeriodLock)
@@ -28,9 +28,13 @@ type Keeper interface {
 	// Get iterator for all locks of a denom token that unlocks after timestamp
 	IteratorAccountsLockedPastTimeDenom(denom string, timestamp time.Time) db.Iterator
 	// Returns all the accounts that locked coins for longer than time.Duration.  Doesn't matter how long is left until unlock.  Only based on initial locktimes
-	IteratorLockPeriodsDenom(denom, time.Duration) []types.PeriodLock
-	// @sunny, single account can have multiple period locks, and it seems to be not valid query
+	IteratorLockPeriodsDenom(denom string, time.Duration) []types.PeriodLock
 	// Returns the length of the initial lock time when the lock was created
-	// GetAccountLockPeriod(sdk.AccAddress, denom string) 
+	GetAccountLockPeriod(sdk.AccAddress, lockID uint64)
+
+	// Unlock all unlockable coins 
+	UnlockAllUnlockableCoins(sdk.Context, sdk.AccAddress) error
+	// unlock by period lock ID
+	UnlockPeriodLockByID(sdk.Context, sdk.AccAddress, LockID uint64) error
 }
 ```
