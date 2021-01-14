@@ -23,3 +23,10 @@ The lockup module emits the following events:
 | ------------- | ------------- | --------------- |
 | unlock_tokens | owner         | {owner}         |
 | unlock_tokens | lock_id       | {lock_id}       |
+
+### MsgUnlockPeriodLock
+
+| Type          | Attribute Key | Attribute Value |
+| ------------- | ------------- | --------------- |
+| unlock_tokens | owner         | {owner}         |
+| unlock_tokens | lock_id       | {lock_id}       |
