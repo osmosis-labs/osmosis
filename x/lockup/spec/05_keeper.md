@@ -38,3 +38,23 @@ type Keeper interface {
 	UnlockPeriodLockByID(sdk.Context, sdk.AccAddress, LockID uint64) error
 }
 ```
+
+# Lock Admin Keeper
+
+```go
+// AdminKeeper defines a god priviledge keeper functions to remove tokens from locks and create new locks
+// For the governance system of token pools, we want a "ragequit" feature
+// So governance changes will take 1 week to go into effect
+// During that time, people can choose to "ragequit" which means they would leave the original pool
+// and form a new pool with the old parameters but if they still had 2 months of lockup left,
+// their liquidity still needs to be 2 month lockup-ed, just in the new pool
+// And we need to replace their pool1 LP tokens with pool2 LP tokens with the same lock duration and end time
+
+type AdminKeeper interface {
+	Keeper
+
+	// this unlock previous lockID and create a new lock with newCoins with same duration and endtime
+	// @sunny, how amount ratio could be checked for pool1 LP and pool2 LP tokens?
+	RageQuit(sdk.Context, lockID uint64, newCoins sdk.Coins) error
+}
+```

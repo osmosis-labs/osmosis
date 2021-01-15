@@ -36,7 +36,7 @@ type MsgUnlockTokens struct {
 **State modifications:**
 
 - Fetch all unlockable `PeriodLock`s that `Owner` has not withdrawn yet
-- Save `PeriodLock` records with `Withdrawn` flag `true` (soft delete)
+- Remove `PeriodLock` records from the state
 - Transfer the tokens from lockup `ModuleAccount` to the `MsgUnlockTokens.Owner`.
 
 ## Unlock PeriodLock
@@ -54,5 +54,7 @@ type MsgUnlockPeriodLock struct {
 
 - Check `PeriodLock` with `LockID` specified by `MsgUnlockPeriodLock` is available and not withdrawn already
 - Check `PeriodLock` owner is same as `MsgUnlockPeriodLock.Owner`
-- Save `PeriodLock` record with `Withdrawn` flag `true` (soft delete)
+- Remove `PeriodLock` record from the state
 - Transfer the tokens from lockup `ModuleAccount` to the `Owner`.
+
+Note: If another module needs past `PeriodLock` item, it can log the details themselves using the hooks.

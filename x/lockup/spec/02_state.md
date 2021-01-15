@@ -24,7 +24,6 @@ type PeriodLock struct {
 	Duration   time.Duration
 	UnlockTime time.Time
   Coins      sdk.Coins
-  Withdrawn  bool
 }
 ```
 
@@ -35,6 +34,5 @@ message PeriodLock {
   google.protobuf.Duration duration = 3;
   google.protobuf.Timestamp unlock_time = 4;
   repeated cosmos.base.v1beta1.Coin coins = 5;
-  bool withdrawn = 6;
 }
 ```
