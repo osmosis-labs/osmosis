@@ -2,9 +2,14 @@
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
+export GO111MODULE=on
+
 .PHONY: clean buildpath osmosis proto docs
 
 all: osmosis proto
+
+# The below include contains the tools and runsim targets.
+include contrib/devtools/Makefile
 
 clean:
 	rm -rf ./build
@@ -25,7 +30,7 @@ proto:
 	@echo
 	@echo "=========== Generate Message ============"
 	@echo
-	./scripts/generate-proto.sh
+	./scripts/protocgen.sh
 	@echo
 	@echo "=========== Generate Complete ============"
 	@echo
