@@ -23,8 +23,7 @@ service Msg {
       returns (MsgExitSwapExternAmountOutResponse);
   rpc ExitSwapShareAmountIn(MsgExitSwapShareAmountIn)
       returns (MsgExitSwapShareAmountInResponse);
-  rpc UpdateSwapFee(MsgUpdateSwapFee)
-      returns (MsgUpdateSwapFeeResponse);
+  rpc UpdateSwapFee(MsgUpdateSwapFee) returns (MsgUpdateSwapFeeResponse);
 }
 
 // ===================== MsgCreatePool
