@@ -14,6 +14,7 @@ const (
 	TypeMsgJoinSwapShareAmountOut  = "join_swap_extern_amount_out"
 	TypeMsgExitSwapExternAmountOut = "exit_swap_extern_amount_out"
 	TypeMsgExitSwapShareAmountIn   = "exit_swap_share_amount_in"
+	TypeMsgUpdateSwapfee      = "update_swapfee"
 )
 
 var _ sdk.Msg = &MsgCreatePool{}
@@ -171,6 +172,18 @@ func (m MsgExitSwapShareAmountIn) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgExitSwapShareAmountIn) GetSigners() []sdk.AccAddress {
+
+var _ sdk.Msg = &MsgUpdateSwapFee{}
+
+func (m MsgUpdateSwapFee) Route() string { return RouterKey }
+func (m MsgUpdateSwapFee) Type() string  { return TypeMsgUpdateSwapfee }
+func (m MsgUpdateSwapFee) ValidateBasic() error {
+	return nil // TODO
+}
+func (m MsgUpdateSwapFee) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgUpdateSwapFee) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
 		panic(err)
