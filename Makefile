@@ -30,7 +30,7 @@ proto:
 	@echo "=========== Generate Complete ============"
 	@echo
 
-proto-all: proto-format proto-lint proto-gen
+proto-all: proto-format proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
@@ -41,9 +41,6 @@ proto-format:
 	$(DOCKER) run --rm -v $(CURDIR):/workspace \
 	--workdir /workspace tendermintdev/docker-build-proto \
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
-
-proto-lint:
-	@$(DOCKER_BUF) check lint --error-format=json
 
 docs:
 	@echo
