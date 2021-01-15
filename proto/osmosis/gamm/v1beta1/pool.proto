@@ -10,57 +10,58 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
 
 message Record {
-    // Denormarized weight.
-    string weight = 1 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"denormalized_weight\"",
-        (gogoproto.nullable) = false
-    ];
-    cosmos.base.v1beta1.Coin token = 2 [
-        (gogoproto.moretags) = "yaml:\"token\"",
-        (gogoproto.nullable) = false
-    ];
+  // Denormarized weight.
+  string weight = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"denormalized_weight\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin token = 2
+      [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
 }
 
-// PoolParams defined the parameters that will be managed by the pool governance in the future.
-// This params are not managed by the chain governanace.
+// PoolParams defined the parameters that will be managed by the pool governance
+// in the future. This params are not managed by the chain governanace.
 message PoolParams {
-    // If the pool is locked, users can't join, exit or swap the pool.
-    bool lock = 1;
-    string swapFee = 2 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-        (gogoproto.moretags) = "yaml:\"swap_fee\"",
-        (gogoproto.nullable) = false
-    ];
-    string exitFee = 3 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-        (gogoproto.moretags) = "yaml:\"exit_fee\"",
-        (gogoproto.nullable) = false
-    ];
+  // If the pool is locked, users can't join, exit or swap the pool.
+  bool lock = 1;
+  string swapFee = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+  string exitFee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"exit_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message PoolAccount {
-    option (gogoproto.goproto_getters)  = false;
-    option (gogoproto.goproto_stringer) = false;
-    option (cosmos_proto.implements_interface) = "PoolAccountI";
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "PoolAccountI";
 
-    cosmos.auth.v1beta1.BaseAccount baseAccount = 1 [(gogoproto.embed) = true, (gogoproto.moretags) = "yaml:\"base_account\""];
-    uint64 id = 2;
-    PoolParams poolParams = 3 [
-        (gogoproto.moretags) = "yaml:\"pool_params\"",
-        (gogoproto.nullable) = false
-    ];
-    string totalWeight = 4 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"total_weight\"",
-        (gogoproto.nullable) = false
-    ];
-    cosmos.base.v1beta1.Coin totalShare = 5 [
-        (gogoproto.moretags) = "yaml:\"total_share\"",
-        (gogoproto.nullable) = false
-    ];
-    repeated Record records = 6 [
-        (gogoproto.moretags) = "yaml:\"records\"",
-        (gogoproto.nullable) = false
-    ];
+  cosmos.auth.v1beta1.BaseAccount baseAccount = 1 [
+    (gogoproto.embed) = true,
+    (gogoproto.moretags) = "yaml:\"base_account\""
+  ];
+  uint64 id = 2;
+  PoolParams poolParams = 3 [
+    (gogoproto.moretags) = "yaml:\"pool_params\"",
+    (gogoproto.nullable) = false
+  ];
+  string totalWeight = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"total_weight\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin totalShare = 5 [
+    (gogoproto.moretags) = "yaml:\"total_share\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated Record records = 6 [
+    (gogoproto.moretags) = "yaml:\"records\"",
+    (gogoproto.nullable) = false
+  ];
 }
