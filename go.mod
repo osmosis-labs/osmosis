@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/cosmos/cosmos-sdk v0.40.0
 	github.com/gogo/protobuf v1.3.2
+	github.com/golang/protobuf v1.4.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.1.0
