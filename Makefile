@@ -42,6 +42,9 @@ proto-format:
 	--workdir /workspace tendermintdev/docker-build-proto \
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
 
+install:
+	go install ./cmd/osmosisd
+
 docs:
 	@echo
 	@echo "=========== Generate Message ============"
