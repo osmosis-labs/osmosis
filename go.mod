@@ -6,9 +6,9 @@ require (
 	github.com/cosmos/cosmos-sdk v0.40.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.4.3
+	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.1.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/spf13/cast v1.3.1
@@ -19,7 +19,6 @@ require (
 	github.com/tendermint/tm-db v0.6.3
 	google.golang.org/genproto v0.0.0-20210106152847-07624b53cd92
 	google.golang.org/grpc v1.34.0
-	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
