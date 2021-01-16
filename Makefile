@@ -11,9 +11,6 @@ TEST_DOCKER_REPO=c-osmosis/osmosisdnode
 
 export GO111MODULE = on
 
-# The below include contains the tools and runsim targets.
-include contrib/devtools/Makefile
-
 # process build tags
 
 build_tags = netgo
