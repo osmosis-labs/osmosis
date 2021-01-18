@@ -36,3 +36,20 @@ message PeriodLock {
   repeated cosmos.base.v1beta1.Coin coins = 5;
 }
 ```
+
+### Period lock queues
+
+For the purpose of tracking lock end time, period lock queue is kept.
+
+All queues objects are sorted by timestamp. The time used within any queue is
+first rounded to the nearest nanosecond then sorted. The sortable time format
+used is a slight modification of the RFC3339Nano and uses the the format string
+`"2006-01-02T15:04:05.000000000"`. Notably this format:
+
+- right pads all zeros
+- drops the time zone info (uses UTC)
+
+In all cases, the stored timestamp represents the maturation time of the queue
+element.
+
+Key will look like `{OwnerBytes}{UnlockTime}` and Value will store `PeriodLock` object.
