@@ -6,18 +6,30 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/query"
+	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/golang/protobuf/ptypes/duration"
+	_ "github.com/golang/protobuf/ptypes/timestamp"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
 	math "math"
+	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -25,22 +37,708 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type ModuleBalanceRequest struct {
+}
+
+func (m *ModuleBalanceRequest) Reset()         { *m = ModuleBalanceRequest{} }
+func (m *ModuleBalanceRequest) String() string { return proto.CompactTextString(m) }
+func (*ModuleBalanceRequest) ProtoMessage()    {}
+func (*ModuleBalanceRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{0}
+}
+func (m *ModuleBalanceRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleBalanceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleBalanceRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleBalanceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleBalanceRequest.Merge(m, src)
+}
+func (m *ModuleBalanceRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleBalanceRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleBalanceRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleBalanceRequest proto.InternalMessageInfo
+
+type ModuleBalanceResponse struct {
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+}
+
+func (m *ModuleBalanceResponse) Reset()         { *m = ModuleBalanceResponse{} }
+func (m *ModuleBalanceResponse) String() string { return proto.CompactTextString(m) }
+func (*ModuleBalanceResponse) ProtoMessage()    {}
+func (*ModuleBalanceResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{1}
+}
+func (m *ModuleBalanceResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleBalanceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleBalanceResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleBalanceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleBalanceResponse.Merge(m, src)
+}
+func (m *ModuleBalanceResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleBalanceResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleBalanceResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleBalanceResponse proto.InternalMessageInfo
+
+func (m *ModuleBalanceResponse) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type ModuleLockedAmountRequest struct {
+}
+
+func (m *ModuleLockedAmountRequest) Reset()         { *m = ModuleLockedAmountRequest{} }
+func (m *ModuleLockedAmountRequest) String() string { return proto.CompactTextString(m) }
+func (*ModuleLockedAmountRequest) ProtoMessage()    {}
+func (*ModuleLockedAmountRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{2}
+}
+func (m *ModuleLockedAmountRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleLockedAmountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleLockedAmountRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleLockedAmountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleLockedAmountRequest.Merge(m, src)
+}
+func (m *ModuleLockedAmountRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleLockedAmountRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleLockedAmountRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleLockedAmountRequest proto.InternalMessageInfo
+
+type ModuleLockedAmountResponse struct {
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+}
+
+func (m *ModuleLockedAmountResponse) Reset()         { *m = ModuleLockedAmountResponse{} }
+func (m *ModuleLockedAmountResponse) String() string { return proto.CompactTextString(m) }
+func (*ModuleLockedAmountResponse) ProtoMessage()    {}
+func (*ModuleLockedAmountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{3}
+}
+func (m *ModuleLockedAmountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleLockedAmountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleLockedAmountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleLockedAmountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleLockedAmountResponse.Merge(m, src)
+}
+func (m *ModuleLockedAmountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleLockedAmountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleLockedAmountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleLockedAmountResponse proto.InternalMessageInfo
+
+func (m *ModuleLockedAmountResponse) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type AccountUnlockableCoinsRequest struct {
+	Owner github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`
+}
+
+func (m *AccountUnlockableCoinsRequest) Reset()         { *m = AccountUnlockableCoinsRequest{} }
+func (m *AccountUnlockableCoinsRequest) String() string { return proto.CompactTextString(m) }
+func (*AccountUnlockableCoinsRequest) ProtoMessage()    {}
+func (*AccountUnlockableCoinsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{4}
+}
+func (m *AccountUnlockableCoinsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountUnlockableCoinsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountUnlockableCoinsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccountUnlockableCoinsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountUnlockableCoinsRequest.Merge(m, src)
+}
+func (m *AccountUnlockableCoinsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountUnlockableCoinsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountUnlockableCoinsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountUnlockableCoinsRequest proto.InternalMessageInfo
+
+func (m *AccountUnlockableCoinsRequest) GetOwner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Owner
+	}
+	return nil
+}
+
+type AccountUnlockableCoinsResponse struct {
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+}
+
+func (m *AccountUnlockableCoinsResponse) Reset()         { *m = AccountUnlockableCoinsResponse{} }
+func (m *AccountUnlockableCoinsResponse) String() string { return proto.CompactTextString(m) }
+func (*AccountUnlockableCoinsResponse) ProtoMessage()    {}
+func (*AccountUnlockableCoinsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{5}
+}
+func (m *AccountUnlockableCoinsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountUnlockableCoinsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountUnlockableCoinsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccountUnlockableCoinsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountUnlockableCoinsResponse.Merge(m, src)
+}
+func (m *AccountUnlockableCoinsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountUnlockableCoinsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountUnlockableCoinsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountUnlockableCoinsResponse proto.InternalMessageInfo
+
+func (m *AccountUnlockableCoinsResponse) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type AccountLockedCoinsRequest struct {
+	Owner github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`
+}
+
+func (m *AccountLockedCoinsRequest) Reset()         { *m = AccountLockedCoinsRequest{} }
+func (m *AccountLockedCoinsRequest) String() string { return proto.CompactTextString(m) }
+func (*AccountLockedCoinsRequest) ProtoMessage()    {}
+func (*AccountLockedCoinsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{6}
+}
+func (m *AccountLockedCoinsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountLockedCoinsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountLockedCoinsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccountLockedCoinsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountLockedCoinsRequest.Merge(m, src)
+}
+func (m *AccountLockedCoinsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountLockedCoinsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountLockedCoinsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountLockedCoinsRequest proto.InternalMessageInfo
+
+func (m *AccountLockedCoinsRequest) GetOwner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Owner
+	}
+	return nil
+}
+
+type AccountLockedCoinsResponse struct {
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+}
+
+func (m *AccountLockedCoinsResponse) Reset()         { *m = AccountLockedCoinsResponse{} }
+func (m *AccountLockedCoinsResponse) String() string { return proto.CompactTextString(m) }
+func (*AccountLockedCoinsResponse) ProtoMessage()    {}
+func (*AccountLockedCoinsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{7}
+}
+func (m *AccountLockedCoinsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountLockedCoinsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountLockedCoinsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccountLockedCoinsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountLockedCoinsResponse.Merge(m, src)
+}
+func (m *AccountLockedCoinsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountLockedCoinsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountLockedCoinsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountLockedCoinsResponse proto.InternalMessageInfo
+
+func (m *AccountLockedCoinsResponse) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type ModuleAccountLockedPastTimeRequest struct {
+	Owner     github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`
+	Timestamp time.Time                                     `protobuf:"bytes,2,opt,name=timestamp,proto3,stdtime" json:"timestamp" yaml:"timestamp"`
+}
+
+func (m *ModuleAccountLockedPastTimeRequest) Reset()         { *m = ModuleAccountLockedPastTimeRequest{} }
+func (m *ModuleAccountLockedPastTimeRequest) String() string { return proto.CompactTextString(m) }
+func (*ModuleAccountLockedPastTimeRequest) ProtoMessage()    {}
+func (*ModuleAccountLockedPastTimeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{8}
+}
+func (m *ModuleAccountLockedPastTimeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleAccountLockedPastTimeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleAccountLockedPastTimeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleAccountLockedPastTimeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleAccountLockedPastTimeRequest.Merge(m, src)
+}
+func (m *ModuleAccountLockedPastTimeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleAccountLockedPastTimeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleAccountLockedPastTimeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleAccountLockedPastTimeRequest proto.InternalMessageInfo
+
+func (m *ModuleAccountLockedPastTimeRequest) GetOwner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Owner
+	}
+	return nil
+}
+
+func (m *ModuleAccountLockedPastTimeRequest) GetTimestamp() time.Time {
+	if m != nil {
+		return m.Timestamp
+	}
+	return time.Time{}
+}
+
+type ModuleAccountLockedPastTimeResponse struct {
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+}
+
+func (m *ModuleAccountLockedPastTimeResponse) Reset()         { *m = ModuleAccountLockedPastTimeResponse{} }
+func (m *ModuleAccountLockedPastTimeResponse) String() string { return proto.CompactTextString(m) }
+func (*ModuleAccountLockedPastTimeResponse) ProtoMessage()    {}
+func (*ModuleAccountLockedPastTimeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{9}
+}
+func (m *ModuleAccountLockedPastTimeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleAccountLockedPastTimeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleAccountLockedPastTimeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleAccountLockedPastTimeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleAccountLockedPastTimeResponse.Merge(m, src)
+}
+func (m *ModuleAccountLockedPastTimeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleAccountLockedPastTimeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleAccountLockedPastTimeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleAccountLockedPastTimeResponse proto.InternalMessageInfo
+
+func (m *ModuleAccountLockedPastTimeResponse) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type AccountLockedPastTimeDenomRequest struct {
+	Owner     github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`
+	Timestamp time.Time                                     `protobuf:"bytes,2,opt,name=timestamp,proto3,stdtime" json:"timestamp" yaml:"timestamp"`
+	Denom     string                                        `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *AccountLockedPastTimeDenomRequest) Reset()         { *m = AccountLockedPastTimeDenomRequest{} }
+func (m *AccountLockedPastTimeDenomRequest) String() string { return proto.CompactTextString(m) }
+func (*AccountLockedPastTimeDenomRequest) ProtoMessage()    {}
+func (*AccountLockedPastTimeDenomRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{10}
+}
+func (m *AccountLockedPastTimeDenomRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountLockedPastTimeDenomRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountLockedPastTimeDenomRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccountLockedPastTimeDenomRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountLockedPastTimeDenomRequest.Merge(m, src)
+}
+func (m *AccountLockedPastTimeDenomRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountLockedPastTimeDenomRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountLockedPastTimeDenomRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountLockedPastTimeDenomRequest proto.InternalMessageInfo
+
+func (m *AccountLockedPastTimeDenomRequest) GetOwner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Owner
+	}
+	return nil
+}
+
+func (m *AccountLockedPastTimeDenomRequest) GetTimestamp() time.Time {
+	if m != nil {
+		return m.Timestamp
+	}
+	return time.Time{}
+}
+
+func (m *AccountLockedPastTimeDenomRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type AccountLockedPastTimeDenomResponse struct {
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+}
+
+func (m *AccountLockedPastTimeDenomResponse) Reset()         { *m = AccountLockedPastTimeDenomResponse{} }
+func (m *AccountLockedPastTimeDenomResponse) String() string { return proto.CompactTextString(m) }
+func (*AccountLockedPastTimeDenomResponse) ProtoMessage()    {}
+func (*AccountLockedPastTimeDenomResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{11}
+}
+func (m *AccountLockedPastTimeDenomResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountLockedPastTimeDenomResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountLockedPastTimeDenomResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccountLockedPastTimeDenomResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountLockedPastTimeDenomResponse.Merge(m, src)
+}
+func (m *AccountLockedPastTimeDenomResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountLockedPastTimeDenomResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountLockedPastTimeDenomResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountLockedPastTimeDenomResponse proto.InternalMessageInfo
+
+func (m *AccountLockedPastTimeDenomResponse) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type AccountLockPeriodRequest struct {
+	Owner  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`
+	LockId uint64                                        `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
+}
+
+func (m *AccountLockPeriodRequest) Reset()         { *m = AccountLockPeriodRequest{} }
+func (m *AccountLockPeriodRequest) String() string { return proto.CompactTextString(m) }
+func (*AccountLockPeriodRequest) ProtoMessage()    {}
+func (*AccountLockPeriodRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{12}
+}
+func (m *AccountLockPeriodRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountLockPeriodRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountLockPeriodRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccountLockPeriodRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountLockPeriodRequest.Merge(m, src)
+}
+func (m *AccountLockPeriodRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountLockPeriodRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountLockPeriodRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountLockPeriodRequest proto.InternalMessageInfo
+
+func (m *AccountLockPeriodRequest) GetOwner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Owner
+	}
+	return nil
+}
+
+func (m *AccountLockPeriodRequest) GetLockId() uint64 {
+	if m != nil {
+		return m.LockId
+	}
+	return 0
+}
+
+type AccountLockPeriodResponse struct {
+	Duration time.Duration `protobuf:"bytes,1,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
+}
+
+func (m *AccountLockPeriodResponse) Reset()         { *m = AccountLockPeriodResponse{} }
+func (m *AccountLockPeriodResponse) String() string { return proto.CompactTextString(m) }
+func (*AccountLockPeriodResponse) ProtoMessage()    {}
+func (*AccountLockPeriodResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e906fda01cffd91a, []int{13}
+}
+func (m *AccountLockPeriodResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountLockPeriodResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountLockPeriodResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccountLockPeriodResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountLockPeriodResponse.Merge(m, src)
+}
+func (m *AccountLockPeriodResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountLockPeriodResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountLockPeriodResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountLockPeriodResponse proto.InternalMessageInfo
+
+func (m *AccountLockPeriodResponse) GetDuration() time.Duration {
+	if m != nil {
+		return m.Duration
+	}
+	return 0
+}
+
+func init() {
+	proto.RegisterType((*ModuleBalanceRequest)(nil), "osmosis.lockup.ModuleBalanceRequest")
+	proto.RegisterType((*ModuleBalanceResponse)(nil), "osmosis.lockup.ModuleBalanceResponse")
+	proto.RegisterType((*ModuleLockedAmountRequest)(nil), "osmosis.lockup.ModuleLockedAmountRequest")
+	proto.RegisterType((*ModuleLockedAmountResponse)(nil), "osmosis.lockup.ModuleLockedAmountResponse")
+	proto.RegisterType((*AccountUnlockableCoinsRequest)(nil), "osmosis.lockup.AccountUnlockableCoinsRequest")
+	proto.RegisterType((*AccountUnlockableCoinsResponse)(nil), "osmosis.lockup.AccountUnlockableCoinsResponse")
+	proto.RegisterType((*AccountLockedCoinsRequest)(nil), "osmosis.lockup.AccountLockedCoinsRequest")
+	proto.RegisterType((*AccountLockedCoinsResponse)(nil), "osmosis.lockup.AccountLockedCoinsResponse")
+	proto.RegisterType((*ModuleAccountLockedPastTimeRequest)(nil), "osmosis.lockup.ModuleAccountLockedPastTimeRequest")
+	proto.RegisterType((*ModuleAccountLockedPastTimeResponse)(nil), "osmosis.lockup.ModuleAccountLockedPastTimeResponse")
+	proto.RegisterType((*AccountLockedPastTimeDenomRequest)(nil), "osmosis.lockup.AccountLockedPastTimeDenomRequest")
+	proto.RegisterType((*AccountLockedPastTimeDenomResponse)(nil), "osmosis.lockup.AccountLockedPastTimeDenomResponse")
+	proto.RegisterType((*AccountLockPeriodRequest)(nil), "osmosis.lockup.AccountLockPeriodRequest")
+	proto.RegisterType((*AccountLockPeriodResponse)(nil), "osmosis.lockup.AccountLockPeriodResponse")
+}
+
 func init() { proto.RegisterFile("osmosis/lockup/query.proto", fileDescriptor_e906fda01cffd91a) }
 
 var fileDescriptor_e906fda01cffd91a = []byte{
-	// 182 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xca, 0x2f, 0xce, 0xcd,
-	0x2f, 0xce, 0x2c, 0xd6, 0xcf, 0xc9, 0x4f, 0xce, 0x2e, 0x2d, 0xd0, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa,
-	0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x83, 0xca, 0xe9, 0x41, 0xe4, 0xa4, 0x64, 0xd2,
-	0xf3, 0xf3, 0xd3, 0x73, 0x52, 0xf5, 0x13, 0x0b, 0x32, 0xf5, 0x13, 0xf3, 0xf2, 0xf2, 0x4b, 0x12,
-	0x4b, 0x32, 0xf3, 0xf3, 0x8a, 0x21, 0xaa, 0xa5, 0xb4, 0x92, 0xc1, 0xca, 0xf5, 0x93, 0x12, 0x8b,
-	0x53, 0x21, 0xc6, 0xe8, 0x97, 0x19, 0x26, 0xa5, 0x96, 0x24, 0x1a, 0xea, 0x17, 0x24, 0xa6, 0x67,
-	0xe6, 0x81, 0x15, 0x43, 0xd4, 0x1a, 0xb1, 0x73, 0xb1, 0x06, 0x82, 0x54, 0x38, 0xb9, 0x9e, 0x78,
-	0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c,
-	0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x76, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92,
-	0x5e, 0x72, 0x7e, 0xae, 0x7e, 0xb2, 0x2e, 0xcc, 0x95, 0x30, 0xba, 0x02, 0xe6, 0xde, 0x92, 0xca,
-	0x82, 0xd4, 0xe2, 0x24, 0x36, 0xb0, 0xb1, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x77, 0x92,
-	0xdd, 0xf4, 0xce, 0x00, 0x00, 0x00,
+	// 772 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xbf, 0x6f, 0xd3, 0x40,
+	0x14, 0xce, 0x51, 0x52, 0xe8, 0x15, 0x41, 0x65, 0xa5, 0x90, 0x98, 0xd6, 0x0e, 0x06, 0xa4, 0xb4,
+	0x10, 0x9b, 0xa4, 0x1b, 0x5b, 0x42, 0x51, 0x85, 0x04, 0x52, 0x89, 0x0a, 0x03, 0x4b, 0xe5, 0xd8,
+	0x47, 0x6a, 0x25, 0xf6, 0xb9, 0xb9, 0x33, 0x90, 0x0a, 0xa9, 0x43, 0xc5, 0x8f, 0xb1, 0x23, 0x7f,
+	0x03, 0x7f, 0x05, 0x0b, 0x52, 0xc7, 0x8e, 0x88, 0x21, 0x45, 0xed, 0xc6, 0xd8, 0x91, 0x09, 0xd9,
+	0xe7, 0x0b, 0x71, 0xea, 0x98, 0x54, 0x2a, 0x91, 0x98, 0x1c, 0xe7, 0xbe, 0xf7, 0xbe, 0xef, 0x7b,
+	0xf6, 0x7b, 0xcf, 0x50, 0xc4, 0xc4, 0xc6, 0xc4, 0x22, 0x5a, 0x0b, 0x1b, 0x4d, 0xcf, 0xd5, 0x36,
+	0x3d, 0xd4, 0xee, 0xa8, 0x6e, 0x1b, 0x53, 0x2c, 0x5c, 0x0e, 0xcf, 0x54, 0x76, 0x26, 0x66, 0x1a,
+	0xb8, 0x81, 0x83, 0x23, 0xcd, 0xff, 0xc5, 0x50, 0xe2, 0x5c, 0x03, 0xe3, 0x46, 0x0b, 0x69, 0xba,
+	0x6b, 0x69, 0xba, 0xe3, 0x60, 0xaa, 0x53, 0x0b, 0x3b, 0x24, 0x3c, 0x5d, 0x34, 0x82, 0x24, 0x5a,
+	0x5d, 0x27, 0x88, 0x25, 0xd7, 0x5e, 0x95, 0xea, 0x88, 0xea, 0x25, 0xcd, 0xd5, 0x1b, 0x96, 0x13,
+	0x80, 0x43, 0xac, 0xd4, 0x8f, 0xe5, 0x28, 0x03, 0x5b, 0xfc, 0x5c, 0x0e, 0x99, 0x82, 0xbb, 0xba,
+	0xf7, 0x52, 0xa3, 0x96, 0x8d, 0x08, 0xd5, 0x6d, 0x97, 0x27, 0x18, 0x04, 0x98, 0x5e, 0xbb, 0x8f,
+	0x40, 0xb9, 0x0a, 0x33, 0x4f, 0xb0, 0xe9, 0xb5, 0x50, 0x55, 0x6f, 0xe9, 0x8e, 0x81, 0x6a, 0x68,
+	0xd3, 0x43, 0x84, 0x2a, 0x5b, 0x70, 0x76, 0xe0, 0x7f, 0xe2, 0x62, 0x87, 0x20, 0x41, 0x87, 0x69,
+	0x9f, 0x9f, 0x64, 0x41, 0x7e, 0xa2, 0x30, 0x5d, 0xce, 0xa9, 0x4c, 0xa1, 0xea, 0x2b, 0x54, 0x43,
+	0x85, 0xea, 0x03, 0x6c, 0x39, 0xd5, 0x7b, 0x7b, 0x5d, 0x39, 0xf5, 0xf9, 0x40, 0x2e, 0x34, 0x2c,
+	0xba, 0xe1, 0xd5, 0x55, 0x03, 0xdb, 0x5a, 0x68, 0x87, 0x5d, 0x8a, 0xc4, 0x6c, 0x6a, 0xb4, 0xe3,
+	0x22, 0x12, 0x04, 0x90, 0x1a, 0xcb, 0xac, 0x5c, 0x87, 0x39, 0xc6, 0xfd, 0x18, 0x1b, 0x4d, 0x64,
+	0x56, 0x6c, 0xec, 0x39, 0x94, 0x0b, 0xdb, 0x86, 0x62, 0xdc, 0xe1, 0xf8, 0xd4, 0x6d, 0xc0, 0xf9,
+	0x8a, 0x61, 0xf8, 0xac, 0xcf, 0x1c, 0xff, 0x2d, 0xd0, 0xeb, 0x2d, 0xc4, 0x00, 0x4c, 0xa1, 0xb0,
+	0x02, 0xd3, 0xf8, 0xb5, 0x83, 0xda, 0x59, 0x90, 0x07, 0x85, 0x4b, 0xd5, 0xd2, 0xaf, 0xae, 0x5c,
+	0x1c, 0x81, 0xa4, 0x62, 0x18, 0x15, 0xd3, 0x6c, 0x23, 0x42, 0x6a, 0x2c, 0x5e, 0xd9, 0x01, 0x50,
+	0x1a, 0x46, 0x35, 0x3e, 0xbf, 0x26, 0xcc, 0x85, 0x22, 0x58, 0xc5, 0xff, 0x8d, 0xd7, 0x6d, 0x28,
+	0xc6, 0xb1, 0x8c, 0xcf, 0xe6, 0x57, 0x00, 0x15, 0xf6, 0x62, 0x45, 0x74, 0xac, 0xea, 0x84, 0xae,
+	0x59, 0x36, 0x3a, 0x6b, 0xc3, 0xc2, 0x73, 0x38, 0xd5, 0xeb, 0xd5, 0xec, 0xb9, 0x3c, 0x28, 0x4c,
+	0x97, 0x45, 0x95, 0x35, 0xab, 0xca, 0x9b, 0x55, 0x5d, 0xe3, 0x88, 0xea, 0x9c, 0xef, 0xeb, 0xb8,
+	0x2b, 0xcf, 0x74, 0x74, 0xbb, 0x75, 0x5f, 0xe9, 0x85, 0x2a, 0xbb, 0x07, 0x32, 0xa8, 0xfd, 0x49,
+	0xa5, 0x7c, 0x04, 0xf0, 0x66, 0xa2, 0x8f, 0xf1, 0x95, 0xf4, 0x3b, 0x80, 0x37, 0x62, 0x45, 0x2c,
+	0x23, 0x07, 0xdb, 0xff, 0x4b, 0x45, 0x85, 0x0c, 0x4c, 0x9b, 0xbe, 0xe0, 0xec, 0x44, 0x1e, 0x14,
+	0xa6, 0x6a, 0xec, 0x46, 0xf9, 0x00, 0xa0, 0x92, 0x64, 0x6e, 0x7c, 0x65, 0x7e, 0x0b, 0xb3, 0x7d,
+	0x42, 0x56, 0x51, 0xdb, 0xc2, 0xe6, 0x99, 0x17, 0xf7, 0x1a, 0xbc, 0xe0, 0x4f, 0xa0, 0x75, 0xcb,
+	0x0c, 0x4a, 0x7b, 0xbe, 0x36, 0xe9, 0xdf, 0x3e, 0x32, 0x95, 0x77, 0x20, 0x32, 0x1f, 0x38, 0x7d,
+	0x68, 0x7f, 0x03, 0x5e, 0xe4, 0x0b, 0x27, 0x90, 0xe0, 0x57, 0x60, 0xf0, 0x91, 0x2c, 0x87, 0x80,
+	0x6a, 0xc9, 0xaf, 0xc0, 0xcf, 0xae, 0x2c, 0xf0, 0x90, 0xbb, 0xd8, 0xb6, 0x28, 0xb2, 0x5d, 0xda,
+	0x39, 0xee, 0xca, 0x57, 0xd8, 0x73, 0xe2, 0x67, 0xca, 0x27, 0xff, 0x31, 0xf5, 0xb2, 0x97, 0xbf,
+	0x4c, 0xc2, 0xf4, 0x53, 0x7f, 0x99, 0x0a, 0xeb, 0x70, 0x66, 0x05, 0xd1, 0xc8, 0xf6, 0x12, 0x6e,
+	0xa9, 0xd1, 0xc5, 0xad, 0xc6, 0x2d, 0x3d, 0xf1, 0xf6, 0x5f, 0x50, 0xa1, 0x29, 0x07, 0xce, 0xf6,
+	0x08, 0xfa, 0xb7, 0x90, 0xb0, 0x10, 0x1f, 0x1f, 0xb3, 0xc6, 0xc4, 0xc5, 0x51, 0xa0, 0x21, 0xdf,
+	0x16, 0xcc, 0xad, 0x20, 0x1a, 0xbf, 0x09, 0x84, 0xe2, 0x60, 0xa2, 0xc4, 0xe5, 0x24, 0xaa, 0xa3,
+	0xc2, 0x23, 0x5e, 0x4f, 0x8e, 0xe6, 0x93, 0x5e, 0x87, 0x2e, 0x89, 0x93, 0x5e, 0x13, 0x26, 0xfd,
+	0x0e, 0x80, 0xd9, 0x41, 0x42, 0xde, 0x59, 0x42, 0x39, 0xbe, 0x68, 0x49, 0x03, 0x5b, 0x5c, 0x3a,
+	0x55, 0x4c, 0xa8, 0xe2, 0x3d, 0x80, 0xf3, 0xc3, 0x54, 0x04, 0xfd, 0x2d, 0x94, 0x12, 0x3d, 0xc5,
+	0x0d, 0x3a, 0xb1, 0x7c, 0x9a, 0x90, 0x50, 0x48, 0x13, 0x66, 0xa2, 0x3a, 0x58, 0x7f, 0x09, 0x85,
+	0x84, 0x5c, 0x91, 0x09, 0x20, 0x2e, 0x8c, 0x80, 0x64, 0x64, 0xd5, 0x87, 0x7b, 0x87, 0x12, 0xd8,
+	0x3f, 0x94, 0xc0, 0x8f, 0x43, 0x09, 0xec, 0x1e, 0x49, 0xa9, 0xfd, 0x23, 0x29, 0xf5, 0xed, 0x48,
+	0x4a, 0xbd, 0xb8, 0xd3, 0x3f, 0x33, 0x8a, 0xfc, 0xfb, 0x98, 0x5f, 0xdf, 0xf0, 0x2f, 0xe5, 0x60,
+	0x78, 0xd4, 0x27, 0x83, 0xce, 0x5e, 0xfa, 0x1d, 0x00, 0x00, 0xff, 0xff, 0xdb, 0x3e, 0x59, 0x51,
+	0x48, 0x0b, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -55,6 +753,20 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Return full balance of the module
+	GetModuleBalance(ctx context.Context, in *ModuleBalanceRequest, opts ...grpc.CallOption) (*ModuleBalanceResponse, error)
+	// Return locked balance of the module
+	GetModuleLockedAmount(ctx context.Context, in *ModuleLockedAmountRequest, opts ...grpc.CallOption) (*ModuleLockedAmountResponse, error)
+	// Returns whole unlockable coins which are not withdrawn yet
+	GetAccountUnlockableCoins(ctx context.Context, in *AccountUnlockableCoinsRequest, opts ...grpc.CallOption) (*AccountUnlockableCoinsResponse, error)
+	// Return a locked coins that can't be withdrawn
+	GetAccountLockedCoins(ctx context.Context, in *AccountLockedCoinsRequest, opts ...grpc.CallOption) (*AccountLockedCoinsResponse, error)
+	// Returns the total number of tokens of an account whose unlock time is beyond timestamp
+	GetAccountLockedPastTime(ctx context.Context, in *ModuleAccountLockedPastTimeRequest, opts ...grpc.CallOption) (*ModuleAccountLockedPastTimeResponse, error)
+	// Same as GetAccountLockedPastTime but denom specific
+	GetAccountLockedPastTimeDenom(ctx context.Context, in *AccountLockedPastTimeDenomRequest, opts ...grpc.CallOption) (*AccountLockedPastTimeDenomResponse, error)
+	// Returns the length of the initial lock time when the lock was created
+	GetAccountLockPeriod(ctx context.Context, in *AccountLockPeriodRequest, opts ...grpc.CallOption) (*AccountLockPeriodResponse, error)
 }
 
 type queryClient struct {
@@ -65,22 +777,2316 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
+func (c *queryClient) GetModuleBalance(ctx context.Context, in *ModuleBalanceRequest, opts ...grpc.CallOption) (*ModuleBalanceResponse, error) {
+	out := new(ModuleBalanceResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Query/GetModuleBalance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetModuleLockedAmount(ctx context.Context, in *ModuleLockedAmountRequest, opts ...grpc.CallOption) (*ModuleLockedAmountResponse, error) {
+	out := new(ModuleLockedAmountResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Query/GetModuleLockedAmount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAccountUnlockableCoins(ctx context.Context, in *AccountUnlockableCoinsRequest, opts ...grpc.CallOption) (*AccountUnlockableCoinsResponse, error) {
+	out := new(AccountUnlockableCoinsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Query/GetAccountUnlockableCoins", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAccountLockedCoins(ctx context.Context, in *AccountLockedCoinsRequest, opts ...grpc.CallOption) (*AccountLockedCoinsResponse, error) {
+	out := new(AccountLockedCoinsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Query/GetAccountLockedCoins", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAccountLockedPastTime(ctx context.Context, in *ModuleAccountLockedPastTimeRequest, opts ...grpc.CallOption) (*ModuleAccountLockedPastTimeResponse, error) {
+	out := new(ModuleAccountLockedPastTimeResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Query/GetAccountLockedPastTime", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAccountLockedPastTimeDenom(ctx context.Context, in *AccountLockedPastTimeDenomRequest, opts ...grpc.CallOption) (*AccountLockedPastTimeDenomResponse, error) {
+	out := new(AccountLockedPastTimeDenomResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Query/GetAccountLockedPastTimeDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAccountLockPeriod(ctx context.Context, in *AccountLockPeriodRequest, opts ...grpc.CallOption) (*AccountLockPeriodResponse, error) {
+	out := new(AccountLockPeriodResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Query/GetAccountLockPeriod", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Return full balance of the module
+	GetModuleBalance(context.Context, *ModuleBalanceRequest) (*ModuleBalanceResponse, error)
+	// Return locked balance of the module
+	GetModuleLockedAmount(context.Context, *ModuleLockedAmountRequest) (*ModuleLockedAmountResponse, error)
+	// Returns whole unlockable coins which are not withdrawn yet
+	GetAccountUnlockableCoins(context.Context, *AccountUnlockableCoinsRequest) (*AccountUnlockableCoinsResponse, error)
+	// Return a locked coins that can't be withdrawn
+	GetAccountLockedCoins(context.Context, *AccountLockedCoinsRequest) (*AccountLockedCoinsResponse, error)
+	// Returns the total number of tokens of an account whose unlock time is beyond timestamp
+	GetAccountLockedPastTime(context.Context, *ModuleAccountLockedPastTimeRequest) (*ModuleAccountLockedPastTimeResponse, error)
+	// Same as GetAccountLockedPastTime but denom specific
+	GetAccountLockedPastTimeDenom(context.Context, *AccountLockedPastTimeDenomRequest) (*AccountLockedPastTimeDenomResponse, error)
+	// Returns the length of the initial lock time when the lock was created
+	GetAccountLockPeriod(context.Context, *AccountLockPeriodRequest) (*AccountLockPeriodResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
+func (*UnimplementedQueryServer) GetModuleBalance(ctx context.Context, req *ModuleBalanceRequest) (*ModuleBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModuleBalance not implemented")
+}
+func (*UnimplementedQueryServer) GetModuleLockedAmount(ctx context.Context, req *ModuleLockedAmountRequest) (*ModuleLockedAmountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModuleLockedAmount not implemented")
+}
+func (*UnimplementedQueryServer) GetAccountUnlockableCoins(ctx context.Context, req *AccountUnlockableCoinsRequest) (*AccountUnlockableCoinsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccountUnlockableCoins not implemented")
+}
+func (*UnimplementedQueryServer) GetAccountLockedCoins(ctx context.Context, req *AccountLockedCoinsRequest) (*AccountLockedCoinsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccountLockedCoins not implemented")
+}
+func (*UnimplementedQueryServer) GetAccountLockedPastTime(ctx context.Context, req *ModuleAccountLockedPastTimeRequest) (*ModuleAccountLockedPastTimeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccountLockedPastTime not implemented")
+}
+func (*UnimplementedQueryServer) GetAccountLockedPastTimeDenom(ctx context.Context, req *AccountLockedPastTimeDenomRequest) (*AccountLockedPastTimeDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccountLockedPastTimeDenom not implemented")
+}
+func (*UnimplementedQueryServer) GetAccountLockPeriod(ctx context.Context, req *AccountLockPeriodRequest) (*AccountLockPeriodResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccountLockPeriod not implemented")
+}
+
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_GetModuleBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModuleBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetModuleBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Query/GetModuleBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetModuleBalance(ctx, req.(*ModuleBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetModuleLockedAmount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModuleLockedAmountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetModuleLockedAmount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Query/GetModuleLockedAmount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetModuleLockedAmount(ctx, req.(*ModuleLockedAmountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAccountUnlockableCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AccountUnlockableCoinsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAccountUnlockableCoins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Query/GetAccountUnlockableCoins",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAccountUnlockableCoins(ctx, req.(*AccountUnlockableCoinsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAccountLockedCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AccountLockedCoinsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAccountLockedCoins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Query/GetAccountLockedCoins",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAccountLockedCoins(ctx, req.(*AccountLockedCoinsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAccountLockedPastTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModuleAccountLockedPastTimeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAccountLockedPastTime(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Query/GetAccountLockedPastTime",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAccountLockedPastTime(ctx, req.(*ModuleAccountLockedPastTimeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAccountLockedPastTimeDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AccountLockedPastTimeDenomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAccountLockedPastTimeDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Query/GetAccountLockedPastTimeDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAccountLockedPastTimeDenom(ctx, req.(*AccountLockedPastTimeDenomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAccountLockPeriod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AccountLockPeriodRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAccountLockPeriod(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Query/GetAccountLockPeriod",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAccountLockPeriod(ctx, req.(*AccountLockPeriodRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.lockup.Query",
 	HandlerType: (*QueryServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "osmosis/lockup/query.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetModuleBalance",
+			Handler:    _Query_GetModuleBalance_Handler,
+		},
+		{
+			MethodName: "GetModuleLockedAmount",
+			Handler:    _Query_GetModuleLockedAmount_Handler,
+		},
+		{
+			MethodName: "GetAccountUnlockableCoins",
+			Handler:    _Query_GetAccountUnlockableCoins_Handler,
+		},
+		{
+			MethodName: "GetAccountLockedCoins",
+			Handler:    _Query_GetAccountLockedCoins_Handler,
+		},
+		{
+			MethodName: "GetAccountLockedPastTime",
+			Handler:    _Query_GetAccountLockedPastTime_Handler,
+		},
+		{
+			MethodName: "GetAccountLockedPastTimeDenom",
+			Handler:    _Query_GetAccountLockedPastTimeDenom_Handler,
+		},
+		{
+			MethodName: "GetAccountLockPeriod",
+			Handler:    _Query_GetAccountLockPeriod_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "osmosis/lockup/query.proto",
 }
+
+func (m *ModuleBalanceRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleBalanceRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleBalanceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleBalanceResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleBalanceResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleBalanceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleLockedAmountRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleLockedAmountRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleLockedAmountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleLockedAmountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleLockedAmountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleLockedAmountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccountUnlockableCoinsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountUnlockableCoinsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccountUnlockableCoinsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccountUnlockableCoinsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountUnlockableCoinsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccountUnlockableCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccountLockedCoinsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountLockedCoinsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccountLockedCoinsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccountLockedCoinsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountLockedCoinsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccountLockedCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleAccountLockedPastTimeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleAccountLockedPastTimeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleAccountLockedPastTimeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Timestamp, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Timestamp):])
+	if err1 != nil {
+		return 0, err1
+	}
+	i -= n1
+	i = encodeVarintQuery(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x12
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleAccountLockedPastTimeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleAccountLockedPastTimeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleAccountLockedPastTimeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccountLockedPastTimeDenomRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountLockedPastTimeDenomRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccountLockedPastTimeDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Timestamp, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Timestamp):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintQuery(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x12
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccountLockedPastTimeDenomResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountLockedPastTimeDenomResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccountLockedPastTimeDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccountLockPeriodRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountLockPeriodRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccountLockPeriodRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.LockId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.LockId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccountLockPeriodResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountLockPeriodResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccountLockPeriodResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n3, err3 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintQuery(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
+	offset -= sovQuery(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *ModuleBalanceRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ModuleBalanceResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ModuleLockedAmountRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ModuleLockedAmountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AccountUnlockableCoinsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *AccountUnlockableCoinsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AccountLockedCoinsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *AccountLockedCoinsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ModuleAccountLockedPastTimeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.Timestamp)
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *ModuleAccountLockedPastTimeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AccountLockedPastTimeDenomRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.Timestamp)
+	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *AccountLockedPastTimeDenomResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AccountLockPeriodRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.LockId != 0 {
+		n += 1 + sovQuery(uint64(m.LockId))
+	}
+	return n
+}
+
+func (m *AccountLockPeriodResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func sovQuery(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozQuery(x uint64) (n int) {
+	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *ModuleBalanceRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleBalanceRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleBalanceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleBalanceResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleBalanceResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleBalanceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleLockedAmountRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleLockedAmountRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleLockedAmountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleLockedAmountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleLockedAmountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleLockedAmountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountUnlockableCoinsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountUnlockableCoinsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountUnlockableCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = append(m.Owner[:0], dAtA[iNdEx:postIndex]...)
+			if m.Owner == nil {
+				m.Owner = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountUnlockableCoinsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountUnlockableCoinsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountUnlockableCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountLockedCoinsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountLockedCoinsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountLockedCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = append(m.Owner[:0], dAtA[iNdEx:postIndex]...)
+			if m.Owner == nil {
+				m.Owner = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountLockedCoinsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountLockedCoinsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountLockedCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleAccountLockedPastTimeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleAccountLockedPastTimeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleAccountLockedPastTimeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = append(m.Owner[:0], dAtA[iNdEx:postIndex]...)
+			if m.Owner == nil {
+				m.Owner = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.Timestamp, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleAccountLockedPastTimeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleAccountLockedPastTimeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleAccountLockedPastTimeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountLockedPastTimeDenomRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountLockedPastTimeDenomRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountLockedPastTimeDenomRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = append(m.Owner[:0], dAtA[iNdEx:postIndex]...)
+			if m.Owner == nil {
+				m.Owner = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.Timestamp, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountLockedPastTimeDenomResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountLockedPastTimeDenomResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountLockedPastTimeDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountLockPeriodRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountLockPeriodRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountLockPeriodRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = append(m.Owner[:0], dAtA[iNdEx:postIndex]...)
+			if m.Owner == nil {
+				m.Owner = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+			}
+			m.LockId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LockId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountLockPeriodResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountLockPeriodResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountLockPeriodResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipQuery(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthQuery
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupQuery
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthQuery
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthQuery        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowQuery          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupQuery = fmt.Errorf("proto: unexpected end of group")
+)
