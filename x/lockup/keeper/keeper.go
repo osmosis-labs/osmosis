@@ -5,24 +5,22 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/c-osmosis/osmosis/x/lockup/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/c-osmosis/osmosis/x/lockup/types"
 )
 
 type (
 	Keeper struct {
 		cdc      codec.Marshaler
 		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
 	}
 )
 
-func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
-		memKey:   memKey,
 	}
 }
 
