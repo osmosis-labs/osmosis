@@ -10,13 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type (
-	Keeper struct {
-		cdc      codec.Marshaler
-		storeKey sdk.StoreKey
-	}
-)
+// Keeper provides a way to manage module storage
+type Keeper struct {
+	cdc      codec.Marshaler
+	storeKey sdk.StoreKey
+}
 
+// NewKeeper returns an instance of Keeper
 func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
@@ -24,6 +24,7 @@ func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey) *Keeper {
 	}
 }
 
+// Logger returns a logger instance
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
