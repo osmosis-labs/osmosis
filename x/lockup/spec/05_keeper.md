@@ -21,10 +21,13 @@ type Keeper interface {
 	// Return a locked coins that can't be withdrawn
 	GetAccountLockedCoins(sdk.Context, sdk.AccAddress) sdk.Coins
 
-	// Returns the total number of tokens of an account whose unlock time is beyond timestamp
-	GetAccountLockedPastTime(sdk.AccAddress, timestamp time.Time) (sdk.Coins | []types.PeriodLock)
+	// Returns the total locks of an account whose unlock time is beyond timestamp
+	GetAccountLockedPastTime(sdk.AccAddress, timestamp time.Time) []types.PeriodLock
+	// Returns the total unlocks of an account whose unlock time is before timestamp
+	GetAccountUnlockedBeforeTime(sdk.AccAddress, timestamp time.Time) []types.PeriodLock
+
 	// Same as GetAccountLockedPastTime but denom specific
-	GetAccountLockedPastTimeDenom(sdk.AccAddress, denom string, timestamp time.Time) (sdk.Coins | []types.PeriodLock)
+	GetAccountLockedPastTimeDenom(sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock
 	// Get iterator for all locks of a denom token that unlocks after timestamp
 	IteratorAccountsLockedPastTimeDenom(denom string, timestamp time.Time) db.Iterator
 	// Returns all the accounts that locked coins for longer than time.Duration.  Doesn't matter how long is left until unlock.  Only based on initial locktimes

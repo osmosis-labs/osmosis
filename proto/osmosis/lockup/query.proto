@@ -2,11 +2,10 @@ syntax = "proto3";
 package osmosis.lockup;
 
 import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "osmosis/lockup/lock.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
 
@@ -22,12 +21,20 @@ service Query {
 	// Return a locked coins that can't be withdrawn
 	rpc GetAccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
 
-	// Returns the total number of tokens of an account whose unlock time is beyond timestamp
-	rpc GetAccountLockedPastTime(ModuleAccountLockedPastTimeRequest) returns (ModuleAccountLockedPastTimeResponse);
+	// Returns the total locks of an account whose unlock time is beyond timestamp
+	rpc GetAccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
+	// Returns the total unlocks of an account whose unlock time is before timestamp
+	rpc GetAccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
+
 	// Same as GetAccountLockedPastTime but denom specific
 	rpc GetAccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
 	// Returns the length of the initial lock time when the lock was created
-	rpc GetAccountLockPeriod(AccountLockPeriodRequest) returns (AccountLockPeriodResponse);
+	rpc GetLock(LockRequest) returns (LockResponse);
+
+	// Returns account locked with duration longer than specified
+	rpc GetAccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
+	// Returns account locked with duration longer than specified with specific denom
+	rpc GetAccountLockedLongerThanDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
 }
 
 message ModuleBalanceRequest {};
@@ -60,16 +67,25 @@ message AccountLockedCoinsResponse {
         [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 };
 
-message ModuleAccountLockedPastTimeRequest {
+message AccountLockedPastTimeRequest {
 	bytes owner = 1 
         [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     google.protobuf.Timestamp timestamp = 2
         [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
 };
-message ModuleAccountLockedPastTimeResponse {
-	repeated cosmos.base.v1beta1.Coin coins = 1
-        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+message AccountLockedPastTimeResponse {
+	repeated PeriodLock locks = 1;
 };
+
+message AccountUnlockedBeforeTimeRequest {
+	bytes owner = 1 
+        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    google.protobuf.Timestamp timestamp = 2
+        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
+};
+message AccountUnlockedBeforeTimeResponse {
+	repeated PeriodLock locks = 1;
+}
 
 message AccountLockedPastTimeDenomRequest {
 	bytes owner = 1 
@@ -79,20 +95,33 @@ message AccountLockedPastTimeDenomRequest {
     string denom = 3;
 };
 message AccountLockedPastTimeDenomResponse {
-	repeated cosmos.base.v1beta1.Coin coins = 1
-        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+	repeated PeriodLock locks = 1;
 };
 
-message AccountLockPeriodRequest {
+message LockRequest {
+    uint64 lock_id = 1;
+};
+message LockResponse {
+	PeriodLock lock = 1;
+};
+
+message AccountLockedLongerDurationRequest {
 	bytes owner = 1 
         [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    uint64 lock_id = 2;
+    google.protobuf.Duration duration = 2
+        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
 };
-message AccountLockPeriodResponse {
-	google.protobuf.Duration duration = 1 [
-		(gogoproto.nullable)    = false,
-		(gogoproto.stdduration) = true,
-		(gogoproto.jsontag)     = "duration,omitempty",
-		(gogoproto.moretags)    = "yaml:\"duration\""
-	];
+message AccountLockedLongerDurationResponse {
+	repeated PeriodLock locks = 1;
+};
+
+message AccountLockedLongerDurationDenomRequest {
+	bytes owner = 1 
+        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    google.protobuf.Duration duration = 2
+		[(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
+	string denom = 3;
+};
+message AccountLockedLongerDurationDenomResponse {
+	repeated PeriodLock locks = 1;
 };

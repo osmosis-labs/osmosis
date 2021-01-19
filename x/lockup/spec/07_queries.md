@@ -19,11 +19,19 @@ service Query {
 	// Return a locked coins that can't be withdrawn
 	rpc GetAccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
 
-	// Returns the total number of tokens of an account whose unlock time is beyond timestamp
-	rpc GetAccountLockedPastTime(ModuleAccountLockedPastTimeRequest) returns (ModuleAccountLockedPastTimeResponse);
+	// Returns the total locks of an account whose unlock time is beyond timestamp
+	rpc GetAccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
+	// Returns the total unlocks of an account whose unlock time is before timestamp
+	rpc GetAccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
+
 	// Same as GetAccountLockedPastTime but denom specific
 	rpc GetAccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
 	// Returns the length of the initial lock time when the lock was created
-	rpc GetAccountLockPeriod(AccountLockPeriodRequest) returns (AccountLockPeriodResponse);
+	rpc GetLock(LockRequest) returns (LockResponse);
+
+	// Returns account locked with duration longer than specified
+	rpc GetAccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
+	// Returns account locked with duration longer than specified with specific denom
+	rpc GetAccountLockedLongerThanDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse;
 }
 ```
