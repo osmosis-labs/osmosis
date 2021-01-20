@@ -43,9 +43,7 @@ message MsgUnlockTokensResponse {
 }
 
 message MsgUnlockPeriodLock {
-	bytes owner = 1 
-		[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-	uint64 ID = 2;
+	uint64 ID = 1;
 }
 message MsgUnlockPeriodLockResponse {
 	bool success = 1;

@@ -12,29 +12,29 @@ option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
 // Query defines the gRPC querier service.
 service Query {
     // Return full balance of the module
-	rpc GetModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse);
+	rpc ModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse);
 	// Return locked balance of the module
-	rpc GetModuleLockedAmount(ModuleLockedAmountRequest) returns (ModuleLockedAmountResponse);
+	rpc ModuleLockedAmount(ModuleLockedAmountRequest) returns (ModuleLockedAmountResponse);
 
 	// Returns whole unlockable coins which are not withdrawn yet
-	rpc GetAccountUnlockableCoins(AccountUnlockableCoinsRequest) returns (AccountUnlockableCoinsResponse);
+	rpc AccountUnlockableCoins(AccountUnlockableCoinsRequest) returns (AccountUnlockableCoinsResponse);
 	// Return a locked coins that can't be withdrawn
-	rpc GetAccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
+	rpc AccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
 
 	// Returns the total locks of an account whose unlock time is beyond timestamp
-	rpc GetAccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
+	rpc AccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
 	// Returns the total unlocks of an account whose unlock time is before timestamp
-	rpc GetAccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
+	rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
 
 	// Same as GetAccountLockedPastTime but denom specific
-	rpc GetAccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
+	rpc AccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
 	// Returns the length of the initial lock time when the lock was created
-	rpc GetLock(LockRequest) returns (LockResponse);
+	rpc Locked(LockedRequest) returns (LockedResponse);
 
 	// Returns account locked with duration longer than specified
-	rpc GetAccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
+	rpc AccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
 	// Returns account locked with duration longer than specified with specific denom
-	rpc GetAccountLockedLongerThanDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
+	rpc AccountLockedLongerThanDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
 }
 
 message ModuleBalanceRequest {};
@@ -98,10 +98,10 @@ message AccountLockedPastTimeDenomResponse {
 	repeated PeriodLock locks = 1;
 };
 
-message LockRequest {
+message LockedRequest {
     uint64 lock_id = 1;
 };
-message LockResponse {
+message LockedResponse {
 	PeriodLock lock = 1;
 };
 
