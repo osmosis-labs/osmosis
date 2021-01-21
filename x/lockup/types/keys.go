@@ -16,6 +16,9 @@ var (
 	// KeyLastLockID defines key to store lock ID used by last
 	KeyLastLockID = []byte{0x33}
 
+	// KeyPrefixTimestamp defines prefix key for timestamp iterator key
+	KeyPrefixTimestamp = []byte{0x34}
+
 	// KeyPrefixPeriodLock defines prefix to store period lock by ID
 	KeyPrefixPeriodLock = []byte{0x00}
 
