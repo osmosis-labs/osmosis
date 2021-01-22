@@ -74,7 +74,8 @@ message AccountLockedPastTimeRequest {
         [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
 };
 message AccountLockedPastTimeResponse {
-	repeated PeriodLock locks = 1;
+	repeated PeriodLock locks = 1
+		[(gogoproto.nullable) = false];
 };
 
 message AccountUnlockedBeforeTimeRequest {
@@ -84,7 +85,8 @@ message AccountUnlockedBeforeTimeRequest {
         [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
 };
 message AccountUnlockedBeforeTimeResponse {
-	repeated PeriodLock locks = 1;
+	repeated PeriodLock locks = 1
+		[(gogoproto.nullable) = false];
 }
 
 message AccountLockedPastTimeDenomRequest {
@@ -95,7 +97,8 @@ message AccountLockedPastTimeDenomRequest {
     string denom = 3;
 };
 message AccountLockedPastTimeDenomResponse {
-	repeated PeriodLock locks = 1;
+	repeated PeriodLock locks = 1
+		[(gogoproto.nullable) = false];
 };
 
 message LockedRequest {
@@ -109,19 +112,21 @@ message AccountLockedLongerDurationRequest {
 	bytes owner = 1 
         [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     google.protobuf.Duration duration = 2
-        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
+        [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
 };
 message AccountLockedLongerDurationResponse {
-	repeated PeriodLock locks = 1;
+	repeated PeriodLock locks = 1
+		[(gogoproto.nullable) = false];
 };
 
 message AccountLockedLongerDurationDenomRequest {
 	bytes owner = 1 
         [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     google.protobuf.Duration duration = 2
-		[(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
+		[(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
 	string denom = 3;
 };
 message AccountLockedLongerDurationDenomResponse {
-	repeated PeriodLock locks = 1;
+	repeated PeriodLock locks = 1
+		[(gogoproto.nullable) = false];
 };

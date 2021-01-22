@@ -19,6 +19,21 @@ var (
 	// KeyPrefixTimestamp defines prefix key for timestamp iterator key
 	KeyPrefixTimestamp = []byte{0x34}
 
+	// KeyPrefixDuration defines prefix key for duration iterator key
+	KeyPrefixDuration = []byte{0x35}
+
+	// KeyPrefixLockDuration defines prefix for the iteration of lock IDs by duration
+	KeyPrefixLockDuration = []byte{0x36}
+
+	// KeyPrefixAccountLockDuration defines prefix for the iteration of lock IDs by account and duration
+	KeyPrefixAccountLockDuration = []byte{0x37}
+
+	// KeyPrefixDenomLockDuration defines prefix for the iteration of lock IDs by denom and duration
+	KeyPrefixDenomLockDuration = []byte{0x38}
+
+	// KeyPrefixAccountDenomLockDuration defines prefix for the iteration of lock IDs by account, denomination and duration
+	KeyPrefixAccountDenomLockDuration = []byte{0x39}
+
 	// KeyPrefixPeriodLock defines prefix to store period lock by ID
 	KeyPrefixPeriodLock = []byte{0x00}
 

@@ -24,7 +24,7 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 			if err != nil {
 				panic(err)
 			}
-			locks = append(locks, lock)
+			locks = append(locks, *lock)
 		}
 	}
 	return locks
@@ -93,17 +93,27 @@ func (k Keeper) GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddre
 	return k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTimeDenom(ctx, addr, denom, timestamp))
 }
 
+// GetAccountLockedLongerThanDuration Returns account locked with duration longer than specified
+func (k Keeper) GetAccountLockedLongerThanDuration(ctx sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDuration(ctx, addr, duration))
+}
+
+// GetAccountLockedLongerThanDurationDenom Returns account locked with duration longer than specified with specific denom
+func (k Keeper) GetAccountLockedLongerThanDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDurationDenom(ctx, addr, denom, duration))
+}
+
 // GetLockByID Returns lock from lockID
-func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (types.PeriodLock, error) {
+func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, error) {
 	lock := types.PeriodLock{}
 	store := ctx.KVStore(k.storeKey)
 	lockKey := LockStoreKey(lockID)
 	if !store.Has(lockKey) {
-		return lock, fmt.Errorf("lock with ID %d does not exist", lockID)
+		return nil, fmt.Errorf("lock with ID %d does not exist", lockID)
 	}
 	bz := store.Get(lockKey)
 	k.cdc.MustUnmarshalJSON(bz, &lock)
-	return lock, nil
+	return &lock, nil
 }
 
 // GetPeriodLocks Returns the period locks on pool
@@ -117,6 +127,53 @@ func (k Keeper) UnlockAllUnlockableCoins(ctx sdk.Context, account sdk.AccAddress
 }
 
 // UnlockPeriodLockByID unlock by period lock ID
-func (k Keeper) UnlockPeriodLockByID(context sdk.Context, LockID uint64) (types.PeriodLock, error) {
-	return types.PeriodLock{}, nil
+func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.PeriodLock, error) {
+	lock, err := k.GetLockByID(ctx, LockID)
+	if err != nil {
+		return lock, err
+	}
+	err = k.Unlock(ctx, *lock)
+	return lock, err
+}
+
+// Lock is a utility to lock coins into module account
+func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.Owner, types.ModuleName, lock.Coins); err != nil {
+		return err
+	}
+
+	lockID := lock.ID
+	store := ctx.KVStore(k.storeKey)
+	store.Set(LockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
+	k.SetLastLockID(ctx, lockID)
+
+	refKeys := lockRefKeys(lock)
+	for _, refKey := range refKeys {
+		k.appendLockRefByKey(ctx, refKey, lockID)
+	}
+	return nil
+}
+
+// Unlock is a utility to unlock coins from module account
+func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
+	// validation for current time and unlock time
+	curTime := ctx.BlockTime()
+	if !curTime.After(lock.EndTime) {
+		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
+	}
+
+	// send coins back to owner
+	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, lock.Coins); err != nil {
+		return err
+	}
+
+	lockID := lock.ID
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(LockStoreKey(lockID)) // remove lock from store
+
+	refKeys := lockRefKeys(lock)
+	for _, refKey := range refKeys {
+		k.deleteLockRefByKey(ctx, refKey, lockID)
+	}
+	return nil
 }
