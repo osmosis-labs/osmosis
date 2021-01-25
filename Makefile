@@ -27,6 +27,8 @@ proto:
 	@echo "=========== Generate Complete ============"
 	@echo
 
+test:
+	@go test -v ./x/...
 docs:
 	@echo
 	@echo "=========== Generate Message ============"

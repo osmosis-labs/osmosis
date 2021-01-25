@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 
 	"github.com/c-osmosis/osmosis/x/gamm/utils"
 	"github.com/c-osmosis/osmosis/x/lockup/types"
@@ -50,6 +52,10 @@ func (server msgServer) UnlockPeriodLock(goCtx context.Context, msg *types.MsgUn
 	lock, err := server.keeper.UnlockPeriodLockByID(ctx, msg.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	if !bytes.Equal(msg.Owner, lock.Owner) {
+		return nil, fmt.Errorf("msg sender(%s) and lock owner(%s) does not match", msg.Owner.String(), lock.Owner.String())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

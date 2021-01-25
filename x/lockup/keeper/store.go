@@ -31,8 +31,8 @@ func LockStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
 }
 
-// getLockRefs get lock IDs specified on the prefix and timestamp key
-func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
+// GetLockRefs get lock IDs specified on the prefix and timestamp key
+func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
 	store := ctx.KVStore(k.storeKey)
 	timeLock := types.LockIDs{}
 	if store.Has(key) {
@@ -45,10 +45,9 @@ func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
 	return timeLock
 }
 
-func (k Keeper) appendLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
-	// TODO: should add test for appendLockRefByKey, deleteLockRefByKey and getLockRefs
+func (k Keeper) AppendLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
 	store := ctx.KVStore(k.storeKey)
-	timeLock := k.getLockRefs(ctx, key)
+	timeLock := k.GetLockRefs(ctx, key)
 	timeLock.IDs = append(timeLock.IDs, lockID)
 	bz, err := json.Marshal(timeLock)
 	if err != nil {
@@ -57,10 +56,10 @@ func (k Keeper) appendLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
 	store.Set(key, bz)
 }
 
-func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
+func (k Keeper) DeleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
 	var index = -1
 	store := ctx.KVStore(k.storeKey)
-	timeLock := k.getLockRefs(ctx, key)
+	timeLock := k.GetLockRefs(ctx, key)
 	timeLock.IDs, index = removeValue(timeLock.IDs, lockID)
 	if index < 0 {
 		panic(fmt.Sprintf("specific lock with ID %d not found", lockID))

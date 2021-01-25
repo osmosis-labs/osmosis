@@ -149,7 +149,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		k.appendLockRefByKey(ctx, refKey, lockID)
+		k.AppendLockRefByKey(ctx, refKey, lockID)
 	}
 	return nil
 }
@@ -173,7 +173,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		k.deleteLockRefByKey(ctx, refKey, lockID)
+		k.DeleteLockRefByKey(ctx, refKey, lockID)
 	}
 	return nil
 }

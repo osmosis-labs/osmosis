@@ -128,6 +128,7 @@ var (
 		transfer.AppModuleBasic{},
 		gamm.AppModuleBasic{},
 		lockup.AppModuleBasic{},
+		vesting.AppModuleBasic{},
 	)
 
 	// module account permissions
