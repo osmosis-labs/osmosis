@@ -18,12 +18,9 @@ func (suite *KeeperTestSuite) TestModuleBalance() {
 
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	duration := time.Second
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	ID := suite.app.LockupKeeper.GetLastLockID(suite.ctx) + 1
-	lock := types.NewPeriodLock(ID, addr1, duration, time.Now().Add(duration), coins)
 	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
-	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, coins, time.Second)
 	suite.Require().NoError(err)
 
 	// final module balance check
