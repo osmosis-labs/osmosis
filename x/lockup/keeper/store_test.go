@@ -2,7 +2,6 @@ package keeper_test
 
 func (suite *KeeperTestSuite) TestLockReferencesManagement() {
 	// test written for AppendLockRefByKey, DeleteLockRefByKey and GetLockRefs
-
 	suite.SetupTest()
 
 	key1 := []byte{0x11}
