@@ -136,6 +136,13 @@ func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.Per
 	return lock, err
 }
 
+// LockTokens lock tokens from an account for specified duration
+func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
+	ID := k.GetLastLockID(ctx) + 1
+	lock := types.NewPeriodLock(ID, owner, duration, ctx.BlockTime().Add(duration), coins)
+	return lock, k.Lock(ctx, lock)
+}
+
 // Lock is a utility to lock coins into module account
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.Owner, types.ModuleName, lock.Coins); err != nil {
@@ -149,7 +156,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		k.AppendLockRefByKey(ctx, refKey, lockID)
+		k.AddLockRefByKey(ctx, refKey, lockID)
 	}
 	return nil
 }

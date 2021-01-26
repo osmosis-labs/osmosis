@@ -25,10 +25,7 @@ var _ types.MsgServer = msgServer{}
 
 func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockTokens) (*types.MsgLockTokensResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	ID := server.keeper.GetLastLockID(ctx) + 1
-	lock := types.NewPeriodLock(ID, msg.Owner, msg.Duration, ctx.BlockTime().Add(msg.Duration), msg.Coins)
-	err := server.keeper.Lock(ctx, lock)
+	lock, err := server.keeper.LockTokens(ctx, msg.Owner, msg.Coins, msg.Duration)
 	if err != nil {
 		return nil, err
 	}
