@@ -1,51 +1,34 @@
 # Osmosis
-### Balancer meets Interchain Staking
 
-## Background
-Osmosis is an onchain generalized multi-token automated market maker and a self-balancing weighted portfolio built on the Cosmos-SDK with extendability as a custom staking token design tool for cross-chain incentive alignment, risk diversification, token distribution, and chain valuation by converging DeFi and staking together.
+_(Note: This repository is under active development. Architecture and implementation may change without documentation)_
 
-One benefit that a multi-token AMM DEX provides is that it allows a flexible AMM model where token weights, fees, and other parameters can be adjusted according to market conditions and competition. It allows an index fund of Cosmos ecosystem tokens that can be held passively, and also generate interest while providing utility in the form of DEX liquidity within Cosmos.
+Osmosis is a fair-launched, customizable automated market maker for interchain assets that allows the creation and management of non-custodial, self-balancing, interchain token index similar to one of Balancer.
 
-We extend the idea of the 'index fund' introduced in Balancer's generalized AMM model as a way to use the multi-token pool's LP token as a staking token for a new zone. Similar to how Balancer provided parameterization of the AMM DEX by allowing custom ratios, multiple tokens, and adjustable trading fees, Osmosis leverages the the generalized automated market maker as a mechanism to create a customizable staking token for a new zone.
+Inspired by [Balancer](http://balancer.finance/whitepaper) and Sunny Aggarwal's '[DAOfying Uniswap Automated Market Maker Pools](https://www.sunnya97.com/blog/daoifying-uniswap-automated-market-maker-pools)', the goal for Osmosis is to provide the best-in-class tools that extend the use of AMMs within the Cosmos ecosystem beyond traditional token swap-type use cases. Bonding curves, while have found its primary use case in decentralized exchange mechanisms, its potential use case can be further extended through the customizability that Osmosis offers. Through the customizability offered by Osmosis such custom-curve AMMs, dynamic adjustments of swap fees, multi-token liquidity pools–the AMM can offer decentralized formation of token fundraisers, interchain staking, options market, and more for the Cosmos ecosystem.
 
-This is a similar idea to 'interchain staking' introduced by Jae Kwon, but uses a very simple mechanism of Balancer + IBC + Non-native token staking to achieve the same goal.
+Whereas most Cosmos zones have focused their incentive scheme on the delegators, Osmosis attempts to align the interests of multiple stakeholders of the ecosystem such as LPs, DAO members, as well as delegators. One mechanism that is introduced is how staked liquidity providers have sovereign ownership over their pools, and through the pool governance process allow them to adjust the parameters depending on the pool’s competition and market conditions. Osmosis is a sovereign Cosmos zone that derives its sovereignty not only from its application-specific blockchain architecture but also the collective sovereignty of the LPs that has aligned interest to different tokens that they are providing liquidity for.
 
-Osmosis is a 'two birds with one stone' project that:
-1. Provide a very flexible AMM DEX to operate within the Cosmos ecosystem
-2. Allow cross-chain incentive alignment, risk hedging, fair launches to be programmed into the staking token
+## Why Osmosis?
+### On customizability of liquidity pools
+Most major AMMs limit the changeable parameters of liquidity pools. For example, Uniswap only allows the creation of a two-token pool of equal ratio with the swap fee of 0.3%. The simplicity of Uniswap protocol allowed quick onboarding of the average user that previously had little to no experience in market making.
 
-## Generalized Automated Market Maker
-Similar to Balancer, Osmosis' `x/gamm` is a multi-token, parameterized automated market maker application. Liquidity pools can be created with up to 8 tokens to specified to different weighted ratios. Liquidity pools can function as an AMM DEX similar to Uniswap, where the average users can interact with the liquidity pool to swap tokens.
+However, as the DeFi market size grows and market participants such as arbitrageurs and liquidity providers mature, the need for liquidity pools to react to market conditions becomes apparent. The optimal swap fee for a AMM trade may depend on various factors such as block times, slippage, transaction fee, market volatility and more. There is no one-size-fits-all solution as the mix of characteristics of blockchain protocol, tokens in the liquidity pool, market conditions, and others can change the optimal strategy for the liquidity providers and the market makers to carry out.
 
-Currently, the following features are working:
-* Token swaps
-	* Calculating swap slippage
-* Liquidity pool
-	* Create new liquidity pools
-		* Set ratio between tokens (i.e. 40% ATOM / 50% IRIS / 10% KAVA)
-		* Add up to 8 tokens
-	* Add liquidity to existing liquidity pools
-		* Mint LP tokens which represent a share in the liquidity pool
-		* Add liquidity according to the specified ratio
-			* i.e. Add $4 ATOM / $5 IRIS / $1 KAVA for the 40% ATOM / 50% IRIS / 10% KAVA pool
-		* Add single token liquidity
-			* Automatically swapped internally
-	* Withdraw from liquidity pool
-		* Liquidity Pool receives LP token and gives the % share of tokens in the pool
-		* Allow single-token withdrawals by automatically swapping the unwanted tokens internally
+The tools Osmosis provides allow the market participants to self-identify opportunities and allow them to react by adjusting the various parameters. An optimal equilibrium between fee and liquidity can be reached through autonomous experiments and iterations, rather than a setting a centrally planned 'most acceptable compromise' value. This extends the addressable market for AMMs and bonding curves to beyond simple token swaps, as limitation on the customizability of liquidity pools may have been the inhibiting factor for more experimental use-cases of AMMs.
 
-### Staking LP Tokens
-We are merging the DeFi primitive of multi-token AMM and Cosmos proof-of-stake system by allowing the LP tokens (similar to the utility of the BPT token in Balancer) to be used as a staking token for a new zone.
+### Self-governing liquidity pools
+As important as the ability to change the parameters of a liquidity pool is, the feature would mean very little without a method to coordinate a decision amongst the stakeholders. The pool governance feature of Osmosis allows a diverse spectrum of liquidity pools with risk tolerance and strategies to not only exist, but evolve.
 
-The intent of this is to allow customization and parameterization of a zone's staking token, similar to how balancer allows customization and parameterization of the AMM LP. Currently, a new Cosmos zone (which only allows native zone staking token to be delegaed) is fully reliant on the economic characteristics of its own staking token for security. By allowing a custom designed LP token to be used as a staking token, the creators of the new zone can essentially 'design' its staking token by customizing the GAMM LP pool which the LP token is used for the zone's staking token.
+In Osmosis, the liquidity pool shares are not only used to calculate the fractional ownership of a liquidity pool, but also the right to participate in the strategic decision making of the liquidity pool as well. To incentivize long-term liquidity commitment, shares must be locked up for an extended period. Longer term commitments are awarded by additional voting power / additional liquidity mining revenue. The long-term liquidity commitment by the liquidity providers prevent the impact of potential vampire attacks, where ownership of the shares are delegated and potentially used to migrate liquidity to an external AMM. This provides equity of power amongst liquidity providers, where those with greater skin-in-the-game are given their rightful power to steer the strategic direction of its pool in proportion to the risk they are taking with their assets.
 
-For example, if I want to create a new zone called Network A which wants to:
-1. Align my zone's success to the success of the Hub
-2. Reduce volatility of the staking token
-3. Have my zone's native token have impact on the voting power of my zone
+As AMMs mostly guarantee a level of constant total value output, those who may disagree with the changes made to the pool are able to withdraw their funds with little to no loss of their principals. As Osmosis expects the market to self-discover the optimal value of each adjustable parameter, if a significant dissenting opinion exists–they are able to start a competing liquidity pool with their own strategy.
 
-I can essentially create a '40% ATOM / 30% USDC / 30% zoneToken' pool on Osmosis and use the Osmosis LP token as my zone's staking token.
+### AMM as serviced infrastructure
+The number and complexity of decentralized financial products are consistently increasing. Instruments such as pegged assets, derivatives, options, and tokenized leveraged positions each have their own characteristics that produce optimal market efficiency when paired with the correct bonding curve. That being said, the traditional notion of AMMs have evolved around putting the AMM first, and the financial product being traded second.
 
-Because the ATOM accounts for 40% of the voting power of 1 staking token on my zone, the success of ATOMs increase the security of my zone as well. Furthermore, it incentivizes ATOM holders to be more interested in participating in my zone without the common downsides of airdrops (i.e. no skin-in-the-game, price volatility, etc). Also, because 30% of the voting power is derived from a stablecoin my zone's security is relatively more secure against price fluctuations of ATOM tokens and the zone token–which allows a more stable security guarantee. Lastly, because my zone's utlity token can be used as a fraction of the voting power, it provides a level of sovereignty to my zone as well. The best part of this is that the assets that are included as part of the Osmosis pool can be selected according to its characteristics such as economic value, community, fiat liquidity, sovereignty, etc. Furthermore, an additional layer of customizability can be configured by setting each of these asset's Osmosis pool ratios at different weights.
+As AMMs substantially increase the market accessibility for these instruments, assets with diverse characteristics either had to:
+1. Compromise efficiency and trade on existing AMMs with non-optimal bonding curves or
+2. Take on the massive task of building one's own AMM that is able to maximize efficiency
 
-Also, because an LP token can be used to withdraw from the pool, whoever chose to participate in minting the staking token can always choose to exit the pool and receive a portion of their tokens back. This reduces the risk of a token investment going to zero, allowing a more equitable token distribution mechanism.
+To solve this issue, Osmosis introduces the idea of an 'AMM as a serviced infrastructure'. Fairly often, adjustment of the value function and a few additional parameters are all that's needed to provide a highly-efficient, highly-accessible AMM for the majority of decentralized financial instruments. By providing the ability for the creator of the pool to simply define the bonding curve value function and reuse the majority of the key AMM infrastructure, the barrier to creating a tailor-made and efficient automated market maker can be reduced.
+
