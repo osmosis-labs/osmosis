@@ -1,8 +1,7 @@
 package keeper_test
 
 func (suite *KeeperTestSuite) TestLockReferencesManagement() {
-	// This test is written for testing below functions
-	// AppendLockRefByKey, DeleteLockRefByKey and GetLockRefs
+	// test written for AppendLockRefByKey, DeleteLockRefByKey and GetLockRefs
 
 	suite.SetupTest()
 

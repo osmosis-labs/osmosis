@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func sliceIndex(IDs []uint64, ID uint64) int {
+func findIndex(IDs []uint64, ID uint64) int {
 	for index, id := range IDs {
 		if id == ID {
 			return index
@@ -17,7 +17,7 @@ func sliceIndex(IDs []uint64, ID uint64) int {
 }
 
 func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
-	index := sliceIndex(IDs, ID)
+	index := findIndex(IDs, ID)
 	if index < 0 {
 		return IDs, index
 	}
@@ -27,7 +27,6 @@ func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
 
 // combineKeys combine bytes array into a single bytes
 func combineKeys(keys ...[]byte) []byte {
-	// TODO: should add test for combineKeys, like bytes ordering
 	combined := []byte{}
 	for _, key := range keys {
 		combined = append(combined, key...)
@@ -58,10 +57,10 @@ func getTimeKey(timestamp time.Time) []byte {
 // getDurationKey returns the key used for getting a set of period locks
 // where duration is longer than a specific duration
 func getDurationKey(duration time.Duration) []byte {
-	key := []byte{}
-	if duration >= 0 {
-		key = sdk.Uint64ToBigEndian(uint64(duration))
+	if duration < 0 {
+		duration = 0
 	}
+	key := sdk.Uint64ToBigEndian(uint64(duration))
 	return combineKeys(types.KeyPrefixDuration, key)
 }
 

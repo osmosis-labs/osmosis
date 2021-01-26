@@ -45,6 +45,7 @@ func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
 	return timeLock
 }
 
+// AppendLockRefByKey append lock ID into an array associated to provided key
 func (k Keeper) AppendLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	timeLock := k.GetLockRefs(ctx, key)
@@ -56,6 +57,7 @@ func (k Keeper) AppendLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
 	store.Set(key, bz)
 }
 
+// DeleteLockRefByKey remove lock ID from an array associated to provided key
 func (k Keeper) DeleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
 	var index = -1
 	store := ctx.KVStore(k.storeKey)
