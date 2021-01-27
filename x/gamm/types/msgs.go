@@ -12,7 +12,7 @@ const (
 	TypeMsgJoinPool                = "join_pool"
 	TypeMsgExitPool                = "exit_pool"
 	TypeMsgJoinSwapExternAmountIn  = "join_swap_extern_amount_in"
-	TypeMsgJoinSwapShareAmountOut  = "join_swap_share_amount_out"
+	TypeMsgJoinSwapShareAmountOut  = "join_swap_extern_amount_out"
 	TypeMsgExitSwapExternAmountOut = "exit_swap_extern_amount_out"
 	TypeMsgExitSwapShareAmountIn   = "exit_swap_share_amount_in"
 )

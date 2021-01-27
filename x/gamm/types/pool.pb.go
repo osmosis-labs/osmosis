@@ -73,8 +73,8 @@ func (m *Record) GetToken() types.Coin {
 	return types.Coin{}
 }
 
-// PoolParams defined the parameters that will be managed by the pool governance in the future.
-// This params are not managed by the chain governanace.
+// PoolParams defined the parameters that will be managed by the pool governance
+// in the future. This params are not managed by the chain governanace.
 type PoolParams struct {
 	// If the pool is locked, users can't join, exit or swap the pool.
 	Lock    bool                                   `protobuf:"varint,1,opt,name=lock,proto3" json:"lock,omitempty"`
