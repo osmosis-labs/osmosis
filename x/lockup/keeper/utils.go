@@ -78,7 +78,7 @@ func lockRefKeys(lock types.PeriodLock) [][]byte {
 		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockTimestamp, denomBz, timeKey))
 		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockDuration, denomBz, durationKey))
 		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockTimestamp, lock.Owner, denomBz, timeKey))
-		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockTimestamp, lock.Owner, denomBz, durationKey))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockDuration, lock.Owner, denomBz, durationKey))
 	}
 	return refKeys
 }

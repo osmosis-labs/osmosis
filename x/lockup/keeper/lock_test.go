@@ -1,25 +1,136 @@
 package keeper_test
 
-func (suite *KeeperTestSuite) TestGetLockByID() {
-	// TODO: write test for LockupKeeper.GetLockByID
-}
+import (
+	"time"
+
+	"github.com/c-osmosis/osmosis/x/lockup/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {
-	// TODO: write test for LockupKeeper.GetPeriodLocks
+	// test for module locked balance check
+	suite.SetupTest()
+
+	// initial module locked balance check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
 }
 
 func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
-	// TODO: write test for LockupKeeper.UnlockAllUnlockableCoins
+	// test for all unlockable coins
+	suite.SetupTest()
+	now := suite.ctx.BlockTime()
+
+	// initial module locked balance check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// unlock locks just now
+	ucoins1, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx, addr1)
+	suite.Require().Equal(ucoins1, sdk.Coins{})
+
+	// unlock locks after 1s
+	ucoins2, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx.WithBlockTime(now.Add(time.Second)), addr1)
+	suite.Require().Equal(ucoins2, coins)
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
 }
 
 func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
-	// TODO: write test for LockupKeeper.UnlockPeriodLockByID
+	// test for all unlockable coins
+	suite.SetupTest()
+	now := suite.ctx.BlockTime()
+
+	// initial locks check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// unlock lock just now
+	lock1, err := suite.app.LockupKeeper.UnlockPeriodLockByID(suite.ctx, 1)
+	suite.Require().Error(err)
+	suite.Require().Equal(lock1.ID, uint64(1))
+
+	// unlock lock after 1s
+	lock2, err := suite.app.LockupKeeper.UnlockPeriodLockByID(suite.ctx.WithBlockTime(now.Add(time.Second)), 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(lock2.ID, uint64(1))
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
 }
 
 func (suite *KeeperTestSuite) TestLock() {
-	// TODO: write test for LockupKeeper.Lock
+	// test for coin locking
+	suite.SetupTest()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	lock := types.NewPeriodLock(1, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
+
+	// try lock without balance
+	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	suite.Require().Error(err)
+
+	// lock with balance
+	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	suite.Require().NoError(err)
+
+	// lock with balance with same id
+	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	suite.Require().Error(err)
+
+	// lock with balance with different id
+	lock = types.NewPeriodLock(2, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
+	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestUnlock() {
-	// TODO: write test for LockupKeeper.Unlock
+	// test for coin unlocking
+	suite.SetupTest()
+	now := suite.ctx.BlockTime()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	lock := types.NewPeriodLock(1, addr1, time.Second, now.Add(time.Second), coins)
+
+	// lock with balance
+	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	suite.Require().NoError(err)
+
+	// unlock with lock object
+	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), lock)
+	suite.Require().NoError(err)
 }

@@ -29,7 +29,7 @@ service Query {
 	// Same as GetAccountLockedPastTime but denom specific
 	rpc AccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
 	// Returns the length of the initial lock time when the lock was created
-	rpc Locked(LockedRequest) returns (LockedResponse);
+	rpc LockedByID(LockedRequest) returns (LockedResponse);
 
 	// Returns account locked with duration longer than specified
 	rpc AccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);

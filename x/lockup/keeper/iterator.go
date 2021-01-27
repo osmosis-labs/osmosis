@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/c-osmosis/osmosis/x/lockup/types"
@@ -12,30 +13,35 @@ func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(time)
 	key := combineKeys(prefix, timeKey)
-	return store.Iterator(key, storetypes.PrefixEndBytes(types.KeyPrefixPeriodLock))
+	// If it’s unlockTime, then it should count as unlocked
+	// inclusive end bytes = key + 1, next iterator
+	return store.Iterator(storetypes.InclusiveEndBytes(key), storetypes.PrefixEndBytes(prefix))
 }
 
 func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(time)
 	key := combineKeys(prefix, timeKey)
-	return store.Iterator(prefix, key)
+	// If it’s unlockTime, then it should count as unlocked
+	// inclusive end bytes = key + 1, next iterator
+	return store.Iterator(prefix, storetypes.InclusiveEndBytes(key))
 }
 
 func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
-	// TODO: should take care of equal iteration key, if user is looking for more than 3 months duration
-	// or no more than 3 months, exact 3 month duration lock participate in both
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
-	return store.Iterator(key, storetypes.PrefixEndBytes(types.KeyPrefixLockDuration))
+	// duration is inclusive, longer means > (greater)
+	// inclusive on longer side, means >= (longer or equal)
+	return store.Iterator(key, storetypes.PrefixEndBytes(prefix))
 }
 
 func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
-	return store.Iterator(types.KeyPrefixLockDuration, key)
+	// inclusive on longer side, shorter means < (lower or equal)
+	return store.Iterator(prefix, key)
 }
 
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
@@ -45,6 +51,7 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 
 // LockIteratorAfterTime returns the iterator to get locked coins
 func (k Keeper) LockIteratorAfterTime(ctx sdk.Context, time time.Time) sdk.Iterator {
+	fmt.Println("LockIteratorAfterTime")
 	return k.iteratorAfterTime(ctx, types.KeyPrefixLockTimestamp, time)
 }
 

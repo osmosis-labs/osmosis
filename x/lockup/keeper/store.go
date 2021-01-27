@@ -46,15 +46,19 @@ func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
 }
 
 // AddLockRefByKey append lock ID into an array associated to provided key
-func (k Keeper) AddLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
+func (k Keeper) AddLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	timeLock := k.GetLockRefs(ctx, key)
+	if findIndex(timeLock.IDs, lockID) > -1 {
+		return fmt.Errorf("lock with same ID exist: %d", lockID)
+	}
 	timeLock.IDs = append(timeLock.IDs, lockID)
 	bz, err := json.Marshal(timeLock)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	store.Set(key, bz)
+	return nil
 }
 
 // DeleteLockRefByKey remove lock ID from an array associated to provided key

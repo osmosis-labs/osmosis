@@ -51,8 +51,8 @@ func (k Keeper) AccountLockedPastTimeDenom(goCtx context.Context, req *types.Acc
 	return &types.AccountLockedPastTimeDenomResponse{Locks: k.GetAccountLockedPastTimeDenom(ctx, req.Owner, req.Denom, req.Timestamp)}, nil
 }
 
-// Locked Returns lock by lock ID
-func (k Keeper) Locked(goCtx context.Context, req *types.LockedRequest) (*types.LockedResponse, error) {
+// LockedByID Returns lock by lock ID
+func (k Keeper) LockedByID(goCtx context.Context, req *types.LockedRequest) (*types.LockedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	lock, err := k.GetLockByID(ctx, req.LockId)
 	return &types.LockedResponse{Lock: lock}, err
