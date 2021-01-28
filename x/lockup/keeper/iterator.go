@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/c-osmosis/osmosis/x/lockup/types"
@@ -51,7 +50,6 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 
 // LockIteratorAfterTime returns the iterator to get locked coins
 func (k Keeper) LockIteratorAfterTime(ctx sdk.Context, time time.Time) sdk.Iterator {
-	fmt.Println("LockIteratorAfterTime")
 	return k.iteratorAfterTime(ctx, types.KeyPrefixLockTimestamp, time)
 }
 

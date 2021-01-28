@@ -11,7 +11,6 @@ import (
 )
 
 func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []types.PeriodLock {
-	fmt.Println("getLocksFromIterator")
 	locks := []types.PeriodLock{}
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -46,7 +45,6 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Co
 }
 
 func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
-	fmt.Println("getCoinsFromLocks")
 	coins := sdk.Coins{}
 	for _, lock := range locks {
 		coins = coins.Add(lock.Coins...)
@@ -55,7 +53,6 @@ func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 }
 
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	fmt.Println("getCoinsFromIterator")
 	return k.getCoinsFromLocks(k.getLocksFromIterator(ctx, iterator))
 }
 
@@ -68,7 +65,6 @@ func (k Keeper) GetModuleBalance(ctx sdk.Context) sdk.Coins {
 
 // GetModuleLockedCoins Returns locked balance of the module
 func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
-	fmt.Println("GetModuleLockedCoins")
 	return k.getCoinsFromIterator(ctx, k.LockIteratorAfterTime(ctx, ctx.BlockTime()))
 }
 
