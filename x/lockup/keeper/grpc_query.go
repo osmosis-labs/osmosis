@@ -21,7 +21,7 @@ func (k Keeper) ModuleLockedAmount(goCtx context.Context, req *types.ModuleLocke
 	return &types.ModuleLockedAmountResponse{Coins: k.GetModuleLockedCoins(ctx)}, nil
 }
 
-// AccountUnlockableCoins Returns whole unlockable coins which are not withdrawn yet
+// AccountUnlockableCoins returns unlockable coins which are not withdrawn yet
 func (k Keeper) AccountUnlockableCoins(goCtx context.Context, req *types.AccountUnlockableCoinsRequest) (*types.AccountUnlockableCoinsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.AccountUnlockableCoinsResponse{Coins: k.GetAccountUnlockableCoins(ctx, req.Owner)}, nil

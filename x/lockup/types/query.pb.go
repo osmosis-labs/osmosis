@@ -1060,21 +1060,21 @@ type QueryClient interface {
 	ModuleBalance(ctx context.Context, in *ModuleBalanceRequest, opts ...grpc.CallOption) (*ModuleBalanceResponse, error)
 	// Return locked balance of the module
 	ModuleLockedAmount(ctx context.Context, in *ModuleLockedAmountRequest, opts ...grpc.CallOption) (*ModuleLockedAmountResponse, error)
-	// Returns whole unlockable coins which are not withdrawn yet
+	// Returns unlockable coins which are not withdrawn yet
 	AccountUnlockableCoins(ctx context.Context, in *AccountUnlockableCoinsRequest, opts ...grpc.CallOption) (*AccountUnlockableCoinsResponse, error)
 	// Return a locked coins that can't be withdrawn
 	AccountLockedCoins(ctx context.Context, in *AccountLockedCoinsRequest, opts ...grpc.CallOption) (*AccountLockedCoinsResponse, error)
-	// Returns the total locks of an account whose unlock time is beyond timestamp
+	// Returns locked records of an account with unlock time beyond timestamp
 	AccountLockedPastTime(ctx context.Context, in *AccountLockedPastTimeRequest, opts ...grpc.CallOption) (*AccountLockedPastTimeResponse, error)
-	// Returns the total unlocks of an account whose unlock time is before timestamp
+	// Returns unlocked records with unlock time before timestamp
 	AccountUnlockedBeforeTime(ctx context.Context, in *AccountUnlockedBeforeTimeRequest, opts ...grpc.CallOption) (*AccountUnlockedBeforeTimeResponse, error)
-	// Same as GetAccountLockedPastTime but denom specific
+	// Returns lock records by address, timestamp, denom
 	AccountLockedPastTimeDenom(ctx context.Context, in *AccountLockedPastTimeDenomRequest, opts ...grpc.CallOption) (*AccountLockedPastTimeDenomResponse, error)
-	// Returns the length of the initial lock time when the lock was created
+	// Returns lock record by id
 	LockedByID(ctx context.Context, in *LockedRequest, opts ...grpc.CallOption) (*LockedResponse, error)
-	// Returns account locked with duration longer than specified
+	// Returns account locked records with longer duration
 	AccountLockedLongerThanDuration(ctx context.Context, in *AccountLockedLongerDurationRequest, opts ...grpc.CallOption) (*AccountLockedLongerDurationResponse, error)
-	// Returns account locked with duration longer than specified with specific denom
+	// Returns account's locked records for a denom with longer duration
 	AccountLockedLongerThanDurationDenom(ctx context.Context, in *AccountLockedLongerDurationDenomRequest, opts ...grpc.CallOption) (*AccountLockedLongerDurationDenomResponse, error)
 }
 
@@ -1182,21 +1182,21 @@ type QueryServer interface {
 	ModuleBalance(context.Context, *ModuleBalanceRequest) (*ModuleBalanceResponse, error)
 	// Return locked balance of the module
 	ModuleLockedAmount(context.Context, *ModuleLockedAmountRequest) (*ModuleLockedAmountResponse, error)
-	// Returns whole unlockable coins which are not withdrawn yet
+	// Returns unlockable coins which are not withdrawn yet
 	AccountUnlockableCoins(context.Context, *AccountUnlockableCoinsRequest) (*AccountUnlockableCoinsResponse, error)
 	// Return a locked coins that can't be withdrawn
 	AccountLockedCoins(context.Context, *AccountLockedCoinsRequest) (*AccountLockedCoinsResponse, error)
-	// Returns the total locks of an account whose unlock time is beyond timestamp
+	// Returns locked records of an account with unlock time beyond timestamp
 	AccountLockedPastTime(context.Context, *AccountLockedPastTimeRequest) (*AccountLockedPastTimeResponse, error)
-	// Returns the total unlocks of an account whose unlock time is before timestamp
+	// Returns unlocked records with unlock time before timestamp
 	AccountUnlockedBeforeTime(context.Context, *AccountUnlockedBeforeTimeRequest) (*AccountUnlockedBeforeTimeResponse, error)
-	// Same as GetAccountLockedPastTime but denom specific
+	// Returns lock records by address, timestamp, denom
 	AccountLockedPastTimeDenom(context.Context, *AccountLockedPastTimeDenomRequest) (*AccountLockedPastTimeDenomResponse, error)
-	// Returns the length of the initial lock time when the lock was created
+	// Returns lock record by id
 	LockedByID(context.Context, *LockedRequest) (*LockedResponse, error)
-	// Returns account locked with duration longer than specified
+	// Returns account locked records with longer duration
 	AccountLockedLongerThanDuration(context.Context, *AccountLockedLongerDurationRequest) (*AccountLockedLongerDurationResponse, error)
-	// Returns account locked with duration longer than specified with specific denom
+	// Returns account's locked records for a denom with longer duration
 	AccountLockedLongerThanDurationDenom(context.Context, *AccountLockedLongerDurationDenomRequest) (*AccountLockedLongerDurationDenomResponse, error)
 }
 
