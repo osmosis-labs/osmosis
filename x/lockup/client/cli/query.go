@@ -366,7 +366,7 @@ $ %s query lockup lock-by-id <id>
 				return err
 			}
 
-			id, err := strconv.ParseUint(args[1], 10, 64)
+			id, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				panic(err)
 			}
@@ -449,7 +449,7 @@ $ %s query lockup account-locked-pasttime <address> <duration> <denom>
 				version.AppName,
 			),
 		),
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
