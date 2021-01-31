@@ -242,6 +242,11 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTimeDenom() {
 	res, err = suite.app.LockupKeeper.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1, Denom: "stake", Timestamp: now.Add(2 * time.Second)})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
+
+	// try querying with prefix coins like "stak" for potential attack
+	res, err = suite.app.LockupKeeper.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1, Denom: "stak", Timestamp: now})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 0)
 }
 
 func (suite *KeeperTestSuite) TestLockedByID() {
@@ -337,6 +342,11 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerThanDurationDenom() {
 
 	// account locks longer than duration check by denom, duration = 2s
 	res, err = suite.app.LockupKeeper.AccountLockedLongerThanDurationDenom(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1, Duration: 2 * time.Second, Denom: "stake"})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 0)
+
+	// try querying with prefix coins like "stak" for potential attack
+	res, err = suite.app.LockupKeeper.AccountLockedLongerThanDurationDenom(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1, Duration: 0, Denom: "sta"})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 }
