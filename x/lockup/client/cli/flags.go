@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"time"
-
 	flag "github.com/spf13/pflag"
 )
 
@@ -15,6 +13,6 @@ const (
 func FlagSetLockTokens() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Int64(FlagDuration, int64(24*time.Hour), "The duration token to be locked")
+	fs.String(FlagDuration, "86400s", "The duration token to be locked. e.g. 1h, 1d, 1d1h2m1s")
 	return fs
 }

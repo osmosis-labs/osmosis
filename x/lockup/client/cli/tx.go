@@ -51,14 +51,19 @@ func NewLockTokensCmd() *cobra.Command {
 				return err
 			}
 
-			duration, err := cmd.Flags().GetInt64(FlagDuration)
+			durationStr, err := cmd.Flags().GetString(FlagDuration)
+			if err != nil {
+				return err
+			}
+
+			duration, err := time.ParseDuration(durationStr)
 			if err != nil {
 				return err
 			}
 
 			msg := &types.MsgLockTokens{
 				Owner:    clientCtx.GetFromAddress(),
-				Duration: time.Duration(duration),
+				Duration: duration,
 				Coins:    coins,
 			}
 

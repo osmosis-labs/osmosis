@@ -413,11 +413,10 @@ $ %s query lockup account-locked-pasttime <address> <duration>
 				return err
 			}
 
-			i, err := strconv.ParseInt(args[1], 10, 64)
+			duration, err := time.ParseDuration(args[1])
 			if err != nil {
-				panic(err)
+				return err
 			}
-			duration := time.Duration(i)
 
 			queryClient := types.NewQueryClient(clientCtx)
 
@@ -461,11 +460,10 @@ $ %s query lockup account-locked-pasttime <address> <duration> <denom>
 				return err
 			}
 
-			i, err := strconv.ParseInt(args[1], 10, 64)
+			duration, err := time.ParseDuration(args[1])
 			if err != nil {
-				panic(err)
+				return err
 			}
-			duration := time.Duration(i)
 
 			denom := args[2]
 

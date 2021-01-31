@@ -2,10 +2,10 @@
 
 ```sh
 # 1 day 100stake lock-tokens command
-osmosisd tx lockup lock-tokens 200stake --duration="86400000000000" --from=validator --chain-id=testing --keyring-backend=test --yes
+osmosisd tx lockup lock-tokens 200stake --duration="86400s" --from=validator --chain-id=testing --keyring-backend=test --yes
 
 # 5s 100stake lock-tokens command
-osmosisd tx lockup lock-tokens 100stake --duration="5000000000" --from=validator --chain-id=testing --keyring-backend=test --yes
+osmosisd tx lockup lock-tokens 100stake --duration="5s" --from=validator --chain-id=testing --keyring-backend=test --yes
 
 # unlock tokens
 osmosisd tx lockup unlock-tokens --from=validator --chain-id=testing --keyring-backend=test --yes
@@ -35,10 +35,10 @@ osmosisd query lockup account-locked-pasttime-denom $(osmosisd keys show -a vali
 osmosisd query lockup account-locked-pasttime $(osmosisd keys show -a validator --keyring-backend=test) 1611879610
 
 # query account locks by denom with longer duration
-osmosisd query lockup account-locked-longer-duration-denom $(osmosisd keys show -a validator --keyring-backend=test) 5000000001 stake
+osmosisd query lockup account-locked-longer-duration-denom $(osmosisd keys show -a validator --keyring-backend=test) 5.1s stake
 
 # query account locks with longer duration
-osmosisd query lockup account-locked-longer-duration $(osmosisd keys show -a validator --keyring-backend=test) 5000000001
+osmosisd query lockup account-locked-longer-duration $(osmosisd keys show -a validator --keyring-backend=test) 5.1s
 
 # query account locked coins
 osmosisd query lockup account-locked-coins $(osmosisd keys show -a validator --keyring-backend=test)
