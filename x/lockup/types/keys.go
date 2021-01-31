@@ -48,4 +48,7 @@ var (
 
 	// KeyPrefixAccountDenomLockTimestamp defines prefix for the iteration of lock IDs by account, denomination and timestamp
 	KeyPrefixAccountDenomLockTimestamp = []byte{0x04}
+
+	// KeyIndexSeparator defines separator between keys when combine
+	KeyIndexSeparator = []byte{0x7f}
 )

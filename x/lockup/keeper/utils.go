@@ -28,8 +28,11 @@ func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
 // combineKeys combine bytes array into a single bytes
 func combineKeys(keys ...[]byte) []byte {
 	combined := []byte{}
-	for _, key := range keys {
+	for i, key := range keys {
 		combined = append(combined, key...)
+		if i < len(keys)-1 { // not last item
+			combined = append(combined, types.KeyIndexSeparator...)
+		}
 	}
 	return combined
 }

@@ -15,10 +15,12 @@ func TestCombineKeys(t *testing.T) {
 	key2 := []byte{0x12}
 	key3 := []byte{0x13}
 	key := combineKeys(key1, key2, key3)
-	require.Len(t, key, 3)
+	require.Len(t, key, 3+2) // 2 is separator
 	require.Equal(t, key[0], key1[0])
-	require.Equal(t, key[1], key2[0])
-	require.Equal(t, key[2], key3[0])
+	require.Equal(t, key[1], types.KeyIndexSeparator[0])
+	require.Equal(t, key[2], key2[0])
+	require.Equal(t, key[3], types.KeyIndexSeparator[0])
+	require.Equal(t, key[4], key3[0])
 }
 
 func TestFindIndex(t *testing.T) {
