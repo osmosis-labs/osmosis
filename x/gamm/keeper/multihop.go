@@ -18,6 +18,9 @@ func init() {
 	}
 }
 
+// MultihopSwapExactAmountIn defines the input denom and input amount for the first pool,
+// the output of the first pool is chained as the input for the next routed pool
+// transaction succeeds when final amount out is greater than tokenOutMinAmount defined
 func (k Keeper) MultihopSwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -40,6 +43,10 @@ func (k Keeper) MultihopSwapExactAmountIn(
 	return
 }
 
+// MultihopSwapExactAmountOut defines the output denom and output amount for the last pool.
+// Calculation starts by providing the tokenOutAmount of the final pool to calculate the required tokenInAmount
+// the calculated tokenInAmount is used as defined tokenOutAmount of the previous pool, calculating in reverse order of the swap
+// Transaction succeeds if the calculated tokenInAmount of the first pool is less than the defined tokenInMaxAmount defined.
 func (k Keeper) MultihopSwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
