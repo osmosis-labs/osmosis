@@ -106,7 +106,8 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	_, _, err = server.keeper.SwapExactAmountIn(ctx, sender, msg.PoolId, msg.TokenIn, msg.TokenOutDenom, msg.TokenOutMinAmount, msg.MaxSpotPrice)
+	_, err = server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +131,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	_, _, err = server.keeper.SwapExactAmountOut(ctx, sender, msg.PoolId, msg.TokenInDenom, msg.TokenInMaxAmount, msg.TokenOut, msg.MaxSpotPrice)
+	_, err = server.keeper.MultihopSwapExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
 	if err != nil {
 		return nil, err
 	}

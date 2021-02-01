@@ -75,21 +75,26 @@ message MsgExitPool {
 message MsgExitPoolResponse {}
 
 // ===================== MsgSwapExactAmountIn
+message SwapAmountInRoute {
+  uint64 poolId = 1 [(gogoproto.moretags) = "yaml:\"pool_id\""];
+  string tokenOutDenom = 2 [
+    (gogoproto.moretags) = "yaml:\"token_out_denom\""
+  ];
+}
+
 message MsgSwapExactAmountIn {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated SwapAmountInRoute routes = 2 [ (gogoproto.nullable) = false ];
   cosmos.base.v1beta1.Coin tokenIn = 3 [
     (gogoproto.moretags) = "yaml:\"token_in\"",
     (gogoproto.nullable) = false
   ];
-  string tokenOutDenom = 4
-      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
-  string tokenOutMinAmount = 5 [
+  string tokenOutMinAmount = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
     (gogoproto.nullable) = false
   ];
-  string maxSpotPrice = 6 [
+  string maxSpotPrice = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"max_spot_price\"",
     (gogoproto.nullable) = false
@@ -99,20 +104,26 @@ message MsgSwapExactAmountIn {
 message MsgSwapExactAmountInResponse {}
 
 // ===================== MsgSwapExactAmountOut
+message SwapAmountOutRoute {
+  uint64 poolId = 1 [(gogoproto.moretags) = "yaml:\"pool_id\""];
+  string tokenInDenom = 2 [
+  (gogoproto.moretags) = "yaml:\"token_out_denom\""
+  ];
+}
+
 message MsgSwapExactAmountOut {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string tokenInDenom = 3 [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
-  string tokenInMaxAmount = 4 [
+  repeated SwapAmountOutRoute routes = 2 [ (gogoproto.nullable) = false ];
+  string tokenInMaxAmount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
     (gogoproto.nullable) = false
   ];
-  cosmos.base.v1beta1.Coin tokenOut = 5 [
+  cosmos.base.v1beta1.Coin tokenOut = 4 [
     (gogoproto.moretags) = "yaml:\"token_out\"",
     (gogoproto.nullable) = false
   ];
-  string maxSpotPrice = 6 [
+  string maxSpotPrice = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"max_spot_price\"",
     (gogoproto.nullable) = false
