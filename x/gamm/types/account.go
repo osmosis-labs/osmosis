@@ -69,11 +69,11 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams) PoolAccountI {
 
 func (params PoolParams) Validate() error {
 	if params.ExitFee.LT(sdk.NewDec(0)) {
-		return fmt.Errorf("exit fee can't be negative")
+		return ErrNegativeExitFee
 	}
 
 	if params.SwapFee.LT(sdk.NewDec(0)) {
-		return fmt.Errorf("swap fee can't be negative")
+		return ErrNegativeSwapFee
 	}
 
 	return nil
