@@ -342,7 +342,6 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 			}),
 			expectPass: false,
 		},
-
 		{
 			name: "empty routes",
 			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
@@ -406,6 +405,183 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				return msg
 			}),
 			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}
+
+func TestMsgJoinPool(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
+	require.NoError(t, err)
+	invalidAddr := sdk.AccAddress("invalid")
+
+	createMsg := func(after func(msg MsgJoinPool) MsgJoinPool) MsgJoinPool {
+		properMsg := MsgJoinPool{
+			Sender:         addr1,
+			PoolId:         1,
+			ShareOutAmount: sdk.NewInt(10),
+			TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(10)), sdk.NewCoin("test2", sdk.NewInt(20))),
+		}
+
+		return after(properMsg)
+	}
+
+	tests := []struct {
+		name       string
+		msg        MsgJoinPool
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+				// Do nothing
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "invalid sender",
+			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+				msg.Sender = invalidAddr.String()
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative requirement",
+			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+				msg.ShareOutAmount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero amount",
+			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+				msg.TokenInMaxs[1].Amount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative amount",
+			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+				msg.TokenInMaxs[1].Amount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "'empty token max in' can pass",
+			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+				msg.TokenInMaxs = nil
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "'empty token max in' can pass 2",
+			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+				msg.TokenInMaxs = sdk.Coins{}
+				return msg
+			}),
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}
+
+func TestMsgExitPool(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
+	require.NoError(t, err)
+	invalidAddr := sdk.AccAddress("invalid")
+
+	createMsg := func(after func(msg MsgExitPool) MsgExitPool) MsgExitPool {
+		properMsg := MsgExitPool{
+			Sender:        addr1,
+			PoolId:        1,
+			ShareInAmount: sdk.NewInt(10),
+			TokenOutMins:  sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(10)), sdk.NewCoin("test2", sdk.NewInt(20))),
+		}
+		return after(properMsg)
+	}
+
+	tests := []struct {
+		name       string
+		msg        MsgExitPool
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+				// Do nothing
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "invalid sender",
+			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+				msg.Sender = invalidAddr.String()
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative requirement",
+			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+				msg.ShareInAmount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero amount",
+			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+				msg.TokenOutMins[1].Amount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative amount",
+			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+				msg.TokenOutMins[1].Amount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "'empty token min out' can pass",
+			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+				msg.TokenOutMins = nil
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "'empty token min out' can pass 2",
+			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+				msg.TokenOutMins = sdk.Coins{}
+				return msg
+			}),
+			expectPass: true,
 		},
 	}
 
