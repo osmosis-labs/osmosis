@@ -94,11 +94,6 @@ message MsgSwapExactAmountIn {
     (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
     (gogoproto.nullable) = false
   ];
-  string maxSpotPrice = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"max_spot_price\"",
-    (gogoproto.nullable) = false
-  ];
 }
 
 message MsgSwapExactAmountInResponse {}
@@ -121,11 +116,6 @@ message MsgSwapExactAmountOut {
   ];
   cosmos.base.v1beta1.Coin tokenOut = 4 [
     (gogoproto.moretags) = "yaml:\"token_out\"",
-    (gogoproto.nullable) = false
-  ];
-  string maxSpotPrice = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"max_spot_price\"",
     (gogoproto.nullable) = false
   ];
 }
