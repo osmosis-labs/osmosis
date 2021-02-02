@@ -72,8 +72,16 @@ func (params PoolParams) Validate() error {
 		return ErrNegativeExitFee
 	}
 
+	if params.ExitFee.GTE(sdk.NewDec(1)) {
+		return ErrTooMuchExitFee
+	}
+
 	if params.SwapFee.LT(sdk.NewDec(0)) {
 		return ErrNegativeSwapFee
+	}
+
+	if params.SwapFee.GTE(sdk.NewDec(1)) {
+		return ErrTooMuchSwapFee
 	}
 
 	return nil

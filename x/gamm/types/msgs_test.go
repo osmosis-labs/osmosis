@@ -156,9 +156,41 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
+			name: "too much swap fee",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolParams.SwapFee = sdk.NewDec(1)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "too much swap fee 2",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolParams.SwapFee = sdk.NewDecWithPrec(15, 1)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
 			name: "nagative exit fee",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolParams.ExitFee = sdk.NewDecWithPrec(-1, 2)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "too much exit fee",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolParams.ExitFee = sdk.NewDec(1)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "too much exit fee 2",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolParams.ExitFee = sdk.NewDecWithPrec(15, 1)
 				return msg
 			}),
 			expectPass: false,
