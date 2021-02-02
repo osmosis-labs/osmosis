@@ -1,4 +1,4 @@
-package types_test
+package types
 
 import (
 	"encoding/json"
@@ -8,8 +8,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/c-osmosis/osmosis/x/gamm/types"
 )
 
 func TestPoolAccountSetRecord(t *testing.T) {
@@ -17,13 +15,13 @@ func TestPoolAccountSetRecord(t *testing.T) {
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
 
-	pacc := types.NewPoolAccount(poolId, types.PoolParams{
+	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	})
 
-	err := pacc.AddRecords([]types.Record{
+	err := pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -37,25 +35,25 @@ func TestPoolAccountSetRecord(t *testing.T) {
 
 	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
 
-	err = pacc.SetRecord("test1", types.Record{
+	err = pacc.SetRecord("test1", Record{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
 	})
 	require.Error(t, err)
 
-	err = pacc.SetRecord("test1", types.Record{
+	err = pacc.SetRecord("test1", Record{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
 	})
 	require.Error(t, err)
 
-	err = pacc.SetRecord("test1", types.Record{
+	err = pacc.SetRecord("test1", Record{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
 	})
 	require.Error(t, err)
 
-	err = pacc.SetRecord("test1", types.Record{
+	err = pacc.SetRecord("test1", Record{
 		Weight: sdk.NewInt(100),
 		Token: sdk.Coin{
 			Denom:  "test1",
@@ -64,7 +62,7 @@ func TestPoolAccountSetRecord(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.SetRecord("test1", types.Record{
+	err = pacc.SetRecord("test1", Record{
 		Weight: sdk.NewInt(200),
 		Token: sdk.Coin{
 			Denom:  "test1",
@@ -85,13 +83,13 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
 
-	pacc := types.NewPoolAccount(poolId, types.PoolParams{
+	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	})
 
-	err := pacc.AddRecords([]types.Record{
+	err := pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(0),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -99,7 +97,7 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(-1),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -107,7 +105,7 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
@@ -115,7 +113,7 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(100),
 			Token: sdk.Coin{
@@ -134,16 +132,16 @@ func TestPoolAccountRecords(t *testing.T) {
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
 
-	pacc := types.NewPoolAccount(poolId, types.PoolParams{
+	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	}).(*types.PoolAccount)
+	}).(*PoolAccount)
 
 	_, err := pacc.GetRecord("test1")
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -172,7 +170,7 @@ func TestPoolAccountRecords(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 2, len(records))
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -184,7 +182,7 @@ func TestPoolAccountRecords(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
@@ -196,7 +194,7 @@ func TestPoolAccountRecords(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
@@ -246,13 +244,13 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
 
-	pacc := types.NewPoolAccount(poolId, types.PoolParams{
+	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	})
 
-	err := pacc.AddRecords([]types.Record{
+	err := pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -266,7 +264,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 
 	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(10000)),
@@ -276,7 +274,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 
 	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
 
-	err = pacc.AddRecords([]types.Record{
+	err = pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(1),
 			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
@@ -292,13 +290,13 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
 
-	pacc := types.NewPoolAccount(poolId, types.PoolParams{
+	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	})
 
-	err := pacc.AddRecords([]types.Record{
+	err := pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -345,13 +343,13 @@ func TestPoolAccountJson(t *testing.T) {
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
 
-	pacc := types.NewPoolAccount(poolId, types.PoolParams{
+	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	}).(*types.PoolAccount)
+	}).(*PoolAccount)
 
-	err := pacc.AddRecords([]types.Record{
+	err := pacc.AddRecords([]Record{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -370,7 +368,7 @@ func TestPoolAccountJson(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(bz1), string(bz))
 
-	var a types.PoolAccount
+	var a PoolAccount
 	require.NoError(t, json.Unmarshal(bz, &a))
 	require.Equal(t, pacc.String(), a.String())
 }

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/c-osmosis/osmosis/x/gamm/types"
@@ -11,11 +13,13 @@ var (
 )
 
 func init() {
-	bit := sdk.NewInt(1)
-	for i := 0; i < 254; i++ {
-		sdkIntMaxValue = sdkIntMaxValue.Add(bit)
-		bit = bit.Mul(sdk.NewInt(2))
+	maxInt := big.NewInt(2)
+	maxInt = maxInt.Exp(maxInt, big.NewInt(255), nil)
+	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
+	if !ok {
+		panic("Failed to calculate the max value of sdk.Int")
 	}
+	sdkIntMaxValue = _sdkIntMaxValue
 }
 
 // MultihopSwapExactAmountIn defines the input denom and input amount for the first pool,
