@@ -93,7 +93,7 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 		}
 	}
 
-	if !msg.TokenIn.IsValid() {
+	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
 	}
 
@@ -135,7 +135,7 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 		}
 	}
 
-	if !msg.TokenOut.IsValid() {
+	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
 	}
 
