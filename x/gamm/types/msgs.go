@@ -12,7 +12,7 @@ const (
 	TypeMsgJoinPool                = "join_pool"
 	TypeMsgExitPool                = "exit_pool"
 	TypeMsgJoinSwapExternAmountIn  = "join_swap_extern_amount_in"
-	TypeMsgJoinSwapShareAmountOut  = "join_swap_extern_amount_out"
+	TypeMsgJoinSwapShareAmountOut  = "join_swap_share_amount_out"
 	TypeMsgExitSwapExternAmountOut = "exit_swap_extern_amount_out"
 	TypeMsgExitSwapShareAmountIn   = "exit_swap_share_amount_in"
 )
@@ -230,7 +230,7 @@ func (msg MsgJoinSwapExternAmountIn) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if !msg.TokenIn.IsValid() {
+	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
 	}
 
@@ -297,7 +297,7 @@ func (msg MsgExitSwapExternAmountOut) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if !msg.TokenOut.IsValid() {
+	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
 	}
 

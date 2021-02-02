@@ -38,6 +38,17 @@ func TestMsgCreatePool(t *testing.T) {
 		return after(properMsg)
 	}
 
+	msg := createMsg(func(msg MsgCreatePool) MsgCreatePool {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "create_pool")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
 	tests := []struct {
 		name       string
 		msg        MsgCreatePool
@@ -202,6 +213,17 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		return after(properMsg)
 	}
 
+	msg := createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "swap_exact_amount_in")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
 	tests := []struct {
 		name       string
 		msg        MsgSwapExactAmountIn
@@ -321,6 +343,17 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		return after(properMsg)
 	}
 
+	msg := createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "swap_exact_amount_out")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
 	tests := []struct {
 		name       string
 		msg        MsgSwapExactAmountOut
@@ -434,6 +467,17 @@ func TestMsgJoinPool(t *testing.T) {
 		return after(properMsg)
 	}
 
+	msg := createMsg(func(msg MsgJoinPool) MsgJoinPool {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "join_pool")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
 	tests := []struct {
 		name       string
 		msg        MsgJoinPool
@@ -522,6 +566,17 @@ func TestMsgExitPool(t *testing.T) {
 		return after(properMsg)
 	}
 
+	msg := createMsg(func(msg MsgExitPool) MsgExitPool {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "exit_pool")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
 	tests := []struct {
 		name       string
 		msg        MsgExitPool
@@ -582,6 +637,404 @@ func TestMsgExitPool(t *testing.T) {
 				return msg
 			}),
 			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}
+
+func TestMsgJoinSwapExternAmountIn(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
+	require.NoError(t, err)
+	invalidAddr := sdk.AccAddress("invalid")
+
+	createMsg := func(after func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+		properMsg := MsgJoinSwapExternAmountIn{
+			Sender:            addr1,
+			PoolId:            1,
+			TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
+			ShareOutMinAmount: sdk.NewInt(100),
+		}
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "join_swap_extern_amount_in")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := []struct {
+		name       string
+		msg        MsgJoinSwapExternAmountIn
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+				// Do nothing
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "invalid sender",
+			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+				msg.Sender = invalidAddr.String()
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid denom",
+			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+				msg.TokenIn.Denom = "1"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero amount",
+			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+				msg.TokenIn.Amount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative amount",
+			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+				msg.TokenIn.Amount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero criteria",
+			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+				msg.ShareOutMinAmount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative criteria",
+			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+				msg.ShareOutMinAmount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}
+
+func TestMsgJoinSwapShareAmountOut(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
+	require.NoError(t, err)
+	invalidAddr := sdk.AccAddress("invalid")
+
+	createMsg := func(after func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+		properMsg := MsgJoinSwapShareAmountOut{
+			Sender:           addr1,
+			PoolId:           1,
+			TokenInDenom:     "test",
+			ShareOutAmount:   sdk.NewInt(100),
+			TokenInMaxAmount: sdk.NewInt(100),
+		}
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "join_swap_share_amount_out")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := []struct {
+		name       string
+		msg        MsgJoinSwapShareAmountOut
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+				// Do nothing
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "invalid sender",
+			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+				msg.Sender = invalidAddr.String()
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid denom",
+			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+				msg.TokenInDenom = "1"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero amount",
+			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+				msg.ShareOutAmount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative amount",
+			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+				msg.ShareOutAmount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero criteria",
+			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+				msg.TokenInMaxAmount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative criteria",
+			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+				msg.TokenInMaxAmount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}
+
+func TestMsgExitSwapExternAmountOut(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
+	require.NoError(t, err)
+	invalidAddr := sdk.AccAddress("invalid")
+
+	createMsg := func(after func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+		properMsg := MsgExitSwapExternAmountOut{
+			Sender:           addr1,
+			PoolId:           1,
+			TokenOut:         sdk.NewCoin("test", sdk.NewInt(100)),
+			ShareInMaxAmount: sdk.NewInt(100),
+		}
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "exit_swap_extern_amount_out")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := []struct {
+		name       string
+		msg        MsgExitSwapExternAmountOut
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+				// Do nothing
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "invalid sender",
+			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+				msg.Sender = invalidAddr.String()
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid denom",
+			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+				msg.TokenOut.Denom = "1"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero amount",
+			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+				msg.TokenOut.Amount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative amount",
+			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+				msg.TokenOut.Amount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero criteria",
+			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+				msg.ShareInMaxAmount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative criteria",
+			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+				msg.ShareInMaxAmount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}
+
+func TestMsgExitSwapShareAmountIn(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
+	require.NoError(t, err)
+	invalidAddr := sdk.AccAddress("invalid")
+
+	createMsg := func(after func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+		properMsg := MsgExitSwapShareAmountIn{
+			Sender:            addr1,
+			PoolId:            1,
+			TokenOutDenom:     "test",
+			ShareInAmount:     sdk.NewInt(100),
+			TokenOutMinAmount: sdk.NewInt(100),
+		}
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "exit_swap_share_amount_in")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := []struct {
+		name       string
+		msg        MsgExitSwapShareAmountIn
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+				// Do nothing
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "invalid sender",
+			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+				msg.Sender = invalidAddr.String()
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid denom",
+			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+				msg.TokenOutDenom = "1"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero amount",
+			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+				msg.ShareInAmount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative amount",
+			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+				msg.ShareInAmount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "zero criteria",
+			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+				msg.TokenOutMinAmount = sdk.NewInt(0)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "nagative criteria",
+			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+				msg.TokenOutMinAmount = sdk.NewInt(-10)
+				return msg
+			}),
+			expectPass: false,
 		},
 	}
 
