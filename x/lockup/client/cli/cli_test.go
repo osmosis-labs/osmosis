@@ -449,9 +449,8 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() {
 
 	timestamp := time.Now().Unix()
 	testCases := []struct {
-		name  string
-		args  []string
-		coins sdk.Coins
+		name string
+		args []string
 	}{
 		{
 			"query account locked coins past time",
@@ -460,7 +459,6 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() {
 				fmt.Sprintf("%d", timestamp),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
 		},
 	}
 
@@ -486,9 +484,8 @@ func (s IntegrationTestSuite) TestCmdAccountUnlockedBeforeTime() {
 
 	timestamp := time.Now().Unix()
 	testCases := []struct {
-		name  string
-		args  []string
-		coins sdk.Coins
+		name string
+		args []string
 	}{
 		{
 			"query account locked coins before time",
@@ -497,7 +494,6 @@ func (s IntegrationTestSuite) TestCmdAccountUnlockedBeforeTime() {
 				fmt.Sprintf("%d", timestamp),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
 		},
 	}
 
@@ -523,9 +519,8 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeDenom() {
 
 	timestamp := time.Now().Unix()
 	testCases := []struct {
-		name  string
-		args  []string
-		coins sdk.Coins
+		name string
+		args []string
 	}{
 		{
 			"query account locked coins past time denom",
@@ -535,7 +530,6 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeDenom() {
 				s.cfg.BondDenom,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
 		},
 	}
 
@@ -560,9 +554,8 @@ func (s IntegrationTestSuite) TestCmdLockedByID() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name  string
-		args  []string
-		coins sdk.Coins
+		name string
+		args []string
 	}{
 		{
 			"get lock by id",
@@ -570,7 +563,6 @@ func (s IntegrationTestSuite) TestCmdLockedByID() {
 				fmt.Sprintf("%d", 1),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
 		},
 	}
 
@@ -595,9 +587,8 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDuration() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name  string
-		args  []string
-		coins sdk.Coins
+		name string
+		args []string
 	}{
 		{
 			"get account locked longer than duration",
@@ -606,7 +597,6 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDuration() {
 				"1s",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
 		},
 	}
 
@@ -631,9 +621,8 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDurationDenom() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name  string
-		args  []string
-		coins sdk.Coins
+		name string
+		args []string
 	}{
 		{
 			"get account locked longer than duration denom",
@@ -643,7 +632,6 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDurationDenom() {
 				s.cfg.BondDenom,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
 		},
 	}
 
