@@ -10,28 +10,28 @@ In this section we describe the queries required on grpc server.
 // Query defines the gRPC querier service.
 service Query {
     // Return full balance of the module
-	rpc GetModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse);
+	rpc ModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse);
 	// Return locked balance of the module
-	rpc GetModuleLockedAmount(ModuleLockedAmountRequest) returns (ModuleLockedAmountResponse);
+	rpc ModuleLockedAmount(ModuleLockedAmountRequest) returns (ModuleLockedAmountResponse);
 
-	// Returns whole unlockable coins which are not withdrawn yet
-	rpc GetAccountUnlockableCoins(AccountUnlockableCoinsRequest) returns (AccountUnlockableCoinsResponse);
+	// Returns unlockable coins which are not withdrawn yet
+	rpc AccountUnlockableCoins(AccountUnlockableCoinsRequest) returns (AccountUnlockableCoinsResponse);
 	// Return a locked coins that can't be withdrawn
-	rpc GetAccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
+	rpc AccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
 
-	// Returns the total locks of an account whose unlock time is beyond timestamp
-	rpc GetAccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
-	// Returns the total unlocks of an account whose unlock time is before timestamp
-	rpc GetAccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
+	// Returns locked records of an account with unlock time beyond timestamp
+	rpc AccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
+	// Returns unlocked records with unlock time before timestamp
+	rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
 
-	// Same as GetAccountLockedPastTime but denom specific
-	rpc GetAccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
-	// Returns the length of the initial lock time when the lock was created
-	rpc GetLock(LockRequest) returns (LockResponse);
+	// Returns lock records by address, timestamp, denom
+	rpc AccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
+	// Returns lock record by id
+	rpc LockedByID(LockedRequest) returns (LockedResponse);
 
-	// Returns account locked with duration longer than specified
-	rpc GetAccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
-	// Returns account locked with duration longer than specified with specific denom
-	rpc GetAccountLockedLongerThanDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse;
+	// Returns account locked records with longer duration
+	rpc AccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
+	// Returns account's locked records for a denom with longer duration
+	rpc AccountLockedLongerThanDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
 }
 ```
