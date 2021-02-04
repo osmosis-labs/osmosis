@@ -24,12 +24,17 @@ import (
 
 // GenesisStateV036 is minimum structure to import airdrop accounts
 type GenesisStateV036 struct {
-	Accounts []v036genaccounts.GenesisAccount `json:"accounts"`
-	Staking  []v036staking.GenesisState       `json:"staking"`
+	AppState AppStateV036 `json:"app_state"`
 }
 
-// ExportAirdropFromCosmosHubGenesisCmd returns add-genesis-account cobra Command.
-func ExportAirdropFromCosmosHubGenesisCmd(defaultNodeHome string) *cobra.Command {
+// AppStateV036 is app state structure for app state
+type AppStateV036 struct {
+	Accounts []v036genaccounts.GenesisAccount `json:"accounts"`
+	Staking  v036staking.GenesisState         `json:"staking"`
+}
+
+// ExportAirdropFromGenesisCmd returns add-genesis-account cobra Command.
+func ExportAirdropFromGenesisCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-airdrop-genesis [denom] [file]",
 		Short: "Import balances from cosmos-hub to genesis.json",
@@ -39,6 +44,7 @@ func ExportAirdropFromCosmosHubGenesisCmd(defaultNodeHome string) *cobra.Command
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
 			cdc := depCdc.(codec.Marshaler)
+			aminoCodec := clientCtx.LegacyAmino.Amino
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -70,13 +76,14 @@ func ExportAirdropFromCosmosHubGenesisCmd(defaultNodeHome string) *cobra.Command
 			byteValue, _ := ioutil.ReadAll(jsonFile)
 
 			var genStateV036 GenesisStateV036
-			err = json.Unmarshal(byteValue, &genStateV036)
+			err = aminoCodec.UnmarshalJSON(byteValue, &genStateV036)
 			if err != nil {
 				return err
 			}
 
+			balanceIndexByAddress := make(map[string]int)
 			balances := []banktypes.Balance{}
-			for _, account := range genStateV036.Accounts {
+			for index, account := range genStateV036.AppState.Accounts {
 				fmt.Println("Address: " + account.Address.String())
 				fmt.Println("Amount: " + account.Coins.String())
 
@@ -95,7 +102,24 @@ func ExportAirdropFromCosmosHubGenesisCmd(defaultNodeHome string) *cobra.Command
 				accs = authtypes.SanitizeGenesisAccounts(accs)
 
 				coins := sdk.NewCoins(sdk.NewCoin(denom, account.Coins.AmountOf(denom)))
-				balances = append(balances, banktypes.Balance{Address: account.Address.String(), Coins: coins.Sort()})
+				address := account.Address
+				balances = append(balances, banktypes.Balance{Address: address.String(), Coins: coins.Sort()})
+				balanceIndexByAddress[address.String()] = index
+			}
+
+			for _, delegation := range genStateV036.AppState.Staking.Delegations {
+				address := delegation.DelegatorAddress
+				shares := delegation.Shares
+				index, ok := balanceIndexByAddress[address.String()]
+				if !ok {
+					continue
+				}
+				originAmt := sdk.NewInt(0)
+				if len(balances[index].Coins) > 0 {
+					originAmt = balances[index].Coins.AmountOf(denom)
+				}
+				amount := originAmt.Add(shares.RoundInt().Mul(sdk.NewInt(2)))
+				balances[index].Coins = sdk.NewCoins(sdk.NewCoin(denom, amount))
 			}
 
 			genAccs, err := authtypes.PackAccounts(accs)
