@@ -30,7 +30,7 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	return locks
 }
 
-func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
+func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
@@ -41,7 +41,7 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Co
 		// sum up all coins unlocked
 		coins = coins.Add(lock.Coins...)
 	}
-	return coins
+	return locks, coins
 }
 
 func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
@@ -122,8 +122,9 @@ func (k Keeper) GetPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error) {
 }
 
 // UnlockAllUnlockableCoins Unlock all unlockable coins
-func (k Keeper) UnlockAllUnlockableCoins(ctx sdk.Context, account sdk.AccAddress) (sdk.Coins, error) {
-	return k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, ctx.BlockTime())), nil
+func (k Keeper) UnlockAllUnlockableCoins(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
+	locks, coins := k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, ctx.BlockTime()))
+	return locks, coins, nil
 }
 
 // UnlockPeriodLockByID unlock by period lock ID

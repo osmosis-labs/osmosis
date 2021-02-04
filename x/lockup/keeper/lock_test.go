@@ -43,12 +43,14 @@ func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
 	suite.LockTokens(addr1, coins, time.Second)
 
 	// unlock locks just now
-	ucoins1, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx, addr1)
+	unlocks1, ucoins1, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx, addr1)
 	suite.Require().Equal(ucoins1, sdk.Coins{})
+	suite.Require().Len(unlocks1, 0)
 
 	// unlock locks after 1s
-	ucoins2, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx.WithBlockTime(now.Add(time.Second)), addr1)
+	unlocks2, ucoins2, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx.WithBlockTime(now.Add(time.Second)), addr1)
 	suite.Require().Equal(ucoins2, coins)
+	suite.Require().Len(unlocks2, 1)
 
 	// check locks
 	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)

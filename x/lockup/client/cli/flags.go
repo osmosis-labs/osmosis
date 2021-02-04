@@ -13,6 +13,6 @@ const (
 func FlagSetLockTokens() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagDuration, "86400s", "The duration token to be locked. e.g. 1h, 1d, 1d1h2m1s")
+	fs.String(FlagDuration, "86400s", "The duration token to be locked. e.g. 1h, 1m, 1s, 0.1s")
 	return fs
 }

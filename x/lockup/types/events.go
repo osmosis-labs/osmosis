@@ -4,6 +4,7 @@ package types
 const (
 	TypeEvtLockTokens   = "lock_tokens"
 	TypeEvtUnlockTokens = "unlock_tokens"
+	TypeEvtUnlock       = "unlock"
 
 	AttributePeriodLockID         = "period_lock_id"
 	AttributePeriodLockOwner      = "owner"

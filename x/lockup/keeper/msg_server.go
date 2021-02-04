@@ -36,6 +36,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 			types.TypeEvtLockTokens,
 			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
 			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePeriodLockAmount, lock.Coins.String()),
 			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
 			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
 		),
@@ -58,11 +59,11 @@ func (server msgServer) UnlockPeriodLock(goCtx context.Context, msg *types.MsgUn
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.TypeEvtUnlockTokens,
+			types.TypeEvtUnlock,
 			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
 			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
 			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
-			sdk.NewAttribute(types.AttributePeriodLockID, lock.EndTime.String()),
+			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
 		),
 	})
 
@@ -72,18 +73,29 @@ func (server msgServer) UnlockPeriodLock(goCtx context.Context, msg *types.MsgUn
 func (server msgServer) UnlockTokens(goCtx context.Context, msg *types.MsgUnlockTokens) (*types.MsgUnlockTokensResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	coins, err := server.keeper.UnlockAllUnlockableCoins(ctx, msg.Owner)
+	unlocks, coins, err := server.keeper.UnlockAllUnlockableCoins(ctx, msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
+	events := sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtUnlockTokens,
 			sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner.String()),
 			sdk.NewAttribute(types.AttributeUnlockedCoins, coins.String()),
 		),
-	})
+	}
+	for _, lock := range unlocks {
+		event := sdk.NewEvent(
+			types.TypeEvtUnlock,
+			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
+		)
+		events = events.AppendEvent(event)
+	}
+	ctx.EventManager().EmitEvents(events)
 
 	return &types.MsgUnlockTokensResponse{}, nil
 }

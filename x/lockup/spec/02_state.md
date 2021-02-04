@@ -20,9 +20,9 @@ It stores owner, duration, unlock time and the amount of coins locked.
 ```go
 type PeriodLock struct {
   ID         uint64         // unique ID of a lock
-	Owner      sdk.AccAddress
-	Duration   time.Duration
-	UnlockTime time.Time
+  Owner      sdk.AccAddress
+  Duration   time.Duration
+  UnlockTime time.Time
   Coins      sdk.Coins
 }
 ```
