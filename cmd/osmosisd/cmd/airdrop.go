@@ -37,9 +37,14 @@ type AppStateV036 struct {
 func ExportAirdropFromGenesisCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-airdrop-genesis [denom] [file]",
-		Short: "Import balances from cosmos-hub to genesis.json",
-		Long:  `Import balances from cosmos-hub to genesis.json`,
-		Args:  cobra.ExactArgs(2),
+		Short: "Import balances from provided genesis to {FlagHome}/genesis.json",
+		Long: `Import balances from provided genesis to {FlagHome}/genesis.json
+Download:
+  https://raw.githubusercontent.com/cephalopodequipment/cosmoshub-3/master/genesis.json
+Example:
+	osomsisd export-airdrop-genesis uatom ../genesis.json
+		`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
