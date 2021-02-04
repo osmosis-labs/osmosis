@@ -56,6 +56,7 @@ func (k Keeper) CreatePool(
 		panic("oh my god")
 	}
 
+	coins = coins.Sort()
 	err = k.bankKeeper.SendCoins(ctx, sender, poolAcc.GetAddress(), coins)
 	if err != nil {
 		return 0, err

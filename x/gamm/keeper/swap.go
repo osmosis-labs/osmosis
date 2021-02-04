@@ -71,7 +71,7 @@ func (k Keeper) SwapExactAmountIn(
 	if spotPriceAfter.LT(spotPriceBefore) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
-	if spotPriceAfter.GT(tokenIn.Amount.ToDec().QuoInt(tokenOutAmount)) {
+	if spotPriceBefore.GT(tokenIn.Amount.ToDec().QuoInt(tokenOutAmount)) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
 
@@ -166,7 +166,7 @@ func (k Keeper) SwapExactAmountOut(
 	if spotPriceAfter.LT(spotPriceBefore) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
-	if spotPriceAfter.GT(tokenInAmount.ToDec().QuoInt(tokenOut.Amount)) {
+	if spotPriceBefore.GT(tokenInAmount.ToDec().QuoInt(tokenOut.Amount)) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
 
@@ -197,4 +197,29 @@ func (k Keeper) SwapExactAmountOut(
 	}
 
 	return tokenInAmount, spotPriceAfter, nil
+}
+
+func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
+	poolAcc, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	inRecord, err := poolAcc.GetRecord(tokenInDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	outRecord, err := poolAcc.GetRecord(tokenOutDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	return calcSpotPrice(
+		inRecord.Token.Amount.ToDec(),
+		inRecord.Weight.ToDec(),
+		outRecord.Token.Amount.ToDec(),
+		outRecord.Weight.ToDec(),
+		poolAcc.GetPoolParams().SwapFee,
+	), nil
 }
