@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/c-osmosis/osmosis/app/params"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,10 +16,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
-	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
 )
 
@@ -33,6 +33,15 @@ type AppStateV036 struct {
 	Staking  v036staking.GenesisState         `json:"staking"`
 }
 
+// setCosmosBech32Prefixes set config for cosmos address system
+func setCosmosBech32Prefixes() {
+	defaultConfig := sdk.NewConfig()
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount(defaultConfig.GetBech32AccountAddrPrefix(), defaultConfig.GetBech32AccountPubPrefix())
+	config.SetBech32PrefixForValidator(defaultConfig.GetBech32ValidatorAddrPrefix(), defaultConfig.GetBech32ValidatorPubPrefix())
+	config.SetBech32PrefixForConsensusNode(defaultConfig.GetBech32ConsensusAddrPrefix(), defaultConfig.GetBech32ConsensusPubPrefix())
+}
+
 // ExportAirdropFromGenesisCmd returns add-genesis-account cobra Command.
 func ExportAirdropFromGenesisCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
@@ -42,7 +51,7 @@ func ExportAirdropFromGenesisCmd(defaultNodeHome string) *cobra.Command {
 Download:
   https://raw.githubusercontent.com/cephalopodequipment/cosmoshub-3/master/genesis.json
 Example:
-	osomsisd export-airdrop-genesis uatom ../genesis.json
+	osmosisd export-airdrop-genesis uatom ../genesis.json
 		`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -81,16 +90,19 @@ Example:
 			byteValue, _ := ioutil.ReadAll(jsonFile)
 
 			var genStateV036 GenesisStateV036
+
+			setCosmosBech32Prefixes()
 			err = aminoCodec.UnmarshalJSON(byteValue, &genStateV036)
 			if err != nil {
 				return err
 			}
+			params.SetBech32Prefixes()
 
 			balanceIndexByAddress := make(map[string]int)
 			balances := []banktypes.Balance{}
 			for index, account := range genStateV036.AppState.Accounts {
-				fmt.Println("Address: " + account.Address.String())
-				fmt.Println("Amount: " + account.Coins.String())
+				// fmt.Println("Address: " + account.Address.String())
+				// fmt.Println("Amount: " + account.Coins.String())
 
 				// create concrete account type based on input parameters
 				var genAccount authtypes.GenesisAccount
