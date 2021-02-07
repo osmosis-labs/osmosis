@@ -45,15 +45,19 @@ func setCosmosBech32Prefixes() {
 // ExportAirdropFromGenesisCmd returns add-genesis-account cobra Command.
 func ExportAirdropFromGenesisCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "export-airdrop-genesis [denom] [file]",
+		Use:   "export-airdrop-genesis [denom] [file] [totalAmount]",
 		Short: "Import balances from provided genesis to {FlagHome}/genesis.json",
 		Long: `Import balances from provided genesis to {FlagHome}/genesis.json
 Download:
-  https://raw.githubusercontent.com/cephalopodequipment/cosmoshub-3/master/genesis.json
+	https://raw.githubusercontent.com/cephalopodequipment/cosmoshub-3/master/genesis.json
+Init genesis file:
+	osmosisd init mynode
 Example:
-	osmosisd export-airdrop-genesis uatom ../genesis.json
+	osmosisd export-airdrop-genesis uatom ../genesis.json 100000000000000
+Check genesis:
+  file is at ~/.osmosisd/config/genesis.json
 		`,
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
@@ -67,6 +71,11 @@ Example:
 
 			denom := args[0]
 			filepath := args[1]
+			osdenom := "uosmo"
+			totalAmount, ok := sdk.NewIntFromString(args[2])
+			if !ok {
+				return fmt.Errorf("failed to parse totalAmount: %s", args[2])
+			}
 
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
@@ -118,9 +127,15 @@ Example:
 				accs = append(accs, genAccount)
 				accs = authtypes.SanitizeGenesisAccounts(accs)
 
-				coins := sdk.NewCoins(sdk.NewCoin(denom, account.Coins.AmountOf(denom)))
+				atomAmt := account.Coins.AmountOf(denom)
+				osmoAmt, err := atomAmt.ToDec().ApproxSqrt()
+				if err != nil {
+					fmt.Println("failed to root atom balance", err)
+					continue
+				}
+				coins := sdk.NewCoins(sdk.NewCoin(osdenom, osmoAmt.RoundInt()))
 				address := account.Address
-				balances = append(balances, banktypes.Balance{Address: address.String(), Coins: coins.Sort()})
+				balances = append(balances, banktypes.Balance{Address: address.String(), Coins: coins})
 				balanceIndexByAddress[address.String()] = index
 			}
 
@@ -133,11 +148,49 @@ Example:
 				}
 				originAmt := sdk.NewInt(0)
 				if len(balances[index].Coins) > 0 {
-					originAmt = balances[index].Coins.AmountOf(denom)
+					originAmt = balances[index].Coins.AmountOf(osdenom)
 				}
-				amount := originAmt.Add(shares.RoundInt().Mul(sdk.NewInt(2)))
-				balances[index].Coins = sdk.NewCoins(sdk.NewCoin(denom, amount))
+				osmoShareBonusRaw, err := shares.ApproxSqrt()
+				if err != nil {
+					fmt.Println("failed to root atom shares", err)
+					continue
+				}
+				// apply 1.5x multiplier for
+				osmoShareBonus := osmoShareBonusRaw.Mul(sdk.NewDecWithPrec(15, 10)).RoundInt()
+				osmoAmt := originAmt.Add(osmoShareBonus)
+				balances[index].Coins = sdk.NewCoins(sdk.NewCoin(osdenom, osmoAmt))
 			}
+
+			// normalize for total number of tokens to drop
+			totalRaw := sdk.NewInt(0)
+			for _, balance := range balances {
+				totalRaw = totalRaw.Add(balance.Coins.AmountOf(osdenom))
+			}
+			for i, balance := range balances {
+				osmoAmtBI := balance.Coins.AmountOf(osdenom).BigInt()
+				osmoAmtMulBI := osmoAmtBI.Mul(osmoAmtBI, totalAmount.BigInt())
+				osmoAmtNormalBI := osmoAmtMulBI.Div(osmoAmtMulBI, totalRaw.BigInt())
+				osmoAmtNormal := sdk.NewIntFromBigInt(osmoAmtNormalBI)
+				balances[i].Coins = sdk.NewCoins(sdk.NewCoin(osdenom, osmoAmtNormal))
+			}
+
+			// remove empty accounts
+			finalBalances := []banktypes.Balance{}
+			totalDistr := sdk.NewInt(0)
+			for _, balance := range balances {
+				if balance.Coins.Empty() {
+					continue
+				}
+				if balance.Coins.AmountOf(osdenom).Equal(sdk.NewInt(0)) {
+					continue
+				}
+				finalBalances = append(finalBalances, balance)
+				totalDistr = totalDistr.Add(balance.Coins.AmountOf(osdenom))
+			}
+			fmt.Println("total distributed amount:", totalDistr.String())
+			fmt.Printf("cosmos accounts: %d\n", len(balances))
+			fmt.Printf("empty drops: %d\n", len(balances)-len(finalBalances))
+			fmt.Printf("available accounts: %d\n", len(finalBalances))
 
 			genAccs, err := authtypes.PackAccounts(accs)
 			if err != nil {
