@@ -82,15 +82,9 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if len(msg.Routes) == 0 {
-		return ErrEmptyRoutes
-	}
-
-	for _, route := range msg.Routes {
-		err = sdk.ValidateDenom(route.TokenOutDenom)
-		if err != nil {
-			return err
-		}
+	err = SwapAmountInRoutes(msg.Routes).Validate()
+	if err != nil {
+		return err
 	}
 
 	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
@@ -124,15 +118,9 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if len(msg.Routes) == 0 {
-		return ErrEmptyRoutes
-	}
-
-	for _, route := range msg.Routes {
-		err = sdk.ValidateDenom(route.TokenInDenom)
-		if err != nil {
-			return err
-		}
+	err = SwapAmountOutRoutes(msg.Routes).Validate()
+	if err != nil {
+		return err
 	}
 
 	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
