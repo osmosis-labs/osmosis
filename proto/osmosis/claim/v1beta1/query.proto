@@ -1,0 +1,12 @@
+syntax = "proto3";
+package osmosis.claim.v1beta1;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/claim/types";
+
+// Query defines the gRPC querier service.
+service Query {
+}
+

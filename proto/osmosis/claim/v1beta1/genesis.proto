@@ -1,0 +1,8 @@
+syntax = "proto3";
+package osmosis.claim.v1beta1;
+
+option go_package = "github.com/c-osmosis/osmosis/x/claim/types";
+
+// GenesisState defines the claim module's genesis state.
+message GenesisState {
+}
