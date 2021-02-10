@@ -123,7 +123,7 @@ func (k Keeper) GetPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error) {
 
 // UnlockAllUnlockableCoins Unlock all unlockable coins
 func (k Keeper) UnlockAllUnlockableCoins(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
-	locks, coins := k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, ctx.BlockTime()))
+	locks, coins := k.unlockFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, account, ctx.BlockTime()))
 	return locks, coins, nil
 }
 

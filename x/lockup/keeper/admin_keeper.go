@@ -18,7 +18,7 @@ func (ak AdminKeeper) RageQuit(ctx sdk.Context, lockID uint64, newCoins sdk.Coin
 	}
 
 	// lock newCoins into module account
-	if ak.bk.SendCoinsFromAccountToModule(ctx, lock.Owner, types.ModuleName, newCoins); err != nil {
+	if err := ak.bk.SendCoinsFromAccountToModule(ctx, lock.Owner, types.ModuleName, newCoins); err != nil {
 		return err
 	}
 
