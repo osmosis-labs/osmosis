@@ -1,14 +1,15 @@
 package keeper
 
 import (
+	"github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/c-osmosis/osmosis/x/claim/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+// NewQuerier returns legacy querier endpoint
 func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		var (
