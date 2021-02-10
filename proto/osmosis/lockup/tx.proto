@@ -1,0 +1,52 @@
+syntax = "proto3";
+package osmosis.lockup;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/lockup/lock.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // LockTokens lock tokens
+    rpc LockTokens(MsgLockTokens) returns (MsgLockTokensResponse);
+    // UnlockTokens unlock all unlockable tokens
+    rpc UnlockTokens(MsgUnlockTokens) returns (MsgUnlockTokensResponse);
+    // UnlockPeriodLock unlock individual period lock by ID
+    rpc UnlockPeriodLock(MsgUnlockPeriodLock) returns (MsgUnlockPeriodLockResponse);
+}
+
+message MsgLockTokens {
+	bytes owner = 1 
+		[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+	google.protobuf.Duration duration = 2 [
+		(gogoproto.nullable)    = false,
+		(gogoproto.stdduration) = true,
+		(gogoproto.jsontag)     = "duration,omitempty",
+		(gogoproto.moretags)    = "yaml:\"duration\""
+	];
+	repeated cosmos.base.v1beta1.Coin coins = 3
+		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+message MsgLockTokensResponse {
+	uint64 ID = 1;
+}
+
+message MsgUnlockTokens {
+	bytes owner = 1 
+		[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+message MsgUnlockTokensResponse {
+	repeated PeriodLock unlocks = 1;
+}
+
+message MsgUnlockPeriodLock {
+	bytes owner = 1 
+		[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+	uint64 ID = 2;
+}
+message MsgUnlockPeriodLockResponse {
+	bool success = 1;
+}
