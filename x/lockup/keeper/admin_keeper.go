@@ -5,8 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// RageQuit unlock previous lockID and create a new lock with newCoins with same duration and endtime
-func (ak AdminKeeper) RageQuit(ctx sdk.Context, lockID uint64, newCoins sdk.Coins) error {
+// Relock unlock previous lockID and create a new lock with newCoins with same duration and endtime
+func (ak AdminKeeper) Relock(ctx sdk.Context, lockID uint64, newCoins sdk.Coins) error {
 	lock, err := ak.GetLockByID(ctx, lockID)
 	if err != nil {
 		return err
@@ -28,5 +28,27 @@ func (ak AdminKeeper) RageQuit(ctx sdk.Context, lockID uint64, newCoins sdk.Coin
 	// reset lock record inside store
 	store := ctx.KVStore(ak.storeKey)
 	store.Set(LockStoreKey(lockID), ak.cdc.MustMarshalJSON(lock))
+	return nil
+}
+
+// BreakLock unlock a lockID without considering time with admin priviledge
+func (ak AdminKeeper) BreakLock(ctx sdk.Context, lockID uint64) error {
+	lock, err := ak.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	// send coins back to owner
+	if err := ak.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, lock.Coins); err != nil {
+		return err
+	}
+
+	store := ctx.KVStore(ak.storeKey)
+	store.Delete(LockStoreKey(lockID)) // remove lock from store
+
+	refKeys := lockRefKeys(*lock)
+	for _, refKey := range refKeys {
+		ak.DeleteLockRefByKey(ctx, refKey, lockID)
+	}
 	return nil
 }

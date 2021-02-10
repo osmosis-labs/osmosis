@@ -67,7 +67,8 @@ type AdminKeeper interface {
 	Keeper
 
 	// this unlock previous lockID and create a new lock with newCoins with same duration and endtime
-	// @sunny, how amount ratio could be checked for pool1 LP and pool2 LP tokens?
-	RageQuit(sdk.Context, lockID uint64, newCoins sdk.Coins) error
+	Relock(sdk.Context, lockID uint64, newCoins sdk.Coins) error
+	// this unlock without time check with an admin priviledge
+	BreakLock(sdk.Context, lockID uint64) error
 }
 ```
