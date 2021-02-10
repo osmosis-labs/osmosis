@@ -121,6 +121,11 @@ func (k Keeper) GetPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error) {
 	return k.getLocksFromIterator(ctx, k.LockIterator(ctx)), nil
 }
 
+// GetAccountPeriodLocks Returns the period locks associated to an account
+func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) ([]types.PeriodLock, error) {
+	return k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, addr)), nil
+}
+
 // UnlockAllUnlockableCoins Unlock all unlockable coins
 func (k Keeper) UnlockAllUnlockableCoins(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
 	locks, coins := k.unlockFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, account, ctx.BlockTime()))

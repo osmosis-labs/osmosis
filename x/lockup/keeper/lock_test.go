@@ -39,8 +39,10 @@ func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
 
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.LockTokens(addr1, coins, time.Second)
+	suite.LockTokens(addr2, coins, time.Second)
 
 	// unlock locks just now
 	unlocks1, ucoins1, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx, addr1)
@@ -52,10 +54,20 @@ func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
 	suite.Require().Equal(ucoins2, coins)
 	suite.Require().Len(unlocks2, 1)
 
-	// check locks
-	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	// check addr1 locks, no lock now
+	locks, err = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
+
+	// check addr2 locks, still 1 as noone unlocked it yet
+	locks, err = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr2)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+
+	// totally 1 lock
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
 }
 
 func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
