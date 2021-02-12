@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GetLastLockID returns ID used last time
-func (k Keeper) GetLastLockID(ctx sdk.Context) uint64 {
+// getLastLockID returns ID used last time
+func (k Keeper) getLastLockID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.KeyLastLockID)
@@ -20,19 +20,19 @@ func (k Keeper) GetLastLockID(ctx sdk.Context) uint64 {
 	return sdk.BigEndianToUint64(bz)
 }
 
-// SetLastLockID save ID used by last lock
-func (k Keeper) SetLastLockID(ctx sdk.Context, ID uint64) {
+// setLastLockID save ID used by last lock
+func (k Keeper) setLastLockID(ctx sdk.Context, ID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.KeyLastLockID, sdk.Uint64ToBigEndian(ID))
 }
 
-// LockStoreKey returns action store key from ID
-func LockStoreKey(ID uint64) []byte {
+// lockStoreKey returns action store key from ID
+func lockStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
 }
 
-// GetLockRefs get lock IDs specified on the prefix and timestamp key
-func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
+// getLockRefs get lock IDs specified on the prefix and timestamp key
+func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
 	store := ctx.KVStore(k.storeKey)
 	timeLock := types.LockIDs{}
 	if store.Has(key) {
@@ -45,10 +45,10 @@ func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
 	return timeLock
 }
 
-// AddLockRefByKey append lock ID into an array associated to provided key
-func (k Keeper) AddLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
+// addLockRefByKey append lock ID into an array associated to provided key
+func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	store := ctx.KVStore(k.storeKey)
-	timeLock := k.GetLockRefs(ctx, key)
+	timeLock := k.getLockRefs(ctx, key)
 	if findIndex(timeLock.IDs, lockID) > -1 {
 		return fmt.Errorf("lock with same ID exist: %d", lockID)
 	}
@@ -61,11 +61,11 @@ func (k Keeper) AddLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 	return nil
 }
 
-// DeleteLockRefByKey remove lock ID from an array associated to provided key
-func (k Keeper) DeleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
+// deleteLockRefByKey removes lock ID from an array associated to provided key
+func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
 	var index = -1
 	store := ctx.KVStore(k.storeKey)
-	timeLock := k.GetLockRefs(ctx, key)
+	timeLock := k.getLockRefs(ctx, key)
 	timeLock.IDs, index = removeValue(timeLock.IDs, lockID)
 	if index < 0 {
 		panic(fmt.Sprintf("specific lock with ID %d not found", lockID))

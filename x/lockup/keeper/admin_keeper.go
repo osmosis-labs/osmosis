@@ -27,7 +27,7 @@ func (ak AdminKeeper) Relock(ctx sdk.Context, lockID uint64, newCoins sdk.Coins)
 
 	// reset lock record inside store
 	store := ctx.KVStore(ak.storeKey)
-	store.Set(LockStoreKey(lockID), ak.cdc.MustMarshalJSON(lock))
+	store.Set(lockStoreKey(lockID), ak.cdc.MustMarshalJSON(lock))
 	return nil
 }
 
@@ -44,11 +44,11 @@ func (ak AdminKeeper) BreakLock(ctx sdk.Context, lockID uint64) error {
 	}
 
 	store := ctx.KVStore(ak.storeKey)
-	store.Delete(LockStoreKey(lockID)) // remove lock from store
+	store.Delete(lockStoreKey(lockID)) // remove lock from store
 
 	refKeys := lockRefKeys(*lock)
 	for _, refKey := range refKeys {
-		ak.DeleteLockRefByKey(ctx, refKey, lockID)
+		ak.deleteLockRefByKey(ctx, refKey, lockID)
 	}
 	return nil
 }

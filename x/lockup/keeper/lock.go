@@ -107,7 +107,7 @@ func (k Keeper) GetAccountLockedLongerThanDurationDenom(ctx sdk.Context, addr sd
 func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, error) {
 	lock := types.PeriodLock{}
 	store := ctx.KVStore(k.storeKey)
-	lockKey := LockStoreKey(lockID)
+	lockKey := lockStoreKey(lockID)
 	if !store.Has(lockKey) {
 		return nil, fmt.Errorf("lock with ID %d does not exist", lockID)
 	}
@@ -144,7 +144,7 @@ func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.Per
 
 // LockTokens lock tokens from an account for specified duration
 func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
-	ID := k.GetLastLockID(ctx) + 1
+	ID := k.getLastLockID(ctx) + 1
 	lock := types.NewPeriodLock(ID, owner, duration, ctx.BlockTime().Add(duration), coins)
 	return lock, k.Lock(ctx, lock)
 }
@@ -157,12 +157,12 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	lockID := lock.ID
 	store := ctx.KVStore(k.storeKey)
-	store.Set(LockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
-	k.SetLastLockID(ctx, lockID)
+	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
+	k.setLastLockID(ctx, lockID)
 
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		if err := k.AddLockRefByKey(ctx, refKey, lockID); err != nil {
+		if err := k.addLockRefByKey(ctx, refKey, lockID); err != nil {
 			return err
 		}
 	}
@@ -184,11 +184,11 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	lockID := lock.ID
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(LockStoreKey(lockID)) // remove lock from store
+	store.Delete(lockStoreKey(lockID)) // remove lock from store
 
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		k.DeleteLockRefByKey(ctx, refKey, lockID)
+		k.deleteLockRefByKey(ctx, refKey, lockID)
 	}
 	return nil
 }
