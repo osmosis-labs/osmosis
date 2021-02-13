@@ -33,7 +33,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 func GetCmdQueryClaimable() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "claimable [address]",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		Short: "Query the claimable amount per account.",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the claimable amount for the account.

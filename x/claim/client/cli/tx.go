@@ -32,12 +32,12 @@ func GetTxCmd() *cobra.Command {
 // NewCmdClaim implements claim transaction command.
 func NewCmdClaim() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim",
+		Use:   "claimable",
 		Short: "Claim airdrop for sender account.",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Claim airdrop for sender account.
 Example:
-$ %s tx claim claim --from mykey
+$ %s tx claim claimable --from mykey
 `,
 				version.AppName,
 			),

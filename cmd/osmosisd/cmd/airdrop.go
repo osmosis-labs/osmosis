@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -22,6 +23,10 @@ import (
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
 )
 
+const (
+	flagSnapshotOutput = "snapshot-output"
+)
+
 // GenesisStateV036 is minimum structure to import airdrop accounts
 type GenesisStateV036 struct {
 	AppState AppStateV036 `json:"app_state"`
@@ -31,6 +36,16 @@ type GenesisStateV036 struct {
 type AppStateV036 struct {
 	Accounts []v036genaccounts.GenesisAccount `json:"accounts"`
 	Staking  v036staking.GenesisState         `json:"staking"`
+}
+
+// SnapshotFields provide fields of snapshot per account
+type SnapshotFields struct {
+	AtomAddress string  `json:"atom_address"`
+	AtomBalance sdk.Int `json:"atom_balance"`
+	AtomPercent sdk.Dec `json:"atom_ownership_percentage"`
+	OsmoAddress string  `json:"osmo_address"`
+	OsmoBalance sdk.Int `json:"osmo_balance"`
+	OsmoPercent sdk.Dec `json:"osmo_ownership_percentage"`
 }
 
 // setCosmosBech32Prefixes set config for cosmos address system
@@ -72,6 +87,11 @@ Check genesis:
 			denom := args[0]
 			filepath := args[1]
 			osdenom := "uosmo"
+			snapshotOutput, err := cmd.Flags().GetString(flagSnapshotOutput)
+			if err != nil {
+				return fmt.Errorf("failed to get snapshot directory: %w", err)
+			}
+
 			totalAmount, ok := sdk.NewIntFromString(args[2])
 			if !ok {
 				return fmt.Errorf("failed to parse totalAmount: %s", args[2])
@@ -105,9 +125,39 @@ Check genesis:
 			if err != nil {
 				return err
 			}
+
+			snapshot := []SnapshotFields{}
+			balanceIndexByAddress := make(map[string]int)
+			totalAtomBalance := sdk.NewInt(0)
+			for index, account := range genStateV036.AppState.Accounts {
+				totalAtomBalance = totalAtomBalance.Add(account.Coins.AmountOf(denom))
+				balanceIndexByAddress[account.Address.String()] = index
+				snapshot = append(snapshot, SnapshotFields{
+					AtomAddress: account.Address.String(),
+					AtomBalance: account.Coins.AmountOf(denom),
+					AtomPercent: sdk.NewDec(0),
+				})
+			}
+
+			for _, delegation := range genStateV036.AppState.Staking.Delegations {
+				address := delegation.DelegatorAddress
+				index, ok := balanceIndexByAddress[address.String()]
+				if !ok {
+					continue
+				}
+				sharesInt := delegation.Shares.RoundInt()
+				snapshot[index].AtomBalance = snapshot[index].AtomBalance.Add(sharesInt)
+				totalAtomBalance = totalAtomBalance.Add(sharesInt)
+			}
+
+			for index, asnapshot := range snapshot {
+				amt := asnapshot.AtomBalance
+				percent := big.NewInt(0).Div(amt.Mul(sdk.NewInt(1000000)).BigInt(), totalAtomBalance.BigInt())
+				snapshot[index].AtomPercent = sdk.NewDecFromBigIntWithPrec(percent, 4)
+			}
+
 			params.SetBech32Prefixes()
 
-			balanceIndexByAddress := make(map[string]int)
 			balances := []banktypes.Balance{}
 			for index, account := range genStateV036.AppState.Accounts {
 				// fmt.Println("Address: " + account.Address.String())
@@ -166,6 +216,13 @@ Check genesis:
 			for _, balance := range balances {
 				totalRaw = totalRaw.Add(balance.Coins.AmountOf(osdenom))
 			}
+			for index, balance := range balances {
+				amt := balance.Coins.AmountOf(osdenom)
+				percent := big.NewInt(0).Div(amt.Mul(sdk.NewInt(1000000)).BigInt(), totalRaw.BigInt())
+				snapshot[index].OsmoAddress = balance.Address
+				snapshot[index].OsmoBalance = amt
+				snapshot[index].OsmoPercent = sdk.NewDecFromBigIntWithPrec(percent, 4)
+			}
 			for i, balance := range balances {
 				osmoAmtBI := balance.Coins.AmountOf(osdenom).BigInt()
 				osmoAmtMulBI := osmoAmtBI.Mul(osmoAmtBI, totalAmount.BigInt())
@@ -221,11 +278,24 @@ Check genesis:
 			}
 
 			genDoc.AppState = appStateJSON
-			return genutil.ExportGenesisFile(genDoc, genFile)
+
+			err = genutil.ExportGenesisFile(genDoc, genFile)
+			if err != nil {
+				return err
+			}
+
+			// export snapshot directory
+			snapshotJSON, err := aminoCodec.MarshalJSON(snapshot)
+			if err != nil {
+				return fmt.Errorf("failed to marshal snapshot: %w", err)
+			}
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			return err
 		},
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().String(flagSnapshotOutput, "", "Snapshot export file")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
