@@ -68,10 +68,12 @@ Download:
 Init genesis file:
 	osmosisd init mynode
 Example:
-	osmosisd export-airdrop-genesis uatom ../genesis.json 100000000000000
-Check genesis:
-  file is at ~/.osmosisd/config/genesis.json
-		`,
+	osmosisd export-airdrop-genesis uatom ../genesis.json 100000000000000 --snapshot-output="../snapshot.json"
+	- Check genesis:
+		file is at ~/.osmosisd/config/genesis.json
+	- Snapshot
+		file is at "../snapshot.json"
+`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
