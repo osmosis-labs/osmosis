@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// constants
 const (
 	TypeMsgCreatePool              = "create_pool"
 	TypeMsgSwapExactAmountIn       = "swap_exact_amount_in"
