@@ -10,20 +10,22 @@ option go_package = "github.com/c-osmosis/osmosis/x/claim/types";
 
 // GenesisState defines the claim module's genesis state.
 message GenesisState {
-  google.protobuf.Timestamp airdrop_start = 1
+  string airdrop_amount = 1
+    [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  google.protobuf.Timestamp airdrop_start = 2
     [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"airdrop_start\""];
-  google.protobuf.Duration duration_until_decay = 2 [
+  google.protobuf.Duration duration_until_decay = 3 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "duration_until_decay,omitempty",
     (gogoproto.moretags)    = "yaml:\"duration_until_decay\""
   ];
-  google.protobuf.Duration duration_of_decay = 3 [
+  google.protobuf.Duration duration_of_decay = 4 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "duration_of_decay,omitempty",
     (gogoproto.moretags)    = "yaml:\"duration_of_decay\""
   ];
-  repeated cosmos.bank.v1beta1.Balance claimables = 4
+  repeated cosmos.bank.v1beta1.Balance claimables = 5
     [(gogoproto.nullable) = false];
 }

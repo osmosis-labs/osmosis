@@ -11,6 +11,22 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+// SetModuleAccountBalance set balance of airdrop module
+func (k Keeper) SetModuleAccountBalance(ctx sdk.Context, amount sdk.Int) {
+	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	k.bankKeeper.SetBalances(ctx, moduleAccAddr, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), amount)))
+}
+
+// ClearClaimables clear claimable amounts
+func (k Keeper) ClearClaimables(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(types.ClaimableStoreKey))
+	for ; iterator.Valid(); iterator.Next() {
+		key := iterator.Key()
+		store.Delete(key)
+	}
+}
+
 // SetClaimables set claimable amount from balances object
 func (k Keeper) SetClaimables(ctx sdk.Context, balances []banktypes.Balance) error {
 	store := ctx.KVStore(k.storeKey)
@@ -46,10 +62,12 @@ func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 
 	goneTime := ctx.BlockTime().Sub(params.AirdropStart)
 	if goneTime < params.DurationUntilDecay {
+		// still not the time for decay
 		return coins, nil
 	}
 
 	if goneTime > params.DurationUntilDecay+params.DurationOfDecay {
+		// airdrop time passed
 		return sdk.Coins{}, nil
 	}
 
@@ -68,8 +86,8 @@ func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	return claimableCoins, nil
 }
 
-// Claim remove claimable amount entry and transfer it to user's account
-func (k Keeper) Claim(ctx sdk.Context, addr string) (sdk.Coins, error) {
+// ClaimCoins remove claimable amount entry and transfer it to user's account
+func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	coins, err := k.GetClaimable(ctx, addr)
 	if err != nil {
 		return coins, err
@@ -84,5 +102,20 @@ func (k Keeper) Claim(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimableStoreKey))
 	prefixStore.Delete([]byte(addr))
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeClaim,
+			sdk.NewAttribute(sdk.AttributeKeySender, addr),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coins.String()),
+		),
+	})
 	return coins, nil
+}
+
+// FundRemainingsToCommunity fund remainings to the community when airdrop period end
+func (k Keeper) FundRemainingsToCommunity(ctx sdk.Context) {
+	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	amt := k.bankKeeper.GetBalance(ctx, moduleAccAddr, k.stakingKeeper.BondDenom(ctx))
+	k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
 }
