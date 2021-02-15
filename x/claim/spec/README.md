@@ -23,7 +23,8 @@ There are tools to generate genesis from cosmos-hub snapshot.
 
 Generate genesis from cosmos-hub snapshot genesis and output snapshot of atom, osmo balance and percentage by address.
 ```sh
-osmosisd export-airdrop-genesis uatom ../genesis.json 100000000000000 --snapshot-output="../snapshot.json"
+osmosisd export-airdrop-genesis uatom ../genesis.json --total-amount=100000000000000 --snapshot-output="../snapshot.json"
+osmosisd export-airdrop-genesis uatom ../genesis.json --snapshot-output="../snapshot.json"
 ```
 
 ## Queries

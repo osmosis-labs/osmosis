@@ -14,8 +14,8 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		AirdropAmount:      sdk.NewInt(0),
 		AirdropStart:       time.Now(),
-		DurationUntilDecay: time.Hour * 24 * 30,
-		DurationOfDecay:    time.Hour * 24 * 30 * 5,
+		DurationUntilDecay: time.Hour * 24 * 30,     // 1 month
+		DurationOfDecay:    time.Hour * 24 * 30 * 5, // 5 months
 	}
 }
 
