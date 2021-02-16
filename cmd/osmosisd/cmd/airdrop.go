@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 	"os"
 
 	"github.com/spf13/cobra"
 
-	"github.com/c-osmosis/osmosis/app/params"
 	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -42,14 +40,18 @@ type AppStateV036 struct {
 
 // SnapshotFields provide fields of snapshot per account
 type SnapshotFields struct {
-	AtomAddress         string         `json:"atom_address"`
-	AtomBalance         sdk.Int        `json:"atom_balance"`
-	AtomStakedBalance   sdk.Int        `json:"atom_staked_balance"`
-	AtomUnstakedBalance sdk.Int        `json:"atom_unstaked_balance"`
-	AtomPercent         sdk.Dec        `json:"atom_ownership_percentage"`
-	OsmoAddress         sdk.AccAddress `json:"osmo_address"`
-	OsmoBalance         sdk.Int        `json:"osmo_balance"`
-	OsmoPercent         sdk.Dec        `json:"osmo_ownership_percentage"`
+	AtomAddress           string         `json:"atom_address"`
+	AtomBalance           sdk.Int        `json:"atom_balance"`
+	AtomStakedBalance     sdk.Int        `json:"atom_staked_balance"`
+	AtomUnstakedBalance   sdk.Int        `json:"atom_unstaked_balance"`
+	AtomStakedPercent     sdk.Dec        `json:"atom_staked_percent"`
+	AtomOwnershipPercent  sdk.Dec        `json:"atom_ownership_percent"`
+	OsmoAddress           sdk.AccAddress `json:"osmo_address"`
+	OsmoNormalizedBalance sdk.Int        `json:"osmo_balance_normalized"`
+	OsmoBalance           sdk.Int        `json:"osmo_balance"`
+	OsmoBalanceBonus      sdk.Int        `json:"osmo_balance_bonus"`
+	OsmoBalanceBase       sdk.Int        `json:"osmo_balance_base"`
+	OsmoPercent           sdk.Dec        `json:"osmo_ownership_percent"`
 }
 
 // setCosmosBech32Prefixes set config for cosmos address system
@@ -145,133 +147,122 @@ Example:
 				currValidators[validator.OperatorAddress.String()] = validator
 			}
 
-			snapshot := []SnapshotFields{}
-			balanceIndexByAddress := make(map[string]int)
+			snapshot := make(map[string]SnapshotFields)
 			totalAtomBalance := sdk.NewInt(0)
+			for _, account := range genStateV036.AppState.Accounts {
+				balance := account.Coins.AmountOf(denom)
+				totalAtomBalance = totalAtomBalance.Add(balance)
 
-			// iterate all accounts
-			for index, account := range genStateV036.AppState.Accounts {
-				totalAtomBalance = totalAtomBalance.Add(account.Coins.AmountOf(denom))
-				balanceIndexByAddress[account.Address.String()] = index
-				snapshot = append(snapshot, SnapshotFields{
+				snapshot[account.Address.String()] = SnapshotFields{
 					AtomAddress:         account.Address.String(),
-					AtomBalance:         account.Coins.AmountOf(denom),
-					AtomStakedBalance:   sdk.NewInt(0),
-					AtomUnstakedBalance: sdk.NewInt(0),
-					AtomPercent:         sdk.NewDec(0),
+					AtomBalance:         balance,
+					AtomUnstakedBalance: balance,
+					AtomStakedBalance:   sdk.ZeroInt(),
 					OsmoAddress:         account.Address,
-				})
+				}
 			}
 
-			// iterate all delegations
+			for _, unbonding := range genStateV036.AppState.Staking.UnbondingDelegations {
+				address := unbonding.DelegatorAddress.String()
+				acc, ok := snapshot[address]
+				if !ok {
+					panic("no account found for unbonding")
+				}
+
+				unbondingAtoms := sdk.NewInt(0)
+				for _, entry := range unbonding.Entries {
+					unbondingAtoms = unbondingAtoms.Add(entry.Balance)
+				}
+
+				acc.AtomBalance = acc.AtomBalance.Add(unbondingAtoms)
+				acc.AtomUnstakedBalance = acc.AtomUnstakedBalance.Add(unbondingAtoms)
+				totalAtomBalance = totalAtomBalance.Add(unbondingAtoms)
+
+				snapshot[address] = acc
+			}
+
+			validators := make(map[string]v036staking.Validator)
+			for _, validator := range genStateV036.AppState.Staking.Validators {
+				validators[validator.OperatorAddress.String()] = validator
+			}
+
 			for _, delegation := range genStateV036.AppState.Staking.Delegations {
-				address := delegation.DelegatorAddress
-				index, ok := balanceIndexByAddress[address.String()]
+				address := delegation.DelegatorAddress.String()
+
+				acc, ok := snapshot[address]
 				if !ok {
-					panic("delegation from invalid account")
+					panic("no account found for delegation")
 				}
-				valAddr := delegation.ValidatorAddress
-				val, ok := currValidators[valAddr.String()]
-				if !ok {
-					panic(fmt.Sprintf("delegation to invalid validator: %s", valAddr.String()))
-				}
-				sharesInt := delegation.Shares.MulInt(val.Tokens).Quo(val.DelegatorShares).RoundInt()
-				snapshot[index].AtomStakedBalance = snapshot[index].AtomStakedBalance.Add(sharesInt)
-				totalAtomBalance = totalAtomBalance.Add(sharesInt)
+
+				val := validators[delegation.ValidatorAddress.String()]
+				stakedAtoms := delegation.Shares.MulInt(val.Tokens).Quo(val.DelegatorShares).RoundInt()
+
+				acc.AtomBalance = acc.AtomBalance.Add(stakedAtoms)
+				acc.AtomStakedBalance = acc.AtomStakedBalance.Add(stakedAtoms)
+				totalAtomBalance = totalAtomBalance.Add(stakedAtoms)
+
+				snapshot[address] = acc
 			}
 
-			// iterate all unbonding delegations
-			for _, unstaked := range genStateV036.AppState.Staking.UnbondingDelegations {
-				address := unstaked.DelegatorAddress
-				index, ok := balanceIndexByAddress[address.String()]
-				if !ok {
-					panic("delegation from invalid account")
+			totalOsmoBalance := sdk.NewInt(0)
+			oneHalf := sdk.NewDecFromIntWithPrec(sdk.NewInt(5), 1)
+
+			for address, acc := range snapshot {
+				allAtoms := acc.AtomBalance.ToDec()
+
+				acc.AtomOwnershipPercent = allAtoms.QuoInt(totalAtomBalance)
+
+				if allAtoms.IsZero() {
+					acc.AtomStakedPercent = sdk.ZeroDec()
+					acc.OsmoBalanceBase = sdk.ZeroInt()
+					acc.OsmoBalanceBonus = sdk.ZeroInt()
+					acc.OsmoBalance = sdk.ZeroInt()
+					snapshot[address] = acc
+					continue
 				}
-				for _, entry := range unstaked.Entries {
-					amt := entry.Balance
-					snapshot[index].AtomUnstakedBalance = snapshot[index].AtomUnstakedBalance.Add(amt)
-					totalAtomBalance = totalAtomBalance.Add(amt)
+
+				stakedAtoms := acc.AtomStakedBalance.ToDec()
+				stakedPercent := stakedAtoms.Quo(allAtoms)
+				acc.AtomStakedPercent = stakedPercent
+
+				baseOsmo, err := allAtoms.ApproxSqrt()
+				if err != nil {
+					panic(fmt.Sprintf("failed to root atom balance: %s", err))
 				}
+				acc.OsmoBalanceBase = baseOsmo.RoundInt()
+
+				bonusOsmo := baseOsmo.Mul(oneHalf).Mul(stakedPercent)
+				acc.OsmoBalanceBonus = bonusOsmo.RoundInt()
+
+				allOsmo := baseOsmo.Add(bonusOsmo)
+				acc.OsmoBalance = allOsmo.RoundInt()
+
+				totalOsmoBalance = totalOsmoBalance.Add(allOsmo.RoundInt())
+
+				snapshot[address] = acc
 			}
 
-			for index, asnapshot := range snapshot {
-				amt := asnapshot.AtomBalance.Add(asnapshot.AtomStakedBalance).Add(asnapshot.AtomUnstakedBalance)
-				percent := big.NewInt(0).Div(amt.Mul(sdk.NewInt(1000000)).BigInt(), totalAtomBalance.BigInt())
-				snapshot[index].AtomPercent = sdk.NewDecFromBigIntWithPrec(percent, 4)
-			}
+			// normalize to initial Atom supply
+			noarmalizationFactor := totalAtomBalance.ToDec().Quo(totalOsmoBalance.ToDec())
 
-			params.SetBech32Prefixes()
+			for address, acc := range snapshot {
+				acc.OsmoPercent = acc.OsmoBalance.ToDec().Quo(totalOsmoBalance.ToDec())
+
+				acc.OsmoNormalizedBalance = acc.OsmoBalance.ToDec().Mul(noarmalizationFactor).RoundInt()
+
+				snapshot[address] = acc
+			}
 
 			balances := []banktypes.Balance{}
 			feeBalances := []banktypes.Balance{}
 			for _, asnapshot := range snapshot {
-				// fmt.Println("Address: " + account.Address.String())
-				// fmt.Println("Amount: " + account.Coins.String())
-
-				// create concrete account type based on input parameters
-				var genAccount authtypes.GenesisAccount
-				baseAccount := authtypes.NewBaseAccount(asnapshot.OsmoAddress, nil, 0, 0)
-				genAccount = baseAccount
-
-				if err := genAccount.Validate(); err != nil {
-					return fmt.Errorf("failed to validate new genesis account: %w", err)
-				}
-
-				// Add the new account to the set of genesis accounts and sanitize the
-				// accounts afterwards.
-				accs = append(accs, genAccount)
-				accs = authtypes.SanitizeGenesisAccounts(accs)
-
-				atomAmt := asnapshot.AtomBalance.Add(asnapshot.AtomStakedBalance).Add(asnapshot.AtomUnstakedBalance)
-				if atomAmt.IsZero() {
-					continue
-				}
-				originAmtDec, err := atomAmt.ToDec().ApproxSqrt()
-				if err != nil {
-					fmt.Println("failed to square root atom balance", err)
-					continue
-				}
-
-				// apply 1.5x multiplier for staked weight
-				// sqrt(total_atom) * (1 + (bonded_atom / total_atom) * 0.5)
-				stakedWeight := asnapshot.AtomStakedBalance.ToDec().Quo(atomAmt.ToDec())
-				osmoAmtDec := originAmtDec.Mul(sdk.NewDec(1).Add(stakedWeight.Mul(sdk.NewDecWithPrec(15, 10))))
-
 				// airdrop balances
-				coins := sdk.NewCoins(sdk.NewCoin(osdenom, osmoAmtDec.RoundInt()))
+				coins := sdk.NewCoins(sdk.NewCoin(osdenom, asnapshot.OsmoNormalizedBalance))
 				balances = append(balances, banktypes.Balance{Address: asnapshot.OsmoAddress.String(), Coins: coins})
 
 				// transaction fee balances
 				feeCoins := sdk.NewCoins(sdk.NewCoin(osdenom, sdk.NewInt(1000000))) // 1 OSMO = 10^6uosmo
 				feeBalances = append(feeBalances, banktypes.Balance{Address: asnapshot.OsmoAddress.String(), Coins: feeCoins})
-			}
-
-			// total of raw airdrop coins
-			totalRaw := sdk.NewInt(0)
-			for _, balance := range balances {
-				totalRaw = totalRaw.Add(balance.Coins.AmountOf(osdenom))
-			}
-
-			// calculate OSMO snapshot
-			for index, balance := range balances {
-				amt := balance.Coins.AmountOf(osdenom)
-				percent := big.NewInt(0).Div(amt.Mul(sdk.NewInt(1000000)).BigInt(), totalRaw.BigInt())
-				snapshot[index].OsmoBalance = amt
-				snapshot[index].OsmoPercent = sdk.NewDecFromBigIntWithPrec(percent, 4)
-			}
-
-			if !totalAmount.IsZero() {
-				// normalize for total number of tokens to drop when totalAmount is not zero
-				for i, balance := range balances {
-					osmoAmtBI := balance.Coins.AmountOf(osdenom).BigInt()
-					osmoAmtMulBI := osmoAmtBI.Mul(osmoAmtBI, totalAmount.BigInt())
-					osmoAmtNormalBI := osmoAmtMulBI.Div(osmoAmtMulBI, totalRaw.BigInt())
-					osmoAmtNormal := sdk.NewIntFromBigInt(osmoAmtNormalBI)
-					balances[i].Coins = sdk.NewCoins(sdk.NewCoin(osdenom, osmoAmtNormal))
-				}
-			} else {
-				// set total amount when it's not provided
-				totalAmount = totalRaw
 			}
 
 			// remove empty accounts
