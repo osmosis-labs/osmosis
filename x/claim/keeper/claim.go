@@ -114,8 +114,8 @@ func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 }
 
 // FundRemainingsToCommunity fund remainings to the community when airdrop period end
-func (k Keeper) FundRemainingsToCommunity(ctx sdk.Context) {
+func (k Keeper) FundRemainingsToCommunity(ctx sdk.Context) error {
 	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	amt := k.bankKeeper.GetBalance(ctx, moduleAccAddr, k.stakingKeeper.BondDenom(ctx))
-	k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
+	return k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
 }
