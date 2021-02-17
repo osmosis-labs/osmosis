@@ -23,6 +23,8 @@ service Query {
 
 	// Returns locked records of an account with unlock time beyond timestamp
 	rpc AccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
+	// locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
+	rpc AccountLockedPastTimeNotUnlockingOnly(AccountLockedPastTimeNotUnlockingOnlyRequest) returns (AccountLockedPastTimeNotUnlockingOnlyResponse);
 	// Returns unlocked records with unlock time before timestamp
 	rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
 
@@ -33,6 +35,8 @@ service Query {
 
 	// Returns account locked records with longer duration
 	rpc AccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
+	// Returns account locked records with longer duration excluding tokens started unlocking
+	rpc AccountLockedLongerDurationNotUnlockingOnly(AccountLockedLongerDurationNotUnlockingOnlyRequest) returns (AccountLockedLongerDurationNotUnlockingOnlyResponse);
 	// Returns account's locked records for a denom with longer duration
 	rpc AccountLockedLongerThanDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
 }
@@ -78,6 +82,17 @@ message AccountLockedPastTimeResponse {
 		[(gogoproto.nullable) = false];
 };
 
+message AccountLockedPastTimeNotUnlockingOnlyRequest {
+	bytes owner = 1 
+        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    google.protobuf.Timestamp timestamp = 2
+        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
+};
+message AccountLockedPastTimeNotUnlockingOnlyResponse {
+	repeated PeriodLock locks = 1
+		[(gogoproto.nullable) = false];
+};
+
 message AccountUnlockedBeforeTimeRequest {
 	bytes owner = 1 
         [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -115,6 +130,17 @@ message AccountLockedLongerDurationRequest {
         [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
 };
 message AccountLockedLongerDurationResponse {
+	repeated PeriodLock locks = 1
+		[(gogoproto.nullable) = false];
+};
+
+message AccountLockedLongerDurationNotUnlockingOnlyRequest {
+	bytes owner = 1 
+        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    google.protobuf.Duration duration = 2
+        [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
+};
+message AccountLockedLongerDurationNotUnlockingOnlyResponse {
 	repeated PeriodLock locks = 1
 		[(gogoproto.nullable) = false];
 };

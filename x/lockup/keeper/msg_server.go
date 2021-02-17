@@ -45,6 +45,61 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 	return &types.MsgLockTokensResponse{}, nil
 }
 
+func (server msgServer) BeginUnlockPeriodLock(goCtx context.Context, msg *types.MsgBeginUnlockPeriodLock) (*types.MsgBeginUnlockPeriodLockResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	lock, err := server.keeper.BeginUnlockPeriodLockByID(ctx, msg.ID)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if !bytes.Equal(msg.Owner, lock.Owner) {
+		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner.String(), lock.Owner.String()))
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtBeginUnlock,
+			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
+		),
+	})
+
+	return &types.MsgUnlockPeriodLockResponse{}, nil
+}
+
+func (server msgServer) BeginUnlockTokens(goCtx context.Context, msg *types.MsgBeginUnlockTokens) (*types.MsgBeginUnlockTokensResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	unlocks, coins, err := server.keeper.BeginUnlockAllUnlockableCoins(ctx, msg.Owner)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	events := sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtBeginUnlockTokens,
+			sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner.String()),
+			sdk.NewAttribute(types.AttributeUnlockedCoins, coins.String()),
+		),
+	}
+	for _, lock := range unlocks {
+		event := sdk.NewEvent(
+			types.TypeEvtBeginUnlock,
+			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
+		)
+		events = events.AppendEvent(event)
+	}
+	ctx.EventManager().EmitEvents(events)
+
+	return &types.MsgUnlockTokensResponse{}, nil
+}
+
 func (server msgServer) UnlockPeriodLock(goCtx context.Context, msg *types.MsgUnlockPeriodLock) (*types.MsgUnlockPeriodLockResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

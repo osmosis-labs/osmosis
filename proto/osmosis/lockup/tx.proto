@@ -12,8 +12,12 @@ option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
 service Msg {
     // LockTokens lock tokens
     rpc LockTokens(MsgLockTokens) returns (MsgLockTokensResponse);
+	// BeginUnlockTokens begin unlocking all tokens
+	rpc BeginUnlockTokens(MsgBeginUnlockTokens) returns (MsgBeginUnlockTokensResponse);
     // UnlockTokens unlock all unlockable tokens
     rpc UnlockTokens(MsgUnlockTokens) returns (MsgUnlockTokensResponse);
+    // BeginUnlockPeriodLock begin unlocking tokens by ID
+    rpc BeginUnlockPeriodLock(MsgBeginUnlockPeriodLock) returns (MsgBeginUnlockPeriodLockResponse);
     // UnlockPeriodLock unlock individual period lock by ID
     rpc UnlockPeriodLock(MsgUnlockPeriodLock) returns (MsgUnlockPeriodLockResponse);
 }
@@ -34,12 +38,29 @@ message MsgLockTokensResponse {
 	uint64 ID = 1;
 }
 
+message MsgBeginUnlockTokens {
+	bytes owner = 1 
+		[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+message MsgBeginUnlockTokensResponse {
+	repeated PeriodLock unlocks = 1;
+}
+
 message MsgUnlockTokens {
 	bytes owner = 1 
 		[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 message MsgUnlockTokensResponse {
 	repeated PeriodLock unlocks = 1;
+}
+
+message MsgBeginUnlockPeriodLock {
+	bytes owner = 1 
+		[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+	uint64 ID = 2;
+}
+message MsgBeginUnlockPeriodLockResponse {
+	bool success = 1;
 }
 
 message MsgUnlockPeriodLock {
