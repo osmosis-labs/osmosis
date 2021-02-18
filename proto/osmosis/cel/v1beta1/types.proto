@@ -1,0 +1,26 @@
+syntax = "proto3";
+package osmosis.cel.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/cel/types";
+
+
+// Int is wrapper for SDK Int
+message Int {
+  string value = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"value\"",
+    (gogoproto.nullable) = false 
+  ];
+}
+
+// Dec is wrapper for SDK Dec
+message Dec {
+  string value = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"value\"",
+    (gogoproto.nullable) = false
+  ];
+}
