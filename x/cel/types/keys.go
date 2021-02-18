@@ -1,5 +1,9 @@
 package types
 
+import (
+	"encoding/binary"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "cel"
@@ -17,12 +21,14 @@ const (
 	MemStoreKey = "mem_capability"
 )
 
-const (
-	KindPrefix = "cel_kind"
-)
-
-func KeyKind(id string) []byte {
-	return []byte(KindPrefix+"/"+id)
+func KeyCell(cellID uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, cellID)
+	return append([]byte{0x00}, bz...)
 }
 
-
+func KeyExpr(cellID, exprID uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, exprID)
+	return append(KeyCell(cellID), bz...)
+}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+package osmosis.cel.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+import "google/api/expr/v1alpha1/checked.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/cel/types";
+
+message Cell {
+  string id = 1 [
+    (gogoproto.moretags) = "yaml:\"id\""
+  ];
+  google.protobuf.Any state = 2 [
+    (cosmos_proto.accepts_interface) = "CellI"
+  ];
+}
+
+message Expr {
+  string expr = 1;
+  repeated google.api.expr.v1alpha1.Decl inputs = 2;
+  google.api.expr.v1alpha1.Type output = 3;
+}

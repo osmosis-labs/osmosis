@@ -1,0 +1,23 @@
+syntax = "proto3";
+package osmosis.cel.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+import "google/api/expr/v1alpha1/checked.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/cel/types";
+
+message ExampleCell {
+  option (cosmos_proto.implements_interface) = "CellI";
+
+  string name = 1;
+  uint32 number = 2;
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
