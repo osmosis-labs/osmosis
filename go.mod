@@ -6,6 +6,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.40.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.4.3
+	github.com/google/cel-go v0.7.2
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/googleapis/googleapis v0.0.0-20210213005520-78f5365656fd // indirect
 	github.com/gorilla/mux v1.8.0

@@ -11,8 +11,8 @@ import "google/api/expr/v1alpha1/checked.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/cel/types";
 
-message ExampleCell {
-  option (cosmos_proto.implements_interface) = "CellI";
+message ExampleCellState {
+  option (cosmos_proto.implements_interface) = "CellStateI";
 
   string name = 1;
   uint32 number = 2;

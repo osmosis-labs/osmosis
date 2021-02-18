@@ -13,16 +13,19 @@ import "google/api/expr/v1alpha1/checked.proto";
 option go_package = "github.com/c-osmosis/osmosis/x/cel/types";
 
 message Cell {
-  string id = 1 [
+  uint64 id = 1 [
     (gogoproto.moretags) = "yaml:\"id\""
   ];
   google.protobuf.Any state = 2 [
-    (cosmos_proto.accepts_interface) = "CellI"
+    (cosmos_proto.accepts_interface) = "CellStateI"
   ];
 }
 
 message Expr {
-  string expr = 1;
-  repeated google.api.expr.v1alpha1.Decl inputs = 2;
-  google.api.expr.v1alpha1.Type output = 3;
+  uint64 id = 1;
+  string expr = 2;
+  repeated google.api.expr.v1alpha1.Decl inputs = 3;
+  google.api.expr.v1alpha1.Type output = 4;
+  // Permission perm = 5;
+
 }
