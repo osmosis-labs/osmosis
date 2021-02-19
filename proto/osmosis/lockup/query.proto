@@ -23,7 +23,7 @@ service Query {
 
 	// Returns locked records of an account with unlock time beyond timestamp
 	rpc AccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
-	// locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
+	// Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
 	rpc AccountLockedPastTimeNotUnlockingOnly(AccountLockedPastTimeNotUnlockingOnlyRequest) returns (AccountLockedPastTimeNotUnlockingOnlyResponse);
 	// Returns unlocked records with unlock time before timestamp
 	rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);

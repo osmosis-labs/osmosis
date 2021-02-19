@@ -18,7 +18,7 @@ var commonArgs = []string{
 	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 }
 
-// MsgLockTokens creates a redelegate message.
+// MsgLockTokens creates a lock tokens message.
 func MsgLockTokens(clientCtx client.Context, owner fmt.Stringer, amount fmt.Stringer, duration string, extraArgs ...string) (testutil.BufferWriter, error) {
 
 	args := []string{
@@ -29,6 +29,17 @@ func MsgLockTokens(clientCtx client.Context, owner fmt.Stringer, amount fmt.Stri
 
 	args = append(args, commonArgs...)
 	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewLockTokensCmd(), args)
+}
+
+// MsgBeginUnlockTokens creates a begin unlock tokens message
+func MsgBeginUnlockTokens(clientCtx client.Context, owner fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
+	}
+
+	args = append(args, commonArgs...)
+	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewBeginUnlockTokensCmd(), args)
 }
 
 // MsgUnlockTokens unlock all unlockable tokens from an account

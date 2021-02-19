@@ -85,3 +85,7 @@ func lockRefKeys(lock types.PeriodLock) [][]byte {
 	}
 	return refKeys
 }
+
+func combineLocks(pl1 []types.PeriodLock, pl2 []types.PeriodLock) []types.PeriodLock {
+	return append(pl1, pl2...)
+}

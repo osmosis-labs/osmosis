@@ -92,6 +92,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, val.Address, secLockAmt, "1s")
 	s.Require().NoError(err)
 
+	// begin unlock tokens
+	_, err = lockuptestutil.MsgBeginUnlockTokens(val.ClientCtx, val.Address)
+	s.Require().NoError(err)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
@@ -190,6 +194,10 @@ func (s *IntegrationTestSuite) TestNewUnlockTokensCmd() {
 	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, newAddr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), "1s")
 	s.Require().NoError(err)
 
+	// begin unlock tokens
+	_, err = lockuptestutil.MsgBeginUnlockTokens(val.ClientCtx, val.Address)
+	s.Require().NoError(err)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
@@ -261,6 +269,13 @@ func (s *IntegrationTestSuite) TestNewUnlockByIDCmd() {
 	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &txResp), res.String())
 	s.Require().Equal(txResp.Logs[0].Events[0].Attributes[0].Key, "period_lock_id")
 	lockID := txResp.Logs[0].Events[0].Attributes[0].Value
+
+	// begin unlock tokens
+	res, err = lockuptestutil.MsgBeginUnlockTokens(val.ClientCtx, newAddr)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)

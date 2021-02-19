@@ -8,9 +8,11 @@ import (
 
 // constants
 const (
-	TypeMsgLockTokens       = "lock_tokens"
-	TypeMsgUnlockTokens     = "unlock_tokens"
-	TypeMsgUnlockPeriodLock = "unlock_period_lock"
+	TypeMsgLockTokens            = "lock_tokens"
+	TypeMsgBeginUnlockTokens     = "begin_unlock_tokens"
+	TypeMsgUnlockTokens          = "unlock_tokens"
+	TypeMsgBeginUnlockPeriodLock = "begin_unlock_period_lock"
+	TypeMsgUnlockPeriodLock      = "unlock_period_lock"
 )
 
 var _ sdk.Msg = &MsgLockTokens{}
@@ -30,6 +32,20 @@ func (m MsgLockTokens) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{m.Owner}
 }
 
+var _ sdk.Msg = &MsgBeginUnlockTokens{}
+
+func (m MsgBeginUnlockTokens) Route() string { return RouterKey }
+func (m MsgBeginUnlockTokens) Type() string  { return TypeMsgBeginUnlockTokens }
+func (m MsgBeginUnlockTokens) ValidateBasic() error {
+	return nil
+}
+func (m MsgBeginUnlockTokens) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgBeginUnlockTokens) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{m.Owner}
+}
+
 var _ sdk.Msg = &MsgUnlockTokens{}
 
 func (m MsgUnlockTokens) Route() string { return RouterKey }
@@ -41,6 +57,20 @@ func (m MsgUnlockTokens) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgUnlockTokens) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{m.Owner}
+}
+
+var _ sdk.Msg = &MsgBeginUnlockPeriodLock{}
+
+func (m MsgBeginUnlockPeriodLock) Route() string { return RouterKey }
+func (m MsgBeginUnlockPeriodLock) Type() string  { return TypeMsgBeginUnlockPeriodLock }
+func (m MsgBeginUnlockPeriodLock) ValidateBasic() error {
+	return nil
+}
+func (m MsgBeginUnlockPeriodLock) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgBeginUnlockPeriodLock) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{m.Owner}
 }
 

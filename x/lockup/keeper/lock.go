@@ -30,6 +30,20 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	return locks
 }
 
+func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
+	coins := sdk.Coins{}
+	locks := k.getLocksFromIterator(ctx, iterator)
+	for _, lock := range locks {
+		err := k.BeginUnlock(ctx, lock)
+		if err != nil {
+			panic(err)
+		}
+		// sum up all coins unlocked
+		coins = coins.Add(lock.Coins...)
+	}
+	return locks, coins
+}
+
 func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
@@ -65,42 +79,89 @@ func (k Keeper) GetModuleBalance(ctx sdk.Context) sdk.Coins {
 
 // GetModuleLockedCoins Returns locked balance of the module
 func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
-	return k.getCoinsFromIterator(ctx, k.LockIteratorAfterTime(ctx, ctx.BlockTime()))
+	// all not unlocking + not finished unlocking
+	notUnlockingCoins := k.getCoinsFromIterator(ctx, k.LockIterator(ctx, types.KeyPrefixNotUnlocking))
+	unlockingCoins := k.getCoinsFromIterator(ctx, k.LockIteratorAfterTime(ctx, types.KeyPrefixUnlocking, ctx.BlockTime()))
+	return notUnlockingCoins.Add(unlockingCoins...)
 }
 
 // GetAccountUnlockableCoins Returns whole unlockable coins which are not withdrawn yet
 func (k Keeper) GetAccountUnlockableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return k.getCoinsFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, addr, ctx.BlockTime()))
+	return k.getCoinsFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, types.KeyPrefixUnlocking, addr, ctx.BlockTime()))
 }
 
 // GetAccountLockedCoins Returns a locked coins that can't be withdrawn
 func (k Keeper) GetAccountLockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return k.getCoinsFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, addr, ctx.BlockTime()))
+	// all account unlocking + not finished unlocking
+	notUnlockingCoins := k.getCoinsFromIterator(ctx, k.AccountLockIterator(ctx, types.KeyPrefixNotUnlocking, addr))
+	unlockingCoins := k.getCoinsFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, types.KeyPrefixUnlocking, addr, ctx.BlockTime()))
+	return notUnlockingCoins.Add(unlockingCoins...)
 }
 
 // GetAccountLockedPastTime Returns the total locks of an account whose unlock time is beyond timestamp
 func (k Keeper) GetAccountLockedPastTime(ctx sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock {
-	return k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, addr, timestamp))
+	// unlockings finish after specific time + not started locks that will finish after the time even though it start now
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, types.KeyPrefixUnlocking, addr, timestamp))
+	duration := time.Duration(0)
+	if timestamp.After(ctx.BlockTime()) {
+		duration = timestamp.Sub(ctx.BlockTime())
+	}
+	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDuration(ctx, types.KeyPrefixNotUnlocking, addr, duration))
+	return combineLocks(notUnlockings, unlockings)
+}
+
+// GetAccountLockedPastTimeNotUnlockingOnly Returns the total locks of an account whose unlock time is beyond timestamp
+func (k Keeper) GetAccountLockedPastTimeNotUnlockingOnly(ctx sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock {
+	duration := time.Duration(0)
+	if timestamp.After(ctx.BlockTime()) {
+		duration = timestamp.Sub(ctx.BlockTime())
+	}
+	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDuration(ctx, types.KeyPrefixNotUnlocking, addr, duration))
 }
 
 // GetAccountUnlockedBeforeTime Returns the total unlocks of an account whose unlock time is before timestamp
 func (k Keeper) GetAccountUnlockedBeforeTime(ctx sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock {
-	return k.getLocksFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, addr, timestamp))
+	// unlockings finish before specific time + not started locks that can finish before the time if start now
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, types.KeyPrefixUnlocking, addr, timestamp))
+	if timestamp.Before(ctx.BlockTime()) {
+		return unlockings
+	}
+	duration := timestamp.Sub(ctx.BlockTime())
+	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorShorterThanDuration(ctx, types.KeyPrefixNotUnlocking, addr, duration))
+	return combineLocks(notUnlockings, unlockings)
 }
 
 // GetAccountLockedPastTimeDenom is equal to GetAccountLockedPastTime but denom specific
 func (k Keeper) GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock {
-	return k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTimeDenom(ctx, addr, denom, timestamp))
+	// unlockings finish after specific time + not started locks that will finish after the time even though it start now
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTimeDenom(ctx, types.KeyPrefixUnlocking, addr, denom, timestamp))
+	duration := time.Duration(0)
+	if timestamp.After(ctx.BlockTime()) {
+		duration = timestamp.Sub(ctx.BlockTime())
+	}
+	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDurationDenom(ctx, types.KeyPrefixNotUnlocking, addr, denom, duration))
+	return combineLocks(notUnlockings, unlockings)
 }
 
 // GetAccountLockedLongerThanDuration Returns account locked with duration longer than specified
 func (k Keeper) GetAccountLockedLongerThanDuration(ctx sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock {
-	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDuration(ctx, addr, duration))
+	// it does not matter started unlocking or not for duration query
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDuration(ctx, types.KeyPrefixUnlocking, addr, duration))
+	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDuration(ctx, types.KeyPrefixNotUnlocking, addr, duration))
+	return combineLocks(notUnlockings, unlockings)
+}
+
+// GetAccountLockedLongerThanDurationNotUnlockingOnly Returns account locked with duration longer than specified
+func (k Keeper) GetAccountLockedLongerThanDurationNotUnlockingOnly(ctx sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDuration(ctx, types.KeyPrefixNotUnlocking, addr, duration))
 }
 
 // GetAccountLockedLongerThanDurationDenom Returns account locked with duration longer than specified with specific denom
 func (k Keeper) GetAccountLockedLongerThanDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock {
-	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDurationDenom(ctx, addr, denom, duration))
+	// it does not matter started unlocking or not for duration query
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDurationDenom(ctx, types.KeyPrefixUnlocking, addr, denom, duration))
+	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDurationDenom(ctx, types.KeyPrefixNotUnlocking, addr, denom, duration))
+	return combineLocks(notUnlockings, unlockings)
 }
 
 // GetLockByID Returns lock from lockID
@@ -118,18 +179,38 @@ func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, 
 
 // GetPeriodLocks Returns the period locks on pool
 func (k Keeper) GetPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error) {
-	return k.getLocksFromIterator(ctx, k.LockIterator(ctx)), nil
+	unlockings := k.getLocksFromIterator(ctx, k.LockIterator(ctx, types.KeyPrefixUnlocking))
+	notUnlockings := k.getLocksFromIterator(ctx, k.LockIterator(ctx, types.KeyPrefixNotUnlocking))
+	return combineLocks(notUnlockings, unlockings), nil
 }
 
 // GetAccountPeriodLocks Returns the period locks associated to an account
 func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) ([]types.PeriodLock, error) {
-	return k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, addr)), nil
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, types.KeyPrefixUnlocking, addr))
+	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, types.KeyPrefixNotUnlocking, addr))
+	return combineLocks(notUnlockings, unlockings), nil
+}
+
+// BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
+func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
+	locks, coins := k.beginUnlockFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, types.KeyPrefixNotUnlocking, account, ctx.BlockTime()))
+	return locks, coins, nil
 }
 
 // UnlockAllUnlockableCoins Unlock all unlockable coins
 func (k Keeper) UnlockAllUnlockableCoins(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
-	locks, coins := k.unlockFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, account, ctx.BlockTime()))
+	locks, coins := k.unlockFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, types.KeyPrefixUnlocking, account, ctx.BlockTime()))
 	return locks, coins, nil
+}
+
+// BeginUnlockPeriodLockByID begin unlock by period lock ID
+func (k Keeper) BeginUnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.PeriodLock, error) {
+	lock, err := k.GetLockByID(ctx, LockID)
+	if err != nil {
+		return lock, err
+	}
+	err = k.BeginUnlock(ctx, *lock)
+	return lock, err
 }
 
 // UnlockPeriodLockByID unlock by period lock ID
@@ -145,7 +226,8 @@ func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.Per
 // LockTokens lock tokens from an account for specified duration
 func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.getLastLockID(ctx) + 1
-	lock := types.NewPeriodLock(ID, owner, duration, ctx.BlockTime().Add(duration), coins)
+	// unlock time is set at the beginning of unlocking time
+	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
 	return lock, k.Lock(ctx, lock)
 }
 
@@ -162,7 +244,27 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		if err := k.addLockRefByKey(ctx, refKey, lockID); err != nil {
+		if err := k.addLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
+func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
+	lockID := lock.ID
+	refKeys := lockRefKeys(lock)
+	for _, refKey := range refKeys {
+		k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID)
+	}
+	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
+
+	refKeys = lockRefKeys(lock)
+	for _, refKey := range refKeys {
+		if err := k.addLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID); err != nil {
 			return err
 		}
 	}
@@ -173,6 +275,10 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// validation for current time and unlock time
 	curTime := ctx.BlockTime()
+	unsetTime := time.Time{}
+	if lock.EndTime == unsetTime {
+		return fmt.Errorf("lock is hasn't started unlocking yet")
+	}
 	if curTime.Before(lock.EndTime) {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
@@ -188,7 +294,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		k.deleteLockRefByKey(ctx, refKey, lockID)
+		k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID)
 	}
 	return nil
 }

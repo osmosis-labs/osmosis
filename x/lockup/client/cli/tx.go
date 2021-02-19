@@ -77,6 +77,32 @@ func NewLockTokensCmd() *cobra.Command {
 	return cmd
 }
 
+// NewBeginUnlockTokensCmd unlock all unlockable tokens from user's account
+func NewBeginUnlockTokensCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "begin-unlock-tokens",
+		Short: "begin unlock not unlocking tokens from lockup pool for an account",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			msg := &types.MsgBeginUnlockTokens{
+				Owner: clientCtx.GetFromAddress(),
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 // NewUnlockTokensCmd unlock all unlockable tokens from user's account
 func NewUnlockTokensCmd() *cobra.Command {
 	cmd := &cobra.Command{

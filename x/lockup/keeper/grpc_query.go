@@ -71,3 +71,15 @@ func (k Keeper) AccountLockedLongerThanDurationDenom(goCtx context.Context, req 
 	locks := k.GetAccountLockedLongerThanDurationDenom(ctx, req.Owner, req.Denom, req.Duration)
 	return &types.AccountLockedLongerDurationDenomResponse{Locks: locks}, nil
 }
+
+// AccountLockedPastTimeNotUnlockingOnly Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
+func (k Keeper) AccountLockedPastTimeNotUnlockingOnly(goCtx context.Context, req *types.AccountLockedPastTimeNotUnlockingOnlyRequest) (*types.AccountLockedPastTimeNotUnlockingOnlyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return &types.AccountLockedPastTimeNotUnlockingOnlyResponse{Locks: k.GetAccountLockedPastTimeNotUnlockingOnly(ctx, req.Owner, req.Timestamp)}, nil
+}
+
+// AccountLockedLongerDurationNotUnlockingOnly Returns account locked records with longer duration excluding tokens started unlocking
+func (k Keeper) AccountLockedLongerDurationNotUnlockingOnly(goCtx context.Context, req *types.AccountLockedLongerDurationNotUnlockingOnlyRequest) (*types.AccountLockedLongerDurationNotUnlockingOnlyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return &types.AccountLockedLongerDurationNotUnlockingOnlyResponse{Locks: k.GetAccountLockedLongerThanDurationNotUnlockingOnly(ctx, req.Owner, req.Duration)}, nil
+}
