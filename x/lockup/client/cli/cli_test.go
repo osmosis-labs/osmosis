@@ -77,6 +77,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	dayLockAmt, err := sdk.ParseCoinNormalized("200stake")
 	s.Require().NoError(err)
 	secLockAmt, err := sdk.ParseCoinNormalized("11stake")
+	s.Require().NoError(err)
+	thirdLockAmt, err := sdk.ParseCoinNormalized("12stake")
+	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
 
@@ -89,10 +92,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// lock tokens for a second
-	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, val.Address, secLockAmt, "1s")
+	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, val.Address, thirdLockAmt, "1s")
 	s.Require().NoError(err)
 
-	// begin unlock tokens
+	// begin unlock all tokens
 	_, err = lockuptestutil.MsgBeginUnlockTokens(val.ClientCtx, val.Address)
 	s.Require().NoError(err)
 
@@ -330,7 +333,7 @@ func (s *IntegrationTestSuite) TestCmdAccountUnlockableCoins() {
 		coins sdk.Coins
 	}{
 		{
-			"query validator account balance",
+			"query validator account unlockable coins",
 			[]string{
 				val.Address.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),

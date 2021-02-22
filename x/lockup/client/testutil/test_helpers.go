@@ -36,6 +36,7 @@ func MsgBeginUnlockTokens(clientCtx client.Context, owner fmt.Stringer, extraArg
 
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 500000),
 	}
 
 	args = append(args, commonArgs...)
@@ -47,6 +48,7 @@ func MsgUnlockTokens(clientCtx client.Context, owner fmt.Stringer, extraArgs ...
 
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 500000),
 	}
 
 	args = append(args, commonArgs...)

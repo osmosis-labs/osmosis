@@ -30,18 +30,18 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	return locks
 }
 
-func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
+func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins, error) {
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
 		err := k.BeginUnlock(ctx, lock)
 		if err != nil {
-			panic(err)
+			return locks, coins, err
 		}
 		// sum up all coins unlocked
 		coins = coins.Add(lock.Coins...)
 	}
-	return locks, coins
+	return locks, coins, nil
 }
 
 func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
@@ -193,8 +193,8 @@ func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) ([]t
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
 func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
-	locks, coins := k.beginUnlockFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, types.KeyPrefixNotUnlocking, account, ctx.BlockTime()))
-	return locks, coins, nil
+	locks, coins, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, types.KeyPrefixNotUnlocking, account))
+	return locks, coins, err
 }
 
 // UnlockAllUnlockableCoins Unlock all unlockable coins
@@ -256,7 +256,10 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	lockID := lock.ID
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID)
+		err := k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID)
+		if err != nil {
+			return err
+		}
 	}
 	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
 	store := ctx.KVStore(k.storeKey)
@@ -277,7 +280,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	curTime := ctx.BlockTime()
 	unsetTime := time.Time{}
 	if lock.EndTime == unsetTime {
-		return fmt.Errorf("lock is hasn't started unlocking yet")
+		return fmt.Errorf("lock hasn't started unlocking yet")
 	}
 	if curTime.Before(lock.EndTime) {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
@@ -294,7 +297,10 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	refKeys := lockRefKeys(lock)
 	for _, refKey := range refKeys {
-		k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID)
+		err := k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
