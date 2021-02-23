@@ -87,6 +87,12 @@ func (suite *KeeperTestSuite) TestAccountUnlockableCoins() {
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.LockTokens(addr1, coins, time.Second)
+
+	// account unlockable coins check before start unlocking
+	res, err = suite.app.LockupKeeper.AccountUnlockableCoins(sdk.WrapSDKContext(suite.ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Coins, sdk.Coins{})
+
 	suite.BeginUnlocking(addr1)
 
 	// account unlockable coins check = unlockTime - 1s
@@ -102,6 +108,48 @@ func (suite *KeeperTestSuite) TestAccountUnlockableCoins() {
 
 	// account unlockable balance after 2 second = unlockTime + 1s
 	res, err = suite.app.LockupKeeper.AccountUnlockableCoins(sdk.WrapSDKContext(suite.ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockableCoinsRequest{Owner: addr1})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Coins, coins)
+}
+
+func (suite *KeeperTestSuite) TestAccountUnlockingCoins() {
+	// test for module unlockable coins check
+	suite.SetupTest()
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	// empty address unlockable coins check
+	res, err := suite.app.LockupKeeper.AccountUnlockingCoins(sdk.WrapSDKContext(suite.ctx), &types.AccountUnlockingCoinsRequest{Owner: sdk.AccAddress{}})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Coins, sdk.Coins{})
+	// initial account unlockable coins check
+	res, err = suite.app.LockupKeeper.AccountUnlockingCoins(sdk.WrapSDKContext(suite.ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Coins, sdk.Coins{})
+
+	// lock coins
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// account unlocking coins check before start unlocking
+	res, err = suite.app.LockupKeeper.AccountUnlockingCoins(sdk.WrapSDKContext(suite.ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Coins, sdk.Coins{})
+
+	suite.BeginUnlocking(addr1)
+
+	// account unlocking coins check = unlockTime - 1s
+	res, err = suite.app.LockupKeeper.AccountUnlockingCoins(sdk.WrapSDKContext(suite.ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Coins, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+
+	// account unlocking balance after 1 second = unlockTime
+	now := suite.ctx.BlockTime()
+	res, err = suite.app.LockupKeeper.AccountUnlockingCoins(sdk.WrapSDKContext(suite.ctx.WithBlockTime(now.Add(time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Coins, coins)
+
+	// account unlocking balance after 2 second = unlockTime + 1s
+	res, err = suite.app.LockupKeeper.AccountUnlockingCoins(sdk.WrapSDKContext(suite.ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
 }
@@ -174,6 +222,40 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTime() {
 
 	// account locks after 2 second = unlockTime + 1s
 	res, err = suite.app.LockupKeeper.AccountLockedPastTime(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedPastTimeRequest{Owner: addr1, Timestamp: now.Add(2 * time.Second)})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 0)
+}
+
+func (suite *KeeperTestSuite) TestAccountLockedPastTimeNotUnlockingOnly() {
+	// test for account locks check
+	suite.SetupTest()
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	now := suite.ctx.BlockTime()
+
+	// empty address locks check
+	res, err := suite.app.LockupKeeper.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: sdk.AccAddress{}, Timestamp: now})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 0)
+
+	// initial account locks check
+	res, err = suite.app.LockupKeeper.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1, Timestamp: now})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 0)
+
+	// lock coins
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// account locks after not start unlocking
+	res, err = suite.app.LockupKeeper.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1, Timestamp: now})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 1)
+
+	// begin unlocking
+	suite.BeginUnlocking(addr1)
+
+	// account locks check after unlocking
+	res, err = suite.app.LockupKeeper.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1, Timestamp: now})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 }
@@ -314,6 +396,37 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {
 
 	// account locks longer than duration check, duration = 2s
 	res, err = suite.app.LockupKeeper.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1, Duration: 2 * time.Second})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 0)
+}
+
+func (suite *KeeperTestSuite) TestAccountLockedLongerDurationNotUnlockingOnly() {
+	// test for account locks longer than duration check
+	suite.SetupTest()
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	// empty address locks longer than duration check
+	res, err := suite.app.LockupKeeper.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: sdk.AccAddress{}, Duration: time.Second})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 0)
+	// initial account locks longer than duration check
+	res, err = suite.app.LockupKeeper.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1, Duration: time.Second})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 0)
+
+	// lock coins
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// account locks longer than duration check before start unlocking, duration = 1s
+	res, err = suite.app.LockupKeeper.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1, Duration: time.Second})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Locks, 1)
+
+	suite.BeginUnlocking(addr1)
+
+	// account locks longer than duration check after start unlocking, duration = 1s
+	res, err = suite.app.LockupKeeper.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1, Duration: time.Second})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 }

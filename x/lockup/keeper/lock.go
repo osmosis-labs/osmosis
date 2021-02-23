@@ -38,7 +38,7 @@ func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) (
 		if err != nil {
 			return locks, coins, err
 		}
-		// sum up all coins unlocked
+		// sum up all coins begin unlocking
 		coins = coins.Add(lock.Coins...)
 	}
 	return locks, coins, nil

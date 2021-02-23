@@ -31,12 +31,15 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdModuleBalance(),
 		GetCmdModuleLockedAmount(),
 		GetCmdAccountUnlockableCoins(),
+		GetCmdAccountUnlockingCoins(),
 		GetCmdAccountLockedCoins(),
 		GetCmdAccountLockedPastTime(),
+		GetCmdAccountLockedPastTimeNotUnlockingOnly(),
 		GetCmdAccountUnlockedBeforeTime(),
 		GetCmdAccountLockedPastTimeDenom(),
 		GetCmdLockedByID(),
 		GetCmdAccountLockedLongerDuration(),
+		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
 	)
 
@@ -157,6 +160,48 @@ $ %s query lockup account-unlockable-coins <address>
 	return cmd
 }
 
+// GetCmdAccountUnlockingCoins returns unlocking coins
+func GetCmdAccountUnlockingCoins() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "account-unlocking-coins <address>",
+		Short: "Query account's unlocking coins",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query account's unlocking coins.
+
+Example:
+$ %s query lockup account-unlocking-coins <address>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.AccountUnlockingCoins(cmd.Context(), &types.AccountUnlockingCoinsRequest{Owner: addr})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // GetCmdAccountLockedCoins returns locked coins that can't be withdrawn
 func GetCmdAccountLockedCoins() *cobra.Command {
 	cmd := &cobra.Command{
@@ -234,6 +279,54 @@ $ %s query lockup account-locked-pasttime <address> <timestamp>
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.AccountLockedPastTime(cmd.Context(), &types.AccountLockedPastTimeRequest{Owner: addr, Timestamp: timestamp})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdAccountLockedPastTimeNotUnlockingOnly returns locked records of an account with unlock time beyond timestamp within not unlocking queue
+func GetCmdAccountLockedPastTimeNotUnlockingOnly() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "account-locked-pasttime-not-unlocking <address> <timestamp>",
+		Short: "Query locked records of an account with unlock time beyond timestamp within not unlocking queue",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query locked records of an account with unlock time beyond timestamp within not unlocking queue.
+
+Example:
+$ %s query lockup account-locked-pasttime-not-unlocking <address> <timestamp>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			i, err := strconv.ParseInt(args[1], 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			timestamp := time.Unix(i, 0)
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.AccountLockedPastTimeNotUnlockingOnly(cmd.Context(), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr, Timestamp: timestamp})
 			if err != nil {
 				return err
 			}
@@ -396,7 +489,7 @@ func GetCmdAccountLockedLongerDuration() *cobra.Command {
 			fmt.Sprintf(`Query account locked records with longer duration.
 
 Example:
-$ %s query lockup account-locked-pasttime <address> <duration>
+$ %s query lockup account-locked-longer-duration <address> <duration>
 `,
 				version.AppName,
 			),
@@ -421,6 +514,53 @@ $ %s query lockup account-locked-pasttime <address> <duration>
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.AccountLockedLongerDuration(cmd.Context(), &types.AccountLockedLongerDurationRequest{Owner: addr, Duration: duration})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdAccountLockedLongerDurationNotUnlockingOnly returns account locked records with longer duration from unlocking only queue
+func GetCmdAccountLockedLongerDurationNotUnlockingOnly() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "account-locked-longer-duration-not-unlocking <address> <duration>",
+		Short: "Query account locked records with longer duration from unlocking only queue",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query account locked records with longer duration from unlocking only queue.
+
+Example:
+$ %s query lockup account-locked-longer-duration-not-unlocking <address> <duration>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			duration, err := time.ParseDuration(args[1])
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.AccountLockedLongerDurationNotUnlockingOnly(cmd.Context(), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr, Duration: duration})
 			if err != nil {
 				return err
 			}

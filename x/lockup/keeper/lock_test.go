@@ -7,6 +7,70 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
+	suite.SetupTest()
+
+	// initial locks check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks[0].EndTime, time.Time{})
+
+	// begin unlock
+	locks, unlockCoins, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr1)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+	suite.Require().Equal(unlockCoins, coins)
+	suite.Require().Equal(locks[0].ID, uint64(1))
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+	suite.Require().NotEqual(locks[0].EndTime, time.Time{})
+}
+
+func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
+	// test for all unlockable coins
+	suite.SetupTest()
+
+	// initial locks check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks[0].EndTime, time.Time{})
+
+	// begin unlock
+	lock1, err := suite.app.LockupKeeper.BeginUnlockPeriodLockByID(suite.ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(lock1.ID, uint64(1))
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().NotEqual(locks[0].EndTime, time.Time{})
+}
+
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	// test for module locked balance check
 	suite.SetupTest()
