@@ -25,8 +25,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgUnlockPeriodLock:
 			res, err := msgServer.UnlockPeriodLock(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgBeginUnlockTokens:
-			res, err := msgServer.BeginUnlockTokens(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgBeginUnlocking:
+			res, err := msgServer.BeginUnlocking(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgUnlockTokens:
 			res, err := msgServer.UnlockTokens(sdk.WrapSDKContext(ctx), msg)

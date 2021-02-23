@@ -31,8 +31,8 @@ func MsgLockTokens(clientCtx client.Context, owner fmt.Stringer, amount fmt.Stri
 	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewLockTokensCmd(), args)
 }
 
-// MsgBeginUnlockTokens creates a begin unlock tokens message
-func MsgBeginUnlockTokens(clientCtx client.Context, owner fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+// MsgBeginUnlocking creates a begin unlock tokens message
+func MsgBeginUnlocking(clientCtx client.Context, owner fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
 
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
@@ -40,7 +40,7 @@ func MsgBeginUnlockTokens(clientCtx client.Context, owner fmt.Stringer, extraArg
 	}
 
 	args = append(args, commonArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewBeginUnlockTokensCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewBeginUnlockingCmd(), args)
 }
 
 // MsgUnlockTokens unlock all unlockable tokens from an account

@@ -26,7 +26,7 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		NewLockTokensCmd(),
-		NewBeginUnlockTokensCmd(),
+		NewBeginUnlockingCmd(),
 		NewUnlockTokensCmd(),
 		NewBeginUnlockByIDCmd(),
 		NewUnlockByIDCmd(),
@@ -79,8 +79,8 @@ func NewLockTokensCmd() *cobra.Command {
 	return cmd
 }
 
-// NewBeginUnlockTokensCmd unlock all unlockable tokens from user's account
-func NewBeginUnlockTokensCmd() *cobra.Command {
+// NewBeginUnlockingCmd unlock all unlockable tokens from user's account
+func NewBeginUnlockingCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin-unlock-tokens",
 		Short: "begin unlock not unlocking tokens from lockup pool for an account",
@@ -93,7 +93,7 @@ func NewBeginUnlockTokensCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			msg := &types.MsgBeginUnlockTokens{
+			msg := &types.MsgBeginUnlocking{
 				Owner: clientCtx.GetFromAddress(),
 			}
 

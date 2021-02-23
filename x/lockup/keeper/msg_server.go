@@ -70,7 +70,7 @@ func (server msgServer) BeginUnlockPeriodLock(goCtx context.Context, msg *types.
 	return &types.MsgBeginUnlockPeriodLockResponse{}, nil
 }
 
-func (server msgServer) BeginUnlockTokens(goCtx context.Context, msg *types.MsgBeginUnlockTokens) (*types.MsgBeginUnlockTokensResponse, error) {
+func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBeginUnlocking) (*types.MsgBeginUnlockingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	unlocks, coins, err := server.keeper.BeginUnlockAllNotUnlockings(ctx, msg.Owner)
@@ -80,7 +80,7 @@ func (server msgServer) BeginUnlockTokens(goCtx context.Context, msg *types.MsgB
 
 	events := sdk.Events{
 		sdk.NewEvent(
-			types.TypeEvtBeginUnlockTokens,
+			types.TypeEvtBeginUnlocking,
 			sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner.String()),
 			sdk.NewAttribute(types.AttributeUnlockedCoins, coins.String()),
 		),
@@ -97,7 +97,7 @@ func (server msgServer) BeginUnlockTokens(goCtx context.Context, msg *types.MsgB
 	}
 	ctx.EventManager().EmitEvents(events)
 
-	return &types.MsgBeginUnlockTokensResponse{}, nil
+	return &types.MsgBeginUnlockingResponse{}, nil
 }
 
 func (server msgServer) UnlockPeriodLock(goCtx context.Context, msg *types.MsgUnlockPeriodLock) (*types.MsgUnlockPeriodLockResponse, error) {

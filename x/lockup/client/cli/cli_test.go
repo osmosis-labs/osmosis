@@ -96,7 +96,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// begin unlock all tokens
-	_, err = lockuptestutil.MsgBeginUnlockTokens(val.ClientCtx, val.Address)
+	_, err = lockuptestutil.MsgBeginUnlocking(val.ClientCtx, val.Address)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -198,7 +198,7 @@ func (s *IntegrationTestSuite) TestNewUnlockTokensCmd() {
 	s.Require().NoError(err)
 
 	// begin unlock tokens
-	_, err = lockuptestutil.MsgBeginUnlockTokens(val.ClientCtx, val.Address)
+	_, err = lockuptestutil.MsgBeginUnlocking(val.ClientCtx, val.Address)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -274,7 +274,7 @@ func (s *IntegrationTestSuite) TestNewUnlockByIDCmd() {
 	lockID := txResp.Logs[0].Events[0].Attributes[0].Value
 
 	// begin unlock tokens
-	res, err = lockuptestutil.MsgBeginUnlockTokens(val.ClientCtx, newAddr)
+	res, err = lockuptestutil.MsgBeginUnlocking(val.ClientCtx, newAddr)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -601,7 +601,7 @@ func (s IntegrationTestSuite) TestCmdLockedByID() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDuration() {
+func (s IntegrationTestSuite) TestCmdAccountLockedLongerDuration() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -622,7 +622,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDuration() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdAccountLockedLongerThanDuration()
+			cmd := cli.GetCmdAccountLockedLongerDuration()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -635,7 +635,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDuration() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDurationDenom() {
+func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationDenom() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -657,7 +657,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDurationDenom() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdAccountLockedLongerThanDurationDenom()
+			cmd := cli.GetCmdAccountLockedLongerDurationDenom()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

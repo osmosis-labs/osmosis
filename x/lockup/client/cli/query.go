@@ -36,8 +36,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdAccountUnlockedBeforeTime(),
 		GetCmdAccountLockedPastTimeDenom(),
 		GetCmdLockedByID(),
-		GetCmdAccountLockedLongerThanDuration(),
-		GetCmdAccountLockedLongerThanDurationDenom(),
+		GetCmdAccountLockedLongerDuration(),
+		GetCmdAccountLockedLongerDurationDenom(),
 	)
 
 	return cmd
@@ -387,8 +387,8 @@ $ %s query lockup lock-by-id <id>
 	return cmd
 }
 
-// GetCmdAccountLockedLongerThanDuration returns account locked records with longer duration
-func GetCmdAccountLockedLongerThanDuration() *cobra.Command {
+// GetCmdAccountLockedLongerDuration returns account locked records with longer duration
+func GetCmdAccountLockedLongerDuration() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-longer-duration <address> <duration>",
 		Short: "Query account locked records with longer duration",
@@ -420,7 +420,7 @@ $ %s query lockup account-locked-pasttime <address> <duration>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedLongerThanDuration(cmd.Context(), &types.AccountLockedLongerDurationRequest{Owner: addr, Duration: duration})
+			res, err := queryClient.AccountLockedLongerDuration(cmd.Context(), &types.AccountLockedLongerDurationRequest{Owner: addr, Duration: duration})
 			if err != nil {
 				return err
 			}
@@ -434,8 +434,8 @@ $ %s query lockup account-locked-pasttime <address> <duration>
 	return cmd
 }
 
-// GetCmdAccountLockedLongerThanDurationDenom returns account's locked records for a denom with longer duration
-func GetCmdAccountLockedLongerThanDurationDenom() *cobra.Command {
+// GetCmdAccountLockedLongerDurationDenom returns account's locked records for a denom with longer duration
+func GetCmdAccountLockedLongerDurationDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-longer-duration-denom <address> <duration> <denom>",
 		Short: "Query locked records for a denom with longer duration",
@@ -469,7 +469,7 @@ $ %s query lockup account-locked-pasttime <address> <duration> <denom>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedLongerThanDurationDenom(cmd.Context(), &types.AccountLockedLongerDurationDenomRequest{Owner: addr, Duration: duration, Denom: denom})
+			res, err := queryClient.AccountLockedLongerDurationDenom(cmd.Context(), &types.AccountLockedLongerDurationDenomRequest{Owner: addr, Duration: duration, Denom: denom})
 			if err != nil {
 				return err
 			}

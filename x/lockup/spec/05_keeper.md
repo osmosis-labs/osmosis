@@ -18,6 +18,8 @@ type Keeper interface {
 
 	// GetAccountUnlockableCoins Returns whole unlockable coins which are not withdrawn yet
 	GetAccountUnlockableCoins(sdk.Context, addr sdk.AccAddress) sdk.Coins
+	// GetAccountUnlockingCoins Returns whole unlocking coins
+	GetAccountUnlockingCoins(sdk.Context, addr sdk.AccAddress) sdk.Coins
 	// GetAccountLockedCoins Returns a locked coins that can't be withdrawn
 	GetAccountLockedCoins(sdk.Context, addr sdk.AccAddress) sdk.Coins
 
@@ -29,10 +31,10 @@ type Keeper interface {
 	// GetAccountLockedPastTimeDenom is equal to GetAccountLockedPastTime but denom specific
 	GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock
 	
-	// GetAccountLockedLongerThanDuration Returns account locked with duration longer than specified
-	GetAccountLockedLongerThanDuration(sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock
-	// GetAccountLockedLongerThanDurationDenom Returns account locked with duration longer than specified with specific denom
-	GetAccountLockedLongerThanDurationDenom(sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock
+	// GetAccountLockedLongerDuration Returns account locked with duration longer than specified
+	GetAccountLockedLongerDuration(sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock
+	// GetAccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom
+	GetAccountLockedLongerDurationDenom(sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock
 
 	// GetLockByID Returns lock from lockID
 	GetLockByID(sdk.Context, lockID uint64) (*types.PeriodLock, error)

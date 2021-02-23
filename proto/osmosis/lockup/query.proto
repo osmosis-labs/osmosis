@@ -18,6 +18,8 @@ service Query {
 
 	// Returns unlockable coins which are not withdrawn yet
 	rpc AccountUnlockableCoins(AccountUnlockableCoinsRequest) returns (AccountUnlockableCoinsResponse);
+	// Returns unlocking coins
+	rpc AccountUnlockingCoins(AccountUnlockingCoinsRequest) returns (AccountUnlockingCoinsResponse);
 	// Return a locked coins that can't be withdrawn
 	rpc AccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
 
@@ -34,11 +36,11 @@ service Query {
 	rpc LockedByID(LockedRequest) returns (LockedResponse);
 
 	// Returns account locked records with longer duration
-	rpc AccountLockedLongerThanDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
+	rpc AccountLockedLongerDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
 	// Returns account locked records with longer duration excluding tokens started unlocking
 	rpc AccountLockedLongerDurationNotUnlockingOnly(AccountLockedLongerDurationNotUnlockingOnlyRequest) returns (AccountLockedLongerDurationNotUnlockingOnlyResponse);
 	// Returns account's locked records for a denom with longer duration
-	rpc AccountLockedLongerThanDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
+	rpc AccountLockedLongerDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
 }
 
 message ModuleBalanceRequest {};
@@ -61,6 +63,15 @@ message AccountUnlockableCoinsResponse {
 	repeated cosmos.base.v1beta1.Coin coins = 1
         [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 };
+
+message AccountUnlockingCoinsRequest {
+	bytes owner = 1 
+        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+message AccountUnlockingCoinsResponse {
+	repeated cosmos.base.v1beta1.Coin coins = 1
+        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
 
 message AccountLockedCoinsRequest {
 	bytes owner = 1 
