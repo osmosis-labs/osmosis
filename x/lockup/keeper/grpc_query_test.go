@@ -146,12 +146,12 @@ func (suite *KeeperTestSuite) TestAccountUnlockingCoins() {
 	now := suite.ctx.BlockTime()
 	res, err = suite.app.LockupKeeper.AccountUnlockingCoins(sdk.WrapSDKContext(suite.ctx.WithBlockTime(now.Add(time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1})
 	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
+	suite.Require().Equal(res.Coins, sdk.Coins{})
 
 	// account unlocking balance after 2 second = unlockTime + 1s
 	res, err = suite.app.LockupKeeper.AccountUnlockingCoins(sdk.WrapSDKContext(suite.ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1})
 	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
+	suite.Require().Equal(res.Coins, sdk.Coins{})
 }
 
 func (suite *KeeperTestSuite) TestAccountLockedCoins() {
@@ -363,6 +363,7 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 	suite.Require().Equal(res.Lock.Coins, coins)
 	suite.Require().Equal(res.Lock.Duration, time.Second)
 	suite.Require().Equal(res.Lock.EndTime, time.Time{})
+	suite.Require().Equal(res.Lock.IsUnlocking(), false)
 }
 
 func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {

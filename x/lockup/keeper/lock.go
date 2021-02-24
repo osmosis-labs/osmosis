@@ -92,7 +92,7 @@ func (k Keeper) GetAccountUnlockableCoins(ctx sdk.Context, addr sdk.AccAddress) 
 
 // GetAccountUnlockingCoins Returns whole unlocking coins
 func (k Keeper) GetAccountUnlockingCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return k.getCoinsFromIterator(ctx, k.AccountLockIterator(ctx, true, addr))
+	return k.getCoinsFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, true, addr, ctx.BlockTime()))
 }
 
 // GetAccountLockedCoins Returns a locked coins that can't be withdrawn
@@ -283,8 +283,7 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// validation for current time and unlock time
 	curTime := ctx.BlockTime()
-	unsetTime := time.Time{}
-	if lock.EndTime == unsetTime {
+	if !lock.IsUnlocking() {
 		return fmt.Errorf("lock hasn't started unlocking yet")
 	}
 	if curTime.Before(lock.EndTime) {

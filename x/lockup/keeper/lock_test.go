@@ -25,6 +25,7 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].EndTime, time.Time{})
+	suite.Require().Equal(locks[0].IsUnlocking(), false)
 
 	// begin unlock
 	locks, unlockCoins, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr1)
@@ -38,6 +39,7 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 1)
 	suite.Require().NotEqual(locks[0].EndTime, time.Time{})
+	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
 }
 
 func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
@@ -59,6 +61,7 @@ func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].EndTime, time.Time{})
+	suite.Require().Equal(locks[0].IsUnlocking(), false)
 
 	// begin unlock
 	lock1, err := suite.app.LockupKeeper.BeginUnlockPeriodLockByID(suite.ctx, 1)
@@ -69,6 +72,7 @@ func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
 	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().NotEqual(locks[0].EndTime, time.Time{})
+	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
 }
 
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {

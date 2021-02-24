@@ -509,7 +509,7 @@ func (s *IntegrationTestSuite) TestCmdAccountUnlockingCoins() {
 				val.Address.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(211))},
+			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
 		},
 	}
 
