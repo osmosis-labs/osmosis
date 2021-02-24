@@ -4,55 +4,167 @@ integrates cel-go
 
 ## Introduction
 
-A cel-go expression type is defined by (EnvType, Input parameter type, Output parameter type).
-Expressions those shares the same functionality(e.g. a curve and its parameter updater) are under the same EnvType.
-We call a set of expressions a cell. Expressions under a cell should share same EnvType(which acts like a state). 
-Expressions can have different input/output parameter types. Output type includes effects.
-For the sake of simplicity, we read the entire variable set defined by EnvType. This could be optimized later.
-For this reason we allow finite set of variables used inside the expression.
-Later we can parameterize EnvSet to use specific variable only.
+CEL is a non turing complete embeddable scripting language that can be used to describe custom expressions
+to be used by the more complex logic. Some of the specifics of CEL are:
+
+- Variables are not explicitly passed, but the underlying environment resolves the names. This environment
+  has to be provided by the expression caller.
+- Cannot access mutable storage. CEL module will support storage without sync and access interface.
+- Has native support of
+-   constructing protobuf and json messages
+-   adding custom functions and types
+-   disabling specific functions and types
+
+We will wrap expressions into an object unit `Cell`. A cell consists of multiple expressions and a shared state.
+The number of expressions are not bounded, but the state has to be finite. 
+This is because when the entire parameter set has to be provided as its execution environment at evaluation.
+An expression is defined as a pair of CEL expression and its input/output type.
+
+Expressions can be either pure or effectful. A pure expression is intended to be readonly upon the input parameters
+and the state, and returns a value. An effectful expression returns a list of effects which is possibly side effectful
+commands expected to be processed by the cel module.
+
+Custom functions and types cannot be generated runtime(as they has to be written in golang and compiled). A set of 
+precompiled functions and types is called plugin. An expression can have a set of plugins to be attatched when it is
+registered to the cel module. The module will provide the plugin information to the execution environment at the 
+evaluation.
 
 ## Components
 
-### EnvType
+### Expression
 
-An EnvType is, roughly, a JSON object type, such as:
-
-```ts
-interface User {
-  balance: number;
-  moniker: string;
-  minter:  address;
+```go
+// Runtime
+type Expression struct {
+  ID string
+  CellID string
+  Expr *cel.Expr
+  Inputs []*cel.Decl
+  Output *cel.Type
+  Plugins []string
 }
 ```
 
-An EnvType defines the state structure that is going to be used by a set of expressions.
-When executing an expression, the module will load corresponding EnvType from the state,
-and initializes a cel-go Env providing the EnvSet declarations to cel.NewEnv.
-
-Custom functions(such as precompiled curve calculation) is EnvType-dependent. 
-For Osmosis, my opinion is that EnvType extension should be done on chain level governance.
-
 ### Cell
 
-A cell is somewhat like a contract. Cell can consists of multiple expressions, which shares the same state.
-New expressions can be dynamically added / existing expressions can be updated through cell-level governance.
+```go
+type Cell struct {
+  ID string
+  State CellState
+}
 
-### Expression
+// Runtime
+type CellState interface {
+  ID() string
+  StateFrame() StateFrame
+  StateVars() map[string]interface{}
+  Plugins() []Plugin
+}
 
-Three types of expressions:
-1. Input -> Output (pure function)
-2. (State, Input) -> Output (reader function)
-3. (State, Input) -> Effect (mutable function)
+// Runtime
+type StateFrame interface {
+  Types() []interface{}
+  Decls() []*exprpb.Decl
+}
 
-(State modification is not what cel-go is defined for, but I think we can hack it to return "effects" that 
-has some mutable effects. We need some sort of mutability for cell level governance anyway. Note this is 
-how functional languages handles side effects, still maintaining purity. This is a hack so would be better to separate 2/3)
+// Compile time
+type Plugin interface {
+  ID() string
+  StateFrame() StateFrame
+  Funcs() []*functions.Overload
+}
+```
 
-TODO: I belive that, we can add a macro that "calls" another pure/reader expression inside an expression. 
-As long as it does not call mutable function(effects cannot be processed inside an expression), and the callee
-is within the same cell, it is a good sideway to use output of other expressions. 
-Within a single expression invocation from an external actor, there still will be no state modification.
+### Effect
+
+Effects are encoded as either protobuf message or json.
+
+```go
+type EffectType enum
+
+const (
+  Abort EffectType = iota
+  SetState
+  Transfer
+  ModuleEffect
+  // ...
+)
+```
+
+### Custom functions
+
+```go
+var _ Plugin = PluginAmm{}
+
+type PluginAMM struct {}
+
+func (_ PluginAMM) ID() string {
+  return "AMM"
+}
+
+func (_ PluginAMM) StateFrame() StateFrame {
+  return PluginStateFrame {
+    Funcs: []*functions.Overload{
+      &functions.Overload{
+        Operator: "amm_curve_calculation",
+        Function: func(args ...ref.Val) ref.Val {
+          if len(args) != 3 {
+            return types.NewErr("invalid number of argument given to amm_curve_calculation")
+          }
+          poolA, ok := args[0].(types.Uint)
+          if !ok {
+            return types.ValOrErr(args[0], "type error on argument 0: expected type uint")
+          }
+          poolB, ok := args[1].(types.Uint)
+          if !ok {
+            return types.ValOrErr(args[1], "type error on argument 1: expected type uint")
+          }
+          value, ok := args[2].(types.Uint)
+          if !ok {
+            return types.ValOrErr(args[2], "type error on argument 2: expected type uint")
+          }
+          newPoolA := poolA.Add(value)
+          newPoolB := poolA.Mul(poolB).Div(poolB)
+          tokensOut := poolB.Sub(newPoolB)
+
+          reg := types.NewRegistry
+          reg.RegiserType(&)
+          return types.NewDynamicList(types.NewRegistry())
+        },
+      },
+      &functions.Overload{
+        Operator: "amm_module_swap_effect_constructor",
+        Function: func(args ...ref.Val) ref.Val {
+          if len(args) != 3 {
+            return types.NewErr("invalid number of argument given to amm_module_swap_effect_constructor")
+          }
+          acc, ok := args[0].(Account)
+          if !ok {
+            return types.ValOrErr(args[0], "type error on argument 0: expected type Account")
+          }
+          value, ok := args[1].(types.Uint)
+          if !ok {
+            return types.ValOrErr(args[1], "type error on argument 1: expected type uint")
+          }
+
+          reg := types.NewRegistry()
+          reg.RegisterType(&EffectAMMSwap{})
+          return NewMessage(&EffectAMMSwap{
+            Account: acc,
+            Value: value,
+          })
+        },
+      }
+    },
+  }
+}
+```
+In this example, the function "amm_curve_calculation" takes three parameters(size of each pool and requested swap value)
+and returns the appropriate result state. Note that this function will be not practically useful as it would be easier
+to write simple functions such as swap in cel expression, and cel does not support multi variable return. 
+
+The function "amm_module_swap_effect_constructor" is however a useful function that constructs an effect message type.
+The effect will be passed to the amm module which will handle the effect in a predefined way.
 
 ## Execution process
 
@@ -62,36 +174,6 @@ Within a single expression invocation from an external actor, there still will b
 4. Setup cel Env using EnvType and the state.
 5. Provide the state and the user input to the expression, evaluate it.
 6. Return the output or process the effects.
-
-## KVStore State
-
-```go
-type Cell struct {
-  ID string
-  EnvType EnvType
-}
-
-// EnvType should be an interface.
-// Macros are EnvType specific. New EnvType is added through chain upgrade. 
-type EnvType struct {
-  Types []*exprpb.Decl
-  State map[string]string
-}
-
-func KeyCell(id string) []byte {
-  return join([]byte(0x00), id)
-}
-
-type Expr struct {
-  InputTypes []*exprpb.Decl
-  OutputType *exprpb.Type
-}
-
-func KeyExpr(cellID string, exprID string) []byte {
-  return join([]byte{0x00}, cellID, exprID)
-}
-```
-
 
 ## Memo
 
