@@ -339,5 +339,9 @@ func NewUpdateSwapFeeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		NewSwapFee: swapFee,
 	}
 
+	if err = msg.ValidateBasic(); err != nil {
+		return txf, nil, err
+	}
+
 	return txf, msg, nil
 }
