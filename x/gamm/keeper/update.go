@@ -32,10 +32,5 @@ func (k Keeper) UpdateSwapFee(
 	params.SwapFee = newSwapFee
 	poolAcc.SetPoolParams(params)
 
-	err = k.SetPool(ctx, poolAcc)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.SetPool(ctx, poolAcc)
 }

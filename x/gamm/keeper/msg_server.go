@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/c-osmosis/osmosis/x/gamm/utils"
 
@@ -257,10 +258,14 @@ func (server msgServer) UpdateSwapFee(goCtx context.Context, msg *types.MsgUpdat
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
+			types.TypeEvtUpdateSwapFee,
+			sdk.NewAttribute(types.AttributeKeyPoolId, fmt.Sprintf("%d", msg.PoolId)),
+			sdk.NewAttribute(types.AttributeKeySwapFee, msg.NewSwapFee.String()),
+		),
+		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			// TODO: Add events for updating swapfee
 		),
 	})
 
