@@ -91,7 +91,7 @@ func NewJoinPoolCmd() *cobra.Command {
 
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 	_ = cmd.MarkFlagRequired(FlagShareAmountOut)
-	_ = cmd.MarkFlagRequired(FlagMaxAountsIn)
+	_ = cmd.MarkFlagRequired(FlagMaxAmountsIn)
 
 	return cmd
 }
@@ -223,7 +223,7 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		return txf, nil, fmt.Errorf("invalid share amount out")
 	}
 
-	maxAmountsInStrs, err := fs.GetStringArray(FlagMaxAountsIn)
+	maxAmountsInStrs, err := fs.GetStringArray(FlagMaxAmountsIn)
 	if err != nil {
 		return txf, nil, err
 	}

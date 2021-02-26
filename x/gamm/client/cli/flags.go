@@ -18,7 +18,7 @@ const (
 	// Will be parsed to sdk.Int
 	FlagShareAmountOut = "share-amount-out"
 	// Will be parsed to []sdk.Coin
-	FlagMaxAountsIn = "max-amounts-in"
+	FlagMaxAmountsIn = "max-amounts-in"
 
 	// Will be parsed to sdk.Int
 	FlagShareAmountIn = "share-amount-in"
@@ -41,7 +41,7 @@ func FlagSetJoinPool() *flag.FlagSet {
 
 	fs.Uint64(FlagPoolId, 0, "The id of pool")
 	fs.String(FlagShareAmountOut, "", "TODO: add description")
-	fs.StringArray(FlagMaxAountsIn, []string{""}, "TODO: add description")
+	fs.StringArray(FlagMaxAmountsIn, []string{""}, "TODO: add description")
 
 	return fs
 }
