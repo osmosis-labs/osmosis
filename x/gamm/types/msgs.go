@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -184,7 +186,23 @@ var _ sdk.Msg = &MsgUpdateSwapFee{}
 func (m MsgUpdateSwapFee) Route() string { return RouterKey }
 func (m MsgUpdateSwapFee) Type() string  { return TypeMsgUpdateSwapfee }
 func (m MsgUpdateSwapFee) ValidateBasic() error {
-	return nil // TODO
+	if m.NewSwapFee.IsNegative() {
+		return errors.New("swap fee could not be negative")
+	}
+
+	if m.NewSwapFee.GT(sdk.NewDec(1)) {
+		return errors.New("swap fee could not exceed 100%")
+	}
+
+	sender, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return err
+	}
+	if sender.Empty() {
+		return errors.New("empty sender")
+	}
+
+	return nil
 }
 func (m MsgUpdateSwapFee) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
