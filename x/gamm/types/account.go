@@ -22,6 +22,7 @@ type PoolAccountI interface {
 
 	GetId() uint64
 	GetPoolParams() PoolParams
+	SetPoolParams(params PoolParams)
 	GetTotalWeight() sdk.Int
 	GetTotalShare() sdk.Coin
 	AddTotalShare(amt sdk.Int)
@@ -85,6 +86,11 @@ func (pa PoolAccount) GetId() uint64 {
 
 func (pa PoolAccount) GetPoolParams() PoolParams {
 	return pa.PoolParams
+}
+
+func (pa *PoolAccount) SetPoolParams(params PoolParams) {
+	pa.PoolParams = params
+	return
 }
 
 func (pa PoolAccount) GetTotalWeight() sdk.Int {

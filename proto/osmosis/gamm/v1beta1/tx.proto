@@ -23,6 +23,7 @@ service Msg {
       returns (MsgExitSwapExternAmountOutResponse);
   rpc ExitSwapShareAmountIn(MsgExitSwapShareAmountIn)
       returns (MsgExitSwapShareAmountInResponse);
+  rpc UpdateSwapFee(MsgUpdateSwapFee) returns (MsgUpdateSwapFeeResponse);
 }
 
 // ===================== MsgCreatePool
@@ -193,3 +194,16 @@ message MsgExitSwapExternAmountOut {
 }
 
 message MsgExitSwapExternAmountOutResponse {}
+
+// ===================== MsgUpdateSwapFee
+message MsgUpdateSwapFee {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string newSwapFee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUpdateSwapFeeResponse {}

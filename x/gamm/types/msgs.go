@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,6 +17,7 @@ const (
 	TypeMsgJoinSwapShareAmountOut  = "join_swap_extern_amount_out"
 	TypeMsgExitSwapExternAmountOut = "exit_swap_extern_amount_out"
 	TypeMsgExitSwapShareAmountIn   = "exit_swap_share_amount_in"
+	TypeMsgUpdateSwapfee           = "update_swapfee"
 )
 
 var _ sdk.Msg = &MsgCreatePool{}
@@ -172,6 +175,40 @@ func (m MsgExitSwapShareAmountIn) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgExitSwapShareAmountIn) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgUpdateSwapFee{}
+
+func (m MsgUpdateSwapFee) Route() string { return RouterKey }
+func (m MsgUpdateSwapFee) Type() string  { return TypeMsgUpdateSwapfee }
+func (m MsgUpdateSwapFee) ValidateBasic() error {
+	if m.NewSwapFee.IsNegative() {
+		return errors.New("swap fee could not be negative")
+	}
+
+	if m.NewSwapFee.GT(sdk.NewDec(1)) {
+		return errors.New("swap fee could not exceed 100%")
+	}
+
+	sender, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return err
+	}
+	if sender.Empty() {
+		return errors.New("empty sender")
+	}
+
+	return nil
+}
+func (m MsgUpdateSwapFee) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgUpdateSwapFee) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
 		panic(err)
