@@ -6,13 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-
+	"github.com/c-osmosis/osmosis/x/gamm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-
-	"github.com/c-osmosis/osmosis/x/gamm/types"
+	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -43,7 +41,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdPool returns pool
 func GetCmdPool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pool",
+		Use:   "pool <poolID>",
 		Short: "Query pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query pool.
@@ -121,7 +119,7 @@ $ %s query gamm pools
 // GetCmdPoolParams return pool params
 func GetCmdPoolParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pool-params",
+		Use:   "pool-params <poolID>",
 		Short: "Query pool-params",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query pool-params.
@@ -163,7 +161,7 @@ $ %s query gamm pool-params 1
 // GetCmdTotalShare return total share
 func GetCmdTotalShare() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "total-share",
+		Use:   "total-share <poolID>",
 		Short: "Query total-share",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query total-share.
@@ -205,7 +203,7 @@ $ %s query gamm total-share 1
 // GetCmdRecords return records
 func GetCmdRecords() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "records",
+		Use:   "records <poolID>",
 		Short: "Query records",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query records.
@@ -247,7 +245,7 @@ $ %s query gamm records 1
 // GetCmdSpotPrice returns spot price
 func GetCmdSpotPrice() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "spot-price",
+		Use:   "spot-price <poolID> <tokenInDenom> <tokenOutDenom>",
 		Short: "Query spot-price",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query spot-price.
@@ -291,7 +289,7 @@ $ %s query gamm spot-price 1 stake stake2
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input
 func GetCmdEstimateSwapExactAmountIn() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "estimate-swap-exact-amount-in",
+		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
 		Short: "Query estimate-swap-exact-amount-in",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query estimate-swap-exact-amount-in.
@@ -365,12 +363,12 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 // GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output
 func GetCmdEstimateSwapExactAmountOut() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "estimate-swap-exact-amount-out",
+		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
 		Short: "Query estimate-swap-exact-amount-out",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query estimate-swap-exact-amount-out.
 Example:
-$ %s query gamm estimate-swap-exact-amount-out 1
+$ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-amounts=100stake2 --swap-route-pool-ids=3 --swap-route-amounts=100stake
 `,
 				version.AppName,
 			),
