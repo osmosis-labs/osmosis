@@ -24,7 +24,20 @@ const (
 	FlagShareAmountIn = "share-amount-in"
 	// Will be parsed to []sdk.Coin
 	FlagMinAmountsOut = "min-amounts-out"
+
+	// Will be parsed to uint64
+	FlagSwapRoutePoolIds = "swap-route-pool-ids"
+	// Will be parsed to []sdk.Coin
+	FlagSwapRouteAmounts = "swap-route-amounts"
 )
+
+func FlagSetQuerySwapRoutes() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool id")
+	fs.StringArray(FlagSwapRouteAmounts, []string{""}, "swap route amount")
+	return fs
+}
 
 func FlagSetCreatePool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
