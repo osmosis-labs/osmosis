@@ -13,8 +13,14 @@ All the incentives that is going to be provided are locked into `IncentivePool` 
 A `Pot` is a unit of incentive distributer. It describes the the users who can get reward, and the amount of coins to be distribute, the distribution start time, and the number of epochs it provide incentive from the `Pot`.
 
 ```go
+type LockType int
+const (
+  ByLockDuration LockType = iota // locks which has more than specific duration
+  ByLockTime // locks which are started before specific time
+)
+
 type DistrCondition struct {
-  LockType   uint64 // type of lock, ByLockDuration | ByLockTime
+  LockType LockType // type of lock condition
   Denom  string // lock denom
   Duration time.Duration // condition for lock duration, only valid if positive
   Timestamp time.Time // condition for lock start time, not valid if unset value
