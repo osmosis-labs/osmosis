@@ -6,12 +6,17 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types/query"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -25,22 +30,639 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type ModuleToDistributeCoinsRequest struct {
+}
+
+func (m *ModuleToDistributeCoinsRequest) Reset()         { *m = ModuleToDistributeCoinsRequest{} }
+func (m *ModuleToDistributeCoinsRequest) String() string { return proto.CompactTextString(m) }
+func (*ModuleToDistributeCoinsRequest) ProtoMessage()    {}
+func (*ModuleToDistributeCoinsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{0}
+}
+func (m *ModuleToDistributeCoinsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleToDistributeCoinsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleToDistributeCoinsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleToDistributeCoinsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleToDistributeCoinsRequest.Merge(m, src)
+}
+func (m *ModuleToDistributeCoinsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleToDistributeCoinsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleToDistributeCoinsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleToDistributeCoinsRequest proto.InternalMessageInfo
+
+type ModuleToDistributeCoinsResponse struct {
+	Coins []*types.Coin `protobuf:"bytes,1,rep,name=coins,proto3" json:"coins,omitempty"`
+}
+
+func (m *ModuleToDistributeCoinsResponse) Reset()         { *m = ModuleToDistributeCoinsResponse{} }
+func (m *ModuleToDistributeCoinsResponse) String() string { return proto.CompactTextString(m) }
+func (*ModuleToDistributeCoinsResponse) ProtoMessage()    {}
+func (*ModuleToDistributeCoinsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{1}
+}
+func (m *ModuleToDistributeCoinsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleToDistributeCoinsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleToDistributeCoinsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleToDistributeCoinsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleToDistributeCoinsResponse.Merge(m, src)
+}
+func (m *ModuleToDistributeCoinsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleToDistributeCoinsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleToDistributeCoinsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleToDistributeCoinsResponse proto.InternalMessageInfo
+
+func (m *ModuleToDistributeCoinsResponse) GetCoins() []*types.Coin {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type ModuleDistributedCoinsRequest struct {
+}
+
+func (m *ModuleDistributedCoinsRequest) Reset()         { *m = ModuleDistributedCoinsRequest{} }
+func (m *ModuleDistributedCoinsRequest) String() string { return proto.CompactTextString(m) }
+func (*ModuleDistributedCoinsRequest) ProtoMessage()    {}
+func (*ModuleDistributedCoinsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{2}
+}
+func (m *ModuleDistributedCoinsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleDistributedCoinsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleDistributedCoinsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleDistributedCoinsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleDistributedCoinsRequest.Merge(m, src)
+}
+func (m *ModuleDistributedCoinsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleDistributedCoinsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleDistributedCoinsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleDistributedCoinsRequest proto.InternalMessageInfo
+
+type ModuleDistributedCoinsResponse struct {
+	Coins []*types.Coin `protobuf:"bytes,1,rep,name=coins,proto3" json:"coins,omitempty"`
+}
+
+func (m *ModuleDistributedCoinsResponse) Reset()         { *m = ModuleDistributedCoinsResponse{} }
+func (m *ModuleDistributedCoinsResponse) String() string { return proto.CompactTextString(m) }
+func (*ModuleDistributedCoinsResponse) ProtoMessage()    {}
+func (*ModuleDistributedCoinsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{3}
+}
+func (m *ModuleDistributedCoinsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleDistributedCoinsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleDistributedCoinsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleDistributedCoinsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleDistributedCoinsResponse.Merge(m, src)
+}
+func (m *ModuleDistributedCoinsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleDistributedCoinsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleDistributedCoinsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleDistributedCoinsResponse proto.InternalMessageInfo
+
+func (m *ModuleDistributedCoinsResponse) GetCoins() []*types.Coin {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type PotByIDRequest struct {
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *PotByIDRequest) Reset()         { *m = PotByIDRequest{} }
+func (m *PotByIDRequest) String() string { return proto.CompactTextString(m) }
+func (*PotByIDRequest) ProtoMessage()    {}
+func (*PotByIDRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{4}
+}
+func (m *PotByIDRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PotByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PotByIDRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PotByIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PotByIDRequest.Merge(m, src)
+}
+func (m *PotByIDRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PotByIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PotByIDRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PotByIDRequest proto.InternalMessageInfo
+
+func (m *PotByIDRequest) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type PotByIDResponse struct {
+	Pot *Pot `protobuf:"bytes,1,opt,name=pot,proto3" json:"pot,omitempty"`
+}
+
+func (m *PotByIDResponse) Reset()         { *m = PotByIDResponse{} }
+func (m *PotByIDResponse) String() string { return proto.CompactTextString(m) }
+func (*PotByIDResponse) ProtoMessage()    {}
+func (*PotByIDResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{5}
+}
+func (m *PotByIDResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PotByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PotByIDResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PotByIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PotByIDResponse.Merge(m, src)
+}
+func (m *PotByIDResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *PotByIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PotByIDResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PotByIDResponse proto.InternalMessageInfo
+
+func (m *PotByIDResponse) GetPot() *Pot {
+	if m != nil {
+		return m.Pot
+	}
+	return nil
+}
+
+type PotsRequest struct {
+}
+
+func (m *PotsRequest) Reset()         { *m = PotsRequest{} }
+func (m *PotsRequest) String() string { return proto.CompactTextString(m) }
+func (*PotsRequest) ProtoMessage()    {}
+func (*PotsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{6}
+}
+func (m *PotsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PotsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PotsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PotsRequest.Merge(m, src)
+}
+func (m *PotsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PotsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PotsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PotsRequest proto.InternalMessageInfo
+
+type PotsResponse struct {
+	Pot []*Pot `protobuf:"bytes,1,rep,name=pot,proto3" json:"pot,omitempty"`
+}
+
+func (m *PotsResponse) Reset()         { *m = PotsResponse{} }
+func (m *PotsResponse) String() string { return proto.CompactTextString(m) }
+func (*PotsResponse) ProtoMessage()    {}
+func (*PotsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{7}
+}
+func (m *PotsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PotsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PotsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PotsResponse.Merge(m, src)
+}
+func (m *PotsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *PotsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PotsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PotsResponse proto.InternalMessageInfo
+
+func (m *PotsResponse) GetPot() []*Pot {
+	if m != nil {
+		return m.Pot
+	}
+	return nil
+}
+
+type ActivePotsRequest struct {
+}
+
+func (m *ActivePotsRequest) Reset()         { *m = ActivePotsRequest{} }
+func (m *ActivePotsRequest) String() string { return proto.CompactTextString(m) }
+func (*ActivePotsRequest) ProtoMessage()    {}
+func (*ActivePotsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{8}
+}
+func (m *ActivePotsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ActivePotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ActivePotsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ActivePotsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActivePotsRequest.Merge(m, src)
+}
+func (m *ActivePotsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ActivePotsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActivePotsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ActivePotsRequest proto.InternalMessageInfo
+
+type ActivePotsResponse struct {
+	Pot []*Pot `protobuf:"bytes,1,rep,name=pot,proto3" json:"pot,omitempty"`
+}
+
+func (m *ActivePotsResponse) Reset()         { *m = ActivePotsResponse{} }
+func (m *ActivePotsResponse) String() string { return proto.CompactTextString(m) }
+func (*ActivePotsResponse) ProtoMessage()    {}
+func (*ActivePotsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{9}
+}
+func (m *ActivePotsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ActivePotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ActivePotsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ActivePotsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActivePotsResponse.Merge(m, src)
+}
+func (m *ActivePotsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ActivePotsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActivePotsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ActivePotsResponse proto.InternalMessageInfo
+
+func (m *ActivePotsResponse) GetPot() []*Pot {
+	if m != nil {
+		return m.Pot
+	}
+	return nil
+}
+
+type UpcomingPotsRequest struct {
+}
+
+func (m *UpcomingPotsRequest) Reset()         { *m = UpcomingPotsRequest{} }
+func (m *UpcomingPotsRequest) String() string { return proto.CompactTextString(m) }
+func (*UpcomingPotsRequest) ProtoMessage()    {}
+func (*UpcomingPotsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{10}
+}
+func (m *UpcomingPotsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpcomingPotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpcomingPotsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpcomingPotsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpcomingPotsRequest.Merge(m, src)
+}
+func (m *UpcomingPotsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpcomingPotsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpcomingPotsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpcomingPotsRequest proto.InternalMessageInfo
+
+type UpcomingPotsResponse struct {
+	Pot []*Pot `protobuf:"bytes,1,rep,name=pot,proto3" json:"pot,omitempty"`
+}
+
+func (m *UpcomingPotsResponse) Reset()         { *m = UpcomingPotsResponse{} }
+func (m *UpcomingPotsResponse) String() string { return proto.CompactTextString(m) }
+func (*UpcomingPotsResponse) ProtoMessage()    {}
+func (*UpcomingPotsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{11}
+}
+func (m *UpcomingPotsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpcomingPotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpcomingPotsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpcomingPotsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpcomingPotsResponse.Merge(m, src)
+}
+func (m *UpcomingPotsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpcomingPotsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpcomingPotsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpcomingPotsResponse proto.InternalMessageInfo
+
+func (m *UpcomingPotsResponse) GetPot() []*Pot {
+	if m != nil {
+		return m.Pot
+	}
+	return nil
+}
+
+type RewardsEstRequest struct {
+	Owner github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`
+}
+
+func (m *RewardsEstRequest) Reset()         { *m = RewardsEstRequest{} }
+func (m *RewardsEstRequest) String() string { return proto.CompactTextString(m) }
+func (*RewardsEstRequest) ProtoMessage()    {}
+func (*RewardsEstRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{12}
+}
+func (m *RewardsEstRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RewardsEstRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RewardsEstRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RewardsEstRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RewardsEstRequest.Merge(m, src)
+}
+func (m *RewardsEstRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *RewardsEstRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RewardsEstRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RewardsEstRequest proto.InternalMessageInfo
+
+func (m *RewardsEstRequest) GetOwner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Owner
+	}
+	return nil
+}
+
+type RewardsEstResponse struct {
+	Coins []*types.Coin `protobuf:"bytes,1,rep,name=coins,proto3" json:"coins,omitempty"`
+}
+
+func (m *RewardsEstResponse) Reset()         { *m = RewardsEstResponse{} }
+func (m *RewardsEstResponse) String() string { return proto.CompactTextString(m) }
+func (*RewardsEstResponse) ProtoMessage()    {}
+func (*RewardsEstResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{13}
+}
+func (m *RewardsEstResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RewardsEstResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RewardsEstResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RewardsEstResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RewardsEstResponse.Merge(m, src)
+}
+func (m *RewardsEstResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *RewardsEstResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RewardsEstResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RewardsEstResponse proto.InternalMessageInfo
+
+func (m *RewardsEstResponse) GetCoins() []*types.Coin {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+func init() {
+	proto.RegisterType((*ModuleToDistributeCoinsRequest)(nil), "osmosis.incentives.ModuleToDistributeCoinsRequest")
+	proto.RegisterType((*ModuleToDistributeCoinsResponse)(nil), "osmosis.incentives.ModuleToDistributeCoinsResponse")
+	proto.RegisterType((*ModuleDistributedCoinsRequest)(nil), "osmosis.incentives.ModuleDistributedCoinsRequest")
+	proto.RegisterType((*ModuleDistributedCoinsResponse)(nil), "osmosis.incentives.ModuleDistributedCoinsResponse")
+	proto.RegisterType((*PotByIDRequest)(nil), "osmosis.incentives.PotByIDRequest")
+	proto.RegisterType((*PotByIDResponse)(nil), "osmosis.incentives.PotByIDResponse")
+	proto.RegisterType((*PotsRequest)(nil), "osmosis.incentives.PotsRequest")
+	proto.RegisterType((*PotsResponse)(nil), "osmosis.incentives.PotsResponse")
+	proto.RegisterType((*ActivePotsRequest)(nil), "osmosis.incentives.ActivePotsRequest")
+	proto.RegisterType((*ActivePotsResponse)(nil), "osmosis.incentives.ActivePotsResponse")
+	proto.RegisterType((*UpcomingPotsRequest)(nil), "osmosis.incentives.UpcomingPotsRequest")
+	proto.RegisterType((*UpcomingPotsResponse)(nil), "osmosis.incentives.UpcomingPotsResponse")
+	proto.RegisterType((*RewardsEstRequest)(nil), "osmosis.incentives.RewardsEstRequest")
+	proto.RegisterType((*RewardsEstResponse)(nil), "osmosis.incentives.RewardsEstResponse")
+}
+
 func init() { proto.RegisterFile("osmosis/incentives/query.proto", fileDescriptor_8124258a89427f98) }
 
 var fileDescriptor_8124258a89427f98 = []byte{
-	// 186 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xcb, 0x2f, 0xce, 0xcd,
-	0x2f, 0xce, 0x2c, 0xd6, 0xcf, 0xcc, 0x4b, 0x4e, 0xcd, 0x2b, 0xc9, 0x2c, 0x4b, 0x2d, 0xd6, 0x2f,
-	0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x82, 0xca, 0xeb, 0x21,
-	0xe4, 0xa5, 0x64, 0xd2, 0xf3, 0xf3, 0xd3, 0x73, 0x52, 0xf5, 0x13, 0x0b, 0x32, 0xf5, 0x13, 0xf3,
-	0xf2, 0xf2, 0x4b, 0x12, 0x4b, 0x32, 0xf3, 0xf3, 0x8a, 0x21, 0x3a, 0xa4, 0xb4, 0x92, 0xc1, 0x5a,
-	0xf4, 0x93, 0x12, 0x8b, 0x53, 0x21, 0x46, 0xe9, 0x97, 0x19, 0x26, 0xa5, 0x96, 0x24, 0x1a, 0xea,
-	0x17, 0x24, 0xa6, 0x67, 0xe6, 0x81, 0x15, 0x43, 0xd4, 0x1a, 0xb1, 0x73, 0xb1, 0x06, 0x82, 0x54,
-	0x38, 0x79, 0x9e, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13,
-	0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x7e, 0x7a, 0x66,
-	0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x7e, 0xb2, 0x2e, 0xcc, 0xb5, 0x30, 0xba, 0x02,
-	0xd9, 0xdd, 0x25, 0x95, 0x05, 0xa9, 0xc5, 0x49, 0x6c, 0x60, 0xa3, 0x8d, 0x01, 0x01, 0x00, 0x00,
-	0xff, 0xff, 0xa9, 0xb1, 0xa6, 0x8c, 0xda, 0x00, 0x00, 0x00,
+	// 561 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0x41, 0x6f, 0xd3, 0x30,
+	0x18, 0x5d, 0xd6, 0x15, 0xa4, 0xaf, 0x65, 0x68, 0xde, 0x60, 0x23, 0x82, 0xb4, 0x0a, 0x02, 0xca,
+	0xa1, 0xb6, 0xda, 0x9d, 0x90, 0x90, 0x50, 0xcb, 0x26, 0xd4, 0x03, 0x52, 0x17, 0xc1, 0x05, 0xb8,
+	0x34, 0x89, 0x55, 0x2c, 0x68, 0x9c, 0xc5, 0xce, 0x46, 0x4f, 0x48, 0xfc, 0x02, 0x7e, 0x16, 0xdc,
+	0x76, 0xe4, 0x84, 0x50, 0xfb, 0x2f, 0x38, 0xa1, 0x24, 0x6e, 0x93, 0x91, 0x64, 0x55, 0x77, 0x4a,
+	0xeb, 0xef, 0x7d, 0xef, 0x7b, 0xb1, 0xdf, 0x8b, 0xc1, 0xe0, 0x62, 0xc2, 0x05, 0x13, 0x84, 0x79,
+	0x0e, 0xf5, 0x24, 0x3b, 0xa3, 0x82, 0x9c, 0x86, 0x34, 0x98, 0x62, 0x3f, 0xe0, 0x92, 0x23, 0xa4,
+	0xea, 0x38, 0xad, 0xeb, 0x7b, 0x63, 0x3e, 0xe6, 0x71, 0x99, 0x44, 0xbf, 0x12, 0xa4, 0x6e, 0x38,
+	0x31, 0x94, 0xd8, 0x23, 0x41, 0xc9, 0x59, 0xc7, 0xa6, 0x72, 0xd4, 0x21, 0x0e, 0x67, 0x9e, 0xaa,
+	0xdf, 0x2f, 0x98, 0xe4, 0x73, 0x99, 0x54, 0xcd, 0x26, 0x18, 0xaf, 0xb9, 0x1b, 0x7e, 0xa6, 0x6f,
+	0xf8, 0x11, 0x13, 0x32, 0x60, 0x76, 0x28, 0xe9, 0x4b, 0xce, 0x3c, 0x61, 0xd1, 0xd3, 0x90, 0x0a,
+	0x69, 0x5a, 0xd0, 0x28, 0x45, 0x08, 0x9f, 0x7b, 0x82, 0x22, 0x02, 0xd5, 0x68, 0xa0, 0x38, 0xd0,
+	0x9a, 0x95, 0x56, 0xad, 0x7b, 0x0f, 0x27, 0x92, 0x70, 0x24, 0x09, 0x2b, 0x49, 0x38, 0x6a, 0xb1,
+	0x12, 0x9c, 0xd9, 0x80, 0x07, 0x09, 0x67, 0xca, 0xe8, 0x5e, 0x1a, 0x7a, 0xb2, 0x90, 0x95, 0x07,
+	0x5c, 0x77, 0x66, 0x13, 0xb6, 0x87, 0x5c, 0xf6, 0xa7, 0x83, 0x23, 0x35, 0x04, 0x6d, 0xc3, 0x26,
+	0x73, 0x0f, 0xb4, 0xa6, 0xd6, 0xda, 0xb2, 0x36, 0x99, 0x6b, 0x3e, 0x87, 0xdb, 0x4b, 0x84, 0x9a,
+	0xf2, 0x14, 0x2a, 0x3e, 0x97, 0x31, 0xa6, 0xd6, 0xdd, 0xc7, 0xf9, 0x43, 0xc1, 0x43, 0x2e, 0xad,
+	0x08, 0x63, 0xde, 0x82, 0xda, 0x90, 0xcb, 0xe5, 0x1b, 0x3c, 0x83, 0x7a, 0xf2, 0xf7, 0x7f, 0xa6,
+	0xca, 0x4a, 0xa6, 0x5d, 0xd8, 0xe9, 0x39, 0xd1, 0x5a, 0x96, 0xef, 0x05, 0xa0, 0xec, 0xe2, 0xfa,
+	0xac, 0x77, 0x60, 0xf7, 0xad, 0xef, 0xf0, 0x09, 0xf3, 0xc6, 0x59, 0xde, 0x1e, 0xec, 0x5d, 0x5e,
+	0x5e, 0x9f, 0xf9, 0x03, 0xec, 0x58, 0xf4, 0x7c, 0x14, 0xb8, 0xe2, 0x58, 0xc8, 0xc5, 0xe6, 0xbe,
+	0x82, 0x2a, 0x3f, 0xf7, 0x68, 0x10, 0xef, 0x5d, 0xbd, 0xdf, 0xf9, 0xfb, 0xbb, 0xd1, 0x1e, 0x33,
+	0xf9, 0x31, 0xb4, 0xb1, 0xc3, 0x27, 0x44, 0x99, 0x36, 0x79, 0xb4, 0x85, 0xfb, 0x89, 0xc8, 0xa9,
+	0x4f, 0x05, 0xee, 0x39, 0x4e, 0xcf, 0x75, 0x03, 0x2a, 0x84, 0x95, 0xf4, 0x9b, 0xc7, 0x80, 0xb2,
+	0xec, 0xd7, 0x3c, 0xfe, 0xee, 0xcf, 0x2a, 0x54, 0x4f, 0xa2, 0x80, 0xa1, 0x6f, 0x1a, 0xec, 0x97,
+	0x38, 0x1a, 0x75, 0x8b, 0x5e, 0xf4, 0xea, 0x80, 0xe8, 0x87, 0x6b, 0xf5, 0x28, 0xfd, 0x5f, 0xe1,
+	0x6e, 0xb1, 0xc1, 0x51, 0xa7, 0x9c, 0xae, 0x24, 0x2d, 0x7a, 0x77, 0x9d, 0x16, 0x25, 0xc0, 0x82,
+	0x9b, 0xca, 0xec, 0xc8, 0x2c, 0x39, 0xdd, 0x4c, 0x56, 0xf4, 0x87, 0x57, 0x62, 0x14, 0xe7, 0x00,
+	0xb6, 0x22, 0x0f, 0xa1, 0x46, 0x09, 0x78, 0x29, 0xb8, 0x59, 0x0e, 0x50, 0x54, 0xef, 0x01, 0x52,
+	0xbb, 0xa3, 0x47, 0x45, 0xf8, 0x5c, 0x46, 0xf4, 0xc7, 0xab, 0x60, 0x8a, 0x7c, 0x04, 0xf5, 0xac,
+	0xe7, 0xd1, 0x93, 0xa2, 0xbe, 0x82, 0xb0, 0xe8, 0xad, 0xd5, 0xc0, 0x54, 0x7f, 0xea, 0xda, 0x62,
+	0xfd, 0xb9, 0xcc, 0x14, 0xeb, 0xcf, 0x9b, 0xbf, 0x3f, 0xf8, 0x31, 0x33, 0xb4, 0x8b, 0x99, 0xa1,
+	0xfd, 0x99, 0x19, 0xda, 0xf7, 0xb9, 0xb1, 0x71, 0x31, 0x37, 0x36, 0x7e, 0xcd, 0x8d, 0x8d, 0x77,
+	0x24, 0x1b, 0xb1, 0xf6, 0xe2, 0xcb, 0xbf, 0x78, 0x7e, 0xc9, 0xde, 0x01, 0x71, 0xde, 0xec, 0x1b,
+	0xf1, 0x35, 0x70, 0xf8, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x25, 0xed, 0xa1, 0x91, 0x90, 0x06, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -55,6 +677,20 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// returns coins that is going to be distributed
+	ModuleToDistributeCoins(ctx context.Context, in *ModuleToDistributeCoinsRequest, opts ...grpc.CallOption) (*ModuleToDistributeCoinsResponse, error)
+	// returns coins that are distributed by module so far
+	ModuleDistributedCoins(ctx context.Context, in *ModuleDistributedCoinsRequest, opts ...grpc.CallOption) (*ModuleDistributedCoinsResponse, error)
+	// returns Pot by id
+	PotByID(ctx context.Context, in *PotByIDRequest, opts ...grpc.CallOption) (*PotByIDResponse, error)
+	// returns pots both upcoming and active
+	Pots(ctx context.Context, in *PotsRequest, opts ...grpc.CallOption) (*PotsResponse, error)
+	// returns active pots
+	ActivePots(ctx context.Context, in *ActivePotsRequest, opts ...grpc.CallOption) (*ActivePotsResponse, error)
+	// returns scheduled pots
+	UpcomingPots(ctx context.Context, in *UpcomingPotsRequest, opts ...grpc.CallOption) (*UpcomingPotsResponse, error)
+	// returns rewards estimation at a future specific time
+	RewardsEst(ctx context.Context, in *RewardsEstRequest, opts ...grpc.CallOption) (*RewardsEstResponse, error)
 }
 
 type queryClient struct {
@@ -65,22 +701,2016 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
+func (c *queryClient) ModuleToDistributeCoins(ctx context.Context, in *ModuleToDistributeCoinsRequest, opts ...grpc.CallOption) (*ModuleToDistributeCoinsResponse, error) {
+	out := new(ModuleToDistributeCoinsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/ModuleToDistributeCoins", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ModuleDistributedCoins(ctx context.Context, in *ModuleDistributedCoinsRequest, opts ...grpc.CallOption) (*ModuleDistributedCoinsResponse, error) {
+	out := new(ModuleDistributedCoinsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/ModuleDistributedCoins", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PotByID(ctx context.Context, in *PotByIDRequest, opts ...grpc.CallOption) (*PotByIDResponse, error) {
+	out := new(PotByIDResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/PotByID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Pots(ctx context.Context, in *PotsRequest, opts ...grpc.CallOption) (*PotsResponse, error) {
+	out := new(PotsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/Pots", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ActivePots(ctx context.Context, in *ActivePotsRequest, opts ...grpc.CallOption) (*ActivePotsResponse, error) {
+	out := new(ActivePotsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/ActivePots", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) UpcomingPots(ctx context.Context, in *UpcomingPotsRequest, opts ...grpc.CallOption) (*UpcomingPotsResponse, error) {
+	out := new(UpcomingPotsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/UpcomingPots", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RewardsEst(ctx context.Context, in *RewardsEstRequest, opts ...grpc.CallOption) (*RewardsEstResponse, error) {
+	out := new(RewardsEstResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/RewardsEst", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// returns coins that is going to be distributed
+	ModuleToDistributeCoins(context.Context, *ModuleToDistributeCoinsRequest) (*ModuleToDistributeCoinsResponse, error)
+	// returns coins that are distributed by module so far
+	ModuleDistributedCoins(context.Context, *ModuleDistributedCoinsRequest) (*ModuleDistributedCoinsResponse, error)
+	// returns Pot by id
+	PotByID(context.Context, *PotByIDRequest) (*PotByIDResponse, error)
+	// returns pots both upcoming and active
+	Pots(context.Context, *PotsRequest) (*PotsResponse, error)
+	// returns active pots
+	ActivePots(context.Context, *ActivePotsRequest) (*ActivePotsResponse, error)
+	// returns scheduled pots
+	UpcomingPots(context.Context, *UpcomingPotsRequest) (*UpcomingPotsResponse, error)
+	// returns rewards estimation at a future specific time
+	RewardsEst(context.Context, *RewardsEstRequest) (*RewardsEstResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
+func (*UnimplementedQueryServer) ModuleToDistributeCoins(ctx context.Context, req *ModuleToDistributeCoinsRequest) (*ModuleToDistributeCoinsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModuleToDistributeCoins not implemented")
+}
+func (*UnimplementedQueryServer) ModuleDistributedCoins(ctx context.Context, req *ModuleDistributedCoinsRequest) (*ModuleDistributedCoinsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModuleDistributedCoins not implemented")
+}
+func (*UnimplementedQueryServer) PotByID(ctx context.Context, req *PotByIDRequest) (*PotByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PotByID not implemented")
+}
+func (*UnimplementedQueryServer) Pots(ctx context.Context, req *PotsRequest) (*PotsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Pots not implemented")
+}
+func (*UnimplementedQueryServer) ActivePots(ctx context.Context, req *ActivePotsRequest) (*ActivePotsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActivePots not implemented")
+}
+func (*UnimplementedQueryServer) UpcomingPots(ctx context.Context, req *UpcomingPotsRequest) (*UpcomingPotsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpcomingPots not implemented")
+}
+func (*UnimplementedQueryServer) RewardsEst(ctx context.Context, req *RewardsEstRequest) (*RewardsEstResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RewardsEst not implemented")
+}
+
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_ModuleToDistributeCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModuleToDistributeCoinsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ModuleToDistributeCoins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/ModuleToDistributeCoins",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ModuleToDistributeCoins(ctx, req.(*ModuleToDistributeCoinsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ModuleDistributedCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModuleDistributedCoinsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ModuleDistributedCoins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/ModuleDistributedCoins",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ModuleDistributedCoins(ctx, req.(*ModuleDistributedCoinsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PotByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PotByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PotByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/PotByID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PotByID(ctx, req.(*PotByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Pots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PotsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Pots(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/Pots",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Pots(ctx, req.(*PotsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ActivePots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActivePotsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ActivePots(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/ActivePots",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ActivePots(ctx, req.(*ActivePotsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_UpcomingPots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpcomingPotsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).UpcomingPots(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/UpcomingPots",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).UpcomingPots(ctx, req.(*UpcomingPotsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RewardsEst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RewardsEstRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RewardsEst(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/RewardsEst",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RewardsEst(ctx, req.(*RewardsEstRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.incentives.Query",
 	HandlerType: (*QueryServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "osmosis/incentives/query.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ModuleToDistributeCoins",
+			Handler:    _Query_ModuleToDistributeCoins_Handler,
+		},
+		{
+			MethodName: "ModuleDistributedCoins",
+			Handler:    _Query_ModuleDistributedCoins_Handler,
+		},
+		{
+			MethodName: "PotByID",
+			Handler:    _Query_PotByID_Handler,
+		},
+		{
+			MethodName: "Pots",
+			Handler:    _Query_Pots_Handler,
+		},
+		{
+			MethodName: "ActivePots",
+			Handler:    _Query_ActivePots_Handler,
+		},
+		{
+			MethodName: "UpcomingPots",
+			Handler:    _Query_UpcomingPots_Handler,
+		},
+		{
+			MethodName: "RewardsEst",
+			Handler:    _Query_RewardsEst_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "osmosis/incentives/query.proto",
 }
+
+func (m *ModuleToDistributeCoinsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleToDistributeCoinsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleToDistributeCoinsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleToDistributeCoinsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleToDistributeCoinsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleToDistributeCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleDistributedCoinsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleDistributedCoinsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleDistributedCoinsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleDistributedCoinsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleDistributedCoinsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleDistributedCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PotByIDRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PotByIDRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PotByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Id != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PotByIDResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PotByIDResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PotByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pot != nil {
+		{
+			size, err := m.Pot.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PotsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PotsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *PotsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PotsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PotsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Pot) > 0 {
+		for iNdEx := len(m.Pot) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Pot[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ActivePotsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ActivePotsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ActivePotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *ActivePotsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ActivePotsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ActivePotsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Pot) > 0 {
+		for iNdEx := len(m.Pot) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Pot[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *UpcomingPotsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpcomingPotsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpcomingPotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *UpcomingPotsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpcomingPotsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpcomingPotsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Pot) > 0 {
+		for iNdEx := len(m.Pot) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Pot[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RewardsEstRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RewardsEstRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RewardsEstRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RewardsEstResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RewardsEstResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RewardsEstResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
+	offset -= sovQuery(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *ModuleToDistributeCoinsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ModuleToDistributeCoinsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ModuleDistributedCoinsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ModuleDistributedCoinsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *PotByIDRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovQuery(uint64(m.Id))
+	}
+	return n
+}
+
+func (m *PotByIDResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pot != nil {
+		l = m.Pot.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *PotsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *PotsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Pot) > 0 {
+		for _, e := range m.Pot {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ActivePotsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ActivePotsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Pot) > 0 {
+		for _, e := range m.Pot {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *UpcomingPotsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *UpcomingPotsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Pot) > 0 {
+		for _, e := range m.Pot {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RewardsEstRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *RewardsEstResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func sovQuery(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozQuery(x uint64) (n int) {
+	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *ModuleToDistributeCoinsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleToDistributeCoinsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleToDistributeCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleToDistributeCoinsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleToDistributeCoinsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleToDistributeCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, &types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleDistributedCoinsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleDistributedCoinsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleDistributedCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleDistributedCoinsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleDistributedCoinsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleDistributedCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, &types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PotByIDRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PotByIDRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PotByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PotByIDResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PotByIDResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PotByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pot", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pot == nil {
+				m.Pot = &Pot{}
+			}
+			if err := m.Pot.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PotsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PotsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PotsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PotsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PotsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PotsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pot", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pot = append(m.Pot, &Pot{})
+			if err := m.Pot[len(m.Pot)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ActivePotsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ActivePotsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ActivePotsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ActivePotsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ActivePotsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ActivePotsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pot", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pot = append(m.Pot, &Pot{})
+			if err := m.Pot[len(m.Pot)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UpcomingPotsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpcomingPotsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpcomingPotsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UpcomingPotsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpcomingPotsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpcomingPotsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pot", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pot = append(m.Pot, &Pot{})
+			if err := m.Pot[len(m.Pot)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RewardsEstRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RewardsEstRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RewardsEstRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = append(m.Owner[:0], dAtA[iNdEx:postIndex]...)
+			if m.Owner == nil {
+				m.Owner = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RewardsEstResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RewardsEstResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RewardsEstResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, &types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipQuery(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthQuery
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupQuery
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthQuery
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthQuery        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowQuery          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupQuery = fmt.Errorf("proto: unexpected end of group")
+)
