@@ -10,7 +10,7 @@ All the incentives that is going to be provided are locked into `IncentivePool` 
 
 ### Pot
 
-A `Pot` is a unit of incentive distributer. It describes the the users who can get reward, and the amount of coins to be distribute, the distribution start time, and the number of epochs it provide incentive from the `Pot`.
+Rewards to be distributed are organized by `Pot`. The `Pot` describes how users can get reward, stores the amount of coins in the pot, the cadence at which rewards are to be distributed, and the number of epochs to distribute the reward over.
 
 ```go
 type LockType int
@@ -61,4 +61,3 @@ To release from `Pots` every epoch, we schedule distribution start time with tim
 #### Active queue
 
 Active queue has all the `Pots` that are distributing and after distribution period finish, it's removed from the queue.
-
