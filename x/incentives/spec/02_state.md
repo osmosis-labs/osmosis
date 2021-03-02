@@ -36,8 +36,15 @@ type Pot struct {
 ```
 
 ```protobuf
+enum LockType {
+    option (gogoproto.goproto_enum_prefix) = false;
+
+    by_duration = 0; // locks which has more than specific duration
+    by_time = 1; // locks which are started before specific time
+}
+
 message DistrCondition {
-  uint64 lock_type = 1; // type of lock, ByLockDuration | ByLockTime
+  LockType lock_type = 1; // type of lock, ByLockDuration | ByLockTime
   string denom = 2; // lock denom
   google.protobuf.Duration duration = 3; // condition for lock duration, only valid if positive
   google.protobuf.Timestamp timestamp = 4; // condition for lock start time, not valid if unset value
