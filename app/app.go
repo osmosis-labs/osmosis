@@ -24,6 +24,15 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/c-osmosis/osmosis/x/gamm"
+	gammkeeper "github.com/c-osmosis/osmosis/x/gamm/keeper"
+	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
+	"github.com/c-osmosis/osmosis/x/incentives"
+	incentiveskeeper "github.com/c-osmosis/osmosis/x/incentives/keeper"
+	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
+	"github.com/c-osmosis/osmosis/x/lockup"
+	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -88,14 +97,6 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/c-osmosis/osmosis/x/gamm"
-	gammkeeper "github.com/c-osmosis/osmosis/x/gamm/keeper"
-	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
-
-	"github.com/c-osmosis/osmosis/x/lockup"
-	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
-
 	appparams "github.com/c-osmosis/osmosis/app/params"
 )
 
@@ -128,6 +129,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		gamm.AppModuleBasic{},
+		incentives.AppModuleBasic{},
 		lockup.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 	)
@@ -142,6 +144,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		gammtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
+		incentivestypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 	}
 
@@ -185,6 +188,7 @@ type OsmosisApp struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 	GAMMKeeper       gammkeeper.Keeper
+	IncentivesKeeper incentiveskeeper.Keeper
 	LockupKeeper     lockupkeeper.Keeper
 
 	// make scoped keepers public for test purposes
@@ -224,7 +228,7 @@ func NewOsmosisApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gammtypes.StoreKey, lockuptypes.StoreKey,
+		gammtypes.StoreKey, incentivestypes.StoreKey, lockuptypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -320,6 +324,7 @@ func NewOsmosisApp(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	app.IncentivesKeeper = incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 
 	/****  Module Options ****/
@@ -351,6 +356,7 @@ func NewOsmosisApp(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		gamm.NewAppModule(appCodec, app.GAMMKeeper),
+		incentives.NewAppModule(appCodec, app.IncentivesKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper),
 	)
 

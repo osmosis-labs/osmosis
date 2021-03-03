@@ -16,14 +16,17 @@ service Msg {
 message MsgCreatePot {
   bytes owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated DistrCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
-  repeated cosmos.base.v1beta1.Coin coins = 3; // can distribute multiple coins
+  repeated cosmos.base.v1beta1.Coin coins = 3
+    [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"]; // can distribute multiple coins
   google.protobuf.Timestamp start_time = 4; // condition for lock start time, not valid if unset value
   uint64 num_epochs = 5; // number of epochs distribution will be done
 }
 message MsgCreatePotResponse {}
 
 message MsgAddToPot {
-  uint64 pot_id = 1;
-  repeated cosmos.base.v1beta1.Coin rewards = 2;
+  bytes owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64 pot_id = 2;
+  repeated cosmos.base.v1beta1.Coin rewards = 3
+    [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 message MsgAddToPotResponse {}
