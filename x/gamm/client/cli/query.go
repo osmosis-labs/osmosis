@@ -312,30 +312,9 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 				return err
 			}
 
-			swapRoutePoolIds, err := cmd.Flags().GetStringArray(FlagSwapRoutePoolIds)
+			routes, err := swapAmountInRoutes(cmd.Flags())
 			if err != nil {
 				return err
-			}
-
-			swapRouteAmounts, err := cmd.Flags().GetStringArray(FlagSwapRouteAmounts)
-			if err != nil {
-				return err
-			}
-
-			if len(swapRoutePoolIds) != len(swapRouteAmounts) {
-				return errors.New("swap route pool ids and amounts mismatch")
-			}
-
-			routes := []types.SwapAmountInRoute{}
-			for index, poolIDStr := range swapRoutePoolIds {
-				pID, err := strconv.Atoi(poolIDStr)
-				if err != nil {
-					return err
-				}
-				routes = append(routes, types.SwapAmountInRoute{
-					PoolId:        uint64(pID),
-					TokenOutDenom: swapRouteAmounts[index],
-				})
 			}
 
 			res, err := queryClient.EstimateSwapExactAmountIn(cmd.Context(), &types.QuerySwapExactAmountInRequest{

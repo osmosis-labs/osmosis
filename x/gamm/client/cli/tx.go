@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -26,6 +28,7 @@ func NewTxCmd() *cobra.Command {
 		NewCreatePoolCmd(),
 		NewJoinPoolCmd(),
 		NewExitPoolCmd(),
+		NewSwapExactAmountInCmd(),
 	)
 
 	return txCmd
@@ -127,6 +130,43 @@ func NewExitPoolCmd() *cobra.Command {
 
 	return cmd
 }
+
+func NewSwapExactAmountInCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "swap-exact-amount-in",
+		Short: "swap exact amount in",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildSwapExactAmountInMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
+	_ = cmd.MarkFlagRequired(FlagSwapRouteAmounts)
+
+	return cmd
+}
+
+// TODO: write CLI command for below messages
+// MsgSwapExactAmountOut
+// MsgJoinSwapExternAmountIn
+// MsgJoinSwapShareAmountOut
+// MsgExitSwapExternAmountOut
+// MsgExitSwapShareAmountIn
 
 func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	recordTokenStrs, err := fs.GetStringArray(FlagPoolRecordTokens)
@@ -282,6 +322,60 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		PoolId:        poolId,
 		ShareInAmount: shareAmountIn,
 		TokenOutMins:  minAmountsOut,
+	}
+
+	return txf, msg, nil
+}
+
+func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
+	swapRoutePoolIds, err := fs.GetStringArray(FlagSwapRoutePoolIds)
+	if err != nil {
+		return nil, err
+	}
+
+	swapRouteAmounts, err := fs.GetStringArray(FlagSwapRouteAmounts)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(swapRoutePoolIds) != len(swapRouteAmounts) {
+		return nil, errors.New("swap route pool ids and amounts mismatch")
+	}
+
+	routes := []types.SwapAmountInRoute{}
+	for index, poolIDStr := range swapRoutePoolIds {
+		pID, err := strconv.Atoi(poolIDStr)
+		if err != nil {
+			return nil, err
+		}
+		routes = append(routes, types.SwapAmountInRoute{
+			PoolId:        uint64(pID),
+			TokenOutDenom: swapRouteAmounts[index],
+		})
+	}
+	return routes, nil
+}
+
+func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	routes, err := swapAmountInRoutes(fs)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
+	if !ok {
+		return txf, nil, errors.New("invalid token out min amount")
+	}
+	msg := &types.MsgSwapExactAmountIn{
+		Sender:            clientCtx.GetFromAddress().String(),
+		Routes:            routes,
+		TokenIn:           tokenIn,
+		TokenOutMinAmount: tokenOutMinAmt,
 	}
 
 	return txf, msg, nil
