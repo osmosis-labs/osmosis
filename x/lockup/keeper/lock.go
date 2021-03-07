@@ -103,6 +103,16 @@ func (k Keeper) GetAccountLockedLongerThanDurationDenom(ctx sdk.Context, addr sd
 	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerThanDurationDenom(ctx, addr, denom, duration))
 }
 
+// GetLocksPastTimeDenom Returns the locks whose unlock time is beyond timestamp
+func (k Keeper) GetLocksPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.LockIteratorAfterTimeDenom(ctx, denom, timestamp))
+}
+
+// GetLocksLongerThanDurationDenom Returns the locks whose unlock duration is longer than duration
+func (k Keeper) GetLocksLongerThanDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, denom, duration))
+}
+
 // GetLockByID Returns lock from lockID
 func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, error) {
 	lock := types.PeriodLock{}

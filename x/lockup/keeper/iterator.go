@@ -63,14 +63,19 @@ func (k Keeper) LockIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixLockTimestamp)
 }
 
-// LockIteratorAfterTimeDenom returns the iterator to get locked coins by denom
+// LockIteratorAfterTimeDenom returns the iterator to get locked locks by denom
 func (k Keeper) LockIteratorAfterTimeDenom(ctx sdk.Context, denom string, time time.Time) sdk.Iterator {
 	return k.iteratorAfterTime(ctx, combineKeys(types.KeyPrefixDenomLockTimestamp, []byte(denom)), time)
 }
 
-// LockIteratorBeforeTimeDenom returns the iterator to get unlockable coins by denom
+// LockIteratorBeforeTimeDenom returns the iterator to get unlockable locks by denom
 func (k Keeper) LockIteratorBeforeTimeDenom(ctx sdk.Context, denom string, time time.Time) sdk.Iterator {
 	return k.iteratorBeforeTime(ctx, combineKeys(types.KeyPrefixDenomLockTimestamp, []byte(denom)), time)
+}
+
+// LockIteratorLongerThanDurationDenom returns the iterator to get locked locks by denom
+func (k Keeper) LockIteratorLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Iterator {
+	return k.iteratorLongerDuration(ctx, combineKeys(types.KeyPrefixDenomLockDuration, []byte(denom)), duration)
 }
 
 // LockIteratorDenom returns the iterator used for getting all locks by denom

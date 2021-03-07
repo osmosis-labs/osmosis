@@ -37,10 +37,10 @@ type Pot struct {
 
 ```protobuf
 enum LockType {
-    option (gogoproto.goproto_enum_prefix) = false;
+  option (gogoproto.goproto_enum_prefix) = false;
 
-    by_duration = 0; // locks which has more than specific duration
-    by_time = 1; // locks which are started before specific time
+  ByDuration = 0; // locks which has more than specific duration
+  ByTime = 1; // locks which are started before specific time
 }
 
 message DistrCondition {

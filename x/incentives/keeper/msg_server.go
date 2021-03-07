@@ -24,7 +24,7 @@ var _ types.MsgServer = msgServer{}
 
 func (server msgServer) CreatePot(goCtx context.Context, msg *types.MsgCreatePot) (*types.MsgCreatePotResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := server.keeper.CreatePot(ctx, msg.Owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochs)
+	potID, err := server.keeper.CreatePot(ctx, msg.Owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochs)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -32,8 +32,7 @@ func (server msgServer) CreatePot(goCtx context.Context, msg *types.MsgCreatePot
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtCreatePot,
-			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
-			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePotID, utils.Uint64ToString(potID)),
 		),
 	})
 
@@ -42,7 +41,7 @@ func (server msgServer) CreatePot(goCtx context.Context, msg *types.MsgCreatePot
 
 func (server msgServer) AddToPot(goCtx context.Context, msg *types.MsgAddToPot) (*types.MsgAddToPotResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	lock, err := server.keeper.AddToPot(ctx, msg.Owner, msg.PotId, msg.Rewards)
+	err := server.keeper.AddToPot(ctx, msg.Owner, msg.Rewards, msg.PotId)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -50,8 +49,7 @@ func (server msgServer) AddToPot(goCtx context.Context, msg *types.MsgAddToPot) 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtAddToPot,
-			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
-			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePotID, utils.Uint64ToString(msg.PotId)),
 		),
 	})
 
