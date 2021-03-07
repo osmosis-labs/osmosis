@@ -13,14 +13,14 @@ All the incentives that is going to be provided are locked into `IncentivePool` 
 Rewards to be distributed are organized by `Pot`. The `Pot` describes how users can get reward, stores the amount of coins in the pot, the cadence at which rewards are to be distributed, and the number of epochs to distribute the reward over.
 
 ```go
-type LockType int
+type LockQueryType int
 const (
-  ByLockDuration LockType = iota // locks which has more than specific duration
+  ByLockDuration LockQueryType = iota // locks which has more than specific duration
   ByLockTime // locks which are started before specific time
 )
 
 type DistrCondition struct {
-  LockType LockType // type of lock condition
+  LockQueryType LockQueryType // type of lock condition
   Denom  string // lock denom
   Duration time.Duration // condition for lock duration, only valid if positive
   Timestamp time.Time // condition for lock start time, not valid if unset value
@@ -36,7 +36,7 @@ type Pot struct {
 ```
 
 ```protobuf
-enum LockType {
+enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
   ByDuration = 0; // locks which has more than specific duration
@@ -44,7 +44,7 @@ enum LockType {
 }
 
 message DistrCondition {
-  LockType lock_type = 1; // type of lock, ByLockDuration | ByLockTime
+  LockQueryType lock_query_type = 1; // type of lock, ByLockDuration | ByLockTime
   string denom = 2; // lock denom
   google.protobuf.Duration duration = 3; // condition for lock duration, only valid if positive
   google.protobuf.Timestamp timestamp = 4; // condition for lock start time, not valid if unset value

@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 
-enum LockType {
+enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
   ByDuration = 0; // locks which has more than specific duration
@@ -16,7 +16,7 @@ enum LockType {
 }
 
 message DistrCondition {
-  LockType lock_type = 1; // type of lock, ByLockDuration | ByLockTime
+  LockQueryType lock_query_type = 1; // type of lock, ByLockDuration | ByLockTime
   string denom = 2; // lock denom
   // condition for lock duration, only valid if positive
   google.protobuf.Duration duration = 3
@@ -28,7 +28,7 @@ message DistrCondition {
 
 message Pot {
   uint64 id = 1; // unique ID of a Pot
-  repeated DistrCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
+  DistrCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
   repeated cosmos.base.v1beta1.Coin coins = 3
     [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"]; // can distribute multiple coins
   // condition for lock start time, not valid if unset value

@@ -24,7 +24,7 @@ func (k Keeper) GetPotByID(ctx sdk.Context, potID uint64) (*types.Pot, error) {
 }
 
 // CreatePot create a pot and send coins to the pot
-func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, distrTo []*types.DistrCondition, startTime time.Time, numEpochs uint64) (uint64, error) {
+func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, distrTo *types.DistrCondition, startTime time.Time, numEpochs uint64) (uint64, error) {
 	pot := types.Pot{
 		Id:           k.getLastPotID(ctx) + 1,
 		DistributeTo: distrTo,
@@ -67,38 +67,36 @@ func (k Keeper) AddToPot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins,
 
 // Distribute distriute coins from pot for fitting conditions
 func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) error {
-	for _, distrCondition := range pot.DistributeTo {
-		locks := []lockuptypes.PeriodLock{}
-		switch distrCondition.LockType {
-		case types.ByDuration:
-			locks = k.lk.GetLocksLongerThanDurationDenom(ctx, distrCondition.Denom, distrCondition.Duration)
-		case types.ByTime:
-			locks = k.lk.GetLocksPastTimeDenom(ctx, distrCondition.Denom, distrCondition.Timestamp)
-		default:
-		}
+	locks := []lockuptypes.PeriodLock{}
+	switch pot.DistributeTo.LockQueryType {
+	case types.ByDuration:
+		locks = k.lk.GetLocksLongerThanDurationDenom(ctx, pot.DistributeTo.Denom, pot.DistributeTo.Duration)
+	case types.ByTime:
+		locks = k.lk.GetLocksPastTimeDenom(ctx, pot.DistributeTo.Denom, pot.DistributeTo.Timestamp)
+	default:
+	}
 
-		lockSum := sdk.NewInt(0)
-		for _, lock := range locks {
-			lockSum = lockSum.Add(lock.Coins.AmountOf(distrCondition.Denom))
+	lockSum := sdk.NewInt(0)
+	for _, lock := range locks {
+		lockSum = lockSum.Add(lock.Coins.AmountOf(pot.DistributeTo.Denom))
+	}
+	if lockSum.IsZero() {
+		return nil
+	}
+	for _, lock := range locks {
+		distrCoins := pot.Coins
+		for i, coin := range distrCoins {
+			bi := big.NewInt(0).Div(coin.Amount.BigInt(), big.NewInt(int64(pot.NumEpochs)))
+			bi = bi.Mul(bi, lock.Coins.AmountOf(pot.DistributeTo.Denom).BigInt())
+			bi = bi.Div(bi, lockSum.BigInt())
+			distrCoins[i].Amount = sdk.NewIntFromBigInt(bi)
 		}
-		if lockSum.IsZero() {
+		distrCoins = distrCoins.Sort()
+		if distrCoins.Empty() {
 			continue
 		}
-		for _, lock := range locks {
-			distrCoins := pot.Coins
-			for i, coin := range distrCoins {
-				bi := big.NewInt(0).Div(coin.Amount.BigInt(), big.NewInt(int64(pot.NumEpochs)))
-				bi = bi.Mul(bi, lock.Coins.AmountOf(distrCondition.Denom).BigInt())
-				bi = bi.Div(bi, lockSum.BigInt())
-				distrCoins[i].Amount = sdk.NewIntFromBigInt(bi)
-			}
-			distrCoins = distrCoins.Sort()
-			if distrCoins.Empty() {
-				continue
-			}
-			if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, pot.Coins); err != nil {
-				return err
-			}
+		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, pot.Coins); err != nil {
+			return err
 		}
 	}
 
