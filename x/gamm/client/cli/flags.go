@@ -29,6 +29,8 @@ const (
 	FlagSwapRoutePoolIds = "swap-route-pool-ids"
 	// Will be parsed to []sdk.Coin
 	FlagSwapRouteAmounts = "swap-route-amounts"
+	// Will be parsed to []string
+	FlagSwapRouteDenoms = "swap-route-denoms"
 )
 
 func FlagSetQuerySwapRoutes() *flag.FlagSet {
@@ -36,6 +38,14 @@ func FlagSetQuerySwapRoutes() *flag.FlagSet {
 
 	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool id")
 	fs.StringArray(FlagSwapRouteAmounts, []string{""}, "swap route amount")
+	return fs
+}
+
+func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool ids")
+	fs.StringArray(FlagSwapRouteDenoms, []string{""}, "swap route denoms")
 	return fs
 }
 
