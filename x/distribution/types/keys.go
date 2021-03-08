@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -28,19 +27,19 @@ const (
 //
 // - 0x01: sdk.ConsAddress
 //
-// - 0x02<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorOutstandingRewards
+// - 0x02<valAddr_Bytes>: ValidatorOutstandingRewards
 //
-// - 0x03<accAddrLen (1 Byte)><accAddr_Bytes>: sdk.AccAddress
+// - 0x03<accAddr_Bytes>: sdk.AccAddress
 //
-// - 0x04<valAddrLen (1 Byte)><valAddr_Bytes><accAddrLen (1 Byte)><accAddr_Bytes>: DelegatorStartingInfo
+// - 0x04<valAddr_Bytes><accAddr_Bytes>: DelegatorStartingInfo
 //
-// - 0x05<valAddrLen (1 Byte)><valAddr_Bytes><period_Bytes>: ValidatorHistoricalRewards
+// - 0x05<valAddr_Bytes><period_Bytes>: ValidatorHistoricalRewards
 //
-// - 0x06<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
+// - 0x06<valAddr_Bytes>: ValidatorCurrentRewards
 //
-// - 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
+// - 0x07<valAddr_Bytes>: ValidatorCurrentRewards
 //
-// - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
+// - 0x08<valAddr_Bytes><height>: ValidatorSlashEvent
 var (
 	FeePoolKey                        = []byte{0x00} // key for global distribution state
 	ProposerKey                       = []byte{0x01} // key for the proposer operator address
@@ -54,56 +53,47 @@ var (
 	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
 )
 
-// GetValidatorOutstandingRewardsAddress creates an address from a validator's outstanding rewards key.
+// gets an address from a validator's outstanding rewards key
 func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
-	// key is in the format:
-	// 0x02<valAddrLen (1 Byte)><valAddr_Bytes>
-
-	// Remove prefix and address length.
-	addr := key[2:]
-	if len(addr) != int(key[1]) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
 		panic("unexpected key length")
 	}
-
 	return sdk.ValAddress(addr)
 }
 
-// GetDelegatorWithdrawInfoAddress creates an address from a delegator's withdraw info key.
+// gets an address from a delegator's withdraw info key
 func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
-	// key is in the format:
-	// 0x03<accAddrLen (1 Byte)><accAddr_Bytes>
-
-	// Remove prefix and address length.
-	addr := key[2:]
-	if len(addr) != int(key[1]) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
 		panic("unexpected key length")
 	}
-
 	return sdk.AccAddress(addr)
 }
 
-// GetDelegatorStartingInfoAddresses creates the addresses from a delegator starting info key.
+// gets the addresses from a delegator starting info key
 func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delAddr sdk.AccAddress) {
-	// key is in the format:
-	// 0x04<valAddrLen (1 Byte)><valAddr_Bytes><accAddrLen (1 Byte)><accAddr_Bytes>
-	valAddrLen := int(key[1])
-	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
-	delAddrLen := int(key[2+valAddrLen])
-	delAddr = sdk.AccAddress(key[3+valAddrLen:])
-	if len(delAddr.Bytes()) != delAddrLen {
+	addr := key[1 : 1+sdk.AddrLen]
+	if len(addr) != sdk.AddrLen {
 		panic("unexpected key length")
 	}
-
+	valAddr = sdk.ValAddress(addr)
+	addr = key[1+sdk.AddrLen:]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	delAddr = sdk.AccAddress(addr)
 	return
 }
 
-// GetValidatorHistoricalRewardsAddressPeriod creates the address & period from a validator's historical rewards key.
+// gets the address & period from a validator's historical rewards key
 func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
-	// key is in the format:
-	// 0x05<valAddrLen (1 Byte)><valAddr_Bytes><period_Bytes>
-	valAddrLen := int(key[1])
-	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
-	b := key[2+valAddrLen:]
+	addr := key[1 : 1+sdk.AddrLen]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	valAddr = sdk.ValAddress(addr)
+	b := key[1+sdk.AddrLen:]
 	if len(b) != 8 {
 		panic("unexpected key length")
 	}
@@ -111,104 +101,93 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	return
 }
 
-// GetValidatorCurrentRewardsAddress creates the address from a validator's current rewards key.
+// gets the address from a validator's current rewards key
 func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
-	// key is in the format:
-	// 0x06<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
-
-	// Remove prefix and address length.
-	addr := key[2:]
-	if len(addr) != int(key[1]) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
 		panic("unexpected key length")
 	}
-
 	return sdk.ValAddress(addr)
 }
 
-// GetValidatorAccumulatedCommissionAddress creates the address from a validator's accumulated commission key.
+// gets the address from a validator's accumulated commission key
 func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddress) {
-	// key is in the format:
-	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
-
-	// Remove prefix and address length.
-	addr := key[2:]
-	if len(addr) != int(key[1]) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
 		panic("unexpected key length")
 	}
-
 	return sdk.ValAddress(addr)
 }
 
-// GetValidatorSlashEventAddressHeight creates the height from a validator's slash event key.
+// gets the height from a validator's slash event key
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
-	// key is in the format:
-	// 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
-	valAddrLen := int(key[1])
-	valAddr = key[2 : 2+valAddrLen]
-	startB := 2 + valAddrLen
+	addr := key[1 : 1+sdk.AddrLen]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	valAddr = sdk.ValAddress(addr)
+	startB := 1 + sdk.AddrLen
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
 }
 
-// GetValidatorOutstandingRewardsKey creates the outstanding rewards key for a validator.
+// gets the outstanding rewards key for a validator
 func GetValidatorOutstandingRewardsKey(valAddr sdk.ValAddress) []byte {
-	return append(ValidatorOutstandingRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...)
+	return append(ValidatorOutstandingRewardsPrefix, valAddr.Bytes()...)
 }
 
-// GetDelegatorWithdrawAddrKey creates the key for a delegator's withdraw addr.
+// gets the key for a delegator's withdraw addr
 func GetDelegatorWithdrawAddrKey(delAddr sdk.AccAddress) []byte {
-	return append(DelegatorWithdrawAddrPrefix, address.MustLengthPrefix(delAddr.Bytes())...)
+	return append(DelegatorWithdrawAddrPrefix, delAddr.Bytes()...)
 }
 
-// GetDelegatorStartingInfoKey creates the key for a delegator's starting info.
+// gets the key for a delegator's starting info
 func GetDelegatorStartingInfoKey(v sdk.ValAddress, d sdk.AccAddress) []byte {
-	return append(append(DelegatorStartingInfoPrefix, address.MustLengthPrefix(v.Bytes())...), address.MustLengthPrefix(d.Bytes())...)
+	return append(append(DelegatorStartingInfoPrefix, v.Bytes()...), d.Bytes()...)
 }
 
-// GetValidatorHistoricalRewardsPrefix creates the prefix key for a validator's historical rewards.
+// gets the prefix key for a validator's historical rewards
 func GetValidatorHistoricalRewardsPrefix(v sdk.ValAddress) []byte {
-	return append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...)
+	return append(ValidatorHistoricalRewardsPrefix, v.Bytes()...)
 }
 
-// GetValidatorHistoricalRewardsKey creates the key for a validator's historical rewards.
+// gets the key for a validator's historical rewards
 func GetValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, k)
-	return append(append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...), b...)
+	return append(append(ValidatorHistoricalRewardsPrefix, v.Bytes()...), b...)
 }
 
-// GetValidatorCurrentRewardsKey creates the key for a validator's current rewards.
+// gets the key for a validator's current rewards
 func GetValidatorCurrentRewardsKey(v sdk.ValAddress) []byte {
-	return append(ValidatorCurrentRewardsPrefix, address.MustLengthPrefix(v.Bytes())...)
+	return append(ValidatorCurrentRewardsPrefix, v.Bytes()...)
 }
 
-// GetValidatorAccumulatedCommissionKey creates the key for a validator's current commission.
+// gets the key for a validator's current commission
 func GetValidatorAccumulatedCommissionKey(v sdk.ValAddress) []byte {
-	return append(ValidatorAccumulatedCommissionPrefix, address.MustLengthPrefix(v.Bytes())...)
+	return append(ValidatorAccumulatedCommissionPrefix, v.Bytes()...)
 }
 
-// GetValidatorSlashEventPrefix creates the prefix key for a validator's slash fractions.
+// gets the prefix key for a validator's slash fractions
 func GetValidatorSlashEventPrefix(v sdk.ValAddress) []byte {
-	return append(ValidatorSlashEventPrefix, address.MustLengthPrefix(v.Bytes())...)
+	return append(ValidatorSlashEventPrefix, v.Bytes()...)
 }
 
-// GetValidatorSlashEventKeyPrefix creates the prefix key for a validator's slash fraction (ValidatorSlashEventPrefix + height).
+// gets the prefix key for a validator's slash fraction (ValidatorSlashEventPrefix + height)
 func GetValidatorSlashEventKeyPrefix(v sdk.ValAddress, height uint64) []byte {
 	heightBz := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBz, height)
-
 	return append(
 		ValidatorSlashEventPrefix,
-		append(address.MustLengthPrefix(v.Bytes()), heightBz...)...,
+		append(v.Bytes(), heightBz...)...,
 	)
 }
 
-// GetValidatorSlashEventKey creates the key for a validator's slash fraction.
+// gets the key for a validator's slash fraction
 func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	periodBz := make([]byte, 8)
 	binary.BigEndian.PutUint64(periodBz, period)
 	prefix := GetValidatorSlashEventKeyPrefix(v, height)
-
 	return append(prefix, periodBz...)
 }

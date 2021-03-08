@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/c-osmosis/osmosis/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
@@ -48,9 +48,11 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(2)), sdk.NewCoin("stake", sdk.NewInt(2)))
-	require.NoError(t, simapp.FundAccount(app, ctx, distrAcc.GetAddress(), coins))
-
+	err := app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(
+		sdk.NewCoin("mytoken", sdk.NewInt(2)),
+		sdk.NewCoin("stake", sdk.NewInt(2)),
+	))
+	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// check initial balance
@@ -66,7 +68,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// withdraw commission
-	_, err := app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+	_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
 	require.NoError(t, err)
 
 	// check balance increase
@@ -111,10 +113,10 @@ func TestFundCommunityPool(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	require.NoError(t, simapp.FundAccount(app, ctx, addr[0], amount))
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr[0], amount))
 
 	initPool := app.DistrKeeper.GetFeePool(ctx)
 	assert.Empty(t, initPool.CommunityPool)

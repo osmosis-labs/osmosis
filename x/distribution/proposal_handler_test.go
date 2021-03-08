@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/c-osmosis/osmosis/x/distribution"
+	"github.com/c-osmosis/osmosis/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 var (
@@ -33,7 +33,8 @@ func TestProposalHandlerPassed(t *testing.T) {
 	// add coins to the module account
 	macc := app.DistrKeeper.GetDistributionAccount(ctx)
 	balances := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
-	require.NoError(t, simapp.FundAccount(app, ctx, macc.GetAddress(), amount))
+	err := app.BankKeeper.SetBalances(ctx, macc.GetAddress(), balances.Add(amount...))
+	require.NoError(t, err)
 
 	app.AccountKeeper.SetModuleAccount(ctx, macc)
 

@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	"github.com/c-osmosis/osmosis/x/distribution/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // DistributeFromFeePool distributes funds from the distribution module account to

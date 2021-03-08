@@ -1,10 +1,10 @@
 package distribution
 
 import (
+	"github.com/c-osmosis/osmosis/x/distribution/keeper"
+	"github.com/c-osmosis/osmosis/x/distribution/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 

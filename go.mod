@@ -3,6 +3,8 @@ module github.com/c-osmosis/osmosis
 go 1.15
 
 require (
+	github.com/armon/go-metrics v0.3.6
+	github.com/coinbase/rosetta-sdk-go v0.6.9
 	github.com/cosmos/cosmos-sdk v0.41.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.4.3

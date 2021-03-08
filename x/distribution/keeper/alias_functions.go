@@ -1,9 +1,9 @@
 package keeper
 
 import (
+	"github.com/c-osmosis/osmosis/x/distribution/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // get outstanding rewards

@@ -5,9 +5,7 @@ import (
 	"fmt"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -94,33 +92,6 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 		return ErrEmptyValidatorAddr
 	}
 	return nil
-}
-
-func (msg *MsgWithdrawDelegatorReward) ToOperations(withStatus, hasError bool) []*rosettatypes.Operation {
-
-	var status string
-	if withStatus {
-		status = rosetta.StatusSuccess
-		if hasError {
-			status = rosetta.StatusReverted
-		}
-	}
-
-	op := &rosettatypes.Operation{
-		OperationIdentifier: &rosettatypes.OperationIdentifier{
-			Index: 0,
-		},
-		RelatedOperations: nil,
-		Type:              proto.MessageName(msg),
-		Status:            status,
-		Account: &rosettatypes.AccountIdentifier{
-			Address: msg.DelegatorAddress,
-			SubAccount: &rosettatypes.SubAccountIdentifier{
-				Address: msg.ValidatorAddress,
-			},
-		},
-	}
-	return []*rosettatypes.Operation{op}
 }
 
 func (msg *MsgWithdrawDelegatorReward) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {

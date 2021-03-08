@@ -82,9 +82,8 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	// fund fee collector
-	require.NoError(t, simapp.FundAccount(app, ctx, feeCollector.GetAddress(), fees))
-
+	err := app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
+	require.NoError(t, err)
 	app.AccountKeeper.SetAccount(ctx, feeCollector)
 
 	votes := []abci.VoteInfo{
@@ -163,7 +162,8 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	require.NoError(t, simapp.FundAccount(app, ctx, feeCollector.GetAddress(), fees))
+	err := app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
+	require.NoError(t, err)
 
 	app.AccountKeeper.SetAccount(ctx, feeCollector)
 
