@@ -2,8 +2,7 @@ package keeper
 
 import (
 	"context"
-
-	"github.com/c-osmosis/osmosis/x/gamm/utils"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -38,7 +37,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePo
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(poolId)),
+			sdk.NewAttribute(types.AttributeKeyPoolId, fmt.Sprintf("%d", poolId)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

@@ -12,8 +12,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/c-osmosis/osmosis/x/gamm/utils"
 )
 
 // PoolAccountI defines an account interface for pools that hold tokens.
@@ -45,7 +43,7 @@ var (
 )
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, utils.Uint64ToBytes(poolId)...)))
+	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, sdk.Uint64ToBigEndian(poolId)...)))
 }
 
 func NewPoolAccount(poolId uint64, poolParams PoolParams) PoolAccountI {
