@@ -68,3 +68,11 @@ func FlagSetExitPool() *flag.FlagSet {
 
 	return fs
 }
+
+func FlagSetJoinSwapExternAmount() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.Uint64(FlagPoolId, 0, "The id of pool")
+
+	return fs
+}
