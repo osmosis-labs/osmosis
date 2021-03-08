@@ -33,6 +33,7 @@ func NewTxCmd() *cobra.Command {
 		NewJoinSwapExternAmountIn(),
 		NewJoinSwapShareAmountOut(),
 		NewExitSwapExternAmountOut(),
+		NewExitSwapShareAmountIn(),
 	)
 
 	return txCmd
@@ -286,7 +287,7 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exit-swap-share-amount-in [token-out-denom] [share-in-amount] [token-out-min-amount]",
 		Short: "exit swap share amount in",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -638,12 +639,12 @@ func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, tokenOutStr, s
 
 	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
 	if err != nil {
-		return txf, nil, errors.New("share out amount")
+		return txf, nil, errors.New("token out")
 	}
 
 	shareInMaxAmt, ok := sdk.NewIntFromString(shareInMaxAmtStr)
 	if !ok {
-		return txf, nil, errors.New("token in max amount")
+		return txf, nil, errors.New("share in max amount")
 	}
 
 	msg := &types.MsgExitSwapExternAmountOut{
