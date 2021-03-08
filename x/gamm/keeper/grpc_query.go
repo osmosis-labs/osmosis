@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"math/big"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -9,6 +10,20 @@ import (
 	"github.com/c-osmosis/osmosis/x/gamm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+var (
+	sdkIntMaxValue = sdk.NewInt(0)
+)
+
+func init() {
+	maxInt := big.NewInt(2)
+	maxInt = maxInt.Exp(maxInt, big.NewInt(255), nil)
+	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
+	if !ok {
+		panic("Failed to calculate the max value of sdk.Int")
+	}
+	sdkIntMaxValue = _sdkIntMaxValue
+}
 
 var _ types.QueryServer = Keeper{}
 
@@ -181,7 +196,7 @@ func (k Keeper) EstimateSwapExactAmountOut(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenInAmount, err := k.MultihopSwapExactAmountOut(sdkCtx, sender, req.Routes, sdk.NewInt(1), tokenOut)
+	tokenInAmount, err := k.MultihopSwapExactAmountOut(sdkCtx, sender, req.Routes, sdkIntMaxValue, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
