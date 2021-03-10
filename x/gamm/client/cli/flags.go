@@ -37,7 +37,7 @@ func FlagSetQuerySwapRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool id")
-	fs.StringArray(FlagSwapRouteAmounts, []string{""}, "swap route amount")
+	fs.StringArray(FlagSwapRouteDenoms, []string{""}, "swap route amount")
 	return fs
 }
 

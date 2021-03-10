@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -334,7 +333,7 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
 	flags.AddQueryFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteAmounts)
+	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
 
 	return cmd
 }
@@ -365,30 +364,9 @@ $ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz8
 				return err
 			}
 
-			swapRoutePoolIds, err := cmd.Flags().GetStringArray(FlagSwapRoutePoolIds)
+			routes, err := swapAmountOutRoutes(cmd.Flags())
 			if err != nil {
 				return err
-			}
-
-			swapRouteAmounts, err := cmd.Flags().GetStringArray(FlagSwapRouteAmounts)
-			if err != nil {
-				return err
-			}
-
-			if len(swapRoutePoolIds) != len(swapRouteAmounts) {
-				return errors.New("swap route pool ids and amounts mismatch")
-			}
-
-			routes := []types.SwapAmountOutRoute{}
-			for index, poolIDStr := range swapRoutePoolIds {
-				pID, err := strconv.Atoi(poolIDStr)
-				if err != nil {
-					return err
-				}
-				routes = append(routes, types.SwapAmountOutRoute{
-					PoolId:       uint64(pID),
-					TokenInDenom: swapRouteAmounts[index],
-				})
 			}
 
 			res, err := queryClient.EstimateSwapExactAmountOut(cmd.Context(), &types.QuerySwapExactAmountOutRequest{
@@ -408,7 +386,7 @@ $ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz8
 	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
 	flags.AddQueryFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteAmounts)
+	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
 
 	return cmd
 }

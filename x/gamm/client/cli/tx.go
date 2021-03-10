@@ -161,7 +161,7 @@ func NewSwapExactAmountInCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
 	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteAmounts)
+	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
 
 	return cmd
 }
@@ -477,13 +477,13 @@ func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
 		return nil, err
 	}
 
-	swapRouteAmounts, err := fs.GetStringArray(FlagSwapRouteAmounts)
+	swapRouteDenoms, err := fs.GetStringArray(FlagSwapRouteDenoms)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(swapRoutePoolIds) != len(swapRouteAmounts) {
-		return nil, errors.New("swap route pool ids and amounts mismatch")
+	if len(swapRoutePoolIds) != len(swapRouteDenoms) {
+		return nil, errors.New("swap route pool ids and denoms mismatch")
 	}
 
 	routes := []types.SwapAmountInRoute{}
@@ -494,7 +494,7 @@ func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
 		}
 		routes = append(routes, types.SwapAmountInRoute{
 			PoolId:        uint64(pID),
-			TokenOutDenom: swapRouteAmounts[index],
+			TokenOutDenom: swapRouteDenoms[index],
 		})
 	}
 	return routes, nil
