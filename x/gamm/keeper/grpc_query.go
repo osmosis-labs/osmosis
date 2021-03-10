@@ -162,7 +162,7 @@ func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QuerySpotPriceResponse{
-		SpotPrice: sp,
+		SpotPrice: sp.String(),
 	}, nil
 }
 

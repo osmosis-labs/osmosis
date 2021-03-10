@@ -98,10 +98,9 @@ message QuerySpotPriceRequest {
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
 }
 message QuerySpotPriceResponse {
+  // String of the Dec. Ex) 10.203uatom
   string spotPrice = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"spot_price\"",
-    (gogoproto.nullable) = false
+    (gogoproto.moretags) = "yaml:\"spot_price\""
   ];
 }
 
