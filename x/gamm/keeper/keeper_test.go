@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/c-osmosis/osmosis/app"
@@ -18,13 +19,18 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app *app.OsmosisApp
-	ctx sdk.Context
+	app         *app.OsmosisApp
+	ctx         sdk.Context
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.app.GAMMKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
