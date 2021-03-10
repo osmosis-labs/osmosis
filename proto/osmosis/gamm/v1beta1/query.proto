@@ -54,7 +54,7 @@ message QueryPoolResponse {
 //=============================== Pools
 message QueryPoolsRequest {
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 message QueryPoolsResponse {
   repeated PoolAccount pools = 1 [ (gogoproto.nullable) = false ];
