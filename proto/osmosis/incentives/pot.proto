@@ -35,4 +35,7 @@ message Pot {
   google.protobuf.Timestamp start_time = 4
     [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""]; 
   uint64 num_epochs = 5; // number of epochs distribution will be done 
+  uint64 filled_epochs = 6; // number of epochs distributed already
+  repeated cosmos.base.v1beta1.Coin distributed_coins = 7
+    [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"]; // already distributed coins
 }

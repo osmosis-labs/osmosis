@@ -28,12 +28,14 @@ service Query {
 
 message ModuleToDistributeCoinsRequest {}
 message ModuleToDistributeCoinsResponse {
-    repeated cosmos.base.v1beta1.Coin coins = 1;
+    repeated cosmos.base.v1beta1.Coin coins = 1
+		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 message ModuleDistributedCoinsRequest {}
 message ModuleDistributedCoinsResponse {
-    repeated cosmos.base.v1beta1.Coin coins = 1;
+    repeated cosmos.base.v1beta1.Coin coins = 1
+		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 message PotByIDRequest {
@@ -45,22 +47,23 @@ message PotByIDResponse {
 
 message PotsRequest {}
 message PotsResponse {
-    repeated Pot pot = 1;
+    repeated Pot data = 1 [(gogoproto.nullable) = false];
 }
 
 message ActivePotsRequest {}
 message ActivePotsResponse {
-    repeated Pot pot = 1;
+    repeated Pot data = 1 [(gogoproto.nullable) = false];
 }
 
 message UpcomingPotsRequest {}
 message UpcomingPotsResponse {
-    repeated Pot pot = 1;
+    repeated Pot data = 1 [(gogoproto.nullable) = false];
 }
 
 message RewardsEstRequest {
     bytes owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 message RewardsEstResponse {
-    repeated cosmos.base.v1beta1.Coin coins = 1;
+    repeated cosmos.base.v1beta1.Coin coins = 1
+		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
