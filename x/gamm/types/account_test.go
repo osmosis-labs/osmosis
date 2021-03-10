@@ -381,7 +381,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := `|
-  address: cosmos13st38lsk0rudja4sv98r2p5608nry4cc9qj7ff
+  address: cosmos10vgzkwmgvqs5nwh3mprrt53ff6r7autptppdxh
   public_key: ""
   account_number: 0
   sequence: 0

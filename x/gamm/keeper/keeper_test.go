@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/c-osmosis/osmosis/app"
@@ -18,13 +19,18 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app *app.OsmosisApp
-	ctx sdk.Context
+	app         *app.OsmosisApp
+	ctx         sdk.Context
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.app.GAMMKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -37,7 +43,7 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
-func (suite *KeeperTestSuite) preparePool() uint64 {
+func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolParams) uint64 {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 		err := suite.app.BankKeeper.AddCoins(
@@ -54,11 +60,7 @@ func (suite *KeeperTestSuite) preparePool() uint64 {
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-		Lock:    false,
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
-	}, []types.Record{
+	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, poolParams, []types.Record{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -73,6 +75,15 @@ func (suite *KeeperTestSuite) preparePool() uint64 {
 		},
 	})
 	suite.NoError(err)
+	return poolId
+}
+
+func (suite *KeeperTestSuite) preparePool() uint64 {
+	poolId := suite.preparePoolWithPoolParams(types.PoolParams{
+		Lock:    false,
+		SwapFee: sdk.NewDec(0),
+		ExitFee: sdk.NewDec(0),
+	})
 
 	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "foo", "bar")
 	suite.NoError(err)

@@ -54,7 +54,7 @@ message QueryPoolResponse {
 //=============================== Pools
 message QueryPoolsRequest {
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 message QueryPoolsResponse {
   repeated PoolAccount pools = 1 [ (gogoproto.nullable) = false ];
@@ -98,10 +98,9 @@ message QuerySpotPriceRequest {
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
 }
 message QuerySpotPriceResponse {
+  // String of the Dec. Ex) 10.203uatom
   string spotPrice = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"spot_price\"",
-    (gogoproto.nullable) = false
+    (gogoproto.moretags) = "yaml:\"spot_price\""
   ];
 }
 

@@ -2,6 +2,12 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+	"math/big"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -9,6 +15,20 @@ import (
 	"github.com/c-osmosis/osmosis/x/gamm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+var (
+	sdkIntMaxValue = sdk.NewInt(0)
+)
+
+func init() {
+	maxInt := big.NewInt(2)
+	maxInt = maxInt.Exp(maxInt, big.NewInt(255), nil)
+	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
+	if !ok {
+		panic("Failed to calculate the max value of sdk.Int")
+	}
+	sdkIntMaxValue = _sdkIntMaxValue
+}
 
 var _ types.QueryServer = Keeper{}
 
@@ -38,7 +58,40 @@ func (k Keeper) Pools(
 	ctx context.Context,
 	req *types.QueryPoolsRequest,
 ) (*types.QueryPoolsResponse, error) {
-	panic("implement me")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	store := sdkCtx.KVStore(k.storeKey)
+	poolStore := prefix.NewStore(store, types.PaginationPoolNumbers)
+
+	pools := []types.PoolAccount{}
+	pageRes, err := query.Paginate(poolStore, req.Pagination, func(_, value []byte) error {
+		poolId := sdk.BigEndianToUint64(value)
+		poolI, err := k.GetPool(sdkCtx, poolId)
+
+		if err != nil {
+			return err
+		}
+
+		pool, ok := poolI.(*types.PoolAccount)
+		if !ok {
+			return fmt.Errorf("pool (%d) is not basic pool account", poolId)
+		}
+
+		pools = append(pools, *pool)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryPoolsResponse{
+		Pools:      pools,
+		Pagination: pageRes,
+	}, nil
 }
 
 func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
@@ -109,7 +162,7 @@ func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QuerySpotPriceResponse{
-		SpotPrice: sp,
+		SpotPrice: sp.String(),
 	}, nil
 }
 
@@ -181,7 +234,7 @@ func (k Keeper) EstimateSwapExactAmountOut(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenInAmount, err := k.MultihopSwapExactAmountOut(sdkCtx, sender, req.Routes, sdk.NewInt(1), tokenOut)
+	tokenInAmount, err := k.MultihopSwapExactAmountOut(sdkCtx, sender, req.Routes, sdkIntMaxValue, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
