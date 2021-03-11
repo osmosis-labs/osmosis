@@ -11,6 +11,7 @@ import (
 	"github.com/c-osmosis/osmosis/app"
 	"github.com/c-osmosis/osmosis/x/gamm/client/cli"
 	gammtestutil "github.com/c-osmosis/osmosis/x/gamm/client/testutil"
+	"github.com/c-osmosis/osmosis/x/gamm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -329,6 +330,598 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
+	val := s.network.Validators[0]
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountOut", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"swap exact amount out", // osmosisd tx gamm swap-exact-amount-out 10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=stake2 --from=validator --keyring-backend=test --chain-id=testing --yes
+			[]string{
+				"10stake", "20",
+				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "stake2"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewSwapExactAmountOutCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
+	val := s.network.Validators[0]
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapExternAmountIn", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"join swap extern amount in", // osmosisd tx gamm join-swap-extern-amount-in --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+			[]string{
+				"10stake", "1",
+				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewJoinSwapExternAmountIn()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
+	val := s.network.Validators[0]
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewExitSwapExternAmountOut", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"exit swap extern amount out", // osmosisd tx gamm exit-swap-extern-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+			[]string{
+				"10stake", "1",
+				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewExitSwapExternAmountOut()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
+	val := s.network.Validators[0]
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOut", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+			[]string{
+				"10stake", "1",
+				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewJoinSwapShareAmountOut()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
+	val := s.network.Validators[0]
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewExitSwapShareAmountIn", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"exit swap share amount in", // osmosisd tx gamm exit-swap-share-amount-in --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+			[]string{
+				"stake", "10", "1",
+				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewExitSwapShareAmountIn()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdPools() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pools",
+			[]string{},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdPools() // osmosisd query gamm pools
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryPoolsResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+
+				s.Require().Greater(len(resp.Pools), 0, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdPool() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pool by id", // osmosisd query gamm pool 1
+			[]string{"1"},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdPool()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryPoolResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pool params by id", // osmosisd query gamm pool-params 1
+			[]string{"1"},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdPoolParams()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryPoolParamsResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdRecords() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pool records by id", // osmosisd query gamm records 1
+			[]string{"1"},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdRecords()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryRecordsResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdTotalShare() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pool total share by id", // osmosisd query gamm total-share 1
+			[]string{"1"},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdTotalShare()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryTotalShareResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pool spot price", // osmosisd query gamm spot-price 1 stake stake2
+			[]string{"1", "stake", "stake2"},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdSpotPrice()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QuerySpotPriceResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountIn() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=stake2
+			[]string{
+				"1",
+				"cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq",
+				"10.0stake",
+				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "stake2"),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdEstimateSwapExactAmountIn()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QuerySwapExactAmountInResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountOut() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=stake2
+			[]string{
+				"1",
+				"cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq",
+				"10.0stake",
+				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "stake2"),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdEstimateSwapExactAmountOut()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QuerySwapExactAmountOutResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
