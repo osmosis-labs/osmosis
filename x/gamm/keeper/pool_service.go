@@ -361,9 +361,11 @@ func (k Keeper) ExitPool(
 	//       And, it seems to be not good way to send the exit fee to the pool account,
 	//       because the pool account doesn't have the record about exit fee.
 	//       So, temporarily, just burn the exit fee.
-	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
-	if err != nil {
-		return err
+	if exitFee.IsPositive() {
+		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, shareInAmountAfterExitFee)
@@ -439,9 +441,11 @@ func (k Keeper) ExitSwapShareAmountIn(
 	//       And, it seems to be not good way to send the exit fee to the pool account,
 	//       because the pool account doesn't have the record about exit fee.
 	//       So, temporarily, just burn the exit fee.
-	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
-	if err != nil {
-		return sdk.Int{}, err
+	if exitFee.IsPositive() {
+		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
+		if err != nil {
+			return sdk.Int{}, err
+		}
 	}
 
 	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, shareInAmountAfterExitFee)
@@ -516,9 +520,11 @@ func (k Keeper) ExitSwapExternAmountOut(
 	//       And, it seems to be not good way to send the exit fee to the pool account,
 	//       because the pool account doesn't have the record about exit fee.
 	//       So, temporarily, just burn the exit fee.
-	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
-	if err != nil {
-		return sdk.Int{}, err
+	if exitFee.IsPositive() {
+		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
+		if err != nil {
+			return sdk.Int{}, err
+		}
 	}
 
 	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, shareInAmountAfterExitFee)
