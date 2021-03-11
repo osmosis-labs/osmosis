@@ -23,8 +23,8 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/%s/{%s}/{%s}", types.QueryAccountUnlockedBeforeTime, RestOwnerAddress, RestTimestamp), queryAccountUnlockedBeforeTimeFn(clientCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/{%s}/{%s}/{%s}", types.QueryAccountLockedPastTimeDenom, RestOwnerAddress, RestDenom, RestTimestamp), queryAccountLockedPastTimeDenomFn(clientCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/{%s}", types.QueryLockedByID, LockID), queryLockedByIDFn(clientCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/{%s}/{%s}", types.QueryAccountLockedLongerThanDuration, RestOwnerAddress, RestDuration), queryAccountLockedLongerThanDurationFn(clientCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/{%s}/{%s}/{%s}", types.QueryAccountLockedLongerThanDurationDenom, RestOwnerAddress, RestDenom, RestDuration), queryAccountLockedLongerThanDurationDenomFn(clientCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/{%s}/{%s}", types.QueryAccountLockedLongerDuration, RestOwnerAddress, RestDuration), queryAccountLockedLongerDurationFn(clientCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/{%s}/{%s}/{%s}", types.QueryAccountLockedLongerDurationDenom, RestOwnerAddress, RestDenom, RestDuration), queryAccountLockedLongerDurationDenomFn(clientCtx)).Methods("GET")
 }
 
 func queryModuleBalanceFn(clientCtx client.Context) http.HandlerFunc {
@@ -246,7 +246,7 @@ func queryLockedByIDFn(clientCtx client.Context) http.HandlerFunc {
 	}
 }
 
-func queryAccountLockedLongerThanDurationFn(clientCtx client.Context) http.HandlerFunc {
+func queryAccountLockedLongerDurationFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strOwnerAddress := vars[RestOwnerAddress]
@@ -268,7 +268,7 @@ func queryAccountLockedLongerThanDurationFn(clientCtx client.Context) http.Handl
 			return
 		}
 
-		res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/lockup/%s", types.QueryAccountLockedLongerThanDuration), bz)
+		res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/lockup/%s", types.QueryAccountLockedLongerDuration), bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -281,7 +281,7 @@ func queryAccountLockedLongerThanDurationFn(clientCtx client.Context) http.Handl
 	}
 }
 
-func queryAccountLockedLongerThanDurationDenomFn(clientCtx client.Context) http.HandlerFunc {
+func queryAccountLockedLongerDurationDenomFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
@@ -306,7 +306,7 @@ func queryAccountLockedLongerThanDurationDenomFn(clientCtx client.Context) http.
 			return
 		}
 
-		res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/lockup/%s", types.QueryAccountLockedLongerThanDurationDenom), bz)
+		res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/lockup/%s", types.QueryAccountLockedLongerDurationDenom), bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

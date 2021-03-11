@@ -26,7 +26,9 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		NewLockTokensCmd(),
+		NewBeginUnlockingCmd(),
 		NewUnlockTokensCmd(),
+		NewBeginUnlockByIDCmd(),
 		NewUnlockByIDCmd(),
 	)
 
@@ -77,6 +79,32 @@ func NewLockTokensCmd() *cobra.Command {
 	return cmd
 }
 
+// NewBeginUnlockingCmd unlock all unlockable tokens from user's account
+func NewBeginUnlockingCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "begin-unlock-tokens",
+		Short: "begin unlock not unlocking tokens from lockup pool for an account",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			msg := &types.MsgBeginUnlocking{
+				Owner: clientCtx.GetFromAddress(),
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 // NewUnlockTokensCmd unlock all unlockable tokens from user's account
 func NewUnlockTokensCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -93,6 +121,38 @@ func NewUnlockTokensCmd() *cobra.Command {
 
 			msg := &types.MsgUnlockTokens{
 				Owner: clientCtx.GetFromAddress(),
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewBeginUnlockByIDCmd unlock individual period lock by ID
+func NewBeginUnlockByIDCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "begin-unlock-by-id",
+		Short: "begin unlock individual period lock by ID",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			id, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgBeginUnlockPeriodLock{
+				Owner: clientCtx.GetFromAddress(),
+				ID:    uint64(id),
 			}
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)

@@ -16,3 +16,8 @@ func NewPeriodLock(ID uint64, owner sdk.AccAddress, duration time.Duration, endT
 		Coins:    coins,
 	}
 }
+
+// IsUnlocking returns lock started unlocking already
+func (p PeriodLock) IsUnlocking() bool {
+	return !p.EndTime.Equal(time.Time{})
+}

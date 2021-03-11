@@ -77,6 +77,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	dayLockAmt, err := sdk.ParseCoinNormalized("200stake")
 	s.Require().NoError(err)
 	secLockAmt, err := sdk.ParseCoinNormalized("11stake")
+	s.Require().NoError(err)
+	thirdLockAmt, err := sdk.ParseCoinNormalized("12stake")
+	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
 
@@ -89,7 +92,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// lock tokens for a second
-	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, val.Address, secLockAmt, "1s")
+	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, val.Address, thirdLockAmt, "1s")
+	s.Require().NoError(err)
+
+	// begin unlock all tokens
+	_, err = lockuptestutil.MsgBeginUnlocking(val.ClientCtx, val.Address)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -168,6 +175,72 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
+	val := s.network.Validators[0]
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockingAcc", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	// lock tokens for a second
+	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, newAddr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), "1s")
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"begin unlocking",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewBeginUnlockingCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestNewUnlockTokensCmd() {
 	val := s.network.Validators[0]
 
@@ -188,6 +261,10 @@ func (s *IntegrationTestSuite) TestNewUnlockTokensCmd() {
 
 	// lock tokens for a second
 	_, err = lockuptestutil.MsgLockTokens(val.ClientCtx, newAddr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), "1s")
+	s.Require().NoError(err)
+
+	// begin unlock tokens
+	_, err = lockuptestutil.MsgBeginUnlocking(val.ClientCtx, val.Address)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -234,6 +311,76 @@ func (s *IntegrationTestSuite) TestNewUnlockTokensCmd() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockPeriodLockAcc", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	// lock tokens for a second
+	txResp := sdk.TxResponse{}
+	out, err := lockuptestutil.MsgLockTokens(val.ClientCtx, newAddr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), "1s")
+	s.Require().NoError(err)
+	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	lockID := txResp.Logs[0].Events[0].Attributes[0].Value
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"begin unlocking by id",
+			[]string{
+				lockID,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewBeginUnlockByIDCmd()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestNewUnlockByIDCmd() {
 	val := s.network.Validators[0]
 
@@ -261,6 +408,13 @@ func (s *IntegrationTestSuite) TestNewUnlockByIDCmd() {
 	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &txResp), res.String())
 	s.Require().Equal(txResp.Logs[0].Events[0].Attributes[0].Key, "period_lock_id")
 	lockID := txResp.Logs[0].Events[0].Attributes[0].Value
+
+	// begin unlock tokens
+	res, err = lockuptestutil.MsgBeginUnlocking(val.ClientCtx, newAddr)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -315,7 +469,7 @@ func (s *IntegrationTestSuite) TestCmdAccountUnlockableCoins() {
 		coins sdk.Coins
 	}{
 		{
-			"query validator account balance",
+			"query validator account unlockable coins",
 			[]string{
 				val.Address.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
@@ -341,6 +495,41 @@ func (s *IntegrationTestSuite) TestCmdAccountUnlockableCoins() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestCmdAccountUnlockingCoins() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name  string
+		args  []string
+		coins sdk.Coins
+	}{
+		{
+			"query validator account unlocking coins",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdAccountUnlockingCoins()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result types.AccountUnlockingCoinsResponse
+			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().Equal(tc.coins.String(), result.Coins.String())
+		})
+	}
+}
+
 func (s IntegrationTestSuite) TestCmdModuleBalance() {
 	val := s.network.Validators[0]
 
@@ -354,7 +543,7 @@ func (s IntegrationTestSuite) TestCmdModuleBalance() {
 			[]string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(211))},
+			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(411))},
 		},
 	}
 
@@ -388,7 +577,7 @@ func (s IntegrationTestSuite) TestCmdModuleLockedAmount() {
 			[]string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))},
+			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(400))},
 		},
 	}
 
@@ -475,6 +664,41 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() {
 			var result types.AccountLockedPastTimeResponse
 			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Len(result.Locks, 1)
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeNotUnlockingOnly() {
+	val := s.network.Validators[0]
+
+	timestamp := time.Now().Unix()
+	testCases := []struct {
+		name string
+		args []string
+	}{
+		{
+			"query account locked coins past time not unlocking only",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("%d", timestamp),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdAccountLockedPastTimeNotUnlockingOnly()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result types.AccountLockedPastTimeNotUnlockingOnlyResponse
+			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().Len(result.Locks, 0)
 		})
 	}
 }
@@ -583,7 +807,7 @@ func (s IntegrationTestSuite) TestCmdLockedByID() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDuration() {
+func (s IntegrationTestSuite) TestCmdAccountLockedLongerDuration() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -604,7 +828,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDuration() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdAccountLockedLongerThanDuration()
+			cmd := cli.GetCmdAccountLockedLongerDuration()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -617,7 +841,41 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDuration() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDurationDenom() {
+func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationNotUnlockingOnly() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name string
+		args []string
+	}{
+		{
+			"get account locked longer than duration not unlocking only",
+			[]string{
+				val.Address.String(),
+				"1s",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdAccountLockedLongerDurationNotUnlockingOnly()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result types.AccountLockedLongerDurationNotUnlockingOnlyResponse
+			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().Len(result.Locks, 0)
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationDenom() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -639,7 +897,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerThanDurationDenom() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdAccountLockedLongerThanDurationDenom()
+			cmd := cli.GetCmdAccountLockedLongerDurationDenom()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

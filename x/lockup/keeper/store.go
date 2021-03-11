@@ -62,21 +62,24 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 }
 
 // deleteLockRefByKey removes lock ID from an array associated to provided key
-func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
+func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	var index = -1
 	store := ctx.KVStore(k.storeKey)
 	timeLock := k.getLockRefs(ctx, key)
 	timeLock.IDs, index = removeValue(timeLock.IDs, lockID)
 	if index < 0 {
-		panic(fmt.Sprintf("specific lock with ID %d not found", lockID))
+		return fmt.Errorf("specific lock with ID %d not found", lockID)
 	}
 	if len(timeLock.IDs) == 0 {
-		store.Delete(key)
+		if store.Has(key) {
+			store.Delete(key)
+		}
 	} else {
 		bz, err := json.Marshal(timeLock)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		store.Set(key, bz)
 	}
+	return nil
 }
