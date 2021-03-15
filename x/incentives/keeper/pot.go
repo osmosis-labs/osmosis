@@ -66,6 +66,13 @@ func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Ite
 	return k.getCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
 }
 
+// setPot modify pot into different one
+func (k Keeper) setPot(ctx sdk.Context, pot *types.Pot) error {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(potStoreKey(pot.Id), k.cdc.MustMarshalJSON(pot))
+	return nil
+}
+
 // GetPotByID Returns pot from pot ID
 func (k Keeper) GetPotByID(ctx sdk.Context, potID uint64) (*types.Pot, error) {
 	pot := types.Pot{}
@@ -93,15 +100,13 @@ func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins
 		return 0, err
 	}
 
-	potID := pot.Id
-	store := ctx.KVStore(k.storeKey)
-	store.Set(potStoreKey(potID), k.cdc.MustMarshalJSON(&pot))
-	k.setLastPotID(ctx, potID)
+	k.setPot(ctx, &pot)
+	k.setLastPotID(ctx, pot.Id)
 
-	if err := k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUncomingPots, getTimeKey(pot.StartTime)), potID); err != nil {
+	if err := k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUncomingPots, getTimeKey(pot.StartTime)), pot.Id); err != nil {
 		return 0, err
 	}
-	return potID, nil
+	return pot.Id, nil
 }
 
 // AddToPot add coins to pot
@@ -115,9 +120,7 @@ func (k Keeper) AddToPot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins,
 	}
 
 	pot.Coins = pot.Coins.Add(coins...)
-
-	store := ctx.KVStore(k.storeKey)
-	store.Set(potStoreKey(potID), k.cdc.MustMarshalJSON(pot))
+	k.setPot(ctx, pot)
 	return nil
 }
 
@@ -177,6 +180,10 @@ func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) error {
 			return err
 		}
 	}
+
+	// increase filled epochs after distribution
+	pot.FilledEpochs += 1
+	k.setPot(ctx, &pot)
 
 	return nil
 }
