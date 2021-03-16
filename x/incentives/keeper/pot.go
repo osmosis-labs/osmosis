@@ -87,7 +87,7 @@ func (k Keeper) GetPotByID(ctx sdk.Context, potID uint64) (*types.Pot, error) {
 }
 
 // CreatePot create a pot and send coins to the pot
-func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, distrTo *types.DistrCondition, startTime time.Time, numEpochs uint64) (uint64, error) {
+func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, distrTo types.DistrCondition, startTime time.Time, numEpochs uint64) (uint64, error) {
 	pot := types.Pot{
 		Id:           k.getLastPotID(ctx) + 1,
 		DistributeTo: distrTo,

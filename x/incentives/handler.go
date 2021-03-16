@@ -3,9 +3,9 @@ package incentives
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/c-osmosis/osmosis/x/incentives/keeper"
 	"github.com/c-osmosis/osmosis/x/incentives/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -13,9 +13,15 @@ import (
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
+		msgServer := keeper.NewMsgServerImpl(k)
 
 		switch msg := msg.(type) {
-		// this line is used by starport scaffolding # 1
+		case *types.MsgCreatePot:
+			res, err := msgServer.CreatePot(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgAddToPot:
+			res, err := msgServer.AddToPot(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
