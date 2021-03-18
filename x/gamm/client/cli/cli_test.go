@@ -76,7 +76,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	// create a new pool
-	_, err = gammtestutil.MsgCreatePool(val.ClientCtx, val.Address, []string{}, []string{}, sdk.NewCoins(), sdk.NewCoins())
+	_, err = gammtestutil.MsgCreatePool(val.ClientCtx, val.Address, []string{"100stake", "100node0token"}, []string{"5", "5"}, "0.01", "0.01")
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -91,7 +91,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewCreatePoolAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -190,7 +190,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinPoolAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -214,9 +214,10 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 	}{
 		{
 			"join pool with insufficient balance",
-			[]string{
+			[]string{ // join-pool --pool-id=1 --max-amounts-in=10000000000000000000000000000stake --share-amount-out=100 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "1"),
+				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "10000000000000000000000000000stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "100"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -227,9 +228,10 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 		},
 		{
 			"join pool with sufficient balance",
-			[]string{
+			[]string{ // join-pool --pool-id=1 --max-amounts-in=100stake --share-amount-out=100 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "1"),
+				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "100"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -264,7 +266,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewExitPoolAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -347,25 +349,26 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
 	s.Require().NoError(err)
 
 	testCases := []struct {
-		name         string
-		args         []string
+		name string
+		args []string
+
 		expectErr    bool
 		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
-			"swap exact amount out", // osmosisd tx gamm swap-exact-amount-out 10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=stake2 --from=validator --keyring-backend=test --chain-id=testing --yes
+			"swap exact amount out", // osmosisd tx gamm swap-exact-amount-out 10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
 				"10stake", "20",
 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "stake2"),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -522,7 +525,7 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOut", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -545,9 +548,9 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 		expectedCode uint32
 	}{
 		{
-			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
-				"10stake", "1",
+				"stake", "10", "1",
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
@@ -822,8 +825,8 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 		expectErr bool
 	}{
 		{
-			"query pool spot price", // osmosisd query gamm spot-price 1 stake stake2
-			[]string{"1", "stake", "stake2"},
+			"query pool spot price", // osmosisd query gamm spot-price 1 stake node0token
+			[]string{"1", "stake", "node0token"},
 			false,
 		},
 	}
@@ -856,13 +859,13 @@ func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountIn() {
 		expectErr bool
 	}{
 		{
-			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=stake2
+			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
 			[]string{
 				"1",
 				"cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq",
 				"10.0stake",
 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "stake2"),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
 			},
 			false,
 		},
@@ -896,13 +899,13 @@ func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountOut() {
 		expectErr bool
 	}{
 		{
-			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=stake2
+			"query pool estimate swap exact amount in", // osmosisd query gamm estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
 			[]string{
 				"1",
 				"cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq",
 				"10.0stake",
 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "stake2"),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
 			},
 			false,
 		},
@@ -928,7 +931,7 @@ func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountOut() {
 }
 
 func (s IntegrationTestSuite) TestNewSwapCmd() {
-	panic("swap command is not implemented!")
+	panic("implement me!")
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
