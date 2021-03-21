@@ -42,11 +42,11 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryLockedByID:
 			return queryLockedByID(ctx, req, k, legacyQuerierCdc)
 
-		case types.QueryAccountLockedLongerThanDuration:
-			return queryAccountLockedLongerThanDuration(ctx, req, k, legacyQuerierCdc)
+		case types.QueryAccountLockedLongerDuration:
+			return queryAccountLockedLongerDuration(ctx, req, k, legacyQuerierCdc)
 
-		case types.QueryAccountLockedLongerThanDurationDenom:
-			return queryAccountLockedLongerThanDurationDenom(ctx, req, k, legacyQuerierCdc)
+		case types.QueryAccountLockedLongerDurationDenom:
+			return queryAccountLockedLongerDurationDenom(ctx, req, k, legacyQuerierCdc)
 
 		default:
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
@@ -87,6 +87,24 @@ func queryAccountUnlockableCoins(ctx sdk.Context, req abci.RequestQuery, k Keepe
 	}
 
 	coins := k.GetAccountUnlockableCoins(ctx, params.Owner)
+
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+}
+
+func queryAccountUnlockingCoins(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	var params types.AccountUnlockableCoinsRequest
+
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	coins := k.GetAccountUnlockingCoins(ctx, params.Owner)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
 	if err != nil {
@@ -189,7 +207,7 @@ func queryLockedByID(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 	return res, nil
 }
 
-func queryAccountLockedLongerThanDuration(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryAccountLockedLongerDuration(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.AccountLockedLongerDurationRequest
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -197,7 +215,7 @@ func queryAccountLockedLongerThanDuration(ctx sdk.Context, req abci.RequestQuery
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	locks := k.GetAccountLockedLongerThanDuration(ctx, params.Owner, params.Duration)
+	locks := k.GetAccountLockedLongerDuration(ctx, params.Owner, params.Duration)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, locks)
 	if err != nil {
@@ -207,7 +225,7 @@ func queryAccountLockedLongerThanDuration(ctx sdk.Context, req abci.RequestQuery
 	return res, nil
 }
 
-func queryAccountLockedLongerThanDurationDenom(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryAccountLockedLongerDurationDenom(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.AccountLockedLongerDurationDenomRequest
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -215,7 +233,7 @@ func queryAccountLockedLongerThanDurationDenom(ctx sdk.Context, req abci.Request
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	locks := k.GetAccountLockedLongerThanDuration(ctx, params.Owner, params.Duration)
+	locks := k.GetAccountLockedLongerDuration(ctx, params.Owner, params.Duration)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, locks)
 	if err != nil {

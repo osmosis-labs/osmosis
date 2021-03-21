@@ -35,6 +35,8 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];
+  string swapFeeGovernor = 4
+      [ (gogoproto.moretags) = "yaml:\"swap_fee_governor\"" ];
 }
 
 message PoolAccount {

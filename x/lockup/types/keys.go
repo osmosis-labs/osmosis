@@ -16,6 +16,15 @@ var (
 	// KeyLastLockID defines key to store lock ID used by last
 	KeyLastLockID = []byte{0x33}
 
+	// KeyPrefixPeriodLock defines prefix to store period lock by ID
+	KeyPrefixPeriodLock = []byte{0x00}
+
+	// KeyPrefixNotUnlocking defines prefix to query iterators which hasn't started unlocking
+	KeyPrefixNotUnlocking = []byte{0xf0}
+
+	// KeyPrefixUnlocking defines prefix to query iterators which has started unlocking
+	KeyPrefixUnlocking = []byte{0xf1}
+
 	// KeyPrefixTimestamp defines prefix key for timestamp iterator key
 	KeyPrefixTimestamp = []byte{0x34}
 
@@ -33,9 +42,6 @@ var (
 
 	// KeyPrefixAccountDenomLockDuration defines prefix for the iteration of lock IDs by account, denomination and duration
 	KeyPrefixAccountDenomLockDuration = []byte{0x39}
-
-	// KeyPrefixPeriodLock defines prefix to store period lock by ID
-	KeyPrefixPeriodLock = []byte{0x00}
 
 	// KeyPrefixLockTimestamp defines prefix for the iteration of lock IDs by timestamp
 	KeyPrefixLockTimestamp = []byte{0x01}

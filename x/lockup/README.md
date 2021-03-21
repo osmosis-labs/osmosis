@@ -7,8 +7,11 @@ osmosisd tx lockup lock-tokens 200stake --duration="86400s" --from=validator --c
 # 5s 100stake lock-tokens command
 osmosisd tx lockup lock-tokens 100stake --duration="5s" --from=validator --chain-id=testing --keyring-backend=test --yes
 
-# unlock tokens
-osmosisd tx lockup unlock-tokens --from=validator --chain-id=testing --keyring-backend=test --yes
+# begin unlock tokens, NOTE: add more gas when unlocking more than two locks in a same command
+osmosisd tx lockup begin-unlock-tokens --from=validator --gas=500000 --chain-id=testing --keyring-backend=test --yes
+
+# unlock tokens, NOTE: add more gas when unlocking more than two locks in a same command
+osmosisd tx lockup unlock-tokens --from=validator --gas=500000 --chain-id=testing --keyring-backend=test --yes
 
 # unlock specific period lock
 osmosisd tx lockup unlock-by-id 1 --from=validator --chain-id=testing --keyring-backend=test --yes
