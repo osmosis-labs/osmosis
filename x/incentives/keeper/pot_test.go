@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 
 	// initial check
 	coins := suite.app.IncentivesKeeper.GetModuleToDistributeCoins(suite.ctx)
-	suite.Require().Equal(coins, sdk.Coins{})
+	suite.Require().Equal(coins, sdk.Coins(nil))
 
 	// create pot
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 
 	// initial check
 	coins := suite.app.IncentivesKeeper.GetModuleDistributedCoins(suite.ctx)
-	suite.Require().Equal(coins, sdk.Coins{})
+	suite.Require().Equal(coins, sdk.Coins(nil))
 
 	// TODO: implement distribution test
 	// BeginDistribution()
@@ -94,10 +94,10 @@ func (suite *KeeperTestSuite) TestPotOperations() {
 	suite.Require().Len(pots, 1)
 	suite.Require().Equal(pots[0].Id, potID)
 	suite.Require().Equal(pots[0].Coins, coins)
-	suite.Require().Equal(pots[0].StartTime, startTime)
-	suite.Require().Equal(pots[0].NumEpochs, 2)
-	suite.Require().Equal(pots[0].FilledEpochs, 0)
+	suite.Require().Equal(pots[0].NumEpochs, uint64(2))
+	suite.Require().Equal(pots[0].FilledEpochs, uint64(0))
 	suite.Require().Equal(pots[0].DistributedCoins, sdk.Coins{})
+	suite.Require().Equal(pots[0].StartTime.Unix(), startTime.Unix())
 
 	// add to pot
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
@@ -108,10 +108,10 @@ func (suite *KeeperTestSuite) TestPotOperations() {
 	suite.Require().Len(pots, 1)
 	suite.Require().Equal(pots[0].Id, potID)
 	suite.Require().Equal(pots[0].Coins, coins.Add(addCoins...))
-	suite.Require().Equal(pots[0].StartTime, startTime)
-	suite.Require().Equal(pots[0].NumEpochs, 2)
-	suite.Require().Equal(pots[0].FilledEpochs, 0)
+	suite.Require().Equal(pots[0].NumEpochs, uint64(2))
+	suite.Require().Equal(pots[0].FilledEpochs, uint64(0))
 	suite.Require().Equal(pots[0].DistributedCoins, sdk.Coins{})
+	suite.Require().Equal(pots[0].StartTime.Unix(), startTime.Unix())
 
 	// TODO: add test for distribution
 	// BeginDistribution()
