@@ -33,15 +33,21 @@ type AppStateV036 struct {
 // SnapshotFields provide fields of snapshot per account
 type SnapshotFields struct {
 	AtomAddress           string  `json:"atom_address"`
+        // Atom Balance = AtomStakedBalance + AtomUnstakedBalance
 	AtomBalance           sdk.Int `json:"atom_balance"`
 	AtomStakedBalance     sdk.Int `json:"atom_staked_balance"`
 	AtomUnstakedBalance   sdk.Int `json:"atom_unstaked_balance"`
+        // AtomStakedPercent = AtomStakedBalance / AtomBalance
 	AtomStakedPercent     sdk.Dec `json:"atom_staked_percent"`
 	AtomOwnershipPercent  sdk.Dec `json:"atom_ownership_percent"`
 	OsmoNormalizedBalance sdk.Int `json:"osmo_balance_normalized"`
+        // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
 	OsmoBalance           sdk.Int `json:"osmo_balance"`
+        // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
 	OsmoBalanceBonus      sdk.Int `json:"osmo_balance_bonus"`
+	// OsmoBalanceBase = sqrt(atom balance)
 	OsmoBalanceBase       sdk.Int `json:"osmo_balance_base"`
+	// OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
 	OsmoPercent           sdk.Dec `json:"osmo_ownership_percent"`
 }
 
@@ -83,6 +89,7 @@ Example:
 			genesisFile := args[1]
 			snapshotOutput := args[2]
 
+			// Parse CLI input for osmo supply
 			osmoSupplyStr, err := cmd.Flags().GetString(flagOsmoSupply)
 			if err != nil {
 				return fmt.Errorf("failed to get osmo total supply: %w", err)
@@ -92,6 +99,7 @@ Example:
 				return fmt.Errorf("failed to parse osmo supply: %s", osmoSupplyStr)
 			}
 
+                      // Read genesis file
 			genesisJson, err := os.Open(genesisFile)
 			if err != nil {
 				return err
@@ -108,6 +116,7 @@ Example:
 				return err
 			}
 
+			// Produce the map of address to total atom balance, both staked and unstaked
 			snapshot := make(map[string]SnapshotFields)
 
 			totalAtomBalance := sdk.NewInt(0)
@@ -146,6 +155,7 @@ Example:
 				snapshot[address] = acc
 			}
 
+			// Make a map from validator operator address to the v036 validator type
 			validators := make(map[string]v036staking.Validator)
 			for _, validator := range genStateV036.AppState.Staking.Validators {
 				validators[validator.OperatorAddress.String()] = validator
@@ -200,6 +210,7 @@ Example:
 				acc.OsmoBalanceBonus = bonusOsmo.RoundInt()
 
 				allOsmo := baseOsmo.Add(bonusOsmo)
+                                // OsmoBalance = sqrt( all atoms) * (1 + 1.5) * (staked atom percent) = 
 				acc.OsmoBalance = allOsmo.RoundInt()
 
 				totalOsmoBalance = totalOsmoBalance.Add(allOsmo.RoundInt())
