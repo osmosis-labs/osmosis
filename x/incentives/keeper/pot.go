@@ -73,19 +73,6 @@ func (k Keeper) setPot(ctx sdk.Context, pot *types.Pot) error {
 	return nil
 }
 
-// GetPotByID Returns pot from pot ID
-func (k Keeper) GetPotByID(ctx sdk.Context, potID uint64) (*types.Pot, error) {
-	pot := types.Pot{}
-	store := ctx.KVStore(k.storeKey)
-	potKey := potStoreKey(potID)
-	if !store.Has(potKey) {
-		return nil, fmt.Errorf("pot with ID %d does not exist", potID)
-	}
-	bz := store.Get(potKey)
-	k.cdc.MustUnmarshalJSON(bz, &pot)
-	return &pot, nil
-}
-
 // CreatePot create a pot and send coins to the pot
 func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, distrTo types.DistrCondition, startTime time.Time, numEpochs uint64) (uint64, error) {
 	pot := types.Pot{
@@ -200,6 +187,19 @@ func (k Keeper) GetModuleDistributedCoins(ctx sdk.Context) sdk.Coins {
 	activePotsDistr := k.getDistributedCoinsFromIterator(ctx, k.ActivePotsIterator(ctx))
 	finishedPotsDistr := k.getDistributedCoinsFromIterator(ctx, k.FinishedPotsIterator(ctx))
 	return activePotsDistr.Add(finishedPotsDistr...)
+}
+
+// GetPotByID Returns pot from pot ID
+func (k Keeper) GetPotByID(ctx sdk.Context, potID uint64) (*types.Pot, error) {
+	pot := types.Pot{}
+	store := ctx.KVStore(k.storeKey)
+	potKey := potStoreKey(potID)
+	if !store.Has(potKey) {
+		return nil, fmt.Errorf("pot with ID %d does not exist", potID)
+	}
+	bz := store.Get(potKey)
+	k.cdc.MustUnmarshalJSON(bz, &pot)
+	return &pot, nil
 }
 
 // GetPots returns pots both upcoming and active
