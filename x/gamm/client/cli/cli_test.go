@@ -24,6 +24,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -115,8 +116,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	}{
 		{
 			"one token pair pool",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "atom"),
+			[]string{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100atom"),
 				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "1"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
@@ -126,15 +127,15 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
-		{
+		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 			"two tokens pair pool",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "atom"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "0.25"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "0.75"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100atom"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "1"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "3"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
@@ -145,15 +146,15 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
-		{
+		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 			"three tokens pair pool",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "atom"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "btc"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "0.25"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "0.25"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "0.5"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100atom"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100btc"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "1"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "1"),
+				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "2"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
@@ -290,9 +291,10 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 	}{
 		{
 			"ask too much when exit",
-			[]string{
+			[]string{ // --min-amounts-out=100stake --pool-id=1 --share-amount-in=10 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "1"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "10"),
+				fmt.Sprintf("--%s=%s", cli.FlagMinAmountsOut, "100stake"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -303,9 +305,10 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 		},
 		{
 			"ask enough when exit",
-			[]string{
+			[]string{ // --min-amounts-out=100stake --pool-id=1 --share-amount-in=10 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "1"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "10"),
+				fmt.Sprintf("--%s=%s", cli.FlagMinAmountsOut, "100stake"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -654,7 +657,9 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 	}{
 		{
 			"query pools",
-			[]string{},
+			[]string{
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
 			false,
 		},
 	}
@@ -690,7 +695,10 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 	}{
 		{
 			"query pool by id", // osmosisd query gamm pool 1
-			[]string{"1"},
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
 			false,
 		},
 	}
@@ -724,7 +732,10 @@ func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
 	}{
 		{
 			"query pool params by id", // osmosisd query gamm pool-params 1
-			[]string{"1"},
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
 			false,
 		},
 	}
@@ -758,7 +769,10 @@ func (s *IntegrationTestSuite) TestGetCmdRecords() {
 	}{
 		{
 			"query pool records by id", // osmosisd query gamm records 1
-			[]string{"1"},
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
 			false,
 		},
 	}
@@ -792,7 +806,10 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShare() {
 	}{
 		{
 			"query pool total share by id", // osmosisd query gamm total-share 1
-			[]string{"1"},
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
 			false,
 		},
 	}
@@ -826,7 +843,10 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 	}{
 		{
 			"query pool spot price", // osmosisd query gamm spot-price 1 stake node0token
-			[]string{"1", "stake", "node0token"},
+			[]string{
+				"1", "stake", "node0token",
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
 			false,
 		},
 	}
@@ -866,6 +886,7 @@ func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountIn() {
 				"10.0stake",
 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
 			false,
 		},
@@ -906,6 +927,7 @@ func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountOut() {
 				"10.0stake",
 				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
 			false,
 		},
