@@ -21,6 +21,12 @@ func (suite *KeeperTestSuite) AddToPot(addr sdk.AccAddress, coins sdk.Coins, pot
 	return potID
 }
 
+func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
+	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
+	suite.Require().NoError(err)
+}
+
 func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	// test for module get pots
 	suite.SetupTest()

@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/c-osmosis/osmosis/x/incentives/types"
@@ -59,11 +58,11 @@ func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.
 }
 
 func (k Keeper) getToDistributeCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
+	return k.getToDistributeCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
 }
 
 func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
+	return k.getDistributedCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
 }
 
 // setPot modify pot into different one
@@ -134,7 +133,7 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 }
 
 // Distribute distriute coins from pot for fitting conditions
-func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) error {
+func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
 	locks := []lockuptypes.PeriodLock{}
 	switch pot.DistributeTo.LockQueryType {
 	case types.ByDuration:
@@ -144,35 +143,42 @@ func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) error {
 	default:
 	}
 
+	totalDistrCoins := sdk.NewCoins()
 	lockSum := sdk.NewInt(0)
 	for _, lock := range locks {
 		lockSum = lockSum.Add(lock.Coins.AmountOf(pot.DistributeTo.Denom))
 	}
+
 	if lockSum.IsZero() {
-		return nil
+		return nil, nil
 	}
+
+	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
+	remainEpochs := pot.NumEpochs - pot.FilledEpochs
 	for _, lock := range locks {
-		distrCoins := pot.Coins
-		for i, coin := range distrCoins {
-			bi := big.NewInt(0).Div(coin.Amount.BigInt(), big.NewInt(int64(pot.NumEpochs)))
-			bi = bi.Mul(bi, lock.Coins.AmountOf(pot.DistributeTo.Denom).BigInt())
-			bi = bi.Div(bi, lockSum.BigInt())
-			distrCoins[i].Amount = sdk.NewIntFromBigInt(bi)
+		distrCoins := sdk.Coins{}
+		for _, coin := range remainCoins {
+			amt := coin.Amount.Mul(lock.Coins.AmountOf(pot.DistributeTo.Denom)).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+			if amt.IsPositive() {
+				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+			}
 		}
 		distrCoins = distrCoins.Sort()
 		if distrCoins.Empty() {
 			continue
 		}
-		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, pot.Coins); err != nil {
-			return err
+		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, distrCoins); err != nil {
+			return nil, err
 		}
+		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
 	// increase filled epochs after distribution
 	pot.FilledEpochs += 1
+	pot.DistributedCoins = pot.DistributedCoins.Add(totalDistrCoins...)
 	k.setPot(ctx, &pot)
 
-	return nil
+	return totalDistrCoins, nil
 }
 
 // GetModuleToDistributeCoins returns sum of to distribute coins for all of the module
