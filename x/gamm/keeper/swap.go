@@ -223,3 +223,28 @@ func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom,
 		poolAcc.GetPoolParams().SwapFee,
 	), nil
 }
+
+func (k Keeper) CalculateSpotPriceSansSwapFee(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
+	poolAcc, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	inRecord, err := poolAcc.GetRecord(tokenInDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	outRecord, err := poolAcc.GetRecord(tokenOutDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	return calcSpotPrice(
+		inRecord.Token.Amount.ToDec(),
+		inRecord.Weight.ToDec(),
+		outRecord.Token.Amount.ToDec(),
+		outRecord.Weight.ToDec(),
+		sdk.ZeroDec(),
+	), nil
+}

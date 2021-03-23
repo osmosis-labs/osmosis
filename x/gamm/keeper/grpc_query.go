@@ -157,9 +157,18 @@ func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	sp, err := k.CalculateSpotPrice(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	var sp sdk.Dec
+	var err error
+	if req.SansSwapFee {
+		sp, err = k.CalculateSpotPriceSansSwapFee(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	} else {
+		sp, err = k.CalculateSpotPrice(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 	return &types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),

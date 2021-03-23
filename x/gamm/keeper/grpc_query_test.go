@@ -170,7 +170,11 @@ func (suite *KeeperTestSuite) TestQuerySpotPrice() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
-	_, err := queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{PoolId: 1})
+	_, err := queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{
+		PoolId:        1,
+		TokenInDenom:  "foo",
+		TokenOutDenom: "bar",
+	})
 	suite.Require().Error(err)
 
 	poolId := suite.preparePool()
