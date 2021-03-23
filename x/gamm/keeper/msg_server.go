@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/c-osmosis/osmosis/x/gamm/utils"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/c-osmosis/osmosis/x/gamm/types"
@@ -39,7 +37,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePo
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(poolId)),
+			sdk.NewAttribute(types.AttributeKeyPoolId, fmt.Sprintf("%d", poolId)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -107,7 +105,8 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	_, _, err = server.keeper.SwapExactAmountIn(ctx, sender, msg.PoolId, msg.TokenIn, msg.TokenOutDenom, msg.TokenOutMinAmount, msg.MaxSpotPrice)
+	_, err = server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +130,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	_, _, err = server.keeper.SwapExactAmountOut(ctx, sender, msg.PoolId, msg.TokenInDenom, msg.TokenInMaxAmount, msg.TokenOut, msg.MaxSpotPrice)
+	_, err = server.keeper.MultihopSwapExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
 	if err != nil {
 		return nil, err
 	}

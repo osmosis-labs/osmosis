@@ -44,6 +44,9 @@ func (k Keeper) NewPool(ctx sdk.Context, poolId uint64, poolParams types.PoolPar
 
 	k.accountKeeper.SetAccount(ctx, poolAcc)
 
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetKeyPaginationPoolNumbers(poolId), sdk.Uint64ToBigEndian(poolId))
+
 	return poolAcc, nil
 }
 
