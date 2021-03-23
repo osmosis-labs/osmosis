@@ -35,12 +35,20 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	coins := suite.app.IncentivesKeeper.GetModuleToDistributeCoins(suite.ctx)
 	suite.Require().Equal(coins, sdk.Coins(nil))
 
+	// create a pot and locks
+	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
+	suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
+
 	// create pot
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	startTime := time.Now()
 	potCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	// TODO: create locks and add those locks for distribution condition after distribution code finish
-	potID := suite.CreatePot(addr1, potCoins, types.DistrCondition{}, startTime, 2)
+	distrTo := types.DistrCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "lptoken",
+		Duration:      time.Second,
+	}
+	potID := suite.CreatePot(addr1, potCoins, distrTo, startTime, 2)
 
 	// check after pot creation
 	coins = suite.app.IncentivesKeeper.GetModuleToDistributeCoins(suite.ctx)
@@ -56,28 +64,69 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	addr2 := sdk.AccAddress([]byte("addr1---------------"))
 	startTime2 := time.Now()
 	potCoins2 := sdk.Coins{sdk.NewInt64Coin("stake", 1000)}
-	suite.CreatePot(addr2, potCoins2, types.DistrCondition{}, startTime2, 2)
+	suite.CreatePot(addr2, potCoins2, distrTo, startTime2, 2)
 	coins = suite.app.IncentivesKeeper.GetModuleToDistributeCoins(suite.ctx)
 	suite.Require().Equal(coins, potCoins.Add(addCoins...).Add(potCoins2...))
 
-	// TODO: implement check after distribution
-	// BeginDistribution()
-	// Distribute()
-	// FinishDistribution()
+	// start distribution
+	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID)
+	suite.Require().NoError(err)
+	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *pot)
+	suite.Require().NoError(err)
+
+	// distribute coins to stakers
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *pot)
+	suite.Require().NoError(err)
+	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 105)})
+
+	// check pot changes after distribution
+	coins = suite.app.IncentivesKeeper.GetModuleToDistributeCoins(suite.ctx)
+	suite.Require().Equal(coins, potCoins.Add(addCoins...).Add(potCoins2...).Sub(distrCoins))
 }
 
 func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
-	// test for module get pots
 	suite.SetupTest()
 
 	// initial check
 	coins := suite.app.IncentivesKeeper.GetModuleDistributedCoins(suite.ctx)
 	suite.Require().Equal(coins, sdk.Coins(nil))
 
-	// TODO: implement distribution test
-	// BeginDistribution()
-	// Distribute()
-	// FinishDistribution()
+	// create a pot and locks
+	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
+	suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
+
+	distrTo := types.DistrCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "lptoken",
+		Duration:      time.Second,
+	}
+
+	// create pot
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	startTime := time.Now()
+	potCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	potID := suite.CreatePot(addr1, potCoins, distrTo, startTime, 2)
+
+	// check after pot creation
+	coins = suite.app.IncentivesKeeper.GetModuleDistributedCoins(suite.ctx)
+	suite.Require().Equal(coins, sdk.Coins(nil))
+
+	// start distribution
+	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID)
+	suite.Require().NoError(err)
+	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *pot)
+	suite.Require().NoError(err)
+
+	// distribute coins to stakers
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *pot)
+	suite.Require().NoError(err)
+	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 5)})
+
+	// check after distribution
+	coins = suite.app.IncentivesKeeper.GetModuleToDistributeCoins(suite.ctx)
+	suite.Require().Equal(coins, distrCoins)
 }
 
 func (suite *KeeperTestSuite) TestPotOperations() {
@@ -88,12 +137,20 @@ func (suite *KeeperTestSuite) TestPotOperations() {
 	pots := suite.app.IncentivesKeeper.GetPots(suite.ctx)
 	suite.Require().Len(pots, 0)
 
+	// create a pot and locks
+	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
+	suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
+
 	// create pot
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	startTime := time.Now()
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	// TODO: create locks and add those locks for distribution condition after distribution code finish
-	potID := suite.CreatePot(addr1, coins, types.DistrCondition{}, startTime, 2)
+	distrTo := types.DistrCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "lptoken",
+		Duration:      time.Second,
+	}
+	potID := suite.CreatePot(addr1, coins, distrTo, startTime, 2)
 
 	// check pots
 	pots = suite.app.IncentivesKeeper.GetPots(suite.ctx)
@@ -119,13 +176,40 @@ func (suite *KeeperTestSuite) TestPotOperations() {
 	suite.Require().Equal(pots[0].DistributedCoins, sdk.Coins{})
 	suite.Require().Equal(pots[0].StartTime.Unix(), startTime.Unix())
 
-	// TODO: add test for distribution
-	// BeginDistribution()
-	// Distribute()
-	// FinishDistribution()
+	// check upcoming pots
+	pots = suite.app.IncentivesKeeper.GetUpcomingPots(suite.ctx)
+	suite.Require().Len(pots, 1)
+
+	// start distribution
+	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID)
+	suite.Require().NoError(err)
+	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *pot)
+	suite.Require().NoError(err)
+
+	// check upcoming pots
+	pots = suite.app.IncentivesKeeper.GetUpcomingPots(suite.ctx)
+	suite.Require().Len(pots, 0)
+
+	// distribute coins to stakers
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *pot)
+	suite.Require().NoError(err)
+	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 105)})
+
+	// check active pots
+	pots = suite.app.IncentivesKeeper.GetActivePots(suite.ctx)
+	suite.Require().Len(pots, 1)
+
+	// finish distribution
+	err = suite.app.IncentivesKeeper.FinishDistribution(suite.ctx, *pot)
+	suite.Require().NoError(err)
+
+	// check finished pots
+	pots = suite.app.IncentivesKeeper.GetFinishedPots(suite.ctx)
+	suite.Require().Len(pots, 1)
 
 	// check pot by ID
-	pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID)
+	pot, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(pot)
 	suite.Require().Equal(*pot, pots[0])
@@ -134,8 +218,5 @@ func (suite *KeeperTestSuite) TestPotOperations() {
 	_, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID+1000)
 	suite.Require().Error(err)
 
-	// TODO: check active pots - GetActivePots()
-	// TODO: check upcoming pots - GetUpcomingPots()
-	// TODO: check finished pots - GetFinishedPots()
 	// TODO: check rewards estimation - GetRewardsEst()
 }

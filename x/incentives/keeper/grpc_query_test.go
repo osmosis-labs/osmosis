@@ -91,8 +91,9 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingPots() {
 func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	suite.SetupTest()
 
-	// TODO: setup locks
+	// create a pot and locks
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
+	suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
 
 	// initial check
 	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
@@ -210,7 +211,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 
 	// start distribution
 	suite.ctx = suite.ctx.WithBlockTime(startTime)
-	suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *pot)
+	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *pot)
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
