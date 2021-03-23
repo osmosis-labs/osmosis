@@ -77,7 +77,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	// create a new pool
-	_, err = gammtestutil.MsgCreatePool(val.ClientCtx, val.Address, []string{"100stake", "100node0token"}, []string{"5", "5"}, "0.01", "0.01")
+	_, err = gammtestutil.MsgCreatePool(val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01")
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -116,9 +116,9 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	}{
 		{
 			"one token pair pool",
-			[]string{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100atom"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "1"),
+			[]string{ // 1atom --initial-deposit=100atom --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
+				"1atom",
+				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100atom"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
@@ -132,10 +132,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 			"two tokens pair pool",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100atom"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "1"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "3"),
+				"1atom,3stake",
+				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100atom,100stake"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
@@ -149,12 +147,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 			"three tokens pair pool",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100atom"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokens, "100btc"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "1"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "1"),
-				fmt.Sprintf("--%s=%s", cli.FlagPoolRecordTokenWeights, "2"),
+				"1atom,1stake,2btc",
+				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100atom,100stake,100btc"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),

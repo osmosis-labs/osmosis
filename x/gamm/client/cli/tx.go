@@ -41,9 +41,12 @@ func NewTxCmd() *cobra.Command {
 
 func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool",
+		Use:   "create-pool <token-weights> [flags]",
 		Short: "create a new pool and provide the liquidity to it",
-		Args:  cobra.ExactArgs(0),
+		Long: `create a new pool and provide the liquidity to it.
+			e.g. create-pool 4uatom,4osmo,2uakt --initial-deposit 100uatom,5osmo,20uakt --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
+		`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -52,7 +55,7 @@ func NewCreatePoolCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, args[0], cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -64,8 +67,7 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetCreatePool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolRecordTokens)
-	_ = cmd.MarkFlagRequired(FlagPoolRecordTokenWeights)
+	_ = cmd.MarkFlagRequired(FlagInitialDeposit)
 	_ = cmd.MarkFlagRequired(FlagSwapFee)
 	_ = cmd.MarkFlagRequired(FlagExitFee)
 
@@ -312,39 +314,24 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	return cmd
 }
 
-func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	recordTokenStrs, err := fs.GetStringArray(FlagPoolRecordTokens)
+func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeights string, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	initialDepositStr, err := fs.GetString(FlagInitialDeposit)
 	if err != nil {
 		return txf, nil, err
 	}
-	if len(recordTokenStrs) < 2 {
-		return txf, nil, fmt.Errorf("bind tokens should be more than 2")
-	}
 
-	recordTokenWeightStrs, err := fs.GetStringArray(FlagPoolRecordTokenWeights)
+	deposit, err := sdk.ParseCoinsNormalized(initialDepositStr)
 	if err != nil {
 		return txf, nil, err
 	}
-	if len(recordTokenStrs) != len(recordTokenWeightStrs) {
-		return txf, nil, fmt.Errorf("tokens and token weights should have same length")
+
+	recordTokens, err := sdk.ParseDecCoins(tokenWeights)
+	if err != nil {
+		return txf, nil, err
 	}
 
-	recordTokens := sdk.Coins{}
-	for i := 0; i < len(recordTokenStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(recordTokenStrs[i])
-		if err != nil {
-			return txf, nil, err
-		}
-		recordTokens = append(recordTokens, parsed)
-	}
-
-	var recordWeights []sdk.Int
-	for i := 0; i < len(recordTokenWeightStrs); i++ {
-		parsed, ok := sdk.NewIntFromString(recordTokenWeightStrs[i])
-		if !ok {
-			return txf, nil, fmt.Errorf("invalid token weight (%s)", recordTokenWeightStrs[i])
-		}
-		recordWeights = append(recordWeights, parsed)
+	if len(deposit) != len(recordTokens) {
+		return txf, nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
 	swapFeeStr, err := fs.GetString(FlagSwapFee)
@@ -367,15 +354,15 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 
 	var records []types.Record
 	for i := 0; i < len(recordTokens); i++ {
-		recordToken := recordTokens[i]
-		recordWeight := recordWeights[i]
 
-		record := types.Record{
-			Weight: recordWeight,
-			Token:  recordToken,
+		if recordTokens[i].Denom != deposit[i].Denom {
+			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
 
-		records = append(records, record)
+		records = append(records, types.Record{
+			Weight: recordTokens[i].Amount.RoundInt(),
+			Token:  deposit[i],
+		})
 	}
 
 	msg := &types.MsgCreatePool{

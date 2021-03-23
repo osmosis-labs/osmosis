@@ -22,23 +22,17 @@ var commonArgs = []string{
 func MsgCreatePool(
 	clientCtx client.Context,
 	owner fmt.Stringer,
-	recordTokens []string,
-	tokenWeights []string,
+	tokenWeights string,
+	initialDeposit string,
 	swapFee string,
 	exitFee string,
 	extraArgs ...string,
 ) (testutil.BufferWriter, error) {
 	args := []string{}
 
-	for _, token := range recordTokens {
-		args = append(args, fmt.Sprintf("--%s=%s", gammcli.FlagPoolRecordTokens, token))
-	}
-
-	for _, weight := range tokenWeights {
-		args = append(args, fmt.Sprintf("--%s=%s", gammcli.FlagPoolRecordTokenWeights, weight))
-	}
-
 	args = append(args,
+		tokenWeights,
+		fmt.Sprintf("--%s=%s", gammcli.FlagInitialDeposit, initialDeposit),
 		fmt.Sprintf("--%s=%s", gammcli.FlagSwapFee, swapFee),
 		fmt.Sprintf("--%s=%s", gammcli.FlagExitFee, exitFee),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
