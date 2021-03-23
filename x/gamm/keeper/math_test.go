@@ -57,6 +57,32 @@ func TestPow(t *testing.T) {
 }
 
 func TestCalcSpotPrice(t *testing.T) {
+	// TODO: Change test to be table driven
+	tokenBalanceIn, err := sdk.NewDecFromStr("100")
+	require.NoError(t, err)
+	tokenWeightIn, err := sdk.NewDecFromStr("0.1")
+	require.NoError(t, err)
+	tokenBalanceOut, err := sdk.NewDecFromStr("200")
+	require.NoError(t, err)
+	tokenWeightOut, err := sdk.NewDecFromStr("0.3")
+	require.NoError(t, err)
+
+	// (100/.1) / (200 / .3) = (1000) / (666.66666667) =
+	s := calcSpotPrice(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut)
+
+	expectedDec, err := sdk.NewDecFromStr("1.5")
+	require.NoError(t, err)
+
+	require.True(
+		t,
+		expectedDec.Sub(s).Abs().LTE(powPrecision),
+		"expected value & actual value's difference should less than precision",
+	)
+
+}
+
+// TODO: Create test vectors with balancer contract
+func TestCalcSpotPriceWithSwapFee(t *testing.T) {
 	tokenBalanceIn, err := sdk.NewDecFromStr("100")
 	require.NoError(t, err)
 	tokenWeightIn, err := sdk.NewDecFromStr("0.1")
@@ -68,7 +94,7 @@ func TestCalcSpotPrice(t *testing.T) {
 	swapFee, err := sdk.NewDecFromStr("0.01")
 	require.NoError(t, err)
 
-	s := calcSpotPrice(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, swapFee)
+	s := calcSpotPriceWithSwapFee(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, swapFee)
 
 	expectedDec, err := sdk.NewDecFromStr("1.51515151")
 	require.NoError(t, err)

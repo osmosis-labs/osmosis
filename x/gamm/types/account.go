@@ -110,7 +110,7 @@ func (pa *PoolAccount) SubTotalShare(amt sdk.Int) {
 }
 
 // AddRecords adds the records to the pool. If the same denom's record exists, will return error.
-// And, records have to be sorted to search the denom's record by the binary search.
+// The list of records must be sorted. This is done to enable fast searching for a record by denomination.
 func (pa *PoolAccount) AddRecords(records []Record) error {
 	exists := make(map[string]bool)
 	for _, record := range pa.Records {
@@ -136,6 +136,9 @@ func (pa *PoolAccount) AddRecords(records []Record) error {
 		addTotalWeight = addTotalWeight.Add(record.Weight)
 	}
 
+	// TODO: Change this to a more efficient sorted insert algorithm.
+	// Furthermore, consider changing the underlying data type to allow im-place modification if the
+	// number of records is expected to be large.
 	pa.Records = append(pa.Records, records...)
 	sort.Slice(pa.Records, func(i, j int) bool {
 		recordA := pa.Records[i]

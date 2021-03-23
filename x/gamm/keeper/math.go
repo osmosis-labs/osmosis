@@ -7,22 +7,43 @@ import (
 )
 
 // Don't EVER change after initializing
+// TODO: Analyze choice here
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
-//  sP
+// calcSpotPrice returns the spot price of the pool
+// This is the weight-adjusted balance of the tokens in the pool.
+// so spot_price = (B_in / W_in) / (B_out / W_out)
 func calcSpotPrice(
+	tokenBalanceIn,
+	tokenWeightIn,
+	tokenBalanceOut,
+	tokenWeightOut sdk.Dec,
+) sdk.Dec {
+	number := tokenBalanceIn.Quo(tokenWeightIn)
+	denom := tokenBalanceOut.Quo(tokenWeightOut)
+	ratio := number.Quo(denom)
+
+	return ratio
+}
+
+// calcSpotPriceWithSwapFee returns the spot price of the pool accounting for
+// the input taken by the swap fee.
+// This is the weight-adjusted balance of the tokens in the pool.
+// so spot_price = (B_in / W_in) / (B_out / W_out)
+// and spot_price_with_fee = spot_price / (1 - swapfee)
+func calcSpotPriceWithSwapFee(
 	tokenBalanceIn,
 	tokenWeightIn,
 	tokenBalanceOut,
 	tokenWeightOut,
 	swapFee sdk.Dec,
 ) sdk.Dec {
-	number := tokenBalanceIn.Quo(tokenWeightIn)
-	denom := tokenBalanceOut.Quo(tokenWeightOut)
-	ratio := number.Quo(denom)
+	spotPrice := calcSpotPrice(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut)
+	// Q: Why is this not just (1 - swapfee)
+	// 1 / (1 - swapfee)
 	scale := sdk.OneDec().Quo(sdk.OneDec().Sub(swapFee))
 
-	return ratio.Mul(scale)
+	return spotPrice.Mul(scale)
 }
 
 // aO
@@ -178,34 +199,47 @@ func subSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	}
 }
 
+// pow computes base^(exp)
+// However since the exponent is not an integer, we must do an approximation algorithm.
+// TODO: In the future, lets add some optimized routines for common exponents.
+// Many simple exponents like 2:1 pools
 func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
+	// Exponentiation of a negative base with an arbitrary real exponent is not closed within the reals.
+	// You can see this by recalling that `i = (-1)^(.5)`. We have to go to complex numbers to define this.
+	// (And would have to implement complex logarithms)
+	// We don't have a need for negative bases, so we don't include any such logic.
 	if base.LTE(sdk.ZeroDec()) {
 		panic(fmt.Errorf("base have to be greater than zero"))
 	}
+	// TODO: Remove this, we can do a
 	if base.GTE(sdk.OneDec().MulInt64(2)) {
 		panic(fmt.Errorf("base have to be lesser than two"))
 	}
 
-	whole := exp.TruncateDec()
-	remain := exp.Sub(whole)
+	// We will use an approximation algorithm to compute the power.
+	// Since computing an integer power is easy, we split up the exponent into
+	// an integer component and a fractional component.
+	// a
+	integer := exp.TruncateDec()
+	fractional := exp.Sub(integer)
 
-	wholePow := base.Power(uint64(whole.TruncateInt64()))
+	integerPow := base.Power(uint64(integer.TruncateInt64()))
 
-	if remain.IsZero() {
-		return wholePow
+	if fractional.IsZero() {
+		return integerPow
 	}
 
-	partialResult := powApprox(base, remain, powPrecision)
+	partialResult := powApprox(base, fractional, powPrecision)
 
-	return wholePow.Mul(partialResult)
+	return integerPow.Mul(partialResult)
 }
 
 func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	if base.LTE(sdk.ZeroDec()) {
-		panic(fmt.Errorf("base have to be greater than zero"))
+		panic(fmt.Errorf("base must be greater than zero"))
 	}
 	if base.GTE(sdk.OneDec().MulInt64(2)) {
-		panic(fmt.Errorf("base have to be lesser than two"))
+		panic(fmt.Errorf("base must be less than two"))
 	}
 
 	a := exp
