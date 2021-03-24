@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) AllocateAssetToFarm(ctx sdk.Context, farmId uint64, newPeriod int64, assets sdk.Coins) error {
+func (k Keeper) AllocateAssetToFarm(ctx sdk.Context, farmId uint64, newPeriod int64, allocator sdk.AccAddress, assets sdk.Coins) error {
 	err := assets.Validate()
 	if err != nil {
 		return err
@@ -41,6 +41,11 @@ func (k Keeper) AllocateAssetToFarm(ctx sdk.Context, farmId uint64, newPeriod in
 		farm.LastPeriod = farm.CurrentPeriod
 		farm.CurrentPeriod = newPeriod
 		farm.CurrentRewards = sdk.DecCoins{}
+	}
+
+	err = k.bk.SendCoinsFromAccountToModule(ctx, allocator, types.ModuleName, assets)
+	if err != nil {
+		return err
 	}
 
 	return k.setFarm(ctx, farm)

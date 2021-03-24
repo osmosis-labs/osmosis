@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/c-osmosis/osmosis/x/farm/types"
@@ -11,12 +13,21 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryMarshaler
+
+	ak types.AccountKeeper
+	bk types.BankKeeper
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper) Keeper {
+	if ak.GetModuleAddress(types.ModuleName) == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
+		ak:       ak,
+		bk:       bk,
 	}
 }
 

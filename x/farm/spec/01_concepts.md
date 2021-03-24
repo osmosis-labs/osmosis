@@ -10,4 +10,4 @@ The `x/farm` module is an inter-module accessible, generalized yield farming rew
 
 It should be noted that the `x/farm` module doesn't support features such as slashing and commission.
 
-**Notice:** The `x/farm` module doesn't include msgs, and only manages the state. The user's shares or assets that was deposited through the `x/farm` module is not custodied by the `x/farm` module. Deposited assets as well as the yield farming reward must be transferred **through**(and not **to**) the `x/farm` module to the other module that is using the `x/farm` module.
+**Notice:** The `x/farm` module doesn't include msgs, and only manages the state. ~~The user's shares or assets that was deposited through the `x/farm` module is not custodied by the `x/farm` module. Deposited assets as well as the yield farming reward must be transferred **through**(and not **to**) the `x/farm` module to the other module that is using the `x/farm` module.~~
