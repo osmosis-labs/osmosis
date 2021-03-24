@@ -30,6 +30,10 @@ func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, address sdk.A
 	}
 	k.setFarmer(ctx, farmer)
 
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, rewards)
+	if err != nil {
+		return sdk.Coins{}, nil
+	}
 	return rewards, nil
 }
 
@@ -61,6 +65,11 @@ func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, currentPer
 		return nil, err
 	}
 	k.setFarmer(ctx, farmer)
+
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, rewards)
+	if err != nil {
+		return sdk.Coins{}, nil
+	}
 	return rewards, nil
 }
 
@@ -90,6 +99,11 @@ func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address 
 
 	farmer.LastWithdrawnPeriod = farm.CurrentPeriod - 1
 	k.setFarmer(ctx, farmer)
+
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, rewards)
+	if err != nil {
+		return sdk.Coins{}, nil
+	}
 	return rewards, nil
 }
 
