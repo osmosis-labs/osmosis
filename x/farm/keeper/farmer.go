@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, currentPeriod int64, address sdk.AccAddress, share sdk.Int) (rewards sdk.Coins, err error) {
+func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, address sdk.AccAddress, share sdk.Int) (rewards sdk.Coins, err error) {
 	farm, err := k.GetFarm(ctx, farmId)
 	if err != nil {
 		return nil, err
@@ -13,37 +13,13 @@ func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, currentPeriod
 
 	farmer := k.GetFarmer(ctx, farmId, address)
 	if farmer == nil {
-		farmer = k.NewFarmer(ctx, farmId, farm.LastPeriod, address, share)
+		farmer = k.NewFarmer(ctx, farmId, farm.CurrentPeriod-1, address, share)
 	} else {
 		rewards, err = k.WithdrawRewardsFromFarm(ctx, farmId, address)
 		if err != nil {
 			return nil, err
 		}
 		farmer.Share = farmer.Share.Add(share)
-	}
-
-	if farm.CurrentPeriod > currentPeriod {
-		panic("Period can't be decreased")
-	}
-
-	if farm.CurrentPeriod < currentPeriod {
-		prevRewardRatio := sdk.DecCoins{}
-		if farm.LastPeriod != 0 {
-			prevRewardRatio = k.GetHistoricalRecord(ctx, farm.FarmId, farm.LastPeriod).CumulativeRewardRatio
-		}
-
-		rewardRatio := sdk.DecCoins{}
-		if farm.TotalShare.GT(sdk.NewInt(0)) {
-			rewardRatio = farm.CurrentRewards.QuoDecTruncate(farm.TotalShare.ToDec())
-		}
-
-		k.SetHistoricalRecord(ctx, farm.FarmId, farm.CurrentPeriod, types.HistoricalRecord{
-			CumulativeRewardRatio: prevRewardRatio.Add(rewardRatio...),
-		})
-
-		farm.LastPeriod = farm.CurrentPeriod
-		farm.CurrentPeriod = currentPeriod
-		farm.CurrentRewards = sdk.DecCoins{}
 	}
 
 	farm.TotalShare = farm.TotalShare.Add(share)
@@ -78,30 +54,6 @@ func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, currentPer
 	}
 	farmer.Share = farmer.Share.Sub(share)
 
-	if farm.CurrentPeriod > currentPeriod {
-		panic("Period can't be decreased")
-	}
-
-	if farm.CurrentPeriod < currentPeriod {
-		prevRewardRatio := sdk.DecCoins{}
-		if farm.LastPeriod != 0 {
-			prevRewardRatio = k.GetHistoricalRecord(ctx, farm.FarmId, farm.LastPeriod).CumulativeRewardRatio
-		}
-
-		rewardRatio := sdk.DecCoins{}
-		if farm.TotalShare.GT(sdk.NewInt(0)) {
-			rewardRatio = farm.CurrentRewards.QuoDecTruncate(farm.TotalShare.ToDec())
-		}
-
-		k.SetHistoricalRecord(ctx, farm.FarmId, farm.CurrentPeriod, types.HistoricalRecord{
-			CumulativeRewardRatio: prevRewardRatio.Add(rewardRatio...),
-		})
-
-		farm.LastPeriod = farm.CurrentPeriod
-		farm.CurrentPeriod = currentPeriod
-		farm.CurrentRewards = sdk.DecCoins{}
-	}
-
 	farm.TotalShare = farm.TotalShare.Sub(share)
 
 	err = k.setFarm(ctx, farm)
@@ -123,11 +75,11 @@ func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address 
 		panic("TODO: Return the sdk.Error (invalid farmer)")
 	}
 
-	if farm.LastPeriod == 0 {
+	if farm.CurrentPeriod-1 == 0 {
 		return sdk.Coins{}, nil
 	}
 
-	lastRewardRatio := k.GetHistoricalRecord(ctx, farm.FarmId, farm.LastPeriod).CumulativeRewardRatio
+	lastRewardRatio := k.GetHistoricalRecord(ctx, farm.FarmId, farm.CurrentPeriod-1).CumulativeRewardRatio
 	farmerRewardRatio := sdk.DecCoins{}
 	if farmer.LastWithdrawnPeriod > 0 {
 		farmerRewardRatio = k.GetHistoricalRecord(ctx, farm.FarmId, farmer.LastWithdrawnPeriod).CumulativeRewardRatio
@@ -136,7 +88,7 @@ func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address 
 	difference := lastRewardRatio.Sub(farmerRewardRatio)
 	rewards, _ = difference.MulDec(farmer.Share.ToDec()).TruncateDecimal()
 
-	farmer.LastWithdrawnPeriod = farm.LastPeriod
+	farmer.LastWithdrawnPeriod = farm.CurrentPeriod - 1
 	k.setFarmer(ctx, farmer)
 	return rewards, nil
 }

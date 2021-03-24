@@ -14,19 +14,18 @@ message Farm {
         (gogoproto.moretags) = "yaml:\"total_share\"",
         (gogoproto.nullable) = false
     ];
-    int64 current_period = 3 [(gogoproto.moretags) = "yaml:\"current_period\""];
-    repeated cosmos.base.v1beta1.DecCoin current_rewards = 4 [
+    int64 currentPeriod = 3 [(gogoproto.moretags) = "yaml:\"current_period\""];
+    repeated cosmos.base.v1beta1.DecCoin currentRewards = 4 [
         (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
         (gogoproto.nullable) = false
     ];
-    int64 last_period = 5 [(gogoproto.moretags) = "yaml:\"last_period\""];
 }
 
 // HistoricalRecord represents historical records for a fool.
 // Height is implicit within the store key.
 // Cumulative reward ratio is the sum from the zeroeth period.
 message HistoricalRecord {
-    repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
+    repeated cosmos.base.v1beta1.DecCoin cumulativeRewardRatio = 1 [
         (gogoproto.moretags)     = "yaml:\"cumulative_reward_ratio\"",
         (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
         (gogoproto.nullable)     = false
@@ -42,5 +41,5 @@ message Farmer {
         (gogoproto.moretags) = "yaml:\"share\"",
         (gogoproto.nullable) = false
     ];
-    int64 last_withdrawn_period = 4 [(gogoproto.moretags) = "yaml:\"last_withdrawn_period\""];
+    int64 lastWithdrawnPeriod = 4 [(gogoproto.moretags) = "yaml:\"last_withdrawn_period\""];
 }
