@@ -288,7 +288,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 			[]string{ // --min-amounts-out=100stake --pool-id=1 --share-amount-in=10 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "10"),
-				fmt.Sprintf("--%s=%s", cli.FlagMinAmountsOut, "100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagMinAmountsOut, "1stake"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -946,8 +946,67 @@ func (s *IntegrationTestSuite) TestGetCmdEstimateSwapExactAmountOut() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewSwapCmd() {
-	panic("implement me!")
+func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
+	val := s.network.Validators[0]
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountIn", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name string
+		args []string
+
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"swap exact amount in", // osmosisd tx gamm swap-exact-amount-in 10stake 3 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=validator --keyring-backend=test --chain-id=testing --yes
+			[]string{
+				"10stake", "3",
+				fmt.Sprintf("--%s=%d", cli.FlagSwapRoutePoolIds, 1),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapRouteDenoms, "node0token"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewSwapExactAmountInCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
