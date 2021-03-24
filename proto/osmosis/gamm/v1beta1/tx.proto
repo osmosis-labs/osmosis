@@ -8,224 +8,203 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
 
 service Msg {
-    rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
-    rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
-    rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
-    rpc SwapExactAmountIn(MsgSwapExactAmountIn) returns (MsgSwapExactAmountInResponse);
-    rpc SwapExactAmountOut(MsgSwapExactAmountOut) returns (MsgSwapExactAmountOutResponse);
-    rpc JoinSwapExternAmountIn(MsgJoinSwapExternAmountIn) returns (MsgJoinSwapExternAmountInResponse);
-    rpc JoinSwapShareAmountOut(MsgJoinSwapShareAmountOut) returns (MsgJoinSwapShareAmountOutResponse);
-    rpc ExitSwapExternAmountOut(MsgExitSwapExternAmountOut) returns (MsgExitSwapExternAmountOutResponse);
-    rpc ExitSwapShareAmountIn(MsgExitSwapShareAmountIn) returns (MsgExitSwapShareAmountInResponse);
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+  rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
+  rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
+  rpc SwapExactAmountIn(MsgSwapExactAmountIn)
+      returns (MsgSwapExactAmountInResponse);
+  rpc SwapExactAmountOut(MsgSwapExactAmountOut)
+      returns (MsgSwapExactAmountOutResponse);
+  rpc JoinSwapExternAmountIn(MsgJoinSwapExternAmountIn)
+      returns (MsgJoinSwapExternAmountInResponse);
+  rpc JoinSwapShareAmountOut(MsgJoinSwapShareAmountOut)
+      returns (MsgJoinSwapShareAmountOutResponse);
+  rpc ExitSwapExternAmountOut(MsgExitSwapExternAmountOut)
+      returns (MsgExitSwapExternAmountOutResponse);
+  rpc ExitSwapShareAmountIn(MsgExitSwapShareAmountIn)
+      returns (MsgExitSwapShareAmountInResponse);
+  rpc UpdateSwapFee(MsgUpdateSwapFee) returns (MsgUpdateSwapFeeResponse);
 }
 
 // ===================== MsgCreatePool
 message MsgCreatePool {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
-    PoolParams poolParams = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_params\"",
-        (gogoproto.nullable) = false
-    ];
+  PoolParams poolParams = 2 [
+    (gogoproto.moretags) = "yaml:\"pool_params\"",
+    (gogoproto.nullable) = false
+  ];
 
-    repeated Record records = 3 [
-        (gogoproto.nullable) = false
-    ];
+  repeated Record records = 3 [ (gogoproto.nullable) = false ];
 }
 
 message MsgCreatePoolResponse {}
 
 // ===================== MsgJoinPool
 message MsgJoinPool {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
-    uint64 poolId = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_id\""
-    ];
-    string shareOutAmount = 3 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"pool_amount_out\"",
-        (gogoproto.nullable) = false
-    ];
-    repeated cosmos.base.v1beta1.Coin tokenInMaxs = 4 [
-        (gogoproto.moretags) = "yaml:\"token_in_max_amounts\"",
-        (gogoproto.nullable) = false
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string shareOutAmount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"pool_amount_out\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin tokenInMaxs = 4 [
+    (gogoproto.moretags) = "yaml:\"token_in_max_amounts\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgJoinPoolResponse {}
 
 // ===================== MsgExitPool
 message MsgExitPool {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
-    uint64 poolId = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_id\""
-    ];
-    string shareInAmount = 3 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"share_in_amount\"",
-        (gogoproto.nullable) = false
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string shareInAmount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
 
-    repeated cosmos.base.v1beta1.Coin tokenOutMins = 4 [
-        (gogoproto.moretags) = "yaml:\"token_out_min_amounts\"",
-        (gogoproto.nullable) = false
-    ];
+  repeated cosmos.base.v1beta1.Coin tokenOutMins = 4 [
+    (gogoproto.moretags) = "yaml:\"token_out_min_amounts\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgExitPoolResponse {}
 
 // ===================== MsgSwapExactAmountIn
+message SwapAmountInRoute {
+  uint64 poolId = 1 [(gogoproto.moretags) = "yaml:\"pool_id\""];
+  string tokenOutDenom = 2 [
+    (gogoproto.moretags) = "yaml:\"token_out_denom\""
+  ];
+}
+
 message MsgSwapExactAmountIn {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
-    uint64 poolId = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_id\""
-    ];
-    cosmos.base.v1beta1.Coin tokenIn = 3 [
-        (gogoproto.moretags) = "yaml:\"token_in\"",
-        (gogoproto.nullable) = false
-    ];
-    string tokenOutDenom = 4 [
-        (gogoproto.moretags) = "yaml:\"token_out_denom\""
-    ];
-    string tokenOutMinAmount = 5 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
-        (gogoproto.nullable) = false
-    ];
-    string maxSpotPrice = 6 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-        (gogoproto.moretags) = "yaml:\"max_spot_price\"",
-        (gogoproto.nullable) = false
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated SwapAmountInRoute routes = 2 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin tokenIn = 3 [
+    (gogoproto.moretags) = "yaml:\"token_in\"",
+    (gogoproto.nullable) = false
+  ];
+  string tokenOutMinAmount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgSwapExactAmountInResponse {}
 
 // ===================== MsgSwapExactAmountOut
+message SwapAmountOutRoute {
+  uint64 poolId = 1 [(gogoproto.moretags) = "yaml:\"pool_id\""];
+  string tokenInDenom = 2 [
+  (gogoproto.moretags) = "yaml:\"token_out_denom\""
+  ];
+}
+
 message MsgSwapExactAmountOut {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
-    uint64 poolId = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_id\""
-    ];
-    string tokenInDenom = 3 [
-        (gogoproto.moretags) = "yaml:\"token_in_denom\""
-    ];
-    string tokenInMaxAmount = 4 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
-        (gogoproto.nullable) = false
-    ];
-    cosmos.base.v1beta1.Coin tokenOut = 5 [
-        (gogoproto.moretags) = "yaml:\"token_out\"",
-        (gogoproto.nullable) = false
-    ];
-    string maxSpotPrice = 6 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-        (gogoproto.moretags) = "yaml:\"max_spot_price\"",
-        (gogoproto.nullable) = false
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated SwapAmountOutRoute routes = 2 [ (gogoproto.nullable) = false ];
+  string tokenInMaxAmount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin tokenOut = 4 [
+    (gogoproto.moretags) = "yaml:\"token_out\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgSwapExactAmountOutResponse {}
 
 // ===================== MsgJoinSwapExternAmountIn
 message MsgJoinSwapExternAmountIn {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
-    uint64 poolId = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_id\""
-    ];
-    cosmos.base.v1beta1.Coin tokenIn = 3 [
-        (gogoproto.moretags) = "yaml:\"token_in\"",
-        (gogoproto.nullable) = false
-    ];
-    string shareOutMinAmount = 4 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"share_out_min_amount\"",
-        (gogoproto.nullable) = false
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  cosmos.base.v1beta1.Coin tokenIn = 3 [
+    (gogoproto.moretags) = "yaml:\"token_in\"",
+    (gogoproto.nullable) = false
+  ];
+  string shareOutMinAmount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_out_min_amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgJoinSwapExternAmountInResponse {}
 
 // ===================== MsgJoinSwapShareAmountOut
 message MsgJoinSwapShareAmountOut {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
-    uint64 poolId = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_id\""
-    ];
-    string tokenInDenom = 3 [
-        (gogoproto.moretags) = "yaml:\"token_in_denom\""
-    ];
-    string shareOutAmount = 4 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"share_out_amount\"",
-        (gogoproto.nullable) = false
-    ];
-    string tokenInMaxAmount = 5 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
-        (gogoproto.nullable) = false
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string tokenInDenom = 3 [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
+  string shareOutAmount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string tokenInMaxAmount = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgJoinSwapShareAmountOutResponse {}
 
 // ===================== MsgExitSwapShareAmountIn
 message MsgExitSwapShareAmountIn {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
-    uint64 poolId = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_id\""
-    ];
-    string tokenOutDenom = 3 [
-        (gogoproto.moretags) = "yaml:\"token_out_denom\""
-    ];
-    string shareInAmount = 4 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"share_in_amount\"",
-        (gogoproto.nullable) = false
-    ];
-    string tokenOutMinAmount = 5 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
-        (gogoproto.nullable) = false
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string tokenOutDenom = 3
+      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
+  string shareInAmount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string tokenOutMinAmount = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgExitSwapShareAmountInResponse {}
 
 // ===================== MsgExitSwapExternAmountOut
 message MsgExitSwapExternAmountOut {
-    string sender = 1 [
-        (gogoproto.moretags) = "yaml:\"sender\""
-    ];
-    uint64 poolId = 2 [
-        (gogoproto.moretags) = "yaml:\"pool_id\""
-    ];
-    cosmos.base.v1beta1.Coin tokenOut = 3 [
-        (gogoproto.moretags) = "yaml:\"token_out\"",
-        (gogoproto.nullable) = false
-    ];
-    string shareInMaxAmount = 4 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.moretags) = "yaml:\"share_in_max_amount\"",
-        (gogoproto.nullable) = false
-    ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  cosmos.base.v1beta1.Coin tokenOut = 3 [
+    (gogoproto.moretags) = "yaml:\"token_out\"",
+    (gogoproto.nullable) = false
+  ];
+  string shareInMaxAmount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_in_max_amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgExitSwapExternAmountOutResponse {}
+
+// ===================== MsgUpdateSwapFee
+message MsgUpdateSwapFee {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string newSwapFee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUpdateSwapFeeResponse {}

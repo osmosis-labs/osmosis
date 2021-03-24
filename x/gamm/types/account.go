@@ -12,8 +12,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/c-osmosis/osmosis/x/gamm/utils"
 )
 
 // PoolAccountI defines an account interface for pools that hold tokens.
@@ -22,6 +20,7 @@ type PoolAccountI interface {
 
 	GetId() uint64
 	GetPoolParams() PoolParams
+	SetPoolParams(params PoolParams)
 	GetTotalWeight() sdk.Int
 	GetTotalShare() sdk.Coin
 	AddTotalShare(amt sdk.Int)
@@ -45,7 +44,7 @@ var (
 )
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, utils.Uint64ToBytes(poolId)...)))
+	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, sdk.Uint64ToBigEndian(poolId)...)))
 }
 
 func NewPoolAccount(poolId uint64, poolParams PoolParams) PoolAccountI {
@@ -69,11 +68,19 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams) PoolAccountI {
 
 func (params PoolParams) Validate() error {
 	if params.ExitFee.LT(sdk.NewDec(0)) {
-		return fmt.Errorf("exit fee can't be negative")
+		return ErrNegativeExitFee
+	}
+
+	if params.ExitFee.GTE(sdk.NewDec(1)) {
+		return ErrTooMuchExitFee
 	}
 
 	if params.SwapFee.LT(sdk.NewDec(0)) {
-		return fmt.Errorf("swap fee can't be negative")
+		return ErrNegativeSwapFee
+	}
+
+	if params.SwapFee.GTE(sdk.NewDec(1)) {
+		return ErrTooMuchSwapFee
 	}
 
 	return nil
@@ -85,6 +92,11 @@ func (pa PoolAccount) GetId() uint64 {
 
 func (pa PoolAccount) GetPoolParams() PoolParams {
 	return pa.PoolParams
+}
+
+func (pa *PoolAccount) SetPoolParams(params PoolParams) {
+	pa.PoolParams = params
+	return
 }
 
 func (pa PoolAccount) GetTotalWeight() sdk.Int {

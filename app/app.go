@@ -92,6 +92,10 @@ import (
 	gammkeeper "github.com/c-osmosis/osmosis/x/gamm/keeper"
 	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
 
+	"github.com/c-osmosis/osmosis/x/lockup"
+	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
+
 	appparams "github.com/c-osmosis/osmosis/app/params"
 )
 
@@ -122,7 +126,10 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
+		vesting.AppModuleBasic{},
 		gamm.AppModuleBasic{},
+		lockup.AppModuleBasic{},
+		vesting.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -135,6 +142,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		gammtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
+		lockuptypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -177,6 +185,7 @@ type OsmosisApp struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 	GAMMKeeper       gammkeeper.Keeper
+	LockupKeeper     lockupkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -214,7 +223,8 @@ func NewOsmosisApp(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, gammtypes.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
+		gammtypes.StoreKey, lockuptypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -310,6 +320,7 @@ func NewOsmosisApp(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 
 	/****  Module Options ****/
 
@@ -340,6 +351,7 @@ func NewOsmosisApp(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		gamm.NewAppModule(appCodec, app.GAMMKeeper),
+		lockup.NewAppModule(appCodec, app.LockupKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

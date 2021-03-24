@@ -2,8 +2,7 @@ package keeper
 
 import (
 	"context"
-
-	"github.com/c-osmosis/osmosis/x/gamm/utils"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -38,7 +37,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePo
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(poolId)),
+			sdk.NewAttribute(types.AttributeKeyPoolId, fmt.Sprintf("%d", poolId)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -106,7 +105,8 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	_, _, err = server.keeper.SwapExactAmountIn(ctx, sender, msg.PoolId, msg.TokenIn, msg.TokenOutDenom, msg.TokenOutMinAmount, msg.MaxSpotPrice)
+	_, err = server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	_, _, err = server.keeper.SwapExactAmountOut(ctx, sender, msg.PoolId, msg.TokenInDenom, msg.TokenInMaxAmount, msg.TokenOut, msg.MaxSpotPrice)
+	_, err = server.keeper.MultihopSwapExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
 	if err != nil {
 		return nil, err
 	}
@@ -240,4 +240,33 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 	})
 
 	return &types.MsgExitSwapShareAmountInResponse{}, nil
+}
+
+func (server msgServer) UpdateSwapFee(goCtx context.Context, msg *types.MsgUpdateSwapFee) (*types.MsgUpdateSwapFeeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.UpdateSwapFee(ctx, sender, msg.PoolId, msg.NewSwapFee)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtUpdateSwapFee,
+			sdk.NewAttribute(types.AttributeKeyPoolId, fmt.Sprintf("%d", msg.PoolId)),
+			sdk.NewAttribute(types.AttributeKeySwapFee, msg.NewSwapFee.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgUpdateSwapFeeResponse{}, nil
 }

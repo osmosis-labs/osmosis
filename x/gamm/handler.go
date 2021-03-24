@@ -35,6 +35,26 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.SwapExactAmountOut(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *types.MsgJoinSwapExternAmountIn:
+			res, err := msgServer.JoinSwapExternAmountIn(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
+		case *types.MsgJoinSwapShareAmountOut:
+			res, err := msgServer.JoinSwapShareAmountOut(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
+		case *types.MsgExitSwapExternAmountOut:
+			res, err := msgServer.ExitSwapExternAmountOut(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
+		case *types.MsgExitSwapShareAmountIn:
+			res, err := msgServer.ExitSwapShareAmountIn(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
+		case *types.MsgUpdateSwapFee:
+			res, err := msgServer.UpdateSwapFee(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}

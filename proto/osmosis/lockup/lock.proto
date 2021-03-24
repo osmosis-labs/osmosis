@@ -1,0 +1,27 @@
+syntax = "proto3";
+package osmosis.lockup;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
+
+// PeriodLock is a single unit of lock by period. It's a record of locked coin at a specific time.
+// It stores owner, duration, unlock time and the amount of coins locked.
+message PeriodLock {
+	uint64 ID = 1;
+	bytes owner = 2 
+		[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+	google.protobuf.Duration duration = 3 [
+		(gogoproto.nullable)    = false,
+		(gogoproto.stdduration) = true,
+		(gogoproto.jsontag)     = "duration,omitempty",
+		(gogoproto.moretags)    = "yaml:\"duration\""
+	];
+    google.protobuf.Timestamp end_time = 4
+        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+	repeated cosmos.base.v1beta1.Coin coins = 5
+		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
