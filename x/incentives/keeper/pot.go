@@ -132,22 +132,57 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 	return nil
 }
 
-// Distribute distriute coins from pot for fitting conditions
-func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
-	locks := []lockuptypes.PeriodLock{}
-	switch pot.DistributeTo.LockQueryType {
+// GetLocksToDistribution get locks that are associated to a condition
+func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo types.DistrCondition) []lockuptypes.PeriodLock {
+	switch distrTo.LockQueryType {
 	case types.ByDuration:
-		locks = k.lk.GetLocksLongerThanDurationDenom(ctx, pot.DistributeTo.Denom, pot.DistributeTo.Duration)
+		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
 	case types.ByTime:
-		locks = k.lk.GetLocksPastTimeDenom(ctx, pot.DistributeTo.Denom, pot.DistributeTo.Timestamp)
+		return k.lk.GetLocksPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
 	default:
 	}
+	return []lockuptypes.PeriodLock{}
+}
 
-	totalDistrCoins := sdk.NewCoins()
-	lockSum := sdk.NewInt(0)
-	for _, lock := range locks {
-		lockSum = lockSum.Add(lock.Coins.AmountOf(pot.DistributeTo.Denom))
+// FilteredLocksDistributionEst estimate distribution amount coins from pot for fitting conditions
+func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, filteredLocks []lockuptypes.PeriodLock) (sdk.Coins, error) {
+	filteredLockIDs := make(map[uint64]bool)
+	for _, lock := range filteredLocks {
+		filteredLockIDs[lock.ID] = true
 	}
+
+	filteredDistrCoins := sdk.NewCoins()
+	locks := k.GetLocksToDistribution(ctx, pot.DistributeTo)
+	lockSum := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
+
+	if lockSum.IsZero() {
+		return nil, nil
+	}
+
+	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
+	remainEpochs := pot.NumEpochs - pot.FilledEpochs
+	for _, lock := range locks {
+		distrCoins := sdk.Coins{}
+		for _, coin := range remainCoins {
+			amt := coin.Amount.Mul(lock.Coins.AmountOf(pot.DistributeTo.Denom)).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+			if amt.IsPositive() {
+				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+			}
+		}
+		distrCoins = distrCoins.Sort()
+		if !distrCoins.Empty() && (len(filteredLocks) == 0 || filteredLockIDs[lock.ID]) {
+			filteredDistrCoins = filteredDistrCoins.Add(distrCoins...)
+		}
+	}
+
+	return filteredDistrCoins, nil
+}
+
+// Distribute distriute coins from pot for fitting conditions
+func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
+	totalDistrCoins := sdk.NewCoins()
+	locks := k.GetLocksToDistribution(ctx, pot.DistributeTo)
+	lockSum := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
 
 	if lockSum.IsZero() {
 		return nil, nil
@@ -229,7 +264,25 @@ func (k Keeper) GetFinishedPots(ctx sdk.Context) []types.Pot {
 }
 
 // GetRewardsEst returns rewards estimation at a future specific time
-func (k Keeper) GetRewardsEst(ctx sdk.Context) sdk.Coins {
-	// TODO: how params should look like and how to calculate this?
-	return nil
+func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, pots []types.Pot, startEpoch, endEpoch int64) sdk.Coins {
+	// initialize pots to active and upcomings if not set
+	if len(pots) == 0 {
+		pots = k.GetPots(ctx)
+	}
+
+	// estimate rewards
+	estimatedRewards := sdk.Coins{}
+	for epoch := startEpoch; epoch <= endEpoch; epoch++ {
+		// TODO: should filter pots that are range between startEpoch and endEpoch - implement it after epoch implementation
+		for _, pot := range pots {
+			distrCoins, err := k.FilteredLocksDistributionEst(ctx, pot, locks)
+			if err != nil {
+				continue
+			}
+			estimatedRewards = estimatedRewards.Add(distrCoins...)
+		}
+	}
+	// TODO: add test for GetRewardsEst
+
+	return estimatedRewards
 }

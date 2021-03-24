@@ -100,7 +100,7 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 		Owner: lockOwner,
 	})
 	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
+	suite.Require().Equal(res.Coins, sdk.Coins{})
 
 	// create a pot
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
