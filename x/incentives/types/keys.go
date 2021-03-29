@@ -36,6 +36,12 @@ var (
 
 	// KeyIndexSeparator defines key for merging bytes
 	KeyIndexSeparator = []byte{0x7F}
+
+	// KeyCurrentEpoch defines key for storing current epoch
+	KeyCurrentEpoch = []byte{0x80}
+
+	// KeyEpochBeginBlock defines key for storing begin block of current epoch
+	KeyEpochBeginBlock = []byte{0x81}
 )
 
 func KeyPrefix(p string) []byte {

@@ -7,27 +7,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-type (
-	Keeper struct {
-		cdc      codec.Marshaler
-		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
-		ak       authkeeper.AccountKeeper
-		bk       types.BankKeeper
-		lk       types.LockupKeeper
-	}
-)
+type Keeper struct {
+	cdc        codec.Marshaler
+	storeKey   sdk.StoreKey
+	paramSpace paramtypes.Subspace
+	ak         authkeeper.AccountKeeper
+	bk         types.BankKeeper
+	lk         types.LockupKeeper
+}
 
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, ak authkeeper.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper) *Keeper {
 	return &Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		ak:       ak,
-		bk:       bk,
-		lk:       lk,
+		cdc:        cdc,
+		storeKey:   storeKey,
+		paramSpace: paramSpace,
+		ak:         ak,
+		bk:         bk,
+		lk:         lk,
 	}
 }
 

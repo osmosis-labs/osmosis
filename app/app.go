@@ -325,7 +325,7 @@ func NewOsmosisApp(
 
 	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
-	app.IncentivesKeeper = *incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.LockupKeeper)
+	app.IncentivesKeeper = *incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.LockupKeeper)
 
 	/****  Module Options ****/
 
@@ -599,6 +599,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(incentivestypes.ModuleName)
 
 	return paramsKeeper
 }

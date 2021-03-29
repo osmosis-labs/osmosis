@@ -1,8 +1,17 @@
 syntax = "proto3";
 package osmosis.incentives;
 
+import "gogoproto/gogo.proto";
+import "osmosis/incentives/params.proto";
+
 option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 
 // GenesisState defines the incentives module's genesis state.
 message GenesisState {
+    // params defines all the parameters of the module
+    Params params = 1 [(gogoproto.nullable) = false];
+    // current epoch
+    int64 current_epoch = 2 [(gogoproto.moretags) = "yaml:\"current_epoch\""];
+    // current epoch begin block
+    int64 epoch_begin_block = 3 [(gogoproto.moretags) = "yaml:\"epoch_begin_block\""];
 }

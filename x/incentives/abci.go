@@ -13,7 +13,17 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 
 // Called every block to distribute coins
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-	// TODO: should do this on every epoch not every block
+	currentEpoch, epochBeginBlock := k.GetCurrentEpochInfo(ctx)
+	params := k.GetParams(ctx)
+
+	if ctx.BlockHeight() < epochBeginBlock+params.BlocksPerEpoch { // not time for epoch
+		return []abci.ValidatorUpdate{}
+	}
+
+	// update epoch info
+	k.SetCurrentEpochInfo(ctx, currentEpoch+1, ctx.BlockHeight())
+
+	// distribute due to epoch event
 	pots := k.GetActivePots(ctx)
 	for _, pot := range pots {
 		k.Distribute(ctx, pot)
@@ -21,5 +31,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			k.FinishDistribution(ctx, pot)
 		}
 	}
+
 	return []abci.ValidatorUpdate{}
 }
