@@ -8,7 +8,7 @@ import (
 
 // Parameter store keys
 var (
-	KeyEpochsPerEpoch = []byte("EpochsPerEpoch")
+	KeyBlocksPerEpoch = []byte("BlocksPerEpoch")
 )
 
 // ParamTable for minting module.
@@ -42,7 +42,7 @@ func (p Params) Validate() error {
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyEpochsPerEpoch, &p.BlocksPerEpoch, validateBlocksPerEpoch),
+		paramtypes.NewParamSetPair(KeyBlocksPerEpoch, &p.BlocksPerEpoch, validateBlocksPerEpoch),
 	}
 }
 
