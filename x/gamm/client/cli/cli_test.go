@@ -212,7 +212,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			[]string{ // join-pool --pool-id=1 --max-amounts-in=10000000000000000000000000000stake --share-amount-out=100 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "10000000000000000000000000000stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "100"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "100000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -226,7 +226,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			[]string{ // join-pool --pool-id=1 --max-amounts-in=100stake --share-amount-out=100 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "100"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "100000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -547,7 +547,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 		{
 			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
-				"stake", "10", "1",
+				"stake", "10000", "500000",
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
