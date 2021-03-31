@@ -65,8 +65,7 @@ message RewardsEstRequest {
     bytes owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 	repeated lockup.PeriodLock locks = 2 [(gogoproto.nullable) = false];
 	repeated Pot pots = 3 [(gogoproto.nullable) = false];
-	int64 start_epoch = 4;
-	int64 end_epoch = 5;
+	int64 end_epoch = 4;
 }
 message RewardsEstResponse {
     repeated cosmos.base.v1beta1.Coin coins = 1

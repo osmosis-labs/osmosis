@@ -145,18 +145,19 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo types.DistrCondi
 }
 
 // FilteredLocksDistributionEst estimate distribution amount coins from pot for fitting conditions
-func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, filteredLocks []lockuptypes.PeriodLock) (sdk.Coins, error) {
+func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, filteredLocks []lockuptypes.PeriodLock) (types.Pot, sdk.Coins, error) {
 	filteredLockIDs := make(map[uint64]bool)
 	for _, lock := range filteredLocks {
 		filteredLockIDs[lock.ID] = true
 	}
 
+	totalDistrCoins := sdk.NewCoins()
 	filteredDistrCoins := sdk.NewCoins()
 	locks := k.GetLocksToDistribution(ctx, pot.DistributeTo)
 	lockSum := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
 
 	if lockSum.IsZero() {
-		return nil, nil
+		return types.Pot{}, nil, nil
 	}
 
 	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
@@ -173,9 +174,14 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, fil
 		if !distrCoins.Empty() && (len(filteredLocks) == 0 || filteredLockIDs[lock.ID]) {
 			filteredDistrCoins = filteredDistrCoins.Add(distrCoins...)
 		}
+		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
-	return filteredDistrCoins, nil
+	// increase filled epochs after distribution
+	pot.FilledEpochs += 1
+	pot.DistributedCoins = pot.DistributedCoins.Add(totalDistrCoins...)
+
+	return pot, filteredDistrCoins, nil
 }
 
 // Distribute distriute coins from pot for fitting conditions
@@ -264,7 +270,7 @@ func (k Keeper) GetFinishedPots(ctx sdk.Context) []types.Pot {
 }
 
 // GetRewardsEst returns rewards estimation at a future specific time
-func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, pots []types.Pot, startEpoch, endEpoch int64) sdk.Coins {
+func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, pots []types.Pot, endEpoch int64) sdk.Coins {
 	// initialize pots to active and upcomings if not set
 	if len(pots) == 0 {
 		pots = k.GetPots(ctx)
@@ -272,17 +278,28 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 
 	// estimate rewards
 	estimatedRewards := sdk.Coins{}
-	for epoch := startEpoch; epoch <= endEpoch; epoch++ {
-		// TODO: should filter pots that are range between startEpoch and endEpoch - implement it after epoch implementation
-		for _, pot := range pots {
-			distrCoins, err := k.FilteredLocksDistributionEst(ctx, pot, locks)
+	params := k.GetParams(ctx)
+	currentEpoch, _ := k.GetCurrentEpochInfo(ctx)
+
+	cacheCtx, _ := ctx.CacheContext()
+	for _, pot := range pots {
+		distrBeginEpoch := currentEpoch
+		blockTime := ctx.BlockTime()
+		if pot.StartTime.After(blockTime) {
+			avgBlockTime := time.Second * 5
+			epochDuration := params.BlocksPerEpoch * int64(avgBlockTime)
+			distrBeginEpoch = currentEpoch + 1 + int64(pot.StartTime.Sub(blockTime))/epochDuration
+		}
+
+		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
+			newPot, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, pot, locks)
 			if err != nil {
 				continue
 			}
 			estimatedRewards = estimatedRewards.Add(distrCoins...)
+			pot = newPot
 		}
 	}
-	// TODO: add test for GetRewardsEst
 
 	return estimatedRewards
 }

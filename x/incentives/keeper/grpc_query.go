@@ -52,5 +52,5 @@ func (k Keeper) UpcomingPots(goCtx context.Context, req *types.UpcomingPotsReque
 // RewardsEst returns rewards estimation at a future specific time
 func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, req.Owner, req.Locks, req.Pots, req.StartEpoch, req.EndEpoch)}, nil
+	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, req.Owner, req.Locks, req.Pots, req.EndEpoch)}, nil
 }

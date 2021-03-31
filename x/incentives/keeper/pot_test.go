@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/c-osmosis/osmosis/x/incentives/types"
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -162,6 +163,10 @@ func (suite *KeeperTestSuite) TestPotOperations() {
 	suite.Require().Equal(pots[0].DistributedCoins, sdk.Coins{})
 	suite.Require().Equal(pots[0].StartTime.Unix(), startTime.Unix())
 
+	// check rewards estimation
+	rewardsEst := suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, []types.Pot{}, 100)
+	suite.Require().Equal(coins.String(), rewardsEst.String())
+
 	// add to pot
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
 	suite.AddToPot(addr1, addCoins, potID)
@@ -218,5 +223,7 @@ func (suite *KeeperTestSuite) TestPotOperations() {
 	_, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID+1000)
 	suite.Require().Error(err)
 
-	// TODO: check rewards estimation - GetRewardsEst()
+	// check rewards estimation
+	rewardsEst = suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, []types.Pot{}, 100)
+	suite.Require().Equal(sdk.Coins{}, rewardsEst)
 }
