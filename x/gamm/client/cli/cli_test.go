@@ -596,108 +596,81 @@ func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 	}
 }
 
-// func (s *IntegrationTestSuite) TestGetCmdPools() {
-// 	val := s.network.Validators[0]
+func (s *IntegrationTestSuite) TestGetCmdPools() {
+	val := s.network.Validators[0]
 
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"query pools",
-// 			[]string{
-// 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// 			},
-// 			false,
-// 		},
-// 	}
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pools",
+			[]string{
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
+			false,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdPools() // osmosisd query gamm pools
-// 			clientCtx := val.ClientCtx
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdPools() // osmosisd query gamm pools
+			clientCtx := val.ClientCtx
 
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				resp := types.QueryPoolsResponse{}
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryPoolsResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
-// 				s.Require().Greater(len(resp.Pools), 0, out.String())
-// 			}
-// 		})
-// 	}
-// }
+				s.Require().Greater(len(resp.Pools), 0, out.String())
+			}
+		})
+	}
+}
 
-// func (s *IntegrationTestSuite) TestGetCmdPool() {
-// 	val := s.network.Validators[0]
+func (s *IntegrationTestSuite) TestGetCmdPool() {
+	val := s.network.Validators[0]
 
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"query pool by id", // osmosisd query gamm pool 1
-// 			[]string{
-// 				"1",
-// 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-// 			},
-// 			false,
-// 		},
-// 	}
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query pool by id", // osmosisd query gamm pool 1
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
+			false,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdPool()
-// 			clientCtx := val.ClientCtx
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdPool()
+			clientCtx := val.ClientCtx
 
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
 
-// 				resp := types.QueryPoolResponse{
-// 					Pool: types.PoolAccount{
-// 						BaseAccount: &authtypes.BaseAccount{
-// 							Address:       val.Address.String(),
-// 							PubKey:        nil,
-// 							AccountNumber: 8,
-// 							Sequence:      0,
-// 						},
-// 						Id: 1,
-// 						PoolParams: types.PoolParams{
-// 							SwapFee: sdk.NewDecWithPrec(1, 2),
-// 							ExitFee: sdk.NewDecWithPrec(1, 2),
-// 						},
-// 						TotalWeight: sdk.NewInt(10),
-// 						TotalShare:  sdk.NewInt64Coin("osmosis/pool/1", 100000000),
-// 						Records: []types.Record{
-// 							{
-// 								Weight: sdk.NewInt(5),
-// 								Token:  sdk.NewInt64Coin("node0token", 100),
-// 							},
-// 							{
-// 								Weight: sdk.NewInt(5),
-// 								Token:  sdk.NewInt64Coin("stake", 100),
-// 							},
-// 						},
-// 					},
-// 				}
-
-// 				s.Require().Equal(string(out.Bytes()), string(clientCtx.JSONMarshaler.MustMarshalJSON(&resp)))
-// 			}
-// 		})
-// 	}
-// }
+				resp := types.QueryPoolResponse{}
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
 
 func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
 	val := s.network.Validators[0]
