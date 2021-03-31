@@ -106,14 +106,19 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	startTime := time.Now()
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.CreatePot(addr1, coins, types.DistrCondition{}, startTime, 2)
+	distrTo := types.DistrCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "lptoken",
+		Duration:      time.Second,
+	}
+	suite.CreatePot(addr1, coins, distrTo, startTime, 2)
 
-	// TODO: implement final check after implementation
-	// res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
-	// 	Owner: lockOwner,
-	// })
-	// suite.Require().NoError(err)
-	// suite.Require().Equal(res.Coins, coins)
+	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+		Owner:    lockOwner,
+		EndEpoch: 100,
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Coins, coins)
 }
 
 func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
