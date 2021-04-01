@@ -220,7 +220,7 @@ func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom,
 		return sdk.Dec{}, err
 	}
 
-	return calcSpotPrice(
+	return calcSpotPriceWithSwapFee(
 		inRecord.Token.Amount.ToDec(),
 		inRecord.Weight.ToDec(),
 		outRecord.Token.Amount.ToDec(),
@@ -245,7 +245,7 @@ func (k Keeper) CalculateSpotPriceSansSwapFee(ctx sdk.Context, poolId uint64, to
 		return sdk.Dec{}, err
 	}
 
-	return calcSpotPrice(
+	return calcSpotPriceWithSwapFee(
 		inRecord.Token.Amount.ToDec(),
 		inRecord.Weight.ToDec(),
 		outRecord.Token.Amount.ToDec(),
