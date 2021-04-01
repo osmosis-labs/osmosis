@@ -67,15 +67,15 @@ func TestCalcSpotPrice(t *testing.T) {
 	tokenWeightOut, err := sdk.NewDecFromStr("0.3")
 	require.NoError(t, err)
 
-	// (100/.1) / (200 / .3) = (1000) / (666.66666667) =
-	s := calcSpotPrice(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut)
-
-	expectedDec, err := sdk.NewDecFromStr("1.5")
+	actual_spot_price := calcSpotPrice(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut)
+	// s = (100/.1) / (200 / .3) = (1000) / (2000 / 3) = 1.5
+	expected_spot_price, err := sdk.NewDecFromStr("1.5")
 	require.NoError(t, err)
 
+	// assert that the spot prices are within the error margin from one another.
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(powPrecision),
+		expected_spot_price.Sub(actual_spot_price).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
 

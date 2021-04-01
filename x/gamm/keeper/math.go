@@ -201,7 +201,7 @@ func subSign(a, b sdk.Dec) (sdk.Dec, bool) {
 
 // pow computes base^(exp)
 // However since the exponent is not an integer, we must do an approximation algorithm.
-// TODO: In the future, lets add some optimized routines for common exponents.
+// TODO: In the future, lets add some optimized routines for common exponents, e.g. for common wIn / wOut ratios
 // Many simple exponents like 2:1 pools
 func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 	// Exponentiation of a negative base with an arbitrary real exponent is not closed within the reals.
