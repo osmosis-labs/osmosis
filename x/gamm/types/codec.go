@@ -30,6 +30,12 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&PoolAccount{},
 	)
 
+	registry.RegisterInterface(
+		"osmosis.gamm.v1beta1.PoolAccount",
+		(*PoolAccountI)(nil),
+		&PoolAccount{},
+	)
+
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreatePool{},
@@ -42,6 +48,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgExitSwapExternAmountOut{},
 		&MsgExitSwapShareAmountIn{},
 	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

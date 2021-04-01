@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/big"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -48,7 +50,11 @@ func (k Keeper) Pool(
 	}
 	switch pool := pool.(type) {
 	case *types.PoolAccount:
-		return &types.QueryPoolResponse{Pool: *pool}, nil
+		any, err := codectypes.NewAnyWithValue(pool)
+		if err != nil {
+			return nil, err
+		}
+		return &types.QueryPoolResponse{Pool: any}, nil
 	default:
 		return nil, status.Error(codes.Internal, "invalid type of pool account")
 	}
@@ -66,7 +72,7 @@ func (k Keeper) Pools(
 	store := sdkCtx.KVStore(k.storeKey)
 	poolStore := prefix.NewStore(store, types.PaginationPoolNumbers)
 
-	pools := []types.PoolAccount{}
+	var anys []*codectypes.Any
 	pageRes, err := query.Paginate(poolStore, req.Pagination, func(_, value []byte) error {
 		poolId := sdk.BigEndianToUint64(value)
 		poolI, err := k.GetPool(sdkCtx, poolId)
@@ -80,7 +86,11 @@ func (k Keeper) Pools(
 			return fmt.Errorf("pool (%d) is not basic pool account", poolId)
 		}
 
-		pools = append(pools, *pool)
+		any, err := codectypes.NewAnyWithValue(pool)
+		if err != nil {
+			return err
+		}
+		anys = append(anys, any)
 		return nil
 	})
 
@@ -89,7 +99,7 @@ func (k Keeper) Pools(
 	}
 
 	return &types.QueryPoolsResponse{
-		Pools:      pools,
+		Pools:      anys,
 		Pagination: pageRes,
 	}, nil
 }

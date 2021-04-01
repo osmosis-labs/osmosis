@@ -7,6 +7,8 @@ import "osmosis/gamm/v1beta1/tx.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
 
@@ -48,7 +50,7 @@ message QueryPoolRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message QueryPoolResponse {
-  PoolAccount pool = 1 [ (gogoproto.nullable) = false ];
+  google.protobuf.Any pool = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
 }
 
 //=============================== Pools
@@ -57,7 +59,7 @@ message QueryPoolsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 message QueryPoolsResponse {
-  repeated PoolAccount pools = 1 [ (gogoproto.nullable) = false ];
+  repeated google.protobuf.Any pools = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

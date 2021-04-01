@@ -25,6 +25,8 @@ type AccountKeeper interface {
 	GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (authtypes.ModuleAccountI, []string)
 	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
 	SetModuleAccount(ctx sdk.Context, macc authtypes.ModuleAccountI)
+
+	UnmarshalAccount(bz []byte) (authtypes.AccountI, error)
 }
 
 // BankKeeper defines the banking contract that must be fulfilled when

@@ -265,7 +265,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
-	if tokenInAmount.LT(tokenInMaxAmount) {
+	if tokenInAmount.GT(tokenInMaxAmount) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", record.Token.Denom)
 	}
 
