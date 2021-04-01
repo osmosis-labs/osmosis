@@ -390,7 +390,6 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
     lock: false
     swap_fee: "0.025000000000000000"
     exit_fee: "0.025000000000000000"
-    swap_fee_governor: ""
   total_weight: "300"
   total_share:
     denom: osmosis/pool/10

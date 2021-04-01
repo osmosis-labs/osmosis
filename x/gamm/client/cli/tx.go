@@ -128,37 +128,6 @@ func NewExitPoolCmd() *cobra.Command {
 	return cmd
 }
 
-func NewUpdateSwapFeeCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "update-swapfee",
-		Short: "update the swapfee for a pool",
-		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			txf, msg, err := NewUpdateSwapFeeMsg(clientCtx, txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetCreatePool())
-	flags.AddTxFlagsToCmd(cmd)
-
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagSwapFee)
-
-	return cmd
-}
-
 func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	recordTokenStrs, err := fs.GetStringArray(FlagPoolRecordTokens)
 	if err != nil {
@@ -313,34 +282,6 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		PoolId:        poolId,
 		ShareInAmount: shareAmountIn,
 		TokenOutMins:  minAmountsOut,
-	}
-
-	return txf, msg, nil
-}
-
-func NewUpdateSwapFeeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	swapFeeStr, err := fs.GetString(FlagSwapFee)
-	if err != nil {
-		return txf, nil, err
-	}
-	swapFee, err := sdk.NewDecFromStr(swapFeeStr)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	msg := &types.MsgUpdateSwapFee{
-		Sender:     clientCtx.GetFromAddress().String(),
-		PoolId:     poolId,
-		NewSwapFee: swapFee,
-	}
-
-	if err = msg.ValidateBasic(); err != nil {
-		return txf, nil, err
 	}
 
 	return txf, msg, nil

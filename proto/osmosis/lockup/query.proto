@@ -11,159 +11,194 @@ option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
 
 // Query defines the gRPC querier service.
 service Query {
-    // Return full balance of the module
-	rpc ModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse);
-	// Return locked balance of the module
-	rpc ModuleLockedAmount(ModuleLockedAmountRequest) returns (ModuleLockedAmountResponse);
+  // Return full balance of the module
+  rpc ModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse);
+  // Return locked balance of the module
+  rpc ModuleLockedAmount(ModuleLockedAmountRequest)
+      returns (ModuleLockedAmountResponse);
 
-	// Returns unlockable coins which are not withdrawn yet
-	rpc AccountUnlockableCoins(AccountUnlockableCoinsRequest) returns (AccountUnlockableCoinsResponse);
-	// Returns unlocking coins
-	rpc AccountUnlockingCoins(AccountUnlockingCoinsRequest) returns (AccountUnlockingCoinsResponse);
-	// Return a locked coins that can't be withdrawn
-	rpc AccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
+  // Returns unlockable coins which are not withdrawn yet
+  rpc AccountUnlockableCoins(AccountUnlockableCoinsRequest)
+      returns (AccountUnlockableCoinsResponse);
+  // Returns unlocking coins
+  rpc AccountUnlockingCoins(AccountUnlockingCoinsRequest)
+      returns (AccountUnlockingCoinsResponse);
+  // Return a locked coins that can't be withdrawn
+  rpc AccountLockedCoins(AccountLockedCoinsRequest)
+      returns (AccountLockedCoinsResponse);
 
-	// Returns locked records of an account with unlock time beyond timestamp
-	rpc AccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
-	// Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
-	rpc AccountLockedPastTimeNotUnlockingOnly(AccountLockedPastTimeNotUnlockingOnlyRequest) returns (AccountLockedPastTimeNotUnlockingOnlyResponse);
-	// Returns unlocked records with unlock time before timestamp
-	rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
+  // Returns locked records of an account with unlock time beyond timestamp
+  rpc AccountLockedPastTime(AccountLockedPastTimeRequest)
+      returns (AccountLockedPastTimeResponse);
+  // Returns locked records of an account with unlock time beyond timestamp
+  // excluding tokens started unlocking
+  rpc AccountLockedPastTimeNotUnlockingOnly(
+      AccountLockedPastTimeNotUnlockingOnlyRequest)
+      returns (AccountLockedPastTimeNotUnlockingOnlyResponse);
+  // Returns unlocked records with unlock time before timestamp
+  rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest)
+      returns (AccountUnlockedBeforeTimeResponse);
 
-	// Returns lock records by address, timestamp, denom
-	rpc AccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
-	// Returns lock record by id
-	rpc LockedByID(LockedRequest) returns (LockedResponse);
+  // Returns lock records by address, timestamp, denom
+  rpc AccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest)
+      returns (AccountLockedPastTimeDenomResponse);
+  // Returns lock record by id
+  rpc LockedByID(LockedRequest) returns (LockedResponse);
 
-	// Returns account locked records with longer duration
-	rpc AccountLockedLongerDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
-	// Returns account locked records with longer duration excluding tokens started unlocking
-	rpc AccountLockedLongerDurationNotUnlockingOnly(AccountLockedLongerDurationNotUnlockingOnlyRequest) returns (AccountLockedLongerDurationNotUnlockingOnlyResponse);
-	// Returns account's locked records for a denom with longer duration
-	rpc AccountLockedLongerDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
+  // Returns account locked records with longer duration
+  rpc AccountLockedLongerDuration(AccountLockedLongerDurationRequest)
+      returns (AccountLockedLongerDurationResponse);
+  // Returns account locked records with longer duration excluding tokens
+  // started unlocking
+  rpc AccountLockedLongerDurationNotUnlockingOnly(
+      AccountLockedLongerDurationNotUnlockingOnlyRequest)
+      returns (AccountLockedLongerDurationNotUnlockingOnlyResponse);
+  // Returns account's locked records for a denom with longer duration
+  rpc AccountLockedLongerDurationDenom(AccountLockedLongerDurationDenomRequest)
+      returns (AccountLockedLongerDurationDenomResponse);
 }
 
 message ModuleBalanceRequest {};
 message ModuleBalanceResponse {
-	repeated cosmos.base.v1beta1.Coin coins = 1
-        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 };
 
 message ModuleLockedAmountRequest {};
 message ModuleLockedAmountResponse {
-	repeated cosmos.base.v1beta1.Coin coins = 1
-        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 };
 
 message AccountUnlockableCoinsRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
 };
 message AccountUnlockableCoinsResponse {
-	repeated cosmos.base.v1beta1.Coin coins = 1
-        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 };
 
 message AccountUnlockingCoinsRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
 }
 message AccountUnlockingCoinsResponse {
-	repeated cosmos.base.v1beta1.Coin coins = 1
-        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 message AccountLockedCoinsRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
 };
 message AccountLockedCoinsResponse {
-	repeated cosmos.base.v1beta1.Coin coins = 1
-        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 };
 
 message AccountLockedPastTimeRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    google.protobuf.Timestamp timestamp = 2
-        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  google.protobuf.Timestamp timestamp = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"timestamp\""
+  ];
 };
 message AccountLockedPastTimeResponse {
-	repeated PeriodLock locks = 1
-		[(gogoproto.nullable) = false];
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
 
 message AccountLockedPastTimeNotUnlockingOnlyRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    google.protobuf.Timestamp timestamp = 2
-        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  google.protobuf.Timestamp timestamp = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"timestamp\""
+  ];
 };
 message AccountLockedPastTimeNotUnlockingOnlyResponse {
-	repeated PeriodLock locks = 1
-		[(gogoproto.nullable) = false];
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
 
 message AccountUnlockedBeforeTimeRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    google.protobuf.Timestamp timestamp = 2
-        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  google.protobuf.Timestamp timestamp = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"timestamp\""
+  ];
 };
 message AccountUnlockedBeforeTimeResponse {
-	repeated PeriodLock locks = 1
-		[(gogoproto.nullable) = false];
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 }
 
 message AccountLockedPastTimeDenomRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    google.protobuf.Timestamp timestamp = 2
-        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
-    string denom = 3;
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  google.protobuf.Timestamp timestamp = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"timestamp\""
+  ];
+  string denom = 3;
 };
 message AccountLockedPastTimeDenomResponse {
-	repeated PeriodLock locks = 1
-		[(gogoproto.nullable) = false];
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
 
-message LockedRequest {
-    uint64 lock_id = 1;
-};
-message LockedResponse {
-	PeriodLock lock = 1;
-};
+message LockedRequest { uint64 lock_id = 1; };
+message LockedResponse { PeriodLock lock = 1; };
 
 message AccountLockedLongerDurationRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    google.protobuf.Duration duration = 2
-        [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
 };
 message AccountLockedLongerDurationResponse {
-	repeated PeriodLock locks = 1
-		[(gogoproto.nullable) = false];
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
 
 message AccountLockedLongerDurationNotUnlockingOnlyRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    google.protobuf.Duration duration = 2
-        [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
 };
 message AccountLockedLongerDurationNotUnlockingOnlyResponse {
-	repeated PeriodLock locks = 1
-		[(gogoproto.nullable) = false];
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
 
 message AccountLockedLongerDurationDenomRequest {
-	bytes owner = 1 
-        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    google.protobuf.Duration duration = 2
-		[(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
-	string denom = 3;
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+  string denom = 3;
 };
 message AccountLockedLongerDurationDenomResponse {
-	repeated PeriodLock locks = 1
-		[(gogoproto.nullable) = false];
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
