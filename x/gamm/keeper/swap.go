@@ -34,7 +34,9 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	spotPriceBefore := calcSpotPrice(
+	// TODO: Understand if we are handling swap fee consistently, with the global swap fee and the pool swap fee
+	//
+	spotPriceBefore := calcSpotPriceWithSwapFee(
 		inRecord.Token.Amount.ToDec(),
 		inRecord.Weight.ToDec(),
 		outRecord.Token.Amount.ToDec(),
@@ -61,7 +63,7 @@ func (k Keeper) SwapExactAmountIn(
 	inRecord.Token.Amount = inRecord.Token.Amount.Add(tokenIn.Amount)
 	outRecord.Token.Amount = outRecord.Token.Amount.Sub(tokenOutAmount)
 
-	spotPriceAfter = calcSpotPrice(
+	spotPriceAfter = calcSpotPriceWithSwapFee(
 		inRecord.Token.Amount.ToDec(),
 		inRecord.Weight.ToDec(),
 		outRecord.Token.Amount.ToDec(),
@@ -71,6 +73,9 @@ func (k Keeper) SwapExactAmountIn(
 	if spotPriceAfter.LT(spotPriceBefore) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
+
+	// TODO: Do we need this check, seems pretty expensive?
+	// I'd rather spend that computation in ensuring a better approx
 	if spotPriceBefore.GT(tokenIn.Amount.ToDec().QuoInt(tokenOutAmount)) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
@@ -129,7 +134,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	spotPriceBefore := calcSpotPrice(
+	spotPriceBefore := calcSpotPriceWithSwapFee(
 		inRecord.Token.Amount.ToDec(),
 		inRecord.Weight.ToDec(),
 		outRecord.Token.Amount.ToDec(),
@@ -156,7 +161,7 @@ func (k Keeper) SwapExactAmountOut(
 	inRecord.Token.Amount = inRecord.Token.Amount.Add(tokenInAmount)
 	outRecord.Token.Amount = outRecord.Token.Amount.Sub(tokenOut.Amount)
 
-	spotPriceAfter = calcSpotPrice(
+	spotPriceAfter = calcSpotPriceWithSwapFee(
 		inRecord.Token.Amount.ToDec(),
 		inRecord.Weight.ToDec(),
 		outRecord.Token.Amount.ToDec(),
