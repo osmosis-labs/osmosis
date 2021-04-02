@@ -11,45 +11,46 @@ func BenchmarkPow(b *testing.B) {
 		base sdk.Dec
 		exp  sdk.Dec
 	}{
+		// TODO: Choose selection here more robustly
 		{
-			base: sdk.NewDecFromStr(12, 1),
-			exp:  sdk.NewDecWithPrec(12, 1),
+			base: sdk.MustNewDecFromStr("1.2"),
+			exp:  sdk.MustNewDecFromStr("1.2"),
 		},
 		{
-			base: sdk.NewDecWithPrec(5, 1),
-			exp:  sdk.NewDecWithPrec(11122, 3),
+			base: sdk.MustNewDecFromStr("0.5"),
+			exp:  sdk.MustNewDecFromStr("11.122"),
 		},
 		{
-			base: sdk.NewDecWithPrec(1, 1),
-			exp:  sdk.NewDecWithPrec(492, 8),
+			base: sdk.MustNewDecFromStr("0.1"),
+			exp:  sdk.MustNewDecFromStr("0.00000492"),
 		},
 		{
-			base: sdk.NewDecWithPrec(2423, 7),
-			exp:  sdk.NewDecWithPrec(1213, 1),
+			base: sdk.MustNewDecFromStr("0.0002423"),
+			exp:  sdk.MustNewDecFromStr("0.1234"),
 		},
 		{
-			base: sdk.NewDecWithPrec(493, 3),
-			exp:  sdk.NewDecWithPrec(121, 8),
+			base: sdk.MustNewDecFromStr("0.493"),
+			exp:  sdk.MustNewDecFromStr("0.00000121"),
 		},
 		{
-			base: sdk.NewDecWithPrec(249, 6),
-			exp:  sdk.NewDecWithPrec(2304, 1),
+			base: sdk.MustNewDecFromStr("0.000249"),
+			exp:  sdk.MustNewDecFromStr("2.304"),
 		},
 		{
-			base: sdk.NewDecWithPrec(2342, 4),
-			exp:  sdk.NewDecWithPrec(322, 1),
+			base: sdk.MustNewDecFromStr("0.2342"),
+			exp:  sdk.MustNewDecFromStr("32.2"),
 		},
 		{
-			base: sdk.NewDecWithPrec(999, 6),
-			exp:  sdk.NewDecWithPrec(1424, 1),
+			base: sdk.MustNewDecFromStr("0.000999"),
+			exp:  sdk.MustNewDecFromStr("142.4"),
 		},
 		{
-			base: sdk.NewDecWithPrec(1234, 3),
-			exp:  sdk.NewDecWithPrec(1203, 1),
+			base: sdk.MustNewDecFromStr("1.234"),
+			exp:  sdk.MustNewDecFromStr("120.3"),
 		},
 		{
-			base: sdk.NewDecWithPrec(122, 5),
-			exp:  sdk.NewDecWithPrec(1232, 1),
+			base: sdk.MustNewDecFromStr("0.00122"),
+			exp:  sdk.MustNewDecFromStr("123.2"),
 		},
 	}
 
