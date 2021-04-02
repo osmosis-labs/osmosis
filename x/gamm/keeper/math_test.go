@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubSign(t *testing.T) {
+func TestAbsDifferenceWithSign(t *testing.T) {
 	decA, err := sdk.NewDecFromStr("3.2")
 	require.NoError(t, err)
 	decB, err := sdk.NewDecFromStr("4.3432389")
 	require.NoError(t, err)
 
-	s, b := subSign(decA, decB)
+	s, b := absDifferenceWithSign(decA, decB)
 	require.True(t, b)
 
 	expectedDec, err := sdk.NewDecFromStr("1.1432389")

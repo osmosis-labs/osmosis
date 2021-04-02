@@ -10,6 +10,12 @@ import (
 // TODO: Analyze choice here
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
+// Singletons
+var zero sdk.Dec = sdk.ZeroDec()
+var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
+var one sdk.Dec = sdk.OneDec()
+var two sdk.Dec = sdk.MustNewDecFromStr("2")
+
 // calcSpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
 // so spot_price = (B_in / W_in) / (B_out / W_out)
@@ -77,7 +83,7 @@ func calcInGivenOut(
 	diff := tokenBalanceOut.Sub(tokenAmountOut)
 	y := tokenBalanceOut.Quo(diff)
 	foo := pow(y, weightRatio)
-	foo = foo.Sub(sdk.OneDec())
+	foo = foo.Sub(one)
 	tokenAmountIn := sdk.OneDec().Sub(swapFee)
 	return (tokenBalanceIn.Mul(foo)).Quo(tokenAmountIn)
 
@@ -191,7 +197,8 @@ func calcPoolInGivenSingleOut(
 
 /*********************************************************/
 
-func subSign(a, b sdk.Dec) (sdk.Dec, bool) {
+// absDifferenceWithSign returns | a - b |, (a - b).sign()
+func absDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	if a.GTE(b) {
 		return a.Sub(b), false
 	} else {
@@ -213,7 +220,7 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 	}
 	// TODO: Remove this if we want to generalize the function,
 	// we can adjust the algorithm in this setting.
-	if base.GTE(sdk.OneDec().MulInt64(2)) {
+	if base.GTE(two) {
 		panic(fmt.Errorf("base must be lesser than two"))
 	}
 
@@ -229,12 +236,10 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 		return integerPow
 	}
 
-	partialResult := powApprox(base, fractional, powPrecision)
+	fractionalPow := powApprox(base, fractional, powPrecision)
 
-	return integerPow.Mul(partialResult)
+	return integerPow.Mul(fractionalPow)
 }
-
-var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 
 // Contract: 0 < base < 2
 func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
@@ -254,14 +259,15 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	// TODO: Make an approx-equal function, and then check if exp * 3 = 1, and do a check accordingly
 
 	a := exp
-	x, xneg := subSign(base, sdk.OneDec())
+	x, xneg := absDifferenceWithSign(base, one)
 	term := sdk.OneDec()
 	sum := sdk.OneDec()
 	negative := false
 
+	// TODO: Document this computation via taylor expansion
 	for i := 1; term.GTE(precision); i++ {
 		bigK := sdk.OneDec().MulInt64(int64(i))
-		c, cneg := subSign(a, bigK.Sub(sdk.OneDec()))
+		c, cneg := absDifferenceWithSign(a, bigK.Sub(one))
 		term = term.Mul(c.Mul(x))
 		term = term.Quo(bigK)
 
