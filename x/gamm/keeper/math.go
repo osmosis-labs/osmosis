@@ -208,18 +208,18 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 	// You can see this by recalling that `i = (-1)^(.5)`. We have to go to complex numbers to define this.
 	// (And would have to implement complex logarithms)
 	// We don't have a need for negative bases, so we don't include any such logic.
-	if base.LTE(sdk.ZeroDec()) {
-		panic(fmt.Errorf("base have to be greater than zero"))
+	if !base.IsPositive() {
+		panic(fmt.Errorf("base must be greater than 0"))
 	}
-	// TODO: Remove this, we can do a
+	// TODO: Remove this if we want to generalize the function,
+	// we can adjust the algorithm in this setting.
 	if base.GTE(sdk.OneDec().MulInt64(2)) {
-		panic(fmt.Errorf("base have to be lesser than two"))
+		panic(fmt.Errorf("base must be lesser than two"))
 	}
 
 	// We will use an approximation algorithm to compute the power.
 	// Since computing an integer power is easy, we split up the exponent into
 	// an integer component and a fractional component.
-	// a
 	integer := exp.TruncateDec()
 	fractional := exp.Sub(integer)
 
@@ -234,13 +234,24 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 	return integerPow.Mul(partialResult)
 }
 
+var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
+
+// Contract: 0 < base < 2
 func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
-	if base.LTE(sdk.ZeroDec()) {
-		panic(fmt.Errorf("base must be greater than zero"))
+	if exp.IsZero() {
+		return sdk.ZeroDec()
 	}
-	if base.GTE(sdk.OneDec().MulInt64(2)) {
-		panic(fmt.Errorf("base must be less than two"))
+
+	// Common case optimization
+	// Optimize for it being equal to one-half
+	if exp.Equal(one_half) {
+		output, err := base.ApproxSqrt()
+		if err != nil {
+			panic(err)
+		}
+		return output
 	}
+	// TODO: Make an approx-equal function, and then check if exp * 3 = 1, and do a check accordingly
 
 	a := exp
 	x, xneg := subSign(base, sdk.OneDec())
