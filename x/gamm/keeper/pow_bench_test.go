@@ -60,3 +60,27 @@ func BenchmarkPow(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkSqrtPow(b *testing.B) {
+	tests := []struct {
+		base sdk.Dec
+	}{
+		// TODO: Choose selection here more robustly
+		{
+			base: sdk.MustNewDecFromStr("1.29847"),
+		},
+		{
+			base: sdk.MustNewDecFromStr("1.313135"),
+		},
+		{
+			base: sdk.MustNewDecFromStr("1.65976735939"),
+		},
+	}
+	one_half := sdk.MustNewDecFromStr("0.5")
+
+	for i := 0; i < b.N; i++ {
+		for _, test := range tests {
+			pow(test.base, one_half)
+		}
+	}
+}
