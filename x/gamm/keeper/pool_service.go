@@ -17,7 +17,7 @@ func (k Keeper) CreatePool(
 	records []types.Record,
 ) (uint64, error) {
 	if len(records) < 2 {
-		return 0, types.ErrTooLittleRecords
+		return 0, types.ErrTooFewRecords
 	}
 	// TODO: Add the limit of binding token to the pool params?
 	if len(records) > 8 {

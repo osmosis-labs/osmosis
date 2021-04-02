@@ -67,19 +67,19 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams) PoolAccountI {
 }
 
 func (params PoolParams) Validate() error {
-	if params.ExitFee.LT(sdk.NewDec(0)) {
+	if params.ExitFee.IsNegative() {
 		return ErrNegativeExitFee
 	}
 
-	if params.ExitFee.GTE(sdk.NewDec(1)) {
+	if params.ExitFee.GTE(sdk.OneDec()) {
 		return ErrTooMuchExitFee
 	}
 
-	if params.SwapFee.LT(sdk.NewDec(0)) {
+	if params.SwapFee.IsNegative() {
 		return ErrNegativeSwapFee
 	}
 
-	if params.SwapFee.GTE(sdk.NewDec(1)) {
+	if params.SwapFee.GTE(sdk.OneDec()) {
 		return ErrTooMuchSwapFee
 	}
 
@@ -174,7 +174,7 @@ func (pa PoolAccount) GetRecord(denom string) (Record, error) {
 		recordA := pa.Records[i]
 
 		compare := strings.Compare(recordA.Token.Denom, denom)
-		return compare == 1 || compare == 0
+		return compare >= 0
 	})
 
 	if i < 0 || i >= len(pa.Records) {
