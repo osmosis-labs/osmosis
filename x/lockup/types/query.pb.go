@@ -1377,7 +1377,8 @@ type QueryClient interface {
 	AccountLockedCoins(ctx context.Context, in *AccountLockedCoinsRequest, opts ...grpc.CallOption) (*AccountLockedCoinsResponse, error)
 	// Returns locked records of an account with unlock time beyond timestamp
 	AccountLockedPastTime(ctx context.Context, in *AccountLockedPastTimeRequest, opts ...grpc.CallOption) (*AccountLockedPastTimeResponse, error)
-	// Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
+	// Returns locked records of an account with unlock time beyond timestamp
+	// excluding tokens started unlocking
 	AccountLockedPastTimeNotUnlockingOnly(ctx context.Context, in *AccountLockedPastTimeNotUnlockingOnlyRequest, opts ...grpc.CallOption) (*AccountLockedPastTimeNotUnlockingOnlyResponse, error)
 	// Returns unlocked records with unlock time before timestamp
 	AccountUnlockedBeforeTime(ctx context.Context, in *AccountUnlockedBeforeTimeRequest, opts ...grpc.CallOption) (*AccountUnlockedBeforeTimeResponse, error)
@@ -1387,7 +1388,8 @@ type QueryClient interface {
 	LockedByID(ctx context.Context, in *LockedRequest, opts ...grpc.CallOption) (*LockedResponse, error)
 	// Returns account locked records with longer duration
 	AccountLockedLongerDuration(ctx context.Context, in *AccountLockedLongerDurationRequest, opts ...grpc.CallOption) (*AccountLockedLongerDurationResponse, error)
-	// Returns account locked records with longer duration excluding tokens started unlocking
+	// Returns account locked records with longer duration excluding tokens
+	// started unlocking
 	AccountLockedLongerDurationNotUnlockingOnly(ctx context.Context, in *AccountLockedLongerDurationNotUnlockingOnlyRequest, opts ...grpc.CallOption) (*AccountLockedLongerDurationNotUnlockingOnlyResponse, error)
 	// Returns account's locked records for a denom with longer duration
 	AccountLockedLongerDurationDenom(ctx context.Context, in *AccountLockedLongerDurationDenomRequest, opts ...grpc.CallOption) (*AccountLockedLongerDurationDenomResponse, error)
@@ -1532,7 +1534,8 @@ type QueryServer interface {
 	AccountLockedCoins(context.Context, *AccountLockedCoinsRequest) (*AccountLockedCoinsResponse, error)
 	// Returns locked records of an account with unlock time beyond timestamp
 	AccountLockedPastTime(context.Context, *AccountLockedPastTimeRequest) (*AccountLockedPastTimeResponse, error)
-	// Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
+	// Returns locked records of an account with unlock time beyond timestamp
+	// excluding tokens started unlocking
 	AccountLockedPastTimeNotUnlockingOnly(context.Context, *AccountLockedPastTimeNotUnlockingOnlyRequest) (*AccountLockedPastTimeNotUnlockingOnlyResponse, error)
 	// Returns unlocked records with unlock time before timestamp
 	AccountUnlockedBeforeTime(context.Context, *AccountUnlockedBeforeTimeRequest) (*AccountUnlockedBeforeTimeResponse, error)
@@ -1542,7 +1545,8 @@ type QueryServer interface {
 	LockedByID(context.Context, *LockedRequest) (*LockedResponse, error)
 	// Returns account locked records with longer duration
 	AccountLockedLongerDuration(context.Context, *AccountLockedLongerDurationRequest) (*AccountLockedLongerDurationResponse, error)
-	// Returns account locked records with longer duration excluding tokens started unlocking
+	// Returns account locked records with longer duration excluding tokens
+	// started unlocking
 	AccountLockedLongerDurationNotUnlockingOnly(context.Context, *AccountLockedLongerDurationNotUnlockingOnlyRequest) (*AccountLockedLongerDurationNotUnlockingOnlyResponse, error)
 	// Returns account's locked records for a denom with longer duration
 	AccountLockedLongerDurationDenom(context.Context, *AccountLockedLongerDurationDenomRequest) (*AccountLockedLongerDurationDenomResponse, error)

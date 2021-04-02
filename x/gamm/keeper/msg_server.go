@@ -241,32 +241,3 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 
 	return &types.MsgExitSwapShareAmountInResponse{}, nil
 }
-
-func (server msgServer) UpdateSwapFee(goCtx context.Context, msg *types.MsgUpdateSwapFee) (*types.MsgUpdateSwapFeeResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	err = server.keeper.UpdateSwapFee(ctx, sender, msg.PoolId, msg.NewSwapFee)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtUpdateSwapFee,
-			sdk.NewAttribute(types.AttributeKeyPoolId, fmt.Sprintf("%d", msg.PoolId)),
-			sdk.NewAttribute(types.AttributeKeySwapFee, msg.NewSwapFee.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
-	return &types.MsgUpdateSwapFeeResponse{}, nil
-}

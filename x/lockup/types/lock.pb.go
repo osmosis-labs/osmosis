@@ -30,8 +30,9 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// PeriodLock is a single unit of lock by period. It's a record of locked coin at a specific time.
-// It stores owner, duration, unlock time and the amount of coins locked.
+// PeriodLock is a single unit of lock by period. It's a record of locked coin
+// at a specific time. It stores owner, duration, unlock time and the amount of
+// coins locked.
 type PeriodLock struct {
 	ID       uint64                                        `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	Owner    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`

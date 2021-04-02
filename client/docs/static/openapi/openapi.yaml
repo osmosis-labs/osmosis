@@ -202,8 +202,6 @@ paths:
                               type: string
                             exitFee:
                               type: string
-                            swapFeeGovernor:
-                              type: string
                           description: >-
                             PoolParams defined the parameters that will be
                             managed by the pool governance
@@ -679,8 +677,6 @@ paths:
                           swapFee:
                             type: string
                           exitFee:
-                            type: string
-                          swapFeeGovernor:
                             type: string
                         description: >-
                           PoolParams defined the parameters that will be managed
@@ -1322,8 +1318,6 @@ paths:
                       swapFee:
                         type: string
                       exitFee:
-                        type: string
-                      swapFeeGovernor:
                         type: string
                     description: >-
                       PoolParams defined the parameters that will be managed by
@@ -13519,8 +13513,6 @@ components:
               type: string
             exitFee:
               type: string
-            swapFeeGovernor:
-              type: string
           description: >-
             PoolParams defined the parameters that will be managed by the pool
             governance
@@ -13572,8 +13564,6 @@ components:
           type: string
         exitFee:
           type: string
-        swapFeeGovernor:
-          type: string
       description: >-
         PoolParams defined the parameters that will be managed by the pool
         governance
@@ -13591,8 +13581,6 @@ components:
             swapFee:
               type: string
             exitFee:
-              type: string
-            swapFeeGovernor:
               type: string
           description: >-
             PoolParams defined the parameters that will be managed by the pool
@@ -13786,8 +13774,6 @@ components:
                 swapFee:
                   type: string
                 exitFee:
-                  type: string
-                swapFeeGovernor:
                   type: string
               description: >-
                 PoolParams defined the parameters that will be managed by the
@@ -14021,8 +14007,6 @@ components:
                   swapFee:
                     type: string
                   exitFee:
-                    type: string
-                  swapFeeGovernor:
                     type: string
                 description: >-
                   PoolParams defined the parameters that will be managed by the
