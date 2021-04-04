@@ -1,0 +1,27 @@
+syntax = "proto3";
+package osmosis.farm.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/farm/types";
+
+// Msg defines the farm Msg service.
+service Msg {
+  // AllocateAssets allows external accounts to provide additional incentives by adding assets to specific farms
+  rpc AllocateAssets(MsgAllocateAssets) returns (MsgAllocateAssetsResponse);
+}
+
+// MsgSend represents a message to allocate coins from one account to the farm.
+message MsgAllocateAssets {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  uint64   farm_id                      = 2 [(gogoproto.moretags) = "yaml:\"farm_id\""];
+  repeated cosmos.base.v1beta1.Coin assets = 3
+    [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+message MsgAllocateAssetsResponse {}

@@ -15,7 +15,7 @@ func (suite *KeeperTestSuite) TestSimpleReward() {
 	suite.Equal(0, len(rewards))
 	suite.Equal("0", suite.app.BankKeeper.GetBalance(suite.ctx, acc1, "foo").Amount.String())
 
-	err = keeper.AllocateAssetToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
+	err = keeper.AllocateAssetsToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
 	suite.NoError(err)
 
 	rewards, err = keeper.WithdrawRewardsFromFarm(suite.ctx, farm.FarmId, acc1)
@@ -23,9 +23,9 @@ func (suite *KeeperTestSuite) TestSimpleReward() {
 	suite.Equal("1000foo", rewards.String())
 	suite.Equal("1000", suite.app.BankKeeper.GetBalance(suite.ctx, acc1, "foo").Amount.String())
 
-	err = keeper.AllocateAssetToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
+	err = keeper.AllocateAssetsToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
 	suite.NoError(err)
-	err = keeper.AllocateAssetToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
+	err = keeper.AllocateAssetsToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
 	suite.NoError(err)
 
 	rewards, err = keeper.WithdrawRewardsFromFarm(suite.ctx, farm.FarmId, acc1)
@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestSimpleReward2() {
 	suite.Equal(0, len(rewards))
 	suite.Equal("0", suite.app.BankKeeper.GetBalance(suite.ctx, acc1, "foo").Amount.String())
 
-	err = keeper.AllocateAssetToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
+	err = keeper.AllocateAssetsToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
 	suite.NoError(err)
 
 	// Until this, acc1 has the 1000foo as rewards.
@@ -57,9 +57,9 @@ func (suite *KeeperTestSuite) TestSimpleReward2() {
 	suite.Equal(0, len(rewards))
 	suite.Equal("0", suite.app.BankKeeper.GetBalance(suite.ctx, acc2, "foo").Amount.String())
 
-	err = keeper.AllocateAssetToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
+	err = keeper.AllocateAssetsToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
 	suite.NoError(err)
-	err = keeper.AllocateAssetToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(2000))))
+	err = keeper.AllocateAssetsToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(2000))))
 	suite.NoError(err)
 
 	// Until this, acc1 has the 2000foo as rewards. And, acc2 has the 2000foo as rewards.
