@@ -24,15 +24,3 @@ message PoolYield {
     (gogoproto.nullable) = false
   ];
 }
-
-// Params defines the parameters for the bank module.
-message Params {
-  option (gogoproto.goproto_stringer)       = false;
-
-  string mint_denom = 1;
-  repeated google.protobuf.Duration lockable_durations = 2 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.moretags)    = "yaml:\"lockable_durations\""
-  ];
-}

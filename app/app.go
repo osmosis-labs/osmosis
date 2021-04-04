@@ -333,7 +333,7 @@ func NewOsmosisApp(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.FarmKeeper = farmkeeper.NewKeeper(appCodec, keys[farmtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
-	app.PoolYieldKeeper = poolyieldkeeper.NewKeeper(appCodec, keys[poolyieldtypes.StoreKey], app.GetSubspace(poolyieldtypes.ModuleName), app.FarmKeeper)
+	app.PoolYieldKeeper = poolyieldkeeper.NewKeeper(appCodec, keys[poolyieldtypes.StoreKey], app.FarmKeeper)
 	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.PoolYieldKeeper.Hooks(), app.AccountKeeper, app.BankKeeper)
 	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 
@@ -390,6 +390,7 @@ func NewOsmosisApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		poolyieldtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
