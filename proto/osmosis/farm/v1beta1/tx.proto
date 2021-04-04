@@ -11,6 +11,7 @@ option go_package = "github.com/c-osmosis/osmosis/x/farm/types";
 service Msg {
   // AllocateAssets allows external accounts to provide additional incentives by adding assets to specific farms
   rpc AllocateAssets(MsgAllocateAssets) returns (MsgAllocateAssetsResponse);
+  rpc WithdrawRewards(MsgWithdrawRewards) returns (MsgWithdrawRewardsResponse);
 }
 
 // MsgSend represents a message to allocate coins from one account to the farm.
@@ -25,3 +26,13 @@ message MsgAllocateAssets {
 }
 
 message MsgAllocateAssetsResponse {}
+
+message MsgWithdrawRewards {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  uint64   farm_id                      = 2 [(gogoproto.moretags) = "yaml:\"farm_id\""];
+}
+
+message MsgWithdrawRewardsResponse {}

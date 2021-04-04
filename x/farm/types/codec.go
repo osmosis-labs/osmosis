@@ -9,11 +9,13 @@ import (
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAllocateAssets{}, "osmosis/MsgAllocateAssets", nil)
+	cdc.RegisterConcrete(&MsgWithdrawRewards{}, "osmosis/MsgWithdrawRewards", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAllocateAssets{},
+		&MsgWithdrawRewards{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

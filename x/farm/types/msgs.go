@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	TypeMsgAllocateAssets = "allocate_assets"
+	TypeMsgAllocateAssets  = "allocate_assets"
+	TypeMsgWithdrawRewards = "withdraw_rewards"
 )
 
 var _ sdk.Msg = &MsgAllocateAssets{}
@@ -45,6 +46,33 @@ func (msg MsgAllocateAssets) GetSignBytes() []byte {
 }
 
 func (msg MsgAllocateAssets) GetSigners() []sdk.AccAddress {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{from}
+}
+
+var _ sdk.Msg = &MsgWithdrawRewards{}
+
+func (msg MsgWithdrawRewards) Route() string { return RouterKey }
+
+func (msg MsgWithdrawRewards) Type() string { return TypeMsgWithdrawRewards }
+
+func (msg MsgWithdrawRewards) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (msg MsgWithdrawRewards) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgWithdrawRewards) GetSigners() []sdk.AccAddress {
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
 		panic(err)

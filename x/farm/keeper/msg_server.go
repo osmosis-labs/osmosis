@@ -33,3 +33,19 @@ func (k msgServer) AllocateAssets(goCtx context.Context, msg *types.MsgAllocateA
 
 	return &types.MsgAllocateAssetsResponse{}, nil
 }
+
+func (k msgServer) WithdrawRewards(goCtx context.Context, msg *types.MsgWithdrawRewards) (*types.MsgWithdrawRewardsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = k.WithdrawRewardsFromFarm(ctx, msg.FarmId, from)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgWithdrawRewardsResponse{}, nil
+}
