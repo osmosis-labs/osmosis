@@ -73,7 +73,7 @@ func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, address sd
 	return rewards, nil
 }
 
-func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address sdk.AccAddress) (rewards sdk.Coins, err error) {
+func (k Keeper) CalculatePendingRewards(ctx sdk.Context, farmId uint64, address sdk.AccAddress) (rewards sdk.DecCoins, err error) {
 	farm, err := k.GetFarm(ctx, farmId)
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address 
 	}
 
 	if farm.CurrentPeriod-1 == 0 {
-		return sdk.Coins{}, nil
+		return nil, nil
 	}
 
 	lastRewardRatio := k.GetHistoricalRecord(ctx, farm.FarmId, farm.CurrentPeriod-1).CumulativeRewardRatio
@@ -95,7 +95,28 @@ func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address 
 	}
 
 	difference := lastRewardRatio.Sub(farmerRewardRatio)
-	rewards, _ = difference.MulDec(farmer.Share.ToDec()).TruncateDecimal()
+	rewards = difference.MulDec(farmer.Share.ToDec())
+
+	return rewards, nil
+}
+
+func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address sdk.AccAddress) (rewards sdk.Coins, err error) {
+	decRewards, err := k.CalculatePendingRewards(ctx, farmId, address)
+	if err != nil {
+		return nil, err
+	}
+
+	rewards, _ = decRewards.TruncateDecimal()
+
+	farm, err := k.GetFarm(ctx, farmId)
+	if err != nil {
+		return nil, err
+	}
+
+	farmer := k.GetFarmer(ctx, farmId, address)
+	if farmer == nil {
+		panic("TODO: Return the sdk.Error (invalid farmer)")
+	}
 
 	farmer.LastWithdrawnPeriod = farm.CurrentPeriod - 1
 	k.setFarmer(ctx, farmer)
