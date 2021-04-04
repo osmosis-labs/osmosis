@@ -55,6 +55,13 @@ func (msg MsgAllocateAssets) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgWithdrawRewards{}
 
+func NewMsgWithdrawRewards(from sdk.AccAddress, farmId uint64) *MsgWithdrawRewards {
+	return &MsgWithdrawRewards{
+		FromAddress: from.String(),
+		FarmId:      farmId,
+	}
+}
+
 func (msg MsgWithdrawRewards) Route() string { return RouterKey }
 
 func (msg MsgWithdrawRewards) Type() string { return TypeMsgWithdrawRewards }

@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/c-osmosis/osmosis/x/farm/client/cli"
 	"github.com/c-osmosis/osmosis/x/farm/keeper"
 	"github.com/c-osmosis/osmosis/x/farm/types"
 )
@@ -61,7 +62,7 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.NewTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
