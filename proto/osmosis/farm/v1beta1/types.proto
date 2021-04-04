@@ -1,0 +1,45 @@
+syntax = "proto3";
+package osmosis.farm.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/farm/types";
+
+message Farm {
+    uint64 farmId = 1 [(gogoproto.moretags) = "yaml:\"farm_id\""];
+    string totalShare = 2 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags) = "yaml:\"total_share\"",
+        (gogoproto.nullable) = false
+    ];
+    int64 currentPeriod = 3 [(gogoproto.moretags) = "yaml:\"current_period\""];
+    repeated cosmos.base.v1beta1.DecCoin currentRewards = 4 [
+        (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+        (gogoproto.nullable) = false
+    ];
+}
+
+// HistoricalRecord represents historical records for a fool.
+// Height is implicit within the store key.
+// Cumulative reward ratio is the sum from the zeroeth period.
+message HistoricalRecord {
+    repeated cosmos.base.v1beta1.DecCoin cumulativeRewardRatio = 1 [
+        (gogoproto.moretags)     = "yaml:\"cumulative_reward_ratio\"",
+        (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+        (gogoproto.nullable)     = false
+    ];
+    // TODO: Add the reference count such as the cosmos-sdk's distribution module.
+}
+
+message Farmer {
+    uint64 farmId = 1 [(gogoproto.moretags) = "yaml:\"farm_id\""];
+    string address = 2;
+    string share = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.moretags) = "yaml:\"share\"",
+        (gogoproto.nullable) = false
+    ];
+    int64 lastWithdrawnPeriod = 4 [(gogoproto.moretags) = "yaml:\"last_withdrawn_period\""];
+}
