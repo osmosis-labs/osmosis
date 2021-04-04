@@ -26,31 +26,31 @@ func TestGetPoolShareDenom(t *testing.T) {
 func TestGetPoolIdFromShareDenom(t *testing.T) {
 	denom := "gamm/pool/1"
 
-	poolId, err := GetPoolIdFromShareDenom(denom)
-	require.NoError(t, err)
+	poolId, ok := GetPoolIdFromShareDenom(denom)
+	require.True(t, ok)
 	require.Equal(t, uint64(1), poolId)
 
-	_, err = GetPoolIdFromShareDenom("hello")
-	require.Error(t, err)
+	_, ok = GetPoolIdFromShareDenom("hello")
+	require.False(t, ok)
 
-	_, err = GetPoolIdFromShareDenom("gamm/pool")
-	require.Error(t, err)
+	_, ok = GetPoolIdFromShareDenom("gamm/pool")
+	require.False(t, ok)
 
-	_, err = GetPoolIdFromShareDenom("gamm/pool/")
-	require.Error(t, err)
+	_, ok = GetPoolIdFromShareDenom("gamm/pool/")
+	require.False(t, ok)
 
-	_, err = GetPoolIdFromShareDenom("gamm/pool/hello")
-	require.Error(t, err)
+	_, ok = GetPoolIdFromShareDenom("gamm/pool/hello")
+	require.False(t, ok)
 
-	_, err = GetPoolIdFromShareDenom("gamm/pool//")
-	require.Error(t, err)
+	_, ok = GetPoolIdFromShareDenom("gamm/pool//")
+	require.False(t, ok)
 
-	_, err = GetPoolIdFromShareDenom("gamm/pool//1")
-	require.Error(t, err)
+	_, ok = GetPoolIdFromShareDenom("gamm/pool//1")
+	require.False(t, ok)
 
-	_, err = GetPoolIdFromShareDenom("gamm/pool/1/1")
-	require.Error(t, err)
+	_, ok = GetPoolIdFromShareDenom("gamm/pool/1/1")
+	require.False(t, ok)
 
-	_, err = GetPoolIdFromShareDenom("gamm/pool/1/hello")
-	require.Error(t, err)
+	_, ok = GetPoolIdFromShareDenom("gamm/pool/1/hello")
+	require.False(t, ok)
 }

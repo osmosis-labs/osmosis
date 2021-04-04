@@ -29,18 +29,23 @@ func GetPoolShareDenom(poolId uint64) string {
 	return fmt.Sprintf("gamm/pool/%d", poolId)
 }
 
-func GetPoolIdFromShareDenom(denom string) (uint64, error) {
+func GetPoolIdFromShareDenom(denom string) (uint64, bool) {
 	r, err := regexp.Compile(`(gamm/pool/)([\d]+)$`)
 	if err != nil {
-		return 0, err
+		return 0, false
 	}
 
 	split := r.FindSubmatch([]byte(denom))
 	if len(split) != 3 {
-		return 0, fmt.Errorf("invalid pool share denom")
+		return 0, false
 	}
 
-	return strconv.ParseUint(string(split[2]), 10, 64)
+	poolId, err := strconv.ParseUint(string(split[2]), 10, 64)
+	if err != nil {
+		return 0, false
+	}
+
+	return poolId, true
 }
 
 func GetKeyPaginationPoolNumbers(poolId uint64) []byte {
