@@ -2153,6 +2153,119 @@ paths:
           format: uint64
       tags:
         - Query
+  '/osmosis/farm/v1beta1/pending-rewards/{farm_id}/{address}':
+    get:
+      operationId: PendingRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    DecCoin defines a token with a denomination and a decimal
+                    amount.
+
+
+                    NOTE: The amount field is an Dec which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: farm_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/osmosis/pool-yield/v1beta1/farm-ids/{poolId}':
+    get:
+      summary: >-
+        FarmIds takes the pool id and returns the matching farm ids and
+        durations
+      operationId: FarmIds
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              farmIdsWithDuration:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    farmId:
+                      type: string
+                      format: uint64
+                    duration:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: poolId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   '/cosmos/auth/v1beta1/accounts/{address}':
     get:
       summary: Account returns account details based on address.
@@ -14629,6 +14742,507 @@ definitions:
       tokenInDenom:
         type: string
     title: '===================== MsgSwapExactAmountOut'
+  cosmos.base.v1beta1.DecCoin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      DecCoin defines a token with a denomination and a decimal amount.
+
+      NOTE: The amount field is an Dec which implements the custom method
+      signatures required by gogoproto.
+  osmosis.farm.v1beta1.QueryPendingRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+  osmosis.lockup.AccountLockedCoinsResponse:
+    type: object
+    properties:
+      coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  osmosis.lockup.AccountLockedLongerDurationDenomResponse:
+    type: object
+    properties:
+      locks:
+        type: array
+        items:
+          type: object
+          properties:
+            ID:
+              type: string
+              format: uint64
+            owner:
+              type: string
+              format: byte
+            duration:
+              type: string
+            end_time:
+              type: string
+              format: date-time
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+          description: >-
+            PeriodLock is a single unit of lock by period. It's a record of
+            locked coin at a specific time.
+
+            It stores owner, duration, unlock time and the amount of coins
+            locked.
+  osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse:
+    type: object
+    properties:
+      locks:
+        type: array
+        items:
+          type: object
+          properties:
+            ID:
+              type: string
+              format: uint64
+            owner:
+              type: string
+              format: byte
+            duration:
+              type: string
+            end_time:
+              type: string
+              format: date-time
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+          description: >-
+            PeriodLock is a single unit of lock by period. It's a record of
+            locked coin at a specific time.
+
+            It stores owner, duration, unlock time and the amount of coins
+            locked.
+  osmosis.lockup.AccountLockedLongerDurationResponse:
+    type: object
+    properties:
+      locks:
+        type: array
+        items:
+          type: object
+          properties:
+            ID:
+              type: string
+              format: uint64
+            owner:
+              type: string
+              format: byte
+            duration:
+              type: string
+            end_time:
+              type: string
+              format: date-time
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+          description: >-
+            PeriodLock is a single unit of lock by period. It's a record of
+            locked coin at a specific time.
+
+            It stores owner, duration, unlock time and the amount of coins
+            locked.
+  osmosis.lockup.AccountLockedPastTimeDenomResponse:
+    type: object
+    properties:
+      locks:
+        type: array
+        items:
+          type: object
+          properties:
+            ID:
+              type: string
+              format: uint64
+            owner:
+              type: string
+              format: byte
+            duration:
+              type: string
+            end_time:
+              type: string
+              format: date-time
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+          description: >-
+            PeriodLock is a single unit of lock by period. It's a record of
+            locked coin at a specific time.
+
+            It stores owner, duration, unlock time and the amount of coins
+            locked.
+  osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyResponse:
+    type: object
+    properties:
+      locks:
+        type: array
+        items:
+          type: object
+          properties:
+            ID:
+              type: string
+              format: uint64
+            owner:
+              type: string
+              format: byte
+            duration:
+              type: string
+            end_time:
+              type: string
+              format: date-time
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+          description: >-
+            PeriodLock is a single unit of lock by period. It's a record of
+            locked coin at a specific time.
+
+            It stores owner, duration, unlock time and the amount of coins
+            locked.
+  osmosis.lockup.AccountLockedPastTimeResponse:
+    type: object
+    properties:
+      locks:
+        type: array
+        items:
+          type: object
+          properties:
+            ID:
+              type: string
+              format: uint64
+            owner:
+              type: string
+              format: byte
+            duration:
+              type: string
+            end_time:
+              type: string
+              format: date-time
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+          description: >-
+            PeriodLock is a single unit of lock by period. It's a record of
+            locked coin at a specific time.
+
+            It stores owner, duration, unlock time and the amount of coins
+            locked.
+  osmosis.lockup.AccountUnlockableCoinsResponse:
+    type: object
+    properties:
+      coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  osmosis.lockup.AccountUnlockedBeforeTimeResponse:
+    type: object
+    properties:
+      locks:
+        type: array
+        items:
+          type: object
+          properties:
+            ID:
+              type: string
+              format: uint64
+            owner:
+              type: string
+              format: byte
+            duration:
+              type: string
+            end_time:
+              type: string
+              format: date-time
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+          description: >-
+            PeriodLock is a single unit of lock by period. It's a record of
+            locked coin at a specific time.
+
+            It stores owner, duration, unlock time and the amount of coins
+            locked.
+  osmosis.lockup.AccountUnlockingCoinsResponse:
+    type: object
+    properties:
+      coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  osmosis.lockup.LockedResponse:
+    type: object
+    properties:
+      lock:
+        type: object
+        properties:
+          ID:
+            type: string
+            format: uint64
+          owner:
+            type: string
+            format: byte
+          duration:
+            type: string
+          end_time:
+            type: string
+            format: date-time
+          coins:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+        description: >-
+          PeriodLock is a single unit of lock by period. It's a record of locked
+          coin at a specific time.
+
+          It stores owner, duration, unlock time and the amount of coins locked.
+  osmosis.lockup.ModuleBalanceResponse:
+    type: object
+    properties:
+      coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  osmosis.lockup.ModuleLockedAmountResponse:
+    type: object
+    properties:
+      coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  osmosis.lockup.PeriodLock:
+    type: object
+    properties:
+      ID:
+        type: string
+        format: uint64
+      owner:
+        type: string
+        format: byte
+      duration:
+        type: string
+      end_time:
+        type: string
+        format: date-time
+      coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: >-
+      PeriodLock is a single unit of lock by period. It's a record of locked
+      coin at a specific time.
+
+      It stores owner, duration, unlock time and the amount of coins locked.
+  osmosis.poolyield.v1beta1.QueryFarmIdsResponse:
+    type: object
+    properties:
+      farmIdsWithDuration:
+        type: array
+        items:
+          type: object
+          properties:
+            farmId:
+              type: string
+              format: uint64
+            duration:
+              type: string
+  osmosis.poolyield.v1beta1.QueryFarmIdsResponse.FarmIdWithDuration:
+    type: object
+    properties:
+      farmId:
+        type: string
+        format: uint64
+      duration:
+        type: string
   cosmos.auth.v1beta1.Params:
     type: object
     properties:
@@ -15110,18 +15724,6 @@ definitions:
     description: |-
       SendEnabled maps coin denom to a send_enabled status (whether a denom is
       sendable).
-  cosmos.base.v1beta1.DecCoin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      DecCoin defines a token with a denomination and a decimal amount.
-
-      NOTE: The amount field is an Dec which implements the custom method
-      signatures required by gogoproto.
   cosmos.distribution.v1beta1.DelegationDelegatorReward:
     type: object
     properties:

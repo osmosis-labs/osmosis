@@ -15,6 +15,30 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/osmosis/farm/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "FarmParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/osmosis/lockup/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "LockupParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/osmosis/pool-yield/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "PoolYieldParams"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
