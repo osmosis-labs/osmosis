@@ -3,6 +3,8 @@ package keeper
 import (
 	"time"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -47,12 +49,16 @@ func (k Keeper) SetPoolFarmId(ctx sdk.Context, poolId uint64, lockableDuration t
 	store.Set(key, sdk.Uint64ToBigEndian(farmId))
 }
 
-func (k Keeper) GetPoolFarmId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) uint64 {
+func (k Keeper) GetPoolFarmId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error) {
 	key := types.GetPoolFarmIdStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(key)
 
-	return sdk.BigEndianToUint64(bz)
+	if len(bz) == 0 {
+		return 0, sdkerrors.Wrapf(types.ErrNoFarmIdExist, "farm id for pool (%d) with duration (%s) not exist", poolId, lockableDuration.String())
+	}
+
+	return sdk.BigEndianToUint64(bz), nil
 }
 
 func (k Keeper) SetGenesisState(ctx sdk.Context, genState *types.GenesisState) {

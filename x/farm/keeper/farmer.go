@@ -37,7 +37,7 @@ func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, address sdk.A
 	return rewards, nil
 }
 
-func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, currentPeriod int64, address sdk.AccAddress, share sdk.Int) (rewards sdk.Coins, err error) {
+func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, address sdk.AccAddress, share sdk.Int) (rewards sdk.Coins, err error) {
 	rewards, err = k.WithdrawRewardsFromFarm(ctx, farmId, address)
 	if err != nil {
 		return nil, err
