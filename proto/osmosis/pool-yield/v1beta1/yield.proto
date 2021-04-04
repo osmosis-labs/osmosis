@@ -1,0 +1,38 @@
+syntax = "proto3";
+package osmosis.poolyield.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/pool-yield/types";
+
+message DistrPool {
+  string pot_id = 1 [(gogoproto.moretags) = "yaml:\"pot_id\""];
+  // Denormarized weight.
+  string weight = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"denormalized_weight\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message PoolYield {
+  repeated DistrPool distribute_pools = 1 [(gogoproto.nullable) = false];
+  string total_weight = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"total_weight\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// Params defines the parameters for the bank module.
+message Params {
+  option (gogoproto.goproto_stringer)       = false;
+
+  string mint_denom = 1;
+  repeated google.protobuf.Duration lockable_durations = 2 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"lockable_durations\""
+  ];
+}
