@@ -3,6 +3,8 @@ package keeper
 import (
 	"time"
 
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
@@ -13,6 +15,7 @@ type Hooks struct {
 }
 
 var _ gammtypes.GammHooks = Hooks{}
+var _ lockuptypes.LockupHooks = Hooks{}
 
 // Create new pool yield hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
@@ -22,8 +25,7 @@ func (h Hooks) AfterPoolCreated(ctx sdk.Context, poolId uint64) {
 	h.k.CreatePoolFarms(ctx, poolId)
 }
 
-// it looks like hook isn’t there for the lockup module, but i’ll go ahead and start on the implementation
-func (h Hooks) onTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
 	// If the locked token in the lockup module is a pool’s share, attempt to add/remove the share to the farm’s pool
 	for _, coin := range amount {
 		poolId, err := gammtypes.GetPoolIdFromShareDenom(coin.Denom)
@@ -43,8 +45,7 @@ func (h Hooks) onTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 	}
 }
 
-// it looks like hook isn’t there for the lockup module, but i’ll go ahead and start on the implementation
-func (h Hooks) onTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
 	// If the locked token in the lockup module is a pool’s share, attempt to add/remove the share to the farm’s pool
 	for _, coin := range amount {
 		poolId, err := gammtypes.GetPoolIdFromShareDenom(coin.Denom)
