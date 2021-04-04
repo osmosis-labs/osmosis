@@ -8,8 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	farmkeeper "github.com/c-osmosis/osmosis/x/farm/keeper"
-
 	"github.com/c-osmosis/osmosis/x/pool-yield/types"
 )
 
@@ -17,10 +15,10 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryMarshaler
 
-	farmKeeper farmkeeper.Keeper
+	farmKeeper types.FarmKeeper
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, farmkeeper farmkeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, farmkeeper types.FarmKeeper) Keeper {
 	return Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
