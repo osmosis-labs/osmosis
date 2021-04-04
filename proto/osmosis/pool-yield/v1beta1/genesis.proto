@@ -1,0 +1,13 @@
+syntax = "proto3";
+package osmosis.poolyield.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "osmosis/pool-yield/v1beta1/yield.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/pool-yield/types";
+
+// GenesisState defines the pool yield module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}

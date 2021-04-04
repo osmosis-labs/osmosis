@@ -2,6 +2,7 @@ package pool_yield
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,23 +31,28 @@ type AppModuleBasic struct {
 	cdc codec.Marshaler
 }
 
-// Name returns the bank module's name.
+// Name returns the pool-yield module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterLegacyAminoCodec registers the bank module's types on the LegacyAmino codec.
+// RegisterLegacyAminoCodec registers the pool-yield module's types on the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	// noop
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the bank
+// DefaultGenesis returns default genesis state as raw bytes for the pool-yield
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return nil
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
-// ValidateGenesis performs genesis state validation for the bank module.
+// ValidateGenesis performs genesis state validation for the pool-yield module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(&data)
 }
 
 //---------------------------------------
@@ -68,7 +74,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return nil
 }
 
-// RegisterInterfaces registers interfaces and implementations of the bank module.
+// RegisterInterfaces registers interfaces and implementations of the pool-yield module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	// noop
 }
@@ -90,31 +96,35 @@ func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
 	}
 }
 
-// RegisterInvariants registers the bank module invariants.
+// RegisterInvariants registers the pool-yield module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	return
 }
 
-// Route returns the message routing key for the bank module.
+// Route returns the message routing key for the pool-yield module.
 func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(types.RouterKey, nil)
 }
 
-// QuerierRoute returns the bank module's querier route name.
+// QuerierRoute returns the pool-yield module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// LegacyQuerierHandler returns the bank module sdk.Querier.
+// LegacyQuerierHandler returns the pool-yield module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
-// InitGenesis performs genesis initialization for the bank module. It returns
-// no validator updates.
+// InitGenesis performs genesis initialization for the pool-yield module.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
-	return nil
+	var genesisState types.GenesisState
+
+	cdc.MustUnmarshalJSON(data, &genesisState)
+
+	am.keeper.InitGenesis(ctx, &genesisState)
+	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the bank
+// ExportGenesis returns the exported genesis state as raw bytes for the pool-yield
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
 	return nil
@@ -123,7 +133,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock returns the end blocker for the bank module. It returns no validator
+// EndBlock returns the end blocker for the pool-yield module. It returns no validator
 // updates.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
@@ -133,7 +143,7 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the bank module.
+// GenerateGenesisState creates a randomized GenState of the pool-yield module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
@@ -143,7 +153,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 	return nil
 }
 
-// RandomizedParams creates randomized bank param changes for the simulator.
+// RandomizedParams creates randomized pool-yield param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return simulation.ParamChanges(r)
 }

@@ -34,8 +34,12 @@ func NewParams(mintDenom string, lockableDurations []time.Duration) Params {
 // DefaultParams is the default parameter configuration for the pool-yield module
 func DefaultParams() Params {
 	return Params{
-		MintDenom:         "osmo",
-		LockableDurations: []time.Duration{},
+		MintDenom: "osmo",
+		LockableDurations: []time.Duration{
+			time.Hour,
+			time.Hour * 3,
+			time.Hour * 7,
+		},
 	}
 }
 

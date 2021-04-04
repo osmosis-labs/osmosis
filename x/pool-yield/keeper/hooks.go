@@ -15,7 +15,7 @@ var _ gammtypes.GammHooks = Hooks{}
 // Create new pool yield hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-// initialize validator distribution record
+// creates a farm for each pool’s lockable duration
 func (h Hooks) AfterPoolCreated(ctx sdk.Context, poolId uint64) {
 	h.k.CreatePoolFarms(ctx, poolId)
 }
