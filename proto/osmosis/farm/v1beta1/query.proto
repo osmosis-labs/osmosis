@@ -10,12 +10,12 @@ option go_package = "github.com/c-osmosis/osmosis/x/farm/types";
 
 service Query {
   rpc PendingRewards(QueryPendingRewardsRequest) returns (QueryPendingRewardsResponse) {
-    option (google.api.http).get = "/osmosis/farm/v1beta1/pending-rewards/{farmId}/{address}";
+    option (google.api.http).get = "/osmosis/farm/v1beta1/pending-rewards/{farm_id}/{address}";
   }
 }
 
 message QueryPendingRewardsRequest {
-  uint64 farmId = 1 [ (gogoproto.moretags) = "yaml:\"farm_id\"" ];
+  uint64 farm_id = 1 [ (gogoproto.moretags) = "yaml:\"farm_id\"" ];
   string address = 2;
 }
 
