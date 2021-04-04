@@ -1,0 +1,30 @@
+syntax = "proto3";
+package osmosis.poolyield.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/pool-yield/types";
+
+service Query {
+  // FarmIds takes the pool id and returns the matching farm ids and durations
+  rpc FarmIds(QueryFarmIdsRequest) returns (QueryFarmIdsResponse) {
+    option (google.api.http).get = "/osmosis/pool-yield/v1beta1/farm-ids/{poolId}";
+  }
+}
+
+message QueryFarmIdsRequest {
+  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message QueryFarmIdsResponse {
+  message FarmIdWithDuration {
+    uint64 farmId = 1 [(gogoproto.moretags) = "yaml:\"farm_id\"" ];
+    google.protobuf.Duration duration = 2 [
+      (gogoproto.nullable)    = false,
+      (gogoproto.stdduration) = true
+    ];
+  }
+
+  repeated FarmIdWithDuration farmIdsWithDuration = 1;
+}

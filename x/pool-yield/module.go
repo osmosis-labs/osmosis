@@ -1,6 +1,7 @@
 package pool_yield
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -62,7 +63,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	// noop
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -86,7 +87,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// noop
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
