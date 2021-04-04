@@ -21,11 +21,10 @@ type Keeper struct {
 
 	// keepers
 	accountKeeper types.AccountKeeper
-	gammKeeper    types.GAMMKeeper
 	farmKeeper    farmkeeper.Keeper
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.GAMMKeeper, farmkeeper farmkeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, farmkeeper farmkeeper.Keeper) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -37,18 +36,11 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 
 		paramSpace: paramSpace,
 
-		gammKeeper: gammKeeper,
 		farmKeeper: farmkeeper,
 	}
 }
 
 func (k Keeper) CreatePoolFarms(ctx sdk.Context, poolId uint64) error {
-	// Make sure that the pool exists
-	_, err := k.gammKeeper.GetPool(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
 	// Create the same number of farms as there are LockableDurations
 	params := k.GetParams(ctx)
 	for _, lockableDuration := range params.LockableDurations {
