@@ -24,12 +24,14 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryMarshaler
 
+	hooks types.GammHooks
+
 	// keepers
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, hooks types.GammHooks, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -45,6 +47,9 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper t
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
+
+		hooks: hooks,
+
 		// keepers
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
