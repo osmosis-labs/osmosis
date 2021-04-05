@@ -1,0 +1,27 @@
+syntax = "proto3";
+package osmosis.poolyield.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/pool-yield/v1beta1/yield.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/pool-yield/types";
+
+message AddPoolIncentivesProposal {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated DistrRecord records = 3 [(gogoproto.nullable) = false];
+}
+
+message RemovePoolIncentivesProposal {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated uint64 indexes = 3;
+}

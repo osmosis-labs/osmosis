@@ -63,11 +63,17 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 	store.Set(types.DistrInfoKey, bz)
 }
 
-func (k Keeper) AddDistrRecords(ctx sdk.Context, records ...types.DistrRecord) {
+func (k Keeper) AddDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
 	deltaWeight := sdk.NewInt(0)
 	for _, record := range records {
+		// Make sure that the farm exists.
+		_, err := k.farmKeeper.GetFarm(ctx, record.FarmId)
+		if err != nil {
+			return err
+		}
+
 		deltaWeight = deltaWeight.Add(record.Weight)
 	}
 
@@ -75,6 +81,8 @@ func (k Keeper) AddDistrRecords(ctx sdk.Context, records ...types.DistrRecord) {
 	distrInfo.Records = append(distrInfo.Records, records...)
 
 	k.SetDistrInfo(ctx, distrInfo)
+
+	return nil
 }
 
 func (k Keeper) RemoveDistrRecords(ctx sdk.Context, indexes ...int) {
