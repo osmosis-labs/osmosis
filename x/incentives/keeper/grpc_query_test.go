@@ -11,10 +11,7 @@ func (suite *KeeperTestSuite) TestGRPCPotByID() {
 	suite.SetupTest()
 
 	// create a pot
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	startTime := time.Now()
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	potID := suite.CreatePot(addr1, coins, types.DistrCondition{}, startTime, 2)
+	potID, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// not available pot
 	res, err := suite.app.IncentivesKeeper.PotByID(sdk.WrapSDKContext(suite.ctx), &types.PotByIDRequest{Id: 1000})
@@ -26,6 +23,11 @@ func (suite *KeeperTestSuite) TestGRPCPotByID() {
 	suite.Require().NoError(err)
 	suite.Require().NotEqual(res.Pot, nil)
 	suite.Require().Equal(res.Pot.Id, potID)
+	suite.Require().Equal(res.Pot.Coins, coins)
+	suite.Require().Equal(res.Pot.NumEpochs, uint64(2))
+	suite.Require().Equal(res.Pot.FilledEpochs, uint64(0))
+	suite.Require().Equal(res.Pot.DistributedCoins, sdk.Coins{})
+	suite.Require().Equal(res.Pot.StartTime.Unix(), startTime.Unix())
 }
 
 func (suite *KeeperTestSuite) TestGRPCPots() {
@@ -37,15 +39,17 @@ func (suite *KeeperTestSuite) TestGRPCPots() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a pot
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	startTime := time.Now()
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.CreatePot(addr1, coins, types.DistrCondition{}, startTime, 2)
+	_, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.Pots(sdk.WrapSDKContext(suite.ctx), &types.PotsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
+	suite.Require().Equal(res.Data[0].Coins, coins)
+	suite.Require().Equal(res.Data[0].NumEpochs, uint64(2))
+	suite.Require().Equal(res.Data[0].FilledEpochs, uint64(0))
+	suite.Require().Equal(res.Data[0].DistributedCoins, sdk.Coins{})
+	suite.Require().Equal(res.Data[0].StartTime.Unix(), startTime.Unix())
 }
 
 func (suite *KeeperTestSuite) TestGRPCActivePots() {
@@ -57,15 +61,17 @@ func (suite *KeeperTestSuite) TestGRPCActivePots() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a pot
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	startTime := time.Now()
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.CreatePot(addr1, coins, types.DistrCondition{}, startTime, 2)
+	_, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.ActivePots(sdk.WrapSDKContext(suite.ctx), &types.ActivePotsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
+	suite.Require().Equal(res.Data[0].Coins, coins)
+	suite.Require().Equal(res.Data[0].NumEpochs, uint64(2))
+	suite.Require().Equal(res.Data[0].FilledEpochs, uint64(0))
+	suite.Require().Equal(res.Data[0].DistributedCoins, sdk.Coins{})
+	suite.Require().Equal(res.Data[0].StartTime.Unix(), startTime.Unix())
 }
 
 func (suite *KeeperTestSuite) TestGRPCUpcomingPots() {
@@ -77,41 +83,32 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingPots() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a pot
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	startTime := time.Now()
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.CreatePot(addr1, coins, types.DistrCondition{}, startTime, 2)
+	_, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.UpcomingPots(sdk.WrapSDKContext(suite.ctx), &types.UpcomingPotsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
+	suite.Require().Equal(res.Data[0].Coins, coins)
+	suite.Require().Equal(res.Data[0].NumEpochs, uint64(2))
+	suite.Require().Equal(res.Data[0].FilledEpochs, uint64(0))
+	suite.Require().Equal(res.Data[0].DistributedCoins, sdk.Coins{})
+	suite.Require().Equal(res.Data[0].StartTime.Unix(), startTime.Unix())
 }
 
 func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	suite.SetupTest()
 
-	// create a pot and locks
-	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-	suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
-
 	// initial check
+	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
 	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
 		Owner: lockOwner,
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
 
-	// create a pot
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	startTime := time.Now()
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	distrTo := types.DistrCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "lptoken",
-		Duration:      time.Second,
-	}
-	suite.CreatePot(addr1, coins, distrTo, startTime, 2)
+	// setup lock and pot
+	lockOwner, _, coins, _ := suite.SetupLockAndPot()
 
 	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
 		Owner:    lockOwner,
@@ -129,19 +126,14 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 
-	// create a pot and locks
+	// create locks
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 	suite.LockTokens(addr1, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
 	suite.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Second)
-	startTime := time.Now()
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	distrTo := types.DistrCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "lptoken",
-		Duration:      time.Second,
-	}
-	potID := suite.CreatePot(addr1, coins, distrTo, startTime, 2)
+
+	// setup a pot
+	potID, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(pot)
@@ -192,19 +184,14 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 
-	// create a pot and locks
+	// create locks
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 	suite.LockTokens(addr1, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
 	suite.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Second)
-	startTime := time.Now()
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	distrTo := types.DistrCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "lptoken",
-		Duration:      time.Second,
-	}
-	potID := suite.CreatePot(addr1, coins, distrTo, startTime, 2)
+
+	// setup a pot
+	potID, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(pot)

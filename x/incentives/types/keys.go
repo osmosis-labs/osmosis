@@ -25,8 +25,8 @@ var (
 	// KeyPrefixPeriodPot defines prefix key for storing pots
 	KeyPrefixPeriodPot = []byte{0x03}
 
-	// KeyPrefixUncomingPots defines prefix key for storing reference key for upcoming pots
-	KeyPrefixUncomingPots = []byte{0x10}
+	// KeyPrefixUpcomingPots defines prefix key for storing reference key for upcoming pots
+	KeyPrefixUpcomingPots = []byte{0x10}
 
 	// KeyPrefixActivePots defines prefix key for storing reference key for active pots
 	KeyPrefixActivePots = []byte{0x11}

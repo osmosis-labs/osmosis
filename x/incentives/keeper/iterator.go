@@ -29,17 +29,17 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 
 // UpcomingPotsIteratorAfterTime returns the iterator to get upcoming pots that start distribution after specific time
 func (k Keeper) UpcomingPotsIteratorAfterTime(ctx sdk.Context, time time.Time) sdk.Iterator {
-	return k.iteratorAfterTime(ctx, types.KeyPrefixUncomingPots, time)
+	return k.iteratorAfterTime(ctx, types.KeyPrefixUpcomingPots, time)
 }
 
 // UpcomingPotsIteratorBeforeTime returns the iterator to get upcoming pots that already started distribution before specific time
 func (k Keeper) UpcomingPotsIteratorBeforeTime(ctx sdk.Context, time time.Time) sdk.Iterator {
-	return k.iteratorBeforeTime(ctx, types.KeyPrefixUncomingPots, time)
+	return k.iteratorBeforeTime(ctx, types.KeyPrefixUpcomingPots, time)
 }
 
 // UpcomingPotsIterator returns iterator for upcoming pots
 func (k Keeper) UpcomingPotsIterator(ctx sdk.Context) sdk.Iterator {
-	return k.iterator(ctx, types.KeyPrefixUncomingPots)
+	return k.iterator(ctx, types.KeyPrefixUpcomingPots)
 }
 
 // ActivePotsIterator returns iterator for active pots

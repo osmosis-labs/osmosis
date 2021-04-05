@@ -89,7 +89,7 @@ func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins
 	k.setPot(ctx, &pot)
 	k.setLastPotID(ctx, pot.Id)
 
-	if err := k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUncomingPots, getTimeKey(pot.StartTime)), pot.Id); err != nil {
+	if err := k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, getTimeKey(pot.StartTime)), pot.Id); err != nil {
 		return 0, err
 	}
 	return pot.Id, nil
@@ -119,7 +119,7 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, pot types.Pot) error {
 	}
 
 	timeKey := getTimeKey(pot.StartTime)
-	k.deletePotRefByKey(ctx, combineKeys(types.KeyPrefixUncomingPots, timeKey), pot.Id)
+	k.deletePotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, timeKey), pot.Id)
 	k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
 	return nil
 }

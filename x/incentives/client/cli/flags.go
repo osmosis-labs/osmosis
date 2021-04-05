@@ -18,7 +18,7 @@ func FlagSetCreatePot() *flag.FlagSet {
 
 	fs.String(FlagLockQueryType, "ByDuration", "ByDuration | ByTime")
 	fs.String(FlagDenom, "stake", "locked denom to be queried")
-	fs.String(FlagDuration, "86400s", "The duration token to be locked. e.g. 1h, 1m, 1s, 0.1s")
+	fs.String(FlagDuration, "168h", "The duration token to be locked, default 1w(168h). Other examples are 1h, 1m, 1s, 0.1s. Maximum unit is hour.")
 	fs.Int64(FlagTimestamp, 1615917475, "Timestamp to that started tokens lock")
 	return fs
 }
