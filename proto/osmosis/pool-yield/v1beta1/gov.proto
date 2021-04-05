@@ -10,7 +10,7 @@ option go_package = "github.com/c-osmosis/osmosis/x/pool-yield/types";
 // If a AddPoolIncentivesProposal passes, the proposal’s record is be added to the module.
 // Each record has a specified farm id and weight, and the incetives are distributed to each farm according to weight/total_weight.
 message AddPoolIncentivesProposal {
-  option (gogoproto.equal)            = false;
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
@@ -23,7 +23,7 @@ message AddPoolIncentivesProposal {
 // If a RemovePoolIncentivesProposal passes, the record of proposal’s specified index are deleted.
 // Records are stored in the form of slice, and the idexes of this slice are removed.
 message RemovePoolIncentivesProposal {
-  option (gogoproto.equal)            = false;
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 

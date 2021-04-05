@@ -30,6 +30,8 @@ message DistrInfo {
 }
 
 message DistrRecord {
+  option (gogoproto.equal) = true;
+
   uint64 farm_id = 1 [(gogoproto.moretags) = "yaml:\"farm_id\""];
   string weight = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

@@ -12,9 +12,16 @@ const (
 	ProposalTypeRemovePoolIncentives = "RemovePoolIncentives"
 )
 
+func init() {
+	govtypes.RegisterProposalType(ProposalTypeAddPoolIncentives)
+	govtypes.RegisterProposalTypeCodec(&AddPoolIncentivesProposal{}, "osmosis/AddPoolIncentivesProposal")
+	govtypes.RegisterProposalType(ProposalTypeRemovePoolIncentives)
+	govtypes.RegisterProposalTypeCodec(&RemovePoolIncentivesProposal{}, "osmosis/RemovePoolIncentivesProposal")
+}
+
 var _ govtypes.Content = &AddPoolIncentivesProposal{}
 
-func NewAddPoolIncentivesProposal(title, description string, records []DistrRecord) *AddPoolIncentivesProposal {
+func NewAddPoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
 	return &AddPoolIncentivesProposal{
 		Title:       title,
 		Description: description,
@@ -66,7 +73,7 @@ func (p AddPoolIncentivesProposal) String() string {
 
 var _ govtypes.Content = &RemovePoolIncentivesProposal{}
 
-func NewRemovePoolIncentivesProposal(title, description string, indexes []uint64) *RemovePoolIncentivesProposal {
+func NewRemovePoolIncentivesProposal(title, description string, indexes []uint64) govtypes.Content {
 	return &RemovePoolIncentivesProposal{
 		Title:       title,
 		Description: description,

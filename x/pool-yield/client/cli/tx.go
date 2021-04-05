@@ -50,7 +50,7 @@ func NewCmdSubmitAddPoolIncentivesProposal() *cobra.Command {
 				weights = append(weights, sdk.NewIntFromUint64(parsed))
 			}
 
-			if len(farmIds) == len(weights) {
+			if len(farmIds) != len(weights) {
 				return fmt.Errorf("the length of farm ids and wieghts not matched")
 			}
 
@@ -105,6 +105,8 @@ func NewCmdSubmitAddPoolIncentivesProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
+	cmd.MarkFlagRequired(cli.FlagTitle)
+	cmd.MarkFlagRequired(cli.FlagDescription)
 
 	return cmd
 }
@@ -170,6 +172,8 @@ func NewCmdSubmitRemovePoolIncentivesProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
+	cmd.MarkFlagRequired(cli.FlagTitle)
+	cmd.MarkFlagRequired(cli.FlagDescription)
 
 	return cmd
 }
