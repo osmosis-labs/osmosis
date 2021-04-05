@@ -19,3 +19,20 @@ message Params {
     (gogoproto.nullable) = false
   ];
 }
+
+message DistrInfo {
+  string total_weight = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"total_weight\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated DistrRecord records = 2 [(gogoproto.nullable) = false];
+}
+
+message DistrRecord {
+  uint64 farm_id = 1 [(gogoproto.moretags) = "yaml:\"farm_id\""];
+  string weight = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}

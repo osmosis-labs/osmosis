@@ -5,7 +5,25 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) AllocateAssetsToFarm(ctx sdk.Context, farmId uint64, allocator sdk.AccAddress, assets sdk.Coins) error {
+func (k Keeper) AllocateAssetsFromAccountToFarm(ctx sdk.Context, farmId uint64, allocator sdk.AccAddress, assets sdk.Coins) error {
+	err := k.allocateAssetsToFarm(ctx, farmId, assets)
+	if err != nil {
+		return err
+	}
+
+	return k.bk.SendCoinsFromAccountToModule(ctx, allocator, types.ModuleName, assets)
+}
+
+func (k Keeper) AllocateAssetsFromModuleToFarm(ctx sdk.Context, farmId uint64, moduleName string, assets sdk.Coins) error {
+	err := k.allocateAssetsToFarm(ctx, farmId, assets)
+	if err != nil {
+		return err
+	}
+
+	return k.bk.SendCoinsFromModuleToModule(ctx, moduleName, types.ModuleName, assets)
+}
+
+func (k Keeper) allocateAssetsToFarm(ctx sdk.Context, farmId uint64, assets sdk.Coins) error {
 	err := assets.Validate()
 	if err != nil {
 		return err
@@ -35,11 +53,6 @@ func (k Keeper) AllocateAssetsToFarm(ctx sdk.Context, farmId uint64, allocator s
 
 	farm.CurrentPeriod = farm.CurrentPeriod + 1
 	farm.CurrentRewards = sdk.DecCoins{}
-
-	err = k.bk.SendCoinsFromAccountToModule(ctx, allocator, types.ModuleName, assets)
-	if err != nil {
-		return err
-	}
 
 	return k.setFarm(ctx, farm)
 }

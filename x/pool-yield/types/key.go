@@ -17,6 +17,7 @@ const (
 
 var (
 	GenesisStateKey = []byte("genesis_state")
+	DistrInfoKey    = []byte("distr_info")
 )
 
 func GetPoolFarmIdStoreKey(poolId uint64, duration time.Duration) []byte {

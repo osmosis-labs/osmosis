@@ -26,7 +26,7 @@ func (k msgServer) AllocateAssets(goCtx context.Context, msg *types.MsgAllocateA
 		return nil, err
 	}
 
-	err = k.AllocateAssetsToFarm(ctx, msg.FarmId, from, msg.Assets)
+	err = k.AllocateAssetsFromAccountToFarm(ctx, msg.FarmId, from, msg.Assets)
 	if err != nil {
 		return nil, err
 	}

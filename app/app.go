@@ -333,7 +333,7 @@ func NewOsmosisApp(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.FarmKeeper = farmkeeper.NewKeeper(appCodec, keys[farmtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
-	app.PoolYieldKeeper = poolyieldkeeper.NewKeeper(appCodec, keys[poolyieldtypes.StoreKey], app.GetSubspace(poolyieldtypes.ModuleName), app.FarmKeeper)
+	app.PoolYieldKeeper = poolyieldkeeper.NewKeeper(appCodec, keys[poolyieldtypes.StoreKey], app.GetSubspace(poolyieldtypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.FarmKeeper, authtypes.FeeCollectorName)
 	poolYieldHooks := app.PoolYieldKeeper.Hooks()
 	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], poolYieldHooks, app.AccountKeeper, app.BankKeeper)
 	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], poolYieldHooks, app.AccountKeeper, app.BankKeeper)
@@ -377,7 +377,8 @@ func NewOsmosisApp(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		// Order is important. poolyield module's begin blocker should be executed before the distribution module's begin blocker.
+		upgradetypes.ModuleName, minttypes.ModuleName, poolyieldtypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
