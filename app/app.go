@@ -101,6 +101,7 @@ import (
 	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 
 	poolyield "github.com/c-osmosis/osmosis/x/pool-yield"
+	poolyieldclient "github.com/c-osmosis/osmosis/x/pool-yield/client"
 	poolyieldkeeper "github.com/c-osmosis/osmosis/x/pool-yield/keeper"
 	poolyieldtypes "github.com/c-osmosis/osmosis/x/pool-yield/types"
 
@@ -126,6 +127,7 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+			poolyieldclient.AddPoolIncentivesHandler, poolyieldclient.RemovePoolIncentiveHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
