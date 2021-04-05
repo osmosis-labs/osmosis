@@ -88,7 +88,7 @@ func (p *RemovePoolIncentivesProposal) ValidateBasic() error {
 		return err
 	}
 	if len(p.Indexes) == 0 {
-		return ErrEmptyProposalRecords
+		return ErrEmptyProposalIndexes
 	}
 
 	return nil
