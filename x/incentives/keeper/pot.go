@@ -11,6 +11,7 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
+// Iterate over everything in a pots iterator, until it reaches the end. Return all pots iterated over.
 func (k Keeper) getPotsFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Pot {
 	pots := []types.Pot{}
 	defer iterator.Close()
