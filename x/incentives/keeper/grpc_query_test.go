@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestGRPCPotByID() {
 	suite.Require().Error(err)
 	suite.Require().Equal(res, (*types.PotByIDResponse)(nil))
 
-	// final check
+	// Check that querying a pot with an ID that exists returns the pot.
 	res, err = suite.app.IncentivesKeeper.PotByID(sdk.WrapSDKContext(suite.ctx), &types.PotByIDRequest{Id: potID})
 	suite.Require().NoError(err)
 	suite.Require().NotEqual(res.Pot, nil)
