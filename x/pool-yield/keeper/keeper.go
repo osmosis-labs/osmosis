@@ -3,10 +3,11 @@ package keeper
 import (
 	"time"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/c-osmosis/osmosis/x/pool-yield/types"
 )
@@ -15,13 +16,22 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryMarshaler
 
+	paramSpace paramtypes.Subspace
+
 	farmKeeper types.FarmKeeper
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, farmkeeper types.FarmKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, farmkeeper types.FarmKeeper) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
+
+		paramSpace: paramSpace,
 
 		farmKeeper: farmkeeper,
 	}

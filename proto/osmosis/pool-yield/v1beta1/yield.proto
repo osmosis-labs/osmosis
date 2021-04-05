@@ -6,21 +6,16 @@ import "google/protobuf/duration.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/pool-yield/types";
 
-message DistrPool {
-  string pot_id = 1 [(gogoproto.moretags) = "yaml:\"pot_id\""];
-  // Denormarized weight.
-  string weight = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"denormalized_weight\"",
-    (gogoproto.nullable) = false
-  ];
-}
+message Params {
+  option (gogoproto.goproto_stringer) = false;
 
-message PoolYield {
-  repeated DistrPool distribute_pools = 1 [(gogoproto.nullable) = false];
-  string total_weight = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"total_weight\"",
+  // minted_denom is the denomination of the coin expected to be minted by the minting module.
+  // Pool-yield module doesn’t actually mint the coin itself, but rather manages the distribution of coins that matches the defined minted_denom.
+  string minted_denom = 1 [(gogoproto.moretags) = "yaml:\"minted_denom\""];
+  // allocation_ratio defines the proportion of the minted minted_denom that is to be allocated as pool incentives.
+  string allocation_ratio = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"allocation_ratio\"",
     (gogoproto.nullable) = false
   ];
 }

@@ -7,5 +7,6 @@ import (
 )
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
+	k.paramSpace.SetParamSet(ctx, &genState.Params)
 	k.SetGenesisState(ctx, genState)
 }
