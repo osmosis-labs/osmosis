@@ -28,12 +28,9 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if len(msg.Records) == 0 {
-		return ErrEmptyRecords
-	}
-
-	if len(msg.Records) == 1 {
-		return ErrTooLittleRecords
+	// The pool must be swapping between at least two assets
+	if len(msg.Records) < 2 {
+		return ErrTooFewRecords
 	}
 
 	// TODO: Add the limit of binding token to the pool params?
@@ -52,7 +49,7 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	}
 
 	if msg.PoolParams.Lock {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't create the locked pool")
+		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't create a locked pool")
 	}
 
 	err = msg.PoolParams.Validate()
