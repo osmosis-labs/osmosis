@@ -50,11 +50,11 @@ func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, address sd
 
 	farmer := k.GetFarmer(ctx, farmId, address)
 	if farmer == nil {
-		panic("TODO: Return the sdk.Error (invalid farmer)")
+		return nil, types.ErrNoFarmerExist
 	}
 
 	if farmer.Share.LT(share) {
-		panic("TODO: Return the sdk.Error (don't have enough share)")
+		return nil, types.ErrInsufficientShare
 	}
 	farmer.Share = farmer.Share.Sub(share)
 
@@ -81,7 +81,7 @@ func (k Keeper) CalculatePendingRewards(ctx sdk.Context, farmId uint64, address 
 
 	farmer := k.GetFarmer(ctx, farmId, address)
 	if farmer == nil {
-		panic("TODO: Return the sdk.Error (invalid farmer)")
+		return nil, types.ErrNoFarmerExist
 	}
 
 	if farm.CurrentPeriod-1 == 0 {
@@ -115,7 +115,7 @@ func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address 
 
 	farmer := k.GetFarmer(ctx, farmId, address)
 	if farmer == nil {
-		panic("TODO: Return the sdk.Error (invalid farmer)")
+		return nil, types.ErrNoFarmerExist
 	}
 
 	farmer.LastWithdrawnPeriod = farm.CurrentPeriod - 1

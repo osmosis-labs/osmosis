@@ -51,7 +51,7 @@ func (k Keeper) GetFarm(ctx sdk.Context, farmId uint64) (types.Farm, error) {
 
 	bz := store.Get(types.GetFarmStoreKey(farmId))
 	if len(bz) == 0 {
-		panic("TODO: Return sdk.Error. (Farm doesn't exist)")
+		return types.Farm{}, types.ErrNoFarmExist
 	}
 
 	farm := types.Farm{}
