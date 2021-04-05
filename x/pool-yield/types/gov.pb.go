@@ -23,6 +23,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// AddPoolIncentivesProposal is a gov Content type for adding the pool incentives.
+// If a AddPoolIncentivesProposal passes, the proposal’s record is be added to the module.
+// Each record has a specified farm id and weight, and the incetives are distributed to each farm according to weight/total_weight.
 type AddPoolIncentivesProposal struct {
 	Title       string        `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string        `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -61,6 +64,9 @@ func (m *AddPoolIncentivesProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AddPoolIncentivesProposal proto.InternalMessageInfo
 
+// RemovePoolIncentivesProposal is a gov Content type for removing the pool incentives.
+// If a RemovePoolIncentivesProposal passes, the record of proposal’s specified index are deleted.
+// Records are stored in the form of slice, and the idexes of this slice are removed.
 type RemovePoolIncentivesProposal struct {
 	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
