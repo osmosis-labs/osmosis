@@ -32,6 +32,7 @@ func (k Keeper) getPotsFromIterator(ctx sdk.Context, iterator db.Iterator) []typ
 	return pots
 }
 
+// Compute the total amount of coins in all the pots
 func (k Keeper) getCoinsFromPots(pots []types.Pot) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, pot := range pots {
