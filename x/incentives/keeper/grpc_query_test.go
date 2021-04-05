@@ -13,12 +13,12 @@ func (suite *KeeperTestSuite) TestGRPCPotByID() {
 	// create a pot
 	potID, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
-	// not available pot
+	// Ensure that a querying for a pot with an ID that doesn't exist returns an error
 	res, err := suite.app.IncentivesKeeper.PotByID(sdk.WrapSDKContext(suite.ctx), &types.PotByIDRequest{Id: 1000})
 	suite.Require().Error(err)
 	suite.Require().Equal(res, (*types.PotByIDResponse)(nil))
 
-	// final check
+	// Check that querying a pot with an ID that exists returns the pot.
 	res, err = suite.app.IncentivesKeeper.PotByID(sdk.WrapSDKContext(suite.ctx), &types.PotByIDRequest{Id: potID})
 	suite.Require().NoError(err)
 	suite.Require().NotEqual(res.Pot, nil)

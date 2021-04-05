@@ -11,6 +11,7 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
+// Iterate over everything in a pots iterator, until it reaches the end. Return all pots iterated over.
 func (k Keeper) getPotsFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Pot {
 	pots := []types.Pot{}
 	defer iterator.Close()
@@ -31,6 +32,7 @@ func (k Keeper) getPotsFromIterator(ctx sdk.Context, iterator db.Iterator) []typ
 	return pots
 }
 
+// Compute the total amount of coins in all the pots
 func (k Keeper) getCoinsFromPots(pots []types.Pot) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, pot := range pots {
@@ -48,6 +50,7 @@ func (k Keeper) getDistributedCoinsFromPots(pots []types.Pot) sdk.Coins {
 }
 
 func (k Keeper) getToDistributeCoinsFromPots(pots []types.Pot) sdk.Coins {
+ 	// TODO: Consider optimizing this in the future to only require one iteration over all pots.
 	coins := k.getCoinsFromPots(pots)
 	distributed := k.getDistributedCoinsFromPots(pots)
 	return coins.Sub(distributed)
