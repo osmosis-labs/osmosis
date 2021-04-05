@@ -8,8 +8,7 @@ option go_package = "github.com/c-osmosis/osmosis/x/pool-yield/types";
 
 // GenesisState defines the pool yield module's genesis state.
 message GenesisState {
-  string mint_denom = 1;
-  repeated google.protobuf.Duration lockable_durations = 2 [
+  repeated google.protobuf.Duration lockable_durations = 1 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.moretags)    = "yaml:\"lockable_durations\""
