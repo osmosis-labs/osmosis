@@ -50,6 +50,7 @@ func (k Keeper) getDistributedCoinsFromPots(pots []types.Pot) sdk.Coins {
 }
 
 func (k Keeper) getToDistributeCoinsFromPots(pots []types.Pot) sdk.Coins {
+ 	// TODO: Consider optimizing this in the future to only require one iteration over all pots.
 	coins := k.getCoinsFromPots(pots)
 	distributed := k.getDistributedCoinsFromPots(pots)
 	return coins.Sub(distributed)
