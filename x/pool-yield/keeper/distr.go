@@ -85,14 +85,20 @@ func (k Keeper) AddDistrRecords(ctx sdk.Context, records ...types.DistrRecord) e
 	return nil
 }
 
-func (k Keeper) RemoveDistrRecords(ctx sdk.Context, indexes ...int) {
+func (k Keeper) RemoveDistrRecords(ctx sdk.Context, indexes ...int) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
 	for _, index := range indexes {
+		if index < 0 || len(distrInfo.Records) <= index {
+			return types.ErrDistrRecordInvalidIndex
+		}
+
 		record := distrInfo.Records[index]
 		distrInfo.TotalWeight = distrInfo.TotalWeight.Sub(record.Weight)
 		distrInfo.Records = append(distrInfo.Records[0:index], distrInfo.Records[index+1:]...)
 	}
 
 	k.SetDistrInfo(ctx, distrInfo)
+
+	return nil
 }

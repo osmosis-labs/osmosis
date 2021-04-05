@@ -15,7 +15,5 @@ func (k Keeper) HandleRemovePoolIncentivesProposal(ctx sdk.Context, p *types.Rem
 	for _, index := range p.Indexes {
 		indexes = append(indexes, int(index))
 	}
-	k.RemoveDistrRecords(ctx, indexes...)
-
-	return nil
+	return k.RemoveDistrRecords(ctx, indexes...)
 }
