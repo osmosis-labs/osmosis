@@ -27,9 +27,9 @@ type PoolAccountI interface {
 	SubTotalShare(amt sdk.Int)
 	AddPoolAssets(PoolAssets []PoolAsset) error
 	GetPoolAsset(denom string) (PoolAsset, error)
-	SetPoolAsset(denom string, PoolAsset PoolAsset) error
+	SetPoolAsset(denom string, asset PoolAsset) error
 	GetPoolAssets(denoms ...string) ([]PoolAsset, error)
-	SetPoolAssets(PoolAsset []PoolAsset) error
+	SetPoolAssets(assets []PoolAsset) error
 	GetAllPoolAssets() []PoolAsset
 	SetTokenWeight(denom string, weight sdk.Int) error
 	GetTokenWeight(denom string) (sdk.Int, error)
