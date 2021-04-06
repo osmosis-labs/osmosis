@@ -394,7 +394,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
   total_share:
     denom: osmosis/pool/10
     amount: "0"
-  PoolAssets:
+  pool_assets:
   - denormalized_weight: "100"
     token:
       denom: test1
