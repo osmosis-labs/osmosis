@@ -323,7 +323,17 @@ func NewOsmosisApp(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.FarmKeeper = farmkeeper.NewKeeper(appCodec, keys[farmtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
-	app.PoolYieldKeeper = poolyieldkeeper.NewKeeper(appCodec, keys[poolyieldtypes.StoreKey], app.GetSubspace(poolyieldtypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.FarmKeeper, authtypes.FeeCollectorName)
+	app.PoolYieldKeeper = poolyieldkeeper.NewKeeper(
+		appCodec,
+		keys[poolyieldtypes.StoreKey],
+		app.GetSubspace(poolyieldtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.FarmKeeper,
+		app.DistrKeeper,
+		distrtypes.ModuleName,
+		authtypes.FeeCollectorName,
+	)
 	poolYieldHooks := app.PoolYieldKeeper.Hooks()
 	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], poolYieldHooks, app.AccountKeeper, app.BankKeeper)
 	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], poolYieldHooks, app.AccountKeeper, app.BankKeeper)

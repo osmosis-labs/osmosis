@@ -21,11 +21,13 @@ type Keeper struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	farmKeeper    types.FarmKeeper
+	distrKeeper   types.DistrKeeper
 
-	feeCollectorName string // name of the FeeCollector ModuleAccount
+	communityPoolName string // name of the Community pool ModuleAccount (Maybe the distribution module)
+	feeCollectorName  string // name of the FeeCollector ModuleAccount
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, farmkeeper types.FarmKeeper, feeCollectorName string) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, farmkeeper types.FarmKeeper, distrKeeper types.DistrKeeper, communityPoolName string, feeCollectorName string) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -40,8 +42,10 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 		farmKeeper:    farmkeeper,
+		distrKeeper:   distrKeeper,
 
-		feeCollectorName: feeCollectorName,
+		communityPoolName: communityPoolName,
+		feeCollectorName:  feeCollectorName,
 	}
 }
 

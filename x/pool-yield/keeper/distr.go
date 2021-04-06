@@ -31,6 +31,16 @@ func (k Keeper) AllocateAsset(ctx sdk.Context, asset sdk.Coin) error {
 				return err
 			}
 		}
+	} else {
+		// If there are no records, put the asset to the community pool
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, k.communityPoolName, sdk.Coins{asset})
+		if err != nil {
+			return err
+		}
+
+		feePool := k.distrKeeper.GetFeePool(ctx)
+		feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(asset)...)
+		k.distrKeeper.SetFeePool(ctx, feePool)
 	}
 
 	return nil
