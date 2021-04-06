@@ -15,10 +15,6 @@ message Farm {
         (gogoproto.nullable) = false
     ];
     uint64 current_period = 3 [(gogoproto.moretags) = "yaml:\"current_period\""];
-    repeated cosmos.base.v1beta1.DecCoin current_rewards = 4 [
-        (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-        (gogoproto.nullable) = false
-    ];
 }
 
 // HistoricalRecord represents historical records for a fool.

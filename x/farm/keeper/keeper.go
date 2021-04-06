@@ -34,10 +34,9 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.Accoun
 func (k Keeper) NewFarm(ctx sdk.Context) (types.Farm, error) {
 	farmId := k.GetNextFarmId(ctx)
 	farm := types.Farm{
-		FarmId:         farmId,
-		TotalShare:     sdk.NewInt(0),
-		CurrentPeriod:  1,
-		CurrentRewards: sdk.DecCoins{},
+		FarmId:        farmId,
+		TotalShare:    sdk.NewInt(0),
+		CurrentPeriod: 1,
 	}
 
 	store := ctx.KVStore(k.storeKey)
