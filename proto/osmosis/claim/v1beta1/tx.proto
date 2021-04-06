@@ -1,0 +1,22 @@
+syntax = "proto3";
+package osmosis.claim.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/claim/types";
+
+service Msg {
+  rpc Claim(MsgClaim) returns (MsgClaimResponse);
+}
+
+message MsgClaim {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message MsgClaimResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false
+  ];
+}

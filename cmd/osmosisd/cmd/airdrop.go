@@ -5,14 +5,13 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -32,22 +31,16 @@ type AppStateV036 struct {
 
 // SnapshotFields provide fields of snapshot per account
 type SnapshotFields struct {
-	AtomAddress           string  `json:"atom_address"`
-        // Atom Balance = AtomStakedBalance + AtomUnstakedBalance
+	AtomAddress           string  `json:"atom_address"` // Atom Balance = AtomStakedBalance + AtomUnstakedBalance
 	AtomBalance           sdk.Int `json:"atom_balance"`
 	AtomStakedBalance     sdk.Int `json:"atom_staked_balance"`
-	AtomUnstakedBalance   sdk.Int `json:"atom_unstaked_balance"`
-        // AtomStakedPercent = AtomStakedBalance / AtomBalance
+	AtomUnstakedBalance   sdk.Int `json:"atom_unstaked_balance"` // AtomStakedPercent = AtomStakedBalance / AtomBalance
 	AtomStakedPercent     sdk.Dec `json:"atom_staked_percent"`
 	AtomOwnershipPercent  sdk.Dec `json:"atom_ownership_percent"`
-	OsmoNormalizedBalance sdk.Int `json:"osmo_balance_normalized"`
-        // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
-	OsmoBalance           sdk.Int `json:"osmo_balance"`
-        // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
-	OsmoBalanceBonus      sdk.Int `json:"osmo_balance_bonus"`
-	// OsmoBalanceBase = sqrt(atom balance)
-	OsmoBalanceBase       sdk.Int `json:"osmo_balance_base"`
-	// OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
+	OsmoNormalizedBalance sdk.Int `json:"osmo_balance_normalized"` // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
+	OsmoBalance           sdk.Int `json:"osmo_balance"`            // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
+	OsmoBalanceBonus      sdk.Int `json:"osmo_balance_bonus"`      // OsmoBalanceBase = sqrt(atom balance)
+	OsmoBalanceBase       sdk.Int `json:"osmo_balance_base"`       // OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
 	OsmoPercent           sdk.Dec `json:"osmo_ownership_percent"`
 }
 
@@ -99,7 +92,7 @@ Example:
 				return fmt.Errorf("failed to parse osmo supply: %s", osmoSupplyStr)
 			}
 
-                      // Read genesis file
+			// Read genesis file
 			genesisJson, err := os.Open(genesisFile)
 			if err != nil {
 				return err
@@ -179,7 +172,6 @@ Example:
 			}
 
 			totalOsmoBalance := sdk.NewInt(0)
-
 			onePointFive := sdk.MustNewDecFromStr("1.5")
 
 			for address, acc := range snapshot {
@@ -210,7 +202,7 @@ Example:
 				acc.OsmoBalanceBonus = bonusOsmo.RoundInt()
 
 				allOsmo := baseOsmo.Add(bonusOsmo)
-                                // OsmoBalance = sqrt( all atoms) * (1 + 1.5) * (staked atom percent) = 
+				// OsmoBalance = sqrt( all atoms) * (1 + 1.5) * (staked atom percent) =
 				acc.OsmoBalance = allOsmo.RoundInt()
 
 				totalOsmoBalance = totalOsmoBalance.Add(allOsmo.RoundInt())
@@ -225,12 +217,12 @@ Example:
 			}
 
 			// normalize to desired genesis osmo supply
-			noarmalizationFactor := osmoSupply.ToDec().Quo(totalOsmoBalance.ToDec())
+			normalizationFactor := osmoSupply.ToDec().Quo(totalOsmoBalance.ToDec())
 
 			for address, acc := range snapshot {
 				acc.OsmoPercent = acc.OsmoBalance.ToDec().Quo(totalOsmoBalance.ToDec())
 
-				acc.OsmoNormalizedBalance = acc.OsmoBalance.ToDec().Mul(noarmalizationFactor).RoundInt()
+				acc.OsmoNormalizedBalance = acc.OsmoBalance.ToDec().Mul(normalizationFactor).RoundInt()
 
 				snapshot[address] = acc
 			}

@@ -1,0 +1,26 @@
+syntax = "proto3";
+package osmosis.claim.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/claim/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  rpc Claimable(ClaimableRequest) returns (ClaimableResponse) {
+    option (google.api.http).get = "/osmosis/claimable/v1beta1/{sender}";
+  }
+}
+
+message ClaimableRequest {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message ClaimableResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false
+  ];
+}
