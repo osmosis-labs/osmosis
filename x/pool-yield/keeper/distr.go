@@ -45,21 +45,21 @@ func (k Keeper) GetDistrInfo(ctx sdk.Context) types.DistrInfo {
 			TotalWeight: sdk.NewInt(0),
 			Records:     nil,
 		}
-		bz = types.ModuleCdc.MustMarshalBinaryBare(&distrInfo)
+		bz = k.cdc.MustMarshalBinaryBare(&distrInfo)
 
 		store.Set(types.DistrInfoKey, bz)
 		return distrInfo
 	}
 
 	distrInfo := types.DistrInfo{}
-	types.ModuleCdc.MustUnmarshalBinaryBare(bz, &distrInfo)
+	k.cdc.MustUnmarshalBinaryBare(bz, &distrInfo)
 
 	return distrInfo
 }
 
 func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.ModuleCdc.MustMarshalBinaryBare(&distrInfo)
+	bz := k.cdc.MustMarshalBinaryBare(&distrInfo)
 	store.Set(types.DistrInfoKey, bz)
 }
 

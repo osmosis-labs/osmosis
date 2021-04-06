@@ -79,7 +79,7 @@ func (k Keeper) GetPoolFarmId(ctx sdk.Context, poolId uint64, lockableDuration t
 
 func (k Keeper) SetGenesisState(ctx sdk.Context, genState *types.GenesisState) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GenesisStateKey, types.ModuleCdc.MustMarshalBinaryBare(genState))
+	store.Set(types.GenesisStateKey, k.cdc.MustMarshalBinaryBare(genState))
 }
 
 func (k Keeper) GetGenesisState(ctx sdk.Context) types.GenesisState {
@@ -91,7 +91,7 @@ func (k Keeper) GetGenesisState(ctx sdk.Context) types.GenesisState {
 		panic("genesis state not set")
 	}
 
-	types.ModuleCdc.MustUnmarshalBinaryBare(bz, &genState)
+	k.cdc.MustUnmarshalBinaryBare(bz, &genState)
 
 	return genState
 }
