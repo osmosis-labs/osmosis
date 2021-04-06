@@ -142,7 +142,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, err
 	}
 	if len(PoolAssetTokenStrs) != len(PoolAssetTokenWeightStrs) {
-		return txf, nil, fmt.Errorf("tokens and token weights should have same length")
+		return txf, nil, fmt.Errorf("There should be the number of tokens and token weights")
 	}
 
 	PoolAssetTokens := sdk.Coins{}
@@ -183,15 +183,15 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 
 	var PoolAssets []types.PoolAsset
 	for i := 0; i < len(PoolAssetTokens); i++ {
-		PoolAssetToken := PoolAssetTokens[i]
-		PoolAssetWeight := PoolAssetWeights[i]
+		assetToken := PoolAssetTokens[i]
+		assetWeight := PoolAssetWeights[i]
 
-		PoolAsset := types.PoolAsset{
-			Weight: PoolAssetWeight,
-			Token:  PoolAssetToken,
+		asset := types.PoolAsset{
+			Weight: assetToken,
+			Token:  assetWeight,
 		}
 
-		PoolAssets = append(PoolAssets, PoolAsset)
+		PoolAssets = append(PoolAssets, asset)
 	}
 
 	msg := &types.MsgCreatePool{

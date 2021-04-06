@@ -14,13 +14,13 @@ func (k Keeper) CreatePool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	poolParams types.PoolParams,
-	PoolAssets []types.PoolAsset,
+	poolAssets []types.PoolAsset,
 ) (uint64, error) {
-	if len(PoolAssets) < 2 {
+	if len(poolAssets) < 2 {
 		return 0, types.ErrTooFewPoolAssets
 	}
 	// TODO: Add the limit of binding token to the pool params?
-	if len(PoolAssets) > 8 {
+	if len(poolAssets) > 8 {
 		return 0, sdkerrors.Wrapf(
 			types.ErrTooManyPoolAssets,
 			"pool has too many PoolAssets (%d)", len(PoolAssets),
@@ -37,18 +37,18 @@ func (k Keeper) CreatePool(
 		return 0, err
 	}
 
-	err = poolAcc.AddPoolAssets(PoolAssets)
+	err = poolAcc.AddPoolAssets(poolAssets)
 	if err != nil {
 		return 0, err
 	}
 
 	// Transfer the PoolAssets tokens to the pool account from the user account.
 	var coins sdk.Coins
-	for _, PoolAsset := range PoolAssets {
-		coins = append(coins, PoolAsset.Token)
+	for _, asset := range poolAssets {
+		coins = append(coins, asset.Token)
 	}
 	if coins == nil {
-		panic("oh my god")
+		panic("No pool assets were in added in the pool. Two should've been added per validateBasic")
 	}
 
 	coins = coins.Sort()
