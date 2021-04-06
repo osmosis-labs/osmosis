@@ -23,7 +23,7 @@ func (k Keeper) CreatePool(
 	if len(poolAssets) > 8 {
 		return 0, sdkerrors.Wrapf(
 			types.ErrTooManyPoolAssets,
-			"pool has too many PoolAssets (%d)", len(PoolAssets),
+			"pool has too many PoolAssets (%d)", len(poolAssets),
 		)
 	}
 

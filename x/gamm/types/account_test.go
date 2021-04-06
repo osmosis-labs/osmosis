@@ -193,7 +193,7 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	require.Equal(t, 0, pacc.LenPoolAssets())
+	require.Equal(t, 0, pacc.NumAssets())
 }
 
 func TestPoolAccountPoolAssets(t *testing.T) {
@@ -223,7 +223,7 @@ func TestPoolAccountPoolAssets(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, 2, len(pacc.PoolAssets))
-	require.Equal(t, 2, pacc.LenPoolAssets())
+	require.Equal(t, 2, pacc.NumAssets())
 	// Check that PoolAssets are sorted.
 	require.Equal(t, "test1", pacc.PoolAssets[0].Token.Denom)
 	require.Equal(t, "test2", pacc.PoolAssets[1].Token.Denom)
@@ -276,7 +276,7 @@ func TestPoolAccountPoolAssets(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, 4, len(pacc.PoolAssets))
-	require.Equal(t, 4, pacc.LenPoolAssets())
+	require.Equal(t, 4, pacc.NumAssets())
 	// Check that PoolAssets are sorted.
 	require.Equal(t, "test1", pacc.PoolAssets[0].Token.Denom)
 	require.Equal(t, "test2", pacc.PoolAssets[1].Token.Denom)

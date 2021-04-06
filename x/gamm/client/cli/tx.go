@@ -183,12 +183,12 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 
 	var PoolAssets []types.PoolAsset
 	for i := 0; i < len(PoolAssetTokens); i++ {
-		assetToken := PoolAssetTokens[i]
 		assetWeight := PoolAssetWeights[i]
+		assetToken := PoolAssetTokens[i]
 
 		asset := types.PoolAsset{
-			Weight: assetToken,
-			Token:  assetWeight,
+			Weight: assetWeight,
+			Token:  assetToken,
 		}
 
 		PoolAssets = append(PoolAssets, asset)
