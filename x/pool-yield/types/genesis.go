@@ -8,10 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-func NewGenesisState(params Params, lockableDurations []time.Duration) *GenesisState {
+func NewGenesisState(params Params, lockableDurations []time.Duration, distrInfo *DistrInfo) *GenesisState {
 	return &GenesisState{
 		Params:            params,
 		LockableDurations: lockableDurations,
+		DistrInfo:         distrInfo,
 	}
 }
 
@@ -24,6 +25,7 @@ func DefaultGenesisState() *GenesisState {
 			time.Hour * 3,
 			time.Hour * 7,
 		},
+		DistrInfo: nil,
 	}
 }
 

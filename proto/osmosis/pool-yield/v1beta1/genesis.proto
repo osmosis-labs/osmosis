@@ -16,4 +16,8 @@ message GenesisState {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags)    = "yaml:\"lockable_durations\""
   ];
+  DistrInfo distr_info = 3 [
+    (gogoproto.nullable)    = true,
+    (gogoproto.moretags)    = "yaml:\"distr_info\""
+  ];
 }
