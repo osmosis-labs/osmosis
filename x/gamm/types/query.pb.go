@@ -445,7 +445,7 @@ func (m *QueryPoolAssetsRequest) GetPoolId() uint64 {
 }
 
 type QueryPoolAssetsResponse struct {
-	PoolAssets []PoolAsset `protobuf:"bytes,1,rep,name=PoolAssets,proto3" json:"PoolAssets"`
+	PoolAssets []PoolAsset `protobuf:"bytes,1,rep,name=poolAssets,proto3" json:"poolAssets"`
 }
 
 func (m *QueryPoolAssetsResponse) Reset()         { *m = QueryPoolAssetsResponse{} }

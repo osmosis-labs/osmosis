@@ -38,13 +38,13 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(msg.PoolAssets))
 	}
 
-	for _, PoolAsset := range msg.PoolAssets {
-		if !PoolAsset.Weight.IsPositive() {
-			return sdkerrors.Wrap(ErrNotPositiveWeight, PoolAsset.Weight.String())
+	for _, asset := range msg.PoolAssets {
+		if !asset.Weight.IsPositive() {
+			return sdkerrors.Wrap(ErrNotPositiveWeight, asset.Weight.String())
 		}
 
-		if !PoolAsset.Token.IsValid() || !PoolAsset.Token.IsPositive() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, PoolAsset.Token.String())
+		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
 	}
 

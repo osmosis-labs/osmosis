@@ -129,7 +129,7 @@ type PoolAccount struct {
 	PoolParams          PoolParams                             `protobuf:"bytes,3,opt,name=poolParams,proto3" json:"poolParams" yaml:"pool_params"`
 	TotalWeight         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=totalWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"totalWeight" yaml:"total_weight"`
 	TotalShare          types.Coin                             `protobuf:"bytes,5,opt,name=totalShare,proto3" json:"totalShare" yaml:"total_share"`
-	PoolAssets          []PoolAsset                            `protobuf:"bytes,6,rep,name=PoolAssets,proto3" json:"PoolAssets" yaml:"PoolAssets"`
+	PoolAssets          []PoolAsset                            `protobuf:"bytes,6,rep,name=poolAssets,proto3" json:"poolAssets" yaml:"pool_assets"`
 }
 
 func (m *PoolAccount) Reset()      { *m = PoolAccount{} }

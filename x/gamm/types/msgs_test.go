@@ -87,7 +87,7 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has one PoolAsset",
+			name: "has one Pool Asset",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolAssets = []PoolAsset{
 					msg.PoolAssets[0],
@@ -105,7 +105,7 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has the PoolAsset that includes the negative weight",
+			name: "has a PoolAsset that includes a negative weight",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
@@ -113,7 +113,7 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has the PoolAsset that includes the negative weight",
+			name: "has a PoolAsset that includes a negative weight",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
@@ -121,7 +121,7 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has the PoolAsset that includes the zero coin",
+			name: "has a PoolAsset that includes a zero coin",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolAssets[0].Token = sdk.NewCoin("test1", sdk.NewInt(0))
 				return msg
@@ -129,7 +129,7 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has the PoolAsset that includes the negative coin",
+			name: "has a PoolAsset that includes a negative coin",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolAssets[0].Token = sdk.Coin{
 					Denom:  "test1",

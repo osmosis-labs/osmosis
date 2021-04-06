@@ -35,7 +35,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type MsgCreatePool struct {
 	Sender     string      `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolParams PoolParams  `protobuf:"bytes,2,opt,name=poolParams,proto3" json:"poolParams" yaml:"pool_params"`
-	PoolAssets []PoolAsset `protobuf:"bytes,3,rep,name=PoolAssets,proto3" json:"PoolAssets"`
+	PoolAssets []PoolAsset `protobuf:"bytes,3,rep,name=poolAssets,proto3" json:"poolAssets" yaml:"pool_assets"`
 }
 
 func (m *MsgCreatePool) Reset()         { *m = MsgCreatePool{} }
