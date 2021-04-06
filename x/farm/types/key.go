@@ -26,7 +26,7 @@ func GetFarmStoreKey(farmId uint64) []byte {
 	return append(FarmPrefix, sdk.Uint64ToBigEndian(farmId)...)
 }
 
-func GetHistoricalRecord(farmId uint64, period uint64) []byte {
+func GetHistoricalRecordKey(farmId uint64, period uint64) []byte {
 	return append(append(HistoricalRecordPrefix, sdk.Uint64ToBigEndian(farmId)...), sdk.Uint64ToBigEndian(period)...)
 }
 

@@ -10,7 +10,7 @@ import (
 
 func (k Keeper) GetHistoricalRecord(ctx sdk.Context, farmId uint64, period uint64) (record types.HistoricalRecord) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetHistoricalRecord(farmId, period))
+	bz := store.Get(types.GetHistoricalRecordKey(farmId, period))
 	if len(bz) == 0 {
 		panic(fmt.Sprintf("historical record not exist (farmId: %d, period: %d)", farmId, period))
 	}
@@ -21,7 +21,7 @@ func (k Keeper) GetHistoricalRecord(ctx sdk.Context, farmId uint64, period uint6
 func (k Keeper) SetHistoricalRecord(ctx sdk.Context, farmId uint64, period uint64, record types.HistoricalRecord) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(&record)
-	store.Set(types.GetHistoricalRecord(farmId, period), bz)
+	store.Set(types.GetHistoricalRecordKey(farmId, period), bz)
 }
 
 func (k Keeper) IterateHistoricalRecords(ctx sdk.Context, handler func(record types.HistoricalRecord, farmId uint64, period uint64) (stop bool)) {

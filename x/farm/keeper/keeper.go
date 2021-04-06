@@ -77,9 +77,11 @@ func (k Keeper) IterateFarms(ctx sdk.Context, handler func(farm types.Farm) (sto
 }
 
 func (k Keeper) setFarm(ctx sdk.Context, farm types.Farm) error {
-	// TODO: If the farm did not exist, return error.
-
 	store := ctx.KVStore(k.storeKey)
+
+	if !store.Has(types.GetFarmStoreKey(farm.FarmId)) {
+		return types.ErrNoFarmExist
+	}
 
 	store.Set(types.GetFarmStoreKey(farm.FarmId), k.cdc.MustMarshalBinaryBare(&farm))
 	return nil

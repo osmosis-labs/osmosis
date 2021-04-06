@@ -18,7 +18,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 	if genState.Farmers != nil {
 		for _, farmer := range genState.Farmers {
-			k.setFarmer(ctx, &farmer)
+			k.setFarmer(ctx, farmer)
 		}
 	}
 
