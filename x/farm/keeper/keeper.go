@@ -63,6 +63,19 @@ func (k Keeper) GetFarm(ctx sdk.Context, farmId uint64) (types.Farm, error) {
 	return farm, nil
 }
 
+func (k Keeper) IterateFarms(ctx sdk.Context, handler func(farm types.Farm) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.FarmPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var farm types.Farm
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &farm)
+		if handler(farm) {
+			break
+		}
+	}
+}
+
 func (k Keeper) setFarm(ctx sdk.Context, farm types.Farm) error {
 	// TODO: If the farm did not exist, return error.
 
