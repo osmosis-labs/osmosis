@@ -30,7 +30,6 @@ message HistoricalRecord {
         (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
         (gogoproto.nullable)     = false
     ];
-    // TODO: Add the reference count such as the cosmos-sdk's distribution module.
 }
 
 message Farmer {

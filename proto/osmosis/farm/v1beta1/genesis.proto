@@ -1,0 +1,21 @@
+syntax = "proto3";
+package osmosis.farm.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/farm/v1beta1/types.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/farm/types";
+
+message GenesisState {
+  repeated Farm farms = 1 [(gogoproto.nullable) = false];
+  repeated Farmer farmers = 2 [(gogoproto.nullable) = false];
+  repeated GenesisHistoricalRecord historicalRecords = 3 [(gogoproto.nullable) = false];
+}
+
+message GenesisHistoricalRecord {
+  HistoricalRecord record = 1 [(gogoproto.nullable) = false];
+  uint64 farm_id = 2 [(gogoproto.moretags) = "yaml:\"farm_id\""];
+  uint64 current_period = 3 [(gogoproto.moretags) = "yaml:\"current_period\""];
+}
