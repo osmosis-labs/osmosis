@@ -14,7 +14,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			Lock:    false,
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, []types.Record{{
+		}, []types.PoolAsset{{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 		}, {
@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.Record{{
+			}, []types.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 					Lock:    true,
 					SwapFee: sdk.NewDecWithPrec(1, 2),
 					ExitFee: sdk.NewDecWithPrec(1, 2),
-				}, []types.Record{{
+				}, []types.PoolAsset{{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 				}, {
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 					Lock:    false,
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(1, 2),
-				}, []types.Record{{
+				}, []types.PoolAsset{{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 				}, {
@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 					Lock:    false,
 					SwapFee: sdk.NewDecWithPrec(1, 2),
 					ExitFee: sdk.NewDecWithPrec(-1, 2),
-				}, []types.Record{{
+				}, []types.PoolAsset{{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 				}, {
@@ -104,8 +104,8 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.Record{})
-			suite.Require().Error(err, "can't create the pool with empty records")
+			}, []types.PoolAsset{})
+			suite.Require().Error(err, "can't create the pool with empty PoolAssets")
 		},
 	}, {
 		fn: func() {
@@ -114,14 +114,14 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.Record{{
+			}, []types.PoolAsset{{
 				Weight: sdk.NewInt(0),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}})
-			suite.Require().Error(err, "can't create the pool with 0 weighted record")
+			suite.Require().Error(err, "can't create the pool with 0 weighted PoolAsset")
 		},
 	}, {
 		fn: func() {
@@ -130,14 +130,14 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.Record{{
+			}, []types.PoolAsset{{
 				Weight: sdk.NewInt(-1),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}})
-			suite.Require().Error(err, "can't create the pool with negative weighted record")
+			suite.Require().Error(err, "can't create the pool with negative weighted PoolAsset")
 		},
 	}, {
 		fn: func() {
@@ -146,14 +146,14 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.Record{{
+			}, []types.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
 			}, {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}})
-			suite.Require().Error(err, "can't create the pool with 0 balance record")
+			suite.Require().Error(err, "can't create the pool with 0 balance PoolAsset")
 		},
 	}, {
 		fn: func() {
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.Record{{
+			}, []types.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token: sdk.Coin{
 					Denom:  "foo",
@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}})
-			suite.Require().Error(err, "can't create the pool with negative balance record")
+			suite.Require().Error(err, "can't create the pool with negative balance PoolAsset")
 		},
 	}, {
 		fn: func() {
@@ -181,14 +181,14 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.Record{{
+			}, []types.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}})
-			suite.Require().Error(err, "can't create the pool with duplicated records")
+			suite.Require().Error(err, "can't create the pool with duplicated PoolAssets")
 		},
 	}}
 
@@ -297,7 +297,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 			Lock:    false,
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, []types.Record{{
+		}, []types.PoolAsset{{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 		}, {
@@ -405,7 +405,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
-			}, []types.Record{{
+			}, []types.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {

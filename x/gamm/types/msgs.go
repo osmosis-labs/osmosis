@@ -29,22 +29,22 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	}
 
 	// The pool must be swapping between at least two assets
-	if len(msg.Records) < 2 {
-		return ErrTooFewRecords
+	if len(msg.PoolAssets) < 2 {
+		return ErrTooFewPoolAssets
 	}
 
 	// TODO: Add the limit of binding token to the pool params?
-	if len(msg.Records) > 8 {
-		return sdkerrors.Wrapf(ErrTooManyRecords, "%d", len(msg.Records))
+	if len(msg.PoolAssets) > 8 {
+		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(msg.PoolAssets))
 	}
 
-	for _, record := range msg.Records {
-		if !record.Weight.IsPositive() {
-			return sdkerrors.Wrap(ErrNotPositiveWeight, record.Weight.String())
+	for _, PoolAsset := range msg.PoolAssets {
+		if !PoolAsset.Weight.IsPositive() {
+			return sdkerrors.Wrap(ErrNotPositiveWeight, PoolAsset.Weight.String())
 		}
 
-		if !record.Token.IsValid() || !record.Token.IsPositive() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, record.Token.String())
+		if !PoolAsset.Token.IsValid() || !PoolAsset.Token.IsPositive() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, PoolAsset.Token.String())
 		}
 	}
 

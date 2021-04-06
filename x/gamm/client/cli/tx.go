@@ -56,8 +56,8 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetCreatePool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolRecordTokens)
-	_ = cmd.MarkFlagRequired(FlagPoolRecordTokenWeights)
+	_ = cmd.MarkFlagRequired(FlagPoolAssets)
+	_ = cmd.MarkFlagRequired(FlagPoolAssetWeights)
 	_ = cmd.MarkFlagRequired(FlagSwapFee)
 	_ = cmd.MarkFlagRequired(FlagExitFee)
 
@@ -129,38 +129,38 @@ func NewExitPoolCmd() *cobra.Command {
 }
 
 func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	recordTokenStrs, err := fs.GetStringArray(FlagPoolRecordTokens)
+	PoolAssetTokenStrs, err := fs.GetStringArray(FlagPoolAssets)
 	if err != nil {
 		return txf, nil, err
 	}
-	if len(recordTokenStrs) < 2 {
+	if len(PoolAssetTokenStrs) < 2 {
 		return txf, nil, fmt.Errorf("bind tokens should be more than 2")
 	}
 
-	recordTokenWeightStrs, err := fs.GetStringArray(FlagPoolRecordTokenWeights)
+	PoolAssetTokenWeightStrs, err := fs.GetStringArray(FlagPoolAssetWeights)
 	if err != nil {
 		return txf, nil, err
 	}
-	if len(recordTokenStrs) != len(recordTokenWeightStrs) {
+	if len(PoolAssetTokenStrs) != len(PoolAssetTokenWeightStrs) {
 		return txf, nil, fmt.Errorf("tokens and token weights should have same length")
 	}
 
-	recordTokens := sdk.Coins{}
-	for i := 0; i < len(recordTokenStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(recordTokenStrs[i])
+	PoolAssetTokens := sdk.Coins{}
+	for i := 0; i < len(PoolAssetTokenStrs); i++ {
+		parsed, err := sdk.ParseCoinNormalized(PoolAssetTokenStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		recordTokens = append(recordTokens, parsed)
+		PoolAssetTokens = append(PoolAssetTokens, parsed)
 	}
 
-	var recordWeights []sdk.Int
-	for i := 0; i < len(recordTokenWeightStrs); i++ {
-		parsed, ok := sdk.NewIntFromString(recordTokenWeightStrs[i])
+	var PoolAssetWeights []sdk.Int
+	for i := 0; i < len(PoolAssetTokenWeightStrs); i++ {
+		parsed, ok := sdk.NewIntFromString(PoolAssetTokenWeightStrs[i])
 		if !ok {
-			return txf, nil, fmt.Errorf("invalid token weight (%s)", recordTokenWeightStrs[i])
+			return txf, nil, fmt.Errorf("invalid token weight (%s)", PoolAssetTokenWeightStrs[i])
 		}
-		recordWeights = append(recordWeights, parsed)
+		PoolAssetWeights = append(PoolAssetWeights, parsed)
 	}
 
 	swapFeeStr, err := fs.GetString(FlagSwapFee)
@@ -181,17 +181,17 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, err
 	}
 
-	var records []types.Record
-	for i := 0; i < len(recordTokens); i++ {
-		recordToken := recordTokens[i]
-		recordWeight := recordWeights[i]
+	var PoolAssets []types.PoolAsset
+	for i := 0; i < len(PoolAssetTokens); i++ {
+		PoolAssetToken := PoolAssetTokens[i]
+		PoolAssetWeight := PoolAssetWeights[i]
 
-		record := types.Record{
-			Weight: recordWeight,
-			Token:  recordToken,
+		PoolAsset := types.PoolAsset{
+			Weight: PoolAssetWeight,
+			Token:  PoolAssetToken,
 		}
 
-		records = append(records, record)
+		PoolAssets = append(PoolAssets, PoolAsset)
 	}
 
 	msg := &types.MsgCreatePool{
@@ -201,7 +201,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 			SwapFee: swapFee,
 			ExitFee: exitFee,
 		},
-		Records: records,
+		PoolAssets: PoolAssets,
 	}
 
 	return txf, msg, nil

@@ -82,21 +82,21 @@ func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.S
 			return nil, err
 		}
 
-		inRecord, err := poolAcc.GetRecord(route.TokenInDenom)
+		inPoolAsset, err := poolAcc.GetPoolAsset(route.TokenInDenom)
 		if err != nil {
 			return nil, err
 		}
 
-		outRecord, err := poolAcc.GetRecord(tokenOut.Denom)
+		outPoolAsset, err := poolAcc.GetPoolAsset(tokenOut.Denom)
 		if err != nil {
 			return nil, err
 		}
 
 		tokenInAmount := calcInGivenOut(
-			inRecord.Token.Amount.ToDec(),
-			inRecord.Weight.ToDec(),
-			outRecord.Token.Amount.ToDec(),
-			outRecord.Weight.ToDec(),
+			inPoolAsset.Token.Amount.ToDec(),
+			inPoolAsset.Weight.ToDec(),
+			outPoolAsset.Token.Amount.ToDec(),
+			outPoolAsset.Weight.ToDec(),
 			tokenOut.Amount.ToDec(),
 			poolAcc.GetPoolParams().SwapFee,
 		).TruncateInt()

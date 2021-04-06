@@ -23,7 +23,7 @@ func TestMsgCreatePool(t *testing.T) {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			},
-			Records: []Record{
+			PoolAssets: []PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("test", sdk.NewInt(100)),
@@ -71,67 +71,67 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has no record",
+			name: "has no PoolAsset",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.Records = nil
+				msg.PoolAssets = nil
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "has no record2",
+			name: "has no PoolAsset2",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.Records = []Record{}
+				msg.PoolAssets = []PoolAsset{}
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "has one record",
+			name: "has one PoolAsset",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.Records = []Record{
-					msg.Records[0],
+				msg.PoolAssets = []PoolAsset{
+					msg.PoolAssets[0],
 				}
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "has the record that includes 0 weight",
+			name: "has the PoolAsset that includes 0 weight",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.Records[0].Weight = sdk.NewInt(0)
+				msg.PoolAssets[0].Weight = sdk.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "has the record that includes the negative weight",
+			name: "has the PoolAsset that includes the negative weight",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.Records[0].Weight = sdk.NewInt(-10)
+				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "has the record that includes the negative weight",
+			name: "has the PoolAsset that includes the negative weight",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.Records[0].Weight = sdk.NewInt(-10)
+				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "has the record that includes the zero coin",
+			name: "has the PoolAsset that includes the zero coin",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.Records[0].Token = sdk.NewCoin("test1", sdk.NewInt(0))
+				msg.PoolAssets[0].Token = sdk.NewCoin("test1", sdk.NewInt(0))
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "has the record that includes the negative coin",
+			name: "has the PoolAsset that includes the negative coin",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.Records[0].Token = sdk.Coin{
+				msg.PoolAssets[0].Token = sdk.Coin{
 					Denom:  "test1",
 					Amount: sdk.NewInt(-10),
 				}
