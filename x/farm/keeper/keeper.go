@@ -88,13 +88,13 @@ func (k Keeper) setFarm(ctx sdk.Context, farm types.Farm) error {
 }
 
 func (k Keeper) GetNextFarmId(ctx sdk.Context) uint64 {
-	var poolNumber uint64
+	var farmNumber uint64
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.GlobalFarmNumber)
 	if bz == nil {
 		// initialize the account numbers
-		poolNumber = 1
+		farmNumber = 1
 	} else {
 		val := gogotypes.UInt64Value{}
 
@@ -103,11 +103,11 @@ func (k Keeper) GetNextFarmId(ctx sdk.Context) uint64 {
 			panic(err)
 		}
 
-		poolNumber = val.GetValue()
+		farmNumber = val.GetValue()
 	}
 
-	bz = k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: poolNumber + 1})
+	bz = k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: farmNumber + 1})
 	store.Set(types.GlobalFarmNumber, bz)
 
-	return poolNumber
+	return farmNumber
 }
