@@ -51,7 +51,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 
 func (k Keeper) CreatePoolFarms(ctx sdk.Context, poolId uint64) error {
 	// Create the same number of farms as there are LockableDurations
-	for _, lockableDuration := range k.GetGenesisState(ctx).LockableDurations {
+	for _, lockableDuration := range k.GetLockableDurations(ctx) {
 		farm, err := k.farmKeeper.NewFarm(ctx)
 		if err != nil {
 			return err
@@ -81,21 +81,24 @@ func (k Keeper) GetPoolFarmId(ctx sdk.Context, poolId uint64, lockableDuration t
 	return sdk.BigEndianToUint64(bz), nil
 }
 
-func (k Keeper) SetGenesisState(ctx sdk.Context, genState *types.GenesisState) {
+func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GenesisStateKey, k.cdc.MustMarshalBinaryBare(genState))
+
+	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
+
+	store.Set(types.LockableDurationsKey, k.cdc.MustMarshalBinaryBare(&info))
 }
 
-func (k Keeper) GetGenesisState(ctx sdk.Context) types.GenesisState {
+func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 	store := ctx.KVStore(k.storeKey)
-	genState := types.GenesisState{}
+	info := types.LockableDurationsInfo{}
 
-	bz := store.Get(types.GenesisStateKey)
+	bz := store.Get(types.LockableDurationsKey)
 	if len(bz) == 0 {
-		panic("genesis state not set")
+		panic("lockable durations not set")
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(bz, &genState)
+	k.cdc.MustUnmarshalBinaryBare(bz, &info)
 
-	return genState
+	return info.LockableDurations
 }

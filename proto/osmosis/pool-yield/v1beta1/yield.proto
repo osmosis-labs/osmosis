@@ -20,6 +20,14 @@ message Params {
   ];
 }
 
+message LockableDurationsInfo {
+  repeated google.protobuf.Duration lockable_durations = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"lockable_durations\""
+  ];
+}
+
 message DistrInfo {
   string total_weight = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

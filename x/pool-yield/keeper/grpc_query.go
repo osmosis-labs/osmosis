@@ -20,11 +20,11 @@ func (k Keeper) FarmIds(ctx context.Context, req *types.QueryFarmIdsRequest) (*t
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	genState := k.GetGenesisState(sdkCtx)
+	lockableDurations := k.GetLockableDurations(sdkCtx)
 
-	farmIdsWithDuration := make([]*types.QueryFarmIdsResponse_FarmIdWithDuration, len(genState.LockableDurations))
+	farmIdsWithDuration := make([]*types.QueryFarmIdsResponse_FarmIdWithDuration, len(lockableDurations))
 
-	for i, duration := range genState.LockableDurations {
+	for i, duration := range lockableDurations {
 		farmId, err := k.GetPoolFarmId(sdkCtx, req.PoolId, duration)
 
 		if err != nil {

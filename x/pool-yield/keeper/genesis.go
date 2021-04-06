@@ -8,5 +8,5 @@ import (
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
-	k.SetGenesisState(ctx, genState)
+	k.SetLockableDurations(ctx, genState.LockableDurations)
 }
