@@ -12,7 +12,7 @@ enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
   ByDuration = 0; // Queries for locks that are longer than a certain duration
-  ByTime = 1; // locks which are started before specific time
+  ByTime = 1; // Queries for lockups that started before a specific time
 }
 
 message DistrCondition {
