@@ -31,8 +31,7 @@ func (k Keeper) CreatePool(
 		panic("don't create the locked pool")
 	}
 
-	poolId := k.GetNextPoolNumber(ctx)
-	poolAcc, err := k.NewPool(ctx, poolId, poolParams)
+	poolAcc, err := k.NewPool(ctx, poolParams)
 	if err != nil {
 		return 0, err
 	}
