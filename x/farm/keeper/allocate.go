@@ -36,20 +36,18 @@ func (k Keeper) allocateAssetsToFarm(ctx sdk.Context, farmId uint64, assets sdk.
 
 	decCoins := sdk.NewDecCoinsFromCoins(assets...)
 
-	prevRewardRatio := sdk.DecCoins{}
-	if farm.CurrentPeriod-1 != 0 {
-		prevRewardRatio = k.GetHistoricalEntry(ctx, farm.FarmId, farm.CurrentPeriod-1).CumulativeRewardRatio
-	}
+	prevRewardRatio := k.getHistoricalEntry(ctx, farm.FarmId, farm.CurrentPeriod-1).CumulativeRewardRatio
 
 	rewardRatio := sdk.DecCoins{}
-	if farm.TotalShare.GT(sdk.NewInt(0)) {
+	if farm.TotalShare.IsPositive() {
 		rewardRatio = decCoins.QuoDecTruncate(farm.TotalShare.ToDec())
 	}
 
-	k.SetHistoricalEntry(ctx, farm.FarmId, farm.CurrentPeriod, types.HistoricalEntry{
+	k.setHistoricalEntry(ctx, farm.FarmId, farm.CurrentPeriod, types.HistoricalEntry{
 		CumulativeRewardRatio: prevRewardRatio.Add(rewardRatio...),
 	})
 
+	// Whenever rewards allocated to the farm, increase the currenct period.
 	farm.CurrentPeriod = farm.CurrentPeriod + 1
 
 	return k.setFarm(ctx, farm)

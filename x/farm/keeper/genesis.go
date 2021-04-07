@@ -24,7 +24,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 	if genState.HistoricalEntries != nil {
 		for _, entry := range genState.HistoricalEntries {
-			k.SetHistoricalEntry(ctx, entry.FarmId, entry.CurrentPeriod, entry.Entry)
+			k.setHistoricalEntry(ctx, entry.FarmId, entry.CurrentPeriod, entry.Entry)
 		}
 	}
 }

@@ -33,6 +33,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.Accoun
 
 func (k Keeper) NewFarm(ctx sdk.Context) (types.Farm, error) {
 	farmId := k.GetNextFarmId(ctx)
+	// Farm starts from the period 1 when it is created
 	farm := types.Farm{
 		FarmId:        farmId,
 		TotalShare:    sdk.NewInt(0),
@@ -42,6 +43,10 @@ func (k Keeper) NewFarm(ctx sdk.Context) (types.Farm, error) {
 	store := ctx.KVStore(k.storeKey)
 
 	store.Set(types.GetFarmStoreKey(farmId), k.cdc.MustMarshalBinaryBare(&farm))
+
+	// Because farm’s period begins from 1, period 0’s entry is definitely empty.
+	entry := types.HistoricalEntry{CumulativeRewardRatio: sdk.DecCoins{}}
+	k.setHistoricalEntry(ctx, farmId, 0, entry)
 	return farm, nil
 }
 

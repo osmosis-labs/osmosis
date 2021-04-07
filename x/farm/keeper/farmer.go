@@ -5,7 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) NewFarmer(ctx sdk.Context, farmId uint64, currentPeriod uint64, address sdk.AccAddress, share sdk.Int) types.Farmer {
+// There is no need for the external module to directly create the farmer.
+// The outside module should use the DepositShareToFarm to create the farmer.
+func (k Keeper) newFarmer(ctx sdk.Context, farmId uint64, currentPeriod uint64, address sdk.AccAddress, share sdk.Int) types.Farmer {
 	farmer := types.Farmer{
 		FarmId:              farmId,
 		Address:             address.String(),

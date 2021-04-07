@@ -8,17 +8,20 @@ import (
 	"github.com/c-osmosis/osmosis/x/farm/types"
 )
 
-func (k Keeper) GetHistoricalEntry(ctx sdk.Context, farmId uint64, period uint64) (record types.HistoricalEntry) {
+func (k Keeper) getHistoricalEntry(ctx sdk.Context, farmId uint64, period uint64) (record types.HistoricalEntry) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetHistoricalEntryKey(farmId, period))
-	if len(bz) == 0 {
+	key := types.GetHistoricalEntryKey(farmId, period)
+
+	if !store.Has(key) {
 		panic(fmt.Sprintf("historical record not exist (farmId: %d, period: %d)", farmId, period))
 	}
+
+	bz := store.Get(key)
 	k.cdc.MustUnmarshalBinaryBare(bz, &record)
 	return record
 }
 
-func (k Keeper) SetHistoricalEntry(ctx sdk.Context, farmId uint64, period uint64, entry types.HistoricalEntry) {
+func (k Keeper) setHistoricalEntry(ctx sdk.Context, farmId uint64, period uint64, entry types.HistoricalEntry) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(&entry)
 	store.Set(types.GetHistoricalEntryKey(farmId, period), bz)

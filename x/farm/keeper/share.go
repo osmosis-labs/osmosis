@@ -14,11 +14,9 @@ func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, address sdk.A
 	farmer, err := k.GetFarmer(ctx, farmId, address)
 	if err != nil {
 		if err == types.ErrNoFarmerExist {
-			if farm.CurrentPeriod == 0 {
-				farmer = k.NewFarmer(ctx, farmId, 0, address, share)
-			} else {
-				farmer = k.NewFarmer(ctx, farmId, farm.CurrentPeriod-1, address, share)
-			}
+			// Farm's period begins from 1 and only increases. Therefore farm.CurrentPeriod-1 will never run into underflow.
+			// Also, an empty entry with 0 preiod is registered when a farm is created, so period 0 is valid.
+			farmer = k.newFarmer(ctx, farmId, farm.CurrentPeriod-1, address, share)
 		} else {
 			return nil, err
 		}
@@ -40,7 +38,7 @@ func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, address sdk.A
 
 	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, rewards)
 	if err != nil {
-		return sdk.Coins{}, nil
+		return nil, err
 	}
 	return rewards, nil
 }
@@ -76,7 +74,7 @@ func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, address sd
 
 	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, rewards)
 	if err != nil {
-		return sdk.Coins{}, nil
+		return nil, err
 	}
 	return rewards, nil
 }
@@ -92,15 +90,8 @@ func (k Keeper) CalculatePendingRewards(ctx sdk.Context, farmId uint64, address 
 		return nil, err
 	}
 
-	if farm.CurrentPeriod-1 == 0 {
-		return nil, nil
-	}
-
-	lastRewardRatio := k.GetHistoricalEntry(ctx, farm.FarmId, farm.CurrentPeriod-1).CumulativeRewardRatio
-	farmerRewardRatio := sdk.DecCoins{}
-	if farmer.LastWithdrawnPeriod > 0 {
-		farmerRewardRatio = k.GetHistoricalEntry(ctx, farm.FarmId, farmer.LastWithdrawnPeriod).CumulativeRewardRatio
-	}
+	lastRewardRatio := k.getHistoricalEntry(ctx, farm.FarmId, farm.CurrentPeriod-1).CumulativeRewardRatio
+	farmerRewardRatio := k.getHistoricalEntry(ctx, farm.FarmId, farmer.LastWithdrawnPeriod).CumulativeRewardRatio
 
 	difference := lastRewardRatio.Sub(farmerRewardRatio)
 	rewards = difference.MulDec(farmer.Share.ToDec())
@@ -131,7 +122,7 @@ func (k Keeper) WithdrawRewardsFromFarm(ctx sdk.Context, farmId uint64, address 
 
 	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, rewards)
 	if err != nil {
-		return sdk.Coins{}, nil
+		return nil, err
 	}
 	return rewards, nil
 }
