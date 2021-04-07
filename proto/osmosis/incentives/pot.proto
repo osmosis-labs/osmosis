@@ -16,7 +16,7 @@ enum LockQueryType {
 }
 
 message DistrCondition {
-  LockQueryType lock_query_type = 1; // type of lock, ByLockDuration | ByLockTime
+  LockQueryType lock_query_type = 1; // type of lock query, ByLockDuration | ByLockTime
   string denom = 2; // lock denom
   // condition for lock duration, only valid if positive
   google.protobuf.Duration duration = 3
