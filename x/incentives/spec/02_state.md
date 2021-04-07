@@ -28,7 +28,7 @@ type DistrCondition struct {
 
 type Pot struct {
   ID           uint64 // unique ID of a Pot
-  DistributeTo []DistrCondition // distribute condition of a lock which meet one of these conditions
+  DistributeTo DistrCondition // distribute condition of a lock
   TotalRewards sdk.Coins // can distribute multiple coins
   StartTime    time.Time // start time to start distribution
   NumEpochs    uint64 // number of epochs distribution will be done 
