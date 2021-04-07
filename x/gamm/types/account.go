@@ -25,17 +25,17 @@ type PoolAccountI interface {
 	GetTotalShare() sdk.Coin
 	AddTotalShare(amt sdk.Int)
 	SubTotalShare(amt sdk.Int)
-	AddRecords(records []Record) error
-	GetRecord(denom string) (Record, error)
-	SetRecord(denom string, record Record) error
-	GetRecords(denoms ...string) ([]Record, error)
-	SetRecords(record []Record) error
-	GetAllRecords() []Record
+	AddPoolAssets(PoolAssets []PoolAsset) error
+	GetPoolAsset(denom string) (PoolAsset, error)
+	SetPoolAsset(denom string, asset PoolAsset) error
+	GetPoolAssets(denoms ...string) ([]PoolAsset, error)
+	SetPoolAssets(assets []PoolAsset) error
+	GetAllPoolAssets() []PoolAsset
 	SetTokenWeight(denom string, weight sdk.Int) error
 	GetTokenWeight(denom string) (sdk.Int, error)
 	SetTokenBalance(denom string, amount sdk.Int) error
 	GetTokenBalance(denom string) (sdk.Int, error)
-	LenRecords() int
+	NumAssets() int
 }
 
 var (
@@ -62,7 +62,7 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams) PoolAccountI {
 		PoolParams:  poolParams,
 		TotalWeight: sdk.ZeroInt(),
 		TotalShare:  sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
-		Records:     nil,
+		PoolAssets:  nil,
 	}
 }
 
@@ -115,42 +115,42 @@ func (pa *PoolAccount) SubTotalShare(amt sdk.Int) {
 	pa.TotalShare.Amount = pa.TotalShare.Amount.Sub(amt)
 }
 
-// AddRecords adds the records to the pool. If the same denom's record exists, will return error.
-// The list of records must be sorted. This is done to enable fast searching for a record by denomination.
-func (pa *PoolAccount) AddRecords(records []Record) error {
+// AddPoolAssets adds the PoolAssets to the pool. If the same denom's PoolAsset exists, will return error.
+// The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
+func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 	exists := make(map[string]bool)
-	for _, record := range pa.Records {
-		exists[record.Token.Denom] = true
+	for _, asset := range pa.PoolAssets {
+		exists[asset.Token.Denom] = true
 	}
 
 	addTotalWeight := sdk.ZeroInt()
 
-	for _, record := range records {
-		if record.Token.Amount.LTE(sdk.ZeroInt()) {
+	for _, asset := range PoolAssets {
+		if asset.Token.Amount.LTE(sdk.ZeroInt()) {
 			return fmt.Errorf("can't add the zero or negative balance of token")
 		}
 
-		if record.Weight.LTE(sdk.ZeroInt()) {
+		if asset.Weight.LTE(sdk.ZeroInt()) {
 			return fmt.Errorf("can't add the zero or negative weight of token")
 		}
 
-		if exists[record.Token.Denom] {
-			return fmt.Errorf("same record already exists")
+		if exists[asset.Token.Denom] {
+			return fmt.Errorf("same PoolAsset already exists")
 		}
-		exists[record.Token.Denom] = true
+		exists[asset.Token.Denom] = true
 
-		addTotalWeight = addTotalWeight.Add(record.Weight)
+		addTotalWeight = addTotalWeight.Add(asset.Weight)
 	}
 
 	// TODO: Change this to a more efficient sorted insert algorithm.
 	// Furthermore, consider changing the underlying data type to allow im-place modification if the
-	// number of records is expected to be large.
-	pa.Records = append(pa.Records, records...)
-	sort.Slice(pa.Records, func(i, j int) bool {
-		recordA := pa.Records[i]
-		recordB := pa.Records[j]
+	// number of PoolAssets is expected to be large.
+	pa.PoolAssets = append(pa.PoolAssets, PoolAssets...)
+	sort.Slice(pa.PoolAssets, func(i, j int) bool {
+		PoolAssetA := pa.PoolAssets[i]
+		PoolAssetB := pa.PoolAssets[j]
 
-		return strings.Compare(recordA.Token.Denom, recordB.Token.Denom) == -1
+		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
 	})
 
 	pa.TotalWeight = pa.TotalWeight.Add(addTotalWeight)
@@ -158,100 +158,100 @@ func (pa *PoolAccount) AddRecords(records []Record) error {
 	return nil
 }
 
-// GetRecords returns the denom's record, If the record doesn't exist, will return error.
-// As above, it will search the denom's record by using binary search.
-// So, it is important to make sure that the records are sorted.
-func (pa PoolAccount) GetRecord(denom string) (Record, error) {
+// GetPoolAssets returns the denom's PoolAsset, If the PoolAsset doesn't exist, will return error.
+// As above, it will search the denom's PoolAsset by using binary search.
+// So, it is important to make sure that the PoolAssets are sorted.
+func (pa PoolAccount) GetPoolAsset(denom string) (PoolAsset, error) {
 	if denom == "" {
-		return Record{}, fmt.Errorf("you tried to find the record with empty denom")
+		return PoolAsset{}, fmt.Errorf("you tried to find the PoolAsset with empty denom")
 	}
 
-	if len(pa.Records) == 0 {
-		return Record{}, fmt.Errorf("can't find the record (%s)", denom)
+	if len(pa.PoolAssets) == 0 {
+		return PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
 	}
 
-	i := sort.Search(len(pa.Records), func(i int) bool {
-		recordA := pa.Records[i]
+	i := sort.Search(len(pa.PoolAssets), func(i int) bool {
+		PoolAssetA := pa.PoolAssets[i]
 
-		compare := strings.Compare(recordA.Token.Denom, denom)
+		compare := strings.Compare(PoolAssetA.Token.Denom, denom)
 		return compare >= 0
 	})
 
-	if i < 0 || i >= len(pa.Records) {
-		return Record{}, fmt.Errorf("can't find the record (%s)", denom)
+	if i < 0 || i >= len(pa.PoolAssets) {
+		return PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
 	}
 
-	if pa.Records[i].Token.Denom != denom {
-		return Record{}, fmt.Errorf("can't find the record (%s)", denom)
+	if pa.PoolAssets[i].Token.Denom != denom {
+		return PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
 	}
 
-	return pa.Records[i], nil
+	return pa.PoolAssets[i], nil
 }
 
-func (pa *PoolAccount) SetRecord(denom string, record Record) error {
-	// Check that record exists.
-	_, err := pa.GetRecord(denom)
+func (pa *PoolAccount) SetPoolAsset(denom string, asset PoolAsset) error {
+	// Check that PoolAsset exists.
+	_, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return err
 	}
 
-	if record.Token.Amount.LTE(sdk.ZeroInt()) {
+	if asset.Token.Amount.LTE(sdk.ZeroInt()) {
 		return fmt.Errorf("can't add the zero or negative balance of token")
 	}
 
-	if record.Weight.LTE(sdk.ZeroInt()) {
+	if asset.Weight.LTE(sdk.ZeroInt()) {
 		return fmt.Errorf("can't add the zero or negative weight of token")
 	}
 
-	for i, oldRecord := range pa.Records {
-		if oldRecord.Token.Denom == record.Token.Denom {
-			deltaTokenWeight := record.Weight.Sub(oldRecord.Weight)
+	for i, oldPoolAsset := range pa.PoolAssets {
+		if oldPoolAsset.Token.Denom == asset.Token.Denom {
+			deltaTokenWeight := asset.Weight.Sub(oldPoolAsset.Weight)
 
 			pa.TotalWeight = pa.TotalWeight.Add(deltaTokenWeight)
 
-			pa.Records[i] = record
+			pa.PoolAssets[i] = asset
 
 			return nil
 		}
 	}
 
-	return fmt.Errorf("can't find the record (%s)", denom)
+	return fmt.Errorf("can't find the PoolAsset (%s)", denom)
 }
 
-func (pa *PoolAccount) SetRecords(records []Record) error {
+func (pa *PoolAccount) SetPoolAssets(assets []PoolAsset) error {
 	exists := make(map[string]int)
-	for index, record := range pa.Records {
-		exists[record.Token.Denom] = index
+	for index, asset := range pa.PoolAssets {
+		exists[asset.Token.Denom] = index
 	}
 
-	addingRecordsExists := make(map[string]bool)
+	addingPoolAssetsExists := make(map[string]bool)
 
 	deltaTotalWeight := sdk.ZeroInt()
 
-	for _, record := range records {
-		if record.Token.Amount.LTE(sdk.ZeroInt()) {
-			return fmt.Errorf("can't set the zero or negative balance of token")
+	for _, asset := range assets {
+		if asset.Token.Amount.LTE(sdk.ZeroInt()) {
+			return fmt.Errorf("can't have an asset in the pool with no reserve supply.")
 		}
 
-		if record.Weight.LTE(sdk.ZeroInt()) {
-			return fmt.Errorf("can't set the zero or negative weight of token")
+		if asset.Weight.LTE(sdk.ZeroInt()) {
+			return fmt.Errorf("can't have an asset with a zero or negative reserve weighting.")
 		}
 
-		index, ok := exists[record.Token.Denom]
+		index, ok := exists[asset.Token.Denom]
 		if !ok {
-			return fmt.Errorf("record doesn't exists")
+			return fmt.Errorf("PoolAsset doesn't exists")
 		}
 
-		if addingRecordsExists[record.Token.Denom] {
-			return fmt.Errorf("adding records duplicated")
+		if addingPoolAssetsExists[asset.Token.Denom] {
+			return fmt.Errorf("adding PoolAssets duplicated")
 		}
-		addingRecordsExists[record.Token.Denom] = true
+		addingPoolAssetsExists[asset.Token.Denom] = true
 
-		oldRecord := pa.Records[index]
-		deltaTotalWeight = deltaTotalWeight.Add(record.Weight.Sub(oldRecord.Weight))
+		oldPoolAsset := pa.PoolAssets[index]
+		deltaTotalWeight = deltaTotalWeight.Add(asset.Weight.Sub(oldPoolAsset.Weight))
 
-		pa.Records[index].Weight = record.Weight
-		pa.Records[index].Token = record.Token
+		pa.PoolAssets[index].Weight = asset.Weight
+		pa.PoolAssets[index].Token = asset.Token
 	}
 
 	pa.TotalWeight = pa.TotalWeight.Add(deltaTotalWeight)
@@ -259,69 +259,69 @@ func (pa *PoolAccount) SetRecords(records []Record) error {
 	return nil
 }
 
-func (pa PoolAccount) GetRecords(denoms ...string) ([]Record, error) {
-	result := make([]Record, 0, len(denoms))
+func (pa PoolAccount) GetPoolAssets(denoms ...string) ([]PoolAsset, error) {
+	result := make([]PoolAsset, 0, len(denoms))
 
 	for _, denom := range denoms {
-		record, err := pa.GetRecord(denom)
+		PoolAsset, err := pa.GetPoolAsset(denom)
 		if err != nil {
 			return nil, err
 		}
 
-		result = append(result, record)
+		result = append(result, PoolAsset)
 	}
 
 	return result, nil
 }
 
-func (pa PoolAccount) GetAllRecords() []Record {
-	copyslice := make([]Record, len(pa.Records))
-	copy(copyslice, pa.Records)
+func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
+	copyslice := make([]PoolAsset, len(pa.PoolAssets))
+	copy(copyslice, pa.PoolAssets)
 	return copyslice
 }
 
 func (pa *PoolAccount) SetTokenWeight(denom string, weight sdk.Int) error {
-	record, err := pa.GetRecord(denom)
+	PoolAsset, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return err
 	}
 
-	record.Weight = weight
+	PoolAsset.Weight = weight
 
-	return pa.SetRecord(denom, record)
+	return pa.SetPoolAsset(denom, PoolAsset)
 }
 
 func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
-	record, err := pa.GetRecord(denom)
+	PoolAsset, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	return record.Weight, nil
+	return PoolAsset.Weight, nil
 }
 
 func (pa *PoolAccount) SetTokenBalance(denom string, amount sdk.Int) error {
-	record, err := pa.GetRecord(denom)
+	PoolAsset, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return err
 	}
 
-	record.Token.Amount = amount
+	PoolAsset.Token.Amount = amount
 
-	return pa.SetRecord(denom, record)
+	return pa.SetPoolAsset(denom, PoolAsset)
 }
 
 func (pa PoolAccount) GetTokenBalance(denom string) (sdk.Int, error) {
-	record, err := pa.GetRecord(denom)
+	PoolAsset, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	return record.Token.Amount, nil
+	return PoolAsset.Token.Amount, nil
 }
 
-func (pa PoolAccount) LenRecords() int {
-	return len(pa.Records)
+func (pa PoolAccount) NumAssets() int {
+	return len(pa.PoolAssets)
 }
 
 // SetPubKey - Implements AccountI
@@ -343,7 +343,7 @@ type poolAccountPretty struct {
 	PoolParams    PoolParams     `json:"pool_params" yaml:"pool_params"`
 	TotalWeight   sdk.Int        `json:"total_weight" yaml:"total_weight"`
 	TotalShare    sdk.Coin       `json:"total_share" yaml:"total_share"`
-	Records       []Record       `json:"records" yaml:"records"`
+	PoolAssets    []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
 
 func (pa PoolAccount) String() string {
@@ -366,7 +366,7 @@ func (pa PoolAccount) MarshalYAML() (interface{}, error) {
 		PoolParams:    pa.PoolParams,
 		TotalWeight:   pa.TotalWeight,
 		TotalShare:    pa.TotalShare,
-		Records:       pa.Records,
+		PoolAssets:    pa.PoolAssets,
 	})
 
 	if err != nil {
@@ -391,7 +391,7 @@ func (pa PoolAccount) MarshalJSON() ([]byte, error) {
 		PoolParams:    pa.PoolParams,
 		TotalWeight:   pa.TotalWeight,
 		TotalShare:    pa.TotalShare,
-		Records:       pa.Records,
+		PoolAssets:    pa.PoolAssets,
 	})
 }
 
@@ -407,7 +407,7 @@ func (pa *PoolAccount) UnmarshalJSON(bz []byte) error {
 	pa.PoolParams = alias.PoolParams
 	pa.TotalWeight = alias.TotalWeight
 	pa.TotalShare = alias.TotalShare
-	pa.Records = alias.Records
+	pa.PoolAssets = alias.PoolAssets
 
 	return nil
 }

@@ -75,7 +75,7 @@ func TestPoolAccountPoolParams(t *testing.T) {
 	})
 }
 
-func TestPoolAccountSetRecord(t *testing.T) {
+func TestPoolAccountSetPoolAsset(t *testing.T) {
 	var poolId uint64 = 10
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
@@ -86,7 +86,7 @@ func TestPoolAccountSetRecord(t *testing.T) {
 		ExitFee: exitFee,
 	})
 
-	err := pacc.AddRecords([]Record{
+	err := pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -97,32 +97,32 @@ func TestPoolAccountSetRecord(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	_, err = pacc.GetRecord("unknown")
+	_, err = pacc.GetPoolAsset("unknown")
 	require.Error(t, err)
-	_, err = pacc.GetRecord("")
+	_, err = pacc.GetPoolAsset("")
 	require.Error(t, err)
 
 	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
 
-	err = pacc.SetRecord("test1", Record{
+	err = pacc.SetPoolAsset("test1", PoolAsset{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
 	})
 	require.Error(t, err)
 
-	err = pacc.SetRecord("test1", Record{
+	err = pacc.SetPoolAsset("test1", PoolAsset{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
 	})
 	require.Error(t, err)
 
-	err = pacc.SetRecord("test1", Record{
+	err = pacc.SetPoolAsset("test1", PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
 	})
 	require.Error(t, err)
 
-	err = pacc.SetRecord("test1", Record{
+	err = pacc.SetPoolAsset("test1", PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token: sdk.Coin{
 			Denom:  "test1",
@@ -131,7 +131,7 @@ func TestPoolAccountSetRecord(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.SetRecord("test1", Record{
+	err = pacc.SetPoolAsset("test1", PoolAsset{
 		Weight: sdk.NewInt(200),
 		Token: sdk.Coin{
 			Denom:  "test1",
@@ -142,12 +142,12 @@ func TestPoolAccountSetRecord(t *testing.T) {
 
 	require.Equal(t, sdk.NewInt(400).String(), pacc.GetTotalWeight().String())
 
-	record, err := pacc.GetRecord("test1")
+	PoolAsset, err := pacc.GetPoolAsset("test1")
 	require.NoError(t, err)
-	require.Equal(t, sdk.NewInt(1).String(), record.Token.Amount.String())
+	require.Equal(t, sdk.NewInt(1).String(), PoolAsset.Token.Amount.String())
 }
 
-func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
+func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	var poolId uint64 = 10
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
@@ -158,7 +158,7 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 		ExitFee: exitFee,
 	})
 
-	err := pacc.AddRecords([]Record{
+	err := pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(0),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -166,7 +166,7 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(-1),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -174,7 +174,7 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
@@ -182,7 +182,7 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token: sdk.Coin{
@@ -193,10 +193,10 @@ func TestPoolAccountRecordsWeightAndTokenBalance(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	require.Equal(t, 0, pacc.LenRecords())
+	require.Equal(t, 0, pacc.NumAssets())
 }
 
-func TestPoolAccountRecords(t *testing.T) {
+func TestPoolAccountPoolAssets(t *testing.T) {
 	var poolId uint64 = 10
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
@@ -207,10 +207,10 @@ func TestPoolAccountRecords(t *testing.T) {
 		ExitFee: exitFee,
 	}).(*PoolAccount)
 
-	_, err := pacc.GetRecord("test1")
+	_, err := pacc.GetPoolAsset("test1")
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -222,24 +222,24 @@ func TestPoolAccountRecords(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, 2, len(pacc.Records))
-	require.Equal(t, 2, pacc.LenRecords())
-	// Check that records are sorted.
-	require.Equal(t, "test1", pacc.Records[0].Token.Denom)
-	require.Equal(t, "test2", pacc.Records[1].Token.Denom)
+	require.Equal(t, 2, len(pacc.PoolAssets))
+	require.Equal(t, 2, pacc.NumAssets())
+	// Check that PoolAssets are sorted.
+	require.Equal(t, "test1", pacc.PoolAssets[0].Token.Denom)
+	require.Equal(t, "test2", pacc.PoolAssets[1].Token.Denom)
 
-	_, err = pacc.GetRecord("test1")
+	_, err = pacc.GetPoolAsset("test1")
 	require.NoError(t, err)
-	_, err = pacc.GetRecord("test2")
+	_, err = pacc.GetPoolAsset("test2")
 	require.NoError(t, err)
-	_, err = pacc.GetRecord("test3")
+	_, err = pacc.GetPoolAsset("test3")
 	require.Error(t, err)
 
-	records, err := pacc.GetRecords("test1", "test2")
+	PoolAssets, err := pacc.GetPoolAssets("test1", "test2")
 	require.NoError(t, err)
-	require.Equal(t, 2, len(records))
+	require.Equal(t, 2, len(PoolAssets))
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -251,7 +251,7 @@ func TestPoolAccountRecords(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
@@ -263,7 +263,7 @@ func TestPoolAccountRecords(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
@@ -275,37 +275,37 @@ func TestPoolAccountRecords(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, 4, len(pacc.Records))
-	require.Equal(t, 4, pacc.LenRecords())
-	// Check that records are sorted.
-	require.Equal(t, "test1", pacc.Records[0].Token.Denom)
-	require.Equal(t, "test2", pacc.Records[1].Token.Denom)
-	require.Equal(t, "test3", pacc.Records[2].Token.Denom)
-	require.Equal(t, "test4", pacc.Records[3].Token.Denom)
+	require.Equal(t, 4, len(pacc.PoolAssets))
+	require.Equal(t, 4, pacc.NumAssets())
+	// Check that PoolAssets are sorted.
+	require.Equal(t, "test1", pacc.PoolAssets[0].Token.Denom)
+	require.Equal(t, "test2", pacc.PoolAssets[1].Token.Denom)
+	require.Equal(t, "test3", pacc.PoolAssets[2].Token.Denom)
+	require.Equal(t, "test4", pacc.PoolAssets[3].Token.Denom)
 
-	_, err = pacc.GetRecord("test1")
+	_, err = pacc.GetPoolAsset("test1")
 	require.NoError(t, err)
-	_, err = pacc.GetRecord("test2")
+	_, err = pacc.GetPoolAsset("test2")
 	require.NoError(t, err)
-	_, err = pacc.GetRecord("test3")
+	_, err = pacc.GetPoolAsset("test3")
 	require.NoError(t, err)
-	_, err = pacc.GetRecord("test4")
+	_, err = pacc.GetPoolAsset("test4")
 	require.NoError(t, err)
-	_, err = pacc.GetRecord("test5")
+	_, err = pacc.GetPoolAsset("test5")
 	require.Error(t, err)
 
-	records, err = pacc.GetRecords("test1", "test2", "test3", "test4")
+	PoolAssets, err = pacc.GetPoolAssets("test1", "test2", "test3", "test4")
 	require.NoError(t, err)
-	require.Equal(t, 4, len(records))
+	require.Equal(t, 4, len(PoolAssets))
 
-	_, err = pacc.GetRecords("test1", "test5")
+	_, err = pacc.GetPoolAssets("test1", "test5")
 	require.Error(t, err)
-	_, err = pacc.GetRecords("test5")
+	_, err = pacc.GetPoolAssets("test5")
 	require.Error(t, err)
 
-	records, err = pacc.GetRecords()
+	PoolAssets, err = pacc.GetPoolAssets()
 	require.NoError(t, err)
-	require.Equal(t, 0, len(records))
+	require.Equal(t, 0, len(PoolAssets))
 }
 
 func TestPoolAccountTotalWeight(t *testing.T) {
@@ -319,7 +319,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 		ExitFee: exitFee,
 	})
 
-	err := pacc.AddRecords([]Record{
+	err := pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -333,7 +333,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 
 	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(10000)),
@@ -343,7 +343,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 
 	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
 
-	err = pacc.AddRecords([]Record{
+	err = pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(1),
 			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
@@ -365,7 +365,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 		ExitFee: exitFee,
 	})
 
-	err := pacc.AddRecords([]Record{
+	err := pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -394,7 +394,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
   total_share:
     denom: osmosis/pool/10
     amount: "0"
-  records:
+  pool_assets:
   - denormalized_weight: "100"
     token:
       denom: test1
@@ -418,7 +418,7 @@ func TestPoolAccountJson(t *testing.T) {
 		ExitFee: exitFee,
 	}).(*PoolAccount)
 
-	err := pacc.AddRecords([]Record{
+	err := pacc.AddPoolAssets([]PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),

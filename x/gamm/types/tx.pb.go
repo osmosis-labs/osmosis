@@ -6,6 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -14,9 +18,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -32,9 +33,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // ===================== MsgCreatePool
 type MsgCreatePool struct {
-	Sender     string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolParams PoolParams `protobuf:"bytes,2,opt,name=poolParams,proto3" json:"poolParams" yaml:"pool_params"`
-	Records    []Record   `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
+	Sender     string      `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolParams PoolParams  `protobuf:"bytes,2,opt,name=poolParams,proto3" json:"poolParams" yaml:"pool_params"`
+	PoolAssets []PoolAsset `protobuf:"bytes,3,rep,name=poolAssets,proto3" json:"poolAssets" yaml:"pool_assets"`
 }
 
 func (m *MsgCreatePool) Reset()         { *m = MsgCreatePool{} }
@@ -84,9 +85,9 @@ func (m *MsgCreatePool) GetPoolParams() PoolParams {
 	return PoolParams{}
 }
 
-func (m *MsgCreatePool) GetRecords() []Record {
+func (m *MsgCreatePool) GetPoolAssets() []PoolAsset {
 	if m != nil {
-		return m.Records
+		return m.PoolAssets
 	}
 	return nil
 }
@@ -1504,10 +1505,10 @@ func (m *MsgCreatePool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Records) > 0 {
-		for iNdEx := len(m.Records) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.PoolAssets) > 0 {
+		for iNdEx := len(m.PoolAssets) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Records[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.PoolAssets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2318,8 +2319,8 @@ func (m *MsgCreatePool) Size() (n int) {
 	}
 	l = m.PoolParams.Size()
 	n += 1 + l + sovTx(uint64(l))
-	if len(m.Records) > 0 {
-		for _, e := range m.Records {
+	if len(m.PoolAssets) > 0 {
+		for _, e := range m.PoolAssets {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
@@ -2724,7 +2725,7 @@ func (m *MsgCreatePool) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolAssets", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2751,8 +2752,8 @@ func (m *MsgCreatePool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Records = append(m.Records, Record{})
-			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.PoolAssets = append(m.PoolAssets, PoolAsset{})
+			if err := m.PoolAssets[len(m.PoolAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

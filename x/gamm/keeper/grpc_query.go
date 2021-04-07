@@ -126,7 +126,7 @@ func (k Keeper) TotalShare(ctx context.Context, req *types.QueryTotalShareReques
 	}, nil
 }
 
-func (k Keeper) Records(ctx context.Context, req *types.QueryRecordsRequest) (*types.QueryRecordsResponse, error) {
+func (k Keeper) PoolAssets(ctx context.Context, req *types.QueryPoolAssetsRequest) (*types.QueryPoolAssetsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -137,8 +137,8 @@ func (k Keeper) Records(ctx context.Context, req *types.QueryRecordsRequest) (*t
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryRecordsResponse{
-		Records: pool.GetAllRecords(),
+	return &types.QueryPoolAssetsResponse{
+		PoolAssets: pool.GetAllPoolAssets(),
 	}, nil
 }
 

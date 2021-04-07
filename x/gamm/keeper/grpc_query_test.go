@@ -128,16 +128,16 @@ func (suite *KeeperTestSuite) TestQueryTotalShare() {
 	suite.Require().Equal(sdk.NewIntWithDecimal(110, 6).String(), res.TotalShare.Amount.String())
 }
 
-func (suite *KeeperTestSuite) TestQueryRecords() {
+func (suite *KeeperTestSuite) TestQueryPoolAssets() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
-	_, err := queryClient.Records(gocontext.Background(), &types.QueryRecordsRequest{PoolId: 1})
+	_, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: 1})
 	suite.Require().Error(err)
 
 	poolId := suite.preparePool()
 
-	res, err := queryClient.Records(gocontext.Background(), &types.QueryRecordsRequest{PoolId: poolId})
+	res, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: poolId})
 	suite.Require().NoError(err)
 
 	/*
@@ -154,16 +154,16 @@ func (suite *KeeperTestSuite) TestQueryRecords() {
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
 		},
 	*/
-	records := res.Records
-	suite.Require().Equal(3, len(records))
+	PoolAssets := res.PoolAssets
+	suite.Require().Equal(3, len(PoolAssets))
 
-	suite.Require().Equal("200", records[0].Weight.String())
-	suite.Require().Equal("300", records[1].Weight.String())
-	suite.Require().Equal("100", records[2].Weight.String())
+	suite.Require().Equal("200", PoolAssets[0].Weight.String())
+	suite.Require().Equal("300", PoolAssets[1].Weight.String())
+	suite.Require().Equal("100", PoolAssets[2].Weight.String())
 
-	suite.Require().Equal("5000000bar", records[0].Token.String())
-	suite.Require().Equal("5000000baz", records[1].Token.String())
-	suite.Require().Equal("5000000foo", records[2].Token.String())
+	suite.Require().Equal("5000000bar", PoolAssets[0].Token.String())
+	suite.Require().Equal("5000000baz", PoolAssets[1].Token.String())
+	suite.Require().Equal("5000000foo", PoolAssets[2].Token.String())
 }
 
 func (suite *KeeperTestSuite) TestQuerySpotPrice() {

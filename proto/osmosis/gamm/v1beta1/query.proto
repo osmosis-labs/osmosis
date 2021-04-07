@@ -23,7 +23,7 @@ service Query {
   rpc TotalShare(QueryTotalShareRequest) returns (QueryTotalShareResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/total_share";
   }
-  rpc Records(QueryRecordsRequest) returns (QueryRecordsResponse) {
+  rpc PoolAssets(QueryPoolAssetsRequest) returns (QueryPoolAssetsResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/tokens";
   }
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
@@ -82,12 +82,12 @@ message QueryTotalShareResponse {
   ];
 }
 
-//=============================== Records
-message QueryRecordsRequest {
+//=============================== PoolAssets
+message QueryPoolAssetsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryRecordsResponse {
-  repeated Record records = 1 [ (gogoproto.nullable) = false ];
+message QueryPoolAssetsResponse {
+  repeated PoolAsset poolAssets = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== SpotPrice

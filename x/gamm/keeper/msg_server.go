@@ -29,7 +29,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePo
 		return nil, err
 	}
 
-	poolId, err := server.keeper.CreatePool(ctx, sender, msg.PoolParams, msg.Records)
+	poolId, err := server.keeper.CreatePool(ctx, sender, msg.PoolParams, msg.PoolAssets)
 	if err != nil {
 		return nil, err
 	}

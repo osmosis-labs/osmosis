@@ -5,15 +5,16 @@ package types
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/regen-network/cosmos-proto"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -27,24 +28,24 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type Record struct {
-	// Denormarized weight.
+type PoolAsset struct {
+	// Denormalized weight.
 	Weight github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"weight" yaml:"denormalized_weight"`
 	Token  types.Coin                             `protobuf:"bytes,2,opt,name=token,proto3" json:"token" yaml:"token"`
 }
 
-func (m *Record) Reset()         { *m = Record{} }
-func (m *Record) String() string { return proto.CompactTextString(m) }
-func (*Record) ProtoMessage()    {}
-func (*Record) Descriptor() ([]byte, []int) {
+func (m *PoolAsset) Reset()         { *m = PoolAsset{} }
+func (m *PoolAsset) String() string { return proto.CompactTextString(m) }
+func (*PoolAsset) ProtoMessage()    {}
+func (*PoolAsset) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e5ab9bc6d45f98ce, []int{0}
 }
-func (m *Record) XXX_Unmarshal(b []byte) error {
+func (m *PoolAsset) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Record) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PoolAsset) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Record.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PoolAsset.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -54,19 +55,19 @@ func (m *Record) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Record) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Record.Merge(m, src)
+func (m *PoolAsset) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolAsset.Merge(m, src)
 }
-func (m *Record) XXX_Size() int {
+func (m *PoolAsset) XXX_Size() int {
 	return m.Size()
 }
-func (m *Record) XXX_DiscardUnknown() {
-	xxx_messageInfo_Record.DiscardUnknown(m)
+func (m *PoolAsset) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolAsset.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Record proto.InternalMessageInfo
+var xxx_messageInfo_PoolAsset proto.InternalMessageInfo
 
-func (m *Record) GetToken() types.Coin {
+func (m *PoolAsset) GetToken() types.Coin {
 	if m != nil {
 		return m.Token
 	}
@@ -128,7 +129,7 @@ type PoolAccount struct {
 	PoolParams          PoolParams                             `protobuf:"bytes,3,opt,name=poolParams,proto3" json:"poolParams" yaml:"pool_params"`
 	TotalWeight         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=totalWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"totalWeight" yaml:"total_weight"`
 	TotalShare          types.Coin                             `protobuf:"bytes,5,opt,name=totalShare,proto3" json:"totalShare" yaml:"total_share"`
-	Records             []Record                               `protobuf:"bytes,6,rep,name=records,proto3" json:"records" yaml:"records"`
+	PoolAssets          []PoolAsset                            `protobuf:"bytes,6,rep,name=poolAssets,proto3" json:"poolAssets" yaml:"pool_assets"`
 }
 
 func (m *PoolAccount) Reset()      { *m = PoolAccount{} }
@@ -164,7 +165,7 @@ func (m *PoolAccount) XXX_DiscardUnknown() {
 var xxx_messageInfo_PoolAccount proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*Record)(nil), "osmosis.gamm.v1beta1.Record")
+	proto.RegisterType((*PoolAsset)(nil), "osmosis.gamm.v1beta1.PoolAsset")
 	proto.RegisterType((*PoolParams)(nil), "osmosis.gamm.v1beta1.PoolParams")
 	proto.RegisterType((*PoolAccount)(nil), "osmosis.gamm.v1beta1.PoolAccount")
 }
@@ -212,7 +213,7 @@ var fileDescriptor_e5ab9bc6d45f98ce = []byte{
 	0xff, 0xc5, 0x64, 0x91, 0x16, 0x93, 0x04, 0x00, 0x00,
 }
 
-func (m *Record) Marshal() (dAtA []byte, err error) {
+func (m *PoolAsset) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -222,12 +223,12 @@ func (m *Record) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Record) MarshalTo(dAtA []byte) (int, error) {
+func (m *PoolAsset) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Record) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PoolAsset) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -328,10 +329,10 @@ func (m *PoolAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Records) > 0 {
-		for iNdEx := len(m.Records) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.PoolAssets) > 0 {
+		for iNdEx := len(m.PoolAssets) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Records[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.PoolAssets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -403,7 +404,7 @@ func encodeVarintPool(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *Record) Size() (n int) {
+func (m *PoolAsset) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -451,8 +452,8 @@ func (m *PoolAccount) Size() (n int) {
 	n += 1 + l + sovPool(uint64(l))
 	l = m.TotalShare.Size()
 	n += 1 + l + sovPool(uint64(l))
-	if len(m.Records) > 0 {
-		for _, e := range m.Records {
+	if len(m.PoolAssets) > 0 {
+		for _, e := range m.PoolAssets {
 			l = e.Size()
 			n += 1 + l + sovPool(uint64(l))
 		}
@@ -466,7 +467,7 @@ func sovPool(x uint64) (n int) {
 func sozPool(x uint64) (n int) {
 	return sovPool(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Record) Unmarshal(dAtA []byte) error {
+func (m *PoolAsset) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -489,10 +490,10 @@ func (m *Record) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Record: wiretype end group for non-group")
+			return fmt.Errorf("proto: PoolAsset: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Record: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PoolAsset: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -913,7 +914,7 @@ func (m *PoolAccount) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolAssets", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -940,8 +941,8 @@ func (m *PoolAccount) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Records = append(m.Records, Record{})
-			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.PoolAssets = append(m.PoolAssets, PoolAsset{})
+			if err := m.PoolAssets[len(m.PoolAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -6,6 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
@@ -16,9 +20,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -398,23 +399,23 @@ func (m *QueryTotalShareResponse) GetTotalShare() types.Coin {
 	return types.Coin{}
 }
 
-//=============================== Records
-type QueryRecordsRequest struct {
+//=============================== PoolAssets
+type QueryPoolAssetsRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
 }
 
-func (m *QueryRecordsRequest) Reset()         { *m = QueryRecordsRequest{} }
-func (m *QueryRecordsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryRecordsRequest) ProtoMessage()    {}
-func (*QueryRecordsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryPoolAssetsRequest) Reset()         { *m = QueryPoolAssetsRequest{} }
+func (m *QueryPoolAssetsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPoolAssetsRequest) ProtoMessage()    {}
+func (*QueryPoolAssetsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d9a717df9ca609ef, []int{8}
 }
-func (m *QueryRecordsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryPoolAssetsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryRecordsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryPoolAssetsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryRecordsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryPoolAssetsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -424,41 +425,41 @@ func (m *QueryRecordsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *QueryRecordsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryRecordsRequest.Merge(m, src)
+func (m *QueryPoolAssetsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPoolAssetsRequest.Merge(m, src)
 }
-func (m *QueryRecordsRequest) XXX_Size() int {
+func (m *QueryPoolAssetsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryRecordsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryRecordsRequest.DiscardUnknown(m)
+func (m *QueryPoolAssetsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPoolAssetsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryRecordsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryPoolAssetsRequest proto.InternalMessageInfo
 
-func (m *QueryRecordsRequest) GetPoolId() uint64 {
+func (m *QueryPoolAssetsRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-type QueryRecordsResponse struct {
-	Records []Record `protobuf:"bytes,1,rep,name=records,proto3" json:"records"`
+type QueryPoolAssetsResponse struct {
+	PoolAssets []PoolAsset `protobuf:"bytes,1,rep,name=poolAssets,proto3" json:"poolAssets"`
 }
 
-func (m *QueryRecordsResponse) Reset()         { *m = QueryRecordsResponse{} }
-func (m *QueryRecordsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryRecordsResponse) ProtoMessage()    {}
-func (*QueryRecordsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryPoolAssetsResponse) Reset()         { *m = QueryPoolAssetsResponse{} }
+func (m *QueryPoolAssetsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPoolAssetsResponse) ProtoMessage()    {}
+func (*QueryPoolAssetsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d9a717df9ca609ef, []int{9}
 }
-func (m *QueryRecordsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryPoolAssetsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryRecordsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryPoolAssetsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryRecordsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryPoolAssetsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -468,21 +469,21 @@ func (m *QueryRecordsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *QueryRecordsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryRecordsResponse.Merge(m, src)
+func (m *QueryPoolAssetsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPoolAssetsResponse.Merge(m, src)
 }
-func (m *QueryRecordsResponse) XXX_Size() int {
+func (m *QueryPoolAssetsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryRecordsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryRecordsResponse.DiscardUnknown(m)
+func (m *QueryPoolAssetsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPoolAssetsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryRecordsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryPoolAssetsResponse proto.InternalMessageInfo
 
-func (m *QueryRecordsResponse) GetRecords() []Record {
+func (m *QueryPoolAssetsResponse) GetPoolAssets() []PoolAsset {
 	if m != nil {
-		return m.Records
+		return m.PoolAssets
 	}
 	return nil
 }
@@ -822,8 +823,8 @@ func init() {
 	proto.RegisterType((*QueryPoolParamsResponse)(nil), "osmosis.gamm.v1beta1.QueryPoolParamsResponse")
 	proto.RegisterType((*QueryTotalShareRequest)(nil), "osmosis.gamm.v1beta1.QueryTotalShareRequest")
 	proto.RegisterType((*QueryTotalShareResponse)(nil), "osmosis.gamm.v1beta1.QueryTotalShareResponse")
-	proto.RegisterType((*QueryRecordsRequest)(nil), "osmosis.gamm.v1beta1.QueryRecordsRequest")
-	proto.RegisterType((*QueryRecordsResponse)(nil), "osmosis.gamm.v1beta1.QueryRecordsResponse")
+	proto.RegisterType((*QueryPoolAssetsRequest)(nil), "osmosis.gamm.v1beta1.QueryPoolAssetsRequest")
+	proto.RegisterType((*QueryPoolAssetsResponse)(nil), "osmosis.gamm.v1beta1.QueryPoolAssetsResponse")
 	proto.RegisterType((*QuerySpotPriceRequest)(nil), "osmosis.gamm.v1beta1.QuerySpotPriceRequest")
 	proto.RegisterType((*QuerySpotPriceResponse)(nil), "osmosis.gamm.v1beta1.QuerySpotPriceResponse")
 	proto.RegisterType((*QuerySwapExactAmountInRequest)(nil), "osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest")
@@ -926,7 +927,7 @@ type QueryClient interface {
 	Pools(ctx context.Context, in *QueryPoolsRequest, opts ...grpc.CallOption) (*QueryPoolsResponse, error)
 	PoolParams(ctx context.Context, in *QueryPoolParamsRequest, opts ...grpc.CallOption) (*QueryPoolParamsResponse, error)
 	TotalShare(ctx context.Context, in *QueryTotalShareRequest, opts ...grpc.CallOption) (*QueryTotalShareResponse, error)
-	Records(ctx context.Context, in *QueryRecordsRequest, opts ...grpc.CallOption) (*QueryRecordsResponse, error)
+	PoolAssets(ctx context.Context, in *QueryPoolAssetsRequest, opts ...grpc.CallOption) (*QueryPoolAssetsResponse, error)
 	SpotPrice(ctx context.Context, in *QuerySpotPriceRequest, opts ...grpc.CallOption) (*QuerySpotPriceResponse, error)
 	// Estimate the swap.
 	EstimateSwapExactAmountIn(ctx context.Context, in *QuerySwapExactAmountInRequest, opts ...grpc.CallOption) (*QuerySwapExactAmountInResponse, error)
@@ -977,9 +978,9 @@ func (c *queryClient) TotalShare(ctx context.Context, in *QueryTotalShareRequest
 	return out, nil
 }
 
-func (c *queryClient) Records(ctx context.Context, in *QueryRecordsRequest, opts ...grpc.CallOption) (*QueryRecordsResponse, error) {
-	out := new(QueryRecordsResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Query/Records", in, out, opts...)
+func (c *queryClient) PoolAssets(ctx context.Context, in *QueryPoolAssetsRequest, opts ...grpc.CallOption) (*QueryPoolAssetsResponse, error) {
+	out := new(QueryPoolAssetsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Query/PoolAssets", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1019,7 +1020,7 @@ type QueryServer interface {
 	Pools(context.Context, *QueryPoolsRequest) (*QueryPoolsResponse, error)
 	PoolParams(context.Context, *QueryPoolParamsRequest) (*QueryPoolParamsResponse, error)
 	TotalShare(context.Context, *QueryTotalShareRequest) (*QueryTotalShareResponse, error)
-	Records(context.Context, *QueryRecordsRequest) (*QueryRecordsResponse, error)
+	PoolAssets(context.Context, *QueryPoolAssetsRequest) (*QueryPoolAssetsResponse, error)
 	SpotPrice(context.Context, *QuerySpotPriceRequest) (*QuerySpotPriceResponse, error)
 	// Estimate the swap.
 	EstimateSwapExactAmountIn(context.Context, *QuerySwapExactAmountInRequest) (*QuerySwapExactAmountInResponse, error)
@@ -1042,8 +1043,8 @@ func (*UnimplementedQueryServer) PoolParams(ctx context.Context, req *QueryPoolP
 func (*UnimplementedQueryServer) TotalShare(ctx context.Context, req *QueryTotalShareRequest) (*QueryTotalShareResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TotalShare not implemented")
 }
-func (*UnimplementedQueryServer) Records(ctx context.Context, req *QueryRecordsRequest) (*QueryRecordsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Records not implemented")
+func (*UnimplementedQueryServer) PoolAssets(ctx context.Context, req *QueryPoolAssetsRequest) (*QueryPoolAssetsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PoolAssets not implemented")
 }
 func (*UnimplementedQueryServer) SpotPrice(ctx context.Context, req *QuerySpotPriceRequest) (*QuerySpotPriceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SpotPrice not implemented")
@@ -1131,20 +1132,20 @@ func _Query_TotalShare_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Records_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryRecordsRequest)
+func _Query_PoolAssets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPoolAssetsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Records(ctx, in)
+		return srv.(QueryServer).PoolAssets(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.gamm.v1beta1.Query/Records",
+		FullMethod: "/osmosis.gamm.v1beta1.Query/PoolAssets",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Records(ctx, req.(*QueryRecordsRequest))
+		return srv.(QueryServer).PoolAssets(ctx, req.(*QueryPoolAssetsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1224,8 +1225,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_TotalShare_Handler,
 		},
 		{
-			MethodName: "Records",
-			Handler:    _Query_Records_Handler,
+			MethodName: "PoolAssets",
+			Handler:    _Query_PoolAssets_Handler,
 		},
 		{
 			MethodName: "SpotPrice",
@@ -1511,7 +1512,7 @@ func (m *QueryTotalShareResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryRecordsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryPoolAssetsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1521,12 +1522,12 @@ func (m *QueryRecordsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryRecordsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryPoolAssetsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryRecordsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryPoolAssetsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1539,7 +1540,7 @@ func (m *QueryRecordsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryRecordsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryPoolAssetsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1549,20 +1550,20 @@ func (m *QueryRecordsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryRecordsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryPoolAssetsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryRecordsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryPoolAssetsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Records) > 0 {
-		for iNdEx := len(m.Records) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.PoolAssets) > 0 {
+		for iNdEx := len(m.PoolAssets) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Records[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.PoolAssets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1948,7 +1949,7 @@ func (m *QueryTotalShareResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryRecordsRequest) Size() (n int) {
+func (m *QueryPoolAssetsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1960,14 +1961,14 @@ func (m *QueryRecordsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryRecordsResponse) Size() (n int) {
+func (m *QueryPoolAssetsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.Records) > 0 {
-		for _, e := range m.Records {
+	if len(m.PoolAssets) > 0 {
+		for _, e := range m.PoolAssets {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -2777,7 +2778,7 @@ func (m *QueryTotalShareResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryRecordsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryPoolAssetsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2800,10 +2801,10 @@ func (m *QueryRecordsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryRecordsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryPoolAssetsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryRecordsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryPoolAssetsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2849,7 +2850,7 @@ func (m *QueryRecordsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryRecordsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryPoolAssetsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2872,15 +2873,15 @@ func (m *QueryRecordsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryRecordsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryPoolAssetsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryRecordsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryPoolAssetsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolAssets", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2907,8 +2908,8 @@ func (m *QueryRecordsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Records = append(m.Records, Record{})
-			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.PoolAssets = append(m.PoolAssets, PoolAsset{})
+			if err := m.PoolAssets[len(m.PoolAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
