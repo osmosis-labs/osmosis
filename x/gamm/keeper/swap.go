@@ -155,7 +155,7 @@ func (k Keeper) SwapExactAmountOut(
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is larger than max amount", outRecord.Token.Denom)
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", outRecord.Token.Denom)
 	}
 
 	inRecord.Token.Amount = inRecord.Token.Amount.Add(tokenInAmount)
