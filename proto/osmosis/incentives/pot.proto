@@ -11,7 +11,7 @@ option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  ByDuration = 0; // locks which has more than specific duration
+  ByDuration = 0; // Queries for locks that are longer than a certain duration
   ByTime = 1; // locks which are started before specific time
 }
 
