@@ -99,7 +99,7 @@ func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins
 }
 
 // AddToPot add coins to pot
-func (k Keeper) AddToPot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, potID uint64) error {
+func (k Keeper) AddToPotRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, potID uint64) error {
 	pot, err := k.GetPotByID(ctx, potID)
 	if err != nil {
 		return err
