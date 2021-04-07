@@ -187,7 +187,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, fil
 	return pot, filteredDistrCoins, nil
 }
 
-// Distribute distriute coins from pot for fitting conditions
+// Distribute coins from pot according to its conditions
 func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	locks := k.GetLocksToDistribution(ctx, pot.DistributeTo)
