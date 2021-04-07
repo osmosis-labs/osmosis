@@ -6,7 +6,7 @@ order: 2
 
 ## Incentives management
 
-All the incentives that is going to be provided are locked into `IncentivePool` until it's released to the users after a specific period of time.
+All the incentives that are going to be provided are locked into `IncentivePool` until released to the appropriate recipients after a specific period of time.
 
 ### Pot
 
