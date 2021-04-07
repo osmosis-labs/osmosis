@@ -17,10 +17,10 @@ message Farm {
     uint64 current_period = 3 [(gogoproto.moretags) = "yaml:\"current_period\""];
 }
 
-// HistoricalRecord represents historical records for a fool.
+// HistoricalEntry represents historical entries for a farm.
 // Height is implicit within the store key.
 // Cumulative reward ratio is the sum from the zeroeth period.
-message HistoricalRecord {
+message HistoricalEntry {
     repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
         (gogoproto.moretags)     = "yaml:\"cumulative_reward_ratio\"",
         (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",

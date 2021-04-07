@@ -22,9 +22,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		}
 	}
 
-	if genState.HistoricalRecords != nil {
-		for _, record := range genState.HistoricalRecords {
-			k.SetHistoricalRecord(ctx, record.FarmId, record.CurrentPeriod, record.Record)
+	if genState.HistoricalEntries != nil {
+		for _, entry := range genState.HistoricalEntries {
+			k.SetHistoricalEntry(ctx, entry.FarmId, entry.CurrentPeriod, entry.Entry)
 		}
 	}
 }
@@ -42,10 +42,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	historicalRecords := make([]types.GenesisHistoricalRecord, 0)
-	k.IterateHistoricalRecords(ctx, func(record types.HistoricalRecord, farmId uint64, period uint64) bool {
-		historicalRecords = append(historicalRecords, types.GenesisHistoricalRecord{
-			Record:        record,
+	historicalEntries := make([]types.GenesisHistoricalEntry, 0)
+	k.IterateHistoricalEntries(ctx, func(entry types.HistoricalEntry, farmId uint64, period uint64) bool {
+		historicalEntries = append(historicalEntries, types.GenesisHistoricalEntry{
+			Entry:         entry,
 			FarmId:        farmId,
 			CurrentPeriod: period,
 		})
@@ -55,6 +55,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Farms:             farms,
 		Farmers:           farmers,
-		HistoricalRecords: historicalRecords,
+		HistoricalEntries: historicalEntries,
 	}
 }

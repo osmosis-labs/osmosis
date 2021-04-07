@@ -11,11 +11,11 @@ option go_package = "github.com/c-osmosis/osmosis/x/farm/types";
 message GenesisState {
   repeated Farm farms = 1 [(gogoproto.nullable) = false];
   repeated Farmer farmers = 2 [(gogoproto.nullable) = false];
-  repeated GenesisHistoricalRecord historicalRecords = 3 [(gogoproto.nullable) = false];
+  repeated GenesisHistoricalEntry historicalEntries = 3 [(gogoproto.nullable) = false];
 }
 
-message GenesisHistoricalRecord {
-  HistoricalRecord record = 1 [(gogoproto.nullable) = false];
+message GenesisHistoricalEntry {
+  HistoricalEntry entry = 1 [(gogoproto.nullable) = false];
   uint64 farm_id = 2 [(gogoproto.moretags) = "yaml:\"farm_id\""];
   uint64 current_period = 3 [(gogoproto.moretags) = "yaml:\"current_period\""];
 }

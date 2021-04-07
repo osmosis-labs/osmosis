@@ -96,10 +96,10 @@ func (k Keeper) CalculatePendingRewards(ctx sdk.Context, farmId uint64, address 
 		return nil, nil
 	}
 
-	lastRewardRatio := k.GetHistoricalRecord(ctx, farm.FarmId, farm.CurrentPeriod-1).CumulativeRewardRatio
+	lastRewardRatio := k.GetHistoricalEntry(ctx, farm.FarmId, farm.CurrentPeriod-1).CumulativeRewardRatio
 	farmerRewardRatio := sdk.DecCoins{}
 	if farmer.LastWithdrawnPeriod > 0 {
-		farmerRewardRatio = k.GetHistoricalRecord(ctx, farm.FarmId, farmer.LastWithdrawnPeriod).CumulativeRewardRatio
+		farmerRewardRatio = k.GetHistoricalEntry(ctx, farm.FarmId, farmer.LastWithdrawnPeriod).CumulativeRewardRatio
 	}
 
 	difference := lastRewardRatio.Sub(farmerRewardRatio)

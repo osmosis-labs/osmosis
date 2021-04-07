@@ -28,6 +28,14 @@ func (suite *KeeperTestSuite) TestSimpleReward() {
 	err = keeper.AllocateAssetsFromAccountToFarm(suite.ctx, farm.FarmId, allocatorAcc, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000))))
 	suite.NoError(err)
 
+	rewards, err = keeper.DepositShareToFarm(suite.ctx, farm.FarmId, acc2, sdk.NewInt(1))
+	suite.NoError(err)
+	suite.Equal(0, len(rewards))
+
+	rewards, err = keeper.WithdrawRewardsFromFarm(suite.ctx, farm.FarmId, acc2)
+	suite.NoError(err)
+	suite.Equal(0, len(rewards))
+
 	rewards, err = keeper.WithdrawRewardsFromFarm(suite.ctx, farm.FarmId, acc1)
 	suite.NoError(err)
 	suite.Equal("2000foo", rewards.String())
