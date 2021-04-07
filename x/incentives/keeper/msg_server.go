@@ -41,7 +41,7 @@ func (server msgServer) CreatePot(goCtx context.Context, msg *types.MsgCreatePot
 
 func (server msgServer) AddToPot(goCtx context.Context, msg *types.MsgAddToPot) (*types.MsgAddToPotResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := server.keeper.AddToPot(ctx, msg.Owner, msg.Rewards, msg.PotId)
+	err := server.keeper.AddToPotRewards(ctx, msg.Owner, msg.Rewards, msg.PotId)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

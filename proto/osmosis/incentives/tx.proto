@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/incentives/pot.proto";
+import "osmosis/lockup/lock.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 
@@ -15,7 +16,7 @@ service Msg {
 
 message MsgCreatePot {
   bytes owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  DistrCondition distribute_to = 2 [(gogoproto.nullable) = false]; // distribute condition of a lock which meet one of these conditions
+  osmosis.lockup.QueryCondition distribute_to = 2 [(gogoproto.nullable) = false]; // distribute condition of a lock which meet one of these conditions
   repeated cosmos.base.v1beta1.Coin coins = 3
     [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"]; // can distribute multiple coins
   // condition for lock start time, not valid if unset value

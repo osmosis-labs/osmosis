@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,7 +25,7 @@ func (m MsgCreatePot) ValidateBasic() error {
 	if m.DistributeTo.Denom == "" {
 		return errors.New("denom should be set for the condition")
 	}
-	if LockQueryType_name[int32(m.DistributeTo.LockQueryType)] == "" {
+	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] == "" {
 		return errors.New("lock query type is invalid")
 	}
 	if m.Coins.Empty() {

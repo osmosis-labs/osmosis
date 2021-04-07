@@ -25,3 +25,21 @@ message PeriodLock {
 	repeated cosmos.base.v1beta1.Coin coins = 5
 		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
+
+enum LockQueryType {
+	option (gogoproto.goproto_enum_prefix) = false;
+  
+	ByDuration = 0; // Queries for locks that are longer than a certain duration
+	ByTime = 1; // Queries for lockups that started before a specific time
+}
+
+message QueryCondition {
+	LockQueryType lock_query_type = 1; // type of lock query, ByLockDuration | ByLockTime
+	string denom = 2; // What token denomination are we looking for lockups of
+	// condition for lock duration, only valid if positive
+	google.protobuf.Duration duration = 3
+	  [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
+	// condition for lock start time, not valid if unset value
+	google.protobuf.Timestamp timestamp = 4
+	  [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
+}

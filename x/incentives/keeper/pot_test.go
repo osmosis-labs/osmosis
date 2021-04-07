@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) CreatePot(addr sdk.AccAddress, coins sdk.Coins, distrTo types.DistrCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Pot) {
+func (suite *KeeperTestSuite) CreatePot(addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Pot) {
 	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
 	potID, err := suite.app.IncentivesKeeper.CreatePot(suite.ctx, addr, coins, distrTo, startTime, numEpoch)
 	suite.Require().NoError(err)
@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) CreatePot(addr sdk.AccAddress, coins sdk.Coins, di
 func (suite *KeeperTestSuite) AddToPot(coins sdk.Coins, potID uint64) uint64 {
 	addr := sdk.AccAddress([]byte("addrx---------------"))
 	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
-	err := suite.app.IncentivesKeeper.AddToPot(suite.ctx, addr, coins, potID)
+	err := suite.app.IncentivesKeeper.AddToPotRewards(suite.ctx, addr, coins, potID)
 	suite.Require().NoError(err)
 	return potID
 }
@@ -34,8 +34,8 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 func (suite *KeeperTestSuite) SetupNewPot(coins sdk.Coins) (uint64, sdk.Coins, time.Time) {
 	addr2 := sdk.AccAddress([]byte("addr1---------------"))
 	startTime2 := time.Now()
-	distrTo := types.DistrCondition{
-		LockQueryType: types.ByDuration,
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}

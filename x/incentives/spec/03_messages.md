@@ -11,7 +11,7 @@ order: 3
 ```go
 type MsgCreatePot struct {
 	Owner    sdk.AccAddress
-  DistributeTo []DistrCondition
+  DistributeTo QueryCondition
   Rewards sdk.Coins
   StartTime    time.Time // start time to start distribution
   NumEpochs    uint64 // number of epochs distribution will be done

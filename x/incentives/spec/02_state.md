@@ -19,7 +19,7 @@ const (
   ByLockTime // locks which are started before specific time
 )
 
-type DistrCondition struct {
+type QueryCondition struct {
   LockQueryType LockQueryType // type of lock condition
   Denom  string // lock denom
   Duration time.Duration // condition for lock duration, only valid if positive
@@ -28,7 +28,7 @@ type DistrCondition struct {
 
 type Pot struct {
   ID           uint64 // unique ID of a Pot
-  DistributeTo DistrCondition // distribute condition of a lock
+  DistributeTo QueryCondition // distribute condition of a lock
   TotalRewards sdk.Coins // can distribute multiple coins
   StartTime    time.Time // start time to start distribution
   NumEpochs    uint64 // number of epochs distribution will be done 
@@ -43,7 +43,7 @@ enum LockQueryType {
   ByTime = 1; // locks which are started before specific time
 }
 
-message DistrCondition {
+message QueryCondition {
   LockQueryType lock_query_type = 1; // type of lock, ByLockDuration | ByLockTime
   string denom = 2; // lock denom
   google.protobuf.Duration duration = 3; // condition for lock duration, only valid if positive
@@ -52,7 +52,7 @@ message DistrCondition {
 
 message Pot {
   uint64 id = 1; // unique ID of a Pot
-  repeated DistrCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
+  QueryCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
   repeated cosmos.base.v1beta1.Coin coins = 3; // can distribute multiple coins
   google.protobuf.Timestamp start_time = 4; // condition for lock start time, not valid if unset value
   uint64 num_epochs = 5; // number of epochs distribution will be done 

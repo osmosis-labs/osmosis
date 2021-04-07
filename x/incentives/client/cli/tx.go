@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/c-osmosis/osmosis/x/incentives/types"
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -65,7 +66,7 @@ func NewCreatePotCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			queryType, ok := types.LockQueryType_value[queryTypeStr]
+			queryType, ok := lockuptypes.LockQueryType_value[queryTypeStr]
 			if !ok {
 				return errors.New("invalid lock query type")
 			}
@@ -88,8 +89,8 @@ func NewCreatePotCmd() *cobra.Command {
 
 			msg := &types.MsgCreatePot{
 				Owner: clientCtx.GetFromAddress(),
-				DistributeTo: types.DistrCondition{
-					LockQueryType: types.LockQueryType(queryType),
+				DistributeTo: lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.LockQueryType(queryType),
 					Denom:         denom,
 					Duration:      duration,
 					Timestamp:     time.Unix(timestamp, 0),

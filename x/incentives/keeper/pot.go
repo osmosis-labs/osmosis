@@ -50,7 +50,7 @@ func (k Keeper) getDistributedCoinsFromPots(pots []types.Pot) sdk.Coins {
 }
 
 func (k Keeper) getToDistributeCoinsFromPots(pots []types.Pot) sdk.Coins {
- 	// TODO: Consider optimizing this in the future to only require one iteration over all pots.
+	// TODO: Consider optimizing this in the future to only require one iteration over all pots.
 	coins := k.getCoinsFromPots(pots)
 	distributed := k.getDistributedCoinsFromPots(pots)
 	return coins.Sub(distributed)
@@ -76,7 +76,7 @@ func (k Keeper) setPot(ctx sdk.Context, pot *types.Pot) error {
 }
 
 // CreatePot create a pot and send coins to the pot
-func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, distrTo types.DistrCondition, startTime time.Time, numEpochs uint64) (uint64, error) {
+func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochs uint64) (uint64, error) {
 	pot := types.Pot{
 		Id:           k.getLastPotID(ctx) + 1,
 		DistributeTo: distrTo,
@@ -136,11 +136,11 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 }
 
 // GetLocksToDistribution get locks that are associated to a condition
-func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo types.DistrCondition) []lockuptypes.PeriodLock {
+func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.QueryCondition) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
-	case types.ByDuration:
+	case lockuptypes.ByDuration:
 		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
-	case types.ByTime:
+	case lockuptypes.ByTime:
 		return k.lk.GetLocksPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
 	default:
 	}
