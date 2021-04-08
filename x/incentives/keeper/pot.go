@@ -168,7 +168,9 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, fil
 	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
-			amt := coin.Amount.Mul(lock.Coins.AmountOf(pot.DistributeTo.Denom)).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+			// distribution amount = pot_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
+			denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
+			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 			if amt.IsPositive() {
 				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
 			}
@@ -202,7 +204,9 @@ func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
 	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
-			amt := coin.Amount.Mul(lock.Coins.AmountOf(pot.DistributeTo.Denom)).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+			// distribution amount = pot_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
+			denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
+			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 			if amt.IsPositive() {
 				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
 			}
@@ -284,6 +288,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	params := k.GetParams(ctx)
 	currentEpoch, _ := k.GetCurrentEpochInfo(ctx)
 
+	// no need to change storage while doing estimation and we use cached context
 	cacheCtx, _ := ctx.CacheContext()
 	for _, pot := range pots {
 		distrBeginEpoch := currentEpoch

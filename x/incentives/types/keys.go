@@ -26,22 +26,22 @@ var (
 	KeyPrefixPeriodPot = []byte{0x03}
 
 	// KeyPrefixUpcomingPots defines prefix key for storing reference key for upcoming pots
-	KeyPrefixUpcomingPots = []byte{0x10}
+	KeyPrefixUpcomingPots = []byte{0x04}
 
 	// KeyPrefixActivePots defines prefix key for storing reference key for active pots
-	KeyPrefixActivePots = []byte{0x11}
+	KeyPrefixActivePots = []byte{0x05}
 
 	// KeyPrefixFinishedPots defines prefix key for storing reference key for finished pots
-	KeyPrefixFinishedPots = []byte{0x12}
+	KeyPrefixFinishedPots = []byte{0x06}
 
 	// KeyIndexSeparator defines key for merging bytes
-	KeyIndexSeparator = []byte{0x7F}
+	KeyIndexSeparator = []byte{0x07}
 
 	// KeyCurrentEpoch defines key for storing current epoch
-	KeyCurrentEpoch = []byte{0x80}
+	KeyCurrentEpoch = []byte{0x08}
 
 	// KeyEpochBeginBlock defines key for storing begin block of current epoch
-	KeyEpochBeginBlock = []byte{0x81}
+	KeyEpochBeginBlock = []byte{0x09}
 )
 
 func KeyPrefix(p string) []byte {

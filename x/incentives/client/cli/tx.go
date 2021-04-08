@@ -68,7 +68,7 @@ func NewCreatePotCmd() *cobra.Command {
 			}
 			queryType, ok := lockuptypes.LockQueryType_value[queryTypeStr]
 			if !ok {
-				return errors.New("invalid lock query type")
+				return errors.New("invalid lock query type, should be one of ByDuration or ByTime.")
 			}
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {

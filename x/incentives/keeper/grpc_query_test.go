@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/c-osmosis/osmosis/x/incentives/types"
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,12 +23,20 @@ func (suite *KeeperTestSuite) TestGRPCPotByID() {
 	res, err = suite.app.IncentivesKeeper.PotByID(sdk.WrapSDKContext(suite.ctx), &types.PotByIDRequest{Id: potID})
 	suite.Require().NoError(err)
 	suite.Require().NotEqual(res.Pot, nil)
-	suite.Require().Equal(res.Pot.Id, potID)
-	suite.Require().Equal(res.Pot.Coins, coins)
-	suite.Require().Equal(res.Pot.NumEpochs, uint64(2))
-	suite.Require().Equal(res.Pot.FilledEpochs, uint64(0))
-	suite.Require().Equal(res.Pot.DistributedCoins, sdk.Coins{})
-	suite.Require().Equal(res.Pot.StartTime.Unix(), startTime.Unix())
+	expectedPot := types.Pot{
+		Id: potID,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
+		},
+		Coins:            coins,
+		NumEpochs:        2,
+		FilledEpochs:     0,
+		DistributedCoins: sdk.Coins{},
+		StartTime:        startTime,
+	}
+	suite.Require().Equal(res.Pot.String(), expectedPot.String())
 }
 
 func (suite *KeeperTestSuite) TestGRPCPots() {
@@ -39,17 +48,26 @@ func (suite *KeeperTestSuite) TestGRPCPots() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a pot
-	_, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	potID, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.Pots(sdk.WrapSDKContext(suite.ctx), &types.PotsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
-	suite.Require().Equal(res.Data[0].Coins, coins)
-	suite.Require().Equal(res.Data[0].NumEpochs, uint64(2))
-	suite.Require().Equal(res.Data[0].FilledEpochs, uint64(0))
-	suite.Require().Equal(res.Data[0].DistributedCoins, sdk.Coins{})
-	suite.Require().Equal(res.Data[0].StartTime.Unix(), startTime.Unix())
+	expectedPot := types.Pot{
+		Id: potID,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
+		},
+		Coins:            coins,
+		NumEpochs:        2,
+		FilledEpochs:     0,
+		DistributedCoins: sdk.Coins{},
+		StartTime:        startTime,
+	}
+	suite.Require().Equal(res.Data[0].String(), expectedPot.String())
 }
 
 func (suite *KeeperTestSuite) TestGRPCActivePots() {
@@ -61,17 +79,26 @@ func (suite *KeeperTestSuite) TestGRPCActivePots() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a pot
-	_, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	potID, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.ActivePots(sdk.WrapSDKContext(suite.ctx), &types.ActivePotsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
-	suite.Require().Equal(res.Data[0].Coins, coins)
-	suite.Require().Equal(res.Data[0].NumEpochs, uint64(2))
-	suite.Require().Equal(res.Data[0].FilledEpochs, uint64(0))
-	suite.Require().Equal(res.Data[0].DistributedCoins, sdk.Coins{})
-	suite.Require().Equal(res.Data[0].StartTime.Unix(), startTime.Unix())
+	expectedPot := types.Pot{
+		Id: potID,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
+		},
+		Coins:            coins,
+		NumEpochs:        2,
+		FilledEpochs:     0,
+		DistributedCoins: sdk.Coins{},
+		StartTime:        startTime,
+	}
+	suite.Require().Equal(res.Data[0].String(), expectedPot.String())
 }
 
 func (suite *KeeperTestSuite) TestGRPCUpcomingPots() {
@@ -83,17 +110,26 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingPots() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a pot
-	_, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	potID, coins, startTime := suite.SetupNewPot(sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.UpcomingPots(sdk.WrapSDKContext(suite.ctx), &types.UpcomingPotsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
-	suite.Require().Equal(res.Data[0].Coins, coins)
-	suite.Require().Equal(res.Data[0].NumEpochs, uint64(2))
-	suite.Require().Equal(res.Data[0].FilledEpochs, uint64(0))
-	suite.Require().Equal(res.Data[0].DistributedCoins, sdk.Coins{})
-	suite.Require().Equal(res.Data[0].StartTime.Unix(), startTime.Unix())
+	expectedPot := types.Pot{
+		Id: potID,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
+		},
+		Coins:            coins,
+		NumEpochs:        2,
+		FilledEpochs:     0,
+		DistributedCoins: sdk.Coins{},
+		StartTime:        startTime,
+	}
+	suite.Require().Equal(res.Data[0].String(), expectedPot.String())
 }
 
 func (suite *KeeperTestSuite) TestGRPCRewardsEst() {

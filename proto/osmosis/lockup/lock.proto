@@ -36,10 +36,10 @@ enum LockQueryType {
 message QueryCondition {
 	LockQueryType lock_query_type = 1; // type of lock query, ByLockDuration | ByLockTime
 	string denom = 2; // What token denomination are we looking for lockups of
-	// condition for lock duration, only valid if positive
+	// valid when query condition is ByDuration
 	google.protobuf.Duration duration = 3
 	  [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"duration\""];
-	// condition for lock start time, not valid if unset value
+	// valid when query condition is ByTime
 	google.protobuf.Timestamp timestamp = 4
 	  [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
 }
