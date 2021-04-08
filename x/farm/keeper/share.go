@@ -6,6 +6,10 @@ import (
 )
 
 func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, address sdk.AccAddress, share sdk.Int) (rewards sdk.Coins, err error) {
+	if !share.IsPositive() {
+		return nil, types.ErrInvalidShare
+	}
+
 	farm, err := k.GetFarm(ctx, farmId)
 	if err != nil {
 		return nil, err
@@ -36,14 +40,14 @@ func (k Keeper) DepositShareToFarm(ctx sdk.Context, farmId uint64, address sdk.A
 	}
 	k.setFarmer(ctx, farmer)
 
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, rewards)
-	if err != nil {
-		return nil, err
-	}
 	return rewards, nil
 }
 
 func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, address sdk.AccAddress, share sdk.Int) (rewards sdk.Coins, err error) {
+	if !share.IsPositive() {
+		return nil, types.ErrInvalidShare
+	}
+
 	rewards, err = k.WithdrawRewardsFromFarm(ctx, farmId, address)
 	if err != nil {
 		return nil, err
@@ -72,10 +76,6 @@ func (k Keeper) WithdrawShareFromFarm(ctx sdk.Context, farmId uint64, address sd
 	}
 	k.setFarmer(ctx, farmer)
 
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, rewards)
-	if err != nil {
-		return nil, err
-	}
 	return rewards, nil
 }
 

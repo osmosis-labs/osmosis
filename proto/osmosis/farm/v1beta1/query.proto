@@ -2,16 +2,73 @@ syntax = "proto3";
 package osmosis.farm.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/duration.proto";
+import "osmosis/farm/v1beta1/types.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/farm/types";
 
 service Query {
+  rpc Farms(QueryFarmsRequest) returns (QueryFarmsResponse) {
+    option (google.api.http).get = "/osmosis/farm/v1beta1/farms";
+  }
+  rpc Farm(QueryFarmRequest) returns (QueryFarmResponse) {
+    option (google.api.http).get = "/osmosis/farm/v1beta1/farm/{farm_id}";
+  }
+  rpc Farmers(QueryFarmersRequest) returns (QueryFarmersResponse) {
+    option (google.api.http).get = "/osmosis/farm/v1beta1/farmers/{farm_id}";
+  }
+  rpc Farmer(QueryFarmerRequest) returns (QueryFarmerResponse) {
+    option (google.api.http).get = "/osmosis/farm/v1beta1/farmer/{farm_id}/{address}";
+  }
   rpc PendingRewards(QueryPendingRewardsRequest) returns (QueryPendingRewardsResponse) {
     option (google.api.http).get = "/osmosis/farm/v1beta1/pending-rewards/{farm_id}/{address}";
   }
+}
+
+message QueryFarmsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryFarmsResponse {
+  repeated Farm farms = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryFarmRequest {
+  uint64 farm_id = 1 [ (gogoproto.moretags) = "yaml:\"farm_id\"" ];
+}
+
+message QueryFarmResponse {
+  Farm farm = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryFarmersRequest {
+  uint64 farm_id = 1 [ (gogoproto.moretags) = "yaml:\"farm_id\"" ];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryFarmersResponse {
+  repeated Farmer farmers = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryFarmerRequest {
+  uint64 farm_id = 1 [ (gogoproto.moretags) = "yaml:\"farm_id\"" ];
+  string address = 2;
+}
+
+message QueryFarmerResponse {
+  Farmer farmer = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryPendingRewardsRequest {

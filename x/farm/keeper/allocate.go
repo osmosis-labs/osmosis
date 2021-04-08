@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/c-osmosis/osmosis/x/farm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,6 +29,10 @@ func (k Keeper) allocateAssetsToFarm(ctx sdk.Context, farmId uint64, assets sdk.
 	err := assets.Validate()
 	if err != nil {
 		return err
+	}
+
+	if assets.Empty() {
+		return fmt.Errorf("assets are empty")
 	}
 
 	farm, err := k.GetFarm(ctx, farmId)
