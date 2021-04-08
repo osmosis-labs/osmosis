@@ -29,7 +29,11 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
-		suite.Require().Equal(poolId, pool.Pool.Id)
+		var poolAcc types.PoolAccountI
+		err = suite.app.InterfaceRegistry().UnpackAny(pool.Pool, &poolAcc)
+		suite.Require().NoError(err)
+		suite.Require().Equal(poolId, poolAcc.GetId())
+		suite.Require().Equal(types.NewPoolAddress(poolId).String(), poolAcc.GetAddress().String())
 	}
 }
 
@@ -42,7 +46,11 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
-		suite.Require().Equal(poolId, pool.Pool.Id)
+		var poolAcc types.PoolAccountI
+		err = suite.app.InterfaceRegistry().UnpackAny(pool.Pool, &poolAcc)
+		suite.Require().NoError(err)
+		suite.Require().Equal(poolId, poolAcc.GetId())
+		suite.Require().Equal(types.NewPoolAddress(poolId).String(), poolAcc.GetAddress().String())
 	}
 
 	res, err := queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
@@ -55,7 +63,11 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, len(res.Pools))
 	for _, r := range res.Pools {
-		suite.Require().Equal(uint64(1), r.Id)
+		var poolAcc types.PoolAccountI
+		err = suite.app.InterfaceRegistry().UnpackAny(r, &poolAcc)
+		suite.Require().NoError(err)
+		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), poolAcc.GetAddress().String())
+		suite.Require().Equal(uint64(1), poolAcc.GetId())
 	}
 
 	res, err = queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
@@ -68,7 +80,11 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(5, len(res.Pools))
 	for i, r := range res.Pools {
-		suite.Require().Equal(uint64(i+1), r.Id)
+		var poolAcc types.PoolAccountI
+		err = suite.app.InterfaceRegistry().UnpackAny(r, &poolAcc)
+		suite.Require().NoError(err)
+		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), poolAcc.GetAddress().String())
+		suite.Require().Equal(uint64(i+1), poolAcc.GetId())
 	}
 }
 
