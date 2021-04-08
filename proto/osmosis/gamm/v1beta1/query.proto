@@ -25,7 +25,7 @@ service Query {
   rpc TotalShare(QueryTotalShareRequest) returns (QueryTotalShareResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/total_share";
   }
-  rpc Records(QueryRecordsRequest) returns (QueryRecordsResponse) {
+  rpc PoolAssets(QueryPoolAssetsRequest) returns (QueryPoolAssetsResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/tokens";
   }
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
@@ -84,12 +84,12 @@ message QueryTotalShareResponse {
   ];
 }
 
-//=============================== Records
-message QueryRecordsRequest {
+//=============================== PoolAssets
+message QueryPoolAssetsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryRecordsResponse {
-  repeated Record records = 1 [ (gogoproto.nullable) = false ];
+message QueryPoolAssetsResponse {
+  repeated PoolAsset poolAssets = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== SpotPrice
@@ -98,12 +98,11 @@ message QuerySpotPriceRequest {
   string tokenInDenom = 2 [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
   string tokenOutDenom = 3
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
+  bool sansSwapFee = 4 [ (gogoproto.moretags) = "yaml:\"sans_swap_fee\"" ];
 }
 message QuerySpotPriceResponse {
   // String of the Dec. Ex) 10.203uatom
-  string spotPrice = 1 [
-    (gogoproto.moretags) = "yaml:\"spot_price\""
-  ];
+  string spotPrice = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
 }
 
 //=============================== EstimateSwapExactAmountIn

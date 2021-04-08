@@ -34,7 +34,7 @@ message MsgCreatePool {
     (gogoproto.nullable) = false
   ];
 
-  repeated Record records = 3 [ (gogoproto.nullable) = false ];
+  repeated PoolAsset poolAssets = 3 [ (gogoproto.nullable) = false ];
 }
 
 message MsgCreatePoolResponse {}
@@ -76,10 +76,9 @@ message MsgExitPoolResponse {}
 
 // ===================== MsgSwapExactAmountIn
 message SwapAmountInRoute {
-  uint64 poolId = 1 [(gogoproto.moretags) = "yaml:\"pool_id\""];
-  string tokenOutDenom = 2 [
-    (gogoproto.moretags) = "yaml:\"token_out_denom\""
-  ];
+  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string tokenOutDenom = 2
+      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
 }
 
 message MsgSwapExactAmountIn {
@@ -100,10 +99,8 @@ message MsgSwapExactAmountInResponse {}
 
 // ===================== MsgSwapExactAmountOut
 message SwapAmountOutRoute {
-  uint64 poolId = 1 [(gogoproto.moretags) = "yaml:\"pool_id\""];
-  string tokenInDenom = 2 [
-  (gogoproto.moretags) = "yaml:\"token_out_denom\""
-  ];
+  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string tokenInDenom = 2 [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
 }
 
 message MsgSwapExactAmountOut {

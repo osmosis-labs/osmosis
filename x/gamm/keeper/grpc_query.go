@@ -136,7 +136,7 @@ func (k Keeper) TotalShare(ctx context.Context, req *types.QueryTotalShareReques
 	}, nil
 }
 
-func (k Keeper) Records(ctx context.Context, req *types.QueryRecordsRequest) (*types.QueryRecordsResponse, error) {
+func (k Keeper) PoolAssets(ctx context.Context, req *types.QueryPoolAssetsRequest) (*types.QueryPoolAssetsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -147,8 +147,8 @@ func (k Keeper) Records(ctx context.Context, req *types.QueryRecordsRequest) (*t
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryRecordsResponse{
-		Records: pool.GetAllRecords(),
+	return &types.QueryPoolAssetsResponse{
+		PoolAssets: pool.GetAllPoolAssets(),
 	}, nil
 }
 
@@ -167,9 +167,18 @@ func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	sp, err := k.CalculateSpotPrice(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	var sp sdk.Dec
+	var err error
+	if req.SansSwapFee {
+		sp, err = k.CalculateSpotPriceSansSwapFee(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	} else {
+		sp, err = k.CalculateSpotPrice(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 	return &types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),

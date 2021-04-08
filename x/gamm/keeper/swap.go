@@ -24,29 +24,31 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, types.ErrPoolLocked
 	}
 
-	inRecord, err := poolAcc.GetRecord(tokenIn.Denom)
+	inPoolAsset, err := poolAcc.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	outRecord, err := poolAcc.GetRecord(tokenOutDenom)
+	outPoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	spotPriceBefore := calcSpotPrice(
-		inRecord.Token.Amount.ToDec(),
-		inRecord.Weight.ToDec(),
-		outRecord.Token.Amount.ToDec(),
-		outRecord.Weight.ToDec(),
+	// TODO: Understand if we are handling swap fee consistently, with the global swap fee and the pool swap fee
+	//
+	spotPriceBefore := calcSpotPriceWithSwapFee(
+		inPoolAsset.Token.Amount.ToDec(),
+		inPoolAsset.Weight.ToDec(),
+		outPoolAsset.Token.Amount.ToDec(),
+		outPoolAsset.Weight.ToDec(),
 		poolAcc.GetPoolParams().SwapFee,
 	)
 
 	tokenOutAmount = calcOutGivenIn(
-		inRecord.Token.Amount.ToDec(),
-		inRecord.Weight.ToDec(),
-		outRecord.Token.Amount.ToDec(),
-		outRecord.Weight.ToDec(),
+		inPoolAsset.Token.Amount.ToDec(),
+		inPoolAsset.Weight.ToDec(),
+		outPoolAsset.Token.Amount.ToDec(),
+		outPoolAsset.Weight.ToDec(),
 		tokenIn.Amount.ToDec(),
 		poolAcc.GetPoolParams().SwapFee,
 	).TruncateInt()
@@ -55,29 +57,32 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", outRecord.Token.Denom)
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", outPoolAsset.Token.Denom)
 	}
 
-	inRecord.Token.Amount = inRecord.Token.Amount.Add(tokenIn.Amount)
-	outRecord.Token.Amount = outRecord.Token.Amount.Sub(tokenOutAmount)
+	inPoolAsset.Token.Amount = inPoolAsset.Token.Amount.Add(tokenIn.Amount)
+	outPoolAsset.Token.Amount = outPoolAsset.Token.Amount.Sub(tokenOutAmount)
 
-	spotPriceAfter = calcSpotPrice(
-		inRecord.Token.Amount.ToDec(),
-		inRecord.Weight.ToDec(),
-		outRecord.Token.Amount.ToDec(),
-		outRecord.Weight.ToDec(),
+	spotPriceAfter = calcSpotPriceWithSwapFee(
+		inPoolAsset.Token.Amount.ToDec(),
+		inPoolAsset.Weight.ToDec(),
+		outPoolAsset.Token.Amount.ToDec(),
+		outPoolAsset.Weight.ToDec(),
 		poolAcc.GetPoolParams().SwapFee,
 	)
 	if spotPriceAfter.LT(spotPriceBefore) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
+
+	// TODO: Do we need this check, seems pretty expensive?
+	// I'd rather spend that computation in ensuring a better approx
 	if spotPriceBefore.GT(tokenIn.Amount.ToDec().QuoInt(tokenOutAmount)) {
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
 
-	err = poolAcc.SetRecords([]types.Record{
-		inRecord,
-		outRecord,
+	err = poolAcc.SetPoolAssets([]types.PoolAsset{
+		inPoolAsset,
+		outPoolAsset,
 	})
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
@@ -119,29 +124,29 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, types.ErrPoolLocked
 	}
 
-	inRecord, err := poolAcc.GetRecord(tokenInDenom)
+	inPoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	outRecord, err := poolAcc.GetRecord(tokenOut.Denom)
+	outPoolAsset, err := poolAcc.GetPoolAsset(tokenOut.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	spotPriceBefore := calcSpotPrice(
-		inRecord.Token.Amount.ToDec(),
-		inRecord.Weight.ToDec(),
-		outRecord.Token.Amount.ToDec(),
-		outRecord.Weight.ToDec(),
+	spotPriceBefore := calcSpotPriceWithSwapFee(
+		inPoolAsset.Token.Amount.ToDec(),
+		inPoolAsset.Weight.ToDec(),
+		outPoolAsset.Token.Amount.ToDec(),
+		outPoolAsset.Weight.ToDec(),
 		poolAcc.GetPoolParams().SwapFee,
 	)
 
 	tokenInAmount = calcInGivenOut(
-		inRecord.Token.Amount.ToDec(),
-		inRecord.Weight.ToDec(),
-		outRecord.Token.Amount.ToDec(),
-		outRecord.Weight.ToDec(),
+		inPoolAsset.Token.Amount.ToDec(),
+		inPoolAsset.Weight.ToDec(),
+		outPoolAsset.Token.Amount.ToDec(),
+		outPoolAsset.Weight.ToDec(),
 		tokenOut.Amount.ToDec(),
 		poolAcc.GetPoolParams().SwapFee,
 	).TruncateInt()
@@ -150,17 +155,17 @@ func (k Keeper) SwapExactAmountOut(
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", outRecord.Token.Denom)
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", outPoolAsset.Token.Denom)
 	}
 
-	inRecord.Token.Amount = inRecord.Token.Amount.Add(tokenInAmount)
-	outRecord.Token.Amount = outRecord.Token.Amount.Sub(tokenOut.Amount)
+	inPoolAsset.Token.Amount = inPoolAsset.Token.Amount.Add(tokenInAmount)
+	outPoolAsset.Token.Amount = outPoolAsset.Token.Amount.Sub(tokenOut.Amount)
 
-	spotPriceAfter = calcSpotPrice(
-		inRecord.Token.Amount.ToDec(),
-		inRecord.Weight.ToDec(),
-		outRecord.Token.Amount.ToDec(),
-		outRecord.Weight.ToDec(),
+	spotPriceAfter = calcSpotPriceWithSwapFee(
+		inPoolAsset.Token.Amount.ToDec(),
+		inPoolAsset.Weight.ToDec(),
+		outPoolAsset.Token.Amount.ToDec(),
+		outPoolAsset.Weight.ToDec(),
 		poolAcc.GetPoolParams().SwapFee,
 	)
 	if spotPriceAfter.LT(spotPriceBefore) {
@@ -170,9 +175,9 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
 
-	err = poolAcc.SetRecords([]types.Record{
-		inRecord,
-		outRecord,
+	err = poolAcc.SetPoolAssets([]types.PoolAsset{
+		inPoolAsset,
+		outPoolAsset,
 	})
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
@@ -205,21 +210,46 @@ func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom,
 		return sdk.Dec{}, err
 	}
 
-	inRecord, err := poolAcc.GetRecord(tokenInDenom)
+	inPoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	outRecord, err := poolAcc.GetRecord(tokenOutDenom)
+	outPoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	return calcSpotPrice(
-		inRecord.Token.Amount.ToDec(),
-		inRecord.Weight.ToDec(),
-		outRecord.Token.Amount.ToDec(),
-		outRecord.Weight.ToDec(),
+	return calcSpotPriceWithSwapFee(
+		inPoolAsset.Token.Amount.ToDec(),
+		inPoolAsset.Weight.ToDec(),
+		outPoolAsset.Token.Amount.ToDec(),
+		outPoolAsset.Weight.ToDec(),
 		poolAcc.GetPoolParams().SwapFee,
+	), nil
+}
+
+func (k Keeper) CalculateSpotPriceSansSwapFee(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
+	poolAcc, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	inPoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	outPoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	return calcSpotPriceWithSwapFee(
+		inPoolAsset.Token.Amount.ToDec(),
+		inPoolAsset.Weight.ToDec(),
+		outPoolAsset.Token.Amount.ToDec(),
+		outPoolAsset.Weight.ToDec(),
+		sdk.ZeroDec(),
 	), nil
 }

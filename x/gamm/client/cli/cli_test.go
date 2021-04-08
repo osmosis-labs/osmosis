@@ -738,7 +738,7 @@ func (s *IntegrationTestSuite) TestGetCmdRecords() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryRecordsResponse{}
+				resp := types.QueryPoolAssetsResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}

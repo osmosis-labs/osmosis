@@ -48,7 +48,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgExitSwapExternAmountOut{},
 		&MsgExitSwapShareAmountIn{},
 	)
-
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

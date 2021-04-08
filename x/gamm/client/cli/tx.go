@@ -325,12 +325,12 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 		return txf, nil, err
 	}
 
-	recordTokens, err := sdk.ParseDecCoins(tokenWeights)
+	poolAssetCoins, err := sdk.ParseDecCoins(tokenWeights)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	if len(deposit) != len(recordTokens) {
+	if len(deposit) != len(poolAssetCoins) {
 		return txf, nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
@@ -352,15 +352,15 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 		return txf, nil, err
 	}
 
-	var records []types.Record
-	for i := 0; i < len(recordTokens); i++ {
+	var poolAssets []types.PoolAsset
+	for i := 0; i < len(poolAssetCoins); i++ {
 
-		if recordTokens[i].Denom != deposit[i].Denom {
+		if poolAssetCoins[i].Denom != deposit[i].Denom {
 			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
 
-		records = append(records, types.Record{
-			Weight: recordTokens[i].Amount.RoundInt(),
+		poolAssets = append(poolAssets, types.PoolAsset{
+			Weight: poolAssetCoins[i].Amount.RoundInt(),
 			Token:  deposit[i],
 		})
 	}
@@ -372,7 +372,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 			SwapFee: swapFee,
 			ExitFee: exitFee,
 		},
-		Records: records,
+		PoolAssets: poolAssets,
 	}
 
 	return txf, msg, nil

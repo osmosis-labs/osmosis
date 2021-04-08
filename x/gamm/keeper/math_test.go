@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubSign(t *testing.T) {
+func TestAbsDifferenceWithSign(t *testing.T) {
 	decA, err := sdk.NewDecFromStr("3.2")
 	require.NoError(t, err)
 	decB, err := sdk.NewDecFromStr("4.3432389")
 	require.NoError(t, err)
 
-	s, b := subSign(decA, decB)
+	s, b := absDifferenceWithSign(decA, decB)
 	require.True(t, b)
 
 	expectedDec, err := sdk.NewDecFromStr("1.1432389")
@@ -57,6 +57,32 @@ func TestPow(t *testing.T) {
 }
 
 func TestCalcSpotPrice(t *testing.T) {
+	// TODO: Change test to be table driven
+	tokenBalanceIn, err := sdk.NewDecFromStr("100")
+	require.NoError(t, err)
+	tokenWeightIn, err := sdk.NewDecFromStr("0.1")
+	require.NoError(t, err)
+	tokenBalanceOut, err := sdk.NewDecFromStr("200")
+	require.NoError(t, err)
+	tokenWeightOut, err := sdk.NewDecFromStr("0.3")
+	require.NoError(t, err)
+
+	actual_spot_price := calcSpotPrice(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut)
+	// s = (100/.1) / (200 / .3) = (1000) / (2000 / 3) = 1.5
+	expected_spot_price, err := sdk.NewDecFromStr("1.5")
+	require.NoError(t, err)
+
+	// assert that the spot prices are within the error margin from one another.
+	require.True(
+		t,
+		expected_spot_price.Sub(actual_spot_price).Abs().LTE(powPrecision),
+		"expected value & actual value's difference should less than precision",
+	)
+
+}
+
+// TODO: Create test vectors with balancer contract
+func TestCalcSpotPriceWithSwapFee(t *testing.T) {
 	tokenBalanceIn, err := sdk.NewDecFromStr("100")
 	require.NoError(t, err)
 	tokenWeightIn, err := sdk.NewDecFromStr("0.1")
@@ -68,7 +94,7 @@ func TestCalcSpotPrice(t *testing.T) {
 	swapFee, err := sdk.NewDecFromStr("0.01")
 	require.NoError(t, err)
 
-	s := calcSpotPrice(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, swapFee)
+	s := calcSpotPriceWithSwapFee(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, swapFee)
 
 	expectedDec, err := sdk.NewDecFromStr("1.51515151")
 	require.NoError(t, err)
@@ -245,58 +271,4 @@ func TestCalcPoolInGivenSingleOut(t *testing.T) {
 		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
 		"expected value & actual value's difference should less than precision*10000",
 	)
-}
-
-func BenchmarkPow(b *testing.B) {
-	tests := []struct {
-		base sdk.Dec
-		exp  sdk.Dec
-	}{
-		{
-			base: sdk.NewDecWithPrec(12, 1),
-			exp:  sdk.NewDecWithPrec(12, 1),
-		},
-		{
-			base: sdk.NewDecWithPrec(5, 1),
-			exp:  sdk.NewDecWithPrec(11122, 3),
-		},
-		{
-			base: sdk.NewDecWithPrec(1, 1),
-			exp:  sdk.NewDecWithPrec(492, 8),
-		},
-		{
-			base: sdk.NewDecWithPrec(2423, 7),
-			exp:  sdk.NewDecWithPrec(1213, 1),
-		},
-		{
-			base: sdk.NewDecWithPrec(493, 3),
-			exp:  sdk.NewDecWithPrec(121, 8),
-		},
-		{
-			base: sdk.NewDecWithPrec(249, 6),
-			exp:  sdk.NewDecWithPrec(2304, 1),
-		},
-		{
-			base: sdk.NewDecWithPrec(2342, 4),
-			exp:  sdk.NewDecWithPrec(322, 1),
-		},
-		{
-			base: sdk.NewDecWithPrec(999, 6),
-			exp:  sdk.NewDecWithPrec(1424, 1),
-		},
-		{
-			base: sdk.NewDecWithPrec(1234, 3),
-			exp:  sdk.NewDecWithPrec(1203, 1),
-		},
-		{
-			base: sdk.NewDecWithPrec(122, 5),
-			exp:  sdk.NewDecWithPrec(1232, 1),
-		},
-	}
-
-	for i := 0; i < b.N; i++ {
-		for _, test := range tests {
-			pow(test.base, test.exp)
-		}
-	}
 }

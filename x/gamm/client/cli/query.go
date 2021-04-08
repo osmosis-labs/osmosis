@@ -225,7 +225,7 @@ $ %s query gamm records 1
 				return err
 			}
 
-			res, err := queryClient.Records(cmd.Context(), &types.QueryRecordsRequest{
+			res, err := queryClient.PoolAssets(cmd.Context(), &types.QueryPoolAssetsRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {

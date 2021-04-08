@@ -33,7 +33,9 @@ func (k Keeper) SetPool(ctx sdk.Context, poolAcc types.PoolAccountI) error {
 	return nil
 }
 
-func (k Keeper) NewPool(ctx sdk.Context, poolId uint64, poolParams types.PoolParams) (types.PoolAccountI, error) {
+func (k Keeper) NewPool(ctx sdk.Context, poolParams types.PoolParams) (types.PoolAccountI, error) {
+	poolId := k.getNextPoolNumber(ctx)
+
 	acc := k.accountKeeper.GetAccount(ctx, types.NewPoolAddress(poolId))
 	if acc != nil {
 		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
@@ -50,7 +52,8 @@ func (k Keeper) NewPool(ctx sdk.Context, poolId uint64, poolParams types.PoolPar
 	return poolAcc, nil
 }
 
-func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
+// getNextPoolNumber returns the next pool number
+func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)
 

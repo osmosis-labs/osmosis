@@ -5,6 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// constants
 const (
 	TypeMsgCreatePool              = "create_pool"
 	TypeMsgSwapExactAmountIn       = "swap_exact_amount_in"
@@ -27,31 +28,28 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if len(msg.Records) == 0 {
-		return ErrEmptyRecords
-	}
-
-	if len(msg.Records) == 1 {
-		return ErrTooLittleRecords
+	// The pool must be swapping between at least two assets
+	if len(msg.PoolAssets) < 2 {
+		return ErrTooFewPoolAssets
 	}
 
 	// TODO: Add the limit of binding token to the pool params?
-	if len(msg.Records) > 8 {
-		return sdkerrors.Wrapf(ErrTooManyRecords, "%d", len(msg.Records))
+	if len(msg.PoolAssets) > 8 {
+		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(msg.PoolAssets))
 	}
 
-	for _, record := range msg.Records {
-		if !record.Weight.IsPositive() {
-			return sdkerrors.Wrap(ErrNotPositiveWeight, record.Weight.String())
+	for _, asset := range msg.PoolAssets {
+		if !asset.Weight.IsPositive() {
+			return sdkerrors.Wrap(ErrNotPositiveWeight, asset.Weight.String())
 		}
 
-		if !record.Token.IsValid() || !record.Token.IsPositive() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, record.Token.String())
+		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
 	}
 
 	if msg.PoolParams.Lock {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't create the locked pool")
+		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't create a locked pool")
 	}
 
 	err = msg.PoolParams.Validate()
