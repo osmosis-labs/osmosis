@@ -91,6 +91,8 @@ func (k Keeper) CreatePool(
 		return 0, err
 	}
 
+	k.hooks.AfterPoolCreated(ctx, poolAcc.GetId())
+
 	return poolAcc.GetId(), nil
 }
 

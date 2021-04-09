@@ -319,8 +319,20 @@ func NewOsmosisApp(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
-	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+
+	app.GAMMKeeper = *gammKeeper.SetHooks(
+		gammtypes.NewMultiGammHooks(
+		// insert gamm hooks receivers here
+		),
+	)
+
+	app.LockupKeeper = *lockupKeeper.SetHooks(
+		lockuptypes.NewMultiLockupHooks(
+		// insert lockup hooks receivers here
+		),
+	)
 
 	/****  Module Options ****/
 

@@ -253,6 +253,8 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 			return err
 		}
 	}
+
+	k.hooks.OnTokenLocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
 
@@ -306,5 +308,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 			return err
 		}
 	}
+
+	k.hooks.OnTokenUnlocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
