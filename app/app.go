@@ -96,10 +96,6 @@ import (
 	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
 	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 
-	poolyield "github.com/c-osmosis/osmosis/x/pool-yield"
-	poolyieldkeeper "github.com/c-osmosis/osmosis/x/pool-yield/keeper"
-	poolyieldtypes "github.com/c-osmosis/osmosis/x/pool-yield/types"
-
 	appparams "github.com/c-osmosis/osmosis/app/params"
 )
 
@@ -134,7 +130,6 @@ var (
 		gamm.AppModuleBasic{},
 		lockup.AppModuleBasic{},
 		vesting.AppModuleBasic{},
-		poolyield.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -191,7 +186,6 @@ type OsmosisApp struct {
 	TransferKeeper   ibctransferkeeper.Keeper
 	GAMMKeeper       gammkeeper.Keeper
 	LockupKeeper     lockupkeeper.Keeper
-	PoolYieldKeeper  poolyieldkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -358,7 +352,6 @@ func NewOsmosisApp(
 		transferModule,
 		gamm.NewAppModule(appCodec, app.GAMMKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper),
-		poolyield.NewAppModule(appCodec, app.PoolYieldKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -600,7 +593,6 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(poolyieldtypes.ModuleName)
 
 	return paramsKeeper
 }
