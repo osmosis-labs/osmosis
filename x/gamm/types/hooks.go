@@ -6,10 +6,12 @@ type GammHooks interface {
 	AfterPoolCreated(ctx sdk.Context, poolId uint64)
 }
 
+var _ GammHooks = MultiGammHooks{}
+
 // combine multiple gamm hooks, all hook functions are run in array sequence
 type MultiGammHooks []GammHooks
 
-func NewMultiStakingHooks(hooks ...GammHooks) MultiGammHooks {
+func NewMultiGammHooks(hooks ...GammHooks) MultiGammHooks {
 	return hooks
 }
 
