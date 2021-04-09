@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/c-osmosis/osmosis/x/mint/client/cli"
+	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type IntegrationTestSuite struct {
@@ -35,10 +35,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var mintData minttypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
 
-	inflation := sdk.MustNewDecFromStr("1.0")
-	mintData.Minter.Inflation = inflation
-	mintData.Params.InflationMin = inflation
-	mintData.Params.InflationMax = inflation
+	epochRewards := sdk.MustNewDecFromStr("1.0")
+	mintData.Params.MinRewardPerEpoch = epochRewards
+	mintData.Params.MaxRewardPerEpoch = epochRewards
 
 	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
 	s.Require().NoError(err)
@@ -68,16 +67,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"mint_denom":"stake","inflation_rate_change":"0.130000000000000000","inflation_max":"1.000000000000000000","inflation_min":"1.000000000000000000","goal_bonded":"0.670000000000000000","blocks_per_year":"6311520"}`,
+			`{"mint_denom":"stake","max_reward_per_epoch":"1.000000000000000000","min_reward_per_epoch":"1.000000000000000000","epochs_per_year":"6311520"}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`blocks_per_year: "6311520"
-goal_bonded: "0.670000000000000000"
-inflation_max: "1.000000000000000000"
-inflation_min: "1.000000000000000000"
-inflation_rate_change: "0.130000000000000000"
+			`epochs_per_year: "6311520"
+max_reward_per_epoch: "1.000000000000000000"
+min_reward_per_epoch: "1.000000000000000000"
 mint_denom: stake`,
 		},
 	}
@@ -87,40 +84,6 @@ mint_denom: stake`,
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryParams()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name           string
-		args           []string
-		expectedOutput string
-	}{
-		{
-			"json output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`1.000000000000000000`,
-		},
-		{
-			"text output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`1.000000000000000000`,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryInflation()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

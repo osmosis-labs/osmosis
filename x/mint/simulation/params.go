@@ -8,39 +8,27 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	"github.com/c-osmosis/osmosis/x/mint/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 const (
-	keyInflationRateChange = "InflationRateChange"
-	keyInflationMax        = "InflationMax"
-	keyInflationMin        = "InflationMin"
-	keyGoalBonded          = "GoalBonded"
+	keyMaxRewardPerEpoch = "MaxRewardPerEpoch"
+	keyMinRewardPerEpoch = "MinRewardPerEpoch"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyInflationRateChange,
+		simulation.NewSimParamChange(types.ModuleName, keyMaxRewardPerEpoch,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%s\"", GenInflationRateChange(r))
+				return fmt.Sprintf("\"%s\"", GenMaxRewardPerEpoch(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyInflationMax,
+		simulation.NewSimParamChange(types.ModuleName, keyMinRewardPerEpoch,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%s\"", GenInflationMax(r))
-			},
-		),
-		simulation.NewSimParamChange(types.ModuleName, keyInflationMin,
-			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%s\"", GenInflationMin(r))
-			},
-		),
-		simulation.NewSimParamChange(types.ModuleName, keyGoalBonded,
-			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%s\"", GenGoalBonded(r))
+				return fmt.Sprintf("\"%s\"", GenMinRewardPerEpoch(r))
 			},
 		),
 	}
