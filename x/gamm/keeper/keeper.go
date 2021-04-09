@@ -31,7 +31,7 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, hooks types.GammHooks, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper bankkeeper.Keeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -43,15 +43,22 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, hooks types.Gam
 	if !permContains(perms, authtypes.Burner) {
 		panic(fmt.Sprintf("%s module account should have the burner permission", types.ModuleName))
 	}
-
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
-
-		hooks: hooks,
-
 		// keepers
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 	}
+}
+
+// Set the gamm hooks
+func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set gamm hooks twice")
+	}
+
+	k.hooks = gh
+
+	return k
 }

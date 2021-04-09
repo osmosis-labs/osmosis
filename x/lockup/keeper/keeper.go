@@ -23,21 +23,29 @@ type Keeper struct {
 }
 
 // NewKeeper returns an instance of Keeper
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, hooks types.LockupHooks, ak authkeeper.AccountKeeper, bk types.BankKeeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, ak authkeeper.AccountKeeper, bk types.BankKeeper) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
-
-		hooks: hooks,
-
-		ak: ak,
-		bk: bk,
+		ak:       ak,
+		bk:       bk,
 	}
 }
 
 // Logger returns a logger instance
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// Set the lockup hooks
+func (k *Keeper) SetHooks(lh types.LockupHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set lockup hooks twice")
+	}
+
+	k.hooks = lh
+
+	return k
 }
 
 // AdminKeeper defines a god priviledge keeper functions to remove tokens from locks and create new locks
