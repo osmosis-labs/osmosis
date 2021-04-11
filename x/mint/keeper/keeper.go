@@ -1,11 +1,13 @@
 package keeper
 
 import (
+	"time"
+
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/c-osmosis/osmosis/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -50,6 +52,60 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// GetEpochNum returns epoch number
+func (k Keeper) GetEpochNum(ctx sdk.Context) int64 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(types.EpochKey)
+	if b == nil {
+		return 0
+	}
+
+	return int64(sdk.BigEndianToUint64(b))
+}
+
+// SetEpochNum set epoch number
+func (k Keeper) SetEpochNum(ctx sdk.Context, epochNum int64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.EpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
+}
+
+// GetLastEpochTime returns last epoch time
+func (k Keeper) GetLastEpochTime(ctx sdk.Context) time.Time {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(types.EpochTimeKey)
+	if b == nil {
+		return time.Time{}
+	}
+	epochTime, err := sdk.ParseTimeBytes(b)
+	if err != nil {
+		return time.Time{}
+	}
+	return epochTime
+}
+
+// SetLastEpochTime set last epoch time
+func (k Keeper) SetLastEpochTime(ctx sdk.Context, epochTime time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.EpochTimeKey, sdk.FormatTimeBytes(epochTime))
+}
+
+// GetLastHalvenEpochNum returns last halven epoch number
+func (k Keeper) GetLastHalvenEpochNum(ctx sdk.Context) int64 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(types.LastHalvenEpochKey)
+	if b == nil {
+		return 0
+	}
+
+	return int64(sdk.BigEndianToUint64(b))
+}
+
+// SetLastHalvenEpochNum set last halven epoch number
+func (k Keeper) SetLastHalvenEpochNum(ctx sdk.Context, epochNum int64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.LastHalvenEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
 }
 
 // get the minter

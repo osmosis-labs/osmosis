@@ -1,17 +1,17 @@
 syntax = "proto3";
-package cosmos.mint.v1beta1;
+package osmosis.mint.v1beta1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
+option go_package = "github.com/c-osmosis/osmosis/x/mint/types";
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
 
 // Minter represents the minting state.
 message Minter {
-  // current annual inflation rate
-  string inflation = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   // current annual expected provisions
-  string annual_provisions = 2 [
+  string annual_provisions = 1 [
     (gogoproto.moretags)   = "yaml:\"annual_provisions\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -22,32 +22,41 @@ message Minter {
 message Params {
   option (gogoproto.goproto_stringer) = false;
 
+
   // type of coin to mint
   string mint_denom = 1;
-  // maximum annual change in inflation rate
-  string inflation_rate_change = 2 [
-    (gogoproto.moretags)   = "yaml:\"inflation_rate_change\"",
+  // annual provisions
+  string annual_provisions = 2 [
+    (gogoproto.moretags)   = "yaml:\"annual_provisions\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // maximum inflation rate
-  string inflation_max = 3 [
-    (gogoproto.moretags)   = "yaml:\"inflation_max\"",
+  // maximum reward per epoch
+  string max_reward_per_epoch = 3 [
+    (gogoproto.moretags)   = "yaml:\"max_reward_per_epoch\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // minimum inflation rate
-  string inflation_min = 4 [
-    (gogoproto.moretags)   = "yaml:\"inflation_min\"",
+  // minimum reward per epoch
+  string min_reward_per_epoch = 4 [
+    (gogoproto.moretags)   = "yaml:\"min_reward_per_epoch\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // goal of percent bonded atoms
-  string goal_bonded = 5 [
-    (gogoproto.moretags)   = "yaml:\"goal_bonded\"",
+  // duration of an epoch
+  google.protobuf.Duration epoch_duration = 5 [
+    (gogoproto.moretags)    = "yaml:\"epoch_duration\"",
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable)    = false
+  ];
+  // number of epochs take to reduce rewards
+  int64 reduction_period_in_epochs = 6 [(gogoproto.moretags) = "yaml:\"reduction_period_in_epochs\""];
+  // reduction multiplier to execute on each period
+  string reduction_factor_for_event = 7 [
+    (gogoproto.moretags)   = "yaml:\"reduction_factor_for_event\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // expected blocks per year
-  uint64 blocks_per_year = 6 [(gogoproto.moretags) = "yaml:\"blocks_per_year\""];
+  // expected epochs per year
+  int64 epochs_per_year = 8 [(gogoproto.moretags) = "yaml:\"epochs_per_year\""];
 }
