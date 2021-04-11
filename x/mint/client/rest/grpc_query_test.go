@@ -90,22 +90,22 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 	}{
 		{
 			"gRPC request params",
-			fmt.Sprintf("%s/cosmos/mint/v1beta1/params", baseURL),
+			fmt.Sprintf("%s/osmosis/mint/v1beta1/params", baseURL),
 			map[string]string{},
 			&minttypes.QueryParamsResponse{},
 			&minttypes.QueryParamsResponse{
-				Params: minttypes.NewParams("stake", sdk.NewDec(500000), time.Duration(604800), sdk.MustNewDecFromStr("0.333"), 156),
+				Params: minttypes.NewParams("stake", sdk.NewDec(5000000), 604800*time.Second, sdk.MustNewDecFromStr("0.5"), 156),
 			},
 		},
 		{
 			"gRPC request epoch provisions",
-			fmt.Sprintf("%s/cosmos/mint/v1beta1/epoch_provisions", baseURL),
+			fmt.Sprintf("%s/osmosis/mint/v1beta1/epoch_provisions", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			&minttypes.QueryEpochProvisionsResponse{},
 			&minttypes.QueryEpochProvisionsResponse{
-				EpochProvisions: sdk.NewDec(500000000),
+				EpochProvisions: sdk.NewDec(5000000),
 			},
 		},
 	}
