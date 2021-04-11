@@ -3,7 +3,7 @@ module github.com/c-osmosis/osmosis
 go 1.15
 
 require (
-	github.com/cosmos/cosmos-sdk v0.42.3
+	github.com/cosmos/cosmos-sdk v0.42.4
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.4 // indirect
@@ -15,11 +15,10 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	github.com/tendermint/tendermint v0.34.8
+	github.com/tendermint/tendermint v0.34.9
 	github.com/tendermint/tm-db v0.6.4
 	google.golang.org/genproto v0.0.0-20210114201628-6edceaf6022f
 	google.golang.org/grpc v1.35.0
-	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 

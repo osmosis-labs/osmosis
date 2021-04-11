@@ -11,7 +11,6 @@ import (
 	"github.com/c-osmosis/osmosis/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -40,12 +39,7 @@ func TestRandomizedGenState(t *testing.T) {
 	var mintGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &mintGenesis)
 
-	dec2, _ := sdk.NewDecFromStr("0.200000000000000000")
-	dec3, _ := sdk.NewDecFromStr("0.070000000000000000")
-
 	require.Equal(t, int64(6311520), mintGenesis.Params.EpochsPerYear)
-	require.Equal(t, dec2, mintGenesis.Params.MaxRewardPerEpoch)
-	require.Equal(t, dec3, mintGenesis.Params.MinRewardPerEpoch)
 	require.Equal(t, "stake", mintGenesis.Params.MintDenom)
 	require.Equal(t, "0stake", mintGenesis.Minter.EpochProvision(mintGenesis.Params).String())
 	require.Equal(t, "0.000000000000000000", mintGenesis.Minter.NextAnnualProvisions(mintGenesis.Params).String())

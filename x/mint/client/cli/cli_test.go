@@ -68,18 +68,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		KeyringOptions:  []keyring.Option{},
 	}
 
-	// var mintData minttypes.GenesisState
-	// s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
-
-	// epochRewards := sdk.MustNewDecFromStr("1.0")
-	// mintData.Params.MinRewardPerEpoch = epochRewards
-	// mintData.Params.MaxRewardPerEpoch = epochRewards
-
-	// mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
-	// s.Require().NoError(err)
-	// genesisState[minttypes.ModuleName] = mintDataBz
-	// cfg.GenesisState = genesisState
-
 	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
@@ -102,14 +90,12 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"mint_denom":"stake","max_reward_per_epoch":"1.000000000000000000","min_reward_per_epoch":"1.000000000000000000","epochs_per_year":"6311520"}`,
+			`{"mint_denom":"stake","epochs_per_year":"6311520"}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
 			`epochs_per_year: "6311520"
-max_reward_per_epoch: "1.000000000000000000"
-min_reward_per_epoch: "1.000000000000000000"
 mint_denom: stake`,
 		},
 	}

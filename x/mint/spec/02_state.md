@@ -22,8 +22,6 @@ Minting params are held in the global params store.
 type Params struct {
 	MintDenom               string        // type of coin to mint
 	AnnualProvisions        sdk.Dec       // annual provisions
-	MaxRewardPerEpoch       sdk.Dec       // maximum reward per epoch
-	MinRewardPerEpoch       sdk.Dec       // minimum reward per epoch
 	EpochDuration           time.Duration // duration of an epoch
 	ReductionPeriodInEpochs int64         // number of epochs take to reduce rewards
 	ReductionFactorForEvent sdk.Dec       // reduction multiplier to execute on each period

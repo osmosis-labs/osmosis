@@ -14,10 +14,8 @@ import (
 
 // Parameter store keys
 var (
-	KeyMintDenom         = []byte("MintDenom")
-	KeyMaxRewardPerEpoch = []byte("MaxRewardPerEpoch")
-	KeyMinRewardPerEpoch = []byte("MinRewardPerEpoch")
-	KeyEpochsPerYear     = []byte("EpochsPerYear")
+	KeyMintDenom     = []byte("MintDenom")
+	KeyEpochsPerYear = []byte("EpochsPerYear")
 )
 
 // ParamTable for minting module.
@@ -26,15 +24,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, annualProvisions, maxRewardPerEpoch, minRewardPerEpoch sdk.Dec, epochDuration time.Duration,
+	mintDenom string, annualProvisions sdk.Dec, epochDuration time.Duration,
 	reductionFactorForEvent sdk.Dec, reductionPeriodInEpochs, epochsPerYear int64,
 ) Params {
 
 	return Params{
 		MintDenom:               mintDenom,
 		AnnualProvisions:        annualProvisions,
-		MaxRewardPerEpoch:       maxRewardPerEpoch,
-		MinRewardPerEpoch:       minRewardPerEpoch,
 		EpochDuration:           epochDuration,
 		ReductionPeriodInEpochs: reductionPeriodInEpochs,
 		ReductionFactorForEvent: reductionFactorForEvent,
@@ -48,8 +44,6 @@ func DefaultParams() Params {
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
 		AnnualProvisions:        sdk.NewDec(5000000).Mul(sdk.NewDec(52)), // yearly rewards
-		MaxRewardPerEpoch:       sdk.NewDec(6000000),                     // per epoch max
-		MinRewardPerEpoch:       sdk.NewDec(4000000),                     // per epoch min
 		EpochDuration:           epochDuration,                           // 1 week
 		ReductionPeriodInEpochs: 156,                                     // 3 years
 		ReductionFactorForEvent: sdk.NewDecWithPrec(5, 1),                // 0.5
@@ -62,20 +56,8 @@ func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
 	}
-	if err := validateMaxRewardPerEpoch(p.MaxRewardPerEpoch); err != nil {
-		return err
-	}
-	if err := validateMinRewardPerEpoch(p.MinRewardPerEpoch); err != nil {
-		return err
-	}
 	if err := validateEpochsPerYear(p.EpochsPerYear); err != nil {
 		return err
-	}
-	if p.MaxRewardPerEpoch.LT(p.MinRewardPerEpoch) {
-		return fmt.Errorf(
-			"max rewards (%s) must be greater than or equal to min rewards (%s)",
-			p.MaxRewardPerEpoch, p.MinRewardPerEpoch,
-		)
 	}
 
 	return nil
@@ -92,8 +74,6 @@ func (p Params) String() string {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
-		paramtypes.NewParamSetPair(KeyMaxRewardPerEpoch, &p.MaxRewardPerEpoch, validateMaxRewardPerEpoch),
-		paramtypes.NewParamSetPair(KeyMinRewardPerEpoch, &p.MinRewardPerEpoch, validateMinRewardPerEpoch),
 		paramtypes.NewParamSetPair(KeyEpochsPerYear, &p.EpochsPerYear, validateEpochsPerYear),
 	}
 }
@@ -109,32 +89,6 @@ func validateMintDenom(i interface{}) error {
 	}
 	if err := sdk.ValidateDenom(v); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func validateMaxRewardPerEpoch(i interface{}) error {
-	v, ok := i.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNegative() {
-		return fmt.Errorf("max rewards cannot be negative: %s", v)
-	}
-
-	return nil
-}
-
-func validateMinRewardPerEpoch(i interface{}) error {
-	v, ok := i.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNegative() {
-		return fmt.Errorf("min rewards cannot be negative: %s", v)
 	}
 
 	return nil

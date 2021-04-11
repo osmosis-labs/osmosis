@@ -67,18 +67,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		KeyringOptions:  []keyring.Option{},
 	}
 
-	// var mintData minttypes.GenesisState
-	// s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
-
-	// epochRewards := sdk.MustNewDecFromStr("1.0")
-	// mintData.Params.MinRewardPerEpoch = epochRewards
-	// mintData.Params.MaxRewardPerEpoch = epochRewards
-
-	// mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
-	// s.Require().NoError(err)
-	// genesisState[minttypes.ModuleName] = mintDataBz
-	// cfg.GenesisState = genesisState
-
 	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
@@ -106,8 +94,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			map[string]string{},
 			&minttypes.QueryParamsResponse{},
 			&minttypes.QueryParamsResponse{
-				Params: minttypes.NewParams("stake", sdk.NewDec(500000), sdk.NewDec(100),
-					sdk.NewDec(100), time.Duration(604800), sdk.MustNewDecFromStr("0.333"), 156, int64(60*60*8766/5)),
+				Params: minttypes.NewParams("stake", sdk.NewDec(500000), time.Duration(604800), sdk.MustNewDecFromStr("0.333"), 156, int64(60*60*8766/5)),
 			},
 		},
 		{
