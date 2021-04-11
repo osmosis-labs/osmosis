@@ -3,6 +3,7 @@ package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/incentives/pot.proto";
 import "osmosis/lockup/lock.proto";
 
@@ -46,19 +47,34 @@ message PotByIDResponse {
     Pot pot = 1;
 }
 
-message PotsRequest {}
+message PotsRequest {
+    // pagination defines an pagination for the request.
+    cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 message PotsResponse {
     repeated Pot data = 1 [(gogoproto.nullable) = false];
+    // pagination defines an pagination for the response.
+    cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message ActivePotsRequest {}
+message ActivePotsRequest {
+    // pagination defines an pagination for the request.
+    cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 message ActivePotsResponse {
     repeated Pot data = 1 [(gogoproto.nullable) = false];
+    // pagination defines an pagination for the response.
+    cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message UpcomingPotsRequest {}
+message UpcomingPotsRequest {
+    // pagination defines an pagination for the request.
+    cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 message UpcomingPotsResponse {
     repeated Pot data = 1 [(gogoproto.nullable) = false];
+    // pagination defines an pagination for the response.
+    cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message RewardsEstRequest {

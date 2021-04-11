@@ -261,6 +261,24 @@ func (k Keeper) GetPotByID(ctx sdk.Context, potID uint64) (*types.Pot, error) {
 	return &pot, nil
 }
 
+// GetPotFromIDs returns pots from pot ids reference
+func (k Keeper) GetPotFromIDs(ctx sdk.Context, refValue []byte) ([]types.Pot, error) {
+	pots := []types.Pot{}
+	potIDs := []uint64{}
+	err := json.Unmarshal(refValue, &potIDs)
+	if err != nil {
+		return pots, err
+	}
+	for _, potID := range potIDs {
+		pot, err := k.GetPotByID(ctx, potID)
+		if err != nil {
+			panic(err)
+		}
+		pots = append(pots, *pot)
+	}
+	return pots, nil
+}
+
 // GetPots returns pots both upcoming and active
 func (k Keeper) GetPots(ctx sdk.Context) []types.Pot {
 	return append(k.GetActivePots(ctx), k.GetUpcomingPots(ctx)...)

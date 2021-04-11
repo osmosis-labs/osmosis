@@ -2,9 +2,14 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/c-osmosis/osmosis/x/incentives/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -34,19 +39,76 @@ func (k Keeper) PotByID(goCtx context.Context, req *types.PotByIDRequest) (*type
 // Pots returns pots both upcoming and active
 func (k Keeper) Pots(goCtx context.Context, req *types.PotsRequest) (*types.PotsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.PotsResponse{Data: k.GetPots(ctx)}, nil
+	pots := []types.Pot{}
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.KeyPrefixPots)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		newPots, err := k.GetPotFromIDs(ctx, value)
+		if err != nil {
+			panic(err)
+		}
+		pots = append(pots, newPots...)
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.PotsResponse{Data: pots, Pagination: pageRes}, nil
 }
 
 // ActivePots returns active pots
 func (k Keeper) ActivePots(goCtx context.Context, req *types.ActivePotsRequest) (*types.ActivePotsResponse, error) {
+	fmt.Println("KeyPrefixActivePots s")
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.ActivePotsResponse{Data: k.GetPots(ctx)}, nil
+	pots := []types.Pot{}
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.KeyPrefixActivePots)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		fmt.Println("KeyPrefixActivePots 111")
+		newPots, err := k.GetPotFromIDs(ctx, value)
+		if err != nil {
+			panic(err)
+		}
+		pots = append(pots, newPots...)
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	fmt.Println("KeyPrefixActivePots e", k.GetActivePots(ctx))
+	return &types.ActivePotsResponse{Data: pots, Pagination: pageRes}, nil
 }
 
 // UpcomingPots returns scheduled pots
 func (k Keeper) UpcomingPots(goCtx context.Context, req *types.UpcomingPotsRequest) (*types.UpcomingPotsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.UpcomingPotsResponse{Data: k.GetPots(ctx)}, nil
+	pots := []types.Pot{}
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingPots)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		newPots, err := k.GetPotFromIDs(ctx, value)
+		if err != nil {
+			panic(err)
+		}
+		pots = append(pots, newPots...)
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.UpcomingPotsResponse{Data: pots, Pagination: pageRes}, nil
 }
 
 // RewardsEst returns rewards estimation at a future specific time

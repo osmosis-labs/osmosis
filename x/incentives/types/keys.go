@@ -25,14 +25,17 @@ var (
 	// KeyPrefixPeriodPot defines prefix key for storing pots
 	KeyPrefixPeriodPot = []byte{0x03}
 
+	// KeyPrefixPots defines prefix key for storing reference key for all pots
+	KeyPrefixPots = []byte{0x04}
+
 	// KeyPrefixUpcomingPots defines prefix key for storing reference key for upcoming pots
-	KeyPrefixUpcomingPots = []byte{0x04}
+	KeyPrefixUpcomingPots = []byte{0x04, 0x00}
 
 	// KeyPrefixActivePots defines prefix key for storing reference key for active pots
-	KeyPrefixActivePots = []byte{0x05}
+	KeyPrefixActivePots = []byte{0x04, 0x01}
 
 	// KeyPrefixFinishedPots defines prefix key for storing reference key for finished pots
-	KeyPrefixFinishedPots = []byte{0x06}
+	KeyPrefixFinishedPots = []byte{0x04, 0x02}
 
 	// KeyIndexSeparator defines key for merging bytes
 	KeyIndexSeparator = []byte{0x07}
