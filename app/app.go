@@ -262,7 +262,7 @@ func NewOsmosisApp(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
-		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName), &stakingKeeper,
+		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 	app.DistrKeeper = distrkeeper.NewKeeper(

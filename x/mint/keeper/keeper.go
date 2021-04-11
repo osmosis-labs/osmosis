@@ -16,7 +16,6 @@ type Keeper struct {
 	cdc              codec.BinaryMarshaler
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
-	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	feeCollectorName string
 }
@@ -24,7 +23,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	sk types.StakingKeeper, ak types.AccountKeeper, bk types.BankKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -41,7 +40,6 @@ func NewKeeper(
 		cdc:              cdc,
 		storeKey:         key,
 		paramSpace:       paramSpace,
-		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 	}
@@ -141,18 +139,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 //______________________________________________________________________
-
-// StakingTokenSupply implements an alias call to the underlying staking keeper's
-// StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
-	return k.stakingKeeper.StakingTokenSupply(ctx)
-}
-
-// BondedRatio implements an alias call to the underlying staking keeper's
-// BondedRatio to be used in BeginBlocker.
-func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	return k.stakingKeeper.BondedRatio(ctx)
-}
 
 // MintCoins implements an alias call to the underlying supply keeper's
 // MintCoins to be used in BeginBlocker.
