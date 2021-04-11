@@ -6,48 +6,83 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/c-osmosis/osmosis/app"
 	"github.com/c-osmosis/osmosis/x/mint/client/cli"
-	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testnet.Config
-	network *testnet.Network
+	cfg     network.Config
+	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := testnet.DefaultConfig()
-	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
+	encCfg := app.MakeEncodingConfig()
 
-	var mintData minttypes.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
+	s.cfg = network.Config{
+		Codec:             encCfg.Marshaler,
+		TxConfig:          encCfg.TxConfig,
+		LegacyAmino:       encCfg.Amino,
+		InterfaceRegistry: encCfg.InterfaceRegistry,
+		AccountRetriever:  authtypes.AccountRetriever{},
+		AppConstructor: func(val network.Validator) servertypes.Application {
+			return app.NewOsmosisApp(
+				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+				encCfg,
+				simapp.EmptyAppOptions{},
+				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			)
+		},
+		GenesisState:    app.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		TimeoutCommit:   2 * time.Second,
+		ChainID:         "osmosis-1",
+		NumValidators:   1,
+		BondDenom:       sdk.DefaultBondDenom,
+		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		AccountTokens:   sdk.TokensFromConsensusPower(1000),
+		StakingTokens:   sdk.TokensFromConsensusPower(500),
+		BondedTokens:    sdk.TokensFromConsensusPower(100),
+		PruningStrategy: storetypes.PruningOptionNothing,
+		CleanupDir:      true,
+		SigningAlgo:     string(hd.Secp256k1Type),
+		KeyringOptions:  []keyring.Option{},
+	}
 
-	epochRewards := sdk.MustNewDecFromStr("1.0")
-	mintData.Params.MinRewardPerEpoch = epochRewards
-	mintData.Params.MaxRewardPerEpoch = epochRewards
+	// var mintData minttypes.GenesisState
+	// s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
 
-	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
-	s.Require().NoError(err)
-	genesisState[minttypes.ModuleName] = mintDataBz
-	cfg.GenesisState = genesisState
+	// epochRewards := sdk.MustNewDecFromStr("1.0")
+	// mintData.Params.MinRewardPerEpoch = epochRewards
+	// mintData.Params.MaxRewardPerEpoch = epochRewards
 
-	s.cfg = cfg
-	s.network = testnet.New(s.T(), cfg)
+	// mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
+	// s.Require().NoError(err)
+	// genesisState[minttypes.ModuleName] = mintDataBz
+	// cfg.GenesisState = genesisState
 
-	_, err = s.network.WaitForHeight(1)
+	s.network = network.New(s.T(), s.cfg)
+
+	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
