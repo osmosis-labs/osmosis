@@ -4,38 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-func TestEpochProvision(t *testing.T) {
-	minter := InitialMinter()
-	params := DefaultParams()
-
-	daysPerYear := int64(365)
-
-	tests := []struct {
-		annualProvisions int64
-		expProvisions    int64
-	}{
-		{daysPerYear / 7, 1},
-		{daysPerYear/7 + 1, 1},
-		{(daysPerYear / 7) * 2, 2},
-		{(daysPerYear / 7) / 2, 0},
-	}
-	for i, tc := range tests {
-		minter.EpochProvisions = sdk.NewDec(tc.annualProvisions)
-		provisions := minter.EpochProvision(params)
-
-		expProvisions := sdk.NewCoin(params.MintDenom,
-			sdk.NewInt(tc.expProvisions))
-
-		require.True(t, expProvisions.IsEqual(provisions),
-			"test: %v\n\tExp: %v\n\tGot: %v\n",
-			i, tc.expProvisions, provisions)
-	}
-}
 
 // Benchmarking :)
 // previously using sdk.Int operations:
