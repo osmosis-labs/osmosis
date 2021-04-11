@@ -18,8 +18,8 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	).Methods("GET")
 
 	r.HandleFunc(
-		"/minting/annual-provisions",
-		queryAnnualProvisionsHandlerFn(clientCtx),
+		"/minting/epoch-provisions",
+		queryEpochProvisionsHandlerFn(clientCtx),
 	).Methods("GET")
 }
 
@@ -42,9 +42,9 @@ func queryParamsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	}
 }
 
-func queryAnnualProvisionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
+func queryEpochProvisionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAnnualProvisions)
+		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryEpochProvisions)
 
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {

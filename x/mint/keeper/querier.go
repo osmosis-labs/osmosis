@@ -16,8 +16,8 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryParameters:
 			return queryParams(ctx, k, legacyQuerierCdc)
 
-		case types.QueryAnnualProvisions:
-			return queryAnnualProvisions(ctx, k, legacyQuerierCdc)
+		case types.QueryEpochProvisions:
+			return queryEpochProvisions(ctx, k, legacyQuerierCdc)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
@@ -36,10 +36,10 @@ func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino)
 	return res, nil
 }
 
-func queryAnnualProvisions(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryEpochProvisions(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	minter := k.GetMinter(ctx)
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, minter.AnnualProvisions)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, minter.EpochProvisions)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

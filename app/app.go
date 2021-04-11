@@ -69,9 +69,6 @@ import (
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -95,6 +92,10 @@ import (
 	"github.com/c-osmosis/osmosis/x/lockup"
 	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
 	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
+
+	"github.com/c-osmosis/osmosis/x/mint"
+	mintkeeper "github.com/c-osmosis/osmosis/x/mint/keeper"
+	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
 
 	appparams "github.com/c-osmosis/osmosis/app/params"
 )

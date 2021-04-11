@@ -23,6 +23,6 @@ const (
 	QuerierRoute = StoreKey
 
 	// Query endpoints supported by the minting querier
-	QueryParameters       = "parameters"
-	QueryAnnualProvisions = "annual_provisions"
+	QueryParameters      = "parameters"
+	QueryEpochProvisions = "epoch_provisions"
 )
