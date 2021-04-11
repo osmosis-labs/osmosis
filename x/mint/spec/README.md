@@ -14,7 +14,7 @@ parent:
     - [Minter](02_state.md#minter)
     - [Params](02_state.md#params)
 3. **[Begin-Block](03_begin_block.md)**
-    - [NextAnnualProvisions](03_begin_block.md#nextannualprovisions)
+    - [NextEpochProvisions](03_begin_block.md#nextepochprovisions)
     - [EpochProvision](03_begin_block.md#EpochProvision)
 4. **[Parameters](04_params.md)**
 5. **[Events](05_events.md)**
