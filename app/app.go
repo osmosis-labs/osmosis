@@ -325,6 +325,7 @@ func NewOsmosisApp(
 
 	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper)
 
 	app.GAMMKeeper = *gammKeeper.SetHooks(
 		gammtypes.NewMultiGammHooks(
@@ -337,7 +338,12 @@ func NewOsmosisApp(
 		// insert lockup hooks receivers here
 		),
 	)
-	app.IncentivesKeeper = *incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.LockupKeeper)
+
+	app.IncentivesKeeper = *incentivesKeeper.SetHooks(
+		incentivestypes.NewMultiIncentiveHooks(
+		// insert incentive hooks receivers here
+		),
+	)
 
 	/****  Module Options ****/
 

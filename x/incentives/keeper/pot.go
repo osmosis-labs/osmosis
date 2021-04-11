@@ -95,6 +95,7 @@ func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins
 	if err := k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, getTimeKey(pot.StartTime)), pot.Id); err != nil {
 		return 0, err
 	}
+	k.hooks.AfterCreatePot(ctx, pot.Id)
 	return pot.Id, nil
 }
 
@@ -110,6 +111,7 @@ func (k Keeper) AddToPotRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk
 
 	pot.Coins = pot.Coins.Add(coins...)
 	k.setPot(ctx, pot)
+	k.hooks.AfterAddToPot(ctx, pot.Id)
 	return nil
 }
 
@@ -124,6 +126,7 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, pot types.Pot) error {
 	timeKey := getTimeKey(pot.StartTime)
 	k.deletePotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, timeKey), pot.Id)
 	k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
+	k.hooks.AfterFinishDistribution(ctx, pot.Id)
 	return nil
 }
 
@@ -132,6 +135,7 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 	timeKey := getTimeKey(pot.StartTime)
 	k.deletePotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
 	k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixFinishedPots, timeKey), pot.Id)
+	k.hooks.AfterFinishDistribution(ctx, pot.Id)
 	return nil
 }
 
@@ -226,6 +230,7 @@ func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
 	pot.DistributedCoins = pot.DistributedCoins.Add(totalDistrCoins...)
 	k.setPot(ctx, &pot)
 
+	k.hooks.AfterDistribute(ctx, pot.Id)
 	return totalDistrCoins, nil
 }
 

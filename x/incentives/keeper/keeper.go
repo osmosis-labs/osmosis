@@ -15,6 +15,7 @@ type Keeper struct {
 	cdc        codec.Marshaler
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
+	hooks      types.IncentiveHooks
 	ak         authkeeper.AccountKeeper
 	bk         types.BankKeeper
 	lk         types.LockupKeeper
@@ -33,6 +34,17 @@ func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes
 		bk:         bk,
 		lk:         lk,
 	}
+}
+
+// Set the gamm hooks
+func (k *Keeper) SetHooks(ih types.IncentiveHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set incentive hooks twice")
+	}
+
+	k.hooks = ih
+
+	return k
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
