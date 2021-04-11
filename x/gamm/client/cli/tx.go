@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -26,6 +28,12 @@ func NewTxCmd() *cobra.Command {
 		NewCreatePoolCmd(),
 		NewJoinPoolCmd(),
 		NewExitPoolCmd(),
+		NewSwapExactAmountInCmd(),
+		NewSwapExactAmountOutCmd(),
+		NewJoinSwapExternAmountIn(),
+		NewJoinSwapShareAmountOut(),
+		NewExitSwapExternAmountOut(),
+		NewExitSwapShareAmountIn(),
 	)
 
 	return txCmd
@@ -33,9 +41,12 @@ func NewTxCmd() *cobra.Command {
 
 func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool",
+		Use:   "create-pool <token-weights> [flags]",
 		Short: "create a new pool and provide the liquidity to it",
-		Args:  cobra.ExactArgs(0),
+		Long: `create a new pool and provide the liquidity to it.
+			e.g. create-pool 4uatom,4osmo,2uakt --initial-deposit 100uatom,5osmo,20uakt --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
+		`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -44,7 +55,7 @@ func NewCreatePoolCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, args[0], cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -56,8 +67,7 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetCreatePool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolRecordTokens)
-	_ = cmd.MarkFlagRequired(FlagPoolRecordTokenWeights)
+	_ = cmd.MarkFlagRequired(FlagInitialDeposit)
 	_ = cmd.MarkFlagRequired(FlagSwapFee)
 	_ = cmd.MarkFlagRequired(FlagExitFee)
 
@@ -91,7 +101,7 @@ func NewJoinPoolCmd() *cobra.Command {
 
 	_ = cmd.MarkFlagRequired(FlagPoolId)
 	_ = cmd.MarkFlagRequired(FlagShareAmountOut)
-	_ = cmd.MarkFlagRequired(FlagMaxAountsIn)
+	_ = cmd.MarkFlagRequired(FlagMaxAmountsIn)
 
 	return cmd
 }
@@ -128,11 +138,11 @@ func NewExitPoolCmd() *cobra.Command {
 	return cmd
 }
 
-func NewUpdateSwapFeeCmd() *cobra.Command {
+func NewSwapExactAmountInCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-swapfee",
-		Short: "update the swapfee for a pool",
-		Args:  cobra.ExactArgs(0),
+		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
+		Short: "swap exact amount in",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -141,7 +151,7 @@ func NewUpdateSwapFeeCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewUpdateSwapFeeMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildSwapExactAmountInMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -150,48 +160,178 @@ func NewUpdateSwapFeeCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetCreatePool())
+	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
 	flags.AddTxFlagsToCmd(cmd)
-
-	_ = cmd.MarkFlagRequired(FlagPoolId)
-	_ = cmd.MarkFlagRequired(FlagSwapFee)
+	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
+	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
 
 	return cmd
 }
 
-func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	recordTokenStrs, err := fs.GetStringArray(FlagPoolRecordTokens)
+func NewSwapExactAmountOutCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "swap-exact-amount-out [token-out] [token-in-max-amount]",
+		Short: "swap exact amount out",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildSwapExactAmountOutMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetSwapAmountOutRoutes())
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
+	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
+
+	return cmd
+}
+
+func NewJoinSwapExternAmountIn() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "join-swap-extern-amount-in [token-in] [share-out-min-amount]",
+		Short: "join swap extern amount in",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildJoinSwapExternAmountInMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+
+	return cmd
+}
+
+func NewJoinSwapShareAmountOut() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount]",
+		Short: "join swap share amount out",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildJoinSwapShareAmountOutMsg(clientCtx, args[0], args[1], args[2], txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+
+	return cmd
+}
+
+func NewExitSwapExternAmountOut() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exit-swap-extern-amount-out [token-out] [share-in-max-amount]",
+		Short: "exit swap extern amount out",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildExitSwapExternAmountOutMsg(clientCtx, args[0], args[1], txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+
+	return cmd
+}
+
+func NewExitSwapShareAmountIn() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exit-swap-share-amount-in [token-out-denom] [share-in-amount] [token-out-min-amount]",
+		Short: "exit swap share amount in",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildExitSwapShareAmountInMsg(clientCtx, args[0], args[1], args[2], txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+
+	return cmd
+}
+
+func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeights string, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	initialDepositStr, err := fs.GetString(FlagInitialDeposit)
 	if err != nil {
 		return txf, nil, err
 	}
-	if len(recordTokenStrs) < 2 {
-		return txf, nil, fmt.Errorf("bind tokens should be more than 2")
-	}
 
-	recordTokenWeightStrs, err := fs.GetStringArray(FlagPoolRecordTokenWeights)
+	deposit, err := sdk.ParseCoinsNormalized(initialDepositStr)
 	if err != nil {
 		return txf, nil, err
 	}
-	if len(recordTokenStrs) != len(recordTokenWeightStrs) {
-		return txf, nil, fmt.Errorf("tokens and token weights should have same length")
+
+	poolAssetCoins, err := sdk.ParseDecCoins(tokenWeights)
+	if err != nil {
+		return txf, nil, err
 	}
 
-	recordTokens := sdk.Coins{}
-	for i := 0; i < len(recordTokenStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(recordTokenStrs[i])
-		if err != nil {
-			return txf, nil, err
-		}
-		recordTokens = append(recordTokens, parsed)
-	}
-
-	var recordWeights []sdk.Int
-	for i := 0; i < len(recordTokenWeightStrs); i++ {
-		parsed, ok := sdk.NewIntFromString(recordTokenWeightStrs[i])
-		if !ok {
-			return txf, nil, fmt.Errorf("invalid token weight (%s)", recordTokenWeightStrs[i])
-		}
-		recordWeights = append(recordWeights, parsed)
+	if len(deposit) != len(poolAssetCoins) {
+		return txf, nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
 	swapFeeStr, err := fs.GetString(FlagSwapFee)
@@ -212,17 +352,17 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, err
 	}
 
-	var records []types.Record
-	for i := 0; i < len(recordTokens); i++ {
-		recordToken := recordTokens[i]
-		recordWeight := recordWeights[i]
+	var poolAssets []types.PoolAsset
+	for i := 0; i < len(poolAssetCoins); i++ {
 
-		record := types.Record{
-			Weight: recordWeight,
-			Token:  recordToken,
+		if poolAssetCoins[i].Denom != deposit[i].Denom {
+			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
 
-		records = append(records, record)
+		poolAssets = append(poolAssets, types.PoolAsset{
+			Weight: poolAssetCoins[i].Amount.RoundInt(),
+			Token:  deposit[i],
+		})
 	}
 
 	msg := &types.MsgCreatePool{
@@ -232,7 +372,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 			SwapFee: swapFee,
 			ExitFee: exitFee,
 		},
-		Records: records,
+		PoolAssets: poolAssets,
 	}
 
 	return txf, msg, nil
@@ -254,7 +394,7 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		return txf, nil, fmt.Errorf("invalid share amount out")
 	}
 
-	maxAmountsInStrs, err := fs.GetStringArray(FlagMaxAountsIn)
+	maxAmountsInStrs, err := fs.GetStringArray(FlagMaxAmountsIn)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -318,29 +458,214 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	return txf, msg, nil
 }
 
-func NewUpdateSwapFeeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {
+	swapRoutePoolIds, err := fs.GetStringArray(FlagSwapRoutePoolIds)
+	if err != nil {
+		return nil, err
+	}
+
+	swapRouteDenoms, err := fs.GetStringArray(FlagSwapRouteDenoms)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(swapRoutePoolIds) != len(swapRouteDenoms) {
+		return nil, errors.New("swap route pool ids and denoms mismatch")
+	}
+
+	routes := []types.SwapAmountInRoute{}
+	for index, poolIDStr := range swapRoutePoolIds {
+		pID, err := strconv.Atoi(poolIDStr)
+		if err != nil {
+			return nil, err
+		}
+		routes = append(routes, types.SwapAmountInRoute{
+			PoolId:        uint64(pID),
+			TokenOutDenom: swapRouteDenoms[index],
+		})
+	}
+	return routes, nil
+}
+
+func swapAmountOutRoutes(fs *flag.FlagSet) ([]types.SwapAmountOutRoute, error) {
+	swapRoutePoolIds, err := fs.GetStringArray(FlagSwapRoutePoolIds)
+	if err != nil {
+		return nil, err
+	}
+
+	swapRouteDenoms, err := fs.GetStringArray(FlagSwapRouteDenoms)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(swapRoutePoolIds) != len(swapRouteDenoms) {
+		return nil, errors.New("swap route pool ids and denoms mismatch")
+	}
+
+	routes := []types.SwapAmountOutRoute{}
+	for index, poolIDStr := range swapRoutePoolIds {
+		pID, err := strconv.Atoi(poolIDStr)
+		if err != nil {
+			return nil, err
+		}
+		routes = append(routes, types.SwapAmountOutRoute{
+			PoolId:       uint64(pID),
+			TokenInDenom: swapRouteDenoms[index],
+		})
+	}
+	return routes, nil
+}
+
+func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	routes, err := swapAmountInRoutes(fs)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	swapFeeStr, err := fs.GetString(FlagSwapFee)
-	if err != nil {
-		return txf, nil, err
-	}
-	swapFee, err := sdk.NewDecFromStr(swapFeeStr)
+	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	msg := &types.MsgUpdateSwapFee{
-		Sender:     clientCtx.GetFromAddress().String(),
-		PoolId:     poolId,
-		NewSwapFee: swapFee,
+	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
+	if !ok {
+		return txf, nil, errors.New("invalid token out min amount")
+	}
+	msg := &types.MsgSwapExactAmountIn{
+		Sender:            clientCtx.GetFromAddress().String(),
+		Routes:            routes,
+		TokenIn:           tokenIn,
+		TokenOutMinAmount: tokenOutMinAmt,
 	}
 
-	if err = msg.ValidateBasic(); err != nil {
+	return txf, msg, nil
+}
+
+func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, tokenOutStr, tokenInMaxAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	routes, err := swapAmountOutRoutes(fs)
+	if err != nil {
 		return txf, nil, err
+	}
+
+	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
+	if !ok {
+		return txf, nil, errors.New("invalid token in max amount")
+	}
+	msg := &types.MsgSwapExactAmountOut{
+		Sender:           clientCtx.GetFromAddress().String(),
+		Routes:           routes,
+		TokenInMaxAmount: tokenInMaxAmount,
+		TokenOut:         tokenOut,
+	}
+
+	return txf, msg, nil
+}
+
+func NewBuildJoinSwapExternAmountInMsg(clientCtx client.Context, tokenInStr, shareOutMinAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolID, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	shareOutMinAmount, ok := sdk.NewIntFromString(shareOutMinAmountStr)
+	if !ok {
+		return txf, nil, errors.New("invalid share out min amount")
+	}
+	msg := &types.MsgJoinSwapExternAmountIn{
+		Sender:            clientCtx.GetFromAddress().String(),
+		PoolId:            poolID,
+		TokenIn:           tokenIn,
+		ShareOutMinAmount: shareOutMinAmount,
+	}
+
+	return txf, msg, nil
+}
+
+func NewBuildJoinSwapShareAmountOutMsg(clientCtx client.Context, tokenInDenom, tokenInMaxAmtStr, shareOutAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolID, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	tokenInMaxAmt, ok := sdk.NewIntFromString(tokenInMaxAmtStr)
+	if !ok {
+		return txf, nil, errors.New("token in max amount")
+	}
+
+	shareOutAmt, ok := sdk.NewIntFromString(shareOutAmtStr)
+	if !ok {
+		return txf, nil, errors.New("share out amount")
+	}
+
+	msg := &types.MsgJoinSwapShareAmountOut{
+		Sender:           clientCtx.GetFromAddress().String(),
+		PoolId:           poolID,
+		TokenInDenom:     tokenInDenom,
+		TokenInMaxAmount: tokenInMaxAmt,
+		ShareOutAmount:   shareOutAmt,
+	}
+
+	return txf, msg, nil
+}
+
+func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, tokenOutStr, shareInMaxAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolID, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	tokenOut, err := sdk.ParseCoinNormalized(tokenOutStr)
+	if err != nil {
+		return txf, nil, errors.New("token out")
+	}
+
+	shareInMaxAmt, ok := sdk.NewIntFromString(shareInMaxAmtStr)
+	if !ok {
+		return txf, nil, errors.New("share in max amount")
+	}
+
+	msg := &types.MsgExitSwapExternAmountOut{
+		Sender:           clientCtx.GetFromAddress().String(),
+		PoolId:           poolID,
+		TokenOut:         tokenOut,
+		ShareInMaxAmount: shareInMaxAmt,
+	}
+
+	return txf, msg, nil
+}
+
+func NewBuildExitSwapShareAmountInMsg(clientCtx client.Context, tokenOutDenom, shareInAmtStr, tokenOutMinAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolID, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	shareInAmt, ok := sdk.NewIntFromString(shareInAmtStr)
+	if !ok {
+		return txf, nil, errors.New("share in amount")
+	}
+
+	tokenOutMinAmount, ok := sdk.NewIntFromString(tokenOutMinAmountStr)
+	if !ok {
+		return txf, nil, errors.New("token out min amount")
+	}
+
+	msg := &types.MsgExitSwapShareAmountIn{
+		Sender:            clientCtx.GetFromAddress().String(),
+		PoolId:            poolID,
+		TokenOutDenom:     tokenOutDenom,
+		ShareInAmount:     shareInAmt,
+		TokenOutMinAmount: tokenOutMinAmount,
 	}
 
 	return txf, msg, nil

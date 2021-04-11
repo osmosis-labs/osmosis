@@ -323,8 +323,20 @@ func NewOsmosisApp(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
-	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+
+	app.GAMMKeeper = *gammKeeper.SetHooks(
+		gammtypes.NewMultiGammHooks(
+		// insert gamm hooks receivers here
+		),
+	)
+
+	app.LockupKeeper = *lockupKeeper.SetHooks(
+		lockuptypes.NewMultiLockupHooks(
+		// insert lockup hooks receivers here
+		),
+	)
 	app.IncentivesKeeper = *incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.LockupKeeper)
 
 	/****  Module Options ****/
@@ -574,7 +586,7 @@ func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 
 	staticServer := http.FileServer(statikFS)
 	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticServer))
-	rtr.Handle("/swagger/", staticServer)
+	rtr.PathPrefix("/swagger/").Handler(staticServer)
 }
 
 // GetMaccPerms returns a copy of the module account permissions
