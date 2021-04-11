@@ -90,11 +90,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-// KeyGenesisEpochProvisions  = []byte("GenesisEpochProvisions")
-// 	KeyEpochDuration           = []byte("EpochDuration")
-// 	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
-// 	KeyReductionFactorForEvent = []byte("ReductionFactorForEvent")
-
 func validateMintDenom(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
@@ -112,29 +107,53 @@ func validateMintDenom(i interface{}) error {
 }
 
 func validateGenesisEpochProvisions(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 
-	// TODO: Add validation here
+	if v.LT(sdk.ZeroDec()) {
+		return fmt.Errorf("genesis epoch provision must be non-negative")
+	}
 
 	return nil
 }
 
 func validateEpochDuration(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 
-	// TODO: Add validation here
+	if v <= 0 {
+		return fmt.Errorf("epoch duration must be positive: %d", v)
+	}
 
 	return nil
 }
 
 func validateReductionPeriodInEpochs(i interface{}) error {
+	v, ok := i.(int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 
-	// TODO: Add validation here
+	if v <= 0 {
+		return fmt.Errorf("max validators must be positive: %d", v)
+	}
 
 	return nil
 }
 
 func validateReductionFactorForEvent(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 
-	// TODO: Add validation here
+	if v.GT(sdk.NewDec(1)) {
+		return fmt.Errorf("reduction factor cannot be greater than 1")
+	}
 
 	return nil
 }
