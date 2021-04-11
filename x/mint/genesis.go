@@ -8,6 +8,7 @@ import (
 
 // InitGenesis new mint genesis
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, data *types.GenesisState) {
+	data.Minter.EpochProvisions = data.Params.GenesisEpochProvisions
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)
 	ak.GetModuleAccount(ctx, types.ModuleName)
