@@ -24,9 +24,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/c-osmosis/osmosis/x/mint"
-	mintkeeper "github.com/c-osmosis/osmosis/x/mint/keeper"
-	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -95,6 +92,10 @@ import (
 	"github.com/c-osmosis/osmosis/x/lockup"
 	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
 	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
+
+	"github.com/c-osmosis/osmosis/x/mint"
+	mintkeeper "github.com/c-osmosis/osmosis/x/mint/keeper"
+	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
 
 	appparams "github.com/c-osmosis/osmosis/app/params"
 )
