@@ -3,13 +3,13 @@ package keeper_test
 import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/c-osmosis/osmosis/app"
+	"github.com/c-osmosis/osmosis/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // returns context and an app with updated mint keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+func createTestApp(isCheckTx bool) (*simapp.OsmosisApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
