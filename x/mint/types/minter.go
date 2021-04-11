@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// NewMinter returns a new Minter object with the given annual
+// NewMinter returns a new Minter object with the given epoch
 // provisions values.
 func NewMinter(epochProvisions sdk.Dec) Minter {
 	return Minter{
@@ -27,12 +27,12 @@ func ValidateMinter(minter Minter) error {
 	return nil
 }
 
-// NextEpochProvisions returns the annual provisions
+// NextEpochProvisions returns the epoch provisions
 func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
 	return m.EpochProvisions.Mul(params.ReductionFactorForEvent)
 }
 
-// EpochProvision returns the provisions for a block based on the annual
+// EpochProvision returns the provisions for a block based on the epoch
 // provisions rate.
 func (m Minter) EpochProvision(params Params) sdk.Coin {
 	provisionAmt := m.EpochProvisions

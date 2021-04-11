@@ -113,8 +113,8 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// QueryAnnualProvisionsRequest is the request type for the
-// Query/AnnualProvisions RPC method.
+// QueryEpochProvisionsRequest is the request type for the
+// Query/EpochProvisions RPC method.
 type QueryEpochProvisionsRequest struct {
 }
 
@@ -151,10 +151,10 @@ func (m *QueryEpochProvisionsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryEpochProvisionsRequest proto.InternalMessageInfo
 
-// QueryAnnualProvisionsResponse is the response type for the
-// Query/AnnualProvisions RPC method.
+// QueryEpochProvisionsResponse is the response type for the
+// Query/EpochProvisions RPC method.
 type QueryEpochProvisionsResponse struct {
-	// annual_provisions is the current minting annual provisions value.
+	// epoch_provisions is the current minting per epoch provisions value.
 	EpochProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=epoch_provisions,json=epochProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_provisions"`
 }
 
@@ -242,7 +242,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns the total set of minting parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// AnnualProvisions current minting annual provisions value.
+	// EpochProvisions current minting epoch provisions value.
 	EpochProvisions(ctx context.Context, in *QueryEpochProvisionsRequest, opts ...grpc.CallOption) (*QueryEpochProvisionsResponse, error)
 }
 
@@ -276,7 +276,7 @@ func (c *queryClient) EpochProvisions(ctx context.Context, in *QueryEpochProvisi
 type QueryServer interface {
 	// Params returns the total set of minting parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// AnnualProvisions current minting annual provisions value.
+	// EpochProvisions current minting epoch provisions value.
 	EpochProvisions(context.Context, *QueryEpochProvisionsRequest) (*QueryEpochProvisionsResponse, error)
 }
 

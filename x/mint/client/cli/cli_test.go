@@ -117,7 +117,7 @@ reduction_period_in_epochs: "156"`,
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
+func (s *IntegrationTestSuite) TestGetCmdQueryEpochProvisions() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -141,7 +141,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryAnnualProvisions()
+			cmd := cli.GetCmdQueryEpochProvisions()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

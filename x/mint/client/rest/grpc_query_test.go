@@ -98,8 +98,8 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			},
 		},
 		{
-			"gRPC request annual provisions",
-			fmt.Sprintf("%s/cosmos/mint/v1beta1/annual_provisions", baseURL),
+			"gRPC request epoch provisions",
+			fmt.Sprintf("%s/cosmos/mint/v1beta1/epoch_provisions", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},

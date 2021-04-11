@@ -4,6 +4,6 @@ package types
 const (
 	EventTypeMint = ModuleName
 
-	AttributeKeyAnnualProvisions = "annual_provisions"
-	AttributeEpochNumber         = "epoch_number"
+	AttributeKeyEpochProvisions = "epoch_provisions"
+	AttributeEpochNumber        = "epoch_number"
 )

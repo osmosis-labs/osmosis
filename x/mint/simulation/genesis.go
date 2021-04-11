@@ -30,9 +30,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// Leaving as sample code
 
 	mintDenom := sdk.DefaultBondDenom
-	annualProvisions := sdk.NewDec(500000)         // TODO: Randomize this
+	epochProvisions := sdk.NewDec(500000)          // TODO: Randomize this
 	epochDuration, _ := time.ParseDuration("168h") // 1 week
-	params := types.NewParams(mintDenom, annualProvisions, epochDuration, sdk.NewDecWithPrec(5, 1), 156)
+	params := types.NewParams(mintDenom, epochProvisions, epochDuration, sdk.NewDecWithPrec(5, 1), 156)
 
 	mintGenesis := types.NewGenesisState(types.InitialMinter(), params, 0, 0)
 

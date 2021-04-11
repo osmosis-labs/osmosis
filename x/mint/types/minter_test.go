@@ -28,14 +28,14 @@ func BenchmarkEpochProvision(b *testing.B) {
 	}
 }
 
-// Next annual provisions benchmarking
-// BenchmarkNextAnnualProvisions-4 5000000 251 ns/op
-func BenchmarkNextAnnualProvisions(b *testing.B) {
+// Next epoch provisions benchmarking
+// BenchmarkNextEpochProvisions-4 5000000 251 ns/op
+func BenchmarkNextEpochProvisions(b *testing.B) {
 	b.ReportAllocs()
 	minter := InitialMinter()
 	params := DefaultParams()
 
-	// run the NextAnnualProvisions function b.N times
+	// run the NextEpochProvisions function b.N times
 	for n := 0; n < b.N; n++ {
 		minter.NextEpochProvisions(params)
 	}

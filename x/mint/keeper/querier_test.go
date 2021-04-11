@@ -27,7 +27,7 @@ func TestNewQuerier(t *testing.T) {
 	_, err := querier(ctx, []string{types.QueryParameters}, query)
 	require.NoError(t, err)
 
-	_, err = querier(ctx, []string{types.QueryAnnualProvisions}, query)
+	_, err = querier(ctx, []string{types.QueryEpochProvisions}, query)
 	require.NoError(t, err)
 
 	_, err = querier(ctx, []string{"foo"}, query)
@@ -48,18 +48,18 @@ func TestQueryParams(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestQueryAnnualProvisions(t *testing.T) {
+func TestQueryEpochProvisions(t *testing.T) {
 	app, ctx := createTestApp(true)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
-	var annualProvisions sdk.Dec
+	var epochProvisions sdk.Dec
 
-	res, sdkErr := querier(ctx, []string{types.QueryAnnualProvisions}, abci.RequestQuery{})
+	res, sdkErr := querier(ctx, []string{types.QueryEpochProvisions}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := app.LegacyAmino().UnmarshalJSON(res, &annualProvisions)
+	err := app.LegacyAmino().UnmarshalJSON(res, &epochProvisions)
 	require.NoError(t, err)
 
-	require.Equal(t, app.MintKeeper.GetMinter(ctx).EpochProvisions, annualProvisions)
+	require.Equal(t, app.MintKeeper.GetMinter(ctx).EpochProvisions, epochProvisions)
 }
