@@ -23,7 +23,7 @@ func GetQueryCmd() *cobra.Command {
 
 	mintingQueryCmd.AddCommand(
 		GetCmdQueryParams(),
-		GetCmdQueryAnnualProvisions(),
+		GetCmdQueryEpochProvisions(),
 	)
 
 	return mintingQueryCmd
@@ -59,12 +59,12 @@ func GetCmdQueryParams() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryAnnualProvisions implements a command to return the current minting
-// annual provisions value.
-func GetCmdQueryAnnualProvisions() *cobra.Command {
+// GetCmdQueryEpochProvisions implements a command to return the current minting
+// epoch provisions value.
+func GetCmdQueryEpochProvisions() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "annual-provisions",
-		Short: "Query the current minting annual provisions value",
+		Use:   "epoch-provisions",
+		Short: "Query the current minting epoch provisions value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -73,14 +73,14 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAnnualProvisionsRequest{}
-			res, err := queryClient.AnnualProvisions(context.Background(), params)
+			params := &types.QueryEpochProvisionsRequest{}
+			res, err := queryClient.EpochProvisions(context.Background(), params)
 
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.AnnualProvisions))
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.EpochProvisions))
 		},
 	}
 

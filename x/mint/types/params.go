@@ -14,10 +14,11 @@ import (
 
 // Parameter store keys
 var (
-	KeyMintDenom         = []byte("MintDenom")
-	KeyMaxRewardPerEpoch = []byte("MaxRewardPerEpoch")
-	KeyMinRewardPerEpoch = []byte("MinRewardPerEpoch")
-	KeyEpochsPerYear     = []byte("EpochsPerYear")
+	KeyMintDenom               = []byte("MintDenom")
+	KeyGenesisEpochProvisions  = []byte("GenesisEpochProvisions")
+	KeyEpochDuration           = []byte("EpochDuration")
+	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
+	KeyReductionFactorForEvent = []byte("ReductionFactorForEvent")
 )
 
 // ParamTable for minting module.
@@ -26,19 +27,16 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, annualProvisions, maxRewardPerEpoch, minRewardPerEpoch sdk.Dec, epochDuration time.Duration,
-	reductionFactorForEvent sdk.Dec, reductionPeriodInEpochs, epochsPerYear int64,
+	mintDenom string, genesisEpochProvisions sdk.Dec, epochDuration time.Duration,
+	reductionFactorForEvent sdk.Dec, reductionPeriodInEpochs int64,
 ) Params {
 
 	return Params{
 		MintDenom:               mintDenom,
-		AnnualProvisions:        annualProvisions,
-		MaxRewardPerEpoch:       maxRewardPerEpoch,
-		MinRewardPerEpoch:       minRewardPerEpoch,
+		GenesisEpochProvisions:  genesisEpochProvisions,
 		EpochDuration:           epochDuration,
 		ReductionPeriodInEpochs: reductionPeriodInEpochs,
 		ReductionFactorForEvent: reductionFactorForEvent,
-		EpochsPerYear:           epochsPerYear,
 	}
 }
 
@@ -47,13 +45,10 @@ func DefaultParams() Params {
 	epochDuration, _ := time.ParseDuration("168h") // 1 week
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
-		AnnualProvisions:        sdk.NewDec(5000000).Mul(sdk.NewDec(52)), // yearly rewards
-		MaxRewardPerEpoch:       sdk.NewDec(6000000),                     // per epoch max
-		MinRewardPerEpoch:       sdk.NewDec(4000000),                     // per epoch min
-		EpochDuration:           epochDuration,                           // 1 week
-		ReductionPeriodInEpochs: 156,                                     // 3 years
-		ReductionFactorForEvent: sdk.NewDecWithPrec(5, 1),                // 0.5
-		EpochsPerYear:           52,                                      // assuming 5 second block times
+		GenesisEpochProvisions:  sdk.NewDec(5000000),
+		EpochDuration:           epochDuration,            // 1 week
+		ReductionPeriodInEpochs: 156,                      // 3 years
+		ReductionFactorForEvent: sdk.NewDecWithPrec(5, 1), // 0.5
 	}
 }
 
@@ -62,24 +57,20 @@ func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
 	}
-	if err := validateMaxRewardPerEpoch(p.MaxRewardPerEpoch); err != nil {
+	if err := validateGenesisEpochProvisions(p.GenesisEpochProvisions); err != nil {
 		return err
 	}
-	if err := validateMinRewardPerEpoch(p.MinRewardPerEpoch); err != nil {
+	if err := validateEpochDuration(p.EpochDuration); err != nil {
 		return err
 	}
-	if err := validateEpochsPerYear(p.EpochsPerYear); err != nil {
+	if err := validateReductionPeriodInEpochs(p.ReductionPeriodInEpochs); err != nil {
 		return err
 	}
-	if p.MaxRewardPerEpoch.LT(p.MinRewardPerEpoch) {
-		return fmt.Errorf(
-			"max rewards (%s) must be greater than or equal to min rewards (%s)",
-			p.MaxRewardPerEpoch, p.MinRewardPerEpoch,
-		)
+	if err := validateReductionFactorForEvent(p.ReductionFactorForEvent); err != nil {
+		return err
 	}
 
 	return nil
-
 }
 
 // String implements the Stringer interface.
@@ -92,11 +83,17 @@ func (p Params) String() string {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
-		paramtypes.NewParamSetPair(KeyMaxRewardPerEpoch, &p.MaxRewardPerEpoch, validateMaxRewardPerEpoch),
-		paramtypes.NewParamSetPair(KeyMinRewardPerEpoch, &p.MinRewardPerEpoch, validateMinRewardPerEpoch),
-		paramtypes.NewParamSetPair(KeyEpochsPerYear, &p.EpochsPerYear, validateEpochsPerYear),
+		paramtypes.NewParamSetPair(KeyGenesisEpochProvisions, &p.GenesisEpochProvisions, validateGenesisEpochProvisions),
+		paramtypes.NewParamSetPair(KeyEpochDuration, &p.EpochDuration, validateEpochDuration),
+		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
+		paramtypes.NewParamSetPair(KeyReductionFactorForEvent, &p.ReductionFactorForEvent, validateReductionFactorForEvent),
 	}
 }
+
+// KeyGenesisEpochProvisions  = []byte("GenesisEpochProvisions")
+// 	KeyEpochDuration           = []byte("EpochDuration")
+// 	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
+// 	KeyReductionFactorForEvent = []byte("ReductionFactorForEvent")
 
 func validateMintDenom(i interface{}) error {
 	v, ok := i.(string)
@@ -114,41 +111,30 @@ func validateMintDenom(i interface{}) error {
 	return nil
 }
 
-func validateMaxRewardPerEpoch(i interface{}) error {
-	v, ok := i.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
+func validateGenesisEpochProvisions(i interface{}) error {
 
-	if v.IsNegative() {
-		return fmt.Errorf("max rewards cannot be negative: %s", v)
-	}
+	// TODO: Add validation here
 
 	return nil
 }
 
-func validateMinRewardPerEpoch(i interface{}) error {
-	v, ok := i.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
+func validateEpochDuration(i interface{}) error {
 
-	if v.IsNegative() {
-		return fmt.Errorf("min rewards cannot be negative: %s", v)
-	}
+	// TODO: Add validation here
 
 	return nil
 }
 
-func validateEpochsPerYear(i interface{}) error {
-	v, ok := i.(int64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
+func validateReductionPeriodInEpochs(i interface{}) error {
 
-	if v == 0 {
-		return fmt.Errorf("blocks per year must be positive: %d", v)
-	}
+	// TODO: Add validation here
+
+	return nil
+}
+
+func validateReductionFactorForEvent(i interface{}) error {
+
+	// TODO: Add validation here
 
 	return nil
 }
