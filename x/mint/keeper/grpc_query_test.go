@@ -41,7 +41,7 @@ func (suite *MintTestSuite) TestGRPCParams() {
 	_, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 
-	_, err = queryClient.AnnualProvisions(gocontext.Background(), &types.QueryAnnualProvisionsRequest{})
+	_, err = queryClient.EpochProvisions(gocontext.Background(), &types.QueryEpochProvisionsRequest{})
 	suite.Require().NoError(err)
 }
 

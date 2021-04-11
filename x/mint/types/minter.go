@@ -6,9 +6,9 @@ import (
 
 // NewMinter returns a new Minter object with the given annual
 // provisions values.
-func NewMinter(annualProvisions sdk.Dec) Minter {
+func NewMinter(epochProvisions sdk.Dec) Minter {
 	return Minter{
-		AnnualProvisions: annualProvisions,
+		EpochProvisions: epochProvisions,
 	}
 }
 
@@ -27,14 +27,14 @@ func ValidateMinter(minter Minter) error {
 	return nil
 }
 
-// NextAnnualProvisions returns the annual provisions
-func (m Minter) NextAnnualProvisions(params Params) sdk.Dec {
-	return m.AnnualProvisions.Mul(params.ReductionFactorForEvent)
+// NextEpochProvisions returns the annual provisions
+func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
+	return m.EpochProvisions.Mul(params.ReductionFactorForEvent)
 }
 
 // EpochProvision returns the provisions for a block based on the annual
 // provisions rate.
 func (m Minter) EpochProvision(params Params) sdk.Coin {
-	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.EpochsPerYear)))
+	provisionAmt := m.EpochProvisions
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

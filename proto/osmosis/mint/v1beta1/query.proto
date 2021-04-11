@@ -15,8 +15,8 @@ service Query {
   }
 
   // AnnualProvisions current minting annual provisions value.
-  rpc AnnualProvisions(QueryAnnualProvisionsRequest) returns (QueryAnnualProvisionsResponse) {
-    option (google.api.http).get = "/osmosis/mint/v1beta1/annual_provisions";
+  rpc EpochProvisions(QueryEpochProvisionsRequest) returns (QueryEpochProvisionsResponse) {
+    option (google.api.http).get = "/osmosis/mint/v1beta1/epoch_provisions";
   }
 }
 
@@ -31,12 +31,12 @@ message QueryParamsResponse {
 
 // QueryAnnualProvisionsRequest is the request type for the
 // Query/AnnualProvisions RPC method.
-message QueryAnnualProvisionsRequest {}
+message QueryEpochProvisionsRequest {}
 
 // QueryAnnualProvisionsResponse is the response type for the
 // Query/AnnualProvisions RPC method.
-message QueryAnnualProvisionsResponse {
+message QueryEpochProvisionsResponse {
   // annual_provisions is the current minting annual provisions value.
-  bytes annual_provisions = 1
+  bytes epoch_provisions = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

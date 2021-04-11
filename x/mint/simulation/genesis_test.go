@@ -39,11 +39,10 @@ func TestRandomizedGenState(t *testing.T) {
 	var mintGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &mintGenesis)
 
-	require.Equal(t, int64(6311520), mintGenesis.Params.EpochsPerYear)
 	require.Equal(t, "stake", mintGenesis.Params.MintDenom)
 	require.Equal(t, "0stake", mintGenesis.Minter.EpochProvision(mintGenesis.Params).String())
-	require.Equal(t, "0.000000000000000000", mintGenesis.Minter.NextAnnualProvisions(mintGenesis.Params).String())
-	require.Equal(t, "0.000000000000000000", mintGenesis.Minter.AnnualProvisions.String())
+	require.Equal(t, "0.000000000000000000", mintGenesis.Minter.NextEpochProvisions(mintGenesis.Params).String())
+	require.Equal(t, "0.000000000000000000", mintGenesis.Minter.EpochProvisions.String())
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

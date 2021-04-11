@@ -73,14 +73,14 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAnnualProvisionsRequest{}
-			res, err := queryClient.AnnualProvisions(context.Background(), params)
+			params := &types.QueryEpochProvisionsRequest{}
+			res, err := queryClient.EpochProvisions(context.Background(), params)
 
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.AnnualProvisions))
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.EpochProvisions))
 		},
 	}
 

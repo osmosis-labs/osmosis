@@ -61,5 +61,5 @@ func TestQueryAnnualProvisions(t *testing.T) {
 	err := app.LegacyAmino().UnmarshalJSON(res, &annualProvisions)
 	require.NoError(t, err)
 
-	require.Equal(t, app.MintKeeper.GetMinter(ctx).AnnualProvisions, annualProvisions)
+	require.Equal(t, app.MintKeeper.GetMinter(ctx).EpochProvisions, annualProvisions)
 }

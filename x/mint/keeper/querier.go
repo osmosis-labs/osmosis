@@ -39,7 +39,7 @@ func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino)
 func queryAnnualProvisions(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	minter := k.GetMinter(ctx)
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, minter.AnnualProvisions)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, minter.EpochProvisions)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

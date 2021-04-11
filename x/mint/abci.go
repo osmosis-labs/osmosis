@@ -32,7 +32,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// in terms of the number of epochs that have transpired.
 	if nextEpochNum >= k.GetParams(ctx).ReductionPeriodInEpochs+k.GetLastHalvenEpochNum(ctx) {
 		// Halven the reward per halven period
-		minter.AnnualProvisions = minter.NextAnnualProvisions(params)
+		minter.EpochProvisions = minter.NextEpochProvisions(params)
 		k.SetMinter(ctx, minter)
 		k.SetLastHalvenEpochNum(ctx, nextEpochNum)
 	}
@@ -63,7 +63,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		sdk.NewEvent(
 			types.EventTypeMint,
 			sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", nextEpochNum)),
-			sdk.NewAttribute(types.AttributeKeyAnnualProvisions, minter.AnnualProvisions.String()),
+			sdk.NewAttribute(types.AttributeKeyAnnualProvisions, minter.EpochProvisions.String()),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
 		),
 	)

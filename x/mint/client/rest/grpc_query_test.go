@@ -94,7 +94,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			map[string]string{},
 			&minttypes.QueryParamsResponse{},
 			&minttypes.QueryParamsResponse{
-				Params: minttypes.NewParams("stake", sdk.NewDec(500000), time.Duration(604800), sdk.MustNewDecFromStr("0.333"), 156, int64(60*60*8766/5)),
+				Params: minttypes.NewParams("stake", sdk.NewDec(500000), time.Duration(604800), sdk.MustNewDecFromStr("0.333"), 156),
 			},
 		},
 		{
@@ -103,9 +103,9 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			&minttypes.QueryAnnualProvisionsResponse{},
-			&minttypes.QueryAnnualProvisionsResponse{
-				AnnualProvisions: sdk.NewDec(500000000),
+			&minttypes.QueryEpochProvisionsResponse{},
+			&minttypes.QueryEpochProvisionsResponse{
+				EpochProvisions: sdk.NewDec(500000000),
 			},
 		},
 	}

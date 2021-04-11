@@ -15,11 +15,10 @@ import (
 // Parameter store keys
 var (
 	KeyMintDenom               = []byte("MintDenom")
-	KeyAnnualProvisions        = []byte("AnnualProvisions")
+	KeyGenesisEpochProvisions  = []byte("GenesisEpochProvisions")
 	KeyEpochDuration           = []byte("EpochDuration")
 	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
 	KeyReductionFactorForEvent = []byte("ReductionFactorForEvent")
-	KeyEpochsPerYear           = []byte("EpochsPerYear")
 )
 
 // ParamTable for minting module.
@@ -28,17 +27,16 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, annualProvisions sdk.Dec, epochDuration time.Duration,
-	reductionFactorForEvent sdk.Dec, reductionPeriodInEpochs, epochsPerYear int64,
+	mintDenom string, genesisEpochProvisions sdk.Dec, epochDuration time.Duration,
+	reductionFactorForEvent sdk.Dec, reductionPeriodInEpochs int64,
 ) Params {
 
 	return Params{
 		MintDenom:               mintDenom,
-		AnnualProvisions:        annualProvisions,
+		GenesisEpochProvisions:  genesisEpochProvisions,
 		EpochDuration:           epochDuration,
 		ReductionPeriodInEpochs: reductionPeriodInEpochs,
 		ReductionFactorForEvent: reductionFactorForEvent,
-		EpochsPerYear:           epochsPerYear,
 	}
 }
 
@@ -47,11 +45,10 @@ func DefaultParams() Params {
 	epochDuration, _ := time.ParseDuration("168h") // 1 week
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
-		AnnualProvisions:        sdk.NewDec(5000000).Mul(sdk.NewDec(52)), // yearly rewards
-		EpochDuration:           epochDuration,                           // 1 week
-		ReductionPeriodInEpochs: 156,                                     // 3 years
-		ReductionFactorForEvent: sdk.NewDecWithPrec(5, 1),                // 0.5
-		EpochsPerYear:           52,                                      // assuming 5 second block times
+		GenesisEpochProvisions:  sdk.NewDec(5000000),
+		EpochDuration:           epochDuration,            // 1 week
+		ReductionPeriodInEpochs: 156,                      // 3 years
+		ReductionFactorForEvent: sdk.NewDecWithPrec(5, 1), // 0.5
 	}
 }
 
@@ -60,7 +57,7 @@ func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
 	}
-	if err := validateAnnualProvisions(p.AnnualProvisions); err != nil {
+	if err := validateGenesisEpochProvisions(p.GenesisEpochProvisions); err != nil {
 		return err
 	}
 	if err := validateEpochDuration(p.EpochDuration); err != nil {
@@ -70,9 +67,6 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateReductionFactorForEvent(p.ReductionFactorForEvent); err != nil {
-		return err
-	}
-	if err := validateEpochsPerYear(p.EpochsPerYear); err != nil {
 		return err
 	}
 
@@ -89,13 +83,17 @@ func (p Params) String() string {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
-		paramtypes.NewParamSetPair(KeyAnnualProvisions, &p.AnnualProvisions, validateAnnualProvisions),
+		paramtypes.NewParamSetPair(KeyGenesisEpochProvisions, &p.GenesisEpochProvisions, validateGenesisEpochProvisions),
 		paramtypes.NewParamSetPair(KeyEpochDuration, &p.EpochDuration, validateEpochDuration),
 		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
 		paramtypes.NewParamSetPair(KeyReductionFactorForEvent, &p.ReductionFactorForEvent, validateReductionFactorForEvent),
-		paramtypes.NewParamSetPair(KeyEpochsPerYear, &p.EpochsPerYear, validateEpochsPerYear),
 	}
 }
+
+// KeyGenesisEpochProvisions  = []byte("GenesisEpochProvisions")
+// 	KeyEpochDuration           = []byte("EpochDuration")
+// 	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
+// 	KeyReductionFactorForEvent = []byte("ReductionFactorForEvent")
 
 func validateMintDenom(i interface{}) error {
 	v, ok := i.(string)
@@ -113,43 +111,30 @@ func validateMintDenom(i interface{}) error {
 	return nil
 }
 
-func validateAnnualProvisions(i interface{}) error {
+func validateGenesisEpochProvisions(i interface{}) error {
 
-	// TODO
+	// TODO: Add validation here
 
 	return nil
 }
 
 func validateEpochDuration(i interface{}) error {
 
-	// TODO
+	// TODO: Add validation here
 
 	return nil
 }
 
 func validateReductionPeriodInEpochs(i interface{}) error {
 
-	// TODO
+	// TODO: Add validation here
 
 	return nil
 }
 
 func validateReductionFactorForEvent(i interface{}) error {
 
-	// TODO
-
-	return nil
-}
-
-func validateEpochsPerYear(i interface{}) error {
-	v, ok := i.(int64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v == 0 {
-		return fmt.Errorf("blocks per year must be positive: %d", v)
-	}
+	// TODO: Add validation here
 
 	return nil
 }
