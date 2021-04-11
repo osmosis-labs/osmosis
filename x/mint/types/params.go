@@ -14,8 +14,12 @@ import (
 
 // Parameter store keys
 var (
-	KeyMintDenom     = []byte("MintDenom")
-	KeyEpochsPerYear = []byte("EpochsPerYear")
+	KeyMintDenom               = []byte("MintDenom")
+	KeyAnnualProvisions        = []byte("AnnualProvisions")
+	KeyEpochDuration           = []byte("EpochDuration")
+	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
+	KeyReductionFactorForEvent = []byte("ReductionFactorForEvent")
+	KeyEpochsPerYear           = []byte("EpochsPerYear")
 )
 
 // ParamTable for minting module.
@@ -56,12 +60,23 @@ func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
 	}
+	if err := validateAnnualProvisions(p.AnnualProvisions); err != nil {
+		return err
+	}
+	if err := validateEpochDuration(p.EpochDuration); err != nil {
+		return err
+	}
+	if err := validateReductionPeriodInEpochs(p.ReductionPeriodInEpochs); err != nil {
+		return err
+	}
+	if err := validateReductionFactorForEvent(p.ReductionFactorForEvent); err != nil {
+		return err
+	}
 	if err := validateEpochsPerYear(p.EpochsPerYear); err != nil {
 		return err
 	}
 
 	return nil
-
 }
 
 // String implements the Stringer interface.
@@ -74,6 +89,10 @@ func (p Params) String() string {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
+		paramtypes.NewParamSetPair(KeyAnnualProvisions, &p.AnnualProvisions, validateAnnualProvisions),
+		paramtypes.NewParamSetPair(KeyEpochDuration, &p.EpochDuration, validateEpochDuration),
+		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
+		paramtypes.NewParamSetPair(KeyReductionFactorForEvent, &p.ReductionFactorForEvent, validateReductionFactorForEvent),
 		paramtypes.NewParamSetPair(KeyEpochsPerYear, &p.EpochsPerYear, validateEpochsPerYear),
 	}
 }
@@ -90,6 +109,34 @@ func validateMintDenom(i interface{}) error {
 	if err := sdk.ValidateDenom(v); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func validateAnnualProvisions(i interface{}) error {
+
+	// TODO
+
+	return nil
+}
+
+func validateEpochDuration(i interface{}) error {
+
+	// TODO
+
+	return nil
+}
+
+func validateReductionPeriodInEpochs(i interface{}) error {
+
+	// TODO
+
+	return nil
+}
+
+func validateReductionFactorForEvent(i interface{}) error {
+
+	// TODO
 
 	return nil
 }
