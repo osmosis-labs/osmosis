@@ -27,11 +27,11 @@ type QueryCondition struct {
 }
 
 type Pot struct {
-  ID           uint64 // unique ID of a Pot
-  DistributeTo QueryCondition // distribute condition of a lock
-  TotalRewards sdk.Coins // can distribute multiple coins
-  StartTime    time.Time // start time to start distribution
-  NumEpochs    uint64 // number of epochs distribution will be done 
+  ID                   uint64 // unique ID of a Pot
+  DistributeTo         QueryCondition // distribute condition of a lock
+  TotalRewards         sdk.Coins // can distribute multiple coins
+  StartTime            time.Time // start time to start distribution
+  NumEpochsPaidOver    uint64 // number of epochs distribution will be done 
 }
 ```
 
@@ -55,7 +55,7 @@ message Pot {
   QueryCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
   repeated cosmos.base.v1beta1.Coin coins = 3; // can distribute multiple coins
   google.protobuf.Timestamp start_time = 4; // condition for lock start time, not valid if unset value
-  uint64 num_epochs = 5; // number of epochs distribution will be done 
+  uint64 num_epochs_paid_over = 5; // number of epochs distribution will be done 
 }
 ```
 

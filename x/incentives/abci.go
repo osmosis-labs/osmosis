@@ -27,7 +27,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	pots := k.GetActivePots(ctx)
 	for _, pot := range pots {
 		k.Distribute(ctx, pot)
-		if pot.NumEpochs <= pot.FilledEpochs {
+		if pot.NumEpochsPaidOver <= pot.FilledEpochs {
 			k.FinishDistribution(ctx, pot)
 		}
 	}

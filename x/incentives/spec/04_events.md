@@ -10,18 +10,18 @@ The incentives module emits the following events:
 
 ### MsgCreatePot
 
-| Type                | Attribute Key       | Attribute Value |
-| ------------------- | ------------------- | --------------- |
-| create_pot          | pot_id              | {potID}         |
-| create_pot          | distribute_to       | {owner}         |
-| create_pot          | rewards             | {rewards}       |
-| create_pot          | start_time          | {startTime}     |
-| create_pot          | num_epochs          | {numEpochs}     |
-| message             | action              | create_pot      |
-| message             | sender              | {owner}         |
-| transfer            | recipient           | {moduleAccount} |
-| transfer            | sender              | {owner}         |
-| transfer            | amount              | {amount}        |
+| Type                | Attribute Key        | Attribute Value     |
+| ------------------- | -------------------- | ------------------- |
+| create_pot          | pot_id               | {potID}             |
+| create_pot          | distribute_to        | {owner}             |
+| create_pot          | rewards              | {rewards}           |
+| create_pot          | start_time           | {startTime}         |
+| create_pot          | num_epochs_paid_over | {numEpochsPaidOver} |
+| message             | action               | create_pot          |
+| message             | sender               | {owner}             |
+| transfer            | recipient            | {moduleAccount}     |
+| transfer            | sender               | {owner}             |
+| transfer            | amount               | {amount}            |
 
 ### MsgAddToPot
 

@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params holds parameters for the mint module
+// Params holds parameters for the incentives module
 type Params struct {
 	// number of blocks per epoch
 	BlocksPerEpoch int64 `protobuf:"varint,1,opt,name=blocks_per_epoch,json=blocksPerEpoch,proto3" json:"blocks_per_epoch,omitempty" yaml:"blocks_per_epoch"`

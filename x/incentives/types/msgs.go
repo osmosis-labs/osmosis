@@ -34,7 +34,7 @@ func (m MsgCreatePot) ValidateBasic() error {
 	if m.StartTime.Equal(time.Time{}) {
 		return errors.New("distribution start time should be set")
 	}
-	if m.NumEpochs == 0 {
+	if m.NumEpochsPaidOver == 0 {
 		return errors.New("distribution period should be at least 1 epoch")
 	}
 

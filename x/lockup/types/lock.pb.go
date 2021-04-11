@@ -55,8 +55,6 @@ func (LockQueryType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_7e9d7527a237b489, []int{0}
 }
 
-// PeriodLock is a single unit of lock by period. It's a record of locked coin at a specific time.
-// It stores owner, duration, unlock time and the amount of coins locked.
 // PeriodLock is a single unit of lock by period. It's a record of locked coin
 // at a specific time. It stores owner, duration, unlock time and the amount of
 // coins locked.
@@ -139,9 +137,9 @@ func (m *PeriodLock) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 type QueryCondition struct {
 	LockQueryType LockQueryType `protobuf:"varint,1,opt,name=lock_query_type,json=lockQueryType,proto3,enum=osmosis.lockup.LockQueryType" json:"lock_query_type,omitempty"`
 	Denom         string        `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
-	// condition for lock duration, only valid if positive
+	// valid when query condition is ByDuration
 	Duration time.Duration `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration" yaml:"duration"`
-	// condition for lock start time, not valid if unset value
+	// valid when query condition is ByTime
 	Timestamp time.Time `protobuf:"bytes,4,opt,name=timestamp,proto3,stdtime" json:"timestamp" yaml:"timestamp"`
 }
 

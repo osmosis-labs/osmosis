@@ -30,11 +30,11 @@ func (suite *KeeperTestSuite) TestGRPCPotByID() {
 			Denom:         "lptoken",
 			Duration:      time.Second,
 		},
-		Coins:            coins,
-		NumEpochs:        2,
-		FilledEpochs:     0,
-		DistributedCoins: sdk.Coins{},
-		StartTime:        startTime,
+		Coins:             coins,
+		NumEpochsPaidOver: 2,
+		FilledEpochs:      0,
+		DistributedCoins:  sdk.Coins{},
+		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Pot.String(), expectedPot.String())
 }
@@ -61,11 +61,11 @@ func (suite *KeeperTestSuite) TestGRPCPots() {
 			Denom:         "lptoken",
 			Duration:      time.Second,
 		},
-		Coins:            coins,
-		NumEpochs:        2,
-		FilledEpochs:     0,
-		DistributedCoins: sdk.Coins{},
-		StartTime:        startTime,
+		Coins:             coins,
+		NumEpochsPaidOver: 2,
+		FilledEpochs:      0,
+		DistributedCoins:  sdk.Coins{},
+		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedPot.String())
 }
@@ -92,11 +92,11 @@ func (suite *KeeperTestSuite) TestGRPCActivePots() {
 			Denom:         "lptoken",
 			Duration:      time.Second,
 		},
-		Coins:            coins,
-		NumEpochs:        2,
-		FilledEpochs:     0,
-		DistributedCoins: sdk.Coins{},
-		StartTime:        startTime,
+		Coins:             coins,
+		NumEpochsPaidOver: 2,
+		FilledEpochs:      0,
+		DistributedCoins:  sdk.Coins{},
+		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedPot.String())
 }
@@ -123,11 +123,11 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingPots() {
 			Denom:         "lptoken",
 			Duration:      time.Second,
 		},
-		Coins:            coins,
-		NumEpochs:        2,
-		FilledEpochs:     0,
-		DistributedCoins: sdk.Coins{},
-		StartTime:        startTime,
+		Coins:             coins,
+		NumEpochsPaidOver: 2,
+		FilledEpochs:      0,
+		DistributedCoins:  sdk.Coins{},
+		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedPot.String())
 }

@@ -36,7 +36,7 @@ func GetTxCmd() *cobra.Command {
 // NewCreatePotCmd broadcast MsgCreatePot
 func NewCreatePotCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pot [coins] [start_time] [num_epochs] [flags]",
+		Use:   "create-pot [coins] [start_time] [num_epochs_paid_over] [flags]",
 		Short: "create a pot to distribute rewards to users",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,7 +57,7 @@ func NewCreatePotCmd() *cobra.Command {
 			}
 			startTime := time.Unix(timeUnix, 0)
 
-			numEpochs, err := strconv.ParseUint(args[2], 10, 64)
+			numEpochsPaidOver, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -95,9 +95,9 @@ func NewCreatePotCmd() *cobra.Command {
 					Duration:      duration,
 					Timestamp:     time.Unix(timestamp, 0),
 				},
-				Coins:     coins,
-				StartTime: startTime,
-				NumEpochs: numEpochs,
+				Coins:             coins,
+				StartTime:         startTime,
+				NumEpochsPaidOver: numEpochsPaidOver,
 			}
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
