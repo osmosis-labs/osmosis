@@ -17,10 +17,10 @@ const (
 )
 
 var (
-	PoolAddressPrefix = []byte("gmm_liquidity_pool")
-	GlobalPoolNumber  = []byte("gmm_global_pool_number")
+	PoolAddressPrefix = []byte("gamm_liquidity_pool")
+	GlobalPoolNumber  = []byte("gamm_global_pool_number")
 	// Used for querying to paginate the registered pool numbers.
-	PaginationPoolNumbers = []byte("gmm_pool_numbers_pagination")
+	PaginationPoolNumbers = []byte("gamm_pool_numbers_pagination")
 )
 
 func GetPoolShareDenom(poolId uint64) string {

@@ -14,16 +14,16 @@ func (k Keeper) CreatePool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	poolParams types.PoolParams,
-	records []types.Record,
+	poolAssets []types.PoolAsset,
 ) (uint64, error) {
-	if len(records) < 2 {
-		return 0, types.ErrTooLittleRecords
+	if len(poolAssets) < 2 {
+		return 0, types.ErrTooFewPoolAssets
 	}
 	// TODO: Add the limit of binding token to the pool params?
-	if len(records) > 8 {
+	if len(poolAssets) > 8 {
 		return 0, sdkerrors.Wrapf(
-			types.ErrTooManyRecords,
-			"pool has too many records (%d)", len(records),
+			types.ErrTooManyPoolAssets,
+			"pool has too many PoolAssets (%d)", len(poolAssets),
 		)
 	}
 
@@ -31,24 +31,23 @@ func (k Keeper) CreatePool(
 		panic("don't create the locked pool")
 	}
 
-	poolId := k.GetNextPoolNumber(ctx)
-	poolAcc, err := k.NewPool(ctx, poolId, poolParams)
+	poolAcc, err := k.NewPool(ctx, poolParams)
 	if err != nil {
 		return 0, err
 	}
 
-	err = poolAcc.AddRecords(records)
+	err = poolAcc.AddPoolAssets(poolAssets)
 	if err != nil {
 		return 0, err
 	}
 
-	// Transfer the records tokens to the pool account from the user account.
+	// Transfer the PoolAssets tokens to the pool account from the user account.
 	var coins sdk.Coins
-	for _, record := range records {
-		coins = append(coins, record.Token)
+	for _, asset := range poolAssets {
+		coins = append(coins, asset.Token)
 	}
 	if coins == nil {
-		panic("oh my god")
+		panic("No pool assets were in added in the pool. Two should've been added per validateBasic")
 	}
 
 	coins = coins.Sort()
@@ -92,6 +91,8 @@ func (k Keeper) CreatePool(
 		return 0, err
 	}
 
+	k.hooks.AfterPoolCreated(ctx, poolAcc.GetId())
+
 	return poolAcc.GetId(), nil
 }
 
@@ -123,29 +124,29 @@ func (k Keeper) JoinPool(
 		tokenInMaxMap[max.Denom] = max.Amount
 	}
 
-	records := poolAcc.GetAllRecords()
-	newRecords := make([]types.Record, 0, len(records))
-	// Transfer the records tokens to the pool account from the user account.
+	PoolAssets := poolAcc.GetAllPoolAssets()
+	newPoolAssets := make([]types.PoolAsset, 0, len(PoolAssets))
+	// Transfer the PoolAssets tokens to the pool account from the user account.
 	var coins sdk.Coins
-	for _, record := range records {
-		tokenInAmount := shareRatio.MulInt(record.Token.Amount).TruncateInt()
+	for _, PoolAsset := range PoolAssets {
+		tokenInAmount := shareRatio.MulInt(PoolAsset.Token.Amount).TruncateInt()
 		if tokenInAmount.LTE(sdk.ZeroInt()) {
 			return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 		}
 
-		if tokenInMaxAmount, ok := tokenInMaxMap[record.Token.Denom]; ok && tokenInAmount.GT(tokenInMaxAmount) {
-			return sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", record.Token.Denom)
+		if tokenInMaxAmount, ok := tokenInMaxMap[PoolAsset.Token.Denom]; ok && tokenInAmount.GT(tokenInMaxAmount) {
+			return sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", PoolAsset.Token.Denom)
 		}
 
-		newRecord := types.Record{
-			Weight: record.Weight,
-			Token:  sdk.NewCoin(record.Token.Denom, record.Token.Amount.Add(tokenInAmount)),
+		newPoolAsset := types.PoolAsset{
+			Weight: PoolAsset.Weight,
+			Token:  sdk.NewCoin(PoolAsset.Token.Denom, PoolAsset.Token.Amount.Add(tokenInAmount)),
 		}
-		newRecords = append(newRecords, newRecord)
-		coins = append(coins, sdk.NewCoin(record.Token.Denom, tokenInAmount))
+		newPoolAssets = append(newPoolAssets, newPoolAsset)
+		coins = append(coins, sdk.NewCoin(PoolAsset.Token.Denom, tokenInAmount))
 	}
 
-	err = poolAcc.SetRecords(newRecords)
+	err = poolAcc.SetPoolAssets(newPoolAssets)
 	if err != nil {
 		return err
 	}
@@ -184,14 +185,14 @@ func (k Keeper) JoinSwapExternAmountIn(
 		return sdk.Int{}, types.ErrPoolLocked
 	}
 
-	record, err := poolAcc.GetRecord(tokenIn.Denom)
+	PoolAsset, err := poolAcc.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	shareOutAmount = calcPoolOutGivenSingleIn(
-		record.Token.Amount.ToDec(),
-		record.Weight.ToDec(),
+		PoolAsset.Token.Amount.ToDec(),
+		PoolAsset.Weight.ToDec(),
 		poolAcc.GetTotalShare().Amount.ToDec(),
 		poolAcc.GetTotalWeight().ToDec(),
 		tokenIn.Amount.ToDec(),
@@ -203,11 +204,11 @@ func (k Keeper) JoinSwapExternAmountIn(
 	}
 
 	if shareOutAmount.LT(shareOutMinAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", record.Token.Denom)
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
 	}
 
-	record.Token = record.Token.Add(tokenIn)
-	err = poolAcc.SetRecords([]types.Record{record})
+	PoolAsset.Token = PoolAsset.Token.Add(tokenIn)
+	err = poolAcc.SetPoolAssets([]types.PoolAsset{PoolAsset})
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -247,14 +248,14 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, types.ErrPoolLocked
 	}
 
-	record, err := poolAcc.GetRecord(tokenInDenom)
+	PoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	tokenInAmount = calcSingleInGivenPoolOut(
-		record.Token.Amount.ToDec(),
-		record.Weight.ToDec(),
+		PoolAsset.Token.Amount.ToDec(),
+		PoolAsset.Weight.ToDec(),
 		poolAcc.GetTotalShare().Amount.ToDec(),
 		poolAcc.GetTotalWeight().ToDec(),
 		shareOutAmount.ToDec(),
@@ -265,12 +266,12 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
-	if tokenInAmount.LT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", record.Token.Denom)
+	if tokenInAmount.GT(tokenInMaxAmount) {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", PoolAsset.Token.Denom)
 	}
 
-	record.Token.Amount = record.Token.Amount.Add(tokenInAmount)
-	err = poolAcc.SetRecords([]types.Record{record})
+	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Add(tokenInAmount)
+	err = poolAcc.SetPoolAssets([]types.PoolAsset{PoolAsset})
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -324,29 +325,29 @@ func (k Keeper) ExitPool(
 		tokenOutMinMap[min.Denom] = min.Amount
 	}
 
-	records := poolAcc.GetAllRecords()
-	newRecords := make([]types.Record, 0, len(records))
-	// Transfer the records tokens to the user account from the pool account.
+	PoolAssets := poolAcc.GetAllPoolAssets()
+	newPoolAssets := make([]types.PoolAsset, 0, len(PoolAssets))
+	// Transfer the PoolAssets tokens to the user account from the pool account.
 	var coins sdk.Coins
-	for _, record := range records {
-		tokenOutAmount := shareRatio.MulInt(record.Token.Amount).TruncateInt()
+	for _, PoolAsset := range PoolAssets {
+		tokenOutAmount := shareRatio.MulInt(PoolAsset.Token.Amount).TruncateInt()
 		if tokenOutAmount.LTE(sdk.ZeroInt()) {
 			return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 		}
 
-		if tokenOutMinAmount, ok := tokenOutMinMap[record.Token.Denom]; ok && tokenOutAmount.LT(tokenOutMinAmount) {
-			return sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", record.Token.Denom)
+		if tokenOutMinAmount, ok := tokenOutMinMap[PoolAsset.Token.Denom]; ok && tokenOutAmount.LT(tokenOutMinAmount) {
+			return sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
 		}
 
-		newRecord := types.Record{
-			Weight: record.Weight,
-			Token:  sdk.NewCoin(record.Token.Denom, record.Token.Amount.Sub(tokenOutAmount)),
+		newPoolAsset := types.PoolAsset{
+			Weight: PoolAsset.Weight,
+			Token:  sdk.NewCoin(PoolAsset.Token.Denom, PoolAsset.Token.Amount.Sub(tokenOutAmount)),
 		}
-		newRecords = append(newRecords, newRecord)
-		coins = append(coins, sdk.NewCoin(record.Token.Denom, tokenOutAmount))
+		newPoolAssets = append(newPoolAssets, newPoolAsset)
+		coins = append(coins, sdk.NewCoin(PoolAsset.Token.Denom, tokenOutAmount))
 	}
 
-	err = poolAcc.SetRecords(newRecords)
+	err = poolAcc.SetPoolAssets(newPoolAssets)
 	if err != nil {
 		return err
 	}
@@ -359,7 +360,7 @@ func (k Keeper) ExitPool(
 	// TODO: `balancer` contract sends the exit fee to the `factory` contract.
 	//       But, it is unclear that how the exit fees in the `factory` contract are handled.
 	//       And, it seems to be not good way to send the exit fee to the pool account,
-	//       because the pool account doesn't have the record about exit fee.
+	//       because the pool account doesn't have the PoolAsset about exit fee.
 	//       So, temporarily, just burn the exit fee.
 	if exitFee.IsPositive() {
 		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
@@ -398,14 +399,14 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, types.ErrPoolLocked
 	}
 
-	record, err := poolAcc.GetRecord(tokenOutDenom)
+	PoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	tokenOutAmount = calcSingleOutGivenPoolIn(
-		record.Token.Amount.ToDec(),
-		record.Weight.ToDec(),
+		PoolAsset.Token.Amount.ToDec(),
+		PoolAsset.Weight.ToDec(),
 		poolAcc.GetTotalShare().Amount.ToDec(),
 		poolAcc.GetTotalWeight().ToDec(),
 		shareInAmount.ToDec(),
@@ -417,11 +418,11 @@ func (k Keeper) ExitSwapShareAmountIn(
 	}
 
 	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", record.Token.Denom)
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
 	}
 
-	record.Token.Amount = record.Token.Amount.Sub(tokenOutAmount)
-	err = poolAcc.SetRecord(tokenOutDenom, record)
+	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Sub(tokenOutAmount)
+	err = poolAcc.SetPoolAsset(tokenOutDenom, PoolAsset)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -439,7 +440,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 	// TODO: `balancer` contract sends the exit fee to the `factory` contract.
 	//       But, it is unclear that how the exit fees in the `factory` contract are handled.
 	//       And, it seems to be not good way to send the exit fee to the pool account,
-	//       because the pool account doesn't have the record about exit fee.
+	//       because the pool account doesn't have the PoolAsset about exit fee.
 	//       So, temporarily, just burn the exit fee.
 	if exitFee.IsPositive() {
 		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
@@ -477,14 +478,14 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, types.ErrPoolLocked
 	}
 
-	record, err := poolAcc.GetRecord(tokenOut.Denom)
+	PoolAsset, err := poolAcc.GetPoolAsset(tokenOut.Denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	shareInAmount = calcPoolInGivenSingleOut(
-		record.Token.Amount.ToDec(),
-		record.Weight.ToDec(),
+		PoolAsset.Token.Amount.ToDec(),
+		PoolAsset.Weight.ToDec(),
 		poolAcc.GetTotalShare().Amount.ToDec(),
 		poolAcc.GetTotalWeight().ToDec(),
 		tokenOut.Amount.ToDec(),
@@ -496,11 +497,11 @@ func (k Keeper) ExitSwapExternAmountOut(
 	}
 
 	if shareInAmount.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", record.Token.Denom)
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", PoolAsset.Token.Denom)
 	}
 
-	record.Token.Amount = record.Token.Amount.Sub(tokenOut.Amount)
-	err = poolAcc.SetRecord(tokenOut.Denom, record)
+	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Sub(tokenOut.Amount)
+	err = poolAcc.SetPoolAsset(tokenOut.Denom, PoolAsset)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -518,7 +519,7 @@ func (k Keeper) ExitSwapExternAmountOut(
 	// TODO: `balancer` contract sends the exit fee to the `factory` contract.
 	//       But, it is unclear that how the exit fees in the `factory` contract are handled.
 	//       And, it seems to be not good way to send the exit fee to the pool account,
-	//       because the pool account doesn't have the record about exit fee.
+	//       because the pool account doesn't have the PoolAsset about exit fee.
 	//       So, temporarily, just burn the exit fee.
 	if exitFee.IsPositive() {
 		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)

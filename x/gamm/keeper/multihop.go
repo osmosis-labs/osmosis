@@ -68,6 +68,7 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	return
 }
 
+// TODO: Document this function
 func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) ([]sdk.Int, error) {
 	insExpected := make([]sdk.Int, len(routes))
 	for i := len(routes) - 1; i >= 0; i-- {
@@ -82,21 +83,21 @@ func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.S
 			return nil, err
 		}
 
-		inRecord, err := poolAcc.GetRecord(route.TokenInDenom)
+		inAsset, err := poolAcc.GetPoolAsset(route.TokenInDenom)
 		if err != nil {
 			return nil, err
 		}
 
-		outRecord, err := poolAcc.GetRecord(tokenOut.Denom)
+		outAsset, err := poolAcc.GetPoolAsset(tokenOut.Denom)
 		if err != nil {
 			return nil, err
 		}
 
 		tokenInAmount := calcInGivenOut(
-			inRecord.Token.Amount.ToDec(),
-			inRecord.Weight.ToDec(),
-			outRecord.Token.Amount.ToDec(),
-			outRecord.Weight.ToDec(),
+			inAsset.Token.Amount.ToDec(),
+			inAsset.Weight.ToDec(),
+			outAsset.Token.Amount.ToDec(),
+			outAsset.Weight.ToDec(),
 			tokenOut.Amount.ToDec(),
 			poolAcc.GetPoolParams().SwapFee,
 		).TruncateInt()

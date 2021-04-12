@@ -34,7 +34,7 @@ message MsgCreatePool {
     (gogoproto.nullable) = false
   ];
 
-  repeated Record records = 3 [ (gogoproto.nullable) = false ];
+  repeated PoolAsset poolAssets = 3 [ (gogoproto.nullable) = false ];
 }
 
 message MsgCreatePoolResponse {}

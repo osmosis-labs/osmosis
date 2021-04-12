@@ -10,6 +10,12 @@ import (
 // TODO: Analyze choice here
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
+// Singletons
+var zero sdk.Dec = sdk.ZeroDec()
+var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
+var one sdk.Dec = sdk.OneDec()
+var two sdk.Dec = sdk.MustNewDecFromStr("2")
+
 // calcSpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
 // so spot_price = (B_in / W_in) / (B_out / W_out)
@@ -77,7 +83,7 @@ func calcInGivenOut(
 	diff := tokenBalanceOut.Sub(tokenAmountOut)
 	y := tokenBalanceOut.Quo(diff)
 	foo := pow(y, weightRatio)
-	foo = foo.Sub(sdk.OneDec())
+	foo = foo.Sub(one)
 	tokenAmountIn := sdk.OneDec().Sub(swapFee)
 	return (tokenBalanceIn.Mul(foo)).Quo(tokenAmountIn)
 
@@ -191,7 +197,8 @@ func calcPoolInGivenSingleOut(
 
 /*********************************************************/
 
-func subSign(a, b sdk.Dec) (sdk.Dec, bool) {
+// absDifferenceWithSign returns | a - b |, (a - b).sign()
+func absDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	if a.GTE(b) {
 		return a.Sub(b), false
 	} else {
@@ -208,18 +215,18 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 	// You can see this by recalling that `i = (-1)^(.5)`. We have to go to complex numbers to define this.
 	// (And would have to implement complex logarithms)
 	// We don't have a need for negative bases, so we don't include any such logic.
-	if base.LTE(sdk.ZeroDec()) {
-		panic(fmt.Errorf("base have to be greater than zero"))
+	if !base.IsPositive() {
+		panic(fmt.Errorf("base must be greater than 0"))
 	}
-	// TODO: Remove this, we can do a
-	if base.GTE(sdk.OneDec().MulInt64(2)) {
-		panic(fmt.Errorf("base have to be lesser than two"))
+	// TODO: Remove this if we want to generalize the function,
+	// we can adjust the algorithm in this setting.
+	if base.GTE(two) {
+		panic(fmt.Errorf("base must be lesser than two"))
 	}
 
 	// We will use an approximation algorithm to compute the power.
 	// Since computing an integer power is easy, we split up the exponent into
 	// an integer component and a fractional component.
-	// a
 	integer := exp.TruncateDec()
 	fractional := exp.Sub(integer)
 
@@ -229,28 +236,38 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 		return integerPow
 	}
 
-	partialResult := powApprox(base, fractional, powPrecision)
+	fractionalPow := powApprox(base, fractional, powPrecision)
 
-	return integerPow.Mul(partialResult)
+	return integerPow.Mul(fractionalPow)
 }
 
+// Contract: 0 < base < 2
 func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
-	if base.LTE(sdk.ZeroDec()) {
-		panic(fmt.Errorf("base must be greater than zero"))
-	}
-	if base.GTE(sdk.OneDec().MulInt64(2)) {
-		panic(fmt.Errorf("base must be less than two"))
+	if exp.IsZero() {
+		return sdk.ZeroDec()
 	}
 
+	// Common case optimization
+	// Optimize for it being equal to one-half
+	if exp.Equal(one_half) {
+		output, err := base.ApproxSqrt()
+		if err != nil {
+			panic(err)
+		}
+		return output
+	}
+	// TODO: Make an approx-equal function, and then check if exp * 3 = 1, and do a check accordingly
+
 	a := exp
-	x, xneg := subSign(base, sdk.OneDec())
+	x, xneg := absDifferenceWithSign(base, one)
 	term := sdk.OneDec()
 	sum := sdk.OneDec()
 	negative := false
 
+	// TODO: Document this computation via taylor expansion
 	for i := 1; term.GTE(precision); i++ {
 		bigK := sdk.OneDec().MulInt64(int64(i))
-		c, cneg := subSign(a, bigK.Sub(sdk.OneDec()))
+		c, cneg := absDifferenceWithSign(a, bigK.Sub(one))
 		term = term.Mul(c.Mul(x))
 		term = term.Quo(bigK)
 

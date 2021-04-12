@@ -69,9 +69,6 @@ import (
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -99,6 +96,10 @@ import (
 	"github.com/c-osmosis/osmosis/x/lockup"
 	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
 	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
+
+	"github.com/c-osmosis/osmosis/x/mint"
+	mintkeeper "github.com/c-osmosis/osmosis/x/mint/keeper"
+	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
 
 	appparams "github.com/c-osmosis/osmosis/app/params"
 )
@@ -267,7 +268,7 @@ func NewOsmosisApp(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
-		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName), &stakingKeeper,
+		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
@@ -326,8 +327,20 @@ func NewOsmosisApp(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.ClaimKeeper = claimkeeper.NewKeeper(appCodec, keys[claimtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper)
-	app.GAMMKeeper = gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
-	app.LockupKeeper = *lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+
+	app.GAMMKeeper = *gammKeeper.SetHooks(
+		gammtypes.NewMultiGammHooks(
+		// insert gamm hooks receivers here
+		),
+	)
+
+	app.LockupKeeper = *lockupKeeper.SetHooks(
+		lockuptypes.NewMultiLockupHooks(
+		// insert lockup hooks receivers here
+		),
+	)
 
 	/****  Module Options ****/
 

@@ -9,8 +9,8 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
 
-message Record {
-  // Denormarized weight.
+message PoolAsset {
+  // Denormalized weight.
   string weight = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"denormalized_weight\"",
@@ -60,8 +60,8 @@ message PoolAccount {
     (gogoproto.moretags) = "yaml:\"total_share\"",
     (gogoproto.nullable) = false
   ];
-  repeated Record records = 6 [
-    (gogoproto.moretags) = "yaml:\"records\"",
+  repeated PoolAsset poolAssets = 6 [
+    (gogoproto.moretags) = "yaml:\"pool_assets\"",
     (gogoproto.nullable) = false
   ];
 }
