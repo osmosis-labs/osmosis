@@ -14,7 +14,8 @@ All genesis accounts have `1 Osmo` for claim fee.
 
 ### Claimables
 
-Claimables are configured by genesis.
+Claimables are the maximum claimable amounts per address and it's configured by genesis.
+It's determined by applying few rules to the snapshot of ATOM balance at cosmoshub-3.
 
 ### Airdrop Tools
 There are tools to generate genesis from cosmos-hub snapshot.
