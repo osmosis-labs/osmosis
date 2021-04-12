@@ -1,6 +1,10 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -17,6 +21,35 @@ const (
 	TypeMsgExitSwapExternAmountOut = "exit_swap_extern_amount_out"
 	TypeMsgExitSwapShareAmountIn   = "exit_swap_share_amount_in"
 )
+
+func ValidateFutureOwner(owner string) error {
+	// allow empty governer
+	if owner == "" {
+		return nil
+	}
+	// validation for future owner
+	_, err := sdk.AccAddressFromBech32(owner)
+	if err == nil {
+		return nil
+	}
+
+	splits := strings.Split(owner, ",")
+	if len(splits) != 2 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
+	}
+
+	lpTokenStr := splits[0]
+	if sdk.ValidateDenom(lpTokenStr) != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
+	}
+
+	lockTimeStr := splits[1]
+	_, err = time.ParseDuration(lockTimeStr)
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
+	}
+	return nil
+}
 
 var _ sdk.Msg = &MsgCreatePool{}
 
@@ -54,6 +87,11 @@ func (msg MsgCreatePool) ValidateBasic() error {
 
 	err = msg.PoolParams.Validate()
 	if err != nil {
+		return err
+	}
+
+	// validation for future owner
+	if err = ValidateFutureOwner(msg.FuturePoolGoverner); err != nil {
 		return err
 	}
 

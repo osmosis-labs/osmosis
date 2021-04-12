@@ -15,6 +15,7 @@ func (k Keeper) CreatePool(
 	sender sdk.AccAddress,
 	poolParams types.PoolParams,
 	poolAssets []types.PoolAsset,
+	futurePoolGoverner string,
 ) (uint64, error) {
 	if len(poolAssets) < 2 {
 		return 0, types.ErrTooFewPoolAssets
@@ -31,7 +32,7 @@ func (k Keeper) CreatePool(
 		panic("don't create the locked pool")
 	}
 
-	poolAcc, err := k.NewPool(ctx, poolParams)
+	poolAcc, err := k.NewPool(ctx, poolParams, futurePoolGoverner)
 	if err != nil {
 		return 0, err
 	}

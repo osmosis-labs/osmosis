@@ -62,7 +62,7 @@ func TestPoolAccountPoolParams(t *testing.T) {
 			Lock:    false,
 			SwapFee: sdk.NewDecWithPrec(-1, 2),
 			ExitFee: exitFee,
-		})
+		}, "")
 	})
 
 	require.Panics(t, func() {
@@ -71,7 +71,7 @@ func TestPoolAccountPoolParams(t *testing.T) {
 			Lock:    false,
 			SwapFee: swapFee,
 			ExitFee: sdk.NewDecWithPrec(-1, 2),
-		})
+		}, "")
 	})
 }
 
@@ -84,7 +84,7 @@ func TestPoolAccountSetPoolAsset(t *testing.T) {
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	})
+	}, "")
 
 	err := pacc.AddPoolAssets([]PoolAsset{
 		{
@@ -156,7 +156,7 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	})
+	}, "")
 
 	err := pacc.AddPoolAssets([]PoolAsset{
 		{
@@ -205,7 +205,7 @@ func TestPoolAccountPoolAssets(t *testing.T) {
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	}).(*PoolAccount)
+	}, "").(*PoolAccount)
 
 	_, err := pacc.GetPoolAsset("test1")
 	require.Error(t, err)
@@ -317,7 +317,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	})
+	}, "")
 
 	err := pacc.AddPoolAssets([]PoolAsset{
 		{
@@ -363,7 +363,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	})
+	}, "")
 
 	err := pacc.AddPoolAssets([]PoolAsset{
 		{
@@ -416,7 +416,7 @@ func TestPoolAccountJson(t *testing.T) {
 		Lock:    false,
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	}).(*PoolAccount)
+	}, "").(*PoolAccount)
 
 	err := pacc.AddPoolAssets([]PoolAsset{
 		{

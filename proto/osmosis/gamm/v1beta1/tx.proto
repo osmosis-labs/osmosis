@@ -35,6 +35,10 @@ message MsgCreatePool {
   ];
 
   repeated PoolAsset poolAssets = 3 [ (gogoproto.nullable) = false ];
+
+  string future_pool_governer = 4 [
+    (gogoproto.moretags) = "yaml:\"future_pool_governer\""
+  ];
 }
 
 message MsgCreatePoolResponse {}
