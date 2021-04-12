@@ -4,7 +4,7 @@
 
 This specifies the `claim` module of Osmosis project, provide commands for claimable amount query and claim airdrop.
 We apply real-time decay after `DurationUntilDecay` pass where monthly decay rate is `-10%` of inital airdrop amount.
-When `DurationOfDecay` time pass, all coins are funded to community pool.
+When `DurationUntilDecay + DurationOfDecay` time passes, all unclaimed coins will be sent to the community pool.
 
 ## Genesis State
 
