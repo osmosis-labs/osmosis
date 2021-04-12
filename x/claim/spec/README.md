@@ -29,7 +29,7 @@ osmosisd export-airdrop-genesis uatom ../genesis.json --snapshot-output="../snap
 
 ## Queries
 
-Query claimable amount of current time.
+Query claimable amount for a given address at the current time.
 ```sh
 osmosisd query claim claimable $(osmosisd keys show -a validator --keyring-backend=test)
 ```
