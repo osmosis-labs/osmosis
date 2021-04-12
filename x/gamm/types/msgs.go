@@ -48,11 +48,11 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		}
 	}
 
-	if msg.PoolParams.Lock {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't create a locked pool")
-	}
-
-	err = msg.PoolParams.Validate()
+	err = PoolParams{
+		Lock:    false,
+		SwapFee: msg.PoolParams.SwapFee,
+		ExitFee: msg.PoolParams.ExitFee,
+	}.Validate()
 	if err != nil {
 		return err
 	}

@@ -43,7 +43,7 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
-func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolParams) uint64 {
+func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolParamsWithoutLock) uint64 {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 		err := suite.app.BankKeeper.AddCoins(
@@ -79,8 +79,7 @@ func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolPar
 }
 
 func (suite *KeeperTestSuite) preparePool() uint64 {
-	poolId := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
+	poolId := suite.preparePoolWithPoolParams(types.PoolParamsWithoutLock{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})

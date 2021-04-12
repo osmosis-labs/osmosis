@@ -95,14 +95,12 @@ func (suite *KeeperTestSuite) TestQueryPoolParams() {
 	_, err := queryClient.PoolParams(gocontext.Background(), &types.QueryPoolParamsRequest{PoolId: 1})
 	suite.Require().Error(err)
 
-	poolId1 := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
+	poolId1 := suite.preparePoolWithPoolParams(types.PoolParamsWithoutLock{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(15, 2),
 	})
 
-	poolId2 := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
+	poolId2 := suite.preparePoolWithPoolParams(types.PoolParamsWithoutLock{
 		SwapFee: sdk.NewDecWithPrec(1, 1),
 		ExitFee: sdk.NewDecWithPrec(15, 3),
 	})

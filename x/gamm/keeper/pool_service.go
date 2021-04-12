@@ -13,7 +13,7 @@ import (
 func (k Keeper) CreatePool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolParams types.PoolParams,
+	poolParams types.PoolParamsWithoutLock,
 	poolAssets []types.PoolAsset,
 ) (uint64, error) {
 	if len(poolAssets) < 2 {
@@ -27,11 +27,11 @@ func (k Keeper) CreatePool(
 		)
 	}
 
-	if poolParams.Lock {
-		panic("don't create the locked pool")
-	}
-
-	poolAcc, err := k.NewPool(ctx, poolParams)
+	poolAcc, err := k.NewPool(ctx, types.PoolParams{
+		Lock:    false,
+		SwapFee: poolParams.SwapFee,
+		ExitFee: poolParams.ExitFee,
+	})
 	if err != nil {
 		return 0, err
 	}
