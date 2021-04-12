@@ -74,6 +74,7 @@ func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	claimableCoins := sdk.Coins{}
 	monthlyDecayPercent := 10
 	monthDuration := time.Hour * 24 * 30
+      // Positive, since goneTime > params.DurationUntilDecay
 	decayTime := goneTime - params.DurationUntilDecay
 	for _, coin := range coins {
 		decayPercent := monthlyDecayPercent * int(decayTime) / int(monthDuration)
