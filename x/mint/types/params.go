@@ -155,5 +155,9 @@ func validateReductionFactorForEvent(i interface{}) error {
 		return fmt.Errorf("reduction factor cannot be greater than 1")
 	}
 
+	if v.IsNegative() {
+		return fmt.Errorf("reduction factor cannot be negative")
+	}
+
 	return nil
 }
