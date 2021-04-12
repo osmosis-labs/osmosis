@@ -36,6 +36,8 @@ osmosisd query claim claimable $(osmosisd keys show -a validator --keyring-backe
 
 ## Msgs
 
+### (WIP) Actual claim commands will change
+
 Claim full airdrop amount from `claim` module.
 ```sh
 osmosisd tx claim claimable --from validator --keyring-backend=test --chain-id=testing --yes
