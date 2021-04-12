@@ -61,7 +61,7 @@ func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	}
 
 	goneTime := ctx.BlockTime().Sub(params.AirdropStart)
-	if goneTime < params.DurationUntilDecay {
+	if goneTime <= params.DurationUntilDecay {
 		// still not the time for decay
 		return coins, nil
 	}
