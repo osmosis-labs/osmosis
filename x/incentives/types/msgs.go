@@ -22,20 +22,20 @@ func (m MsgCreatePot) ValidateBasic() error {
 	if m.Owner.Empty() {
 		return errors.New("owner should be set")
 	}
-	if m.DistributeTo.Denom == "" {
-		return errors.New("denom should be set for the condition")
+	if sdk.ValidateDenom(m.DistributeTo.Denom) != nil {
+		return errors.New("denom should be valid for the condition")
 	}
 	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] == "" {
 		return errors.New("lock query type is invalid")
-	}
-	if m.Coins.Empty() {
-		return errors.New("distribution amount should not be empty")
 	}
 	if m.StartTime.Equal(time.Time{}) {
 		return errors.New("distribution start time should be set")
 	}
 	if m.NumEpochsPaidOver == 0 {
 		return errors.New("distribution period should be at least 1 epoch")
+	}
+	if m.IsPerpetual && m.NumEpochsPaidOver != 1 {
+		return errors.New("distribution period should be 1 epoch for perpetual pot")
 	}
 
 	return nil

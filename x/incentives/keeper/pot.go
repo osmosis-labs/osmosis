@@ -76,9 +76,10 @@ func (k Keeper) setPot(ctx sdk.Context, pot *types.Pot) error {
 }
 
 // CreatePot create a pot and send coins to the pot
-func (k Keeper) CreatePot(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
+func (k Keeper) CreatePot(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
 	pot := types.Pot{
 		Id:                k.getLastPotID(ctx) + 1,
+		IsPerpetual:       isPerpetual,
 		DistributeTo:      distrTo,
 		Coins:             coins,
 		StartTime:         startTime,
@@ -168,7 +169,10 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, fil
 	}
 
 	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
-	remainEpochs := pot.NumEpochsPaidOver - pot.FilledEpochs
+	remainEpochs := uint64(1)
+	if !pot.IsPerpetual { // set remain epochs when it's not perpetual pot
+		remainEpochs = pot.NumEpochsPaidOver - pot.FilledEpochs
+	}
 	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
@@ -204,7 +208,10 @@ func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
 	}
 
 	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
-	remainEpochs := pot.NumEpochsPaidOver - pot.FilledEpochs
+	remainEpochs := uint64(1)
+	if !pot.IsPerpetual { // set remain epochs when it's not perpetual pot
+		remainEpochs = pot.NumEpochsPaidOver - pot.FilledEpochs
+	}
 	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {

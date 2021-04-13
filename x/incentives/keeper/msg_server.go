@@ -24,7 +24,7 @@ var _ types.MsgServer = msgServer{}
 
 func (server msgServer) CreatePot(goCtx context.Context, msg *types.MsgCreatePot) (*types.MsgCreatePotResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	potID, err := server.keeper.CreatePot(ctx, msg.Owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver)
+	potID, err := server.keeper.CreatePot(ctx, msg.IsPerpetual, msg.Owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

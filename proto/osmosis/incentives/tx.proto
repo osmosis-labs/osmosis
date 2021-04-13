@@ -15,14 +15,15 @@ service Msg {
 }
 
 message MsgCreatePot {
-  bytes owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  osmosis.lockup.QueryCondition distribute_to = 2 [(gogoproto.nullable) = false]; // distribute condition of a lock which meet one of these conditions
-  repeated cosmos.base.v1beta1.Coin coins = 3
+  bool is_perpetual = 1; // flag to show if it's perpetual or multi-epoch distribution incentives by third party
+  bytes owner = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  osmosis.lockup.QueryCondition distribute_to = 3 [(gogoproto.nullable) = false]; // distribute condition of a lock which meet one of these conditions
+  repeated cosmos.base.v1beta1.Coin coins = 4
     [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"]; // can distribute multiple coins
   // distribution start time
-  google.protobuf.Timestamp start_time = 4
+  google.protobuf.Timestamp start_time = 5
     [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"timestamp\""];
-  uint64 num_epochs_paid_over = 5; // number of epochs distribution will be done
+  uint64 num_epochs_paid_over = 6; // number of epochs distribution will be done
 }
 message MsgCreatePotResponse {}
 
