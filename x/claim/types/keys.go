@@ -18,4 +18,7 @@ const (
 
 	// ParamsKey defines the store key for claim module parameters
 	ParamsKey = "params"
+
+	// ActionKey defines the store key to store user accomplished actions
+	ActionKey = "action"
 )

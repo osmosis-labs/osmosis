@@ -74,7 +74,7 @@ func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	claimableCoins := sdk.Coins{}
 	monthlyDecayPercent := 10
 	monthDuration := time.Hour * 24 * 30
-      // Positive, since goneTime > params.DurationUntilDecay
+	// Positive, since goneTime > params.DurationUntilDecay
 	decayTime := goneTime - params.DurationUntilDecay
 	for _, coin := range coins {
 		// decayPercent = decay_percent_per_month * (time_decayed) / (1 month)
@@ -115,6 +115,26 @@ func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 		),
 	})
 	return coins, nil
+}
+
+func (k Keeper) GetUserActionHistory(ctx sdk.Context, address sdk.AccAddress) []uint64 {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, []byte(types.ActionKey))
+	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	actions := []uint64{}
+	for ; iterator.Valid(); iterator.Next() {
+		actionType := sdk.BigEndianToUint64(iterator.Value())
+		actions = append(actions, actionType)
+	}
+	return actions
+}
+
+func (k Keeper) SetUserActionHistory(ctx sdk.Context, address sdk.AccAddress, actionType uint64) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, []byte(types.ActionKey))
+	prefixStore.Set(sdk.Uint64ToBigEndian(actionType), sdk.Uint64ToBigEndian(actionType))
 }
 
 // FundRemainingsToCommunity fund remainings to the community when airdrop period end

@@ -3,7 +3,7 @@ package types
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type GammHooks interface {
-	AfterPoolCreated(ctx sdk.Context, poolId uint64)
+	AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64)
 }
 
 var _ GammHooks = MultiGammHooks{}
@@ -15,8 +15,8 @@ func NewMultiGammHooks(hooks ...GammHooks) MultiGammHooks {
 	return hooks
 }
 
-func (h MultiGammHooks) AfterPoolCreated(ctx sdk.Context, poolId uint64) {
+func (h MultiGammHooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
 	for i := range h {
-		h[i].AfterPoolCreated(ctx, poolId)
+		h[i].AfterPoolCreated(ctx, sender, poolId)
 	}
 }

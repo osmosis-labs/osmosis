@@ -332,7 +332,8 @@ func NewOsmosisApp(
 
 	app.GAMMKeeper = *gammKeeper.SetHooks(
 		gammtypes.NewMultiGammHooks(
-		// insert gamm hooks receivers here
+			// insert gamm hooks receivers here
+			app.ClaimKeeper.Hooks(),
 		),
 	)
 
