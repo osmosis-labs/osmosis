@@ -1,3 +1,4 @@
+#[macro_export]
 macro_rules! use_std {
     () => {
         use super::$contract;
@@ -46,11 +47,9 @@ macro_rules! create_amm_entry_points {
             _env: Env,
             msg: ExecuteMsg
         ) -> StdResult<Response> {
-            match msg {
-                QueryMsg::SpotPrice{} => $contract::spot_price(msg);
-                QueryMsg::InGivenOut{} => $contract::in_given_out(msg);
-                QueryMsg::OutGivenIn{} => $contract::out_given_in(msg);
-            }
+            QueryMsg::SpotPrice{} => $contract::spot_price();
+            QueryMsg::InGivenOut{} => $contract::in_given_out();
+            QueryMsg::OutGivenIn{} => $contract::out_given_in();
         }
 
         #[no_mangle]
