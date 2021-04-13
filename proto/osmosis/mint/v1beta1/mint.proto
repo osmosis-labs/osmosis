@@ -40,8 +40,8 @@ message Params {
   // number of epochs take to reduce rewards
   int64 reduction_period_in_epochs = 4 [(gogoproto.moretags) = "yaml:\"reduction_period_in_epochs\""];
   // reduction multiplier to execute on each period
-  string reduction_factor_for_event = 5 [
-    (gogoproto.moretags)   = "yaml:\"reduction_factor_for_event\"",
+  string reduction_factor = 5 [
+    (gogoproto.moretags)   = "yaml:\"reduction_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];

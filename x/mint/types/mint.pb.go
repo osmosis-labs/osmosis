@@ -5,6 +5,11 @@ package types
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	time "time"
+
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -12,10 +17,6 @@ import (
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "github.com/golang/protobuf/ptypes/duration"
 	_ "github.com/golang/protobuf/ptypes/timestamp"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -80,7 +81,7 @@ type Params struct {
 	// number of epochs take to reduce rewards
 	ReductionPeriodInEpochs int64 `protobuf:"varint,4,opt,name=reduction_period_in_epochs,json=reductionPeriodInEpochs,proto3" json:"reduction_period_in_epochs,omitempty" yaml:"reduction_period_in_epochs"`
 	// reduction multiplier to execute on each period
-	ReductionFactorForEvent github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=reduction_factor_for_event,json=reductionFactorForEvent,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reduction_factor_for_event" yaml:"reduction_factor_for_event"`
+	ReductionFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=reduction_factor,json=ReductionFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reduction_factor" yaml:"reduction_factor"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }
@@ -231,9 +232,9 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size := m.ReductionFactorForEvent.Size()
+		size := m.ReductionFactor.Size()
 		i -= size
-		if _, err := m.ReductionFactorForEvent.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.ReductionFactor.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintMint(dAtA, i, uint64(size))
@@ -312,7 +313,7 @@ func (m *Params) Size() (n int) {
 	if m.ReductionPeriodInEpochs != 0 {
 		n += 1 + sovMint(uint64(m.ReductionPeriodInEpochs))
 	}
-	l = m.ReductionFactorForEvent.Size()
+	l = m.ReductionFactor.Size()
 	n += 1 + l + sovMint(uint64(l))
 	return n
 }
@@ -559,7 +560,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			}
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReductionFactorForEvent", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ReductionFactor", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -587,7 +588,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ReductionFactorForEvent.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ReductionFactor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
