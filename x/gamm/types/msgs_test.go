@@ -198,7 +198,7 @@ func TestMsgCreatePool(t *testing.T) {
 		{
 			name: "invalid governer",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.FuturePoolGoverner = "cosmos_address"
+				msg.FuturePoolGoverner = "invalid_cosmos_address"
 				return msg
 			}),
 			expectPass: false,
@@ -207,6 +207,14 @@ func TestMsgCreatePool(t *testing.T) {
 			name: "valid governer: lptoken and lock",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.FuturePoolGoverner = "lptoken,1000h"
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "valid governer: just lock duration for pool token",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGoverner = "1000h"
 				return msg
 			}),
 			expectPass: true,

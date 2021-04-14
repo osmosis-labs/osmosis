@@ -27,23 +27,34 @@ func ValidateFutureOwner(owner string) error {
 	if owner == "" {
 		return nil
 	}
+
 	// validation for future owner
+	// "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
 	_, err := sdk.AccAddressFromBech32(owner)
 	if err == nil {
 		return nil
 	}
 
+	lockTimeStr := ""
 	splits := strings.Split(owner, ",")
-	if len(splits) != 2 {
+	if len(splits) > 2 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
 	}
 
-	lpTokenStr := splits[0]
-	if sdk.ValidateDenom(lpTokenStr) != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
+	// token,100h
+	if len(splits) == 2 {
+		lpTokenStr := splits[0]
+		if sdk.ValidateDenom(lpTokenStr) != nil {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
+		}
+		lockTimeStr = splits[1]
 	}
 
-	lockTimeStr := splits[1]
+	// 100h
+	if len(splits) == 1 {
+		lockTimeStr = splits[0]
+	}
+
 	_, err = time.ParseDuration(lockTimeStr)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
