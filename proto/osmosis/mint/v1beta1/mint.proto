@@ -1,0 +1,48 @@
+syntax = "proto3";
+package osmosis.mint.v1beta1;
+
+option go_package = "github.com/c-osmosis/osmosis/x/mint/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+
+// Minter represents the minting state.
+message Minter {
+  // current epoch provisions
+  string epoch_provisions = 1 [
+    (gogoproto.moretags)   = "yaml:\"epoch_provisions\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// Params holds parameters for the mint module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+
+
+  // type of coin to mint
+  string mint_denom = 1;
+  // epoch provisions from the first epoch
+  string genesis_epoch_provisions = 2 [
+    (gogoproto.moretags)   = "yaml:\"genesis_epoch_provisions\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // duration of an epoch
+  google.protobuf.Duration epoch_duration = 3 [
+    (gogoproto.moretags)    = "yaml:\"epoch_duration\"",
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable)    = false
+  ];
+  // number of epochs take to reduce rewards
+  int64 reduction_period_in_epochs = 4 [(gogoproto.moretags) = "yaml:\"reduction_period_in_epochs\""];
+  // reduction multiplier to execute on each period
+  string reduction_factor_for_event = 5 [
+    (gogoproto.moretags)   = "yaml:\"reduction_factor_for_event\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
