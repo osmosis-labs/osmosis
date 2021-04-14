@@ -39,7 +39,7 @@ func TestMsgCreatePool(t *testing.T) {
 	require.Equal(t, msg.Type(), "create_pot")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
-	require.Equal(t, signers[0].String(), addr1)
+	require.Equal(t, signers[0].String(), addr1.String())
 
 	tests := []struct {
 		name       string
@@ -160,7 +160,7 @@ func TestMsgAddToPot(t *testing.T) {
 	require.Equal(t, msg.Type(), "add_to_pot")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
-	require.Equal(t, signers[0].String(), addr1)
+	require.Equal(t, signers[0].String(), addr1.String())
 
 	tests := []struct {
 		name       string

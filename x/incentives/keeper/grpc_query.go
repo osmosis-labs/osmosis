@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/c-osmosis/osmosis/x/incentives/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -62,14 +61,12 @@ func (k Keeper) Pots(goCtx context.Context, req *types.PotsRequest) (*types.Pots
 
 // ActivePots returns active pots
 func (k Keeper) ActivePots(goCtx context.Context, req *types.ActivePotsRequest) (*types.ActivePotsResponse, error) {
-	fmt.Println("KeyPrefixActivePots s")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pots := []types.Pot{}
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.KeyPrefixActivePots)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		fmt.Println("KeyPrefixActivePots 111")
 		newPots, err := k.GetPotFromIDs(ctx, value)
 		if err != nil {
 			panic(err)
@@ -83,7 +80,6 @@ func (k Keeper) ActivePots(goCtx context.Context, req *types.ActivePotsRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	fmt.Println("KeyPrefixActivePots e", k.GetActivePots(ctx))
 	return &types.ActivePotsResponse{Data: pots, Pagination: pageRes}, nil
 }
 

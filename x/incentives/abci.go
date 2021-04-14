@@ -23,11 +23,20 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	// update epoch info
 	k.SetCurrentEpochInfo(ctx, currentEpoch+1, ctx.BlockHeight())
 
+	// begin distribution if it's start time
+	pots := k.GetUpcomingPots(ctx)
+	for _, pot := range pots {
+		if pot.StartTime.Before(ctx.BlockTime()) {
+			k.BeginDistribution(ctx, pot)
+		}
+	}
+
 	// distribute due to epoch event
-	pots := k.GetActivePots(ctx)
+	pots = k.GetActivePots(ctx)
 	for _, pot := range pots {
 		k.Distribute(ctx, pot)
-		if !pot.IsPerpetual && pot.NumEpochsPaidOver <= pot.FilledEpochs {
+		// filled epoch is increased in this step and we compare with +1
+		if !pot.IsPerpetual && pot.NumEpochsPaidOver <= pot.FilledEpochs+1 {
 			k.FinishDistribution(ctx, pot)
 		}
 	}
