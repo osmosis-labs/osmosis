@@ -29,7 +29,7 @@ func ValidateMinter(minter Minter) error {
 
 // NextEpochProvisions returns the epoch provisions
 func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
-	return m.EpochProvisions.Mul(params.ReductionFactorForEvent)
+	return m.EpochProvisions.Mul(params.ReductionFactor)
 }
 
 // EpochProvision returns the provisions for a block based on the epoch

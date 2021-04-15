@@ -18,7 +18,7 @@ var (
 	KeyGenesisEpochProvisions  = []byte("GenesisEpochProvisions")
 	KeyEpochDuration           = []byte("EpochDuration")
 	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
-	KeyReductionFactorForEvent = []byte("ReductionFactorForEvent")
+	KeyReductionFactor         = []byte("ReductionFactor")
 )
 
 // ParamTable for minting module.
@@ -28,7 +28,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochDuration time.Duration,
-	reductionFactorForEvent sdk.Dec, reductionPeriodInEpochs int64,
+	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64,
 ) Params {
 
 	return Params{
@@ -36,7 +36,7 @@ func NewParams(
 		GenesisEpochProvisions:  genesisEpochProvisions,
 		EpochDuration:           epochDuration,
 		ReductionPeriodInEpochs: reductionPeriodInEpochs,
-		ReductionFactorForEvent: reductionFactorForEvent,
+		ReductionFactor:         ReductionFactor,
 	}
 }
 
@@ -48,7 +48,7 @@ func DefaultParams() Params {
 		GenesisEpochProvisions:  sdk.NewDec(5000000),
 		EpochDuration:           epochDuration,            // 1 week
 		ReductionPeriodInEpochs: 156,                      // 3 years
-		ReductionFactorForEvent: sdk.NewDecWithPrec(5, 1), // 0.5
+		ReductionFactor:         sdk.NewDecWithPrec(5, 1), // 0.5
 	}
 }
 
@@ -66,7 +66,7 @@ func (p Params) Validate() error {
 	if err := validateReductionPeriodInEpochs(p.ReductionPeriodInEpochs); err != nil {
 		return err
 	}
-	if err := validateReductionFactorForEvent(p.ReductionFactorForEvent); err != nil {
+	if err := validateReductionFactor(p.ReductionFactor); err != nil {
 		return err
 	}
 
@@ -86,7 +86,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyGenesisEpochProvisions, &p.GenesisEpochProvisions, validateGenesisEpochProvisions),
 		paramtypes.NewParamSetPair(KeyEpochDuration, &p.EpochDuration, validateEpochDuration),
 		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
-		paramtypes.NewParamSetPair(KeyReductionFactorForEvent, &p.ReductionFactorForEvent, validateReductionFactorForEvent),
+		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
 	}
 }
 
@@ -145,7 +145,7 @@ func validateReductionPeriodInEpochs(i interface{}) error {
 	return nil
 }
 
-func validateReductionFactorForEvent(i interface{}) error {
+func validateReductionFactor(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

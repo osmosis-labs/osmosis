@@ -24,6 +24,6 @@ type Params struct {
     GenesisEpochProvisions  sdk.Dec       // initial epoch provisions at genesis
     EpochDuration           time.Duration // duration of an epoch
     ReductionPeriodInEpochs int64         // number of epochs between reward reductions
-    ReductionFactorForEvent sdk.Dec       // reduction multiplier to execute on each period
+    ReductionFactor sdk.Dec       // reduction multiplier to execute on each period
 }
 ```
