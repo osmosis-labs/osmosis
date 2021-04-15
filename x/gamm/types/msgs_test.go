@@ -196,6 +196,38 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
+			name: "invalid governor",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGovernor = "invalid_cosmos_address"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "valid governor: lptoken and lock",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGovernor = "lptoken,1000h"
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "valid governor: just lock duration for pool token",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGovernor = "1000h"
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "valid governor: address",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGovernor = "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
 			name: "zero swap fee",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolParams.SwapFee = sdk.NewDec(0)
