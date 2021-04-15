@@ -198,7 +198,7 @@ func TestMsgCreatePool(t *testing.T) {
 		{
 			name: "invalid governor",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.FuturePoolGoverner = "invalid_cosmos_address"
+				msg.FuturePoolGovernor = "invalid_cosmos_address"
 				return msg
 			}),
 			expectPass: false,
@@ -206,7 +206,7 @@ func TestMsgCreatePool(t *testing.T) {
 		{
 			name: "valid governor: lptoken and lock",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.FuturePoolGoverner = "lptoken,1000h"
+				msg.FuturePoolGovernor = "lptoken,1000h"
 				return msg
 			}),
 			expectPass: true,
@@ -214,7 +214,7 @@ func TestMsgCreatePool(t *testing.T) {
 		{
 			name: "valid governor: just lock duration for pool token",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.FuturePoolGoverner = "1000h"
+				msg.FuturePoolGovernor = "1000h"
 				return msg
 			}),
 			expectPass: true,
@@ -222,7 +222,7 @@ func TestMsgCreatePool(t *testing.T) {
 		{
 			name: "valid governor: address",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.FuturePoolGoverner = "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
+				msg.FuturePoolGovernor = "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
 				return msg
 			}),
 			expectPass: true,

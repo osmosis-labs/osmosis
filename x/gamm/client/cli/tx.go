@@ -365,7 +365,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 		})
 	}
 
-	futureGoverner, err := fs.GetString(FlagFutureGoverner)
+	futureGovernor, err := fs.GetString(FlagFutureGovernor)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -378,7 +378,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 			ExitFee: exitFee,
 		},
 		PoolAssets:         poolAssets,
-		FuturePoolGoverner: futureGoverner,
+		FuturePoolGovernor: futureGovernor,
 	}
 
 	return txf, msg, nil

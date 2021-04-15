@@ -33,7 +33,7 @@ func (k Keeper) SetPool(ctx sdk.Context, poolAcc types.PoolAccountI) error {
 	return nil
 }
 
-func (k Keeper) NewPool(ctx sdk.Context, poolParams types.PoolParams, futureGoverner string) (types.PoolAccountI, error) {
+func (k Keeper) NewPool(ctx sdk.Context, poolParams types.PoolParams, futureGovernor string) (types.PoolAccountI, error) {
 	poolId := k.getNextPoolNumber(ctx)
 
 	acc := k.accountKeeper.GetAccount(ctx, types.NewPoolAddress(poolId))
@@ -41,7 +41,7 @@ func (k Keeper) NewPool(ctx sdk.Context, poolParams types.PoolParams, futureGove
 		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
 	}
 
-	poolAcc := types.NewPoolAccount(poolId, poolParams, futureGoverner)
+	poolAcc := types.NewPoolAccount(poolId, poolParams, futureGovernor)
 	poolAcc = k.accountKeeper.NewAccount(ctx, poolAcc).(types.PoolAccountI)
 
 	k.accountKeeper.SetAccount(ctx, poolAcc)

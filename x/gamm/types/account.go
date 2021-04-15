@@ -47,7 +47,7 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, sdk.Uint64ToBigEndian(poolId)...)))
 }
 
-func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGoverner string) PoolAccountI {
+func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGovernor string) PoolAccountI {
 	poolAddr := NewPoolAddress(poolId)
 	baseAcc := authtypes.NewBaseAccountWithAddress(poolAddr)
 
@@ -63,7 +63,7 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGoverner string)
 		TotalWeight:        sdk.ZeroInt(),
 		TotalShare:         sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
 		PoolAssets:         nil,
-		FuturePoolGoverner: futureGoverner,
+		FuturePoolGovernor: futureGovernor,
 	}
 }
 
