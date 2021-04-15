@@ -30,8 +30,8 @@ const (
 	// Will be parsed to []string
 	FlagSwapRouteDenoms = "swap-route-denoms"
 
-	// FlagFutureGoverner can be an address, or a This LP Token, lockup time pair
-	FlagFutureGoverner = "future-governer"
+	// FlagFutureGovernor can be an address, or a This LP Token, lockup time pair
+	FlagFutureGovernor = "future-governor"
 )
 
 func FlagSetQuerySwapRoutes() *flag.FlagSet {
@@ -56,7 +56,7 @@ func FlagSetCreatePool() *flag.FlagSet {
 	fs.String(FlagInitialDeposit, "", "The tokens to be deposited to the pool initially")
 	fs.String(FlagSwapFee, "", "Swap fee of the pool")
 	fs.String(FlagExitFee, "", "Exit fee of the pool")
-	fs.String(FlagFutureGoverner, "", "Future governer of the pool")
+	fs.String(FlagFutureGovernor, "", "Future governor of the pool")
 	return fs
 }
 

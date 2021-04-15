@@ -23,7 +23,7 @@ const (
 )
 
 func ValidateFutureOwner(owner string) error {
-	// allow empty governer
+	// allow empty governor
 	if owner == "" {
 		return nil
 	}
