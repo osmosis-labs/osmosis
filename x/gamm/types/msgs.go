@@ -22,30 +22,30 @@ const (
 	TypeMsgExitSwapShareAmountIn   = "exit_swap_share_amount_in"
 )
 
-func ValidateFutureOwner(owner string) error {
+func ValidateFutureGovernor(governor string) error {
 	// allow empty governor
-	if owner == "" {
+	if governor == "" {
 		return nil
 	}
 
 	// validation for future owner
 	// "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
-	_, err := sdk.AccAddressFromBech32(owner)
+	_, err := sdk.AccAddressFromBech32(governor)
 	if err == nil {
 		return nil
 	}
 
 	lockTimeStr := ""
-	splits := strings.Split(owner, ",")
+	splits := strings.Split(governor, ",")
 	if len(splits) > 2 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 	}
 
 	// token,100h
 	if len(splits) == 2 {
 		lpTokenStr := splits[0]
 		if sdk.ValidateDenom(lpTokenStr) != nil {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 		}
 		lockTimeStr = splits[1]
 	}
@@ -57,7 +57,7 @@ func ValidateFutureOwner(owner string) error {
 
 	_, err = time.ParseDuration(lockTimeStr)
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future owner: %s", owner))
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 	}
 	return nil
 }
@@ -102,7 +102,7 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	}
 
 	// validation for future owner
-	if err = ValidateFutureOwner(msg.FuturePoolGoverner); err != nil {
+	if err = ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
 	}
 

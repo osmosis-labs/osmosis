@@ -64,7 +64,7 @@ message PoolAccount {
     (gogoproto.moretags) = "yaml:\"pool_assets\"",
     (gogoproto.nullable) = false
   ];
-  string future_pool_goveror = 7 [
+  string future_pool_governor = 7 [
     (gogoproto.moretags) = "yaml:\"future_pool_governor\""
   ];
 }
