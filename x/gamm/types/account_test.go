@@ -197,6 +197,7 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 }
 
 func TestPoolAccountPoolAssets(t *testing.T) {
+	// TODO: Refactor this to be table driven
 	var poolId uint64 = 10
 	swapFee, _ := sdk.NewDecFromStr("0.025")
 	exitFee, _ := sdk.NewDecFromStr("0.025")
@@ -395,14 +396,14 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
     denom: osmosis/pool/10
     amount: "0"
   pool_assets:
-  - denormalized_weight: "100"
-    token:
+  - token:
       denom: test1
       amount: "10000"
-  - denormalized_weight: "200"
-    token:
+    weight: "100"
+  - token:
       denom: test2
       amount: "50000"
+    weight: "200"
 `
 	require.Equal(t, want, string(bs))
 }
