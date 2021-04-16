@@ -21,3 +21,11 @@ func NewPeriodLock(ID uint64, owner sdk.AccAddress, duration time.Duration, endT
 func (p PeriodLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
 }
+
+func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
+	sum := sdk.NewInt(0)
+	for _, lock := range locks {
+		sum = sum.Add(lock.Coins.AmountOf(denom))
+	}
+	return sum
+}

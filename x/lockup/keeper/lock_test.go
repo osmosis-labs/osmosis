@@ -10,7 +10,7 @@ import (
 func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
 	suite.SetupTest()
 
-	// initial locks check
+	// initial check
 	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
@@ -43,10 +43,9 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 }
 
 func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
-	// test for all unlockable coins
 	suite.SetupTest()
 
-	// initial locks check
+	// initial check
 	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
@@ -76,10 +75,9 @@ func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
 }
 
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {
-	// test for module locked balance check
 	suite.SetupTest()
 
-	// initial module locked balance check
+	// initial check
 	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
@@ -96,11 +94,10 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 }
 
 func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
-	// test for all unlockable coins
 	suite.SetupTest()
 	now := suite.ctx.BlockTime()
 
-	// initial module locked balance check
+	// initial check
 	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
@@ -152,11 +149,10 @@ func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
 }
 
 func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
-	// test for all unlockable coins
 	suite.SetupTest()
 	now := suite.ctx.BlockTime()
 
-	// initial locks check
+	// initial check
 	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
@@ -242,4 +238,59 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	// unlock with lock object
 	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), lock)
 	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) TestModuleLockedCoins() {
+	suite.SetupTest()
+
+	// initial check
+	lockedCoins := suite.app.LockupKeeper.GetModuleLockedCoins(suite.ctx)
+	suite.Require().Equal(lockedCoins, sdk.Coins(nil))
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// final check
+	lockedCoins = suite.app.LockupKeeper.GetModuleLockedCoins(suite.ctx)
+	suite.Require().Equal(lockedCoins, coins)
+}
+
+func (suite *KeeperTestSuite) TestLocksPastTimeDenom() {
+	suite.SetupTest()
+
+	now := time.Now()
+	suite.ctx = suite.ctx.WithBlockTime(now)
+
+	// initial check
+	locks := suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", now)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// final check
+	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", now)
+	suite.Require().Len(locks, 1)
+}
+
+func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
+	suite.SetupTest()
+
+	// initial check
+	duration := time.Second
+	locks := suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", duration)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// final check
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", duration)
+	suite.Require().Len(locks, 1)
 }
