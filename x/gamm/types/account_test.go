@@ -10,69 +10,51 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
+	require.Equal(t, expected.String(), pool.GetTotalWeight().String())
+}
+
 func TestPoolAccountPoolParams(t *testing.T) {
-	swapFee, _ := sdk.NewDecFromStr("0.025")
-	exitFee, _ := sdk.NewDecFromStr("0.025")
+	defaultSwapFee, _ := sdk.NewDecFromStr("0.025")
+	defaultExitFee, _ := sdk.NewDecFromStr("0.025")
+	wantErr := true
+	noErr := false
 
-	require.Error(t, PoolParams{
-		Lock: false,
+	tests := []struct {
+		SwapFee   sdk.Dec
+		ExitFee   sdk.Dec
+		shouldErr bool
+	}{
+		// Should work
+		{defaultSwapFee, defaultExitFee, noErr},
 		// Can't set the swap fee as negative
-		SwapFee: sdk.NewDecWithPrec(-1, 2),
-		ExitFee: exitFee,
-	}.Validate())
-
-	require.Error(t, PoolParams{
-		Lock: false,
+		{sdk.NewDecWithPrec(-1, 2), defaultExitFee, wantErr},
 		// Can't set the swap fee as 1
-		SwapFee: sdk.NewDec(1),
-		ExitFee: exitFee,
-	}.Validate())
-
-	require.Error(t, PoolParams{
-		Lock: false,
+		{sdk.NewDec(1), defaultExitFee, wantErr},
 		// Can't set the swap fee above 1
-		SwapFee: sdk.NewDecWithPrec(15, 1),
-		ExitFee: exitFee,
-	}.Validate())
-
-	require.Error(t, PoolParams{
-		Lock:    false,
-		SwapFee: swapFee,
+		{sdk.NewDecWithPrec(15, 1), defaultExitFee, wantErr},
 		// Can't set the exit fee as negative
-		ExitFee: sdk.NewDecWithPrec(-1, 2),
-	}.Validate())
-
-	require.Error(t, PoolParams{
-		Lock:    false,
-		SwapFee: swapFee,
+		{defaultSwapFee, sdk.NewDecWithPrec(-1, 2), wantErr},
 		// Can't set the exit fee as 1
-		ExitFee: sdk.NewDec(1),
-	}.Validate())
-
-	require.Error(t, PoolParams{
-		Lock:    false,
-		SwapFee: swapFee,
+		{defaultSwapFee, sdk.NewDec(1), wantErr},
 		// Can't set the exit fee above 1
-		ExitFee: sdk.NewDecWithPrec(15, 1),
-	}.Validate())
+		{defaultSwapFee, sdk.NewDecWithPrec(15, 1), wantErr},
+	}
 
-	require.Panics(t, func() {
-		// Can't create with negative swap fee.
-		NewPoolAccount(1, PoolParams{
+	for i, params := range tests {
+		poolParams := PoolParams{
 			Lock:    false,
-			SwapFee: sdk.NewDecWithPrec(-1, 2),
-			ExitFee: exitFee,
-		}, "")
-	})
-
-	require.Panics(t, func() {
-		// Can't create with negative exit fee.
-		NewPoolAccount(1, PoolParams{
-			Lock:    false,
-			SwapFee: swapFee,
-			ExitFee: sdk.NewDecWithPrec(-1, 2),
-		}, "")
-	})
+			SwapFee: params.SwapFee,
+			ExitFee: params.ExitFee,
+		}
+		err := poolParams.Validate()
+		if params.shouldErr {
+			require.Error(t, err, "unexpected error, tc %v", i)
+			require.Panics(t, func() { NewPoolAccount(1, poolParams, "") })
+		} else {
+			require.NoError(t, err, "unexpected error, tc %v", i)
+		}
+	}
 }
 
 func TestPoolAccountSetPoolAsset(t *testing.T) {
@@ -102,7 +84,7 @@ func TestPoolAccountSetPoolAsset(t *testing.T) {
 	_, err = pacc.GetPoolAsset("")
 	require.Error(t, err)
 
-	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
+	testTotalWeight(t, sdk.NewInt(300), pacc)
 
 	err = pacc.SetPoolAsset("test1", PoolAsset{
 		Weight: sdk.NewInt(-1),
