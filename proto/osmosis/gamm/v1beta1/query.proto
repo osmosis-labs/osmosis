@@ -50,7 +50,8 @@ message QueryPoolRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message QueryPoolResponse {
-  google.protobuf.Any pool = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
+  google.protobuf.Any pool = 1
+      [ (cosmos_proto.accepts_interface) = "AccountI" ];
 }
 
 //=============================== Pools
@@ -59,7 +60,8 @@ message QueryPoolsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 message QueryPoolsResponse {
-  repeated google.protobuf.Any pools = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "AccountI" ];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
