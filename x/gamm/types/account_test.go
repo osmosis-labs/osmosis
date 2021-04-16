@@ -10,16 +10,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var (
+	defaultSwapFee = sdk.MustNewDecFromStr("0.025")
+	defaultExitFee = sdk.MustNewDecFromStr("0.025")
+	wantErr        = true
+	noErr          = false
+)
+
 func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
 	require.Equal(t, expected.String(), pool.GetTotalWeight().String())
 }
 
 func TestPoolAccountPoolParams(t *testing.T) {
-	defaultSwapFee, _ := sdk.NewDecFromStr("0.025")
-	defaultExitFee, _ := sdk.NewDecFromStr("0.025")
-	wantErr := true
-	noErr := false
-
+	// Tests that creating a pool with the given pair of swapfee and exit fee
+	// errors or succeeds as intended. Furthermore, it checks that
+	// NewPoolAccount panics in the error case.
 	tests := []struct {
 		SwapFee   sdk.Dec
 		ExitFee   sdk.Dec
@@ -49,7 +54,7 @@ func TestPoolAccountPoolParams(t *testing.T) {
 		}
 		err := poolParams.Validate()
 		if params.shouldErr {
-			require.Error(t, err, "unexpected error, tc %v", i)
+			require.Error(t, err, "unexpected lack of error, tc %v", i)
 			require.Panics(t, func() { NewPoolAccount(1, poolParams, "") })
 		} else {
 			require.NoError(t, err, "unexpected error, tc %v", i)
@@ -59,13 +64,11 @@ func TestPoolAccountPoolParams(t *testing.T) {
 
 func TestPoolAccountSetPoolAsset(t *testing.T) {
 	var poolId uint64 = 10
-	swapFee, _ := sdk.NewDecFromStr("0.025")
-	exitFee, _ := sdk.NewDecFromStr("0.025")
 
 	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
-		SwapFee: swapFee,
-		ExitFee: exitFee,
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
 	}, "")
 
 	err := pacc.AddPoolAssets([]PoolAsset{
@@ -130,64 +133,85 @@ func TestPoolAccountSetPoolAsset(t *testing.T) {
 }
 
 func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
-	var poolId uint64 = 10
-	swapFee, _ := sdk.NewDecFromStr("0.025")
-	exitFee, _ := sdk.NewDecFromStr("0.025")
+	// TODO: Add more cases
+	tests := []struct {
+		assets    []PoolAsset
+		shouldErr bool
+	}{
+		// weight 0
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(0),
+					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
+				},
+			},
+			wantErr,
+		},
+		// negative weight
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(-1),
+					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
+				},
+			},
+			wantErr,
+		},
+		// 0 token amount
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
+				},
+			},
+			wantErr,
+		},
+		// negative token amount
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token: sdk.Coin{
+						Denom:  "test1",
+						Amount: sdk.NewInt(-1),
+					},
+				},
+			},
+			wantErr,
+		},
+	}
 
+	numPassingCases := 0
+	var poolId uint64 = 10
 	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
-		SwapFee: swapFee,
-		ExitFee: exitFee,
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
 	}, "")
 
-	err := pacc.AddPoolAssets([]PoolAsset{
-		{
-			Weight: sdk.NewInt(0),
-			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
-		},
-	})
-	require.Error(t, err)
-
-	err = pacc.AddPoolAssets([]PoolAsset{
-		{
-			Weight: sdk.NewInt(-1),
-			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
-		},
-	})
-	require.Error(t, err)
-
-	err = pacc.AddPoolAssets([]PoolAsset{
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
-		},
-	})
-	require.Error(t, err)
-
-	err = pacc.AddPoolAssets([]PoolAsset{
-		{
-			Weight: sdk.NewInt(100),
-			Token: sdk.Coin{
-				Denom:  "test1",
-				Amount: sdk.NewInt(-1),
-			},
-		},
-	})
-	require.Error(t, err)
-
-	require.Equal(t, 0, pacc.NumAssets())
+	for i, tc := range tests {
+		err := pacc.AddPoolAssets(tc.assets)
+		if tc.shouldErr {
+			require.Error(t, err, "unexpected lack of error, tc %v", i)
+		} else {
+			require.NoError(t, err, "unexpected error, tc %v", i)
+			numPassingCases += 1
+			require.Equal(t, numPassingCases, pacc.NumAssets())
+		}
+	}
 }
 
 func TestPoolAccountPoolAssets(t *testing.T) {
 	// TODO: Refactor this to be table driven
 	var poolId uint64 = 10
-	swapFee, _ := sdk.NewDecFromStr("0.025")
-	exitFee, _ := sdk.NewDecFromStr("0.025")
 
+	// expectedTotalThusFar := sdk.ZeroInt()
 	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
-		SwapFee: swapFee,
-		ExitFee: exitFee,
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
 	}, "").(*PoolAccount)
 
 	_, err := pacc.GetPoolAsset("test1")
@@ -293,13 +317,11 @@ func TestPoolAccountPoolAssets(t *testing.T) {
 
 func TestPoolAccountTotalWeight(t *testing.T) {
 	var poolId uint64 = 10
-	swapFee, _ := sdk.NewDecFromStr("0.025")
-	exitFee, _ := sdk.NewDecFromStr("0.025")
 
 	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
-		SwapFee: swapFee,
-		ExitFee: exitFee,
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
 	}, "")
 
 	err := pacc.AddPoolAssets([]PoolAsset{
@@ -339,13 +361,11 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 
 func TestPoolAccountMarshalYAML(t *testing.T) {
 	var poolId uint64 = 10
-	swapFee, _ := sdk.NewDecFromStr("0.025")
-	exitFee, _ := sdk.NewDecFromStr("0.025")
 
 	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
-		SwapFee: swapFee,
-		ExitFee: exitFee,
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
 	}, "")
 
 	err := pacc.AddPoolAssets([]PoolAsset{
@@ -392,13 +412,11 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 
 func TestPoolAccountJson(t *testing.T) {
 	var poolId uint64 = 10
-	swapFee, _ := sdk.NewDecFromStr("0.025")
-	exitFee, _ := sdk.NewDecFromStr("0.025")
 
 	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
-		SwapFee: swapFee,
-		ExitFee: exitFee,
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
 	}, "").(*PoolAccount)
 
 	err := pacc.AddPoolAssets([]PoolAsset{
