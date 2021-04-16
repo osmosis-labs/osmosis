@@ -204,115 +204,137 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 }
 
 func TestPoolAccountPoolAssets(t *testing.T) {
-	// TODO: Refactor this to be table driven
-	var poolId uint64 = 10
+	// Adds []PoolAssets, one after another
+	// if the addition doesn't error, adds the weight of the pool assets to a running total,
+	// and ensures the pool's total weight is equal to the expected.
+	// This also ensures that the pool assets remain sorted within the pool account.
+	// Furthermore, it ensures that GetPoolAsset succeeds for everything in the pool,
+	// and fails for things not in it.
+	denomNotInPool := "xyzCoin"
 
-	// expectedTotalThusFar := sdk.ZeroInt()
+	tests := []struct {
+		assets         []PoolAsset
+		newAssetsAdded int
+		shouldErr      bool
+	}{
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
+				},
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
+				},
+			},
+			2,
+			noErr,
+		},
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
+				},
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("test3", sdk.NewInt(10000)),
+				},
+			},
+			0,
+			wantErr,
+		},
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
+				},
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("test3", sdk.NewInt(10000)),
+				},
+			},
+			0,
+			wantErr,
+		},
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
+				},
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("test4", sdk.NewInt(10000)),
+				},
+			},
+			2,
+			noErr,
+		},
+	}
+
+	expectedTotalWeight := sdk.ZeroInt()
+	expectedNumAssets := 0
+	var poolId uint64 = 10
 	pacc := NewPoolAccount(poolId, PoolParams{
 		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "").(*PoolAccount)
 
+	// Just check that theres no asset called test1 at the start.
 	_, err := pacc.GetPoolAsset("test1")
 	require.Error(t, err)
 
-	err = pacc.AddPoolAssets([]PoolAsset{
-		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
-		},
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
-		},
-	})
-	require.NoError(t, err)
+	for i, tc := range tests {
+		err = pacc.AddPoolAssets(tc.assets)
+		if tc.shouldErr {
+			require.Error(t, err, "unexpected lack of error, tc %v", i)
+		} else {
+			require.NoError(t, err, "unexpected error, tc %v", i)
+			// Check that the number of assets in the pool is correct
+			expectedNumAssets += len(tc.assets)
+			require.Equal(t, expectedNumAssets, pacc.NumAssets())
+			// Check that the total weight is correct
+			for _, asset := range tc.assets {
+				expectedTotalWeight = expectedTotalWeight.Add(asset.Weight)
+			}
+			testTotalWeight(t, expectedTotalWeight, pacc)
+			// Check that the assets in the pool are sorted by denomination
+			// TODO: The following is just left as a stub
+			require.Equal(t, "test1", pacc.PoolAssets[0].Token.Denom)
+			require.Equal(t, "test2", pacc.PoolAssets[1].Token.Denom)
+		}
+		// Check that GetPoolAsset works for every denom in pool
+		for _, asset := range pacc.PoolAssets {
+			_, err = pacc.GetPoolAsset(asset.Token.Denom)
+			require.NoError(t, err)
+		}
+		// Check that GetPoolAsset fails for a denom not in the pool
+		_, err = pacc.GetPoolAsset(denomNotInPool)
+		require.Error(t, err)
+	}
 
-	require.Equal(t, 2, len(pacc.PoolAssets))
-	require.Equal(t, 2, pacc.NumAssets())
-	// Check that PoolAssets are sorted.
-	require.Equal(t, "test1", pacc.PoolAssets[0].Token.Denom)
-	require.Equal(t, "test2", pacc.PoolAssets[1].Token.Denom)
+	// Hardcoded GetPoolAssets tests.
+	// TODO: Find ways to generalize these.
+	assets, err := pacc.GetPoolAssets("test1", "test2")
+	require.NoError(t, err)
+	require.Equal(t, 2, len(assets))
 
-	_, err = pacc.GetPoolAsset("test1")
+	assets, err = pacc.GetPoolAssets("test1", "test2", "test3", "test4")
 	require.NoError(t, err)
-	_, err = pacc.GetPoolAsset("test2")
-	require.NoError(t, err)
-	_, err = pacc.GetPoolAsset("test3")
-	require.Error(t, err)
-
-	PoolAssets, err := pacc.GetPoolAssets("test1", "test2")
-	require.NoError(t, err)
-	require.Equal(t, 2, len(PoolAssets))
-
-	err = pacc.AddPoolAssets([]PoolAsset{
-		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
-		},
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("test3", sdk.NewInt(10000)),
-		},
-	})
-	require.Error(t, err)
-
-	err = pacc.AddPoolAssets([]PoolAsset{
-		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
-		},
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("test3", sdk.NewInt(10000)),
-		},
-	})
-	require.Error(t, err)
-
-	err = pacc.AddPoolAssets([]PoolAsset{
-		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
-		},
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("test4", sdk.NewInt(10000)),
-		},
-	})
-	require.NoError(t, err)
-
-	require.Equal(t, 4, len(pacc.PoolAssets))
-	require.Equal(t, 4, pacc.NumAssets())
-	// Check that PoolAssets are sorted.
-	require.Equal(t, "test1", pacc.PoolAssets[0].Token.Denom)
-	require.Equal(t, "test2", pacc.PoolAssets[1].Token.Denom)
-	require.Equal(t, "test3", pacc.PoolAssets[2].Token.Denom)
-	require.Equal(t, "test4", pacc.PoolAssets[3].Token.Denom)
-
-	_, err = pacc.GetPoolAsset("test1")
-	require.NoError(t, err)
-	_, err = pacc.GetPoolAsset("test2")
-	require.NoError(t, err)
-	_, err = pacc.GetPoolAsset("test3")
-	require.NoError(t, err)
-	_, err = pacc.GetPoolAsset("test4")
-	require.NoError(t, err)
-	_, err = pacc.GetPoolAsset("test5")
-	require.Error(t, err)
-
-	PoolAssets, err = pacc.GetPoolAssets("test1", "test2", "test3", "test4")
-	require.NoError(t, err)
-	require.Equal(t, 4, len(PoolAssets))
+	require.Equal(t, 4, len(assets))
 
 	_, err = pacc.GetPoolAssets("test1", "test5")
 	require.Error(t, err)
 	_, err = pacc.GetPoolAssets("test5")
 	require.Error(t, err)
 
-	PoolAssets, err = pacc.GetPoolAssets()
+	assets, err = pacc.GetPoolAssets()
 	require.NoError(t, err)
-	require.Equal(t, 0, len(PoolAssets))
+	require.Equal(t, 0, len(assets))
 }
 
 func TestPoolAccountTotalWeight(t *testing.T) {
