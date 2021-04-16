@@ -36,6 +36,13 @@ type Keeper interface {
 	// GetAccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom
 	GetAccountLockedLongerDurationDenom(sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock
 
+	// GetLocksPastTimeDenom Returns the locks whose unlock time is beyond timestamp
+	GetLocksPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock
+
+	// GetLocksLongerThanDurationDenom Returns the locks whose unlock duration is longer than duration
+	GetLocksLongerThanDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock
+
+
 	// GetLockByID Returns lock from lockID
 	GetLockByID(sdk.Context, lockID uint64) (*types.PeriodLock, error)
 	// GetPeriodLocks Returns the period locks on pool

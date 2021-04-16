@@ -85,6 +85,12 @@ func (k Keeper) LockIteratorBeforeTimeDenom(ctx sdk.Context, isUnlocking bool, d
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom)), time)
 }
 
+// LockIteratorLongerThanDurationDenom returns the iterator to get locked locks by denom
+func (k Keeper) LockIteratorLongerThanDurationDenom(ctx sdk.Context, isUnlocking bool, denom string, duration time.Duration) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	return k.iteratorLongerDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockDuration, []byte(denom)), duration)
+}
+
 // LockIteratorDenom returns the iterator used for getting all locks by denom
 func (k Keeper) LockIteratorDenom(ctx sdk.Context, isUnlocking bool, denom string) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)

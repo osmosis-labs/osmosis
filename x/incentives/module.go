@@ -1,22 +1,24 @@
-package lockup
+package incentives
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/c-osmosis/osmosis/x/lockup/client/cli"
-	"github.com/c-osmosis/osmosis/x/lockup/client/rest"
-	"github.com/c-osmosis/osmosis/x/lockup/keeper"
-	"github.com/c-osmosis/osmosis/x/lockup/types"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/c-osmosis/osmosis/x/incentives/client/cli"
+	"github.com/c-osmosis/osmosis/x/incentives/client/rest"
+	"github.com/c-osmosis/osmosis/x/incentives/keeper"
+	"github.com/c-osmosis/osmosis/x/incentives/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (

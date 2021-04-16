@@ -6,29 +6,29 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/spf13/cast"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
-
+	appparams "github.com/c-osmosis/osmosis/app/params"
 	_ "github.com/c-osmosis/osmosis/client/docs/statik"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
-
+	"github.com/c-osmosis/osmosis/x/gamm"
+	gammkeeper "github.com/c-osmosis/osmosis/x/gamm/keeper"
+	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
+	"github.com/c-osmosis/osmosis/x/incentives"
+	incentiveskeeper "github.com/c-osmosis/osmosis/x/incentives/keeper"
+	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
+	"github.com/c-osmosis/osmosis/x/lockup"
+	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
+	"github.com/c-osmosis/osmosis/x/mint"
+	mintkeeper "github.com/c-osmosis/osmosis/x/mint/keeper"
+	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -84,20 +84,15 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	"github.com/c-osmosis/osmosis/x/gamm"
-	gammkeeper "github.com/c-osmosis/osmosis/x/gamm/keeper"
-	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
-
-	"github.com/c-osmosis/osmosis/x/lockup"
-	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
-
-	"github.com/c-osmosis/osmosis/x/mint"
-	mintkeeper "github.com/c-osmosis/osmosis/x/mint/keeper"
-	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
-
-	appparams "github.com/c-osmosis/osmosis/app/params"
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 const appName = "OsmosisApp"
@@ -129,6 +124,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		gamm.AppModuleBasic{},
+		incentives.AppModuleBasic{},
 		lockup.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 	)
@@ -143,6 +139,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		gammtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
+		incentivestypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 	}
 
@@ -186,6 +183,7 @@ type OsmosisApp struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 	GAMMKeeper       gammkeeper.Keeper
+	IncentivesKeeper incentiveskeeper.Keeper
 	LockupKeeper     lockupkeeper.Keeper
 
 	// make scoped keepers public for test purposes
@@ -225,7 +223,7 @@ func NewOsmosisApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gammtypes.StoreKey, lockuptypes.StoreKey,
+		gammtypes.StoreKey, incentivestypes.StoreKey, lockuptypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -322,6 +320,7 @@ func NewOsmosisApp(
 
 	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper)
 
 	app.GAMMKeeper = *gammKeeper.SetHooks(
 		gammtypes.NewMultiGammHooks(
@@ -332,6 +331,12 @@ func NewOsmosisApp(
 	app.LockupKeeper = *lockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
 		// insert lockup hooks receivers here
+		),
+	)
+
+	app.IncentivesKeeper = *incentivesKeeper.SetHooks(
+		incentivestypes.NewMultiIncentiveHooks(
+		// insert incentive hooks receivers here
 		),
 	)
 
@@ -364,6 +369,7 @@ func NewOsmosisApp(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		gamm.NewAppModule(appCodec, app.GAMMKeeper),
+		incentives.NewAppModule(appCodec, app.IncentivesKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper),
 	)
 
@@ -386,6 +392,7 @@ func NewOsmosisApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		incentivestypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -606,6 +613,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(incentivestypes.ModuleName)
 
 	return paramsKeeper
 }
