@@ -284,6 +284,31 @@ func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
 	return copyslice
 }
 
+// updateAllWeights updates all of the pool's internal weights to be equal to
+// the new weights. It assumes that `newWeights` are sorted by denomination,
+// and only contain the same denominations as the pool already contains.
+// This does not affect the asset balances.
+// If any of the above are not satisfied, this will panic.
+// (As all input to this should be generated from the state machine)
+// TODO: (post-launch) If newWeights includes a new denomination,
+// add the balance as well to the pool's internal measurements.
+// TODO: (post-launch) If newWeights excludes an existing denomination,
+// remove the weight from the pool, and figure out something to do
+// with any remaining coin.
+func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
+	if len(pa.PoolAssets) != len(newWeights) {
+		panic("updateAllWeights called with invalid input, len(newWeights) != len(existingWeights)")
+	}
+	for i, asset := range pa.PoolAssets {
+		if asset.Token.Denom != newWeights[i].Token.Denom {
+			panic(fmt.Sprintf("updateAllWeights called with invalid input, "+
+				"expected new weights' %vth asset to be %v, got %v",
+				i, asset.Token.Denom, asset.Token.Denom))
+		}
+		asset.Weight = newWeights[i].Weight
+	}
+}
+
 // PokeTokenWeights checks to see if the pool's token weights need to be updated,
 // and if so, does so.
 func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
@@ -311,9 +336,8 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 		// t > start_time + duration
 		// Update weights to be the target weights.
 		// TODO: When we add support for adding new assets via this method,
-		// Ensure the new asset has some token sent with it.
-		// TODO:
-		// pa.updateWeights(params.TargetPoolWeights)
+		// 		 Ensure the new asset has some token sent with it.
+		pa.updateAllWeights(params.TargetPoolWeights)
 		// We've finished updating weights, so delete this parameter
 		pa.PoolParams.SmoothWeightChangeParams = nil
 		return
@@ -324,8 +348,7 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 		shiftedBlockTime := blockTime.Sub(params.StartTime).Milliseconds()
 		percent_duration_elapsed := sdk.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
 		if percent_duration_elapsed.GT(sdk.OneDec()) {
-			// TODO:
-			// pa.updateWeights(params.TargetPoolWeights)
+			pa.updateAllWeights(params.TargetPoolWeights)
 			return
 		}
 		// TODO:
