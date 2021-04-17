@@ -327,15 +327,16 @@ func (pa PoolAccount) SetSequence(seq uint64) error {
 }
 
 type poolAccountPretty struct {
-	Address       sdk.AccAddress `json:"address" yaml:"address"`
-	PubKey        string         `json:"public_key" yaml:"public_key"`
-	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
-	Sequence      uint64         `json:"sequence" yaml:"sequence"`
-	Id            uint64         `json:"id" yaml:"id"`
-	PoolParams    PoolParams     `json:"pool_params" yaml:"pool_params"`
-	TotalWeight   sdk.Int        `json:"total_weight" yaml:"total_weight"`
-	TotalShare    sdk.Coin       `json:"total_share" yaml:"total_share"`
-	PoolAssets    []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
+	Address            sdk.AccAddress `json:"address" yaml:"address"`
+	PubKey             string         `json:"public_key" yaml:"public_key"`
+	AccountNumber      uint64         `json:"account_number" yaml:"account_number"`
+	Sequence           uint64         `json:"sequence" yaml:"sequence"`
+	Id                 uint64         `json:"id" yaml:"id"`
+	PoolParams         PoolParams     `json:"pool_params" yaml:"pool_params"`
+	FuturePoolGovernor string         `json:"future_pool_governor" yaml:"future_pool_governor"`
+	TotalWeight        sdk.Int        `json:"total_weight" yaml:"total_weight"`
+	TotalShare         sdk.Coin       `json:"total_share" yaml:"total_share"`
+	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
 
 func (pa PoolAccount) String() string {
@@ -351,14 +352,15 @@ func (pa PoolAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	bs, err := yaml.Marshal(poolAccountPretty{
-		Address:       accAddr,
-		PubKey:        "",
-		AccountNumber: pa.AccountNumber,
-		Id:            pa.Id,
-		PoolParams:    pa.PoolParams,
-		TotalWeight:   pa.TotalWeight,
-		TotalShare:    pa.TotalShare,
-		PoolAssets:    pa.PoolAssets,
+		Address:            accAddr,
+		PubKey:             "",
+		AccountNumber:      pa.AccountNumber,
+		Id:                 pa.Id,
+		PoolParams:         pa.PoolParams,
+		FuturePoolGovernor: pa.FuturePoolGovernor,
+		TotalWeight:        pa.TotalWeight,
+		TotalShare:         pa.TotalShare,
+		PoolAssets:         pa.PoolAssets,
 	})
 
 	if err != nil {
@@ -376,14 +378,15 @@ func (pa PoolAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(poolAccountPretty{
-		Address:       accAddr,
-		PubKey:        "",
-		AccountNumber: pa.AccountNumber,
-		Id:            pa.Id,
-		PoolParams:    pa.PoolParams,
-		TotalWeight:   pa.TotalWeight,
-		TotalShare:    pa.TotalShare,
-		PoolAssets:    pa.PoolAssets,
+		Address:            accAddr,
+		PubKey:             "",
+		AccountNumber:      pa.AccountNumber,
+		Id:                 pa.Id,
+		PoolParams:         pa.PoolParams,
+		FuturePoolGovernor: pa.FuturePoolGovernor,
+		TotalWeight:        pa.TotalWeight,
+		TotalShare:         pa.TotalShare,
+		PoolAssets:         pa.PoolAssets,
 	})
 }
 
@@ -397,9 +400,11 @@ func (pa *PoolAccount) UnmarshalJSON(bz []byte) error {
 	pa.BaseAccount = authtypes.NewBaseAccount(alias.Address, nil, alias.AccountNumber, alias.Sequence)
 	pa.Id = alias.Id
 	pa.PoolParams = alias.PoolParams
+	pa.FuturePoolGovernor = alias.FuturePoolGovernor
 	pa.TotalWeight = alias.TotalWeight
 	pa.TotalShare = alias.TotalShare
 	pa.PoolAssets = alias.PoolAssets
+	pa.PoolWeightsChanging = (pa.PoolParams.SmoothWeightChangeParams == nil)
 
 	return nil
 }

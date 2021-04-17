@@ -416,6 +416,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
     swap_fee: "0.025000000000000000"
     exit_fee: "0.025000000000000000"
     smooth_weight_change_params: null
+  future_pool_governor: ""
   total_weight: "300"
   total_share:
     denom: osmosis/pool/10
