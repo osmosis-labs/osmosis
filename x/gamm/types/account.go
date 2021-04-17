@@ -303,7 +303,11 @@ func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
 		if asset.Token.Denom != newWeights[i].Token.Denom {
 			panic(fmt.Sprintf("updateAllWeights called with invalid input, "+
 				"expected new weights' %vth asset to be %v, got %v",
-				i, asset.Token.Denom, asset.Token.Denom))
+				i, asset.Token.Denom, newWeights[i].Token.Denom))
+		}
+		err := newWeights[i].ValidateWeight()
+		if err != nil {
+			panic("updateAllWeights: Tried to set an invalid weight")
 		}
 		asset.Weight = newWeights[i].Weight
 	}
