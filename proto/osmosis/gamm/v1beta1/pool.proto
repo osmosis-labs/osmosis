@@ -152,8 +152,4 @@ message PoolAccount {
     (gogoproto.moretags) = "yaml:\"total_weight\"",
     (gogoproto.nullable) = false
   ];
-  // are the pool weights currently changing? If so, 
-  // params.smoothWeightChangeParams must be set.
-  bool poolWeightsChanging = 8
-      [ (gogoproto.moretags) = "yaml:\"pool_weights_changing\"" ];
 }

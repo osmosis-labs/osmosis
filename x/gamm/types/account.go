@@ -59,14 +59,13 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGovernor string)
 	}
 
 	return &PoolAccount{
-		BaseAccount:         baseAcc,
-		Id:                  poolId,
-		PoolParams:          poolParams,
-		TotalWeight:         sdk.ZeroInt(),
-		TotalShare:          sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
-		PoolAssets:          nil,
-		FuturePoolGovernor:  futureGovernor,
-		PoolWeightsChanging: false,
+		BaseAccount:        baseAcc,
+		Id:                 poolId,
+		PoolParams:         poolParams,
+		TotalWeight:        sdk.ZeroInt(),
+		TotalShare:         sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
+		PoolAssets:         nil,
+		FuturePoolGovernor: futureGovernor,
 	}
 }
 
@@ -289,7 +288,8 @@ func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
 // and if so, does so.
 func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 	// Pool weights aren't changing, do nothing.
-	if !pa.PoolWeightsChanging {
+	poolWeightsChanging := (pa.PoolParams.SmoothWeightChangeParams != nil)
+	if !poolWeightsChanging {
 		return
 	}
 	// Pool weights are changing.
@@ -315,7 +315,6 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 		// TODO:
 		// pa.updateWeights(params.TargetPoolWeights)
 		// We've finished updating weights, so delete this parameter
-		pa.PoolWeightsChanging = false
 		pa.PoolParams.SmoothWeightChangeParams = nil
 		return
 	} else {
@@ -461,7 +460,6 @@ func (pa *PoolAccount) UnmarshalJSON(bz []byte) error {
 	pa.TotalWeight = alias.TotalWeight
 	pa.TotalShare = alias.TotalShare
 	pa.PoolAssets = alias.PoolAssets
-	pa.PoolWeightsChanging = (pa.PoolParams.SmoothWeightChangeParams == nil)
 
 	return nil
 }
