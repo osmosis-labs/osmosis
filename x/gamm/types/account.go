@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
@@ -32,6 +33,7 @@ type PoolAccountI interface {
 	GetPoolAssets(denoms ...string) ([]PoolAsset, error)
 	SetPoolAssets(assets []PoolAsset) error
 	GetAllPoolAssets() []PoolAsset
+	PokeTokenWeights(blockTime time.Time) error
 	GetTokenWeight(denom string) (sdk.Int, error)
 	SetTokenBalance(denom string, amount sdk.Int) error
 	GetTokenBalance(denom string) (sdk.Int, error)
@@ -281,6 +283,59 @@ func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
 	copyslice := make([]PoolAsset, len(pa.PoolAssets))
 	copy(copyslice, pa.PoolAssets)
 	return copyslice
+}
+
+func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) error {
+	// Pool weights aren't changing, do nothing.
+	if !pa.PoolWeightsChanging {
+		return nil
+	}
+	// Pool weights are changing.
+	// TODO: Add intra-block cache check that we haven't already poked
+	// the block yet.
+	params := *pa.PoolParams.SmoothWeightChangeParams
+	// the weights w(t) for the pool at time `t` is the following:
+	//   t <= start_time: w(t) = initial_pool_weights
+	//   start_time < t <= start_time + duration:
+	//     w(t) = initial_pool_weights + (t - start_time) *
+	//       (target_pool_weights - initial_pool_weights) / (duration)
+	//   t > start_time + duration: w(t) = target_pool_weights
+
+	// t <= blockTime
+	if params.StartTime.Before(blockTime) || params.StartTime.Equal(blockTime) {
+		// Do nothing
+		return nil
+	} else if blockTime.After(params.StartTime.Add(params.Duration)) {
+		// t > start_time + duration
+		// Update weights to be the target weights.
+		// TODO: When we add support for adding new assets via this method,
+		// Ensure the new asset has some token sent with it.
+		// TODO:
+		// pa.updateWeights(params.TargetPoolWeights)
+		// We've finished updating weights, so delete this parameter
+		pa.PoolWeightsChanging = false
+		pa.PoolParams.SmoothWeightChangeParams = nil
+		return nil
+	} else {
+		//	w(t) = initial_pool_weights + (t - start_time) *
+		//       (target_pool_weights - initial_pool_weights) / (duration)
+		// We first compute percent duration elapsed = (t - start_time) / duration, via Unix time.
+		shiftedBlockTime := blockTime.Sub(params.StartTime).Milliseconds()
+		percent_duration_elapsed := sdk.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
+		if percent_duration_elapsed.GT(sdk.OneDec()) {
+			// TODO:
+			// pa.updateWeights(params.TargetPoolWeights)
+			return nil
+		}
+		// TODO:
+		// weightsDiff := target_pool_weights.Sub(initial_pool_weights)
+		// // Below will be auto-truncated according to internal weight precision routine.
+		// overallDiff := weightsDiff.Mul(percent_duration_elapsed)
+		// updatedWeights := initial_pool_weights + overallDiff
+		// pa.updateWeights(updatedWeights)
+	}
+
+	return nil
 }
 
 func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
