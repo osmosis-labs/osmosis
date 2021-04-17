@@ -22,6 +22,7 @@ pub trait PoolT: MathT {
     fn swap(&self mut, token_in: Coin, token_in_max: Uint128, token_out: Coin, token_out_max: Uint128, max_spot_price: Uint128) -> StdResult<Response<SwapResult>>
 }
 
+/*
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Record {
     pub weight: Uint128,
@@ -47,7 +48,6 @@ pub struct Pool {
     pub records: Vec<Record>,
 }
 
-
 pub fn lock_pool(pool: Singleton<Pool>) -> StdResult<Response> {
 
 }
@@ -66,3 +66,5 @@ pub fn swap(
 pub fn pool_params(pool: Singleton<Pool>) -> StdResult<Response> {
 
 }
+
+*/
