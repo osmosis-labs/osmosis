@@ -33,7 +33,7 @@ type PoolAccountI interface {
 	GetPoolAssets(denoms ...string) ([]PoolAsset, error)
 	SetPoolAssets(assets []PoolAsset) error
 	GetAllPoolAssets() []PoolAsset
-	PokeTokenWeights(blockTime time.Time) error
+	PokeTokenWeights(blockTime time.Time)
 	GetTokenWeight(denom string) (sdk.Int, error)
 	SetTokenBalance(denom string, amount sdk.Int) error
 	GetTokenBalance(denom string) (sdk.Int, error)
@@ -285,10 +285,12 @@ func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
 	return copyslice
 }
 
-func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) error {
+// PokeTokenWeights checks to see if the pool's token weights need to be updated,
+// and if so, does so.
+func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 	// Pool weights aren't changing, do nothing.
 	if !pa.PoolWeightsChanging {
-		return nil
+		return
 	}
 	// Pool weights are changing.
 	// TODO: Add intra-block cache check that we haven't already poked
@@ -304,7 +306,7 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) error {
 	// t <= blockTime
 	if params.StartTime.Before(blockTime) || params.StartTime.Equal(blockTime) {
 		// Do nothing
-		return nil
+		return
 	} else if blockTime.After(params.StartTime.Add(params.Duration)) {
 		// t > start_time + duration
 		// Update weights to be the target weights.
@@ -315,7 +317,7 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) error {
 		// We've finished updating weights, so delete this parameter
 		pa.PoolWeightsChanging = false
 		pa.PoolParams.SmoothWeightChangeParams = nil
-		return nil
+		return
 	} else {
 		//	w(t) = initial_pool_weights + (t - start_time) *
 		//       (target_pool_weights - initial_pool_weights) / (duration)
@@ -325,7 +327,7 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) error {
 		if percent_duration_elapsed.GT(sdk.OneDec()) {
 			// TODO:
 			// pa.updateWeights(params.TargetPoolWeights)
-			return nil
+			return
 		}
 		// TODO:
 		// weightsDiff := target_pool_weights.Sub(initial_pool_weights)
@@ -335,7 +337,7 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) error {
 		// pa.updateWeights(updatedWeights)
 	}
 
-	return nil
+	return
 }
 
 func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
