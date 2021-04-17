@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
@@ -382,14 +383,73 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 }
 
 func TestPoolAccountPokeTokenWeights(t *testing.T) {
-	// TODO: STUB
-	// var poolId uint64 = 10
+	// Set default date
+	defaultStartTime := time.Date(2021, time.April, 17, 16, 10, 0, 0, nil)
+	defaultDuration := 100 * time.Second
+	type testCase struct {
+		blockTime       time.Time
+		expectedWeights []sdk.Int
+	}
 
-	// pacc := NewPoolAccount(poolId, PoolParams{
-	// 	Lock:    false,
-	// 	SwapFee: defaultSwapFee,
-	// 	ExitFee: defaultExitFee,
-	// }, "")
+	// Tests how the pool weights get updated via PokeTokenWeights at different block times.
+	// The framework underneath will automatically add tests for times before the start time,
+	// at the start time, at the end time, and after the end time. It is up to the test writer to
+	// test the behavior at times in-between.
+	tests := []struct {
+		// We take the initial weights from here
+		params SmoothWeightChangeParams
+		cases  []testCase
+	}{
+		{
+			// 1:1 pool, between test1 and test2
+			// transitioning to a 1:2 pool
+			params: SmoothWeightChangeParams{
+				StartTime: defaultStartTime,
+				Duration:  defaultDuration,
+				InitialPoolWeights: []PoolAsset{
+					{
+						Weight: sdk.NewInt(1 * 1000000),
+						Token:  sdk.NewCoin("asset_1", sdk.NewInt(0)),
+					},
+					{
+						Weight: sdk.NewInt(1 * 1000000),
+						Token:  sdk.NewCoin("asset_2", sdk.NewInt(0)),
+					},
+				},
+				TargetPoolWeights: []PoolAsset{
+					{
+						Weight: sdk.NewInt(1 * 1000000),
+						Token:  sdk.NewCoin("asset_1", sdk.NewInt(0)),
+					},
+					{
+						Weight: sdk.NewInt(2 * 1000000),
+						Token:  sdk.NewCoin("asset_2", sdk.NewInt(0)),
+					},
+				},
+			},
+			cases: []testCase{
+				{
+					// blockTime:
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		// paramsCopy := tc.params
+		// Initialize pool
+		var poolId uint64 = 10
+		pacc := NewPoolAccount(poolId, PoolParams{
+			Lock:                     false,
+			SwapFee:                  defaultSwapFee,
+			ExitFee:                  defaultExitFee,
+			SmoothWeightChangeParams: &tc.params,
+		}, "")
+
+		// just remove unused warning
+		require.NotNil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
+	}
+
 }
 
 func TestPoolAccountMarshalYAML(t *testing.T) {
