@@ -47,7 +47,7 @@ func subPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 // with the denominations in the same order.
 // Returned weights can be negative.
 func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
-	weightDifference := make([]PoolAsset, len(base))
+	weightSum := make([]PoolAsset, len(base))
 	// TODO: Consider deleting these panics for performance
 	if len(base) != len(other) {
 		panic("subPoolAssetWeights called with invalid input, len(base) != len(other)")
@@ -58,8 +58,21 @@ func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 				"expected other's %vth asset to be %v, got %v",
 				i, asset.Token.Denom, other[i].Token.Denom))
 		}
-		curWeightDiff := asset.Weight.Add(other[i].Weight)
-		weightDifference = append(weightDifference, PoolAsset{Token: asset.Token, Weight: curWeightDiff})
+		curWeightSum := asset.Weight.Add(other[i].Weight)
+		weightSum = append(weightSum, PoolAsset{Token: asset.Token, Weight: curWeightSum})
 	}
-	return weightDifference
+	return weightSum
+}
+
+// assumes 0 < d < 1
+func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
+	newWeights := make([]PoolAsset, len(base))
+	for _, asset := range base {
+		// TODO: This can adversarially panic at the moment! (as can PoolAccount.TotalWeight)
+		// Ensure this won't be able to panic in the future PR where we bound
+		// each assets weight, and add precision
+		newWeight := d.MulInt(asset.Weight).RoundInt()
+		newWeights = append(newWeights, PoolAsset{Token: asset.Token, Weight: newWeight})
+	}
+	return newWeights
 }
