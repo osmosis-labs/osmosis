@@ -32,7 +32,6 @@ type PoolAccountI interface {
 	GetPoolAssets(denoms ...string) ([]PoolAsset, error)
 	SetPoolAssets(assets []PoolAsset) error
 	GetAllPoolAssets() []PoolAsset
-	SetTokenWeight(denom string, weight sdk.Int) error
 	GetTokenWeight(denom string) (sdk.Int, error)
 	SetTokenBalance(denom string, amount sdk.Int) error
 	GetTokenBalance(denom string) (sdk.Int, error)
@@ -58,13 +57,14 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGovernor string)
 	}
 
 	return &PoolAccount{
-		BaseAccount:        baseAcc,
-		Id:                 poolId,
-		PoolParams:         poolParams,
-		TotalWeight:        sdk.ZeroInt(),
-		TotalShare:         sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
-		PoolAssets:         nil,
-		FuturePoolGovernor: futureGovernor,
+		BaseAccount:         baseAcc,
+		Id:                  poolId,
+		PoolParams:          poolParams,
+		TotalWeight:         sdk.ZeroInt(),
+		TotalShare:          sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
+		PoolAssets:          nil,
+		FuturePoolGovernor:  futureGovernor,
+		PoolWeightsChanging: false,
 	}
 }
 
@@ -147,7 +147,7 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 	}
 
 	// TODO: Change this to a more efficient sorted insert algorithm.
-	// Furthermore, consider changing the underlying data type to allow im-place modification if the
+	// Furthermore, consider changing the underlying data type to allow in-place modification if the
 	// number of PoolAssets is expected to be large.
 	pa.PoolAssets = append(pa.PoolAssets, PoolAssets...)
 	sort.Slice(pa.PoolAssets, func(i, j int) bool {
@@ -281,17 +281,6 @@ func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
 	copyslice := make([]PoolAsset, len(pa.PoolAssets))
 	copy(copyslice, pa.PoolAssets)
 	return copyslice
-}
-
-func (pa *PoolAccount) SetTokenWeight(denom string, weight sdk.Int) error {
-	PoolAsset, err := pa.GetPoolAsset(denom)
-	if err != nil {
-		return err
-	}
-
-	PoolAsset.Weight = weight
-
-	return pa.SetPoolAsset(denom, PoolAsset)
 }
 
 func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
