@@ -6,9 +6,9 @@ use cosmwasm_storage::{
     Singleton, singleton,
 }
 
-pub const PREFIX_POOL: &[u8] = b"pool";
+pub const PREFIX_RECORD: &[u8] = b"record";
 
-fn key_pool(id: Uint128) -> &[u8] {
+fn key_record(id: String) -> &[u8] {
 
 }
 

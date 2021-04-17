@@ -20,7 +20,6 @@ pub trait PoolT: MathT {
     fn lock(&self mut) -> StdResult<Response<()>>
     fn unlock(&self mut) -> StdResult<Response<()>>
     fn swap(&self mut, token_in: Coin, token_in_max: Uint128, token_out: Coin, token_out_max: Uint128, max_spot_price: Uint128) -> StdResult<Response<SwapResult>>
-
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -46,19 +45,18 @@ pub struct Pool {
     pub total_weight: Uint128,
     pub total_share: Coin,
     pub records: Vec<Record>,
-} 
+}
 
-impl  
 
 pub fn lock_pool(pool: Singleton<Pool>) -> StdResult<Response> {
 
 }
 
 pub fn swap(
-    pool: Singleton<Pool>, 
-    token_in: Coin, 
-    token_in_max: Uint128, 
-    token_out: Coin, 
+    pool: Singleton<Pool>,
+    token_in: Coin,
+    token_in_max: Uint128,
+    token_out: Coin,
     token_out_max: Uint128,
     max_spot_price: Uint128,
     ) -> StdResult<Response> {
@@ -66,5 +64,5 @@ pub fn swap(
     }
 
 pub fn pool_params(pool: Singleton<Pool>) -> StdResult<Response> {
-    
+
 }
