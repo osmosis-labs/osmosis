@@ -50,11 +50,11 @@ func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 	weightSum := make([]PoolAsset, len(base))
 	// TODO: Consider deleting these panics for performance
 	if len(base) != len(other) {
-		panic("subPoolAssetWeights called with invalid input, len(base) != len(other)")
+		panic("addPoolAssetWeights called with invalid input, len(base) != len(other)")
 	}
 	for i, asset := range base {
 		if asset.Token.Denom != other[i].Token.Denom {
-			panic(fmt.Sprintf("subPoolAssetWeights called with invalid input, "+
+			panic(fmt.Sprintf("addPoolAssetWeights called with invalid input, "+
 				"expected other's %vth asset to be %v, got %v",
 				i, asset.Token.Denom, other[i].Token.Denom))
 		}

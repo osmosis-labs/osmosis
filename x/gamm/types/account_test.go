@@ -381,6 +381,17 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 	require.Equal(t, sdk.NewInt(301).String(), pacc.GetTotalWeight().String())
 }
 
+func TestPoolAccountPokeTokenWeights(t *testing.T) {
+	// TODO: STUB
+	// var poolId uint64 = 10
+
+	// pacc := NewPoolAccount(poolId, PoolParams{
+	// 	Lock:    false,
+	// 	SwapFee: defaultSwapFee,
+	// 	ExitFee: defaultExitFee,
+	// }, "")
+}
+
 func TestPoolAccountMarshalYAML(t *testing.T) {
 	var poolId uint64 = 10
 
