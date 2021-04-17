@@ -385,6 +385,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 func TestPoolAccountPokeTokenWeights(t *testing.T) {
 	// Set default date
 	defaultStartTime := time.Date(2021, time.April, 17, 16, 10, 0, 0, nil)
+	defaultStartTimeUnix := defaultStartTime.Unix()
 	defaultDuration := 100 * time.Second
 	type testCase struct {
 		blockTime       time.Time
@@ -429,10 +430,58 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 			},
 			cases: []testCase{
 				{
-					// blockTime:
+					// Halfway through at 50 seconds elapsed
+					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
+					expectedWeights: []sdk.Int{
+						sdk.NewInt(1 * 1000000),
+						// Halfway between 1000000 & 2000000
+						sdk.NewInt(1500000),
+					},
 				},
 			},
 		},
+	}
+
+	// Add test cases at a time before the start, the start, the end, and a time after the end.
+	addDefaultCases := func(params SmoothWeightChangeParams, cases []testCase) []testCase {
+		// Set times one second before the start, and one second after the end
+		timeBeforeWeightChangeStart := time.Unix(params.StartTime.Unix()-1, 0)
+		timeAtWeightChangeEnd := params.StartTime.Add(params.Duration)
+		timeAfterWeightChangeEnd := time.Unix(timeAtWeightChangeEnd.Unix()+1, 0)
+		initialWeights := make([]sdk.Int, len(params.InitialPoolWeights))
+		finalWeights := make([]sdk.Int, len(params.TargetPoolWeights))
+		for i, v := range params.InitialPoolWeights {
+			initialWeights[i] = v.Weight
+		}
+		for i, v := range params.TargetPoolWeights {
+			finalWeights[i] = v.Weight
+		}
+		// Set the test cases for times before the start, and the start
+		updatedCases := []testCase{
+			{
+				blockTime:       timeBeforeWeightChangeStart,
+				expectedWeights: initialWeights,
+			},
+			{
+				blockTime:       params.StartTime,
+				expectedWeights: initialWeights,
+			},
+		}
+		// Append the provided cases
+		updatedCases = append(updatedCases, cases...)
+		finalCases := []testCase{
+			{
+				blockTime:       timeAtWeightChangeEnd,
+				expectedWeights: finalWeights,
+			},
+			{
+				blockTime:       timeAfterWeightChangeEnd,
+				expectedWeights: finalWeights,
+			},
+		}
+		// Append the final cases
+		updatedCases = append(updatedCases, finalCases...)
+		return updatedCases
 	}
 
 	for _, tc := range tests {
@@ -446,8 +495,9 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 			SmoothWeightChangeParams: &tc.params,
 		}, "")
 
-		// just remove unused warning
+		testCases := addDefaultCases(tc.params, tc.cases)
 		require.NotNil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
+		require.NotNil(t, testCases)
 	}
 
 }
