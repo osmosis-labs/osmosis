@@ -337,9 +337,9 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 		// 		 Ensure the new asset has some token sent with it.
 		pa.updateAllWeights(params.TargetPoolWeights)
 		// We've finished updating weights, so delete this parameter
+		// TODO: This line doesn't work, since this is a non-pointer receiever,
+		// and pa.PoolParams gets copied.
 		pa.PoolParams.SmoothWeightChangeParams = nil
-		// fmt.Printf("%v\n", pa.PoolParams.SmoothWeightChangeParams)
-		// fmt.Printf("%v\n", pa.GetPoolParams().SmoothWeightChangeParams)
 		return
 	} else {
 		//	w(t) = initial_pool_weights + (t - start_time) *

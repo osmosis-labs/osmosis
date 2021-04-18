@@ -515,11 +515,10 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 					"Didn't get the expected weights, poolNumber %v, caseNumber %v, assetNumber %v",
 					poolNum, caseNum, assetNum)
 			}
-			// fmt.Printf("%v\n", caseNum)
 		}
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
+		// TODO: This doesn't work due to PokeTokenWeights having a non-pointer receiver =/
 		// require.Nil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
-		require.NotNil(t, testCases)
 	}
 
 }
