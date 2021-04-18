@@ -442,6 +442,65 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 						sdk.NewInt(1500000),
 					},
 				},
+				{
+					// Quarter way through at 25 seconds elapsed
+					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
+					expectedWeights: []sdk.Int{
+						sdk.NewInt(1 * 1000000),
+						// Quarter way between 1000000 & 2000000
+						sdk.NewInt(1250000),
+					},
+				},
+			},
+		},
+		{
+			// 2:2 pool, between test1 and test2
+			// transitioning to a 4:1 pool
+			params: SmoothWeightChangeParams{
+				StartTime: defaultStartTime,
+				Duration:  defaultDuration,
+				InitialPoolWeights: []PoolAsset{
+					{
+						Weight: sdk.NewInt(2 * 1000000),
+						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
+					},
+					{
+						Weight: sdk.NewInt(2 * 1000000),
+						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
+					},
+				},
+				TargetPoolWeights: []PoolAsset{
+					{
+						Weight: sdk.NewInt(4 * 1000000),
+						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
+					},
+					{
+						Weight: sdk.NewInt(1 * 1000000),
+						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
+					},
+				},
+			},
+			cases: []testCase{
+				{
+					// Halfway through at 50 seconds elapsed
+					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
+					expectedWeights: []sdk.Int{
+						// Halfway between 2000000 & 4000000
+						sdk.NewInt(3 * 1000000),
+						// Halfway between 1000000 & 2000000
+						sdk.NewInt(1500000),
+					},
+				},
+				{
+					// Quarter way through at 25 seconds elapsed
+					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
+					expectedWeights: []sdk.Int{
+						// Quarter way between 2000000 & 4000000
+						sdk.NewInt(2500000),
+						// Quarter way between 1000000 & 2000000
+						sdk.NewInt(1750000),
+					},
+				},
 			},
 		},
 	}
