@@ -303,7 +303,7 @@ func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
 		if err != nil {
 			panic("updateAllWeights: Tried to set an invalid weight")
 		}
-		asset.Weight = newWeights[i].Weight
+		pa.PoolAssets[i].Weight = newWeights[i].Weight
 	}
 }
 
@@ -326,8 +326,8 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 	//       (target_pool_weights - initial_pool_weights) / (duration)
 	//   t > start_time + duration: w(t) = target_pool_weights
 
-	// t <= blockTime
-	if params.StartTime.Before(blockTime) || params.StartTime.Equal(blockTime) {
+	// t <= StartTime
+	if blockTime.Before(params.StartTime) || params.StartTime.Equal(blockTime) {
 		// Do nothing
 		return
 	} else if blockTime.After(params.StartTime.Add(params.Duration)) {
@@ -338,6 +338,8 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 		pa.updateAllWeights(params.TargetPoolWeights)
 		// We've finished updating weights, so delete this parameter
 		pa.PoolParams.SmoothWeightChangeParams = nil
+		// fmt.Printf("%v\n", pa.PoolParams.SmoothWeightChangeParams)
+		// fmt.Printf("%v\n", pa.GetPoolParams().SmoothWeightChangeParams)
 		return
 	} else {
 		//	w(t) = initial_pool_weights + (t - start_time) *
