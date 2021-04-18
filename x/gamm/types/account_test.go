@@ -406,7 +406,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 		cases  []testCase
 	}{
 		{
-			// 1:1 pool, between test1 and test2
+			// 1:1 pool, between asset1 and asset2
 			// transitioning to a 1:2 pool
 			params: SmoothWeightChangeParams{
 				StartTime: defaultStartTime,
@@ -454,7 +454,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 			},
 		},
 		{
-			// 2:2 pool, between test1 and test2
+			// 2:2 pool, between asset1 and asset2
 			// transitioning to a 4:1 pool
 			params: SmoothWeightChangeParams{
 				StartTime: defaultStartTime,
@@ -497,7 +497,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 					expectedWeights: []sdk.Int{
 						// Quarter way between 2000000 & 4000000
 						sdk.NewInt(2500000),
-						// Quarter way between 1000000 & 2000000
+						// Quarter way between 2000000 & 1000000
 						sdk.NewInt(1750000),
 					},
 				},
