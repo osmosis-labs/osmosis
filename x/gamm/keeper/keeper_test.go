@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolPar
 			Weight: sdk.NewInt(300),
 			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
 		},
-	})
+	}, "")
 	suite.NoError(err)
 	return poolId
 }

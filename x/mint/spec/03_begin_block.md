@@ -16,7 +16,7 @@ will be lowered by `1 - reduction factor`.
 
 ```go
 func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
-    return m.EpochProvisions.Mul(params.ReductionFactorForEvent)
+    return m.EpochProvisions.Mul(params.ReductionFactor)
 }
 ```
 

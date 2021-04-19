@@ -148,7 +148,7 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative swap fee",
+			name: "negative swap fee",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolParams.SwapFee = sdk.NewDecWithPrec(-1, 2)
 				return msg
@@ -172,7 +172,7 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative exit fee",
+			name: "negative exit fee",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolParams.ExitFee = sdk.NewDecWithPrec(-1, 2)
 				return msg
@@ -194,6 +194,38 @@ func TestMsgCreatePool(t *testing.T) {
 				return msg
 			}),
 			expectPass: false,
+		},
+		{
+			name: "invalid governor",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGovernor = "invalid_cosmos_address"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "valid governor: lptoken and lock",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGovernor = "lptoken,1000h"
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "valid governor: just lock duration for pool token",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGovernor = "1000h"
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "valid governor: address",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.FuturePoolGovernor = "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
+				return msg
+			}),
+			expectPass: true,
 		},
 		{
 			name: "zero swap fee",
@@ -532,7 +564,7 @@ func TestMsgJoinPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative requirement",
+			name: "negative requirement",
 			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
 				msg.ShareOutAmount = sdk.NewInt(-10)
 				return msg
@@ -548,7 +580,7 @@ func TestMsgJoinPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative amount",
+			name: "negative amount",
 			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
 				msg.TokenInMaxs[1].Amount = sdk.NewInt(-10)
 				return msg
@@ -631,7 +663,7 @@ func TestMsgExitPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative requirement",
+			name: "negative requirement",
 			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
 				msg.ShareInAmount = sdk.NewInt(-10)
 				return msg
@@ -647,7 +679,7 @@ func TestMsgExitPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative amount",
+			name: "negative amount",
 			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
 				msg.TokenOutMins[1].Amount = sdk.NewInt(-10)
 				return msg
@@ -746,7 +778,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative amount",
+			name: "negative amount",
 			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
 				msg.TokenIn.Amount = sdk.NewInt(-10)
 				return msg
@@ -762,7 +794,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative criteria",
+			name: "negative criteria",
 			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
 				msg.ShareOutMinAmount = sdk.NewInt(-10)
 				return msg
@@ -846,7 +878,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative amount",
+			name: "negative amount",
 			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
 				msg.ShareOutAmount = sdk.NewInt(-10)
 				return msg
@@ -862,7 +894,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative criteria",
+			name: "negative criteria",
 			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
 				msg.TokenInMaxAmount = sdk.NewInt(-10)
 				return msg
@@ -945,7 +977,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative amount",
+			name: "negative amount",
 			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
 				msg.TokenOut.Amount = sdk.NewInt(-10)
 				return msg
@@ -961,7 +993,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative criteria",
+			name: "negative criteria",
 			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
 				msg.ShareInMaxAmount = sdk.NewInt(-10)
 				return msg
@@ -1045,7 +1077,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative amount",
+			name: "negative amount",
 			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
 				msg.ShareInAmount = sdk.NewInt(-10)
 				return msg
@@ -1061,7 +1093,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nagative criteria",
+			name: "negative criteria",
 			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
 				msg.TokenOutMinAmount = sdk.NewInt(-10)
 				return msg

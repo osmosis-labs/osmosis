@@ -10,18 +10,32 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/c-osmosis/osmosis/x/gamm/types";
 
 message PoolAsset {
-  // Denormalized weight.
-  string weight = 1 [
+  // Coins we are talking about,
+  // the denomination must be unique amongst all PoolAssets for this pool.
+  cosmos.base.v1beta1.Coin token = 1
+      [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
+  // Weight that is not normalized. This weight must be less than 2^32
+  string weight = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"denormalized_weight\"",
+    (gogoproto.moretags) = "yaml:\"weight\"",
     (gogoproto.nullable) = false
   ];
-  cosmos.base.v1beta1.Coin token = 2
-      [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
+
+  // Weight that is normalized s.t. the sum of all pool assets' weights equals 1.
+  // If the user provides this value, it is ignored. 
+  // This should only ever be set by the state machine.
+  // This is left as a TODO for a future PR.
+  // string normalizedWeight = 3 [
+  //  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  //  (gogoproto.moretags) = "yaml:\"normalized_weight\"",
+  //  (gogoproto.nullable) = true
+  // ];
 }
 
 // PoolParams defined the parameters that will be managed by the pool governance
 // in the future. This params are not managed by the chain governanace.
+// Instead they will be managed by the token holders of the pool.
+// The pool's token holders are specified in future_pool_governor.
 message PoolParams {
   // If the pool is locked, users can't join, exit or swap the pool.
   bool lock = 1;
@@ -51,17 +65,32 @@ message PoolAccount {
     (gogoproto.moretags) = "yaml:\"pool_params\"",
     (gogoproto.nullable) = false
   ];
-  string totalWeight = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"total_weight\"",
-    (gogoproto.nullable) = false
-  ];
+  // This string specifies who will govern the pool in the future.
+  // Valid forms of this are:
+  // {token name},{duration}
+  // {duration}
+  // where {token name} if specified is the token which determines the governor,
+  // and if not specified is the LP token for this pool.
+  // duration is a time specified as 0w,1w,2w, etc. which specifies how long the token
+  // would need to be locked up to count in governance. 0w means no lockup.
+  // TODO: Further improve these docs
+  string future_pool_governor = 4
+      [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
+  // sum of all LP tokens sent out
   cosmos.base.v1beta1.Coin totalShare = 5 [
     (gogoproto.moretags) = "yaml:\"total_share\"",
     (gogoproto.nullable) = false
   ];
+  // These are assumed to be sorted by denomiation. 
+  // They contain the pool asset and the information about the weight
   repeated PoolAsset poolAssets = 6 [
     (gogoproto.moretags) = "yaml:\"pool_assets\"",
+    (gogoproto.nullable) = false
+  ];
+  // sum of all non-normalized pool weights
+  string totalWeight = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"total_weight\"",
     (gogoproto.nullable) = false
   ];
 }

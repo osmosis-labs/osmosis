@@ -365,6 +365,11 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 		})
 	}
 
+	futureGovernor, err := fs.GetString(FlagFutureGovernor)
+	if err != nil {
+		return txf, nil, err
+	}
+
 	msg := &types.MsgCreatePool{
 		Sender: clientCtx.GetFromAddress().String(),
 		PoolParams: types.PoolParams{
@@ -372,7 +377,8 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 			SwapFee: swapFee,
 			ExitFee: exitFee,
 		},
-		PoolAssets: poolAssets,
+		PoolAssets:         poolAssets,
+		FuturePoolGovernor: futureGovernor,
 	}
 
 	return txf, msg, nil

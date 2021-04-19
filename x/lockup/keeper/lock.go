@@ -169,6 +169,26 @@ func (k Keeper) GetAccountLockedLongerDurationDenom(ctx sdk.Context, addr sdk.Ac
 	return combineLocks(notUnlockings, unlockings)
 }
 
+// GetLocksPastTimeDenom Returns the locks whose unlock time is beyond timestamp
+func (k Keeper) GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp time.Time) []types.PeriodLock {
+	// returns both unlocking started and not started assuming it started unlocking current time
+	unlockings := k.getLocksFromIterator(ctx, k.LockIteratorAfterTimeDenom(ctx, true, denom, timestamp))
+	duration := time.Duration(0)
+	if timestamp.After(ctx.BlockTime()) {
+		duration = timestamp.Sub(ctx.BlockTime())
+	}
+	notUnlockings := k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, false, denom, duration))
+	return combineLocks(notUnlockings, unlockings)
+}
+
+// GetLocksLongerThanDurationDenom Returns the locks whose unlock duration is longer than duration
+func (k Keeper) GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []types.PeriodLock {
+	// returns both unlocking started and not started
+	unlockings := k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, true, denom, duration))
+	notUnlockings := k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, false, denom, duration))
+	return combineLocks(notUnlockings, unlockings)
+}
+
 // GetLockByID Returns lock from lockID
 func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, error) {
 	lock := types.PeriodLock{}
