@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
+	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
 )
 
@@ -67,10 +67,9 @@ func (k Keeper) CreatePoolPots(ctx sdk.Context, poolId uint64) error {
 			sdk.Coins{},
 			lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.ByDuration,
-				// WARNING: Even if governance changes the minted denom in the params, it will not apply for pots that were created previously
-				Denom:     k.GetParams(ctx).MintedDenom,
-				Duration:  lockableDuration,
-				Timestamp: time.Time{},
+				Denom:         gammtypes.GetPoolShareDenom(poolId),
+				Duration:      lockableDuration,
+				Timestamp:     time.Time{},
 			},
 			// QUESTION: Should we set the startTime as the epoch start time that the modules share or the current block time?
 			ctx.BlockTime(),
