@@ -3,6 +3,7 @@ package keeper
 import (
 	"time"
 
+	"github.com/c-osmosis/osmosis/x/claim/types"
 	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
 	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,19 +12,19 @@ import (
 )
 
 func (k Keeper) AfterAddLiquidity(ctx sdk.Context, sender sdk.AccAddress) {
-	k.SetUserActionHistory(ctx, sender, 1)
+	k.SetUserActionHistory(ctx, sender, types.ActionAddLiquidity)
 }
 
 func (k Keeper) AfterSwap(ctx sdk.Context, sender sdk.AccAddress) {
-	k.SetUserActionHistory(ctx, sender, 2)
+	k.SetUserActionHistory(ctx, sender, types.ActionSwap)
 }
 
 func (k Keeper) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	k.SetUserActionHistory(ctx, voterAddr, 3)
+	k.SetUserActionHistory(ctx, voterAddr, types.ActionVote)
 }
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	k.SetUserActionHistory(ctx, delAddr, 4)
+	k.SetUserActionHistory(ctx, delAddr, types.ActionDelegateStake)
 }
 
 //_________________________________________________________________________________________

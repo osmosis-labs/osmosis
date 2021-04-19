@@ -8,6 +8,15 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/claim/types";
 
+enum Action {
+	option (gogoproto.goproto_enum_prefix) = false;
+  
+	ActionAddLiquidity = 0;
+	ActionSwap = 1;
+	ActionVote = 2;
+	ActionDelegateStake = 3;
+}
+
 // GenesisState defines the claim module's genesis state.
 message GenesisState {
   string airdrop_amount = 1
@@ -28,4 +37,5 @@ message GenesisState {
   ];
   repeated cosmos.bank.v1beta1.Balance claimables = 5
     [(gogoproto.nullable) = false];
+  repeated Action done_actions = 6;
 }

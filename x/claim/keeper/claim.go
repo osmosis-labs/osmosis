@@ -117,24 +117,24 @@ func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	return coins, nil
 }
 
-func (k Keeper) GetUserActionHistory(ctx sdk.Context, address sdk.AccAddress) []uint64 {
+func (k Keeper) GetUserActionHistory(ctx sdk.Context, address sdk.AccAddress) []types.Action {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ActionKey))
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 
-	actions := []uint64{}
+	actions := []types.Action{}
 	for ; iterator.Valid(); iterator.Next() {
 		actionType := sdk.BigEndianToUint64(iterator.Value())
-		actions = append(actions, actionType)
+		actions = append(actions, types.Action(actionType))
 	}
 	return actions
 }
 
-func (k Keeper) SetUserActionHistory(ctx sdk.Context, address sdk.AccAddress, actionType uint64) {
+func (k Keeper) SetUserActionHistory(ctx sdk.Context, address sdk.AccAddress, action types.Action) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ActionKey))
-	prefixStore.Set(sdk.Uint64ToBigEndian(actionType), sdk.Uint64ToBigEndian(actionType))
+	prefixStore.Set(sdk.Uint64ToBigEndian(uint64(action)), sdk.Uint64ToBigEndian(uint64(action)))
 }
 
 // FundRemainingsToCommunity fund remainings to the community when airdrop period end
