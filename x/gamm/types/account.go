@@ -346,16 +346,16 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 		//       (target_pool_weights - initial_pool_weights) / (duration)
 		// We first compute percent duration elapsed = (t - start_time) / duration, via Unix time.
 		shiftedBlockTime := blockTime.Sub(params.StartTime).Milliseconds()
-		percent_duration_elapsed := sdk.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
+		percentDurationElapsed := sdk.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
 		// If the duration elapsed is equal to the total time,
 		// or a rounding error makes it seem like it is, just set to target weight
-		if percent_duration_elapsed.GTE(sdk.OneDec()) {
+		if percentDurationElapsed.GTE(sdk.OneDec()) {
 			pa.updateAllWeights(params.TargetPoolWeights)
 			return
 		}
 		totalWeightsDiff := subPoolAssetWeights(params.TargetPoolWeights, params.InitialPoolWeights)
 		// Below will be auto-truncated according to internal weight precision routine.
-		scaledDiff := poolAssetsMulDec(totalWeightsDiff, percent_duration_elapsed)
+		scaledDiff := poolAssetsMulDec(totalWeightsDiff, percentDurationElapsed)
 		updatedWeights := addPoolAssetWeights(params.InitialPoolWeights, scaledDiff)
 		pa.updateAllWeights(updatedWeights)
 	}
