@@ -55,6 +55,7 @@ func ValidateFutureGovernor(governor string) error {
 		lockTimeStr = splits[0]
 	}
 
+	// Note that a duration of 0 is allowed
 	_, err = time.ParseDuration(lockTimeStr)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
