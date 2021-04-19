@@ -20,8 +20,6 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	poolAcc.PokeTokenWeights(ctx.BlockTime())
-
 	if poolAcc.GetPoolParams().Lock {
 		return sdk.Int{}, sdk.Dec{}, types.ErrPoolLocked
 	}
@@ -121,8 +119,6 @@ func (k Keeper) SwapExactAmountOut(
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
-
-	poolAcc.PokeTokenWeights(ctx.BlockTime())
 
 	if poolAcc.GetPoolParams().Lock {
 		return sdk.Int{}, sdk.Dec{}, types.ErrPoolLocked

@@ -19,6 +19,8 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolAccountI, err
 		return nil, sdkerrors.Wrapf(types.ErrPoolNotFound, "pool %d does not exist", poolId)
 	}
 
+	poolAcc.PokeTokenWeights(ctx.BlockTime())
+
 	return poolAcc, nil
 }
 
