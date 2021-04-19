@@ -22,6 +22,18 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
 	require.Equal(t, expected.String(), pool.GetTotalWeight().String())
 }
 
+func TestPoolAccountShareDenom(t *testing.T) {
+	var poolId uint64 = 10
+
+	pacc := NewPoolAccount(poolId, PoolParams{
+		Lock:    false,
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
+	}, "")
+
+	require.Equal(t, "gamm/pool/10", pacc.GetTotalShare().Denom)
+}
+
 func TestPoolAccountPoolParams(t *testing.T) {
 	// Tests that creating a pool with the given pair of swapfee and exit fee
 	// errors or succeeds as intended. Furthermore, it checks that
@@ -620,7 +632,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
   future_pool_governor: ""
   total_weight: "300"
   total_share:
-    denom: osmosis/pool/10
+    denom: gamm/pool/10
     amount: "0"
   pool_assets:
   - token:
