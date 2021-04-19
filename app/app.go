@@ -24,6 +24,7 @@ import (
 	mintkeeper "github.com/c-osmosis/osmosis/x/mint/keeper"
 	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
 	poolincentives "github.com/c-osmosis/osmosis/x/pool-incentives"
+	poolincentivesclient "github.com/c-osmosis/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/c-osmosis/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/c-osmosis/osmosis/x/pool-incentives/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -118,6 +119,7 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+			poolincentivesclient.AddPoolIncentivesHandler, poolincentivesclient.EditPoolIncentivesHandler, poolincentivesclient.RemovePoolIncentiveHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
