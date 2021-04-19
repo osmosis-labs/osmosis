@@ -4,6 +4,9 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type GammHooks interface {
 	AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64)
+	AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int)
+	AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins)
+	AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins)
 }
 
 var _ GammHooks = MultiGammHooks{}
@@ -18,5 +21,23 @@ func NewMultiGammHooks(hooks ...GammHooks) MultiGammHooks {
 func (h MultiGammHooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
 	for i := range h {
 		h[i].AfterPoolCreated(ctx, sender, poolId)
+	}
+}
+
+func (h MultiGammHooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+	for i := range h {
+		h[i].AfterJoinPool(ctx, sender, poolId, enterCoins, shareOutAmount)
+	}
+}
+
+func (h MultiGammHooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+	for i := range h {
+		h[i].AfterExitPool(ctx, sender, poolId, shareInAmount, exitCoins)
+	}
+}
+
+func (h MultiGammHooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+	for i := range h {
+		h[i].AfterSwap(ctx, sender, poolId, input, output)
 	}
 }
