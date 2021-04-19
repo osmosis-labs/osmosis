@@ -232,7 +232,7 @@ func NewOsmosisApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gammtypes.StoreKey, incentivestypes.StoreKey, lockuptypes.StoreKey,
+		gammtypes.StoreKey, incentivestypes.StoreKey, lockuptypes.StoreKey, poolincentivestypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -325,7 +325,7 @@ func NewOsmosisApp(
 		app.GetSubspace(poolincentivestypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.IncentivesKeeper,
+		incentivesKeeper,
 		app.DistrKeeper,
 		distrtypes.ModuleName,
 		authtypes.FeeCollectorName,
