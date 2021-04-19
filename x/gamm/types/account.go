@@ -62,7 +62,7 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGovernor string)
 		Id:                 poolId,
 		PoolParams:         poolParams,
 		TotalWeight:        sdk.ZeroInt(),
-		TotalShare:         sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
+		TotalShare:         sdk.NewCoin(GetPoolShareDenom(poolId), sdk.ZeroInt()),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
