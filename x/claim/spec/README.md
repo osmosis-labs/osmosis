@@ -28,6 +28,11 @@ Each action is defined in enum in implementation
 ```
 All of these actions are monitored by registring claim **hooks** to governance, staking, gamm, lockup modules hooks.
 
+### User withdrawables
+```
+user_withdrawables = user_claimables x (percentage_accomplished_actions - percentage_withdrawn_actions)
+```
+
 ### User withdrawn actions
 A user can't withdraw twice for single action type, example `Vote`. To withdraw all, they need to do every action.
 To do this, claim module manage withdrawn actions flag. It's using same strategy as user actions, but only count the actions that user has already withdrawn.
