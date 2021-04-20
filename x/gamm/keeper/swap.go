@@ -104,6 +104,8 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
+	k.hooks.AfterSwap(ctx, sender, poolAcc.GetId(), sdk.Coins{tokenIn}, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
+
 	return tokenOutAmount, spotPriceAfter, nil
 }
 
@@ -200,6 +202,8 @@ func (k Keeper) SwapExactAmountOut(
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
+
+	k.hooks.AfterSwap(ctx, sender, poolAcc.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, sdk.Coins{tokenOut})
 
 	return tokenInAmount, spotPriceAfter, nil
 }

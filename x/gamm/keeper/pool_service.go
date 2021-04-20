@@ -92,7 +92,7 @@ func (k Keeper) CreatePool(
 		return 0, err
 	}
 
-	k.hooks.AfterPoolCreated(ctx, poolAcc.GetId())
+	k.hooks.AfterPoolCreated(ctx, sender, poolAcc.GetId())
 
 	return poolAcc.GetId(), nil
 }
@@ -167,6 +167,8 @@ func (k Keeper) JoinPool(
 		return err
 	}
 
+	k.hooks.AfterJoinPool(ctx, sender, poolAcc.GetId(), coins, shareOutAmount)
+
 	return nil
 }
 
@@ -228,6 +230,8 @@ func (k Keeper) JoinSwapExternAmountIn(
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
+	k.hooks.AfterJoinPool(ctx, sender, poolAcc.GetId(), sdk.Coins{tokenIn}, shareOutAmount)
 
 	return shareOutAmount, nil
 }
@@ -291,6 +295,8 @@ func (k Keeper) JoinSwapShareAmountOut(
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
+	k.hooks.AfterJoinPool(ctx, sender, poolAcc.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, shareOutAmount)
 
 	return shareOutAmount, nil
 }
@@ -380,6 +386,8 @@ func (k Keeper) ExitPool(
 		return err
 	}
 
+	k.hooks.AfterExitPool(ctx, sender, poolAcc.GetId(), shareInAmount, coins)
+
 	return nil
 }
 
@@ -460,6 +468,8 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
+	k.hooks.AfterExitPool(ctx, sender, poolAcc.GetId(), shareInAmount, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
+
 	return tokenOutAmount, nil
 }
 
@@ -538,6 +548,8 @@ func (k Keeper) ExitSwapExternAmountOut(
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
+	k.hooks.AfterExitPool(ctx, sender, poolAcc.GetId(), shareInAmount, sdk.Coins{tokenOut})
 
 	return shareInAmount, nil
 }
