@@ -32,13 +32,33 @@ func (k Keeper) SetClaimables(ctx sdk.Context, balances []banktypes.Balance) err
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimableStoreKey))
 	for _, bal := range balances {
-		bz, err := bal.Coins.MarshalJSON()
-		if err != nil {
-			return err
-		}
-		prefixStore.Set([]byte(bal.Address), bz)
+		prefixStore.Set([]byte(bal.Address), []byte(bal.Coins.String()))
 	}
 	return nil
+}
+
+// GetClaimables get claimables for genesis export
+func (k Keeper) GetClaimables(ctx sdk.Context) []banktypes.Balance {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, []byte(types.ClaimableStoreKey))
+
+	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	balances := []banktypes.Balance{}
+	for ; iterator.Valid(); iterator.Next() {
+		coins, err := sdk.ParseCoinsNormalized(string(iterator.Value()))
+		if err != nil {
+			panic(err)
+		}
+		addrBz := iterator.Key()[len(types.ClaimableStoreKey):]
+		addr := sdk.AccAddress(addrBz)
+		balances = append(balances, banktypes.Balance{
+			Address: addr.String(),
+			Coins:   coins,
+		})
+	}
+	return balances
 }
 
 // GetClaimable returns claimable amount for an address
@@ -90,9 +110,31 @@ func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	return claimableCoins, nil
 }
 
+// GetClaimablesByActivity returns the withdrawal amount from users' airdrop amount and activity made
+func (k Keeper) GetWithdrawableByActivity(ctx sdk.Context, addr string) (sdk.Coins, error) {
+	address, err := sdk.AccAddressFromBech32(addr)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	coins, err := k.GetClaimable(ctx, addr)
+	if err != nil {
+		return coins, err
+	}
+	percentage := k.GetClaimablePercentageByActivity(ctx, address)
+	withdrawable := sdk.Coins{}
+	for _, coin := range coins {
+		amount := coin.Amount.ToDec().Mul(percentage).RoundInt()
+		if amount.IsPositive() {
+			withdrawable = withdrawable.Add(sdk.NewCoin(coin.Denom, amount))
+		}
+	}
+	return withdrawable, nil
+}
+
 // ClaimCoins remove claimable amount entry and transfer it to user's account
 func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
-	coins, err := k.GetClaimable(ctx, addr)
+	coins, err := k.GetWithdrawableByActivity(ctx, addr)
 	if err != nil {
 		return coins, err
 	}
@@ -102,10 +144,7 @@ func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	}
 
 	k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, coins)
-
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(types.ClaimableStoreKey))
-	prefixStore.Delete([]byte(addr))
+	k.SetUserWithdrawnActions(ctx, address, k.GetUserActions(ctx, address))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -115,26 +154,6 @@ func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 		),
 	})
 	return coins, nil
-}
-
-func (k Keeper) GetUserActionHistory(ctx sdk.Context, address sdk.AccAddress) []types.Action {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(types.ActionKey))
-	iterator := prefixStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	actions := []types.Action{}
-	for ; iterator.Valid(); iterator.Next() {
-		actionType := sdk.BigEndianToUint64(iterator.Value())
-		actions = append(actions, types.Action(actionType))
-	}
-	return actions
-}
-
-func (k Keeper) SetUserActionHistory(ctx sdk.Context, address sdk.AccAddress, action types.Action) {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(types.ActionKey))
-	prefixStore.Set(sdk.Uint64ToBigEndian(uint64(action)), sdk.Uint64ToBigEndian(uint64(action)))
 }
 
 // FundRemainingsToCommunity fund remainings to the community when airdrop period end

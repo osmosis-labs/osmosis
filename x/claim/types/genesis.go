@@ -4,7 +4,10 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
+
+type Actions []Action
 
 // DefaultIndex is the default capability global index
 const DefaultIndex uint64 = 1
@@ -16,6 +19,8 @@ func DefaultGenesis() *GenesisState {
 		AirdropStart:       time.Now(),
 		DurationUntilDecay: time.Hour * 24 * 30,     // 1 month
 		DurationOfDecay:    time.Hour * 24 * 30 * 5, // 5 months
+		Claimables:         []banktypes.Balance{},
+		Activities:         []UserActivities{},
 	}
 }
 

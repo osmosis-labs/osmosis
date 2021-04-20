@@ -12,19 +12,19 @@ import (
 )
 
 func (k Keeper) AfterAddLiquidity(ctx sdk.Context, sender sdk.AccAddress) {
-	k.SetUserActionHistory(ctx, sender, types.ActionAddLiquidity)
+	k.SetUserAction(ctx, sender, types.ActionAddLiquidity)
 }
 
 func (k Keeper) AfterSwap(ctx sdk.Context, sender sdk.AccAddress) {
-	k.SetUserActionHistory(ctx, sender, types.ActionSwap)
+	k.SetUserAction(ctx, sender, types.ActionSwap)
 }
 
 func (k Keeper) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	k.SetUserActionHistory(ctx, voterAddr, types.ActionVote)
+	k.SetUserAction(ctx, voterAddr, types.ActionVote)
 }
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	k.SetUserActionHistory(ctx, delAddr, types.ActionDelegateStake)
+	k.SetUserAction(ctx, delAddr, types.ActionDelegateStake)
 }
 
 //_________________________________________________________________________________________

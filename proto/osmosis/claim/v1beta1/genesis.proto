@@ -17,6 +17,17 @@ enum Action {
 	ActionDelegateStake = 3;
 }
 
+message UserActivities {
+  string user = 1;
+  repeated Action actions = 2 [(gogoproto.nullable) = false];
+  repeated Action withdrawn = 3 [(gogoproto.nullable) = false];
+}
+
+message UserActivity {
+  string user = 1;
+  Action action = 2;
+}
+
 // GenesisState defines the claim module's genesis state.
 message GenesisState {
   string airdrop_amount = 1
@@ -37,5 +48,5 @@ message GenesisState {
   ];
   repeated cosmos.bank.v1beta1.Balance claimables = 5
     [(gogoproto.nullable) = false];
-  repeated Action done_actions = 6;
+  repeated UserActivities activities = 6[(gogoproto.nullable) = false];
 }
