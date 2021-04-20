@@ -1,0 +1,8 @@
+syntax = "proto3";
+package c-osmosis.osmosis.epochs;
+
+option go_package = "github.com/c-osmosis/osmosis/x/epochs/types";
+
+// GenesisState defines the epochs module's genesis state.
+message GenesisState {
+}
