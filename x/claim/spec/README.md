@@ -29,6 +29,7 @@ Each action is defined in enum in implementation
 All of these actions are monitored by registring claim **hooks** to governance, staking, gamm, lockup modules hooks.
 
 ### User withdrawables
+It is how much a user can withraw now.
 ```
 user_withdrawables = user_claimables x (percentage_accomplished_actions - percentage_withdrawn_actions)
 ```
