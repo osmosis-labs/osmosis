@@ -201,6 +201,76 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimable() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestCmdQueryWithdrawable() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name  string
+		args  []string
+		coins sdk.Coins
+	}{
+		{
+			"query withdrawable amount",
+			[]string{
+				addr2.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryWithdrawable()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result types.WithdrawableResponse
+			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().Equal(tc.coins.String(), sdk.Coins(result.Coins).String())
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdQueryActivities() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name  string
+		args  []string
+		coins sdk.Coins
+	}{
+		{
+			"query activities amount",
+			[]string{
+				addr2.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryActivities()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result types.ActivitiesResponse
+			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().Equal(tc.coins.String(), sdk.Coins(result.Coins).String())
+		})
+	}
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
