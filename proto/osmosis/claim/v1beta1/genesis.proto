@@ -19,8 +19,8 @@ enum Action {
 
 message UserActivities {
   string user = 1;
-  repeated Action actions = 2 [(gogoproto.nullable) = false];
-  repeated Action withdrawn = 3 [(gogoproto.nullable) = false];
+  repeated Action actions = 2;
+  repeated Action withdrawn = 3;
 }
 
 message UserActivity {

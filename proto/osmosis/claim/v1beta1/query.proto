@@ -12,6 +12,12 @@ service Query {
   rpc Claimable(ClaimableRequest) returns (ClaimableResponse) {
     option (google.api.http).get = "/osmosis/claimable/v1beta1/{sender}";
   }
+  rpc Withdrawable(WithdrawableRequest) returns (WithdrawableResponse) {
+    option (google.api.http).get = "/osmosis/withdrawable/v1beta1/{sender}";
+  }
+  rpc Activities(ActivitiesRequest) returns (ActivitiesResponse) {
+    option (google.api.http).get = "/osmosis/activites/v1beta1/{sender}";
+  }
 }
 
 message ClaimableRequest {
@@ -23,4 +29,26 @@ message ClaimableResponse {
     (gogoproto.moretags) = "yaml:\"coins\"",
     (gogoproto.nullable) = false
   ];
+}
+
+message WithdrawableRequest {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message WithdrawableResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message ActivitiesRequest {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message ActivitiesResponse {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated string all = 2;
+  repeated string completed = 3;
+  repeated string not_completed = 4;
 }
