@@ -19,7 +19,7 @@ The purpose of `epochs` module is to provide generalized epoch interface to othe
 type Keeper interface {
 	// CreateEpochCounter Returns full balance of the module
   // All of these epoch counters could be set on epoch module's genesis
-  // if startTime is not set, we could use genesisTime - ctx.BlockTime at the time of InitChain
+  // if startTime is not set, we could use genesisTime (ctx.BlockTime) at the time of InitChain
 	CreateEpochCounter(ctx sdk.Context, epochIdentifier string, duration time.Duration, startTime time.Time)
 }
 ```
