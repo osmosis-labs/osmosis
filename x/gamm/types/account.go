@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
@@ -20,7 +21,6 @@ type PoolAccountI interface {
 
 	GetId() uint64
 	GetPoolParams() PoolParams
-	SetPoolParams(params PoolParams)
 	GetTotalWeight() sdk.Int
 	GetTotalShare() sdk.Coin
 	AddTotalShare(amt sdk.Int)
@@ -32,7 +32,7 @@ type PoolAccountI interface {
 	GetPoolAssets(denoms ...string) ([]PoolAsset, error)
 	SetPoolAssets(assets []PoolAsset) error
 	GetAllPoolAssets() []PoolAsset
-	SetTokenWeight(denom string, weight sdk.Int) error
+	PokeTokenWeights(blockTime time.Time)
 	GetTokenWeight(denom string) (sdk.Int, error)
 	SetTokenBalance(denom string, amount sdk.Int) error
 	GetTokenBalance(denom string) (sdk.Int, error)
@@ -62,7 +62,7 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGovernor string)
 		Id:                 poolId,
 		PoolParams:         poolParams,
 		TotalWeight:        sdk.ZeroInt(),
-		TotalShare:         sdk.NewCoin(fmt.Sprintf("osmosis/pool/%d", poolId), sdk.ZeroInt()),
+		TotalShare:         sdk.NewCoin(GetPoolShareDenom(poolId), sdk.ZeroInt()),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
@@ -94,11 +94,6 @@ func (pa PoolAccount) GetId() uint64 {
 
 func (pa PoolAccount) GetPoolParams() PoolParams {
 	return pa.PoolParams
-}
-
-func (pa *PoolAccount) SetPoolParams(params PoolParams) {
-	pa.PoolParams = params
-	return
 }
 
 func (pa PoolAccount) GetTotalWeight() sdk.Int {
@@ -147,7 +142,7 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 	}
 
 	// TODO: Change this to a more efficient sorted insert algorithm.
-	// Furthermore, consider changing the underlying data type to allow im-place modification if the
+	// Furthermore, consider changing the underlying data type to allow in-place modification if the
 	// number of PoolAssets is expected to be large.
 	pa.PoolAssets = append(pa.PoolAssets, PoolAssets...)
 	sort.Slice(pa.PoolAssets, func(i, j int) bool {
@@ -283,15 +278,89 @@ func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
 	return copyslice
 }
 
-func (pa *PoolAccount) SetTokenWeight(denom string, weight sdk.Int) error {
-	PoolAsset, err := pa.GetPoolAsset(denom)
-	if err != nil {
-		return err
+// updateAllWeights updates all of the pool's internal weights to be equal to
+// the new weights. It assumes that `newWeights` are sorted by denomination,
+// and only contain the same denominations as the pool already contains.
+// This does not affect the asset balances.
+// If any of the above are not satisfied, this will panic.
+// (As all input to this should be generated from the state machine)
+// TODO: (post-launch) If newWeights includes a new denomination,
+// add the balance as well to the pool's internal measurements.
+// TODO: (post-launch) If newWeights excludes an existing denomination,
+// remove the weight from the pool, and figure out something to do
+// with any remaining coin.
+func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
+	if len(pa.PoolAssets) != len(newWeights) {
+		panic("updateAllWeights called with invalid input, len(newWeights) != len(existingWeights)")
+	}
+	for i, asset := range pa.PoolAssets {
+		if asset.Token.Denom != newWeights[i].Token.Denom {
+			panic(fmt.Sprintf("updateAllWeights called with invalid input, "+
+				"expected new weights' %vth asset to be %v, got %v",
+				i, asset.Token.Denom, newWeights[i].Token.Denom))
+		}
+		err := newWeights[i].ValidateWeight()
+		if err != nil {
+			panic("updateAllWeights: Tried to set an invalid weight")
+		}
+		pa.PoolAssets[i].Weight = newWeights[i].Weight
+	}
+}
+
+// PokeTokenWeights checks to see if the pool's token weights need to be updated,
+// and if so, does so.
+func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
+	// Pool weights aren't changing, do nothing.
+	poolWeightsChanging := (pa.PoolParams.SmoothWeightChangeParams != nil)
+	if !poolWeightsChanging {
+		return
+	}
+	// Pool weights are changing.
+	// TODO: Add intra-block cache check that we haven't already poked
+	// the block yet.
+	params := *pa.PoolParams.SmoothWeightChangeParams
+	// the weights w(t) for the pool at time `t` is the following:
+	//   t <= start_time: w(t) = initial_pool_weights
+	//   start_time < t <= start_time + duration:
+	//     w(t) = initial_pool_weights + (t - start_time) *
+	//       (target_pool_weights - initial_pool_weights) / (duration)
+	//   t > start_time + duration: w(t) = target_pool_weights
+
+	// t <= StartTime
+	if blockTime.Before(params.StartTime) || params.StartTime.Equal(blockTime) {
+		// Do nothing
+		return
+	} else if blockTime.After(params.StartTime.Add(params.Duration)) {
+		// t > start_time + duration
+		// Update weights to be the target weights.
+		// TODO: When we add support for adding new assets via this method,
+		// 		 Ensure the new asset has some token sent with it.
+		pa.updateAllWeights(params.TargetPoolWeights)
+		// We've finished updating weights, so delete this parameter
+		// TODO: This line doesn't work, since this is a non-pointer receiever,
+		// and pa.PoolParams gets copied.
+		pa.PoolParams.SmoothWeightChangeParams = nil
+		return
+	} else {
+		//	w(t) = initial_pool_weights + (t - start_time) *
+		//       (target_pool_weights - initial_pool_weights) / (duration)
+		// We first compute percent duration elapsed = (t - start_time) / duration, via Unix time.
+		shiftedBlockTime := blockTime.Sub(params.StartTime).Milliseconds()
+		percentDurationElapsed := sdk.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
+		// If the duration elapsed is equal to the total time,
+		// or a rounding error makes it seem like it is, just set to target weight
+		if percentDurationElapsed.GTE(sdk.OneDec()) {
+			pa.updateAllWeights(params.TargetPoolWeights)
+			return
+		}
+		totalWeightsDiff := subPoolAssetWeights(params.TargetPoolWeights, params.InitialPoolWeights)
+		// Below will be auto-truncated according to internal weight precision routine.
+		scaledDiff := poolAssetsMulDec(totalWeightsDiff, percentDurationElapsed)
+		updatedWeights := addPoolAssetWeights(params.InitialPoolWeights, scaledDiff)
+		pa.updateAllWeights(updatedWeights)
 	}
 
-	PoolAsset.Weight = weight
-
-	return pa.SetPoolAsset(denom, PoolAsset)
+	return
 }
 
 func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
@@ -338,15 +407,16 @@ func (pa PoolAccount) SetSequence(seq uint64) error {
 }
 
 type poolAccountPretty struct {
-	Address       sdk.AccAddress `json:"address" yaml:"address"`
-	PubKey        string         `json:"public_key" yaml:"public_key"`
-	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
-	Sequence      uint64         `json:"sequence" yaml:"sequence"`
-	Id            uint64         `json:"id" yaml:"id"`
-	PoolParams    PoolParams     `json:"pool_params" yaml:"pool_params"`
-	TotalWeight   sdk.Int        `json:"total_weight" yaml:"total_weight"`
-	TotalShare    sdk.Coin       `json:"total_share" yaml:"total_share"`
-	PoolAssets    []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
+	Address            sdk.AccAddress `json:"address" yaml:"address"`
+	PubKey             string         `json:"public_key" yaml:"public_key"`
+	AccountNumber      uint64         `json:"account_number" yaml:"account_number"`
+	Sequence           uint64         `json:"sequence" yaml:"sequence"`
+	Id                 uint64         `json:"id" yaml:"id"`
+	PoolParams         PoolParams     `json:"pool_params" yaml:"pool_params"`
+	FuturePoolGovernor string         `json:"future_pool_governor" yaml:"future_pool_governor"`
+	TotalWeight        sdk.Int        `json:"total_weight" yaml:"total_weight"`
+	TotalShare         sdk.Coin       `json:"total_share" yaml:"total_share"`
+	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
 
 func (pa PoolAccount) String() string {
@@ -362,14 +432,15 @@ func (pa PoolAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	bs, err := yaml.Marshal(poolAccountPretty{
-		Address:       accAddr,
-		PubKey:        "",
-		AccountNumber: pa.AccountNumber,
-		Id:            pa.Id,
-		PoolParams:    pa.PoolParams,
-		TotalWeight:   pa.TotalWeight,
-		TotalShare:    pa.TotalShare,
-		PoolAssets:    pa.PoolAssets,
+		Address:            accAddr,
+		PubKey:             "",
+		AccountNumber:      pa.AccountNumber,
+		Id:                 pa.Id,
+		PoolParams:         pa.PoolParams,
+		FuturePoolGovernor: pa.FuturePoolGovernor,
+		TotalWeight:        pa.TotalWeight,
+		TotalShare:         pa.TotalShare,
+		PoolAssets:         pa.PoolAssets,
 	})
 
 	if err != nil {
@@ -387,14 +458,15 @@ func (pa PoolAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(poolAccountPretty{
-		Address:       accAddr,
-		PubKey:        "",
-		AccountNumber: pa.AccountNumber,
-		Id:            pa.Id,
-		PoolParams:    pa.PoolParams,
-		TotalWeight:   pa.TotalWeight,
-		TotalShare:    pa.TotalShare,
-		PoolAssets:    pa.PoolAssets,
+		Address:            accAddr,
+		PubKey:             "",
+		AccountNumber:      pa.AccountNumber,
+		Id:                 pa.Id,
+		PoolParams:         pa.PoolParams,
+		FuturePoolGovernor: pa.FuturePoolGovernor,
+		TotalWeight:        pa.TotalWeight,
+		TotalShare:         pa.TotalShare,
+		PoolAssets:         pa.PoolAssets,
 	})
 }
 
@@ -408,6 +480,7 @@ func (pa *PoolAccount) UnmarshalJSON(bz []byte) error {
 	pa.BaseAccount = authtypes.NewBaseAccount(alias.Address, nil, alias.AccountNumber, alias.Sequence)
 	pa.Id = alias.Id
 	pa.PoolParams = alias.PoolParams
+	pa.FuturePoolGovernor = alias.FuturePoolGovernor
 	pa.TotalWeight = alias.TotalWeight
 	pa.TotalShare = alias.TotalShare
 	pa.PoolAssets = alias.PoolAssets

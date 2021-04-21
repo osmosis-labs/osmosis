@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
@@ -19,6 +20,18 @@ var (
 
 func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
 	require.Equal(t, expected.String(), pool.GetTotalWeight().String())
+}
+
+func TestPoolAccountShareDenom(t *testing.T) {
+	var poolId uint64 = 10
+
+	pacc := NewPoolAccount(poolId, PoolParams{
+		Lock:    false,
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
+	}, "")
+
+	require.Equal(t, "gamm/pool/10", pacc.GetTotalShare().Denom)
 }
 
 func TestPoolAccountPoolParams(t *testing.T) {
@@ -381,6 +394,206 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 	require.Equal(t, sdk.NewInt(301).String(), pacc.GetTotalWeight().String())
 }
 
+func TestPoolAccountPokeTokenWeights(t *testing.T) {
+	// Set default date
+	defaultStartTime := time.Unix(1618703511, 0)
+	defaultStartTimeUnix := defaultStartTime.Unix()
+	defaultDuration := 100 * time.Second
+
+	// testCases don't need to be ordered by time. but the blockTime should be
+	// less than the end time of the SmoothWeightChange. Testing past the end time
+	// is already handled.
+	type testCase struct {
+		blockTime       time.Time
+		expectedWeights []sdk.Int
+	}
+
+	// Tests how the pool weights get updated via PokeTokenWeights at different block times.
+	// The framework underneath will automatically add tests for times before the start time,
+	// at the start time, at the end time, and after the end time. It is up to the test writer to
+	// test the behavior at times in-between.
+	tests := []struct {
+		// We take the initial weights from here
+		params SmoothWeightChangeParams
+		cases  []testCase
+	}{
+		{
+			// 1:1 pool, between asset1 and asset2
+			// transitioning to a 1:2 pool
+			params: SmoothWeightChangeParams{
+				StartTime: defaultStartTime,
+				Duration:  defaultDuration,
+				InitialPoolWeights: []PoolAsset{
+					{
+						Weight: sdk.NewInt(1 * 1000000),
+						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
+					},
+					{
+						Weight: sdk.NewInt(1 * 1000000),
+						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
+					},
+				},
+				TargetPoolWeights: []PoolAsset{
+					{
+						Weight: sdk.NewInt(1 * 1000000),
+						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
+					},
+					{
+						Weight: sdk.NewInt(2 * 1000000),
+						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
+					},
+				},
+			},
+			cases: []testCase{
+				{
+					// Halfway through at 50 seconds elapsed
+					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
+					expectedWeights: []sdk.Int{
+						sdk.NewInt(1 * 1000000),
+						// Halfway between 1000000 & 2000000
+						sdk.NewInt(1500000),
+					},
+				},
+				{
+					// Quarter way through at 25 seconds elapsed
+					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
+					expectedWeights: []sdk.Int{
+						sdk.NewInt(1 * 1000000),
+						// Quarter way between 1000000 & 2000000
+						sdk.NewInt(1250000),
+					},
+				},
+			},
+		},
+		{
+			// 2:2 pool, between asset1 and asset2
+			// transitioning to a 4:1 pool
+			params: SmoothWeightChangeParams{
+				StartTime: defaultStartTime,
+				Duration:  defaultDuration,
+				InitialPoolWeights: []PoolAsset{
+					{
+						Weight: sdk.NewInt(2 * 1000000),
+						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
+					},
+					{
+						Weight: sdk.NewInt(2 * 1000000),
+						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
+					},
+				},
+				TargetPoolWeights: []PoolAsset{
+					{
+						Weight: sdk.NewInt(4 * 1000000),
+						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
+					},
+					{
+						Weight: sdk.NewInt(1 * 1000000),
+						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
+					},
+				},
+			},
+			cases: []testCase{
+				{
+					// Halfway through at 50 seconds elapsed
+					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
+					expectedWeights: []sdk.Int{
+						// Halfway between 2000000 & 4000000
+						sdk.NewInt(3 * 1000000),
+						// Halfway between 1000000 & 2000000
+						sdk.NewInt(1500000),
+					},
+				},
+				{
+					// Quarter way through at 25 seconds elapsed
+					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
+					expectedWeights: []sdk.Int{
+						// Quarter way between 2000000 & 4000000
+						sdk.NewInt(2500000),
+						// Quarter way between 2000000 & 1000000
+						sdk.NewInt(1750000),
+					},
+				},
+			},
+		},
+	}
+
+	// Add test cases at a time before the start, the start, the end, and a time after the end.
+	addDefaultCases := func(params SmoothWeightChangeParams, cases []testCase) []testCase {
+		// Set times one second before the start, and one second after the end
+		timeBeforeWeightChangeStart := time.Unix(params.StartTime.Unix()-1, 0)
+		timeAtWeightChangeEnd := params.StartTime.Add(params.Duration)
+		timeAfterWeightChangeEnd := time.Unix(timeAtWeightChangeEnd.Unix()+1, 0)
+		initialWeights := make([]sdk.Int, len(params.InitialPoolWeights))
+		finalWeights := make([]sdk.Int, len(params.TargetPoolWeights))
+		for i, v := range params.InitialPoolWeights {
+			initialWeights[i] = v.Weight
+		}
+		for i, v := range params.TargetPoolWeights {
+			finalWeights[i] = v.Weight
+		}
+		// Set the test cases for times before the start, and the start
+		updatedCases := []testCase{
+			{
+				blockTime:       timeBeforeWeightChangeStart,
+				expectedWeights: initialWeights,
+			},
+			{
+				blockTime:       params.StartTime,
+				expectedWeights: initialWeights,
+			},
+		}
+		// Append the provided cases
+		updatedCases = append(updatedCases, cases...)
+		finalCases := []testCase{
+			{
+				blockTime:       timeAtWeightChangeEnd,
+				expectedWeights: finalWeights,
+			},
+			{
+				blockTime:       timeAfterWeightChangeEnd,
+				expectedWeights: finalWeights,
+			},
+		}
+		// Append the final cases
+		updatedCases = append(updatedCases, finalCases...)
+		return updatedCases
+	}
+
+	for poolNum, tc := range tests {
+		paramsCopy := tc.params
+		// Initialize pool
+		pacc := NewPoolAccount(uint64(poolNum), PoolParams{
+			Lock:                     false,
+			SwapFee:                  defaultSwapFee,
+			ExitFee:                  defaultExitFee,
+			SmoothWeightChangeParams: &tc.params,
+		}, "future_pool_governor")
+		// Add assets according to start weight
+		for _, asset := range paramsCopy.InitialPoolWeights {
+			assetCopy := PoolAsset{
+				Weight: asset.Weight,
+				Token:  sdk.NewInt64Coin(asset.Token.Denom, 10000),
+			}
+			pacc.AddPoolAssets([]PoolAsset{assetCopy})
+		}
+		require.NotNil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
+
+		testCases := addDefaultCases(paramsCopy, tc.cases)
+		for caseNum, testCase := range testCases {
+			pacc.PokeTokenWeights(testCase.blockTime)
+			for assetNum, asset := range pacc.GetAllPoolAssets() {
+				require.Equal(t, testCase.expectedWeights[assetNum], asset.Weight,
+					"Didn't get the expected weights, poolNumber %v, caseNumber %v, assetNumber %v",
+					poolNum, caseNum, assetNum)
+			}
+		}
+		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
+		// TODO: This doesn't work due to PokeTokenWeights having a non-pointer receiver =/
+		// require.Nil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
+	}
+
+}
+
 func TestPoolAccountMarshalYAML(t *testing.T) {
 	var poolId uint64 = 10
 
@@ -415,9 +628,11 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
     lock: false
     swap_fee: "0.025000000000000000"
     exit_fee: "0.025000000000000000"
+    smooth_weight_change_params: null
+  future_pool_governor: ""
   total_weight: "300"
   total_share:
-    denom: osmosis/pool/10
+    denom: gamm/pool/10
     amount: "0"
   pool_assets:
   - token:
