@@ -26,8 +26,10 @@ type Keeper interface {
 
 ### Hooks
 ```go
-  onEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64)
+  // the first block whose timestamp is after the duration is counted as the end of the epoch
   onEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64)
+  // new epoch is next block of epoch end block
+  onEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64)
 ```
 
 ### How modules receive hooks
