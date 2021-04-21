@@ -29,9 +29,15 @@ func (k Keeper) GetActivities(ctx sdk.Context) []types.UserActivities {
 
 	activities := []types.UserActivities{}
 	for user, actions := range actionsByUser {
+		address, err := sdk.AccAddressFromBech32(user)
+		if err != nil {
+			panic(err)
+		}
+		withdrawn := k.GetWithdrawnActions(ctx, address)
 		activities = append(activities, types.UserActivities{
-			User:    user,
-			Actions: actions,
+			User:      user,
+			Actions:   actions,
+			Withdrawn: withdrawn,
 		})
 	}
 	return activities

@@ -240,9 +240,8 @@ func (s *IntegrationTestSuite) TestCmdQueryActivities() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name  string
-		args  []string
-		coins sdk.Coins
+		name string
+		args []string
 	}{
 		{
 			"query activities amount",
@@ -250,7 +249,6 @@ func (s *IntegrationTestSuite) TestCmdQueryActivities() {
 				addr2.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))},
 		},
 	}
 
@@ -266,7 +264,9 @@ func (s *IntegrationTestSuite) TestCmdQueryActivities() {
 
 			var result types.ActivitiesResponse
 			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-			s.Require().Equal(tc.coins.String(), sdk.Coins(result.Coins).String())
+			s.Require().Equal([]string{"ActionAddLiquidity", "ActionSwap", "ActionVote", "ActionDelegateStake"}, result.All)
+			s.Require().Equal([]string{}, result.Completed)
+			s.Require().Equal([]string{}, result.Withdrawn)
 		})
 	}
 }

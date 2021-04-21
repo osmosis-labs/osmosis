@@ -22,6 +22,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 		k.SetUserActions(ctx, user, activities.Actions)
+		k.SetUserWithdrawnActions(ctx, user, activities.Withdrawn)
 	}
 }
 

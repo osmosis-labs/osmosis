@@ -51,6 +51,10 @@ func (k Keeper) Activities(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	address, err := sdk.AccAddressFromBech32(req.Sender)
+	if err != nil {
+		return nil, err
+	}
 
 	allActions := []types.Action{
 		types.ActionAddLiquidity,
@@ -58,11 +62,11 @@ func (k Keeper) Activities(
 		types.ActionVote,
 		types.ActionDelegateStake,
 	}
-	completedActions := k.GetUserActions(ctx, req.Sender)
-	withdrawnActions := k.GetWithdrawnActions(ctx, req.Sender)
+	completedActions := k.GetUserActions(ctx, address)
+	withdrawnActions := k.GetWithdrawnActions(ctx, address)
 	return &types.ActivitiesResponse{
-		All:              types.ActionToNames(allActions),
-		CompletedActions: types.ActionToNames(completedActions),
-		WithdrawnActions: types.ActionToNames(withdrawnActions),
+		All:       types.ActionToNames(allActions),
+		Completed: types.ActionToNames(completedActions),
+		Withdrawn: types.ActionToNames(withdrawnActions),
 	}, err
 }

@@ -50,5 +50,5 @@ message ActivitiesResponse {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated string all = 2;
   repeated string completed = 3;
-  repeated string not_completed = 4;
+  repeated string withdrawn = 4;
 }
