@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/json"
 	"math/big"
 	"time"
 
@@ -65,12 +64,11 @@ func (k Keeper) GetClaimables(ctx sdk.Context) []banktypes.Balance {
 func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimableStoreKey))
-	coins := sdk.Coins{}
 	if !prefixStore.Has([]byte(addr)) {
-		return coins, nil
+		return sdk.Coins{}, nil
 	}
 	bz := prefixStore.Get([]byte(addr))
-	err := json.Unmarshal(bz, &coins)
+	coins, err := sdk.ParseCoinsNormalized(string(bz))
 	if err != nil {
 		return coins, err
 	}

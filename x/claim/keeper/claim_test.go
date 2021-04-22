@@ -39,11 +39,63 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(coins3, sdk.Coins{})
 
+	// get withdrawable amount before activity
+	coins4, err := suite.app.ClaimKeeper.GetWithdrawableByActivity(suite.ctx, addr1.String())
+	suite.Require().NoError(err)
+	suite.Require().Equal(coins4.String(), sdk.NewCoins().String())
+
+	// try to claim before any activity
 	coins1, err = suite.app.ClaimKeeper.ClaimCoins(suite.ctx, addr1.String())
+	suite.Require().NoError(err)
+	suite.Require().Equal(coins1.String(), sdk.NewCoins().String())
+
+	// get withdrawn activities
+	actions := suite.app.ClaimKeeper.GetWithdrawnActions(suite.ctx, addr1)
+	suite.Require().Len(actions, 0)
+
+	// do half of actions
+	suite.app.ClaimKeeper.SetUserAction(suite.ctx, addr1, types.ActionAddLiquidity)
+	suite.app.ClaimKeeper.SetUserAction(suite.ctx, addr1, types.ActionSwap)
+
+	// get withdrawable amount after activity
+	coins5, err := suite.app.ClaimKeeper.GetWithdrawableByActivity(suite.ctx, addr1.String())
+	suite.Require().NoError(err)
+	suite.Require().Equal(coins5.String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)).String())
+
+	// claim after activity
+	coins1, err = suite.app.ClaimKeeper.ClaimCoins(suite.ctx, addr1.String())
+	suite.Require().NoError(err)
+	suite.Require().Equal(coins1.String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)).String())
+
+	// get withdrawn activities
+	actions = suite.app.ClaimKeeper.GetWithdrawnActions(suite.ctx, addr1)
+	suite.Require().Len(actions, 2)
+
+	// do rest of actions
+	suite.app.ClaimKeeper.SetUserAction(suite.ctx, addr1, types.ActionVote)
+	suite.app.ClaimKeeper.SetUserAction(suite.ctx, addr1, types.ActionDelegateStake)
+
+	// get withdrawable amount after rest actions done
+	coins6, err := suite.app.ClaimKeeper.GetWithdrawableByActivity(suite.ctx, addr1.String())
+	suite.Require().NoError(err)
+	suite.Require().Equal(coins6.String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)).String())
+
+	// try to claim after rest actions done
+	coins1, err = suite.app.ClaimKeeper.ClaimCoins(suite.ctx, addr1.String())
+	suite.Require().NoError(err)
+	suite.Require().Equal(coins1.String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)).String())
+
+	// get withdrawn activities
+	actions = suite.app.ClaimKeeper.GetWithdrawnActions(suite.ctx, addr1)
+	suite.Require().Len(actions, 4)
+
+	// get claimable after withdrawing all
+	coins1, err = suite.app.ClaimKeeper.GetClaimable(suite.ctx, addr1.String())
 	suite.Require().NoError(err)
 	suite.Require().Equal(coins1, balances[0].Coins)
 
-	coins1, err = suite.app.ClaimKeeper.GetClaimable(suite.ctx, addr1.String())
+	// get withdrawable after withdrawing all
+	coins1, err = suite.app.ClaimKeeper.GetWithdrawableByActivity(suite.ctx, addr1.String())
 	suite.Require().NoError(err)
 	suite.Require().Equal(coins1, sdk.Coins{})
 

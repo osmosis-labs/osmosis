@@ -215,7 +215,7 @@ func (s *IntegrationTestSuite) TestCmdQueryWithdrawable() {
 				addr2.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))},
+			sdk.Coins{},
 		},
 	}
 
@@ -265,8 +265,8 @@ func (s *IntegrationTestSuite) TestCmdQueryActivities() {
 			var result types.ActivitiesResponse
 			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal([]string{"ActionAddLiquidity", "ActionSwap", "ActionVote", "ActionDelegateStake"}, result.All)
-			s.Require().Equal([]string{}, result.Completed)
-			s.Require().Equal([]string{}, result.Withdrawn)
+			s.Require().Equal([]string(nil), result.Completed)
+			s.Require().Equal([]string(nil), result.Withdrawn)
 		})
 	}
 }
