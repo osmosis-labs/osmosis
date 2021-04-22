@@ -9,12 +9,15 @@ import (
 
 const (
 	ProposalTypeAddPoolIncentives    = "AddPoolIncentives"
+	ProposalTypeEditPoolIncentives   = "EditPoolIncentives"
 	ProposalTypeRemovePoolIncentives = "RemovePoolIncentives"
 )
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeAddPoolIncentives)
 	govtypes.RegisterProposalTypeCodec(&AddPoolIncentivesProposal{}, "osmosis/AddPoolIncentivesProposal")
+	govtypes.RegisterProposalType(ProposalTypeEditPoolIncentives)
+	govtypes.RegisterProposalTypeCodec(&EditPoolIncentivesProposal{}, "osmosis/EditPoolIncentivesProposal")
 	govtypes.RegisterProposalType(ProposalTypeRemovePoolIncentives)
 	govtypes.RegisterProposalTypeCodec(&RemovePoolIncentivesProposal{}, "osmosis/RemovePoolIncentivesProposal")
 }
@@ -87,7 +90,7 @@ func (p *EditPoolIncentivesProposal) GetDescription() string { return p.Descript
 
 func (p *EditPoolIncentivesProposal) ProposalRoute() string { return RouterKey }
 
-func (p *EditPoolIncentivesProposal) ProposalType() string { return ProposalTypeRemovePoolIncentives }
+func (p *EditPoolIncentivesProposal) ProposalType() string { return ProposalTypeEditPoolIncentives }
 
 func (p *EditPoolIncentivesProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
