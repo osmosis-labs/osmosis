@@ -32,7 +32,7 @@ var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
 func request_Query_Epochs_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryEpochsRequest
+	var protoReq QueryEpochsInfoRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.Epochs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -41,7 +41,7 @@ func request_Query_Epochs_0(ctx context.Context, marshaler runtime.Marshaler, cl
 }
 
 func local_request_Query_Epochs_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryEpochsRequest
+	var protoReq QueryEpochsInfoRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.Epochs(ctx, &protoReq)

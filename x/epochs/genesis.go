@@ -1,6 +1,8 @@
 package epochs
 
 import (
+	"time"
+
 	"github.com/c-osmosis/osmosis/x/epochs/keeper"
 	"github.com/c-osmosis/osmosis/x/epochs/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +14,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, epoch := range genState.Epochs {
 		k.SetEpochInfo(ctx, epoch)
 		// TODO: when StartTime and CurrentEpochStartTime are not set use ctx.BlockTime()
+		if !epoch.EpochEnded && (epoch.StartTime.Equal(time.Time{}) || epoch.CurrentEpochStartTime.Equal(time.Time{})) {
+			epoch.StartTime = ctx.BlockTime()
+			epoch.CurrentEpochStartTime = ctx.BlockTime()
+		}
 	}
 }
 

@@ -10,10 +10,10 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // Epochs provide running epochs
-func (k Keeper) Epochs(c context.Context, _ *types.QueryEpochsRequest) (*types.QueryEpochsResponse, error) {
+func (k Keeper) Epochs(c context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	return &types.QueryEpochsResponse{
+	return &types.QueryEpochsInfoResponse{
 		Epochs: k.AllEpochInfos(ctx),
 	}, nil
 }

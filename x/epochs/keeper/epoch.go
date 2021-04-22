@@ -8,8 +8,8 @@ import (
 )
 
 // GetEpochInfo returns epoch info by identifier
-func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.Epoch {
-	epoch := types.Epoch{}
+func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo {
+	epoch := types.EpochInfo{}
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(append(types.KeyPrefixEpoch, []byte(identifier)...))
 	if b == nil {
@@ -23,7 +23,7 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.Epoch {
 }
 
 // SetEpochInfo set epoch info
-func (k Keeper) SetEpochInfo(ctx sdk.Context, epoch types.Epoch) {
+func (k Keeper) SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo) {
 	store := ctx.KVStore(k.storeKey)
 	value, err := json.Marshal(epoch)
 	if err != nil {
@@ -33,7 +33,7 @@ func (k Keeper) SetEpochInfo(ctx sdk.Context, epoch types.Epoch) {
 }
 
 // IterateEpochInfo iterate through epochs
-func (k Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo types.Epoch) (stop bool)) {
+func (k Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo types.EpochInfo) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixEpoch)
@@ -42,7 +42,7 @@ func (k Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo
 	i := int64(0)
 
 	for ; iterator.Valid(); iterator.Next() {
-		epoch := types.Epoch{}
+		epoch := types.EpochInfo{}
 		err := json.Unmarshal(iterator.Value(), &epoch)
 		if err != nil {
 			panic(err)
@@ -56,9 +56,9 @@ func (k Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo
 	}
 }
 
-func (k Keeper) AllEpochInfos(ctx sdk.Context) []types.Epoch {
-	epochs := []types.Epoch{}
-	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.Epoch) (stop bool) {
+func (k Keeper) AllEpochInfos(ctx sdk.Context) []types.EpochInfo {
+	epochs := []types.EpochInfo{}
+	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
 		epochs = append(epochs, epochInfo)
 		return false
 	})
