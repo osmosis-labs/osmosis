@@ -140,6 +140,15 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 	return nil
 }
 
+func (k Keeper) GetLocksToDistributionForOwner(ctx sdk.Context, distrTo lockuptypes.QueryCondition, owner sdk.AccAddress) []lockuptypes.PeriodLock {
+  switch distrTo.LockQueryType {
+  case lockuptypes.ByDuration:
+    return k.lk.GetAccountLockedLongerDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
+  case lockuptypes.ByTime:
+    return k.lk.GetAccountLockedPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
+  }
+}
+
 // GetLocksToDistribution get locks that are associated to a condition
 func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.QueryCondition) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
@@ -312,32 +321,34 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	if len(pots) == 0 {
 		pots = k.GetPots(ctx)
 	}
-
+ 
 	// estimate rewards
 	estimatedRewards := sdk.Coins{}
-	params := k.GetParams(ctx)
-	currentEpoch, _ := k.GetCurrentEpochInfo(ctx)
 
 	// no need to change storage while doing estimation and we use cached context
 	cacheCtx, _ := ctx.CacheContext()
-	for _, pot := range pots {
-		distrBeginEpoch := currentEpoch
-		blockTime := ctx.BlockTime()
-		if pot.StartTime.After(blockTime) {
-			avgBlockTime := time.Second * 5
-			epochDuration := params.BlocksPerEpoch * int64(avgBlockTime)
-			distrBeginEpoch = currentEpoch + 1 + int64(pot.StartTime.Sub(blockTime))/epochDuration
-		}
 
-		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
-			newPot, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, pot, locks)
-			if err != nil {
-				continue
-			}
-			estimatedRewards = estimatedRewards.Add(distrCoins...)
-			pot = newPot
-		}
-	}
+  for _, pot := range pots {
+    distrBeginEpoch := currentEpoch
+    blockTime := ctx.BlockTime()
+    if pot.StartTime.After(blockTime) {
+      avgBlockTime := time.Second * 5
+      epochDuration := params.BlockPerEpoch * int64(avgBlockTime)
+      distrBeginEpoch = currentEpoch + 1 + int64(pot.StartTime.Sub(blockTime))/epochDuration
+    }
+    // total distribution amount = pot_size * denom_lock_amount / total_denom_lock_amount
+    distrCoins := sdk.Coins{}
+    remainCoins := pot.Coins.Sub(pot.DistributedCoins)
+    locks := k.GetLocksToDistributionForOwner(cacheCtx, pot.DistributeTo, addr)
+    denomLockAmt := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
+    for _, remainCoin := range remainCoins {
+      amt := remainCoin.Amount.Mul(denomLockAmt).Div(pot.TotalLock)
+      distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+    }
+    
+    distrCoins.Sort()
+    estimatedRewards = estimatedRewards.Add(distrCoins)
+  }
 
 	return estimatedRewards
 }
