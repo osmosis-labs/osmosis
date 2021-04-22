@@ -15,5 +15,5 @@ func (k Keeper) HandleEditPoolIncentivesProposal(ctx sdk.Context, p *types.EditP
 }
 
 func (k Keeper) HandleRemovePoolIncentivesProposal(ctx sdk.Context, p *types.RemovePoolIncentivesProposal) error {
-	return k.RemoveDistrRecords(ctx, p.Indexes...)
+	return k.RemoveDistrRecords(ctx, p.PotIds...)
 }

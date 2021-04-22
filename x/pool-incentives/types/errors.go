@@ -7,9 +7,9 @@ import (
 var (
 	ErrNoPotIdExist                 = sdkerrors.Register(ModuleName, 1, "no pot id exist")
 	ErrDistrRecordNotPositiveWeight = sdkerrors.Register(ModuleName, 2, "weight in record should be positive")
-	ErrDistrRecordInvalidIndex      = sdkerrors.Register(ModuleName, 3, "invalid index")
-	ErrDistrRecordMismatchedPotId   = sdkerrors.Register(ModuleName, 4, "pot id mismatched")
+	ErrDistrRecordNotRegisteredPot  = sdkerrors.Register(ModuleName, 3, "pot was not registered")
+	ErrDistrRecordRegisteredPot     = sdkerrors.Register(ModuleName, 4, "pot was already registered")
 
 	ErrEmptyProposalRecords = sdkerrors.Register(ModuleName, 10, "records are empty")
-	ErrEmptyProposalIndexes = sdkerrors.Register(ModuleName, 11, "indexes are empty")
+	ErrEmptyProposalPotIds  = sdkerrors.Register(ModuleName, 11, "pot ids are empty")
 )

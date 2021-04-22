@@ -22,11 +22,11 @@ type AddPoolIncentivesRequest struct {
 }
 
 type EditPoolIncentivesRequest struct {
-	BaseReq     rest.BaseReq                                            `json:"base_req" yaml:"base_req"`
-	Title       string                                                  `json:"title" yaml:"title"`
-	Description string                                                  `json:"description" yaml:"description"`
-	Deposit     sdk.Coins                                               `json:"deposit" yaml:"deposit"`
-	Records     []types.EditPoolIncentivesProposal_DistrRecordWithIndex `json:"records" yaml:"records"`
+	BaseReq     rest.BaseReq        `json:"base_req" yaml:"base_req"`
+	Title       string              `json:"title" yaml:"title"`
+	Description string              `json:"description" yaml:"description"`
+	Deposit     sdk.Coins           `json:"deposit" yaml:"deposit"`
+	Records     []types.DistrRecord `json:"records" yaml:"records"`
 }
 
 type RemovePoolIncentivesRequest struct {

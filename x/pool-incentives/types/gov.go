@@ -76,7 +76,7 @@ func (p AddPoolIncentivesProposal) String() string {
 
 var _ govtypes.Content = &EditPoolIncentivesProposal{}
 
-func NewEditPoolIncentivesProposal(title, description string, records []EditPoolIncentivesProposal_DistrRecordWithIndex) govtypes.Content {
+func NewEditPoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
 	return &EditPoolIncentivesProposal{
 		Title:       title,
 		Description: description,
@@ -108,7 +108,7 @@ func (p EditPoolIncentivesProposal) String() string {
 	// TODO: Make this prettier
 	recordsStr := ""
 	for _, record := range p.Records {
-		recordsStr = recordsStr + fmt.Sprintf("(Index: %d, PotId: %d, Weight: %s) ", record.Index, record.Record.PotId, record.Record.Weight.String())
+		recordsStr = recordsStr + fmt.Sprintf("(PotId: %d, Weight: %s) ", record.PotId, record.Weight.String())
 	}
 
 	var b strings.Builder
@@ -122,11 +122,11 @@ func (p EditPoolIncentivesProposal) String() string {
 
 var _ govtypes.Content = &RemovePoolIncentivesProposal{}
 
-func NewRemovePoolIncentivesProposal(title, description string, indexes []uint64) govtypes.Content {
+func NewRemovePoolIncentivesProposal(title, description string, potIds []uint64) govtypes.Content {
 	return &RemovePoolIncentivesProposal{
 		Title:       title,
 		Description: description,
-		Indexes:     indexes,
+		PotIds:      potIds,
 	}
 }
 
@@ -143,8 +143,8 @@ func (p *RemovePoolIncentivesProposal) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	if len(p.Indexes) == 0 {
-		return ErrEmptyProposalIndexes
+	if len(p.PotIds) == 0 {
+		return ErrEmptyProposalPotIds
 	}
 
 	return nil
@@ -152,16 +152,16 @@ func (p *RemovePoolIncentivesProposal) ValidateBasic() error {
 
 func (p RemovePoolIncentivesProposal) String() string {
 	// TODO: Make this prettier
-	indexesStr := ""
-	for _, index := range p.Indexes {
-		indexesStr = indexesStr + fmt.Sprintf("%d ", index)
+	potIdsStr := ""
+	for _, potId := range p.PotIds {
+		potIdsStr = potIdsStr + fmt.Sprintf("%d ", potId)
 	}
 
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Remove Pool Incentives Proposal:
   Title:       %s
   Description: %s
-  Indexes:     %s
-`, p.Title, p.Description, indexesStr))
+  PotIds:     %s
+`, p.Title, p.Description, potIdsStr))
 	return b.String()
 }

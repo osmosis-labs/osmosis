@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
 )
@@ -79,11 +80,32 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 	store.Set(types.DistrInfoKey, bz)
 }
 
+// indexOfDistrRecordByPotId returns the index of the record for the specific pot id.
+// If there is no record matched to the pot id, return -1.
+func (k Keeper) indexOfDistrRecordByPotId(ctx sdk.Context, potId uint64) int {
+	distrInfo := k.GetDistrInfo(ctx)
+	records := distrInfo.Records
+	for i, record := range records {
+		if record.PotId == potId {
+			return i
+		}
+	}
+	return -1
+}
+
 func (k Keeper) AddDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
 	deltaWeight := sdk.NewInt(0)
 	for _, record := range records {
+		if k.indexOfDistrRecordByPotId(ctx, record.PotId) >= 0 {
+			return sdkerrors.Wrapf(
+				types.ErrDistrRecordRegisteredPot,
+				"Pot ID #%d already exists in DistrRecord. Use EditPoolIncentivesProposal instead of AddPoolIncentivesProposal",
+				record.PotId,
+			)
+		}
+
 		// Make sure that the pot exists.
 		_, err := k.incentivesKeeper.GetPotByID(ctx, record.PotId)
 		if err != nil {
@@ -101,23 +123,21 @@ func (k Keeper) AddDistrRecords(ctx sdk.Context, records ...types.DistrRecord) e
 	return nil
 }
 
-func (k Keeper) EditDistrRecords(ctx sdk.Context, records ...types.EditPoolIncentivesProposal_DistrRecordWithIndex) error {
+func (k Keeper) EditDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
 	deltaWeight := sdk.NewInt(0)
-	for _, recordWithIndex := range records {
-		index := recordWithIndex.Index
-		record := recordWithIndex.Record
-
-		if index < 0 || uint64(len(distrInfo.Records)) <= index {
-			return types.ErrDistrRecordInvalidIndex
+	for _, record := range records {
+		index := k.indexOfDistrRecordByPotId(ctx, record.PotId)
+		if index < 0 {
+			return sdkerrors.Wrapf(
+				types.ErrDistrRecordNotRegisteredPot,
+				"Pot ID #%d doesn't exist in DistrRecord. Use AddPoolIncentivesProposal first",
+				record.PotId,
+			)
 		}
 
 		priorRecord := distrInfo.Records[index]
-
-		if priorRecord.PotId != record.PotId {
-			return types.ErrDistrRecordMismatchedPotId
-		}
 
 		deltaWeight = deltaWeight.Add(record.Weight.Sub(priorRecord.Weight))
 
@@ -131,12 +151,17 @@ func (k Keeper) EditDistrRecords(ctx sdk.Context, records ...types.EditPoolIncen
 	return nil
 }
 
-func (k Keeper) RemoveDistrRecords(ctx sdk.Context, indexes ...uint64) error {
+func (k Keeper) RemoveDistrRecords(ctx sdk.Context, potIds ...uint64) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
-	for _, index := range indexes {
-		if index < 0 || uint64(len(distrInfo.Records)) <= index {
-			return types.ErrDistrRecordInvalidIndex
+	for _, potId := range potIds {
+		index := k.indexOfDistrRecordByPotId(ctx, potId)
+		if index < 0 {
+			return sdkerrors.Wrapf(
+				types.ErrDistrRecordNotRegisteredPot,
+				"Pot ID #%d doesn't exist in DistrRecord. Use AddPoolIncentivesProposal first",
+				potId,
+			)
 		}
 
 		record := distrInfo.Records[index]

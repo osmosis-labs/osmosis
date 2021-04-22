@@ -113,7 +113,7 @@ func NewCmdSubmitAddPoolIncentivesProposal() *cobra.Command {
 
 func NewCmdSubmitEditPoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "edit-pool-incentives [indexes] [potIds] [weights]",
+		Use:   "edit-pool-incentives [potIds] [weights]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Submit a edit record for pool incentives",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -122,19 +122,8 @@ func NewCmdSubmitEditPoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			var indexes []uint64
-			for _, indexStr := range strings.Split(args[0], ",") {
-				indexStr = strings.TrimSpace(indexStr)
-
-				parsed, err := strconv.ParseUint(indexStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				indexes = append(indexes, parsed)
-			}
-
 			var potIds []uint64
-			for _, potIdStr := range strings.Split(args[1], ",") {
+			for _, potIdStr := range strings.Split(args[0], ",") {
 				potIdStr = strings.TrimSpace(potIdStr)
 
 				parsed, err := strconv.ParseUint(potIdStr, 10, 64)
@@ -145,7 +134,7 @@ func NewCmdSubmitEditPoolIncentivesProposal() *cobra.Command {
 			}
 
 			var weights []sdk.Int
-			for _, weightStr := range strings.Split(args[2], ",") {
+			for _, weightStr := range strings.Split(args[1], ",") {
 				weightStr = strings.TrimSpace(weightStr)
 
 				parsed, err := strconv.ParseUint(weightStr, 10, 64)
@@ -153,10 +142,6 @@ func NewCmdSubmitEditPoolIncentivesProposal() *cobra.Command {
 					return err
 				}
 				weights = append(weights, sdk.NewIntFromUint64(parsed))
-			}
-
-			if len(indexes) != len(potIds) {
-				return fmt.Errorf("the length of indexes and pot ids not matched")
 			}
 
 			if len(potIds) != len(weights) {
@@ -167,14 +152,11 @@ func NewCmdSubmitEditPoolIncentivesProposal() *cobra.Command {
 				return fmt.Errorf("records is empty")
 			}
 
-			var records []types.EditPoolIncentivesProposal_DistrRecordWithIndex
+			var records []types.DistrRecord
 			for i, potId := range potIds {
-				records = append(records, types.EditPoolIncentivesProposal_DistrRecordWithIndex{
-					Index: indexes[i],
-					Record: types.DistrRecord{
-						PotId:  potId,
-						Weight: weights[i],
-					},
+				records = append(records, types.DistrRecord{
+					PotId:  potId,
+					Weight: weights[i],
 				})
 			}
 
@@ -225,7 +207,7 @@ func NewCmdSubmitEditPoolIncentivesProposal() *cobra.Command {
 
 func NewCmdSubmitRemovePoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-pool-incentives [indexes]",
+		Use:   "remove-pool-incentives [potIds]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Remove a specific index of record from pool incentives",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -234,15 +216,15 @@ func NewCmdSubmitRemovePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			var indexes []uint64
-			for _, indexStr := range strings.Split(args[0], ",") {
-				indexStr = strings.TrimSpace(indexStr)
+			var potIds []uint64
+			for _, potIdsStr := range strings.Split(args[0], ",") {
+				potIdsStr = strings.TrimSpace(potIdsStr)
 
-				parsed, err := strconv.ParseUint(indexStr, 10, 64)
+				parsed, err := strconv.ParseUint(potIdsStr, 10, 64)
 				if err != nil {
 					return err
 				}
-				indexes = append(indexes, parsed)
+				potIds = append(potIds, parsed)
 			}
 
 			title, err := cmd.Flags().GetString(cli.FlagTitle)
@@ -266,7 +248,7 @@ func NewCmdSubmitRemovePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			content := types.NewRemovePoolIncentivesProposal(title, description, indexes)
+			content := types.NewRemovePoolIncentivesProposal(title, description, potIds)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

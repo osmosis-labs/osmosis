@@ -68,9 +68,9 @@ var xxx_messageInfo_AddPoolIncentivesProposal proto.InternalMessageInfo
 // If a EditPoolIncentivesProposal passes, the record of proposal’s specified index are edited.
 // Records are stored in the form of slice, and the idexes of this slice are edited.
 type EditPoolIncentivesProposal struct {
-	Title       string                                            `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description string                                            `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Records     []EditPoolIncentivesProposal_DistrRecordWithIndex `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
+	Title       string        `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string        `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Records     []DistrRecord `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
 }
 
 func (m *EditPoolIncentivesProposal) Reset()      { *m = EditPoolIncentivesProposal{} }
@@ -105,69 +105,13 @@ func (m *EditPoolIncentivesProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EditPoolIncentivesProposal proto.InternalMessageInfo
 
-type EditPoolIncentivesProposal_DistrRecordWithIndex struct {
-	Index  uint64      `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
-	Record DistrRecord `protobuf:"bytes,2,opt,name=record,proto3" json:"record"`
-}
-
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) Reset() {
-	*m = EditPoolIncentivesProposal_DistrRecordWithIndex{}
-}
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) String() string {
-	return proto.CompactTextString(m)
-}
-func (*EditPoolIncentivesProposal_DistrRecordWithIndex) ProtoMessage() {}
-func (*EditPoolIncentivesProposal_DistrRecordWithIndex) Descriptor() ([]byte, []int) {
-	return fileDescriptor_96caede426ba9516, []int{1, 0}
-}
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EditPoolIncentivesProposal_DistrRecordWithIndex.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EditPoolIncentivesProposal_DistrRecordWithIndex.Merge(m, src)
-}
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) XXX_Size() int {
-	return m.Size()
-}
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) XXX_DiscardUnknown() {
-	xxx_messageInfo_EditPoolIncentivesProposal_DistrRecordWithIndex.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EditPoolIncentivesProposal_DistrRecordWithIndex proto.InternalMessageInfo
-
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) GetIndex() uint64 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) GetRecord() DistrRecord {
-	if m != nil {
-		return m.Record
-	}
-	return DistrRecord{}
-}
-
 // RemovePoolIncentivesProposal is a gov Content type for removing the pool incentives.
 // If a RemovePoolIncentivesProposal passes, the record of proposal’s specified index are deleted.
 // Records are stored in the form of slice, and the idexes of this slice are removed.
 type RemovePoolIncentivesProposal struct {
 	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Indexes     []uint64 `protobuf:"varint,3,rep,packed,name=indexes,proto3" json:"indexes,omitempty"`
+	PotIds      []uint64 `protobuf:"varint,3,rep,packed,name=pot_ids,json=potIds,proto3" json:"pot_ids,omitempty" yaml:"pot_ids"`
 }
 
 func (m *RemovePoolIncentivesProposal) Reset()      { *m = RemovePoolIncentivesProposal{} }
@@ -205,7 +149,6 @@ var xxx_messageInfo_RemovePoolIncentivesProposal proto.InternalMessageInfo
 func init() {
 	proto.RegisterType((*AddPoolIncentivesProposal)(nil), "osmosis.poolincentives.v1beta1.AddPoolIncentivesProposal")
 	proto.RegisterType((*EditPoolIncentivesProposal)(nil), "osmosis.poolincentives.v1beta1.EditPoolIncentivesProposal")
-	proto.RegisterType((*EditPoolIncentivesProposal_DistrRecordWithIndex)(nil), "osmosis.poolincentives.v1beta1.EditPoolIncentivesProposal.DistrRecordWithIndex")
 	proto.RegisterType((*RemovePoolIncentivesProposal)(nil), "osmosis.poolincentives.v1beta1.RemovePoolIncentivesProposal")
 }
 
@@ -214,7 +157,7 @@ func init() {
 }
 
 var fileDescriptor_96caede426ba9516 = []byte{
-	// 377 bytes of a gzipped FileDescriptorProto
+	// 338 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xd2, 0xcc, 0x2f, 0xce, 0xcd,
 	0x2f, 0xce, 0x2c, 0xd6, 0x2f, 0xc8, 0xcf, 0xcf, 0xd1, 0xcd, 0xcc, 0x4b, 0x4e, 0xcd, 0x2b, 0xc9,
 	0x2c, 0x4b, 0x2d, 0xd6, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0xd4, 0x4f, 0xcf, 0x2f, 0xd3,
@@ -227,18 +170,16 @@ var fileDescriptor_96caede426ba9516 = []byte{
 	0x04, 0x96, 0x43, 0x16, 0x12, 0xf2, 0xe6, 0x62, 0x2f, 0x4a, 0x4d, 0xce, 0x2f, 0x4a, 0x29, 0x96,
 	0x60, 0x56, 0x60, 0xd6, 0xe0, 0x36, 0xd2, 0xd6, 0xc3, 0xef, 0x1f, 0x3d, 0x97, 0xcc, 0xe2, 0x92,
 	0xa2, 0x20, 0xb0, 0x1e, 0x27, 0x96, 0x13, 0xf7, 0xe4, 0x19, 0x82, 0x60, 0x26, 0x58, 0xf1, 0x74,
-	0x2c, 0x90, 0x67, 0x98, 0xb1, 0x40, 0x9e, 0xe1, 0xc5, 0x02, 0x79, 0x46, 0xa5, 0x4b, 0x4c, 0x5c,
-	0x52, 0xae, 0x29, 0x99, 0x25, 0x54, 0x76, 0x71, 0x3e, 0xba, 0x8b, 0xfd, 0x09, 0xb9, 0x18, 0xb7,
-	0x23, 0x90, 0x3d, 0x13, 0x9e, 0x59, 0x92, 0xe1, 0x99, 0x97, 0x92, 0x5a, 0x81, 0xe6, 0x2b, 0xa9,
-	0x5a, 0x2e, 0x11, 0x6c, 0xca, 0x40, 0x1e, 0xc8, 0x04, 0x31, 0xc0, 0x1e, 0x60, 0x09, 0x82, 0x70,
-	0x84, 0x3c, 0xb9, 0xd8, 0x20, 0x1a, 0xc1, 0x6e, 0x27, 0x2b, 0x3c, 0xa1, 0x06, 0x58, 0xb1, 0x80,
-	0x82, 0x11, 0x2d, 0x50, 0xeb, 0xb8, 0x64, 0x82, 0x52, 0x73, 0xf3, 0xcb, 0x52, 0xa9, 0x1c, 0xaa,
-	0x12, 0x5c, 0xec, 0x60, 0xf7, 0xa7, 0x42, 0x42, 0x95, 0x25, 0x08, 0xc6, 0x45, 0xb5, 0xdf, 0xc9,
-	0xef, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58,
-	0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x4c, 0xd2, 0x33, 0x4b, 0x32,
-	0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x93, 0x75, 0x61, 0xc9, 0x1b, 0x46, 0x57, 0x60, 0x24,
-	0xf4, 0x92, 0xca, 0x82, 0xd4, 0xe2, 0x24, 0x36, 0x70, 0xe2, 0x36, 0x06, 0x04, 0x00, 0x00, 0xff,
-	0xff, 0x24, 0x1e, 0xd1, 0xbc, 0x71, 0x03, 0x00, 0x00,
+	0x2c, 0x90, 0x67, 0x98, 0xb1, 0x40, 0x9e, 0xe1, 0xc5, 0x02, 0x79, 0x46, 0xa5, 0xf5, 0x8c, 0x5c,
+	0x52, 0xae, 0x29, 0x99, 0x25, 0x43, 0xc7, 0xc5, 0x13, 0x19, 0xb9, 0x64, 0x82, 0x52, 0x73, 0xf3,
+	0xcb, 0x52, 0xa9, 0xec, 0x66, 0x6d, 0x2e, 0xf6, 0x82, 0xfc, 0x92, 0xf8, 0x4c, 0xa8, 0x9b, 0x59,
+	0x9c, 0x84, 0x3e, 0xdd, 0x93, 0xe7, 0xab, 0x4c, 0xcc, 0xcd, 0xb1, 0x52, 0x82, 0x4a, 0x28, 0x05,
+	0xb1, 0x15, 0xe4, 0x97, 0x78, 0xa2, 0xbb, 0xc9, 0xc9, 0xef, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f,
+	0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b,
+	0x8f, 0xe5, 0x18, 0xa2, 0x4c, 0xd2, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5,
+	0x93, 0x75, 0x61, 0xe9, 0x09, 0x46, 0x57, 0x60, 0xa4, 0xac, 0x92, 0xca, 0x82, 0xd4, 0xe2, 0x24,
+	0x36, 0x70, 0x6a, 0x32, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x16, 0x67, 0x4f, 0x74, 0xe2, 0x02,
+	0x00, 0x00,
 }
 
 func (this *AddPoolIncentivesProposal) Equal(that interface{}) bool {
@@ -311,33 +252,6 @@ func (this *EditPoolIncentivesProposal) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *EditPoolIncentivesProposal_DistrRecordWithIndex) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*EditPoolIncentivesProposal_DistrRecordWithIndex)
-	if !ok {
-		that2, ok := that.(EditPoolIncentivesProposal_DistrRecordWithIndex)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Index != that1.Index {
-		return false
-	}
-	if !this.Record.Equal(&that1.Record) {
-		return false
-	}
-	return true
-}
 func (this *RemovePoolIncentivesProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -363,11 +277,11 @@ func (this *RemovePoolIncentivesProposal) Equal(that interface{}) bool {
 	if this.Description != that1.Description {
 		return false
 	}
-	if len(this.Indexes) != len(that1.Indexes) {
+	if len(this.PotIds) != len(that1.PotIds) {
 		return false
 	}
-	for i := range this.Indexes {
-		if this.Indexes[i] != that1.Indexes[i] {
+	for i := range this.PotIds {
+		if this.PotIds[i] != that1.PotIds[i] {
 			return false
 		}
 	}
@@ -475,44 +389,6 @@ func (m *EditPoolIncentivesProposal) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Record.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintGov(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if m.Index != 0 {
-		i = encodeVarintGov(dAtA, i, uint64(m.Index))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *RemovePoolIncentivesProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -533,21 +409,21 @@ func (m *RemovePoolIncentivesProposal) MarshalToSizedBuffer(dAtA []byte) (int, e
 	_ = i
 	var l int
 	_ = l
-	if len(m.Indexes) > 0 {
-		dAtA3 := make([]byte, len(m.Indexes)*10)
-		var j2 int
-		for _, num := range m.Indexes {
+	if len(m.PotIds) > 0 {
+		dAtA2 := make([]byte, len(m.PotIds)*10)
+		var j1 int
+		for _, num := range m.PotIds {
 			for num >= 1<<7 {
-				dAtA3[j2] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j2++
+				j1++
 			}
-			dAtA3[j2] = uint8(num)
-			j2++
+			dAtA2[j1] = uint8(num)
+			j1++
 		}
-		i -= j2
-		copy(dAtA[i:], dAtA3[:j2])
-		i = encodeVarintGov(dAtA, i, uint64(j2))
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintGov(dAtA, i, uint64(j1))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -625,20 +501,6 @@ func (m *EditPoolIncentivesProposal) Size() (n int) {
 	return n
 }
 
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Index != 0 {
-		n += 1 + sovGov(uint64(m.Index))
-	}
-	l = m.Record.Size()
-	n += 1 + l + sovGov(uint64(l))
-	return n
-}
-
 func (m *RemovePoolIncentivesProposal) Size() (n int) {
 	if m == nil {
 		return 0
@@ -653,9 +515,9 @@ func (m *RemovePoolIncentivesProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGov(uint64(l))
 	}
-	if len(m.Indexes) > 0 {
+	if len(m.PotIds) > 0 {
 		l = 0
-		for _, e := range m.Indexes {
+		for _, e := range m.PotIds {
 			l += sovGov(uint64(e))
 		}
 		n += 1 + sovGov(uint64(l)) + l
@@ -942,113 +804,8 @@ func (m *EditPoolIncentivesProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Records = append(m.Records, EditPoolIncentivesProposal_DistrRecordWithIndex{})
+			m.Records = append(m.Records, DistrRecord{})
 			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGov(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthGov
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthGov
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *EditPoolIncentivesProposal_DistrRecordWithIndex) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGov
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DistrRecordWithIndex: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DistrRecordWithIndex: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
-			}
-			m.Index = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGov
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Index |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGov
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGov
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGov
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Record.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1186,7 +943,7 @@ func (m *RemovePoolIncentivesProposal) Unmarshal(dAtA []byte) error {
 						break
 					}
 				}
-				m.Indexes = append(m.Indexes, v)
+				m.PotIds = append(m.PotIds, v)
 			} else if wireType == 2 {
 				var packedLen int
 				for shift := uint(0); ; shift += 7 {
@@ -1221,8 +978,8 @@ func (m *RemovePoolIncentivesProposal) Unmarshal(dAtA []byte) error {
 					}
 				}
 				elementCount = count
-				if elementCount != 0 && len(m.Indexes) == 0 {
-					m.Indexes = make([]uint64, 0, elementCount)
+				if elementCount != 0 && len(m.PotIds) == 0 {
+					m.PotIds = make([]uint64, 0, elementCount)
 				}
 				for iNdEx < postIndex {
 					var v uint64
@@ -1240,10 +997,10 @@ func (m *RemovePoolIncentivesProposal) Unmarshal(dAtA []byte) error {
 							break
 						}
 					}
-					m.Indexes = append(m.Indexes, v)
+					m.PotIds = append(m.PotIds, v)
 				}
 			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field Indexes", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PotIds", wireType)
 			}
 		default:
 			iNdEx = preIndex
