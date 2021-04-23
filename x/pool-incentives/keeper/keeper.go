@@ -86,13 +86,13 @@ func (k Keeper) CreatePoolPots(ctx sdk.Context, poolId uint64) error {
 }
 
 func (k Keeper) SetPoolPotId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration, potId uint64) {
-	key := types.GetPoolPodIdStoreKey(poolId, lockableDuration)
+	key := types.GetPoolPotIdStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, sdk.Uint64ToBigEndian(potId))
 }
 
 func (k Keeper) GetPoolPotId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error) {
-	key := types.GetPoolPodIdStoreKey(poolId, lockableDuration)
+	key := types.GetPoolPotIdStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(key)
 

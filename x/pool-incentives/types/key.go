@@ -20,6 +20,6 @@ var (
 	DistrInfoKey         = []byte("distr_info")
 )
 
-func GetPoolPodIdStoreKey(poolId uint64, duration time.Duration) []byte {
+func GetPoolPotIdStoreKey(poolId uint64, duration time.Duration) []byte {
 	return []byte(fmt.Sprintf("pool-incentives/%d/%s", poolId, duration.String()))
 }
