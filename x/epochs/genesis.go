@@ -11,13 +11,19 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	// set epoch info from genesis
 	for _, epoch := range genState.Epochs {
-		k.SetEpochInfo(ctx, epoch)
-		// TODO: when StartTime and CurrentEpochStartTime are not set use ctx.BlockTime()
-		if !epoch.EpochEnded && (epoch.StartTime.Equal(time.Time{}) || epoch.CurrentEpochStartTime.Equal(time.Time{})) {
+		// when epoch counting start time is not set, set it
+		if epoch.StartTime.Equal(time.Time{}) {
 			epoch.StartTime = ctx.BlockTime()
+		}
+
+		// when epoch counting started and current_epoch_start_time is not set, set it
+		if epoch.EpochCountingStarted && epoch.CurrentEpochStartTime.Equal(time.Time{}) {
 			epoch.CurrentEpochStartTime = ctx.BlockTime()
 		}
+
+		k.SetEpochInfo(ctx, epoch)
 	}
 }
 

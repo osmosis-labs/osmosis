@@ -8,6 +8,9 @@ import (
 
 	appparams "github.com/c-osmosis/osmosis/app/params"
 	_ "github.com/c-osmosis/osmosis/client/docs/statik"
+	"github.com/c-osmosis/osmosis/x/epochs"
+	epochskeeper "github.com/c-osmosis/osmosis/x/epochs/keeper"
+	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
 	"github.com/c-osmosis/osmosis/x/gamm"
 	gammkeeper "github.com/c-osmosis/osmosis/x/gamm/keeper"
 	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
@@ -127,6 +130,7 @@ var (
 		incentives.AppModuleBasic{},
 		lockup.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		epochs.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -185,6 +189,7 @@ type OsmosisApp struct {
 	GAMMKeeper       gammkeeper.Keeper
 	IncentivesKeeper incentiveskeeper.Keeper
 	LockupKeeper     lockupkeeper.Keeper
+	EpochsKeeper     epochskeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -224,6 +229,7 @@ func NewOsmosisApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, incentivestypes.StoreKey, lockuptypes.StoreKey,
+		epochstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -321,6 +327,7 @@ func NewOsmosisApp(
 	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper)
+	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 
 	app.GAMMKeeper = *gammKeeper.SetHooks(
 		gammtypes.NewMultiGammHooks(
@@ -337,6 +344,12 @@ func NewOsmosisApp(
 	app.IncentivesKeeper = *incentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
 		// insert incentive hooks receivers here
+		),
+	)
+
+	app.EpochsKeeper = *epochsKeeper.SetHooks(
+		epochstypes.NewMultiEpochHooks(
+		// insert epoch hooks receivers here
 		),
 	)
 

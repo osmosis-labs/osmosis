@@ -13,13 +13,29 @@ import (
 // BeginBlocker of epochs module
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	// TODO: epoch is always more than 2 blocks on this implementation
 
+	// Note: epoch is always more than 2 blocks on this implementation as epoch_endblock and epoch_startblock are separate
+	// epoch_startblock(n+1) = epoch_endblock(n) + 1
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
-		if epochInfo.CurrentEpochEnded {
+		if !epochInfo.EpochCountingStarted { // epoch counting not started
+			if epochInfo.StartTime.Before(ctx.BlockTime()) { // check time is good to start
+				epochInfo.EpochCountingStarted = true
+				epochInfo.CurrentEpochEnded = false
+				epochInfo.CurrentEpoch = 0
+				epochInfo.CurrentEpochStartTime = ctx.BlockTime()
+				ctx.EventManager().EmitEvent(
+					sdk.NewEvent(
+						types.EventTypeEpochStart,
+						sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochInfo.CurrentEpoch)),
+						sdk.NewAttribute(types.AttributeEpochStartTime, fmt.Sprintf("%d", epochInfo.CurrentEpochStartTime.Unix())),
+					),
+				)
+			}
+		} else if epochInfo.CurrentEpochEnded { // epoch ended in last block
 			epochInfo.CurrentEpochEnded = false
 			epochInfo.CurrentEpoch = epochInfo.CurrentEpoch + 1
 			epochInfo.CurrentEpochStartTime = ctx.BlockTime()
+
 			k.SetEpochInfo(ctx, epochInfo)
 			k.OnEpochStart(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
 			ctx.EventManager().EmitEvent(
@@ -39,6 +55,12 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
+		// if epoch counting not started, continue to next counter
+		if !epochInfo.EpochCountingStarted {
+			return false
+		}
+
+		// check epoch duration pass and set the current epoch ended
 		nextEpochTimeEst := epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
 		if ctx.BlockTime().Before(nextEpochTimeEst) {
 			return false
@@ -52,18 +74,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			sdk.NewEvent(
 				types.EventTypeEpochEnd,
 				sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochInfo.CurrentEpoch)),
-			),
-		)
-
-		// TODO: epoch start should be always begin blocker? for now we do on endblocker
-		epochInfo.CurrentEpoch = epochInfo.CurrentEpoch + 1
-		epochInfo.CurrentEpochStartTime = ctx.BlockTime()
-		k.OnEpochStart(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeEpochStart,
-				sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochInfo.CurrentEpoch)),
-				sdk.NewAttribute(types.AttributeEpochStartTime, fmt.Sprintf("%d", epochInfo.CurrentEpochStartTime.Unix())),
 			),
 		)
 		return false
