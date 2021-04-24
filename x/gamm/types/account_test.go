@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -18,8 +19,13 @@ var (
 	noErr          = false
 )
 
+// Expected is un-scaled
 func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
-	require.Equal(t, expected.String(), pool.GetTotalWeight().String())
+	scaledExpected := expected.MulRaw(GuaranteedWeightPrecision)
+	fmt.Printf("%v, %v\n", expected.String(), scaledExpected.String())
+	require.Equal(t,
+		scaledExpected.String(),
+		pool.GetTotalWeight().String())
 }
 
 func TestPoolAccountShareDenom(t *testing.T) {
@@ -128,7 +134,7 @@ func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 		sdk.NewCoin("test1", sdk.NewInt(1)))
 	require.NoError(t, err)
 
-	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
+	testTotalWeight(t, sdk.NewInt(300), pacc)
 
 	PoolAsset, err := pacc.GetPoolAsset("test1")
 	require.NoError(t, err)

@@ -43,7 +43,9 @@ type PoolAccountI interface {
 
 var (
 	// TODO: Add `GenesisAccount` type
-	_ PoolAccountI = (*PoolAccount)(nil)
+	_                         PoolAccountI = (*PoolAccount)(nil)
+	MaxUserSpecifiedWeight    sdk.Int      = sdk.NewIntFromUint64(1 << 20)
+	GuaranteedWeightPrecision int64        = 1 << 30
 )
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
@@ -125,7 +127,7 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 	newTotalWeight := pa.TotalWeight
 
 	// TODO: Refactor this into PoolAsset.validate()
-	for _, asset := range PoolAssets {
+	for i, asset := range PoolAssets {
 		if asset.Token.Amount.LTE(sdk.ZeroInt()) {
 			return fmt.Errorf("can't add the zero or negative balance of token")
 		}
@@ -140,7 +142,9 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 		}
 		exists[asset.Token.Denom] = true
 
-		newTotalWeight = newTotalWeight.Add(asset.Weight)
+		// Scale weight from the user provided weight to the correct internal weight
+		PoolAssets[i].Weight = PoolAssets[i].Weight.MulRaw(GuaranteedWeightPrecision)
+		newTotalWeight = newTotalWeight.Add(PoolAssets[i].Weight)
 	}
 
 	// TODO: Change this to a more efficient sorted insert algorithm.
