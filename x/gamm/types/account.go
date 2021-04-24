@@ -125,9 +125,10 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 	}
 
 	newTotalWeight := pa.TotalWeight
+	scaledPoolAssets := make([]PoolAsset, 0, len(PoolAssets))
 
 	// TODO: Refactor this into PoolAsset.validate()
-	for i, asset := range PoolAssets {
+	for _, asset := range PoolAssets {
 		if asset.Token.Amount.LTE(sdk.ZeroInt()) {
 			return fmt.Errorf("can't add the zero or negative balance of token")
 		}
@@ -143,14 +144,15 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 		exists[asset.Token.Denom] = true
 
 		// Scale weight from the user provided weight to the correct internal weight
-		PoolAssets[i].Weight = PoolAssets[i].Weight.MulRaw(GuaranteedWeightPrecision)
-		newTotalWeight = newTotalWeight.Add(PoolAssets[i].Weight)
+		asset.Weight = asset.Weight.MulRaw(GuaranteedWeightPrecision)
+		scaledPoolAssets = append(scaledPoolAssets, asset)
+		newTotalWeight = newTotalWeight.Add(asset.Weight)
 	}
 
 	// TODO: Change this to a more efficient sorted insert algorithm.
 	// Furthermore, consider changing the underlying data type to allow in-place modification if the
 	// number of PoolAssets is expected to be large.
-	pa.PoolAssets = append(pa.PoolAssets, PoolAssets...)
+	pa.PoolAssets = append(pa.PoolAssets, scaledPoolAssets...)
 	sort.Slice(pa.PoolAssets, func(i, j int) bool {
 		PoolAssetA := pa.PoolAssets[i]
 		PoolAssetB := pa.PoolAssets[j]

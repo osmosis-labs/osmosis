@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -22,7 +21,6 @@ var (
 // Expected is un-scaled
 func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
 	scaledExpected := expected.MulRaw(GuaranteedWeightPrecision)
-	fmt.Printf("%v, %v\n", expected.String(), scaledExpected.String())
 	require.Equal(t,
 		scaledExpected.String(),
 		pool.GetTotalWeight().String())
