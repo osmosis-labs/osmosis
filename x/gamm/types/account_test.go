@@ -625,7 +625,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
     exit_fee: "0.025000000000000000"
     smooth_weight_change_params: null
   future_pool_governor: ""
-  total_weight: "300"
+  total_weight: "322122547200"
   total_share:
     denom: gamm/pool/10
     amount: "0"
@@ -633,11 +633,11 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
   - token:
       denom: test1
       amount: "10000"
-    weight: "100"
+    weight: "107374182400"
   - token:
       denom: test2
       amount: "50000"
-    weight: "200"
+    weight: "214748364800"
 `
 	require.Equal(t, want, string(bs))
 }
