@@ -24,7 +24,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	claimQueryCmd.AddCommand(
 		GetCmdQueryClaimable(),
-		GetCmdQueryWithdrawable(),
 		GetCmdQueryActivities(),
 	)
 
@@ -53,38 +52,6 @@ $ %s query claim claimable <address>
 			queryClient := types.NewQueryClient(clientCtx)
 			// Query store
 			res, err := queryClient.Claimable(context.Background(), &types.ClaimableRequest{Sender: args[0]})
-			if err != nil {
-				return err
-			}
-			return clientCtx.PrintObjectLegacy(res)
-		},
-	}
-	flags.AddQueryFlagsToCmd(cmd)
-	return cmd
-}
-
-// GetCmdQueryWithdrawable implements the query withdrawable command.
-func GetCmdQueryWithdrawable() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "withdrawable [address]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Query the withdrawable amount per account.",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the withdrawable amount for the account.
-Example:
-$ %s query claim withdrawable <address>
-`,
-				version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			// Query store
-			res, err := queryClient.Withdrawable(context.Background(), &types.WithdrawableRequest{Sender: args[0]})
 			if err != nil {
 				return err
 			}

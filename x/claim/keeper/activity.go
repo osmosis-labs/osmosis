@@ -29,15 +29,9 @@ func (k Keeper) GetActivities(ctx sdk.Context) []types.UserActivities {
 
 	activities := []types.UserActivities{}
 	for user, actions := range actionsByUser {
-		address, err := sdk.AccAddressFromBech32(user)
-		if err != nil {
-			panic(err)
-		}
-		withdrawn := k.GetWithdrawnActions(ctx, address)
 		activities = append(activities, types.UserActivities{
 			User:      user,
 			Actions:   actions,
-			Withdrawn: withdrawn,
 		})
 	}
 	return activities
@@ -87,50 +81,9 @@ func (k Keeper) SetUserAction(ctx sdk.Context, address sdk.AccAddress, action ty
 	return true
 }
 
-// GetClaimablePercentageByActivity returns completed action percentage from user's activity
+// GetClaimablePercentageByActivity returns percentage by user's activity when the weight of actions are same
 func (k Keeper) GetClaimablePercentageByActivity(ctx sdk.Context, address sdk.AccAddress) sdk.Dec {
-	numActions := len(k.GetUserActions(ctx, address))
-	numWithdrawnActions := len(k.GetWithdrawnActions(ctx, address))
 	numTotalActions := len(types.Action_name)
-	return sdk.NewDec(int64(numActions - numWithdrawnActions)).QuoInt64(int64(numTotalActions))
+	return sdk.NewDec(1).QuoInt64(int64(numTotalActions))
 }
 
-func (k Keeper) SetUserWithdrawnActions(ctx sdk.Context, address sdk.AccAddress, actions []types.Action) {
-	for _, action := range actions {
-		k.SetUserWithdrawnAction(ctx, address, action)
-	}
-}
-
-func (k Keeper) GetWithdrawnActions(ctx sdk.Context, address sdk.AccAddress) []types.Action {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, append([]byte(types.WithdrawnActionKey), address.Bytes()...))
-	iterator := prefixStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	actions := []types.Action{}
-	for ; iterator.Valid(); iterator.Next() {
-		value := types.UserActivity{}
-		err := json.Unmarshal(iterator.Value(), &value)
-		if err != nil {
-			panic(err)
-		}
-		actions = append(actions, value.Action)
-	}
-
-	return actions
-}
-
-func (k Keeper) SetUserWithdrawnAction(ctx sdk.Context, address sdk.AccAddress, action types.Action) {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(types.WithdrawnActionKey))
-	key := append(address, sdk.Uint64ToBigEndian(uint64(action))...)
-	value := types.UserActivity{
-		User:   address.String(),
-		Action: action,
-	}
-	valueBz, err := json.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-	prefixStore.Set(key, valueBz)
-}

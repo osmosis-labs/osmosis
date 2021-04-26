@@ -26,21 +26,6 @@ func (k Keeper) Claimable(
 	return &types.ClaimableResponse{Coins: coins}, err
 }
 
-// Withdrawable returns withdrawable amount per user
-func (k Keeper) Withdrawable(
-	goCtx context.Context,
-	req *types.WithdrawableRequest,
-) (*types.WithdrawableResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	coins, err := k.GetWithdrawableByActivity(ctx, req.Sender)
-	return &types.WithdrawableResponse{Coins: coins}, err
-}
-
 // Activities returns activities
 func (k Keeper) Activities(
 	goCtx context.Context,
@@ -63,10 +48,8 @@ func (k Keeper) Activities(
 		types.ActionDelegateStake,
 	}
 	completedActions := k.GetUserActions(ctx, address)
-	withdrawnActions := k.GetWithdrawnActions(ctx, address)
 	return &types.ActivitiesResponse{
 		All:       types.ActionToNames(allActions),
 		Completed: types.ActionToNames(completedActions),
-		Withdrawn: types.ActionToNames(withdrawnActions),
 	}, err
 }

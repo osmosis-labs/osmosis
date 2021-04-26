@@ -21,7 +21,4 @@ const (
 
 	// ActionKey defines the store key to store user accomplished actions
 	ActionKey = "action"
-
-	// WithdrawnActionKey defines the store key to store user withdrawn flags for actions
-	WithdrawnActionKey = "withdrawn"
 )

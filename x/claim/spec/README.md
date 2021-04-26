@@ -27,17 +27,7 @@ Each action is defined in enum in implementation
 	ActionDelegateStake Action = 3
 ```
 All of these actions are monitored by registring claim **hooks** to governance, staking, gamm, lockup modules hooks.
-
-### User withdrawables
-It is how much a user can withraw now.
-```
-user_withdrawables = user_claimables x (percentage_accomplished_actions - percentage_withdrawn_actions)
-```
-
-### User withdrawn actions
-A user can't withdraw twice for single action type, example `Vote`. To withdraw all, they need to do every action.
-To do this, claim module manage withdrawn actions flag. It's using same strategy as user actions, but only count the actions that user has already withdrawn.
-If Alice has done `DelegateStake` action, withdraw 25% of claimables, and then if she do `Vote` action, she is able to withdraw another 25% of claimables. Here, withdrawn actions flag is used to avoid double withdraw on `DelegateStake` action.
+If Alice has done `DelegateStake` action, claim module withdraw 25% of claimables, and then if she do `Vote` action, she is able to withdraw another 25% of claimables. Here, double `DelegateStake` action only withdraw 25%.
 
 ### Airdrop Tools
 There are tools to generate genesis from cosmos-hub snapshot.

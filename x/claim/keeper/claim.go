@@ -142,7 +142,6 @@ func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	}
 
 	k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, coins)
-	k.SetUserWithdrawnActions(ctx, address, k.GetUserActions(ctx, address))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
