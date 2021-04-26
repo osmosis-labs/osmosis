@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// bank message types
+// message types
 const (
 	TypeMsgClaim = "send"
 )

@@ -68,10 +68,13 @@ func (k Keeper) GetUserActions(ctx sdk.Context, address sdk.AccAddress) []types.
 	return actions
 }
 
-func (k Keeper) SetUserAction(ctx sdk.Context, address sdk.AccAddress, action types.Action) {
+func (k Keeper) SetUserAction(ctx sdk.Context, address sdk.AccAddress, action types.Action) bool {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ActionKey))
 	key := append(address, sdk.Uint64ToBigEndian(uint64(action))...)
+	if prefixStore.Has(key) {
+		return false
+	}
 	value := types.UserActivity{
 		User:   address.String(),
 		Action: action,
@@ -81,6 +84,7 @@ func (k Keeper) SetUserAction(ctx sdk.Context, address sdk.AccAddress, action ty
 		panic(err)
 	}
 	prefixStore.Set(key, valueBz)
+	return true
 }
 
 // GetClaimablePercentageByActivity returns completed action percentage from user's activity

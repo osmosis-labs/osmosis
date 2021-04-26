@@ -12,19 +12,27 @@ import (
 )
 
 func (k Keeper) AfterAddLiquidity(ctx sdk.Context, sender sdk.AccAddress) {
-	k.SetUserAction(ctx, sender, types.ActionAddLiquidity)
+	if k.SetUserAction(ctx, sender, types.ActionAddLiquidity) {
+		k.ClaimCoins(ctx, sender.String())
+	}
 }
 
 func (k Keeper) AfterSwap(ctx sdk.Context, sender sdk.AccAddress) {
-	k.SetUserAction(ctx, sender, types.ActionSwap)
+	if k.SetUserAction(ctx, sender, types.ActionSwap) {
+		k.ClaimCoins(ctx, sender.String())
+	}
 }
 
 func (k Keeper) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	k.SetUserAction(ctx, voterAddr, types.ActionVote)
+	if k.SetUserAction(ctx, voterAddr, types.ActionVote) {
+		k.ClaimCoins(ctx, voterAddr.String())
+	}
 }
 
-func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	k.SetUserAction(ctx, delAddr, types.ActionDelegateStake)
+func (k Keeper) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	if k.SetUserAction(ctx, delAddr, types.ActionDelegateStake) {
+		k.ClaimCoins(ctx, delAddr.String())
+	}
 }
 
 //_________________________________________________________________________________________
@@ -85,6 +93,7 @@ func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, v
 func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.BeforeDelegationCreated(ctx, delAddr, valAddr)
 }
 func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
