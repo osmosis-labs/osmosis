@@ -1,11 +1,8 @@
 package keeper
 
 import (
-	"time"
-
 	"github.com/c-osmosis/osmosis/x/claim/types"
 	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -43,7 +40,6 @@ type Hooks struct {
 }
 
 var _ gammtypes.GammHooks = Hooks{}
-var _ lockuptypes.LockupHooks = Hooks{}
 var _ govtypes.GovHooks = Hooks{}
 var _ stakingtypes.StakingHooks = Hooks{}
 
@@ -63,12 +59,6 @@ func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 }
 func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	h.k.AfterSwap(ctx, sender)
-}
-
-// lockup hooks
-func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
-}
-func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
 }
 
 // governance hooks
