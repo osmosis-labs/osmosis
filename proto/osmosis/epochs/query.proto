@@ -10,8 +10,8 @@ option go_package = "github.com/c-osmosis/osmosis/x/epochs/types";
 
 // Query defines the gRPC querier service.
 service Query {
-    // Epochs provide running epochs
-    rpc Epochs(QueryEpochsInfoRequest) returns (QueryEpochsInfoResponse) {
+    // EpochInfos provide running epochInfos
+    rpc EpochInfos(QueryEpochsInfoRequest) returns (QueryEpochsInfoResponse) {
         option (google.api.http).get = "/osmosis/epochs/v1beta1/epochs";
     }
 }

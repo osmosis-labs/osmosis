@@ -17,11 +17,10 @@ type (
 	}
 )
 
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, hooks types.EpochHooks) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
-		hooks:    hooks,
 	}
 }
 

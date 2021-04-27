@@ -9,8 +9,8 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// Epochs provide running epochs
-func (k Keeper) Epochs(c context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
+// EpochInfos provide running epochInfos
+func (k Keeper) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	return &types.QueryEpochsInfoResponse{
