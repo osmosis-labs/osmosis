@@ -80,3 +80,7 @@ func (k Keeper) deletePotRefByKey(ctx sdk.Context, key []byte, potID uint64) {
 		store.Set(key, bz)
 	}
 }
+
+func getTotalLockedDenomKey(denom string) []byte {
+	return combineKeys(types.KeyPrefixTotalLockedDenom, []byte(denom))
+}

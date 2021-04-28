@@ -143,10 +143,12 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 func (k Keeper) GetLocksToDistributionForOwner(ctx sdk.Context, distrTo lockuptypes.QueryCondition, owner sdk.AccAddress) []lockuptypes.PeriodLock {
   switch distrTo.LockQueryType {
   case lockuptypes.ByDuration:
-    return k.lk.GetAccountLockedLongerDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
+    return k.lk.GetAccountLockedLongerDurationDenom(ctx, owner, distrTo.Denom, distrTo.Duration)
   case lockuptypes.ByTime:
-    return k.lk.GetAccountLockedPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
-  }
+    return k.lk.GetAccountLockedPastTimeDenom(ctx, owner, distrTo.Denom, distrTo.Timestamp)
+	default:
+	}
+	return []lockuptypes.PeriodLock{}
 }
 
 // GetLocksToDistribution get locks that are associated to a condition
@@ -329,25 +331,20 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	cacheCtx, _ := ctx.CacheContext()
 
   for _, pot := range pots {
-    distrBeginEpoch := currentEpoch
-    blockTime := ctx.BlockTime()
-    if pot.StartTime.After(blockTime) {
-      avgBlockTime := time.Second * 5
-      epochDuration := params.BlockPerEpoch * int64(avgBlockTime)
-      distrBeginEpoch = currentEpoch + 1 + int64(pot.StartTime.Sub(blockTime))/epochDuration
-    }
     // total distribution amount = pot_size * denom_lock_amount / total_denom_lock_amount
     distrCoins := sdk.Coins{}
     remainCoins := pot.Coins.Sub(pot.DistributedCoins)
     locks := k.GetLocksToDistributionForOwner(cacheCtx, pot.DistributeTo, addr)
+
+		totalLocked := k.getTotalLockedDenom(ctx, pot.DistributeTo.Denom)
     denomLockAmt := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
     for _, remainCoin := range remainCoins {
-      amt := remainCoin.Amount.Mul(denomLockAmt).Div(pot.TotalLock)
-      distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+      amt := remainCoin.Amount.Mul(denomLockAmt).Quo(totalLocked)
+      distrCoins = distrCoins.Add(sdk.NewCoin(remainCoin.Denom, amt))
     }
     
     distrCoins.Sort()
-    estimatedRewards = estimatedRewards.Add(distrCoins)
+    estimatedRewards = estimatedRewards.Add(distrCoins...)
   }
 
 	return estimatedRewards

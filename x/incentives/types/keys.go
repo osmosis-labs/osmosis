@@ -45,6 +45,10 @@ var (
 
 	// KeyEpochBeginBlock defines key for storing begin block of current epoch
 	KeyEpochBeginBlock = []byte{0x09}
+
+	// KeyTotalLockedDenom defines key for storing total locked token amount per
+	// denom
+	KeyPrefixTotalLockedDenom = []byte{0x10}
 )
 
 func KeyPrefix(p string) []byte {

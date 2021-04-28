@@ -19,4 +19,11 @@ type BankKeeper interface {
 type LockupKeeper interface {
 	GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp time.Time) []lockuptypes.PeriodLock
 	GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []lockuptypes.PeriodLock
+	GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []lockuptypes.PeriodLock
+	GetAccountLockedLongerDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []lockuptypes.PeriodLock
+}
+
+type IncentivesKeeper interface {
+	IncreaseTotalLocked(ctx sdk.Context, amount sdk.Coins)
+	DecreaseTotalLocked(ctx sdk.Context, amount sdk.Coins)
 }
