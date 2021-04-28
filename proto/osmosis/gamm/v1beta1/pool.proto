@@ -17,7 +17,7 @@ message PoolAsset {
   // the denomination must be unique amongst all PoolAssets for this pool.
   cosmos.base.v1beta1.Coin token = 1
       [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
-  // Weight that is not normalized. This weight must be less than 2^32
+  // Weight that is not normalized. This weight must be less than 2^50
   string weight = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"weight\"",

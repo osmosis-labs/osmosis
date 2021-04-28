@@ -20,7 +20,7 @@ var (
 	ErrTooMuchSwapFee           = sdkerrors.Register(ModuleName, 25, "swap fee should be lesser than 1 (100%)")
 	ErrTooMuchExitFee           = sdkerrors.Register(ModuleName, 26, "exit fee should be lesser than 1 (100%)")
 	ErrNotPositiveWeight        = sdkerrors.Register(ModuleName, 27, "token weight should be greater than 0")
-	ErrWeightTooLarge           = sdkerrors.Register(ModuleName, 28, "token weight should be less than {MAX VALUE}")
+	ErrWeightTooLarge           = sdkerrors.Register(ModuleName, 28, "user specified token weight should be less than 2^20")
 	ErrNotPositiveCriteria      = sdkerrors.Register(ModuleName, 29, "min out amount or max in amount should be positive")
 	ErrNotPositiveRequireAmount = sdkerrors.Register(ModuleName, 30, "required amount should be positive")
 )

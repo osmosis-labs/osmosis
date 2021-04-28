@@ -243,6 +243,14 @@ func TestMsgCreatePool(t *testing.T) {
 			}),
 			expectPass: true,
 		},
+		{
+			name: "too large of a weight",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolAssets[0].Weight = sdk.NewInt(1 << 21)
+				return msg
+			}),
+			expectPass: false,
+		},
 	}
 
 	for _, test := range tests {

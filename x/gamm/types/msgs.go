@@ -88,6 +88,10 @@ func (msg MsgCreatePool) ValidateBasic() error {
 			return sdkerrors.Wrap(ErrNotPositiveWeight, asset.Weight.String())
 		}
 
+		if asset.Weight.GTE(MaxUserSpecifiedWeight) {
+			return sdkerrors.Wrap(ErrWeightTooLarge, asset.Weight.String())
+		}
+
 		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}

@@ -36,7 +36,7 @@ type PoolAsset struct {
 	// Coins we are talking about,
 	// the denomination must be unique amongst all PoolAssets for this pool.
 	Token types.Coin `protobuf:"bytes,1,opt,name=token,proto3" json:"token" yaml:"token"`
-	// Weight that is not normalized. This weight must be less than 2^32
+	// Weight that is not normalized. This weight must be less than 2^50
 	Weight github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"weight" yaml:"weight"`
 }
 
