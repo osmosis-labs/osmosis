@@ -11,79 +11,84 @@ option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 
 // Query defines the gRPC querier service.
 service Query {
-      // returns coins that is going to be distributed
-	rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest) returns (ModuleToDistributeCoinsResponse);
-	// returns coins that are distributed by module so far
-	rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest) returns (ModuleDistributedCoinsResponse);
+  // returns coins that is going to be distributed
+  rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest)
+      returns (ModuleToDistributeCoinsResponse);
+  // returns coins that are distributed by module so far
+  rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest)
+      returns (ModuleDistributedCoinsResponse);
 
-	// returns Pot by id
-	rpc PotByID(PotByIDRequest) returns (PotByIDResponse);
-	// returns pots both upcoming and active
-	rpc Pots(PotsRequest) returns (PotsResponse);
-	// returns active pots
-	rpc ActivePots(ActivePotsRequest) returns (ActivePotsResponse);
-	// returns scheduled pots
-	rpc UpcomingPots(UpcomingPotsRequest) returns (UpcomingPotsResponse);
-	// returns rewards estimation at a future specific time
-	rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse);
+  // returns Pot by id
+  rpc PotByID(PotByIDRequest) returns (PotByIDResponse);
+  // returns pots both upcoming and active
+  rpc Pots(PotsRequest) returns (PotsResponse);
+  // returns active pots
+  rpc ActivePots(ActivePotsRequest) returns (ActivePotsResponse);
+  // returns scheduled pots
+  rpc UpcomingPots(UpcomingPotsRequest) returns (UpcomingPotsResponse);
+  // returns rewards estimation at a future specific time
+  rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse);
 }
 
 message ModuleToDistributeCoinsRequest {}
 message ModuleToDistributeCoinsResponse {
-    repeated cosmos.base.v1beta1.Coin coins = 1
-		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 message ModuleDistributedCoinsRequest {}
 message ModuleDistributedCoinsResponse {
-    repeated cosmos.base.v1beta1.Coin coins = 1
-		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
-message PotByIDRequest {
-    uint64 id = 1;
-}
-message PotByIDResponse {
-    Pot pot = 1;
-}
+message PotByIDRequest { uint64 id = 1; }
+message PotByIDResponse { Pot pot = 1; }
 
 message PotsRequest {
-    // pagination defines an pagination for the request.
-    cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message PotsResponse {
-    repeated Pot data = 1 [(gogoproto.nullable) = false];
-    // pagination defines an pagination for the response.
-    cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  repeated Pot data = 1 [ (gogoproto.nullable) = false ];
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message ActivePotsRequest {
-    // pagination defines an pagination for the request.
-    cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message ActivePotsResponse {
-    repeated Pot data = 1 [(gogoproto.nullable) = false];
-    // pagination defines an pagination for the response.
-    cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  repeated Pot data = 1 [ (gogoproto.nullable) = false ];
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message UpcomingPotsRequest {
-    // pagination defines an pagination for the request.
-    cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message UpcomingPotsResponse {
-    repeated Pot data = 1 [(gogoproto.nullable) = false];
-    // pagination defines an pagination for the response.
-    cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  repeated Pot data = 1 [ (gogoproto.nullable) = false ];
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message RewardsEstRequest {
-    bytes owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-	repeated lockup.PeriodLock locks = 2 [(gogoproto.nullable) = false];
-	repeated Pot pots = 3 [(gogoproto.nullable) = false];
-	int64 end_epoch = 4;
+  bytes owner = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  repeated lockup.PeriodLock locks = 2 [ (gogoproto.nullable) = false ];
+  repeated Pot pots = 3 [ (gogoproto.nullable) = false ];
+  int64 end_epoch = 4;
 }
 message RewardsEstResponse {
-    repeated cosmos.base.v1beta1.Coin coins = 1
-		[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }

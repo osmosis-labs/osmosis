@@ -26,10 +26,6 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	if poolAcc.GetPoolParams().Lock {
-		return sdk.Int{}, sdk.Dec{}, types.ErrPoolLocked
-	}
-
 	inPoolAsset, err := poolAcc.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
@@ -130,10 +126,6 @@ func (k Keeper) SwapExactAmountOut(
 	poolAcc, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
-	}
-
-	if poolAcc.GetPoolParams().Lock {
-		return sdk.Int{}, sdk.Dec{}, types.ErrPoolLocked
 	}
 
 	inPoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)

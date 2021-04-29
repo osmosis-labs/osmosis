@@ -373,7 +373,6 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 	msg := &types.MsgCreatePool{
 		Sender: clientCtx.GetFromAddress().String(),
 		PoolParams: types.PoolParams{
-			Lock:    false,
 			SwapFee: swapFee,
 			ExitFee: exitFee,
 		},
