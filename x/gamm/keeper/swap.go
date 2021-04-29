@@ -21,17 +21,8 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	poolAcc, err := k.GetPool(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
-	}
-
-	inPoolAsset, err := poolAcc.GetPoolAsset(tokenIn.Denom)
-	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
-	}
-
-	outPoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
+	poolAcc, inPoolAsset, outPoolAsset, err :=
+		k.getPoolAndInOutAssets(ctx, poolId, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -123,17 +114,8 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	poolAcc, err := k.GetPool(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
-	}
-
-	inPoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
-	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
-	}
-
-	outPoolAsset, err := poolAcc.GetPoolAsset(tokenOut.Denom)
+	poolAcc, inPoolAsset, outPoolAsset, err :=
+		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -211,17 +193,8 @@ func (k Keeper) SwapExactAmountOut(
 }
 
 func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
-	poolAcc, err := k.GetPool(ctx, poolId)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	inPoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	outPoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
+	poolAcc, inPoolAsset, outPoolAsset, err :=
+		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -236,17 +209,8 @@ func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom,
 }
 
 func (k Keeper) CalculateSpotPriceSansSwapFee(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
-	poolAcc, err := k.GetPool(ctx, poolId)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	inPoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	outPoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
+	_, inPoolAsset, outPoolAsset, err :=
+		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}

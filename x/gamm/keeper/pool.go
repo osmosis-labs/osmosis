@@ -79,3 +79,26 @@ func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
 
 	return poolNumber
 }
+
+func (k Keeper) getPoolAndInOutAssets(
+	ctx sdk.Context, poolId uint64,
+	tokenInDenom string,
+	tokenOutDenom string) (
+	pool types.PoolAccountI,
+	inAsset types.PoolAsset,
+	outAsset types.PoolAsset,
+	err error,
+) {
+	pool, err = k.GetPool(ctx, poolId)
+	if err != nil {
+		return
+	}
+
+	inAsset, err = pool.GetPoolAsset(tokenInDenom)
+	if err != nil {
+		return
+	}
+
+	outAsset, err = pool.GetPoolAsset(tokenOutDenom)
+	return
+}
