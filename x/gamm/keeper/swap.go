@@ -27,15 +27,8 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	// TODO: Understand if we are handling swap fee consistently, with the global swap fee and the pool swap fee
-	//
-	spotPriceBefore := calcSpotPriceWithSwapFee(
-		inPoolAsset.Token.Amount.ToDec(),
-		inPoolAsset.Weight.ToDec(),
-		outPoolAsset.Token.Amount.ToDec(),
-		outPoolAsset.Weight.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
-	)
+	// TODO: Understand if we are handling swap fee consistently,
+	// with the global swap fee and the pool swap fee
 
 	tokenOutAmount = calcOutGivenIn(
 		inPoolAsset.Token.Amount.ToDec(),
@@ -55,23 +48,6 @@ func (k Keeper) SwapExactAmountIn(
 
 	inPoolAsset.Token.Amount = inPoolAsset.Token.Amount.Add(tokenIn.Amount)
 	outPoolAsset.Token.Amount = outPoolAsset.Token.Amount.Sub(tokenOutAmount)
-
-	spotPriceAfter = calcSpotPriceWithSwapFee(
-		inPoolAsset.Token.Amount.ToDec(),
-		inPoolAsset.Weight.ToDec(),
-		outPoolAsset.Token.Amount.ToDec(),
-		outPoolAsset.Weight.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
-	)
-	if spotPriceAfter.LT(spotPriceBefore) {
-		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
-	}
-
-	// TODO: Do we need this check, seems pretty expensive?
-	// I'd rather spend that computation in ensuring a better approx
-	if spotPriceBefore.GT(tokenIn.Amount.ToDec().QuoInt(tokenOutAmount)) {
-		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
-	}
 
 	tokenOut := sdk.Coin{Denom: tokenOutDenom, Amount: tokenOutAmount}
 
@@ -101,14 +77,6 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	spotPriceBefore := calcSpotPriceWithSwapFee(
-		inPoolAsset.Token.Amount.ToDec(),
-		inPoolAsset.Weight.ToDec(),
-		outPoolAsset.Token.Amount.ToDec(),
-		outPoolAsset.Weight.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
-	)
-
 	tokenInAmount = calcInGivenOut(
 		inPoolAsset.Token.Amount.ToDec(),
 		inPoolAsset.Weight.ToDec(),
@@ -127,20 +95,6 @@ func (k Keeper) SwapExactAmountOut(
 
 	inPoolAsset.Token.Amount = inPoolAsset.Token.Amount.Add(tokenInAmount)
 	outPoolAsset.Token.Amount = outPoolAsset.Token.Amount.Sub(tokenOut.Amount)
-
-	spotPriceAfter = calcSpotPriceWithSwapFee(
-		inPoolAsset.Token.Amount.ToDec(),
-		inPoolAsset.Weight.ToDec(),
-		outPoolAsset.Token.Amount.ToDec(),
-		outPoolAsset.Weight.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
-	)
-	if spotPriceAfter.LT(spotPriceBefore) {
-		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
-	}
-	if spotPriceBefore.GT(tokenInAmount.ToDec().QuoInt(tokenOut.Amount)) {
-		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
-	}
 
 	tokenIn := sdk.Coin{Denom: tokenInDenom, Amount: tokenInAmount}
 
