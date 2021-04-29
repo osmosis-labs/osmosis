@@ -4,6 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type IncentiveKeeper interface {
+	IncreaseTotalLocked(ctx sdk.Context, coin sdk.Coins)
+	DecreaseTotalLocked(ctx sdk.Context, coin sdk.Coins)
+}
+
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins

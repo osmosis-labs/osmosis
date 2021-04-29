@@ -11,8 +11,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-var _ types.IncentivesKeeper = Keeper{}
-
 type Keeper struct {
 	cdc        codec.Marshaler
 	storeKey   sdk.StoreKey

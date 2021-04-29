@@ -1,8 +1,6 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -51,20 +49,4 @@ func (h MultiIncentiveHooks) AfterDistribute(ctx sdk.Context, potId uint64) {
 	for i := range h {
 		h[i].AfterDistribute(ctx, potId)
 	}
-}
-
-type LockupHook struct {
-	k IncentivesKeeper
-}
-
-func NewLockupHook(k IncentivesKeeper) LockupHook {
-	return LockupHook{k}
-}
-
-func (h LockupHook) OnTokenLocked(ctx sdk.Context, _ sdk.AccAddress, _ uint64, amount sdk.Coins, _ time.Duration, _ time.Time) {
-	h.k.IncreaseTotalLocked(ctx, amount)
-}
-
-func (h LockupHook) OnTokenUnlocked(ctx sdk.Context, _ sdk.AccAddress, _ uint64, amount sdk.Coins, _ time.Duration, _ time.Time) {
-	h.k.DecreaseTotalLocked(ctx, amount)
 }
