@@ -73,31 +73,12 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
 
-	err = poolAcc.UpdatePoolAssetBalances(sdk.NewCoins(
-		inPoolAsset.Token,
-		outPoolAsset.Token,
-	))
-	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
-	}
-	err = k.SetPool(ctx, poolAcc)
-	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
-	}
+	tokenOut := sdk.Coin{Denom: tokenOutDenom, Amount: tokenOutAmount}
 
-	err = k.bankKeeper.SendCoins(ctx, sender, poolAcc.GetAddress(), sdk.Coins{tokenIn})
+	err = k.updatePoolForSwap(ctx, poolAcc, sender, inPoolAsset, outPoolAsset, tokenIn, tokenOut)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
-
-	err = k.bankKeeper.SendCoins(ctx, poolAcc.GetAddress(), sender, sdk.Coins{
-		sdk.NewCoin(tokenOutDenom, tokenOutAmount),
-	})
-	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
-	}
-
-	k.hooks.AfterSwap(ctx, sender, poolAcc.GetId(), sdk.Coins{tokenIn}, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
 
 	return tokenOutAmount, spotPriceAfter, nil
 }
@@ -161,35 +142,56 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
 
-	err = poolAcc.UpdatePoolAssetBalances(sdk.NewCoins(
-		inPoolAsset.Token,
-		outPoolAsset.Token,
-	))
+	tokenIn := sdk.Coin{Denom: tokenInDenom, Amount: tokenInAmount}
+
+	err = k.updatePoolForSwap(ctx, poolAcc, sender, inPoolAsset, outPoolAsset, tokenIn, tokenOut)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
+	}
+	return tokenInAmount, spotPriceAfter, nil
+}
+
+// updatePoolForSwap takes a pool, sender, post-swap pool reserves, and tokenIn, tokenOut amounts
+// It then updates the pool's balances to the new reserve amounts, and
+// sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
+func (k Keeper) updatePoolForSwap(
+	ctx sdk.Context,
+	poolAcc types.PoolAccountI,
+	sender sdk.AccAddress,
+	updatedPoolAssetIn types.PoolAsset,
+	updatedPoolAssetOut types.PoolAsset,
+	tokenIn sdk.Coin,
+	tokenOut sdk.Coin,
+) error {
+	err := poolAcc.UpdatePoolAssetBalances(sdk.NewCoins(
+		updatedPoolAssetIn.Token,
+		updatedPoolAssetOut.Token,
+	))
+	if err != nil {
+		return err
 	}
 	err = k.SetPool(ctx, poolAcc)
 	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
+		return err
 	}
 
 	err = k.bankKeeper.SendCoins(ctx, sender, poolAcc.GetAddress(), sdk.Coins{
-		sdk.NewCoin(tokenInDenom, tokenInAmount),
+		tokenIn,
 	})
 	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
+		return err
 	}
 
 	err = k.bankKeeper.SendCoins(ctx, poolAcc.GetAddress(), sender, sdk.Coins{
 		tokenOut,
 	})
 	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
+		return err
 	}
 
-	k.hooks.AfterSwap(ctx, sender, poolAcc.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, sdk.Coins{tokenOut})
+	k.hooks.AfterSwap(ctx, sender, poolAcc.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 
-	return tokenInAmount, spotPriceAfter, nil
+	return err
 }
 
 func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
