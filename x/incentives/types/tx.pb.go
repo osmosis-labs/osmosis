@@ -36,7 +36,8 @@ var _ = time.Kitchen
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type MsgCreatePot struct {
-	IsPerpetual  bool                                          `protobuf:"varint,1,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
+	IsPerpetual bool `protobuf:"varint,1,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
+	// distribution incentives by third party
 	Owner        github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`
 	DistributeTo types.QueryCondition                          `protobuf:"bytes,3,opt,name=distribute_to,json=distributeTo,proto3" json:"distribute_to"`
 	Coins        github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,4,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`

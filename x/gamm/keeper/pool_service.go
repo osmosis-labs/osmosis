@@ -28,10 +28,6 @@ func (k Keeper) CreatePool(
 		)
 	}
 
-	if poolParams.Lock {
-		panic("don't create the locked pool")
-	}
-
 	poolAcc, err := k.NewPool(ctx, poolParams, futurePoolGovernor)
 	if err != nil {
 		return 0, err
@@ -109,10 +105,6 @@ func (k Keeper) JoinPool(
 		return err
 	}
 
-	if poolAcc.GetPoolParams().Lock {
-		return types.ErrPoolLocked
-	}
-
 	totalShareAmount := poolAcc.GetTotalShare().Amount
 	shareRatio := shareOutAmount.ToDec().QuoInt(totalShareAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
@@ -181,10 +173,6 @@ func (k Keeper) JoinSwapExternAmountIn(
 		return sdk.Int{}, err
 	}
 
-	if poolAcc.GetPoolParams().Lock {
-		return sdk.Int{}, types.ErrPoolLocked
-	}
-
 	PoolAsset, err := poolAcc.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -246,10 +234,6 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
-	if poolAcc.GetPoolParams().Lock {
-		return sdk.Int{}, types.ErrPoolLocked
-	}
-
 	PoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -308,10 +292,6 @@ func (k Keeper) ExitPool(
 	poolAcc, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return err
-	}
-
-	if poolAcc.GetPoolParams().Lock {
-		return types.ErrPoolLocked
 	}
 
 	totalShareAmount := poolAcc.GetTotalShare().Amount
@@ -398,10 +378,6 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
-	if poolAcc.GetPoolParams().Lock {
-		return sdk.Int{}, types.ErrPoolLocked
-	}
-
 	PoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -477,10 +453,6 @@ func (k Keeper) ExitSwapExternAmountOut(
 	poolAcc, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
-	}
-
-	if poolAcc.GetPoolParams().Lock {
-		return sdk.Int{}, types.ErrPoolLocked
 	}
 
 	PoolAsset, err := poolAcc.GetPoolAsset(tokenOut.Denom)

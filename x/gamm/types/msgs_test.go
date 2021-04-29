@@ -19,7 +19,6 @@ func TestMsgCreatePool(t *testing.T) {
 		properMsg := MsgCreatePool{
 			Sender: addr1,
 			PoolParams: PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			},
@@ -135,14 +134,6 @@ func TestMsgCreatePool(t *testing.T) {
 					Denom:  "test1",
 					Amount: sdk.NewInt(-10),
 				}
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "locked pool",
-			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.PoolParams.Lock = true
 				return msg
 			}),
 			expectPass: false,

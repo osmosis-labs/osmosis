@@ -96,13 +96,11 @@ func (suite *KeeperTestSuite) TestQueryPoolParams() {
 	suite.Require().Error(err)
 
 	poolId1 := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(15, 2),
 	})
 
 	poolId2 := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
 		SwapFee: sdk.NewDecWithPrec(1, 1),
 		ExitFee: sdk.NewDecWithPrec(15, 3),
 	})

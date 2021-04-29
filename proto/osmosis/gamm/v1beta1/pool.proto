@@ -24,10 +24,9 @@ message PoolAsset {
     (gogoproto.nullable) = false
   ];
 
-  // Weight that is normalized s.t. the sum of all pool assets' weights equals 1.
-  // If the user provides this value, it is ignored. 
-  // This should only ever be set by the state machine.
-  // This is left as a TODO for a future PR.
+  // Weight that is normalized s.t. the sum of all pool assets' weights
+  // equals 1. If the user provides this value, it is ignored. This should only
+  // ever be set by the state machine. This is left as a TODO for a future PR.
   // string normalizedWeight = 3 [
   //  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
   //  (gogoproto.moretags) = "yaml:\"normalized_weight\"",
@@ -39,10 +38,11 @@ message PoolAsset {
 // a start weight and end weight over a period of time.
 // Currently, the only smooth change supported is linear changing between
 // the two weights, but more types may be added in the future.
-// When these parameters are set, the weight w(t) for pool time `t` is the following:
+// When these parameters are set, the weight w(t) for pool time `t` is the
+// following:
 //   t <= start_time: w(t) = initial_pool_weights
-//   start_time < t <= start_time + duration: 
-//     w(t) = initial_pool_weights + (t - start_time) * 
+//   start_time < t <= start_time + duration:
+//     w(t) = initial_pool_weights + (t - start_time) *
 //       (target_pool_weights - initial_pool_weights) / (duration)
 //   t > start_time + duration: w(t) = target_pool_weights
 message SmoothWeightChangeParams {
@@ -64,20 +64,21 @@ message SmoothWeightChangeParams {
   // The initial pool weights. These are copied from the pool's settings
   // at the time of weight change instantiation.
   // The amount PoolAsset.token.amount field is ignored if present,
-  // future type refactorings should just have a type with the denom & weight here.
+  // future type refactorings should just have a type with the denom & weight
+  // here.
   repeated PoolAsset initialPoolWeights = 3 [
     (gogoproto.moretags) = "yaml:\"initial_pool_weights\"",
     (gogoproto.nullable) = false
   ];
-  // The target pool weights. The pool weights will change linearly with respect to time
-  // between start_time, and start_time + duration. 
-  // The amount PoolAsset.token.amount field is ignored if present,
-  // future type refactorings should just have a type with the denom & weight here.
+  // The target pool weights. The pool weights will change linearly with respect
+  // to time between start_time, and start_time + duration. The amount
+  // PoolAsset.token.amount field is ignored if present, future type
+  // refactorings should just have a type with the denom & weight here.
   repeated PoolAsset targetPoolWeights = 4 [
     (gogoproto.moretags) = "yaml:\"target_pool_weights\"",
     (gogoproto.nullable) = false
   ];
-  // Intermediate variable for the 'slope' of pool weights. This is equal to 
+  // Intermediate variable for the 'slope' of pool weights. This is equal to
   // (target_pool_weights - initial_pool_weights) / (duration)
   // TODO: Work out precision, and decide if this is good to add
   // repeated PoolAsset poolWeightSlope = 5 [
@@ -91,20 +92,18 @@ message SmoothWeightChangeParams {
 // Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
 message PoolParams {
-  // If the pool is locked, users can't join, exit or swap the pool.
-  bool lock = 1;
-  string swapFee = 2 [
+  string swapFee = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
-  string exitFee = 3 [
+  string exitFee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];
-  // 
-  SmoothWeightChangeParams smoothWeightChangeParams = 4 [
+  //
+  SmoothWeightChangeParams smoothWeightChangeParams = 3 [
     (gogoproto.moretags) = "yaml:\"smooth_weight_change_params\"",
     (gogoproto.nullable) = true
   ];
@@ -130,8 +129,9 @@ message PoolAccount {
   // {duration}
   // where {token name} if specified is the token which determines the governor,
   // and if not specified is the LP token for this pool.
-  // duration is a time specified as 0w,1w,2w, etc. which specifies how long the token
-  // would need to be locked up to count in governance. 0w means no lockup.
+  // duration is a time specified as 0w,1w,2w, etc. which specifies how long the
+  // token would need to be locked up to count in governance. 0w means no
+  // lockup.
   // TODO: Further improve these docs
   string future_pool_governor = 4
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
@@ -140,7 +140,7 @@ message PoolAccount {
     (gogoproto.moretags) = "yaml:\"total_share\"",
     (gogoproto.nullable) = false
   ];
-  // These are assumed to be sorted by denomiation. 
+  // These are assumed to be sorted by denomiation.
   // They contain the pool asset and the information about the weight
   repeated PoolAsset poolAssets = 6 [
     (gogoproto.moretags) = "yaml:\"pool_assets\"",

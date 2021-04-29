@@ -11,7 +11,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 
 		// Try to create pool without balances.
 		_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-			Lock:    false,
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, []types.PoolAsset{{
@@ -30,7 +29,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
 			poolId, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -51,24 +49,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			suite.Require().Panics(func() {
 				keeper := suite.app.GAMMKeeper
 				keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-					Lock:    true,
-					SwapFee: sdk.NewDecWithPrec(1, 2),
-					ExitFee: sdk.NewDecWithPrec(1, 2),
-				}, []types.PoolAsset{{
-					Weight: sdk.NewInt(100),
-					Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
-				}, {
-					Weight: sdk.NewInt(100),
-					Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
-				}}, "")
-			}, "can't create the pool with locked initially")
-		},
-	}, {
-		fn: func() {
-			suite.Require().Panics(func() {
-				keeper := suite.app.GAMMKeeper
-				keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-					Lock:    false,
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(1, 2),
 				}, []types.PoolAsset{{
@@ -85,7 +65,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			suite.Require().Panics(func() {
 				keeper := suite.app.GAMMKeeper
 				keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-					Lock:    false,
 					SwapFee: sdk.NewDecWithPrec(1, 2),
 					ExitFee: sdk.NewDecWithPrec(-1, 2),
 				}, []types.PoolAsset{{
@@ -101,7 +80,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{}, "")
@@ -111,7 +89,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -127,7 +104,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -143,7 +119,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -159,7 +134,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -178,7 +152,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -294,7 +267,6 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 
 		// Create the pool at first
 		poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-			Lock:    false,
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, []types.PoolAsset{{
@@ -402,7 +374,6 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 			// Create the pool at first
 			poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, types.PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
 			}, []types.PoolAsset{{

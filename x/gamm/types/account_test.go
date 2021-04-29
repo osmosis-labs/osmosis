@@ -30,7 +30,6 @@ func TestPoolAccountShareDenom(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -65,7 +64,6 @@ func TestPoolAccountPoolParams(t *testing.T) {
 
 	for i, params := range tests {
 		poolParams := PoolParams{
-			Lock:    false,
 			SwapFee: params.SwapFee,
 			ExitFee: params.ExitFee,
 		}
@@ -83,7 +81,6 @@ func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -193,7 +190,6 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	numPassingCases := 0
 	var poolId uint64 = 10
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -286,7 +282,6 @@ func TestPoolAccountPoolAssets(t *testing.T) {
 	expectedNumAssets := 0
 	var poolId uint64 = 10
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "").(*PoolAccount)
@@ -348,7 +343,6 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -558,7 +552,6 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 		paramsCopy := tc.params
 		// Initialize pool
 		pacc := NewPoolAccount(uint64(poolNum), PoolParams{
-			Lock:                     false,
 			SwapFee:                  defaultSwapFee,
 			ExitFee:                  defaultExitFee,
 			SmoothWeightChangeParams: &tc.params,
@@ -593,7 +586,6 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -620,7 +612,6 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
   sequence: 0
   id: 10
   pool_params:
-    lock: false
     swap_fee: "0.025000000000000000"
     exit_fee: "0.025000000000000000"
     smooth_weight_change_params: null
@@ -646,7 +637,6 @@ func TestPoolAccountJson(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "").(*PoolAccount)
