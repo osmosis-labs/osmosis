@@ -74,17 +74,8 @@ func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.S
 	for i := len(routes) - 1; i >= 0; i-- {
 		route := routes[i]
 
-		poolAcc, err := k.GetPool(ctx, route.PoolId)
-		if err != nil {
-			return nil, err
-		}
-
-		inAsset, err := poolAcc.GetPoolAsset(route.TokenInDenom)
-		if err != nil {
-			return nil, err
-		}
-
-		outAsset, err := poolAcc.GetPoolAsset(tokenOut.Denom)
+		poolAcc, inAsset, outAsset, err :=
+			k.getPoolAndInOutAssets(ctx, route.PoolId, route.TokenInDenom, tokenOut.Denom)
 		if err != nil {
 			return nil, err
 		}
