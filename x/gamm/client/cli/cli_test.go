@@ -115,7 +115,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	  "%s": "0.001",
 	  "%s": "0.001"
 	}
-	`, cli.FlagWeights, cli.FlagInitialDeposit, cli.FlagSwapFee, cli.FlagExitFee))
+	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee))
 
 	badJSON := testutil.WriteToNewTempFile(s.T(), "bad json")
 
@@ -127,10 +127,11 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	  "%s": "0.001",
 	  "%s": 0.001
 	}
-	`, cli.FlagWeights, cli.FlagInitialDeposit, cli.FlagSwapFee, cli.FlagExitFee))
+	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee))
 
 	testCases := []struct {
 		name         string
+		json         string
 		args         []string
 		expectErr    bool
 		respType     proto.Message
@@ -138,11 +139,15 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	}{
 		{
 			"one token pair pool",
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token",
+			  "%s": "100node0token",
+			  "%s": "0.001",
+			  "%s": "0.001"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee))),
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token"),
-				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token"),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
