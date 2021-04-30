@@ -80,7 +80,6 @@ func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolPar
 
 func (suite *KeeperTestSuite) preparePool() uint64 {
 	poolId := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})

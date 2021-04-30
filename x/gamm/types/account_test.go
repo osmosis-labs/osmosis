@@ -18,15 +18,18 @@ var (
 	noErr          = false
 )
 
+// Expected is un-scaled
 func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
-	require.Equal(t, expected.String(), pool.GetTotalWeight().String())
+	scaledExpected := expected.MulRaw(GuaranteedWeightPrecision)
+	require.Equal(t,
+		scaledExpected.String(),
+		pool.GetTotalWeight().String())
 }
 
 func TestPoolAccountShareDenom(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -61,7 +64,6 @@ func TestPoolAccountPoolParams(t *testing.T) {
 
 	for i, params := range tests {
 		poolParams := PoolParams{
-			Lock:    false,
 			SwapFee: params.SwapFee,
 			ExitFee: params.ExitFee,
 		}
@@ -75,11 +77,10 @@ func TestPoolAccountPoolParams(t *testing.T) {
 	}
 }
 
-func TestPoolAccountSetPoolAsset(t *testing.T) {
+func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -102,43 +103,33 @@ func TestPoolAccountSetPoolAsset(t *testing.T) {
 
 	testTotalWeight(t, sdk.NewInt(300), pacc)
 
-	err = pacc.SetPoolAsset("test1", PoolAsset{
+	err = pacc.AddPoolAssets([]PoolAsset{PoolAsset{
 		Weight: sdk.NewInt(-1),
-		Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
-	})
+		Token:  sdk.NewCoin("negativeWeight", sdk.NewInt(50000)),
+	}})
+
 	require.Error(t, err)
 
-	err = pacc.SetPoolAsset("test1", PoolAsset{
+	err = pacc.AddPoolAssets([]PoolAsset{PoolAsset{
 		Weight: sdk.NewInt(0),
-		Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
-	})
+		Token:  sdk.NewCoin("zeroWeight", sdk.NewInt(50000)),
+	}})
 	require.Error(t, err)
 
-	err = pacc.SetPoolAsset("test1", PoolAsset{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
-	})
+	err = pacc.UpdatePoolAssetBalance(
+		sdk.NewCoin("test1", sdk.NewInt(0)))
 	require.Error(t, err)
 
-	err = pacc.SetPoolAsset("test1", PoolAsset{
-		Weight: sdk.NewInt(100),
-		Token: sdk.Coin{
-			Denom:  "test1",
-			Amount: sdk.NewInt(-1),
-		},
-	})
+	err = pacc.UpdatePoolAssetBalance(
+		sdk.Coin{Denom: "test1", Amount: sdk.NewInt(-1)},
+	)
 	require.Error(t, err)
 
-	err = pacc.SetPoolAsset("test1", PoolAsset{
-		Weight: sdk.NewInt(200),
-		Token: sdk.Coin{
-			Denom:  "test1",
-			Amount: sdk.NewInt(1),
-		},
-	})
+	err = pacc.UpdatePoolAssetBalance(
+		sdk.NewCoin("test1", sdk.NewInt(1)))
 	require.NoError(t, err)
 
-	require.Equal(t, sdk.NewInt(400).String(), pacc.GetTotalWeight().String())
+	testTotalWeight(t, sdk.NewInt(300), pacc)
 
 	PoolAsset, err := pacc.GetPoolAsset("test1")
 	require.NoError(t, err)
@@ -199,7 +190,6 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	numPassingCases := 0
 	var poolId uint64 = 10
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -292,7 +282,6 @@ func TestPoolAccountPoolAssets(t *testing.T) {
 	expectedNumAssets := 0
 	var poolId uint64 = 10
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "").(*PoolAccount)
@@ -354,7 +343,6 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -371,7 +359,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
+	testTotalWeight(t, sdk.NewInt(300), pacc)
 
 	err = pacc.AddPoolAssets([]PoolAsset{
 		{
@@ -381,7 +369,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 	})
 	require.Error(t, err)
 
-	require.Equal(t, sdk.NewInt(300).String(), pacc.GetTotalWeight().String())
+	testTotalWeight(t, sdk.NewInt(300), pacc)
 
 	err = pacc.AddPoolAssets([]PoolAsset{
 		{
@@ -391,7 +379,7 @@ func TestPoolAccountTotalWeight(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, sdk.NewInt(301).String(), pacc.GetTotalWeight().String())
+	testTotalWeight(t, sdk.NewInt(301), pacc)
 }
 
 func TestPoolAccountPokeTokenWeights(t *testing.T) {
@@ -399,6 +387,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 	defaultStartTime := time.Unix(1618703511, 0)
 	defaultStartTimeUnix := defaultStartTime.Unix()
 	defaultDuration := 100 * time.Second
+	floatGuaranteedPrecison := float64(GuaranteedWeightPrecision)
 
 	// testCases don't need to be ordered by time. but the blockTime should be
 	// less than the end time of the SmoothWeightChange. Testing past the end time
@@ -425,21 +414,21 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 				Duration:  defaultDuration,
 				InitialPoolWeights: []PoolAsset{
 					{
-						Weight: sdk.NewInt(1 * 1000000),
+						Weight: sdk.NewInt(1 * GuaranteedWeightPrecision),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
 					},
 					{
-						Weight: sdk.NewInt(1 * 1000000),
+						Weight: sdk.NewInt(1 * GuaranteedWeightPrecision),
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
 				TargetPoolWeights: []PoolAsset{
 					{
-						Weight: sdk.NewInt(1 * 1000000),
+						Weight: sdk.NewInt(1 * GuaranteedWeightPrecision),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
 					},
 					{
-						Weight: sdk.NewInt(2 * 1000000),
+						Weight: sdk.NewInt(2 * GuaranteedWeightPrecision),
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
@@ -449,18 +438,18 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 					// Halfway through at 50 seconds elapsed
 					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
 					expectedWeights: []sdk.Int{
-						sdk.NewInt(1 * 1000000),
-						// Halfway between 1000000 & 2000000
-						sdk.NewInt(1500000),
+						sdk.NewInt(1 * GuaranteedWeightPrecision),
+						// Halfway between 1 & 2
+						sdk.NewInt(3 * GuaranteedWeightPrecision / 2),
 					},
 				},
 				{
 					// Quarter way through at 25 seconds elapsed
 					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
 					expectedWeights: []sdk.Int{
-						sdk.NewInt(1 * 1000000),
-						// Quarter way between 1000000 & 2000000
-						sdk.NewInt(1250000),
+						sdk.NewInt(1 * GuaranteedWeightPrecision),
+						// Quarter way between 1 & 2 = 1.25
+						sdk.NewInt(int64(1.25 * floatGuaranteedPrecison)),
 					},
 				},
 			},
@@ -473,21 +462,21 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 				Duration:  defaultDuration,
 				InitialPoolWeights: []PoolAsset{
 					{
-						Weight: sdk.NewInt(2 * 1000000),
+						Weight: sdk.NewInt(2 * GuaranteedWeightPrecision),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
 					},
 					{
-						Weight: sdk.NewInt(2 * 1000000),
+						Weight: sdk.NewInt(2 * GuaranteedWeightPrecision),
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
 				TargetPoolWeights: []PoolAsset{
 					{
-						Weight: sdk.NewInt(4 * 1000000),
+						Weight: sdk.NewInt(4 * GuaranteedWeightPrecision),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
 					},
 					{
-						Weight: sdk.NewInt(1 * 1000000),
+						Weight: sdk.NewInt(1 * GuaranteedWeightPrecision),
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
@@ -497,20 +486,20 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 					// Halfway through at 50 seconds elapsed
 					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
 					expectedWeights: []sdk.Int{
-						// Halfway between 2000000 & 4000000
-						sdk.NewInt(3 * 1000000),
-						// Halfway between 1000000 & 2000000
-						sdk.NewInt(1500000),
+						// Halfway between 2 & 4
+						sdk.NewInt(6 * GuaranteedWeightPrecision / 2),
+						// Halfway between 1 & 2
+						sdk.NewInt(3 * GuaranteedWeightPrecision / 2),
 					},
 				},
 				{
 					// Quarter way through at 25 seconds elapsed
 					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
 					expectedWeights: []sdk.Int{
-						// Quarter way between 2000000 & 4000000
-						sdk.NewInt(2500000),
-						// Quarter way between 2000000 & 1000000
-						sdk.NewInt(1750000),
+						// Quarter way between 2 & 4 = 2.5
+						sdk.NewInt(int64(2.5 * floatGuaranteedPrecison)),
+						// Quarter way between 2 & 1 = 1.75
+						sdk.NewInt(int64(1.75 * floatGuaranteedPrecison)),
 					},
 				},
 			},
@@ -563,7 +552,6 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 		paramsCopy := tc.params
 		// Initialize pool
 		pacc := NewPoolAccount(uint64(poolNum), PoolParams{
-			Lock:                     false,
 			SwapFee:                  defaultSwapFee,
 			ExitFee:                  defaultExitFee,
 			SmoothWeightChangeParams: &tc.params,
@@ -571,7 +559,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 		// Add assets according to start weight
 		for _, asset := range paramsCopy.InitialPoolWeights {
 			assetCopy := PoolAsset{
-				Weight: asset.Weight,
+				Weight: asset.Weight.QuoRaw(GuaranteedWeightPrecision),
 				Token:  sdk.NewInt64Coin(asset.Token.Denom, 10000),
 			}
 			pacc.AddPoolAssets([]PoolAsset{assetCopy})
@@ -598,7 +586,6 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "")
@@ -625,12 +612,11 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
   sequence: 0
   id: 10
   pool_params:
-    lock: false
     swap_fee: "0.025000000000000000"
     exit_fee: "0.025000000000000000"
     smooth_weight_change_params: null
   future_pool_governor: ""
-  total_weight: "300"
+  total_weight: "322122547200"
   total_share:
     denom: gamm/pool/10
     amount: "0"
@@ -638,11 +624,11 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
   - token:
       denom: test1
       amount: "10000"
-    weight: "100"
+    weight: "107374182400"
   - token:
       denom: test2
       amount: "50000"
-    weight: "200"
+    weight: "214748364800"
 `
 	require.Equal(t, want, string(bs))
 }
@@ -651,7 +637,6 @@ func TestPoolAccountJson(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc := NewPoolAccount(poolId, PoolParams{
-		Lock:    false,
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, "").(*PoolAccount)

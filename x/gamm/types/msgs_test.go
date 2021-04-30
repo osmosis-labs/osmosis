@@ -19,7 +19,6 @@ func TestMsgCreatePool(t *testing.T) {
 		properMsg := MsgCreatePool{
 			Sender: addr1,
 			PoolParams: PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			},
@@ -140,14 +139,6 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "locked pool",
-			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.PoolParams.Lock = true
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
 			name: "negative swap fee",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolParams.SwapFee = sdk.NewDecWithPrec(-1, 2)
@@ -242,6 +233,14 @@ func TestMsgCreatePool(t *testing.T) {
 				return msg
 			}),
 			expectPass: true,
+		},
+		{
+			name: "too large of a weight",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolAssets[0].Weight = sdk.NewInt(1 << 21)
+				return msg
+			}),
+			expectPass: false,
 		},
 	}
 

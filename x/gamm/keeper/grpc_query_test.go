@@ -96,13 +96,11 @@ func (suite *KeeperTestSuite) TestQueryPoolParams() {
 	suite.Require().Error(err)
 
 	poolId1 := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(15, 2),
 	})
 
 	poolId2 := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
 		SwapFee: sdk.NewDecWithPrec(1, 1),
 		ExitFee: sdk.NewDecWithPrec(15, 3),
 	})
@@ -158,24 +156,24 @@ func (suite *KeeperTestSuite) TestQueryPoolAssets() {
 
 	/*
 		{
-			Weight: sdk.NewInt(200),
+			Weight: sdk.NewInt(200 * GuaranteedWeightPrecision),
 			Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
 		},
 		{
-			Weight: sdk.NewInt(300),
+			Weight: sdk.NewInt(300 * GuaranteedWeightPrecision),
 			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
 		},
 		{
-			Weight: sdk.NewInt(100),
+			Weight: sdk.NewInt(100 * GuaranteedWeightPrecision),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
 		},
 	*/
 	PoolAssets := res.PoolAssets
 	suite.Require().Equal(3, len(PoolAssets))
 
-	suite.Require().Equal("200", PoolAssets[0].Weight.String())
-	suite.Require().Equal("300", PoolAssets[1].Weight.String())
-	suite.Require().Equal("100", PoolAssets[2].Weight.String())
+	suite.Require().Equal(sdk.NewInt(200*types.GuaranteedWeightPrecision), PoolAssets[0].Weight)
+	suite.Require().Equal(sdk.NewInt(300*types.GuaranteedWeightPrecision), PoolAssets[1].Weight)
+	suite.Require().Equal(sdk.NewInt(100*types.GuaranteedWeightPrecision), PoolAssets[2].Weight)
 
 	suite.Require().Equal("5000000bar", PoolAssets[0].Token.String())
 	suite.Require().Equal("5000000baz", PoolAssets[1].Token.String())

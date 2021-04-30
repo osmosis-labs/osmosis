@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -15,13 +17,13 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, spotPriceAfter sdk.Dec, err error) {
+	if tokenIn.Denom == tokenOutDenom {
+		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
+	}
+
 	poolAcc, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
-	}
-
-	if poolAcc.GetPoolParams().Lock {
-		return sdk.Int{}, sdk.Dec{}, types.ErrPoolLocked
 	}
 
 	inPoolAsset, err := poolAcc.GetPoolAsset(tokenIn.Denom)
@@ -80,10 +82,10 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
 
-	err = poolAcc.SetPoolAssets([]types.PoolAsset{
-		inPoolAsset,
-		outPoolAsset,
-	})
+	err = poolAcc.UpdatePoolAssetBalances(sdk.NewCoins(
+		inPoolAsset.Token,
+		outPoolAsset.Token,
+	))
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -104,6 +106,8 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
+	k.hooks.AfterSwap(ctx, sender, poolAcc.GetId(), sdk.Coins{tokenIn}, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
+
 	return tokenOutAmount, spotPriceAfter, nil
 }
 
@@ -115,13 +119,13 @@ func (k Keeper) SwapExactAmountOut(
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, spotPriceAfter sdk.Dec, err error) {
+	if tokenInDenom == tokenOut.Denom {
+		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
+	}
+
 	poolAcc, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
-	}
-
-	if poolAcc.GetPoolParams().Lock {
-		return sdk.Int{}, sdk.Dec{}, types.ErrPoolLocked
 	}
 
 	inPoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
@@ -175,10 +179,10 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, types.ErrInvalidMathApprox
 	}
 
-	err = poolAcc.SetPoolAssets([]types.PoolAsset{
-		inPoolAsset,
-		outPoolAsset,
-	})
+	err = poolAcc.UpdatePoolAssetBalances(sdk.NewCoins(
+		inPoolAsset.Token,
+		outPoolAsset.Token,
+	))
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -200,6 +204,8 @@ func (k Keeper) SwapExactAmountOut(
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
+
+	k.hooks.AfterSwap(ctx, sender, poolAcc.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, sdk.Coins{tokenOut})
 
 	return tokenInAmount, spotPriceAfter, nil
 }

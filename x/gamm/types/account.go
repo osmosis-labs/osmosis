@@ -27,21 +27,25 @@ type PoolAccountI interface {
 	SubTotalShare(amt sdk.Int)
 	AddPoolAssets(PoolAssets []PoolAsset) error
 	GetPoolAsset(denom string) (PoolAsset, error)
-	// TODO: Rename this function, as it expects the asset to already exist
-	SetPoolAsset(denom string, asset PoolAsset) error
+	// UpdatePoolAssetBalance updates the balances for
+	// the token with denomination coin.denom
+	UpdatePoolAssetBalance(coin sdk.Coin) error
+	// UpdatePoolAssetBalances calls UpdatePoolAssetBalance
+	// on each constituent coin.
+	UpdatePoolAssetBalances(coins sdk.Coins) error
 	GetPoolAssets(denoms ...string) ([]PoolAsset, error)
-	SetPoolAssets(assets []PoolAsset) error
 	GetAllPoolAssets() []PoolAsset
 	PokeTokenWeights(blockTime time.Time)
 	GetTokenWeight(denom string) (sdk.Int, error)
-	SetTokenBalance(denom string, amount sdk.Int) error
 	GetTokenBalance(denom string) (sdk.Int, error)
 	NumAssets() int
 }
 
 var (
 	// TODO: Add `GenesisAccount` type
-	_ PoolAccountI = (*PoolAccount)(nil)
+	_                         PoolAccountI = (*PoolAccount)(nil)
+	MaxUserSpecifiedWeight    sdk.Int      = sdk.NewIntFromUint64(1 << 20)
+	GuaranteedWeightPrecision int64        = 1 << 30
 )
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
@@ -121,6 +125,7 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 	}
 
 	newTotalWeight := pa.TotalWeight
+	scaledPoolAssets := make([]PoolAsset, 0, len(PoolAssets))
 
 	// TODO: Refactor this into PoolAsset.validate()
 	for _, asset := range PoolAssets {
@@ -138,13 +143,16 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 		}
 		exists[asset.Token.Denom] = true
 
+		// Scale weight from the user provided weight to the correct internal weight
+		asset.Weight = asset.Weight.MulRaw(GuaranteedWeightPrecision)
+		scaledPoolAssets = append(scaledPoolAssets, asset)
 		newTotalWeight = newTotalWeight.Add(asset.Weight)
 	}
 
 	// TODO: Change this to a more efficient sorted insert algorithm.
 	// Furthermore, consider changing the underlying data type to allow in-place modification if the
 	// number of PoolAssets is expected to be large.
-	pa.PoolAssets = append(pa.PoolAssets, PoolAssets...)
+	pa.PoolAssets = append(pa.PoolAssets, scaledPoolAssets...)
 	sort.Slice(pa.PoolAssets, func(i, j int) bool {
 		PoolAssetA := pa.PoolAssets[i]
 		PoolAssetB := pa.PoolAssets[j]
@@ -193,66 +201,40 @@ func (pa PoolAccount) getPoolAssetAndIndex(denom string) (int, PoolAsset, error)
 	return i, pa.PoolAssets[i], nil
 }
 
-func (pa *PoolAccount) SetPoolAsset(denom string, asset PoolAsset) error {
+func (pa *PoolAccount) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	// Check that PoolAsset exists.
-	assetIndex, existingAsset, err := pa.getPoolAssetAndIndex(denom)
+	assetIndex, existingAsset, err := pa.getPoolAssetAndIndex(coin.Denom)
 	if err != nil {
 		return err
 	}
 
-	if asset.Token.Amount.LTE(sdk.ZeroInt()) {
-		return fmt.Errorf("can't add the zero or negative balance of token")
+	if coin.Amount.LTE(sdk.ZeroInt()) {
+		return fmt.Errorf("can't set the pool's balance of a token to be zero or negative")
 	}
 
-	err = asset.ValidateWeight()
-	if err != nil {
-		return err
-	}
-
-	// Update the total weight in the pool
-	weightDifference := asset.Weight.Sub(existingAsset.Weight)
-	pa.TotalWeight = pa.TotalWeight.Add(weightDifference)
-	pa.PoolAssets[assetIndex] = asset
+	// Update the supply of the asset
+	existingAsset.Token = coin
+	pa.PoolAssets[assetIndex] = existingAsset
 	return nil
 }
 
-func (pa *PoolAccount) SetPoolAssets(assets []PoolAsset) error {
-	exists := make(map[string]int)
-	for index, asset := range pa.PoolAssets {
-		exists[asset.Token.Denom] = index
+func (pa *PoolAccount) UpdatePoolAssetBalances(coins sdk.Coins) error {
+	// Ensures that there are no duplicate denoms, all denom's are valid,
+	// and amount is > 0
+	err := coins.Validate()
+	if err != nil {
+		return fmt.Errorf("provided coins are invalid, %v", err)
 	}
 
-	addingPoolAssetsExists := make(map[string]bool)
-
-	deltaTotalWeight := sdk.ZeroInt()
-
-	for _, asset := range assets {
-		if asset.Token.Amount.LTE(sdk.ZeroInt()) {
-			return fmt.Errorf("can't have an asset in the pool with no reserve supply.")
-		}
-
-		err := asset.ValidateWeight()
+	for _, coin := range coins {
+		// TODO: We may be able to make this log(|coins|) faster in how it
+		// looks up denom -> Coin by doing a multi-search,
+		// but as we don't anticipate |coins| to be large, we omit this.
+		err = pa.UpdatePoolAssetBalance(coin)
 		if err != nil {
 			return err
 		}
-
-		index, ok := exists[asset.Token.Denom]
-		if !ok {
-			return fmt.Errorf("PoolAsset doesn't exists")
-		}
-
-		if addingPoolAssetsExists[asset.Token.Denom] {
-			return fmt.Errorf("adding PoolAssets duplicated")
-		}
-		addingPoolAssetsExists[asset.Token.Denom] = true
-
-		oldPoolAsset := pa.PoolAssets[index]
-		deltaTotalWeight = deltaTotalWeight.Add(asset.Weight.Sub(oldPoolAsset.Weight))
-
-		pa.PoolAssets[index] = asset
 	}
-
-	pa.TotalWeight = pa.TotalWeight.Add(deltaTotalWeight)
 
 	return nil
 }
@@ -370,17 +352,6 @@ func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
 	}
 
 	return PoolAsset.Weight, nil
-}
-
-func (pa *PoolAccount) SetTokenBalance(denom string, amount sdk.Int) error {
-	PoolAsset, err := pa.GetPoolAsset(denom)
-	if err != nil {
-		return err
-	}
-
-	PoolAsset.Token.Amount = amount
-
-	return pa.SetPoolAsset(denom, PoolAsset)
 }
 
 func (pa PoolAccount) GetTokenBalance(denom string) (sdk.Int, error) {

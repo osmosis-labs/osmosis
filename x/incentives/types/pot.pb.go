@@ -34,7 +34,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Pot struct {
 	Id          uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	IsPerpetual bool   `protobuf:"varint,2,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
-	// Rewards are distributed to lockups that are are returned by at least one of these queries
+	// distribution incentives by third party
+	// Rewards are distributed to lockups that are are returned by at least one of
+	// these queries
 	DistributeTo types.QueryCondition                     `protobuf:"bytes,3,opt,name=distribute_to,json=distributeTo,proto3" json:"distribute_to"`
 	Coins        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 	// distribution start time

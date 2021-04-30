@@ -88,13 +88,13 @@ func (msg MsgCreatePool) ValidateBasic() error {
 			return sdkerrors.Wrap(ErrNotPositiveWeight, asset.Weight.String())
 		}
 
+		if asset.Weight.GTE(MaxUserSpecifiedWeight) {
+			return sdkerrors.Wrap(ErrWeightTooLarge, asset.Weight.String())
+		}
+
 		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
-	}
-
-	if msg.PoolParams.Lock {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't create a locked pool")
 	}
 
 	err = msg.PoolParams.Validate()
