@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"time"
 )
 
@@ -36,5 +37,13 @@ func DefaultGenesis() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
+	for _, epoch := range gs.Epochs {
+		if epoch.Identifier == "" {
+			return errors.New("epoch identifier should NOT be empty")
+		}
+		if epoch.Duration == 0 {
+			return errors.New("epoch duration should NOT be 0")
+		}
+	}
 	return nil
 }

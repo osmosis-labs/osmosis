@@ -17,19 +17,25 @@ The purpose of `epochs` module is to provide generalized epoch interface to othe
 ```go
 // Keeper is the interface for lockup module keeper
 type Keeper interface {
-	// CreateEpochCounter Returns full balance of the module
-  // All of these epoch counters could be set on epoch module's genesis
-  // if startTime is not set, we could use genesisTime (ctx.BlockTime) at the time of InitChain
-	CreateEpochCounter(ctx sdk.Context, epochIdentifier string, duration time.Duration, startTime time.Time)
+  // GetEpochInfo returns epoch info by identifier
+  GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
+  // SetEpochInfo set epoch info
+  SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo) 
+  // DeleteEpochInfo delete epoch info
+  DeleteEpochInfo(ctx sdk.Context, identifier string)
+  // IterateEpochInfo iterate through epochs
+  IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo types.EpochInfo) (stop bool))
+  // Get all epoch infos
+  AllEpochInfos(ctx sdk.Context) []types.EpochInfo
 }
 ```
 
 ### Hooks
 ```go
   // the first block whose timestamp is after the duration is counted as the end of the epoch
-  onEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64)
+  AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64)
   // new epoch is next block of epoch end block
-  onEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64)
+  BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64)
 ```
 
 ### How modules receive hooks

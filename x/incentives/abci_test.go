@@ -33,8 +33,8 @@ func TestPerpetualPotNotExpireAfterDistribution(t *testing.T) {
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
-	app.EpochsKeeper.OnEpochStart(futureCtx, params.DistrEpochIdentifier, 1)
-	app.EpochsKeeper.OnEpochEnd(futureCtx, params.DistrEpochIdentifier, 1)
+	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, 1)
+	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, 1)
 	pots := app.IncentivesKeeper.GetUpcomingPots(futureCtx)
 	require.Len(t, pots, 0)
 	pots = app.IncentivesKeeper.GetActivePots(futureCtx)
@@ -64,8 +64,8 @@ func TestNonPerpetualPotExpireAfterDistribution(t *testing.T) {
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
-	app.EpochsKeeper.OnEpochStart(futureCtx, params.DistrEpochIdentifier, 1)
-	app.EpochsKeeper.OnEpochEnd(futureCtx, params.DistrEpochIdentifier, 1)
+	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, 1)
+	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, 1)
 	pots := app.IncentivesKeeper.GetUpcomingPots(futureCtx)
 	require.Len(t, pots, 0)
 	pots = app.IncentivesKeeper.GetActivePots(futureCtx)
