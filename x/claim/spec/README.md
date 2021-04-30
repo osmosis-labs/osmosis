@@ -10,7 +10,7 @@ When `DurationUntilDecay + DurationOfDecay` time passes, all unclaimed coins wil
 
 ### Accounts
 
-All genesis accounts have `1 Osmo` for claim fee.
+All genesis accounts have `1 Osmo`, intended for tx fees as they perform actions to claim the rest of their Osmo
 
 ### Claimables
 
