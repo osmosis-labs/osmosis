@@ -31,7 +31,7 @@ func MsgCreatePool(
 	args := []string{}
 
 	args = append(args,
-		tokenWeights,
+		fmt.Sprintf("--%s=%s", gammcli.FlagWeights, tokenWeights),
 		fmt.Sprintf("--%s=%s", gammcli.FlagInitialDeposit, initialDeposit),
 		fmt.Sprintf("--%s=%s", gammcli.FlagSwapFee, swapFee),
 		fmt.Sprintf("--%s=%s", gammcli.FlagExitFee, exitFee),

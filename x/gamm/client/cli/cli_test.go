@@ -19,6 +19,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,6 +108,27 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	)
 	s.Require().NoError(err)
 
+	okJSON := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`
+	{
+	  "%s": "1node0token,3stake",
+	  "%s": "100node0token,100stake",
+	  "%s": "0.001",
+	  "%s": "0.001"
+	}
+	`, cli.FlagWeights, cli.FlagInitialDeposit, cli.FlagSwapFee, cli.FlagExitFee))
+
+	badJSON := testutil.WriteToNewTempFile(s.T(), "bad json")
+
+	// this badJSON is missing quotes around the FlagExitFee value
+	badJSON2 := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`
+	{
+	  "%s": "1node0token,3stake",
+	  "%s": "100node0token,100stake",
+	  "%s": "0.001",
+	  "%s": 0.001
+	}
+	`, cli.FlagWeights, cli.FlagInitialDeposit, cli.FlagSwapFee, cli.FlagExitFee))
+
 	testCases := []struct {
 		name         string
 		args         []string
@@ -117,7 +139,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		{
 			"one token pair pool",
 			[]string{
-				"1node0token",
+				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token"),
 				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
@@ -132,7 +154,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		{
 			"two tokens pair pool",
 			[]string{
-				"1node0token,3stake",
+				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
 				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
@@ -147,7 +169,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 			"three tokens pair pool - insufficient balance check",
 			[]string{
-				"1node0token,1stake,2btc",
+				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,1stake,2btc"),
 				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake,100btc"),
 				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
 				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
@@ -158,6 +180,131 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 5,
+		},
+		{
+			"future governor address",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
+				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
+				fmt.Sprintf("--%s=%s", cli.FlagFutureGovernor, "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"future governor time",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
+				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
+				fmt.Sprintf("--%s=%s", cli.FlagFutureGovernor, "2h"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"future governor token + time",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
+				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
+				fmt.Sprintf("--%s=%s", cli.FlagFutureGovernor, "token,1000h"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"invalid future governor",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
+				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
+				fmt.Sprintf("--%s=%s", cli.FlagFutureGovernor, "validdenom,invalidtime"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 7,
+		},
+		{
+			"pool json",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, okJSON.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"bad pool json",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, badJSON.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"bad pool json 2",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, badJSON2.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"nonexistant pool json",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, "fileDoesNotExist"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"incompatible flags with --pool-file",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, okJSON.Name()),
+				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
 		},
 	}
 
