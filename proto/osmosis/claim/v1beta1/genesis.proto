@@ -17,35 +17,43 @@ enum Action {
 	ActionDelegateStake = 3;
 }
 
-message UserActivities {
+message UserActions {
   string user = 1;
   repeated Action actions = 2;
 }
 
-message UserActivity {
+message UserAction {
   string user = 1;
   Action action = 2;
 }
 
 // GenesisState defines the claim module's genesis state.
 message GenesisState {
+  // airdrop amount is total amount of airdrop put on claim module's account
   string airdrop_amount = 1
     [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  // airdrop start time
   google.protobuf.Timestamp airdrop_start = 2
     [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"airdrop_start\""];
+  // duration until decay start to happen from airdrop start time
   google.protobuf.Duration duration_until_decay = 3 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "duration_until_decay,omitempty",
     (gogoproto.moretags)    = "yaml:\"duration_until_decay\""
   ];
+  // duration of decay from decay start time
   google.protobuf.Duration duration_of_decay = 4 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "duration_of_decay,omitempty",
     (gogoproto.moretags)    = "yaml:\"duration_of_decay\""
   ];
+  // the maximum claimable amount per address
+  // [(account_string, max_claimable), (account_string, max_claimable) ... ]
   repeated cosmos.bank.v1beta1.Balance claimables = 5
     [(gogoproto.nullable) = false];
-  repeated UserActivities activities = 6[(gogoproto.nullable) = false];
+  // the actions done per address
+  // [(account_string, [done_action1, done_action2]), (account_string, [done_action1]) ... ]
+  repeated UserActions activities = 6[(gogoproto.nullable) = false];
 }

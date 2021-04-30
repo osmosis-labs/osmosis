@@ -11,7 +11,6 @@ import (
 
 // NewHandler returns claim module messages
 func NewHandler(k keeper.Keeper) sdk.Handler {
-	_ = keeper.NewMsgServerImpl(k)
 
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())

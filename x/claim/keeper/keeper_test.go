@@ -26,8 +26,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app.ClaimKeeper.SetModuleAccountBalance(suite.ctx, sdk.NewInt(10000000))
 	suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
 		AirdropStart:       time.Now(),
-		DurationUntilDecay: time.Hour,
-		DurationOfDecay:    time.Hour * 5,
+		DurationUntilDecay: types.DefaultDurationUntilDecay,
+		DurationOfDecay:    types.DefaultDurationOfDecay,
 	})
 }
 

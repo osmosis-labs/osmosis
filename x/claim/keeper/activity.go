@@ -9,7 +9,7 @@ import (
 )
 
 // GetActivities get activites of users for genesis export
-func (k Keeper) GetActivities(ctx sdk.Context) []types.UserActivities {
+func (k Keeper) GetActivities(ctx sdk.Context) []types.UserActions {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, append([]byte(types.ActionKey)))
 	iterator := prefixStore.Iterator(nil, nil)
@@ -17,7 +17,7 @@ func (k Keeper) GetActivities(ctx sdk.Context) []types.UserActivities {
 
 	actionsByUser := make(map[string]types.Actions)
 	for ; iterator.Valid(); iterator.Next() {
-		value := types.UserActivity{}
+		value := types.UserAction{}
 		err := json.Unmarshal(iterator.Value(), &value)
 		if err != nil {
 			panic(err)
@@ -27,11 +27,11 @@ func (k Keeper) GetActivities(ctx sdk.Context) []types.UserActivities {
 		actionsByUser[value.User] = actions
 	}
 
-	activities := []types.UserActivities{}
+	activities := []types.UserActions{}
 	for user, actions := range actionsByUser {
-		activities = append(activities, types.UserActivities{
-			User:      user,
-			Actions:   actions,
+		activities = append(activities, types.UserActions{
+			User:    user,
+			Actions: actions,
 		})
 	}
 	return activities
@@ -39,7 +39,7 @@ func (k Keeper) GetActivities(ctx sdk.Context) []types.UserActivities {
 
 func (k Keeper) SetUserActions(ctx sdk.Context, address sdk.AccAddress, actions []types.Action) {
 	for _, action := range actions {
-		k.SetUserAction(ctx, address, action)
+		k.CheckAndSetUserAction(ctx, address, action)
 	}
 }
 
@@ -51,7 +51,7 @@ func (k Keeper) GetUserActions(ctx sdk.Context, address sdk.AccAddress) []types.
 
 	actions := []types.Action{}
 	for ; iterator.Valid(); iterator.Next() {
-		value := types.UserActivity{}
+		value := types.UserAction{}
 		err := json.Unmarshal(iterator.Value(), &value)
 		if err != nil {
 			panic(err)
@@ -62,14 +62,14 @@ func (k Keeper) GetUserActions(ctx sdk.Context, address sdk.AccAddress) []types.
 	return actions
 }
 
-func (k Keeper) SetUserAction(ctx sdk.Context, address sdk.AccAddress, action types.Action) bool {
+func (k Keeper) CheckAndSetUserAction(ctx sdk.Context, address sdk.AccAddress, action types.Action) bool {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ActionKey))
 	key := append(address, sdk.Uint64ToBigEndian(uint64(action))...)
 	if prefixStore.Has(key) {
 		return false
 	}
-	value := types.UserActivity{
+	value := types.UserAction{
 		User:   address.String(),
 		Action: action,
 	}
@@ -80,10 +80,3 @@ func (k Keeper) SetUserAction(ctx sdk.Context, address sdk.AccAddress, action ty
 	prefixStore.Set(key, valueBz)
 	return true
 }
-
-// GetClaimablePercentageByActivity returns percentage by user's activity when the weight of actions are same
-func (k Keeper) GetClaimablePercentageByActivity(ctx sdk.Context, address sdk.AccAddress) sdk.Dec {
-	numTotalActions := len(types.Action_name)
-	return sdk.NewDec(1).QuoInt64(int64(numTotalActions))
-}
-

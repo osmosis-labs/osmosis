@@ -9,25 +9,25 @@ import (
 )
 
 func (k Keeper) AfterAddLiquidity(ctx sdk.Context, sender sdk.AccAddress) {
-	if k.SetUserAction(ctx, sender, types.ActionAddLiquidity) {
+	if k.CheckAndSetUserAction(ctx, sender, types.ActionAddLiquidity) {
 		k.ClaimCoins(ctx, sender.String())
 	}
 }
 
 func (k Keeper) AfterSwap(ctx sdk.Context, sender sdk.AccAddress) {
-	if k.SetUserAction(ctx, sender, types.ActionSwap) {
+	if k.CheckAndSetUserAction(ctx, sender, types.ActionSwap) {
 		k.ClaimCoins(ctx, sender.String())
 	}
 }
 
 func (k Keeper) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	if k.SetUserAction(ctx, voterAddr, types.ActionVote) {
+	if k.CheckAndSetUserAction(ctx, voterAddr, types.ActionVote) {
 		k.ClaimCoins(ctx, voterAddr.String())
 	}
 }
 
 func (k Keeper) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	if k.SetUserAction(ctx, delAddr, types.ActionDelegateStake) {
+	if k.CheckAndSetUserAction(ctx, delAddr, types.ActionDelegateStake) {
 		k.ClaimCoins(ctx, delAddr.String())
 	}
 }

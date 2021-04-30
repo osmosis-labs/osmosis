@@ -17,10 +17,10 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		AirdropAmount:      sdk.NewInt(0),
 		AirdropStart:       time.Now(),
-		DurationUntilDecay: time.Hour * 24 * 30,     // 1 month
-		DurationOfDecay:    time.Hour * 24 * 30 * 5, // 5 months
+		DurationUntilDecay: DefaultDurationUntilDecay, // 1 month
+		DurationOfDecay:    DefaultDurationOfDecay,    // 5 months
 		Claimables:         []banktypes.Balance{},
-		Activities:         []UserActivities{},
+		Activities:         []UserActions{},
 	}
 }
 

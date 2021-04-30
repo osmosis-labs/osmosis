@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(coins3, sdk.Coins{})
 
-	// get rewards amount per activity
+	// get rewards amount per action
 	coins4, err := suite.app.ClaimKeeper.GetWithdrawableByActivity(suite.ctx, addr1.String())
 	suite.Require().NoError(err)
 	suite.Require().Equal(coins4.String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2)).String())

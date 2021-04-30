@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	appparams "github.com/c-osmosis/osmosis/app/params"
 	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
-	appparams "github.com/c-osmosis/osmosis/app/params"
 )
 
 func GenerateGenesisCmd() *cobra.Command {
@@ -43,7 +43,6 @@ Example:
 			config.SetRoot(clientCtx.HomeDir)
 
 			snapshotInput := args[0]
-			osdenom := "uosmo"
 
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
@@ -77,29 +76,29 @@ Example:
 			balances := []banktypes.Balance{}
 			feeBalances := []banktypes.Balance{}
 
-			totalOsmoBalance := sdk.NewInt(0)
+			totalNormalizedOsmoBalance := sdk.NewInt(0)
 			for _, acc := range snapshot {
 				// calculate total osmo balance
-				totalOsmoBalance = totalOsmoBalance.Add(acc.OsmoBalance)
+				totalNormalizedOsmoBalance = totalNormalizedOsmoBalance.Add(acc.OsmoNormalizedBalance)
 
 				// set atom bech32 prefixes
 				setCosmosBech32Prefixes()
-				
+
 				// read address from snapshot
 				address, err := sdk.AccAddressFromBech32(acc.AtomAddress)
 				if err != nil {
 					return err
 				}
- 
+
 				// set osmo bech32 prefixes
 				appparams.SetBech32Prefixes()
 
 				// airdrop balances
-				coins := sdk.NewCoins(sdk.NewCoin(osdenom, acc.OsmoNormalizedBalance))
+				coins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance))
 				balances = append(balances, banktypes.Balance{Address: address.String(), Coins: coins})
 
 				// transaction fee balances
-				feeCoins := sdk.NewCoins(sdk.NewCoin(osdenom, sdk.NewInt(1e6))) // 1 OSMO = 10^6 uosmo
+				feeCoins := claimtypes.DefaultClaimModuleAcctBalance
 				feeBalances = append(feeBalances, banktypes.Balance{Address: address.String(), Coins: feeCoins})
 			}
 
@@ -126,7 +125,7 @@ Example:
 
 			// claim module genesis
 			claimGenState := claimtypes.DefaultGenesis()
-			claimGenState.AirdropAmount = totalOsmoBalance
+			claimGenState.AirdropAmount = totalNormalizedOsmoBalance
 			claimGenState.Claimables = balances
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {

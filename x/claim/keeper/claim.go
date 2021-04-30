@@ -108,18 +108,19 @@ func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	return claimableCoins, nil
 }
 
+// GetClaimablePercentagePerAction returns percentage per user's action when the weight of actions are same
+func GetClaimablePercentagePerAction() sdk.Dec {
+	numTotalActions := len(types.Action_name)
+	return sdk.NewDec(1).QuoInt64(int64(numTotalActions))
+}
+
 // GetClaimablesByActivity returns the withdrawal amount from users' airdrop amount and activity made
 func (k Keeper) GetWithdrawableByActivity(ctx sdk.Context, addr string) (sdk.Coins, error) {
-	address, err := sdk.AccAddressFromBech32(addr)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
 	coins, err := k.GetClaimable(ctx, addr)
 	if err != nil {
 		return coins, err
 	}
-	percentage := k.GetClaimablePercentageByActivity(ctx, address)
+	percentage := GetClaimablePercentagePerAction()
 	withdrawable := sdk.Coins{}
 	for _, coin := range coins {
 		amount := coin.Amount.ToDec().Mul(percentage).RoundInt()
