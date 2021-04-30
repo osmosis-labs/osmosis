@@ -119,6 +119,16 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 
 	badJSON := testutil.WriteToNewTempFile(s.T(), "bad json")
 
+	// this badJSON is missing quotes around the FlagExitFee value
+	badJSON2 := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`
+	{
+	  "%s": "1node0token,3stake",
+	  "%s": "100node0token,100stake",
+	  "%s": "0.001",
+	  "%s": 0.001
+	}
+	`, cli.FlagWeights, cli.FlagInitialDeposit, cli.FlagSwapFee, cli.FlagExitFee))
+
 	testCases := []struct {
 		name         string
 		args         []string
@@ -251,6 +261,18 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			"bad pool json",
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, badJSON.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"bad pool json 2",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, badJSON2.Name()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
