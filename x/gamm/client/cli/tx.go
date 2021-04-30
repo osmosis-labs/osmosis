@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -43,9 +45,27 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
-		Long: `create a new pool and provide the liquidity to it.
-			e.g. create-pool --weights 4uatom,4osmo,2uakt --initial-deposit 100uatom,5osmo,20uakt --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
-		`,
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`create a new pool and provide the liquidity to it.
+Proposal initialization parameters can be given directly as CLI flags or through a pool JSON file.
+
+Example:
+$ %s tx gamm create-pool --proposal="path/to/pool.json" --from mykey
+Where pool.json contains:
+{
+	"weights": "4uatom,4osmo,2uakt",
+	"initial-deposit": "100uatom,5osmo,20uakt",
+	"swap-fee": "0.01",
+	"exit-fee": "0.01",
+	"future-governor": "168h"
+}
+
+Which is equivalent to:
+$ %s tx gamm create-pool --weights 4uatom,4osmo,2uakt --initial-deposit 100uatom,5osmo,20uakt --swap-fee=0.01 --exit-fee=0.01 --future-governor 168h --from=mykey
+`,
+				version.AppName, version.AppName,
+			),
+		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
