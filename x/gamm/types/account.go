@@ -25,7 +25,6 @@ type PoolAccountI interface {
 	GetTotalShare() sdk.Coin
 	AddTotalShare(amt sdk.Int)
 	SubTotalShare(amt sdk.Int)
-	AddPoolAssets(PoolAssets []PoolAsset) error
 	GetPoolAsset(denom string) (PoolAsset, error)
 	// UpdatePoolAssetBalance updates the balances for
 	// the token with denomination coin.denom
@@ -52,16 +51,19 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, sdk.Uint64ToBigEndian(poolId)...)))
 }
 
-func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGovernor string) PoolAccountI {
+// NewPoolAccount returns a weighted CPMM pool with the provided parameters, and initial assets.
+// Invariants that are assumed to be satisfied and not checked:
+// TODO: Why don't we check these in here?
+// * 2 <= len(assets) <= 8
+// * FutureGovernor is valid
+// * poolID doesn't already exist
+func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string) (PoolAccountI, error) {
 	poolAddr := NewPoolAddress(poolId)
 	baseAcc := authtypes.NewBaseAccountWithAddress(poolAddr)
 
-	err := poolParams.Validate()
-	if err != nil {
-		panic(err)
-	}
-
-	return &PoolAccount{
+	// pool account thats created up to ensuring the assets and params are valid.
+	// We assume that FuturePoolGovernor is valid.
+	protoPoolAcc := &PoolAccount{
 		BaseAccount:        baseAcc,
 		Id:                 poolId,
 		PoolParams:         poolParams,
@@ -70,9 +72,21 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGovernor string)
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
+
+	err := protoPoolAcc.setInitialPoolAssets(assets)
+	if err != nil {
+		return &PoolAccount{}, err
+	}
+
+	err = poolParams.Validate(protoPoolAcc.GetAllPoolAssets())
+	if err != nil {
+		return &PoolAccount{}, err
+	}
+
+	return protoPoolAcc, nil
 }
 
-func (params PoolParams) Validate() error {
+func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	if params.ExitFee.IsNegative() {
 		return ErrNegativeExitFee
 	}
@@ -87,6 +101,20 @@ func (params PoolParams) Validate() error {
 
 	if params.SwapFee.GTE(sdk.OneDec()) {
 		return ErrTooMuchSwapFee
+	}
+
+	if params.SmoothWeightChangeParams != nil {
+		// TODO: We need to test that TargetPoolWeights only contains the same denoms as
+		// the provided PoolWeights
+		// for _, v := range params.SmoothWeightChangeParams.TargetPoolWeights {
+		// 	err := ValidateUserSpecifiedWeight(v.Weight)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// }
+		// TODO: Validate duration & start time
+		// We do not need to validate InitialPoolWeights, as we should be setting that ourselves
+		// TODO: Set that in create new pool.
 	}
 
 	return nil
@@ -116,9 +144,12 @@ func (pa *PoolAccount) SubTotalShare(amt sdk.Int) {
 	pa.TotalShare.Amount = pa.TotalShare.Amount.Sub(amt)
 }
 
-// AddPoolAssets adds the PoolAssets to the pool. If the same denom's PoolAsset exists, will return error.
+// setInitialPoolAssets sets the PoolAssets in the pool.
+// It is only designed to be called at the pool's creation.
+// If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
-func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
+// TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
+func (pa *PoolAccount) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
 		exists[asset.Token.Denom] = true
