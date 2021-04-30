@@ -54,7 +54,6 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 // NewPoolAccount returns a Balancer pool with the provided parameters, and initial assets.
 // Invariants that are assumed to be satisfied and not checked:
 // TODO: Why don't we check these in here?
-// TODO: Why does this panic, not just return an error?
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
 // * poolID doesn't already exist
