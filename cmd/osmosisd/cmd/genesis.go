@@ -99,7 +99,7 @@ Example:
 				balances = append(balances, banktypes.Balance{Address: address.String(), Coins: coins})
 
 				// transaction fee balances
-				feeCoins := sdk.NewCoins(sdk.NewCoin(osdenom, sdk.NewInt(1000000))) // 1 OSMO = 10^6uosmo
+				feeCoins := sdk.NewCoins(sdk.NewCoin(osdenom, sdk.NewInt(1e6))) // 1 OSMO = 10^6 uosmo
 				feeBalances = append(feeBalances, banktypes.Balance{Address: address.String(), Coins: feeCoins})
 			}
 
