@@ -45,7 +45,10 @@ func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []t
 		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
 	}
 
-	poolAcc := types.NewPoolAccount(poolId, poolParams, assets, futureGovernor)
+	poolAcc, err := types.NewPoolAccount(poolId, poolParams, assets, futureGovernor)
+	if err != nil {
+		return nil, err
+	}
 	poolAcc = k.accountKeeper.NewAccount(ctx, poolAcc).(types.PoolAccountI)
 
 	k.accountKeeper.SetAccount(ctx, poolAcc)

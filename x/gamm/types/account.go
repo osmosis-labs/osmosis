@@ -25,7 +25,6 @@ type PoolAccountI interface {
 	GetTotalShare() sdk.Coin
 	AddTotalShare(amt sdk.Int)
 	SubTotalShare(amt sdk.Int)
-	// AddPoolAssets(PoolAssets []PoolAsset) error
 	GetPoolAsset(denom string) (PoolAsset, error)
 	// UpdatePoolAssetBalance updates the balances for
 	// the token with denomination coin.denom
@@ -59,7 +58,7 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string) PoolAccountI {
+func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string) (PoolAccountI, error) {
 	poolAddr := NewPoolAddress(poolId)
 	baseAcc := authtypes.NewBaseAccountWithAddress(poolAddr)
 
@@ -77,15 +76,15 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, fu
 
 	err := protoPoolAcc.setInitialPoolAssets(assets)
 	if err != nil {
-		panic(err)
+		return &PoolAccount{}, err
 	}
 
 	err = poolParams.Validate(protoPoolAcc.GetAllPoolAssets())
 	if err != nil {
-		panic(err)
+		return &PoolAccount{}, err
 	}
 
-	return protoPoolAcc
+	return protoPoolAcc, nil
 }
 
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {
@@ -108,12 +107,12 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	if params.SmoothWeightChangeParams != nil {
 		// TODO: We need to test that TargetPoolWeights only contains the same denoms as
 		// the provided PoolWeights
-		for _, v := range params.SmoothWeightChangeParams.TargetPoolWeights {
-			err := ValidateUserSpecifiedWeight(v.Weight)
-			if err != nil {
-				return err
-			}
-		}
+		// for _, v := range params.SmoothWeightChangeParams.TargetPoolWeights {
+		// 	err := ValidateUserSpecifiedWeight(v.Weight)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// }
 		// TODO: Validate duration & start time
 		// We do not need to validate InitialPoolWeights, as we should be setting that ourselves
 		// TODO: Set that in create new pool.
