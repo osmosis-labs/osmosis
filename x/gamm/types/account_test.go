@@ -576,8 +576,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 			}
 		}
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
-		// TODO: This doesn't work due to PokeTokenWeights having a non-pointer receiver =/
-		// require.Nil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
+		require.Nil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
 	}
 
 }
