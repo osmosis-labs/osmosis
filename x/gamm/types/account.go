@@ -148,7 +148,7 @@ func (pa *PoolAccount) SubTotalShare(amt sdk.Int) {
 // It is only designed to be called at the pool's creation.
 // If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
-// TODO: Unify story for validation of []PoolAsset
+// TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
 func (pa *PoolAccount) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
