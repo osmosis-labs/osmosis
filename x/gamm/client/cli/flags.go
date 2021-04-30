@@ -35,11 +35,18 @@ const (
 )
 
 type createPoolInputs struct {
-	Weights        string `json:"weights"`
-	InitialDeposit string `json:"initial-deposit"`
-	SwapFee        string `json:"swap-fee"`
-	ExitFee        string `json:"exit-fee"`
-	FutureGovernor string `json:"future-governor"`
+	Weights                  string                         `json:"weights"`
+	InitialDeposit           string                         `json:"initial-deposit"`
+	SwapFee                  string                         `json:"swap-fee"`
+	ExitFee                  string                         `json:"exit-fee"`
+	FutureGovernor           string                         `json:"future-governor"`
+	SmoothWeightChangeParams smoothWeightChangeParamsInputs `json:"smooth-weight-change-params"`
+}
+
+type smoothWeightChangeParamsInputs struct {
+	StartTime         string `json:"start_time"`
+	Duration          string `json:"duration"`
+	TargetPoolWeights string `json:"target_pool_weights"`
 }
 
 func FlagSetQuerySwapRoutes() *flag.FlagSet {
