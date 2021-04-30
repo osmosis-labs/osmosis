@@ -51,7 +51,7 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, sdk.Uint64ToBigEndian(poolId)...)))
 }
 
-// NewPoolAccount returns a Balancer pool with the provided parameters, and initial assets.
+// NewPoolAccount returns a weighted CPMM pool with the provided parameters, and initial assets.
 // Invariants that are assumed to be satisfied and not checked:
 // TODO: Why don't we check these in here?
 // * 2 <= len(assets) <= 8
