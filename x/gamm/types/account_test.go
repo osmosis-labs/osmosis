@@ -151,8 +151,9 @@ func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	// TODO: Add more cases
 	tests := []struct {
-		assets    []PoolAsset
-		shouldErr bool
+		assets      []PoolAsset
+		totalWeight int64
+		shouldErr   bool
 	}{
 		// weight 0
 		{
@@ -162,6 +163,7 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
 				},
 			},
+			0,
 			wantErr,
 		},
 		// negative weight
@@ -172,6 +174,7 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
 				},
 			},
+			-1,
 			wantErr,
 		},
 		// 0 token amount
@@ -182,6 +185,7 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 					Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
 				},
 			},
+			100,
 			wantErr,
 		},
 		// negative token amount
@@ -195,11 +199,45 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 					},
 				},
 			},
+			100,
 			wantErr,
+		},
+		// total weight 300
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
+				},
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
+				},
+			},
+			300,
+			noErr,
+		},
+		// total weight 7300
+		{
+			[]PoolAsset{
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
+				},
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
+				},
+				{
+					Weight: sdk.NewInt(7000),
+					Token:  sdk.NewCoin("test3", sdk.NewInt(10000)),
+				},
+			},
+			7300,
+			noErr,
 		},
 	}
 
-	numPassingCases := 0
 	var poolId uint64 = 10
 
 	for i, tc := range tests {
@@ -208,8 +246,7 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 		} else {
 			require.NoError(t, err, "unexpected error, tc %v", i)
-			numPassingCases += 1
-			require.Equal(t, numPassingCases, pacc.NumAssets())
+			testTotalWeight(t, sdk.NewInt(tc.totalWeight), pacc)
 		}
 	}
 }
@@ -344,50 +381,6 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 // 	assets, err = pacc.GetPoolAssets()
 // 	require.NoError(t, err)
 // 	require.Equal(t, 0, len(assets))
-// }
-
-// TODO: Refactor this into a test that makes sense in the current setting.
-// func TestPoolAccountTotalWeight(t *testing.T) {
-// 	var poolId uint64 = 10
-
-// 	pacc := NewPoolAccount(poolId, PoolParams{
-// 		SwapFee: defaultSwapFee,
-// 		ExitFee: defaultExitFee,
-// 	}, "")
-
-// 	err := pacc.AddPoolAssets([]PoolAsset{
-// 		{
-// 			Weight: sdk.NewInt(200),
-// 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
-// 		},
-// 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
-// 		},
-// 	})
-// 	require.NoError(t, err)
-
-// 	testTotalWeight(t, sdk.NewInt(300), pacc)
-
-// 	err = pacc.AddPoolAssets([]PoolAsset{
-// 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("test2", sdk.NewInt(10000)),
-// 		},
-// 	})
-// 	require.Error(t, err)
-
-// 	testTotalWeight(t, sdk.NewInt(300), pacc)
-
-// 	err = pacc.AddPoolAssets([]PoolAsset{
-// 		{
-// 			Weight: sdk.NewInt(1),
-// 			Token:  sdk.NewCoin("test3", sdk.NewInt(50000)),
-// 		},
-// 	})
-// 	require.NoError(t, err)
-
-// 	testTotalWeight(t, sdk.NewInt(301), pacc)
 // }
 
 func TestPoolAccountPokeTokenWeights(t *testing.T) {
