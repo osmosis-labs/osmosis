@@ -28,12 +28,7 @@ func (k Keeper) CreatePool(
 		)
 	}
 
-	poolAcc, err := k.NewPool(ctx, poolParams, futurePoolGovernor)
-	if err != nil {
-		return 0, err
-	}
-
-	err = poolAcc.AddPoolAssets(poolAssets)
+	poolAcc, err := k.newPool(ctx, poolParams, poolAssets, futurePoolGovernor)
 	if err != nil {
 		return 0, err
 	}

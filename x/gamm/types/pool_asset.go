@@ -4,7 +4,43 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+func ValidateUserSpecifiedWeight(weight sdk.Int) error {
+	if !weight.IsPositive() {
+		return sdkerrors.Wrap(ErrNotPositiveWeight, weight.String())
+	}
+
+	if weight.GTE(MaxUserSpecifiedWeight) {
+		return sdkerrors.Wrap(ErrWeightTooLarge, weight.String())
+	}
+	return nil
+}
+
+func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
+	// The pool must be swapping between at least two assets
+	if len(assets) < 2 {
+		return ErrTooFewPoolAssets
+	}
+
+	// TODO: Add the limit of binding token to the pool params?
+	if len(assets) > 8 {
+		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(assets))
+	}
+
+	for _, asset := range assets {
+		err := ValidateUserSpecifiedWeight(asset.Weight)
+		if err != nil {
+			return err
+		}
+
+		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
+		}
+	}
+	return nil
+}
 
 // Validates a pool asset, to check if it has a valid weight.
 func (asset PoolAsset) ValidateWeight() error {

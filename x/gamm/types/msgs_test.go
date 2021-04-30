@@ -2,6 +2,7 @@ package types
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -37,14 +38,14 @@ func TestMsgCreatePool(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgCreatePool) MsgCreatePool {
+	default_msg := createMsg(func(msg MsgCreatePool) MsgCreatePool {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "create_pool")
-	signers := msg.GetSigners()
+	require.Equal(t, default_msg.Route(), RouterKey)
+	require.Equal(t, default_msg.Type(), "create_pool")
+	signers := default_msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
 
@@ -241,6 +242,27 @@ func TestMsgCreatePool(t *testing.T) {
 				return msg
 			}),
 			expectPass: false,
+		},
+		{
+			name: "Create an LBP",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolParams.SmoothWeightChangeParams = &SmoothWeightChangeParams{
+					StartTime: time.Now(),
+					Duration:  time.Hour,
+					TargetPoolWeights: []PoolAsset{
+						{
+							Weight: sdk.NewInt(200),
+							Token:  sdk.NewCoin("test", sdk.NewInt(1)),
+						},
+						{
+							Weight: sdk.NewInt(50),
+							Token:  sdk.NewCoin("test2", sdk.NewInt(1)),
+						},
+					},
+				}
+				return msg
+			}),
+			expectPass: true,
 		},
 	}
 

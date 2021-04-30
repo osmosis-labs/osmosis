@@ -12,10 +12,17 @@ import (
 )
 
 var (
-	defaultSwapFee = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee = sdk.MustNewDecFromStr("0.025")
-	wantErr        = true
-	noErr          = false
+	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
+	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
+	defaultPoolParams = PoolParams{
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
+	}
+	defaultFutureGovernor = ""
+	//
+	dummyPoolAssets = []PoolAsset{}
+	wantErr         = true
+	noErr           = false
 )
 
 // Expected is un-scaled
@@ -29,10 +36,7 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
 func TestPoolAccountShareDenom(t *testing.T) {
 	var poolId uint64 = 10
 
-	pacc := NewPoolAccount(poolId, PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
-	}, "")
+	pacc := NewPoolAccount(poolId, defaultPoolParams, dummyPoolAssets, defaultFutureGovernor)
 
 	require.Equal(t, "gamm/pool/10", pacc.GetTotalShare().Denom)
 }
@@ -67,25 +71,21 @@ func TestPoolAccountPoolParams(t *testing.T) {
 			SwapFee: params.SwapFee,
 			ExitFee: params.ExitFee,
 		}
-		err := poolParams.Validate()
+		err := poolParams.Validate(dummyPoolAssets)
 		if params.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
-			require.Panics(t, func() { NewPoolAccount(1, poolParams, "") })
+			require.Panics(t, func() { NewPoolAccount(1, poolParams, dummyPoolAssets, defaultFutureGovernor) })
 		} else {
 			require.NoError(t, err, "unexpected error, tc %v", i)
 		}
 	}
 }
 
+// TODO: Refactor this into multiple tests
 func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 	var poolId uint64 = 10
 
-	pacc := NewPoolAccount(poolId, PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
-	}, "")
-
-	err := pacc.AddPoolAssets([]PoolAsset{
+	initialAssets := []PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -94,44 +94,54 @@ func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
 		},
-	})
-	require.NoError(t, err)
-	_, err = pacc.GetPoolAsset("unknown")
+	}
+
+	pacc := NewPoolAccount(poolId, PoolParams{
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
+	}, initialAssets, defaultFutureGovernor)
+
+	_, err := pacc.GetPoolAsset("unknown")
 	require.Error(t, err)
 	_, err = pacc.GetPoolAsset("")
 	require.Error(t, err)
 
 	testTotalWeight(t, sdk.NewInt(300), pacc)
 
-	err = pacc.AddPoolAssets([]PoolAsset{PoolAsset{
+	// Break abstractions and start reasoning about the underlying internal representation's APIs.
+	// TODO: This test actually just needs to be refactored to not be doing this, and just
+	// create a different pool each time.
+	pacc_internal := pacc.(*PoolAccount)
+
+	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("negativeWeight", sdk.NewInt(50000)),
 	}})
 
 	require.Error(t, err)
 
-	err = pacc.AddPoolAssets([]PoolAsset{PoolAsset{
+	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("zeroWeight", sdk.NewInt(50000)),
 	}})
 	require.Error(t, err)
 
-	err = pacc.UpdatePoolAssetBalance(
+	err = pacc_internal.UpdatePoolAssetBalance(
 		sdk.NewCoin("test1", sdk.NewInt(0)))
 	require.Error(t, err)
 
-	err = pacc.UpdatePoolAssetBalance(
+	err = pacc_internal.UpdatePoolAssetBalance(
 		sdk.Coin{Denom: "test1", Amount: sdk.NewInt(-1)},
 	)
 	require.Error(t, err)
 
-	err = pacc.UpdatePoolAssetBalance(
+	err = pacc_internal.UpdatePoolAssetBalance(
 		sdk.NewCoin("test1", sdk.NewInt(1)))
 	require.NoError(t, err)
 
-	testTotalWeight(t, sdk.NewInt(300), pacc)
+	testTotalWeight(t, sdk.NewInt(300), pacc_internal)
 
-	PoolAsset, err := pacc.GetPoolAsset("test1")
+	PoolAsset, err := pacc_internal.GetPoolAsset("test1")
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(1).String(), PoolAsset.Token.Amount.String())
 }

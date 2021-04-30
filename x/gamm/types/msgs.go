@@ -73,31 +73,9 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	// The pool must be swapping between at least two assets
-	if len(msg.PoolAssets) < 2 {
-		return ErrTooFewPoolAssets
-	}
+	ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
 
-	// TODO: Add the limit of binding token to the pool params?
-	if len(msg.PoolAssets) > 8 {
-		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(msg.PoolAssets))
-	}
-
-	for _, asset := range msg.PoolAssets {
-		if !asset.Weight.IsPositive() {
-			return sdkerrors.Wrap(ErrNotPositiveWeight, asset.Weight.String())
-		}
-
-		if asset.Weight.GTE(MaxUserSpecifiedWeight) {
-			return sdkerrors.Wrap(ErrWeightTooLarge, asset.Weight.String())
-		}
-
-		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
-		}
-	}
-
-	err = msg.PoolParams.Validate()
+	err = msg.PoolParams.Validate(msg.PoolAssets)
 	if err != nil {
 		return err
 	}
