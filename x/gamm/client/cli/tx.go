@@ -41,12 +41,12 @@ func NewTxCmd() *cobra.Command {
 
 func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool <token-weights> [flags]",
+		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
 		Long: `create a new pool and provide the liquidity to it.
-			e.g. create-pool 4uatom,4osmo,2uakt --initial-deposit 100uatom,5osmo,20uakt --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
+			e.g. create-pool --weights 4uatom,4osmo,2uakt --initial-deposit 100uatom,5osmo,20uakt --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 		`,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -55,7 +55,7 @@ func NewCreatePoolCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, args[0], cmd.Flags())
+			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -67,9 +67,9 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetCreatePool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagInitialDeposit)
-	_ = cmd.MarkFlagRequired(FlagSwapFee)
-	_ = cmd.MarkFlagRequired(FlagExitFee)
+	// _ = cmd.MarkFlagRequired(FlagInitialDeposit)
+	// _ = cmd.MarkFlagRequired(FlagSwapFee)
+	// _ = cmd.MarkFlagRequired(FlagExitFee)
 
 	return cmd
 }
@@ -314,18 +314,19 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	return cmd
 }
 
-func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeights string, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	initialDepositStr, err := fs.GetString(FlagInitialDeposit)
+func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+
+	pool, err := parseCreatePoolFlags(fs)
+	if err != nil {
+		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
+	}
+
+	deposit, err := sdk.ParseCoinsNormalized(pool.InitialDeposit)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	deposit, err := sdk.ParseCoinsNormalized(initialDepositStr)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	poolAssetCoins, err := sdk.ParseDecCoins(tokenWeights)
+	poolAssetCoins, err := sdk.ParseDecCoins(pool.Weights)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -334,20 +335,12 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 		return txf, nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	swapFeeStr, err := fs.GetString(FlagSwapFee)
-	if err != nil {
-		return txf, nil, err
-	}
-	swapFee, err := sdk.NewDecFromStr(swapFeeStr)
+	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	exitFeeStr, err := fs.GetString(FlagExitFee)
-	if err != nil {
-		return txf, nil, err
-	}
-	exitFee, err := sdk.NewDecFromStr(exitFeeStr)
+	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -365,11 +358,6 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 		})
 	}
 
-	futureGovernor, err := fs.GetString(FlagFutureGovernor)
-	if err != nil {
-		return txf, nil, err
-	}
-
 	msg := &types.MsgCreatePool{
 		Sender: clientCtx.GetFromAddress().String(),
 		PoolParams: types.PoolParams{
@@ -377,7 +365,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 			ExitFee: exitFee,
 		},
 		PoolAssets:         poolAssets,
-		FuturePoolGovernor: futureGovernor,
+		FuturePoolGovernor: pool.FutureGovernor,
 	}
 
 	return txf, msg, nil

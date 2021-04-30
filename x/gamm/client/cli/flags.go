@@ -5,12 +5,19 @@ import (
 )
 
 const (
+	// Will be parsed to string
+	FlagPoolFile = "pool-file"
+
+	// Will be parsed to []sdk.DecCoin
+	FlagWeights = "weights"
 	// Will be parsed to []sdk.Coin
 	FlagInitialDeposit = "initial-deposit"
 	// Will be parsed to sdk.Dec
 	FlagSwapFee = "swap-fee"
 	// Will be parsed to sdk.Dec
 	FlagExitFee = "exit-fee"
+	// FlagFutureGovernor can be an address, or a This LP Token, lockup time pair
+	FlagFutureGovernor = "future-governor"
 
 	FlagPoolId = "pool-id"
 	// Will be parsed to sdk.Int
@@ -29,10 +36,26 @@ const (
 	FlagSwapRouteAmounts = "swap-route-amounts"
 	// Will be parsed to []string
 	FlagSwapRouteDenoms = "swap-route-denoms"
-
-	// FlagFutureGovernor can be an address, or a This LP Token, lockup time pair
-	FlagFutureGovernor = "future-governor"
 )
+
+// CreatePoolFlags defines the core required fields of creating a pool. It is used to
+// verify that these values are not provided in conjunction with a JSON pool
+// file.
+var CreatePoolFlags = []string{
+	FlagWeights,
+	FlagInitialDeposit,
+	FlagSwapFee,
+	FlagExitFee,
+	FlagFutureGovernor,
+}
+
+type createPoolInputs struct {
+	Weights        string `json:"weights"`
+	InitialDeposit string `json:"initial-deposit"`
+	SwapFee        string `json:"swap-fee"`
+	ExitFee        string `json:"exit-fee"`
+	FutureGovernor string `json:"future-governor"`
+}
 
 func FlagSetQuerySwapRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
@@ -53,6 +76,8 @@ func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
 func FlagSetCreatePool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
+	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other proposal flags should not be used)")
+	fs.String(FlagWeights, "", "The amm weights of the tokens in the pool")
 	fs.String(FlagInitialDeposit, "", "The tokens to be deposited to the pool initially")
 	fs.String(FlagSwapFee, "", "Swap fee of the pool")
 	fs.String(FlagExitFee, "", "Exit fee of the pool")
