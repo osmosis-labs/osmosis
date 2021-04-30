@@ -76,7 +76,7 @@ func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
 func FlagSetCreatePool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other proposal flags should not be used)")
+	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other create pool flags should not be used)")
 	fs.String(FlagWeights, "", "The amm weights of the tokens in the pool")
 	fs.String(FlagInitialDeposit, "", "The tokens to be deposited to the pool initially")
 	fs.String(FlagSwapFee, "", "Swap fee of the pool")

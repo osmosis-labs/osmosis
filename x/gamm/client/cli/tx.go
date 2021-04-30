@@ -47,10 +47,10 @@ func NewCreatePoolCmd() *cobra.Command {
 		Short: "create a new pool and provide the liquidity to it",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`create a new pool and provide the liquidity to it.
-Proposal initialization parameters can be given directly as CLI flags or through a pool JSON file.
+Pool initialization parameters can be given directly as CLI flags or through a pool JSON file.
 
 Example:
-$ %s tx gamm create-pool --proposal="path/to/pool.json" --from mykey
+$ %s tx gamm create-pool --pool-file="path/to/pool.json" --from mykey
 Where pool.json contains:
 {
 	"weights": "4uatom,4osmo,2uakt",
