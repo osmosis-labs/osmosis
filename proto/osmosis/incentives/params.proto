@@ -7,7 +7,6 @@ option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 
 // Params holds parameters for the incentives module
 message Params {
-    // number of blocks per epoch
-    int64 blocks_per_epoch = 1 [(gogoproto.moretags) = "yaml:\"blocks_per_epoch\""];
-    // TODO: update blocks_per_epoch to "epoch_identifier" and get epoch signals from epochs module
+    // distribution epoch identifier
+    string distr_epoch_identifier = 1 [(gogoproto.moretags) = "yaml:\"distr_epoch_identifier\""];
 }

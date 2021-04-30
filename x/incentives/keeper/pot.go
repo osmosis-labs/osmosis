@@ -68,8 +68,25 @@ func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Ite
 	return k.getDistributedCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
 }
 
-// setPot modify pot into different one
+// setPot set the pot inside store
 func (k Keeper) setPot(ctx sdk.Context, pot *types.Pot) error {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(potStoreKey(pot.Id), k.cdc.MustMarshalJSON(pot))
+	return nil
+}
+
+func (k Keeper) SetPotWithRefKey(ctx sdk.Context, pot *types.Pot) error {
+	k.setPot(ctx, pot)
+
+	curTime := ctx.BlockTime()
+	timeKey := getTimeKey(pot.StartTime)
+	if pot.IsUpcomingPot(curTime) {
+		k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, timeKey), pot.Id)
+	} else if pot.IsActivePot(curTime) {
+		k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
+	} else {
+		k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixFinishedPots, timeKey), pot.Id)
+	}
 	store := ctx.KVStore(k.storeKey)
 	store.Set(potStoreKey(pot.Id), k.cdc.MustMarshalJSON(pot))
 	return nil
@@ -288,6 +305,10 @@ func (k Keeper) GetPotFromIDs(ctx sdk.Context, refValue []byte) ([]types.Pot, er
 
 // GetPots returns pots both upcoming and active
 func (k Keeper) GetPots(ctx sdk.Context) []types.Pot {
+	return k.getPotsFromIterator(ctx, k.PotsIterator(ctx))
+}
+
+func (k Keeper) GetNotFinishedPots(ctx sdk.Context) []types.Pot {
 	return append(k.GetActivePots(ctx), k.GetUpcomingPots(ctx)...)
 }
 
@@ -310,23 +331,21 @@ func (k Keeper) GetFinishedPots(ctx sdk.Context) []types.Pot {
 func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, pots []types.Pot, endEpoch int64) sdk.Coins {
 	// initialize pots to active and upcomings if not set
 	if len(pots) == 0 {
-		pots = k.GetPots(ctx)
+		pots = k.GetNotFinishedPots(ctx)
 	}
 
 	// estimate rewards
 	estimatedRewards := sdk.Coins{}
 	params := k.GetParams(ctx)
-	currentEpoch, _ := k.GetCurrentEpochInfo(ctx)
+	epochInfo := k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
 
 	// no need to change storage while doing estimation and we use cached context
 	cacheCtx, _ := ctx.CacheContext()
 	for _, pot := range pots {
-		distrBeginEpoch := currentEpoch
+		distrBeginEpoch := epochInfo.CurrentEpoch
 		blockTime := ctx.BlockTime()
 		if pot.StartTime.After(blockTime) {
-			avgBlockTime := time.Second * 5
-			epochDuration := params.BlocksPerEpoch * int64(avgBlockTime)
-			distrBeginEpoch = currentEpoch + 1 + int64(pot.StartTime.Sub(blockTime))/epochDuration
+			distrBeginEpoch = epochInfo.CurrentEpoch + 1 + int64(pot.StartTime.Sub(blockTime)/epochInfo.Duration)
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {

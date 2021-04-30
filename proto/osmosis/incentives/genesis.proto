@@ -3,6 +3,7 @@ package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
 import "osmosis/incentives/params.proto";
+import "osmosis/incentives/pot.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 
@@ -10,8 +11,5 @@ option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 message GenesisState {
     // params defines all the parameters of the module
     Params params = 1 [(gogoproto.nullable) = false];
-    // current epoch
-    int64 current_epoch = 2 [(gogoproto.moretags) = "yaml:\"current_epoch\""];
-    // current epoch begin block
-    int64 epoch_begin_block = 3 [(gogoproto.moretags) = "yaml:\"epoch_begin_block\""];
+    repeated Pot pots = 2 [(gogoproto.nullable) = false];
 }

@@ -138,14 +138,14 @@ func (suite *KeeperTestSuite) TestNonPerpetualPotOperations() {
 	suite.SetupTest()
 
 	// initial module pots check
-	pots := suite.app.IncentivesKeeper.GetPots(suite.ctx)
+	pots := suite.app.IncentivesKeeper.GetNotFinishedPots(suite.ctx)
 	suite.Require().Len(pots, 0)
 
 	// setup lock and pot
 	lockOwner, potID, coins, startTime := suite.SetupLockAndPot(false)
 
 	// check pots
-	pots = suite.app.IncentivesKeeper.GetPots(suite.ctx)
+	pots = suite.app.IncentivesKeeper.GetNotFinishedPots(suite.ctx)
 	suite.Require().Len(pots, 1)
 	suite.Require().Equal(pots[0].Id, potID)
 	suite.Require().Equal(pots[0].Coins, coins)
@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualPotOperations() {
 	suite.AddToPot(addCoins, potID)
 
 	// check pots
-	pots = suite.app.IncentivesKeeper.GetPots(suite.ctx)
+	pots = suite.app.IncentivesKeeper.GetNotFinishedPots(suite.ctx)
 	suite.Require().Len(pots, 1)
 	expectedPot := types.Pot{
 		Id:          potID,
@@ -233,14 +233,14 @@ func (suite *KeeperTestSuite) TestPerpetualPotOperations() {
 	suite.SetupTest()
 
 	// initial module pots check
-	pots := suite.app.IncentivesKeeper.GetPots(suite.ctx)
+	pots := suite.app.IncentivesKeeper.GetNotFinishedPots(suite.ctx)
 	suite.Require().Len(pots, 0)
 
 	// setup lock and pot
 	lockOwner, potID, coins, startTime := suite.SetupLockAndPot(true)
 
 	// check pots
-	pots = suite.app.IncentivesKeeper.GetPots(suite.ctx)
+	pots = suite.app.IncentivesKeeper.GetNotFinishedPots(suite.ctx)
 	suite.Require().Len(pots, 1)
 	expectedPot := types.Pot{
 		Id:          potID,
@@ -263,7 +263,7 @@ func (suite *KeeperTestSuite) TestPerpetualPotOperations() {
 	suite.Require().Equal(coins.String(), rewardsEst.String())
 
 	// check pots
-	pots = suite.app.IncentivesKeeper.GetPots(suite.ctx)
+	pots = suite.app.IncentivesKeeper.GetNotFinishedPots(suite.ctx)
 	suite.Require().Len(pots, 1)
 	expectedPot = types.Pot{
 		Id:          potID,
