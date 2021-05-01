@@ -131,10 +131,16 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 				return ErrPoolParamsInvalidDenom
 			}
 		}
-		// TODO: Validate duration & start time
+		// TODO: validate start time
+		// Wait until we find how tendermint validates start time
 
 		// We do not need to validate InitialPoolWeights, as we set that ourselves
 		// in setInitialPoolParams
+
+		// TODO: Is there anything else we can validate for duration?
+		if params.SmoothWeightChangeParams.Duration <= 0 {
+			return errors.New("params.SmoothWeightChangeParams must have a positive duration")
+		}
 	}
 
 	return nil
@@ -243,12 +249,6 @@ func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []Po
 		// TODO: Set start time if not present.
 		// This requires us figuring out what an unset start time defaults to though.
 		// We don't have access to the current block time though...
-
-		// TODO: Is there anything we can validate for duration besides it being negative?
-		// cross-check with the SDK
-		if params.SmoothWeightChangeParams.Duration <= 0 {
-			return errors.New("params.SmoothWeightChangeParams can not have a negative duration")
-		}
 	}
 	return nil
 }
