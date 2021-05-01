@@ -356,21 +356,21 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 				Duration:  defaultDuration,
 				InitialPoolWeights: []PoolAsset{
 					{
-						Weight: sdk.NewInt(1 * GuaranteedWeightPrecision),
+						Weight: sdk.NewInt(1),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
 					},
 					{
-						Weight: sdk.NewInt(1 * GuaranteedWeightPrecision),
+						Weight: sdk.NewInt(1),
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
 				TargetPoolWeights: []PoolAsset{
 					{
-						Weight: sdk.NewInt(1 * GuaranteedWeightPrecision),
+						Weight: sdk.NewInt(1),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
 					},
 					{
-						Weight: sdk.NewInt(2 * GuaranteedWeightPrecision),
+						Weight: sdk.NewInt(2),
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
@@ -404,21 +404,21 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 				Duration:  defaultDuration,
 				InitialPoolWeights: []PoolAsset{
 					{
-						Weight: sdk.NewInt(2 * GuaranteedWeightPrecision),
+						Weight: sdk.NewInt(2),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
 					},
 					{
-						Weight: sdk.NewInt(2 * GuaranteedWeightPrecision),
+						Weight: sdk.NewInt(2),
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
 				TargetPoolWeights: []PoolAsset{
 					{
-						Weight: sdk.NewInt(4 * GuaranteedWeightPrecision),
+						Weight: sdk.NewInt(4),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
 					},
 					{
-						Weight: sdk.NewInt(1 * GuaranteedWeightPrecision),
+						Weight: sdk.NewInt(1),
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
@@ -457,9 +457,11 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 		initialWeights := make([]sdk.Int, len(params.InitialPoolWeights))
 		finalWeights := make([]sdk.Int, len(params.TargetPoolWeights))
 		for i, v := range params.InitialPoolWeights {
-			initialWeights[i] = v.Weight
+			initialWeights[i] = v.Weight.MulRaw(GuaranteedWeightPrecision)
 		}
 		for i, v := range params.TargetPoolWeights {
+			// Doesn't need to be scaled, due to this being done already in param initialization,
+			// and because params is only shallow copied
 			finalWeights[i] = v.Weight
 		}
 		// Set the test cases for times before the start, and the start
@@ -496,7 +498,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 		initialPoolAssets := make([]PoolAsset, len(paramsCopy.InitialPoolWeights))
 		for i, asset := range paramsCopy.InitialPoolWeights {
 			assetCopy := PoolAsset{
-				Weight: asset.Weight.QuoRaw(GuaranteedWeightPrecision),
+				Weight: asset.Weight,
 				Token:  sdk.NewInt64Coin(asset.Token.Denom, 10000),
 			}
 			initialPoolAssets[i] = assetCopy

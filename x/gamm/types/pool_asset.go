@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -40,6 +42,16 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		}
 	}
 	return nil
+}
+
+// SortPoolAssetsByWeight sorts pool assets in place, by weight
+func SortPoolAssetsByWeight(assets []PoolAsset) {
+	sort.Slice(assets, func(i, j int) bool {
+		PoolAssetA := assets[i]
+		PoolAssetB := assets[j]
+
+		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
+	})
 }
 
 // Validates a pool asset, to check if it has a valid weight.

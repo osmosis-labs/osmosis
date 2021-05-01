@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -63,27 +64,33 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, fu
 
 	// pool account thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
-	protoPoolAcc := &PoolAccount{
+	poolAcc := &PoolAccount{
 		BaseAccount:        baseAcc,
 		Id:                 poolId,
-		PoolParams:         poolParams,
+		PoolParams:         PoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
 		TotalShare:         sdk.NewCoin(GetPoolShareDenom(poolId), sdk.ZeroInt()),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
 
-	err := protoPoolAcc.setInitialPoolAssets(assets)
+	err := poolAcc.setInitialPoolAssets(assets)
 	if err != nil {
 		return &PoolAccount{}, err
 	}
 
-	err = poolParams.Validate(protoPoolAcc.GetAllPoolAssets())
+	sortedPoolAssets := poolAcc.GetAllPoolAssets()
+	err = poolParams.Validate(sortedPoolAssets)
 	if err != nil {
 		return &PoolAccount{}, err
 	}
 
-	return protoPoolAcc, nil
+	err = poolAcc.setInitialPoolParams(poolParams, sortedPoolAssets)
+	if err != nil {
+		return &PoolAccount{}, err
+	}
+
+	return poolAcc, nil
 }
 
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {
@@ -106,12 +113,12 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	if params.SmoothWeightChangeParams != nil {
 		// TODO: We need to test that TargetPoolWeights only contains the same denoms as
 		// the provided PoolWeights
-		// for _, v := range params.SmoothWeightChangeParams.TargetPoolWeights {
-		// 	err := ValidateUserSpecifiedWeight(v.Weight)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// }
+		for _, v := range params.SmoothWeightChangeParams.TargetPoolWeights {
+			err := ValidateUserSpecifiedWeight(v.Weight)
+			if err != nil {
+				return err
+			}
+		}
 		// TODO: Validate duration & start time
 		// We do not need to validate InitialPoolWeights, as we should be setting that ourselves
 		// TODO: Set that in create new pool.
@@ -184,15 +191,52 @@ func (pa *PoolAccount) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 	// Furthermore, consider changing the underlying data type to allow in-place modification if the
 	// number of PoolAssets is expected to be large.
 	pa.PoolAssets = append(pa.PoolAssets, scaledPoolAssets...)
-	sort.Slice(pa.PoolAssets, func(i, j int) bool {
-		PoolAssetA := pa.PoolAssets[i]
-		PoolAssetB := pa.PoolAssets[j]
-
-		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
-	})
+	SortPoolAssetsByWeight(pa.PoolAssets)
 
 	pa.TotalWeight = newTotalWeight
 
+	return nil
+}
+
+// setInitialPoolParams
+func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset) error {
+	pa.PoolParams = params
+	if params.SmoothWeightChangeParams != nil {
+		// set initial assets
+		initialWeights := make([]PoolAsset, len(sortedAssets))
+		for i, v := range sortedAssets {
+			initialWeights[i] = PoolAsset{
+				Weight: v.Weight,
+				Token:  sdk.Coin{Denom: v.Token.Denom, Amount: sdk.ZeroInt()},
+			}
+		}
+		params.SmoothWeightChangeParams.InitialPoolWeights = initialWeights
+
+		// sort target weights by denom
+		targetPoolWeights := params.SmoothWeightChangeParams.TargetPoolWeights
+		SortPoolAssetsByWeight(targetPoolWeights)
+
+		for i, v := range targetPoolWeights {
+			err := ValidateUserSpecifiedWeight(v.Weight)
+			if err != nil {
+				return err
+			}
+			pa.PoolParams.SmoothWeightChangeParams.TargetPoolWeights[i] = PoolAsset{
+				Weight: v.Weight.MulRaw(GuaranteedWeightPrecision),
+				Token:  v.Token,
+			}
+		}
+
+		// TODO: Set start time if not present.
+		// This requires us figuring out what an unset start time defaults to though.
+		// We don't have access to the current block time though...
+
+		// TODO: Is there anything we can validate for duration besides it being negative?
+		// cross-check with the SDK
+		if params.SmoothWeightChangeParams.Duration <= 0 {
+			return errors.New("params.SmoothWeightChangeParams can not have a negative duration")
+		}
+	}
 	return nil
 }
 
