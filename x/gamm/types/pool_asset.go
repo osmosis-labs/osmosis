@@ -44,8 +44,20 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	return nil
 }
 
-// SortPoolAssetsByWeight sorts pool assets in place, by weight
-func SortPoolAssetsByWeight(assets []PoolAsset) {
+// SortPoolAssetsOutOfPlaceByDenom sorts pool assets in place, by weight
+// Doesn't deep copy the underlying weights, but it does place the assets
+// into a new slice.
+func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
+	assets_copy := make([]PoolAsset, len(assets))
+	for i, v := range assets {
+		assets_copy[i] = v
+	}
+	SortPoolAssetsByDenom(assets_copy)
+	return assets_copy
+}
+
+// SortPoolAssetsByDenom sorts pool assets in place, by weight
+func SortPoolAssetsByDenom(assets []PoolAsset) {
 	sort.Slice(assets, func(i, j int) bool {
 		PoolAssetA := assets[i]
 		PoolAssetB := assets[j]

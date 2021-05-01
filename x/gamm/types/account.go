@@ -111,17 +111,30 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	}
 
 	if params.SmoothWeightChangeParams != nil {
-		// TODO: We need to test that TargetPoolWeights only contains the same denoms as
-		// the provided PoolWeights
-		for _, v := range params.SmoothWeightChangeParams.TargetPoolWeights {
+		targetWeights := params.SmoothWeightChangeParams.TargetPoolWeights
+		// Ensure it has the right number of weights
+		if len(targetWeights) != len(poolWeights) {
+			return ErrPoolParamsInvalidNumDenoms
+		}
+		// Validate all user specified weights
+		for _, v := range targetWeights {
 			err := ValidateUserSpecifiedWeight(v.Weight)
 			if err != nil {
 				return err
 			}
 		}
+		// Ensure that all the target weight denoms are same as pool asset weights
+		sortedTargetPoolWeights := SortPoolAssetsOutOfPlaceByDenom(targetWeights)
+		sortedPoolWeights := SortPoolAssetsOutOfPlaceByDenom(poolWeights)
+		for i, v := range sortedPoolWeights {
+			if sortedTargetPoolWeights[i].Token.Denom != v.Token.Denom {
+				return ErrPoolParamsInvalidDenom
+			}
+		}
 		// TODO: Validate duration & start time
-		// We do not need to validate InitialPoolWeights, as we should be setting that ourselves
-		// TODO: Set that in create new pool.
+
+		// We do not need to validate InitialPoolWeights, as we set that ourselves
+		// in setInitialPoolParams
 	}
 
 	return nil
@@ -191,7 +204,7 @@ func (pa *PoolAccount) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 	// Furthermore, consider changing the underlying data type to allow in-place modification if the
 	// number of PoolAssets is expected to be large.
 	pa.PoolAssets = append(pa.PoolAssets, scaledPoolAssets...)
-	SortPoolAssetsByWeight(pa.PoolAssets)
+	SortPoolAssetsByDenom(pa.PoolAssets)
 
 	pa.TotalWeight = newTotalWeight
 
@@ -214,7 +227,7 @@ func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []Po
 
 		// sort target weights by denom
 		targetPoolWeights := params.SmoothWeightChangeParams.TargetPoolWeights
-		SortPoolAssetsByWeight(targetPoolWeights)
+		SortPoolAssetsByDenom(targetPoolWeights)
 
 		for i, v := range targetPoolWeights {
 			err := ValidateUserSpecifiedWeight(v.Weight)
