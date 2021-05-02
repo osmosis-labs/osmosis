@@ -20,6 +20,7 @@ const (
 	PoolFileDuration                 = "duration"
 	PoolFileTargetPoolWeights        = "target-pool-weights"
 
+
 	FlagPoolId = "pool-id"
 	// Will be parsed to sdk.Int
 	FlagShareAmountOut = "share-amount-out"

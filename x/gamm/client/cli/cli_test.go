@@ -51,7 +51,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			return app.NewOsmosisApp(
 				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 				encCfg,
-				simapp.EmptyAppOptions{},
+				simapp.
+        
+        AppOptions{},
 				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 			)
 		},
