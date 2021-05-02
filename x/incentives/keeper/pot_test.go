@@ -31,6 +31,18 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 	suite.Require().NoError(err)
 }
 
+func (suite *KeeperTestSuite) BeginUnlockAllNotUnlockings(addr sdk.AccAddress) sdk.Coins {
+	_, coins, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr)
+	suite.Require().NoError(err)
+	return coins
+}
+
+func (suite *KeeperTestSuite) UnlockAllUnlockableCoins(addr sdk.AccAddress) sdk.Coins {
+	_, coins, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx, addr)
+	suite.Require().NoError(err)
+	return coins
+}
+
 func (suite *KeeperTestSuite) SetupNewPot(isPerpetual bool, coins sdk.Coins) (uint64, *types.Pot, sdk.Coins, time.Time) {
 	addr2 := sdk.AccAddress([]byte("addr1---------------"))
 	startTime2 := time.Now()

@@ -141,11 +141,11 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 }
 
 func (k Keeper) GetLocksToDistributionForOwner(ctx sdk.Context, distrTo lockuptypes.QueryCondition, owner sdk.AccAddress) []lockuptypes.PeriodLock {
-  switch distrTo.LockQueryType {
-  case lockuptypes.ByDuration:
-    return k.lk.GetAccountLockedLongerDurationDenom(ctx, owner, distrTo.Denom, distrTo.Duration)
-  case lockuptypes.ByTime:
-    return k.lk.GetAccountLockedPastTimeDenom(ctx, owner, distrTo.Denom, distrTo.Timestamp)
+	switch distrTo.LockQueryType {
+	case lockuptypes.ByDuration:
+		return k.lk.GetAccountLockedLongerDurationDenom(ctx, owner, distrTo.Denom, distrTo.Duration)
+	case lockuptypes.ByTime:
+		return k.lk.GetAccountLockedPastTimeDenom(ctx, owner, distrTo.Denom, distrTo.Timestamp)
 	default:
 	}
 	return []lockuptypes.PeriodLock{}
@@ -323,29 +323,29 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	if len(pots) == 0 {
 		pots = k.GetPots(ctx)
 	}
- 
+
 	// estimate rewards
 	estimatedRewards := sdk.Coins{}
 
 	// no need to change storage while doing estimation and we use cached context
 	cacheCtx, _ := ctx.CacheContext()
 
-  for _, pot := range pots {
-    // total distribution amount = pot_size * denom_lock_amount / total_denom_lock_amount
-    distrCoins := sdk.Coins{}
-    remainCoins := pot.Coins.Sub(pot.DistributedCoins)
-    locks := k.GetLocksToDistributionForOwner(cacheCtx, pot.DistributeTo, addr)
+	for _, pot := range pots {
+		// total distribution amount = pot_size * denom_lock_amount / total_denom_lock_amount
+		distrCoins := sdk.Coins{}
+		remainCoins := pot.Coins.Sub(pot.DistributedCoins)
+		locks := k.GetLocksToDistributionForOwner(cacheCtx, pot.DistributeTo, addr)
 
-		totalLocked := k.getTotalLockedDenom(ctx, pot.DistributeTo.Denom)
-    denomLockAmt := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
-    for _, remainCoin := range remainCoins {
-      amt := remainCoin.Amount.Mul(denomLockAmt).Quo(totalLocked)
-      distrCoins = distrCoins.Add(sdk.NewCoin(remainCoin.Denom, amt))
-    }
-    
-    distrCoins.Sort()
-    estimatedRewards = estimatedRewards.Add(distrCoins...)
-  }
+		totalLocked := k.GetTotalLockedDenom(ctx, pot.DistributeTo.Denom)
+		denomLockAmt := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
+		for _, remainCoin := range remainCoins {
+			amt := remainCoin.Amount.Mul(denomLockAmt).Quo(totalLocked)
+			distrCoins = distrCoins.Add(sdk.NewCoin(remainCoin.Denom, amt))
+		}
+
+		distrCoins.Sort()
+		estimatedRewards = estimatedRewards.Add(distrCoins...)
+	}
 
 	return estimatedRewards
 }

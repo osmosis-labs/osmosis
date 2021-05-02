@@ -21,4 +21,6 @@ type LockupKeeper interface {
 	GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []lockuptypes.PeriodLock
 	GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []lockuptypes.PeriodLock
 	GetAccountLockedLongerDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []lockuptypes.PeriodLock
+	UnlockAllUnlockableCoins(ctx sdk.Context, addr sdk.AccAddress) ([]lockuptypes.PeriodLock, sdk.Coins, error)
+	BeginUnlockAllNotUnlockings(ctx sdk.Context, addr sdk.AccAddress) ([]lockuptypes.PeriodLock, sdk.Coins, error)
 }

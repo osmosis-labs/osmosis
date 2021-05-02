@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) getTotalLockedDenom(ctx sdk.Context, denom string) (res sdk.Int) {
+func (k Keeper) GetTotalLockedDenom(ctx sdk.Context, denom string) (res sdk.Int) {
 	key := getTotalLockedDenomKey(denom)
 	store := ctx.KVStore(k.storeKey)
 	if !store.Has(key) {
@@ -28,14 +28,14 @@ func (k Keeper) setTotalLockedDenom(ctx sdk.Context, denom string, amount sdk.In
 
 func (k Keeper) IncreaseTotalLocked(ctx sdk.Context, amount sdk.Coins) {
 	for _, coin := range amount {
-		x := k.getTotalLockedDenom(ctx, coin.Denom)
+		x := k.GetTotalLockedDenom(ctx, coin.Denom)
 		k.setTotalLockedDenom(ctx, coin.Denom, x.Add(coin.Amount))
 	}
 }
 
 func (k Keeper) DecreaseTotalLocked(ctx sdk.Context, amount sdk.Coins) {
 	for _, coin := range amount {
-		x := k.getTotalLockedDenom(ctx, coin.Denom)
+		x := k.GetTotalLockedDenom(ctx, coin.Denom)
 		k.setTotalLockedDenom(ctx, coin.Denom, x.Sub(coin.Amount))
 		// XXX: invariant no negative
 	}
