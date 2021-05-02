@@ -11,13 +11,13 @@ import (
 )
 
 // SetModuleAccountBalance set balance of airdrop module
-func (k Keeper) SetModuleAccountBalance(ctx sdk.Context, amount sdk.Int) {
+func (k Keeper) SetModuleAccountBalance(ctx sdk.Context, amount sdk.Coins) {
 	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	k.bankKeeper.SetBalances(ctx, moduleAccAddr, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), amount)))
+	k.bankKeeper.SetBalances(ctx, moduleAccAddr, amount)
 }
 
 // ClearClaimables clear claimable amounts
-func (k Keeper) ClearClaimables(ctx sdk.Context) {
+func (k Keeper) ClearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(types.ClaimableStoreKey))
 	for ; iterator.Valid(); iterator.Next() {
@@ -27,7 +27,7 @@ func (k Keeper) ClearClaimables(ctx sdk.Context) {
 }
 
 // SetClaimables set claimable amount from balances object
-func (k Keeper) SetClaimables(ctx sdk.Context, balances []banktypes.Balance) error {
+func (k Keeper) SetInitialClaimables(ctx sdk.Context, balances []banktypes.Balance) error {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimableStoreKey))
 	for _, bal := range balances {
@@ -37,7 +37,7 @@ func (k Keeper) SetClaimables(ctx sdk.Context, balances []banktypes.Balance) err
 }
 
 // GetClaimables get claimables for genesis export
-func (k Keeper) GetClaimables(ctx sdk.Context) []banktypes.Balance {
+func (k Keeper) GetInitialClaimables(ctx sdk.Context) []banktypes.Balance {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimableStoreKey))
 
