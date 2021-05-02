@@ -403,9 +403,10 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
 			}
 
-			poolAssets = append(poolAssets, types.PoolAsset{
-				Weight: poolAssetCoins[i].Amount.RoundInt(),
+			targetPoolAssets = append(targetPoolAssets, types.PoolAsset{
+				Weight: targetPoolAssetCoins[i].Amount.RoundInt(),
 				Token:  deposit[i],
+				// TODO: This doesn't make sense. Should only use denom, not an sdk.Coin
 			})
 		}
 
