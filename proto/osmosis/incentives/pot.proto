@@ -23,6 +23,4 @@ message Pot {
   uint64 filled_epochs = 7; // number of epochs distributed already
   repeated cosmos.base.v1beta1.Coin distributed_coins = 8
     [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"]; // already distributed coins
-  cosmos.base.v1beta1.Coin total_locked = 9
-    [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"]; // total locked coins
 }
