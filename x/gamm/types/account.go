@@ -131,8 +131,8 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 				return ErrPoolParamsInvalidDenom
 			}
 		}
-		// TODO: validate start time
-		// Wait until we find how tendermint validates start time
+
+		// No start time validation needed
 
 		// We do not need to validate InitialPoolWeights, as we set that ourselves
 		// in setInitialPoolParams
