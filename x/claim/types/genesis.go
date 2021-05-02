@@ -15,12 +15,12 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		AirdropAmount:      sdk.NewInt(0),
-		AirdropStart:       time.Now(),
-		DurationUntilDecay: DefaultDurationUntilDecay, // 1 month
-		DurationOfDecay:    DefaultDurationOfDecay,    // 5 months
-		Claimables:         []banktypes.Balance{},
-		Activities:         []UserActions{},
+		ModuleAccountBalance: sdk.NewCoins(),
+		StartTime:            time.Now(),
+		DurationUntilDecay:   DefaultDurationUntilDecay, // 1 month
+		DurationOfDecay:      DefaultDurationOfDecay,    // 5 months
+		InitialClaimables:    []banktypes.Balance{},
+		Activities:           []UserActions{},
 	}
 }
 

@@ -17,6 +17,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	if goneTime > params.DurationUntilDecay+params.DurationOfDecay {
 		// airdrop time passed
 		k.FundRemainingsToCommunity(ctx)
-		k.ClearClaimables(ctx)
+		k.ClearInitialClaimables(ctx)
 	}
 }

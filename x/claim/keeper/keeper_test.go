@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 
-	suite.app.ClaimKeeper.SetModuleAccountBalance(suite.ctx, sdk.NewInt(10000000))
+	suite.app.ClaimKeeper.SetModuleAccountBalance(suite.ctx, sdk.NewCoins(sdk.NewCoin(types.OsmoBondDenom, sdk.NewInt(10000000))))
 	suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
 		AirdropStart:       time.Now(),
 		DurationUntilDecay: types.DefaultDurationUntilDecay,
