@@ -211,19 +211,18 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		{
 			"bad pool json - missing quotes around exit fee",
 			fmt.Sprintf(`
-	{
-	  "%s": "1node0token,3stake",
-	  "%s": "100node0token,100stake",
-	  "%s": "0.001",
-	  "%s": 0.001
-	}
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": 0.001
+			}
 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
 			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"empty pool json",
-			"",
-			true, &sdk.TxResponse{}, 0,
+			"", true, &sdk.TxResponse{}, 0,
 		},
 	}
 
