@@ -47,10 +47,11 @@ func NewCreatePoolCmd() *cobra.Command {
 		Short: "create a new pool and provide the liquidity to it",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`create a new pool and provide the liquidity to it.
-Pool initialization parameters can be given directly as CLI flags or through a pool JSON file.
+Pool initialization parameters must be provided through a pool JSON file.
 
 Example:
 $ %s tx gamm create-pool --pool-file="path/to/pool.json" --from mykey
+
 Where pool.json contains:
 {
 	"weights": "4uatom,4osmo,2uakt",
@@ -59,11 +60,8 @@ Where pool.json contains:
 	"exit-fee": "0.01",
 	"future-governor": "168h"
 }
-
-Which is equivalent to:
-$ %s tx gamm create-pool --weights 4uatom,4osmo,2uakt --initial-deposit 100uatom,5osmo,20uakt --swap-fee=0.01 --exit-fee=0.01 --future-governor 168h --from=mykey
 `,
-				version.AppName, version.AppName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(0),
@@ -87,9 +85,7 @@ $ %s tx gamm create-pool --weights 4uatom,4osmo,2uakt --initial-deposit 100uatom
 	cmd.Flags().AddFlagSet(FlagSetCreatePool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	// _ = cmd.MarkFlagRequired(FlagInitialDeposit)
-	// _ = cmd.MarkFlagRequired(FlagSwapFee)
-	// _ = cmd.MarkFlagRequired(FlagExitFee)
+	_ = cmd.MarkFlagRequired(FlagPoolFile)
 
 	return cmd
 }

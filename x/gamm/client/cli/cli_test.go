@@ -78,7 +78,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	// create a new pool
-	_, err = gammtestutil.MsgCreatePool(val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01")
+	_, err = gammtestutil.MsgCreatePool(s.T(), val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01", "")
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -108,203 +108,121 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	)
 	s.Require().NoError(err)
 
-	okJSON := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`
-	{
-	  "%s": "1node0token,3stake",
-	  "%s": "100node0token,100stake",
-	  "%s": "0.001",
-	  "%s": "0.001"
-	}
-	`, cli.FlagWeights, cli.FlagInitialDeposit, cli.FlagSwapFee, cli.FlagExitFee))
-
-	badJSON := testutil.WriteToNewTempFile(s.T(), "bad json")
-
-	// this badJSON is missing quotes around the FlagExitFee value
-	badJSON2 := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`
-	{
-	  "%s": "1node0token,3stake",
-	  "%s": "100node0token,100stake",
-	  "%s": "0.001",
-	  "%s": 0.001
-	}
-	`, cli.FlagWeights, cli.FlagInitialDeposit, cli.FlagSwapFee, cli.FlagExitFee))
-
 	testCases := []struct {
 		name         string
-		args         []string
+		json         string
 		expectErr    bool
 		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
 			"one token pair pool",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token"),
-				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token"),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token",
+			  "%s": "100node0token",
+			  "%s": "0.001",
+			  "%s": "0.001"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
 			false, &sdk.TxResponse{}, 4,
 		},
 		{
 			"two tokens pair pool",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": "0.001"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
 			false, &sdk.TxResponse{}, 0,
 		},
 		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 			"three tokens pair pool - insufficient balance check",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,1stake,2btc"),
-				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake,100btc"),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,1stake,2btc",
+			  "%s": "100node0token,100stake,100btc",
+			  "%s": "0.001",
+			  "%s": "0.001"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
 			false, &sdk.TxResponse{}, 5,
 		},
 		{
 			"future governor address",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagFutureGovernor, "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": "0.001",
+			  "%s": "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
 			"future governor time",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagFutureGovernor, "2h"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": "0.001",
+			  "%s": "2h"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
 			"future governor token + time",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagFutureGovernor, "token,1000h"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": "0.001",
+			  "%s": "token,1000h"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
 			"invalid future governor",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagWeights, "1node0token,3stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagInitialDeposit, "100node0token,100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagExitFee, "0.001"),
-				fmt.Sprintf("--%s=%s", cli.FlagFutureGovernor, "validdenom,invalidtime"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": "0.001",
+			  "%s": "validdenom,invalidtime"
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 7,
 		},
 		{
-			"pool json",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, okJSON.Name()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"bad pool json",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, badJSON.Name()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			"not valid json",
+			"bad json",
 			true, &sdk.TxResponse{}, 0,
 		},
 		{
-			"bad pool json 2",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, badJSON2.Name()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
+			"bad pool json - missing quotes around exit fee",
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token,3stake",
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": 0.001
+			}
+	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
 			true, &sdk.TxResponse{}, 0,
 		},
 		{
-			"nonexistant pool json",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, "fileDoesNotExist"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"incompatible flags with --pool-file",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, okJSON.Name()),
-				fmt.Sprintf("--%s=%s", cli.FlagSwapFee, "0.001"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
-			true, &sdk.TxResponse{}, 0,
+			"empty pool json",
+			"", true, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -315,7 +233,18 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			cmd := cli.NewCreatePoolCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			jsonFile := testutil.WriteToNewTempFile(s.T(), tc.json)
+
+			args := []string{
+				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, jsonFile.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
