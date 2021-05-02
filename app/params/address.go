@@ -22,18 +22,12 @@ var (
 	Bech32PrefixConsPub = Bech32PrefixAccAddr + "valconspub"
 
 	HumanCoinUnit = "osmo"
-	BaseCoinUnit  = "uosmo" // 10^-8 AKA "carson"
-	CroExponent   = 6
+	BaseCoinUnit  = "uosmo"
+	OsmoExponent  = 6
 )
 
 func init() {
 	SetAddressPrefixes()
-
-	// croUnit := sdk.OneDec()
-	// err := sdk.RegisterDenom(HumanCoinUnit, croUnit)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 }
 
 func SetAddressPrefixes() {
