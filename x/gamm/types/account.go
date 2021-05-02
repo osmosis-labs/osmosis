@@ -251,8 +251,6 @@ func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []Po
 		if params.SmoothWeightChangeParams.StartTime.Unix() <= 0 {
 			params.SmoothWeightChangeParams.StartTime = time.Unix(curBlockTime.Unix(), 0)
 		}
-		// This requires us figuring out what an unset start time defaults to though.
-		// We don't have access to the current block time though...
 	}
 	return nil
 }
