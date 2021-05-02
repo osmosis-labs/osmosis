@@ -10,6 +10,8 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	appparams "github.com/c-osmosis/osmosis/app/params"
 )
 
 var (
@@ -573,6 +575,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 }
 
 func TestPoolAccountMarshalYAML(t *testing.T) {
+	appparams.SetAddressPrefixes()
 	var poolId uint64 = 10
 
 	ymlAssetTest := []PoolAsset{
@@ -595,7 +598,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := `|
-  address: cosmos1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrhtwpas
+  address: osmo1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrlsa3tz
   public_key: ""
   account_number: 0
   sequence: 0

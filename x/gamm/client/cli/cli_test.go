@@ -3,30 +3,24 @@ package cli_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/c-osmosis/osmosis/app"
+	"github.com/c-osmosis/osmosis/config"
 	"github.com/c-osmosis/osmosis/x/gamm/client/cli"
 	gammtestutil "github.com/c-osmosis/osmosis/x/gamm/client/testutil"
 	"github.com/c-osmosis/osmosis/x/gamm/types"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tm-db"
 )
 
 type IntegrationTestSuite struct {
@@ -39,36 +33,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	encCfg := app.MakeEncodingConfig()
-
-	s.cfg = network.Config{
-		Codec:             encCfg.Marshaler,
-		TxConfig:          encCfg.TxConfig,
-		LegacyAmino:       encCfg.Amino,
-		InterfaceRegistry: encCfg.InterfaceRegistry,
-		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor: func(val network.Validator) servertypes.Application {
-			return app.NewOsmosisApp(
-				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-				encCfg,
-				simapp.EmptyAppOptions{},
-				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-			)
-		},
-		GenesisState:    app.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
-		TimeoutCommit:   2 * time.Second,
-		ChainID:         "osmosis-1",
-		NumValidators:   1,
-		BondDenom:       sdk.DefaultBondDenom,
-		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:   sdk.TokensFromConsensusPower(1000),
-		StakingTokens:   sdk.TokensFromConsensusPower(500),
-		BondedTokens:    sdk.TokensFromConsensusPower(100),
-		PruningStrategy: storetypes.PruningOptionNothing,
-		CleanupDir:      true,
-		SigningAlgo:     string(hd.Secp256k1Type),
-		KeyringOptions:  []keyring.Option{},
-	}
+	s.cfg = config.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -171,7 +136,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
 			  "%s": "0.001",
-			  "%s": "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
+			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
@@ -324,9 +289,6 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 
 	for _, tc := range testCases {
 		tc := tc
-
-		fmt.Println()
-		fmt.Println(tc.name)
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCreatePoolCmd()
