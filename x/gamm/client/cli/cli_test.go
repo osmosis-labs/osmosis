@@ -325,6 +325,9 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	for _, tc := range testCases {
 		tc := tc
 
+		fmt.Println()
+		fmt.Println(tc.name)
+
 		s.Run(tc.name, func() {
 			cmd := cli.NewCreatePoolCmd()
 			clientCtx := val.ClientCtx
