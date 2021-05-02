@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -382,6 +383,48 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		},
 		PoolAssets:         poolAssets,
 		FuturePoolGovernor: pool.FutureGovernor,
+	}
+
+	if (pool.SmoothWeightChangeParams != smoothWeightChangeParamsInputs{}) {
+		duration, err := time.ParseDuration(pool.SmoothWeightChangeParams.Duration)
+		if err != nil {
+			return txf, nil, fmt.Errorf("could not parse duration: %w", err)
+		}
+
+		targetPoolAssetCoins, err := sdk.ParseDecCoins(pool.SmoothWeightChangeParams.TargetPoolWeights)
+		if err != nil {
+			return txf, nil, err
+		}
+
+		var targetPoolAssets []types.PoolAsset
+		for i := 0; i < len(targetPoolAssetCoins); i++ {
+
+			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
+				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
+			}
+
+			poolAssets = append(poolAssets, types.PoolAsset{
+				Weight: poolAssetCoins[i].Amount.RoundInt(),
+				Token:  deposit[i],
+			})
+		}
+
+		smoothWeightParams := types.SmoothWeightChangeParams{
+			Duration:           duration,
+			InitialPoolWeights: poolAssets,
+			TargetPoolWeights:  targetPoolAssets,
+		}
+
+		if pool.SmoothWeightChangeParams.StartTime != "" {
+			startTime, err := time.Parse(time.RFC3339, pool.SmoothWeightChangeParams.StartTime)
+			if err != nil {
+				return txf, nil, fmt.Errorf("could not parse time: %w", err)
+			}
+
+			smoothWeightParams.StartTime = startTime
+		}
+
+		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
 	}
 
 	return txf, msg, nil

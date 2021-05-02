@@ -15,6 +15,11 @@ const (
 	PoolFileExitFee        = "exit-fee"
 	PoolFileFutureGovernor = "future-governor"
 
+	PoolFileSmoothWeightChangeParams = "smooth-weight-change-params"
+	PoolFileStartTime                = "start-time"
+	PoolFileDuration                 = "duration"
+	PoolFileTargetPoolWeights        = "target-pool-weights"
+
 	FlagPoolId = "pool-id"
 	// Will be parsed to sdk.Int
 	FlagShareAmountOut = "share-amount-out"
@@ -44,9 +49,9 @@ type createPoolInputs struct {
 }
 
 type smoothWeightChangeParamsInputs struct {
-	StartTime         string `json:"start_time"`
+	StartTime         string `json:"start-time"`
 	Duration          string `json:"duration"`
-	TargetPoolWeights string `json:"target_pool_weights"`
+	TargetPoolWeights string `json:"target-pool-weights"`
 }
 
 func FlagSetQuerySwapRoutes() *flag.FlagSet {

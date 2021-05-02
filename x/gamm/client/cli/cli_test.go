@@ -139,6 +139,18 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
 			false, &sdk.TxResponse{}, 0,
 		},
+		{
+			"change order of json fields",
+			fmt.Sprintf(`
+			{
+			  "%s": "100node0token,100stake",
+			  "%s": "0.001",
+			  "%s": "1node0token,3stake",
+			  "%s": "0.001"
+			}
+			`, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileWeights, cli.PoolFileExitFee),
+			false, &sdk.TxResponse{}, 0,
+		},
 		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
 			"three tokens pair pool - insufficient balance check",
 			fmt.Sprintf(`
@@ -223,6 +235,90 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		{
 			"empty pool json",
 			"", true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"smooth change params",
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": {
+						"%s": "864h",
+						"%s": "2node0token,1stake",
+						"%s": "2006-01-02T15:04:05Z"
+					}
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights, cli.PoolFileStartTime,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"smooth change params - no start time",
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": {
+						"%s": "864h",
+						"%s": "2node0token,1stake"
+					}
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"empty smooth change params",
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": {}
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"smooth change params wrong type",
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": "invalid string"
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams,
+			),
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"smooth change params missing duration",
+			fmt.Sprintf(`
+				{
+					"%s": "1node0token,3stake",
+					"%s": "100node0token,100stake",
+					"%s": "0.001",
+					"%s": "0.001",
+					"%s": {
+						"%s": "2node0token,1stake"
+					}
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileTargetPoolWeights,
+			),
+			true, &sdk.TxResponse{}, 0,
 		},
 	}
 
