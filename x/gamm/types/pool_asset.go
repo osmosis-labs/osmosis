@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -40,6 +42,28 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		}
 	}
 	return nil
+}
+
+// SortPoolAssetsOutOfPlaceByDenom sorts pool assets in place, by weight
+// Doesn't deep copy the underlying weights, but it does place the assets
+// into a new slice.
+func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
+	assets_copy := make([]PoolAsset, len(assets))
+	for i, v := range assets {
+		assets_copy[i] = v
+	}
+	SortPoolAssetsByDenom(assets_copy)
+	return assets_copy
+}
+
+// SortPoolAssetsByDenom sorts pool assets in place, by weight
+func SortPoolAssetsByDenom(assets []PoolAsset) {
+	sort.Slice(assets, func(i, j int) bool {
+		PoolAssetA := assets[i]
+		PoolAssetB := assets[j]
+
+		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
+	})
 }
 
 // Validates a pool asset, to check if it has a valid weight.
