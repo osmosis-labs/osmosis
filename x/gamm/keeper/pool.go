@@ -45,7 +45,7 @@ func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []t
 		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
 	}
 
-	poolAcc, err := types.NewPoolAccount(poolId, poolParams, assets, futureGovernor)
+	poolAcc, err := types.NewPoolAccount(poolId, poolParams, assets, futureGovernor, ctx.BlockTime())
 	if err != nil {
 		return nil, err
 	}

@@ -58,7 +58,7 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string) (PoolAccountI, error) {
+func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (PoolAccountI, error) {
 	poolAddr := NewPoolAddress(poolId)
 	baseAcc := authtypes.NewBaseAccountWithAddress(poolAddr)
 
@@ -85,7 +85,7 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, fu
 		return &PoolAccount{}, err
 	}
 
-	err = poolAcc.setInitialPoolParams(poolParams, sortedPoolAssets)
+	err = poolAcc.setInitialPoolParams(poolParams, sortedPoolAssets, blockTime)
 	if err != nil {
 		return &PoolAccount{}, err
 	}
@@ -218,7 +218,7 @@ func (pa *PoolAccount) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 }
 
 // setInitialPoolParams
-func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset) error {
+func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset, curBlockTime time.Time) error {
 	pa.PoolParams = params
 	if params.SmoothWeightChangeParams != nil {
 		// set initial assets
@@ -235,6 +235,7 @@ func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []Po
 		targetPoolWeights := params.SmoothWeightChangeParams.TargetPoolWeights
 		SortPoolAssetsByDenom(targetPoolWeights)
 
+		// scale target pool weights by GuaranteedWeightPrecision
 		for i, v := range targetPoolWeights {
 			err := ValidateUserSpecifiedWeight(v.Weight)
 			if err != nil {
@@ -246,7 +247,10 @@ func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []Po
 			}
 		}
 
-		// TODO: Set start time if not present.
+		// Set start time if not present.
+		if params.SmoothWeightChangeParams.StartTime.Unix() <= 0 {
+			params.SmoothWeightChangeParams.StartTime = time.Unix(curBlockTime.Unix(), 0)
+		}
 		// This requires us figuring out what an unset start time defaults to though.
 		// We don't have access to the current block time though...
 	}
@@ -389,6 +393,7 @@ func (pa *PoolAccount) PokeTokenWeights(blockTime time.Time) {
 	// TODO: Add intra-block cache check that we haven't already poked
 	// the block yet.
 	params := *pa.PoolParams.SmoothWeightChangeParams
+
 	// the weights w(t) for the pool at time `t` is the following:
 	//   t <= start_time: w(t) = initial_pool_weights
 	//   start_time < t <= start_time + duration:
