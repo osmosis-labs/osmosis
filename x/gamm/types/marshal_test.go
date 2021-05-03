@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -89,7 +91,11 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
 	bs, err := yaml.Marshal(pacc)
 	require.NoError(t, err)
 
-	want := `|
+	expectedStartTimeBz, err := yaml.Marshal(defaultCurBlockTime)
+	expectedStartTimeString := strings.Trim(string(expectedStartTimeBz), "\n")
+	require.NoError(t, err)
+
+	want := fmt.Sprintf(`|
   address: osmo1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrlsa3tz
   public_key: ""
   account_number: 0
@@ -99,7 +105,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
     swap_fee: "0.025000000000000000"
     exit_fee: "0.025000000000000000"
     smooth_weight_change_params:
-      start_time: 2021-04-17T15:53:20-07:00
+      start_time: %s
       duration: 1h0m0s
       initial_pool_weights:
       - |
@@ -139,7 +145,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
       denom: test2
       amount: "50000"
     weight: "200.000000000000000000"
-`
+`, expectedStartTimeString)
 	require.Equal(t, want, string(bs))
 }
 
