@@ -19,7 +19,7 @@ pool.json
     "exit-fee": "0.001",
     "lbp-params": {
         "duration": "72h",
-        "target-pool-weights": "1akt,1atom",
+        "target-pool-weights": "1akt,1atom"
     }
 }
 ```
