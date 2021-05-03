@@ -21,32 +21,13 @@ func (asset PoolAsset) prettify() poolAssetPretty {
 	}
 }
 
-func (asset poolAssetPretty) uglify() PoolAsset {
-	return PoolAsset{
-		Weight: asset.Weight.MulInt64(GuaranteedWeightPrecision).RoundInt(),
-		Token:  asset.Token,
-	}
-}
-
-// MarshalJSON returns the JSON representation of a PoolAsset.
-func (pa PoolAsset) MarshalJSON() ([]byte, error) {
-	return json.Marshal(pa.prettify())
-}
-
-// UnmarshalJSON unmarshals raw JSON bytes into a PoolAsset.
-func (pa *PoolAsset) UnmarshalJSON(bz []byte) error {
-	var alias poolAssetPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
-		return err
-	}
-
-	validAsset := alias.uglify()
-
-	pa.Weight = validAsset.Weight
-	pa.Token = validAsset.Token
-
-	return nil
-}
+// D: at name
+// func (asset poolAssetPretty) uglify() PoolAsset {
+// 	return PoolAsset{
+// 		Weight: asset.Weight.MulInt64(GuaranteedWeightPrecision).RoundInt(),
+// 		Token:  asset.Token,
+// 	}
+// }
 
 // MarshalYAML returns the YAML representation of a PoolAsset.
 // This is assumed to not be called on a stand-alone instance, so it removes the first marshalled line.
