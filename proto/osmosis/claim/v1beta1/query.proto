@@ -22,10 +22,8 @@ message ClaimableRequest {
 }
 
 message ClaimableResponse {
-  repeated cosmos.base.v1beta1.Coin coins = 1 [
-    (gogoproto.moretags) = "yaml:\"coins\"",
-    (gogoproto.nullable) = false
-  ];
+  repeated cosmos.base.v1beta1.Coin coins = 1
+      [ (gogoproto.moretags) = "yaml:\"coins\"", (gogoproto.nullable) = false ];
 }
 
 message ActivitiesRequest {
