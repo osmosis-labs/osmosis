@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/c-osmosis/osmosis/config"
-	"github.com/c-osmosis/osmosis/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/osmosis-labs/osmosis/config"
+	"github.com/osmosis-labs/osmosis/x/mint/client/cli"
 )
 
 type IntegrationTestSuite struct {

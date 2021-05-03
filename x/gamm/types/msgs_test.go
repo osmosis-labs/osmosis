@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appParams "github.com/c-osmosis/osmosis/app/params"
+	appParams "github.com/osmosis-labs/osmosis/app/params"
 )
 
 func TestMsgCreatePool(t *testing.T) {

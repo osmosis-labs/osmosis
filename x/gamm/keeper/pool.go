@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogotypes "github.com/gogo/protobuf/types"
 
-	"github.com/c-osmosis/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolAccountI, error) {

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/stretchr/testify/require"
 )
 

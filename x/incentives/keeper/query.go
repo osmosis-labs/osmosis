@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	"github.com/c-osmosis/osmosis/x/incentives/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )

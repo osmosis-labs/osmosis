@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/c-osmosis/osmosis/x/gamm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )

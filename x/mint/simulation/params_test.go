@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/c-osmosis/osmosis/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/x/mint/simulation"
 )
 
 func TestParamChanges(t *testing.T) {

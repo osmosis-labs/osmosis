@@ -3,10 +3,11 @@ package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 
 // Params holds parameters for the incentives module
 message Params {
-    // distribution epoch identifier
-    string distr_epoch_identifier = 1 [(gogoproto.moretags) = "yaml:\"distr_epoch_identifier\""];
+  // distribution epoch identifier
+  string distr_epoch_identifier = 1
+      [ (gogoproto.moretags) = "yaml:\"distr_epoch_identifier\"" ];
 }

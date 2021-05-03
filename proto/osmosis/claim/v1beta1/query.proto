@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/c-osmosis/osmosis/x/claim/types";
+option go_package = "github.com/osmosis-labs/osmosis/x/claim/types";
 
 // Query defines the gRPC querier service.
 service Query {

@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/c-osmosis/osmosis/app"
+	"github.com/osmosis-labs/osmosis/app"
 
-	"github.com/c-osmosis/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 type KeeperTestSuite struct {

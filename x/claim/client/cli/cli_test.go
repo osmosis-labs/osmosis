@@ -7,11 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
-	"github.com/c-osmosis/osmosis/app"
-	"github.com/c-osmosis/osmosis/app/params"
-	"github.com/c-osmosis/osmosis/x/claim/client/cli"
-	"github.com/c-osmosis/osmosis/x/claim/types"
-	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -23,6 +18,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/app/params"
+	"github.com/osmosis-labs/osmosis/x/claim/client/cli"
+	"github.com/osmosis-labs/osmosis/x/claim/types"
+	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tm-db"
