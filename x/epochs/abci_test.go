@@ -15,8 +15,12 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	app.EpochsKeeper.DeleteEpochInfo(ctx, "daily")
-	app.EpochsKeeper.DeleteEpochInfo(ctx, "weekly")
+	// On init genesis, default epochs information is set
+	// To check init genesis again, should make it fresh status
+	epochInfos := app.EpochsKeeper.AllEpochInfos(ctx)
+	for _, epochInfo := range epochInfos {
+		app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+	}
 
 	now := time.Now()
 	ctx = ctx.WithBlockHeight(1)

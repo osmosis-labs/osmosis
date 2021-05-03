@@ -20,12 +20,14 @@ func NewMultiEpochHooks(hooks ...EpochHooks) MultiEpochHooks {
 	return hooks
 }
 
+// AfterEpochEnd is called when epoch is going to be ended, epochNumber is the number of epoch that is ending
 func (h MultiEpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	for i := range h {
 		h[i].AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 	}
 }
 
+// BeforeEpochStart is called when epoch is going to be started, epochNumber is the number of epoch that is starting
 func (h MultiEpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	for i := range h {
 		h[i].BeforeEpochStart(ctx, epochIdentifier, epochNumber)
