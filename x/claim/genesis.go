@@ -9,7 +9,6 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-
 	k.SetModuleAccountBalance(ctx, genState.ModuleAccountBalance)
 	k.SetParams(ctx, types.Params{
 		AirdropStart:       genState.StartTime,
@@ -30,6 +29,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params, _ := k.GetParams(ctx)
 	genesis := types.DefaultGenesis()
+	genesis.ModuleAccountBalance = k.GetModuleAccountBalance(ctx)
 	genesis.StartTime = params.AirdropStart
 	genesis.DurationUntilDecay = params.DurationUntilDecay
 	genesis.DurationOfDecay = params.DurationOfDecay
