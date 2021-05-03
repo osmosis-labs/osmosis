@@ -123,13 +123,13 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(coins1, balances[0].Coins)
 
-	err = suite.app.ClaimKeeper.FundRemainingsToCommunity(suite.ctx)
+	err = suite.app.ClaimKeeper.EndAirdrop(suite.ctx)
 	suite.Require().NoError(err)
+
 	moduleAccAddr := suite.app.AccountKeeper.GetModuleAddress(types.ModuleName)
 	coins := suite.app.BankKeeper.GetBalance(suite.ctx, moduleAccAddr, sdk.DefaultBondDenom)
 	suite.Require().Equal(coins, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
 
-	suite.app.ClaimKeeper.ClearInitialClaimables(suite.ctx)
 	coins2, err = suite.app.ClaimKeeper.GetClaimable(suite.ctx, addr2.String())
 	suite.Require().NoError(err)
 	suite.Require().Equal(coins2, sdk.Coins{})
