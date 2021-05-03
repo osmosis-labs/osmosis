@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	appParams "github.com/c-osmosis/osmosis/app/params"
 )
 
 var (
