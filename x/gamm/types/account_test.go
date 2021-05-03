@@ -613,11 +613,11 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
   - token:
       denom: test1
       amount: "10000"
-    weight: "107374182400"
+    weight: "100.000000000000000000"
   - token:
       denom: test2
       amount: "50000"
-    weight: "214748364800"
+    weight: "200.000000000000000000"
 `
 	require.Equal(t, want, string(bs))
 }
