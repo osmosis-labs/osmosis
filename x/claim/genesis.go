@@ -11,7 +11,7 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetModuleAccountBalance(ctx, genState.ModuleAccountBalance)
 	k.SetParams(ctx, types.Params{
-		AirdropStart:       genState.StartTime,
+		AirdropStart:       genState.AirdropStartTime,
 		DurationUntilDecay: genState.DurationUntilDecay,
 		DurationOfDecay:    genState.DurationOfDecay,
 	})
@@ -30,7 +30,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params, _ := k.GetParams(ctx)
 	genesis := types.DefaultGenesis()
 	genesis.ModuleAccountBalance = k.GetModuleAccountBalance(ctx)
-	genesis.StartTime = params.AirdropStart
+	genesis.AirdropStartTime = params.AirdropStart
 	genesis.DurationUntilDecay = params.DurationUntilDecay
 	genesis.DurationOfDecay = params.DurationOfDecay
 	genesis.InitialClaimables = k.GetInitialClaimables(ctx)
