@@ -48,11 +48,13 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
     denom: gamm/pool/10
     amount: "0"
   pool_assets:
-  - token:
+  - |
+    token:
       denom: test1
       amount: "10000"
     weight: "100.000000000000000000"
-  - token:
+  - |
+    token:
       denom: test2
       amount: "50000"
     weight: "200.000000000000000000"

@@ -14,40 +14,64 @@ type poolAssetPretty struct {
 	Weight sdk.Dec    `json:"weight" yaml:"weight"`
 }
 
-func (pa PoolAccount) getAllPoolAssetPretty() []poolAssetPretty {
-	prettyPoolAssets := make([]poolAssetPretty, len(pa.PoolAssets))
-	for i, v := range pa.PoolAssets {
-		prettyPoolAssets[i] = poolAssetPretty{
-			Weight: sdk.NewDecFromInt(v.Weight).QuoInt64(GuaranteedWeightPrecision),
-			Token:  v.Token,
-		}
+func (asset PoolAsset) prettify() poolAssetPretty {
+	return poolAssetPretty{
+		Weight: sdk.NewDecFromInt(asset.Weight).QuoInt64(GuaranteedWeightPrecision),
+		Token:  asset.Token,
 	}
-	return prettyPoolAssets
 }
 
-func uglifyPrettyPoolAssets(prettyAssets []poolAssetPretty) []PoolAsset {
-	// don't be mean to the standard assets D:
-	uglyPoolAssets := make([]PoolAsset, len(prettyAssets))
-	for i, v := range prettyAssets {
-		uglyPoolAssets[i] = PoolAsset{
-			Weight: v.Weight.MulInt64(GuaranteedWeightPrecision).RoundInt(),
-			Token:  v.Token,
-		}
+func (asset poolAssetPretty) uglify() PoolAsset {
+	return PoolAsset{
+		Weight: asset.Weight.MulInt64(GuaranteedWeightPrecision).RoundInt(),
+		Token:  asset.Token,
 	}
-	return uglyPoolAssets
+}
+
+// MarshalJSON returns the JSON representation of a PoolAsset.
+func (pa PoolAsset) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pa.prettify())
+}
+
+// UnmarshalJSON unmarshals raw JSON bytes into a PoolAsset.
+func (pa *PoolAsset) UnmarshalJSON(bz []byte) error {
+	var alias poolAssetPretty
+	if err := json.Unmarshal(bz, &alias); err != nil {
+		return err
+	}
+
+	validAsset := alias.uglify()
+
+	pa.Weight = validAsset.Weight
+	pa.Token = validAsset.Token
+
+	return nil
+}
+
+// MarshalYAML returns the YAML representation of a PoolAsset.
+// This is assumed to not be called on a stand-alone instance, so it removes the first marshalled line.
+func (pa PoolAsset) MarshalYAML() (interface{}, error) {
+	bz, err := yaml.Marshal(pa.prettify())
+	if err != nil {
+		return nil, err
+	}
+	s := string(bz)
+	// lines := strings.Split(s, "\n")
+	// s = strings.Join(lines[1:], "")
+	return s, nil
 }
 
 type poolAccountPretty struct {
-	Address            sdk.AccAddress    `json:"address" yaml:"address"`
-	PubKey             string            `json:"public_key" yaml:"public_key"`
-	AccountNumber      uint64            `json:"account_number" yaml:"account_number"`
-	Sequence           uint64            `json:"sequence" yaml:"sequence"`
-	Id                 uint64            `json:"id" yaml:"id"`
-	PoolParams         PoolParams        `json:"pool_params" yaml:"pool_params"`
-	FuturePoolGovernor string            `json:"future_pool_governor" yaml:"future_pool_governor"`
-	TotalWeight        sdk.Int           `json:"total_weight" yaml:"total_weight"`
-	TotalShare         sdk.Coin          `json:"total_share" yaml:"total_share"`
-	PoolAssets         []poolAssetPretty `json:"pool_assets" yaml:"pool_assets"`
+	Address            sdk.AccAddress `json:"address" yaml:"address"`
+	PubKey             string         `json:"public_key" yaml:"public_key"`
+	AccountNumber      uint64         `json:"account_number" yaml:"account_number"`
+	Sequence           uint64         `json:"sequence" yaml:"sequence"`
+	Id                 uint64         `json:"id" yaml:"id"`
+	PoolParams         PoolParams     `json:"pool_params" yaml:"pool_params"`
+	FuturePoolGovernor string         `json:"future_pool_governor" yaml:"future_pool_governor"`
+	TotalWeight        sdk.Int        `json:"total_weight" yaml:"total_weight"`
+	TotalShare         sdk.Coin       `json:"total_share" yaml:"total_share"`
+	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
 
 func (pa PoolAccount) String() string {
@@ -62,9 +86,7 @@ func (pa PoolAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	prettyPoolAssets := pa.getAllPoolAssetPretty()
-
-	bs, err := yaml.Marshal(poolAccountPretty{
+	bz, err := yaml.Marshal(poolAccountPretty{
 		Address:            accAddr,
 		PubKey:             "",
 		AccountNumber:      pa.AccountNumber,
@@ -73,14 +95,14 @@ func (pa PoolAccount) MarshalYAML() (interface{}, error) {
 		FuturePoolGovernor: pa.FuturePoolGovernor,
 		TotalWeight:        pa.TotalWeight,
 		TotalShare:         pa.TotalShare,
-		PoolAssets:         prettyPoolAssets,
+		PoolAssets:         pa.PoolAssets,
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return string(bs), nil
+	return string(bz), nil
 }
 
 // MarshalJSON returns the JSON representation of a PoolAccount.
@@ -89,8 +111,6 @@ func (pa PoolAccount) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	prettyPoolAssets := pa.getAllPoolAssetPretty()
 
 	return json.Marshal(poolAccountPretty{
 		Address:            accAddr,
@@ -101,7 +121,7 @@ func (pa PoolAccount) MarshalJSON() ([]byte, error) {
 		FuturePoolGovernor: pa.FuturePoolGovernor,
 		TotalWeight:        pa.TotalWeight,
 		TotalShare:         pa.TotalShare,
-		PoolAssets:         prettyPoolAssets,
+		PoolAssets:         pa.PoolAssets,
 	})
 }
 
@@ -118,7 +138,7 @@ func (pa *PoolAccount) UnmarshalJSON(bz []byte) error {
 	pa.FuturePoolGovernor = alias.FuturePoolGovernor
 	pa.TotalWeight = alias.TotalWeight
 	pa.TotalShare = alias.TotalShare
-	pa.PoolAssets = uglifyPrettyPoolAssets(alias.PoolAssets)
+	pa.PoolAssets = alias.PoolAssets
 
 	return nil
 }
