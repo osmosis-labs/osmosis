@@ -28,12 +28,15 @@ func ValidateFutureGovernor(governor string) error {
 		return nil
 	}
 
+	fmt.Println(governor)
+
 	// validation for future owner
-	// "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
+	// "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 	_, err := sdk.AccAddressFromBech32(governor)
 	if err == nil {
 		return nil
 	}
+
 
 	lockTimeStr := ""
 	splits := strings.Split(governor, ",")
@@ -68,6 +71,7 @@ var _ sdk.Msg = &MsgCreatePool{}
 func (msg MsgCreatePool) Route() string { return RouterKey }
 func (msg MsgCreatePool) Type() string  { return TypeMsgCreatePool }
 func (msg MsgCreatePool) ValidateBasic() error {
+
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
@@ -143,6 +147,7 @@ func (msg MsgSwapExactAmountOut) Route() string { return RouterKey }
 func (msg MsgSwapExactAmountOut) Type() string  { return TypeMsgSwapExactAmountOut }
 func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
+
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}

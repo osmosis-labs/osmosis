@@ -428,8 +428,6 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
 	}
 
-	fmt.Println(string(sdk.MustSortJSON(clientCtx.JSONMarshaler.MustMarshalJSON(msg))))
-
 	return txf, msg, nil
 }
 
