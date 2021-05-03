@@ -106,10 +106,6 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	coins1 = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
 	suite.Require().Equal(coins1.String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 4)).String())
 
-	// get completed activities
-	actions = suite.app.ClaimKeeper.GetUserActions(suite.ctx, addr1)
-	suite.Require().Len(actions, 2)
-
 	// do rest of actions
 	suite.app.ClaimKeeper.AfterProposalVote(suite.ctx, 1, addr1)
 	suite.app.ClaimKeeper.BeforeDelegationCreated(suite.ctx, addr1, sdk.ValAddress(addr1))

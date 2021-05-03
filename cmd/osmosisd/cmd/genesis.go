@@ -125,7 +125,7 @@ Example:
 
 			// claim module genesis
 			claimGenState := claimtypes.DefaultGenesis()
-			claimGenState.ModuleAccountBalance = sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, totalNormalizedOsmoBalance))
+			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, totalNormalizedOsmoBalance)
 			claimGenState.InitialClaimables = balances
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {

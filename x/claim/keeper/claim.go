@@ -10,10 +10,16 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// SetModuleAccountBalance set balance of airdrop module
-func (k Keeper) SetModuleAccountBalance(ctx sdk.Context, amount sdk.Coins) {
+// GetModuleAccountBalance gets the airdrop coin balance of module account
+func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
 	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	k.bankKeeper.SetBalances(ctx, moduleAccAddr, amount)
+	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, sdk.DefaultBondDenom)
+}
+
+// SetModuleAccountBalance set balance of airdrop module
+func (k Keeper) SetModuleAccountBalance(ctx sdk.Context, amount sdk.Coin) {
+	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	k.bankKeeper.SetBalances(ctx, moduleAccAddr, sdk.NewCoins(amount))
 }
 
 // ClearClaimables clear claimable amounts
@@ -142,7 +148,10 @@ func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 		return coins, err
 	}
 
-	k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, coins)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, coins)
+	if err != nil {
+		return coins, err
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
