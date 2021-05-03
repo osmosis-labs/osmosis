@@ -176,11 +176,13 @@ type GenesisState struct {
 	// duration of decay from decay start time
 	DurationOfDecay time.Duration `protobuf:"bytes,4,opt,name=duration_of_decay,json=durationOfDecay,proto3,stdduration" json:"duration_of_decay,omitempty" yaml:"duration_of_decay"`
 	// this is the initial amount that is claimable per address
-	// because the claimable amount decays over time, this is also the maximum claimable amount
+	// because the claimable amount decays over time, this is also the maximum
+	// claimable amount
 	// [(account_string, max_claimable), (account_string, max_claimable) ... ]
 	InitialClaimables []types1.Balance `protobuf:"bytes,5,rep,name=initial_claimables,json=initialClaimables,proto3" json:"initial_claimables"`
 	// the actions done per address
-	// [(account_string, [done_action1, done_action2]), (account_string, [done_action1]) ... ]
+	// [(account_string, [done_action1, done_action2]), (account_string,
+	// [done_action1]) ... ]
 	Activities []UserActions `protobuf:"bytes,6,rep,name=activities,proto3" json:"activities"`
 }
 
