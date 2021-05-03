@@ -1,13 +1,10 @@
 package incentives_test
 
-// TODO: should add endblocker test to make sure pots are not removed after distribution for perpetual pots
-
 import (
 	"testing"
 	"time"
 
 	simapp "github.com/c-osmosis/osmosis/app"
-	"github.com/c-osmosis/osmosis/x/incentives"
 	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -34,10 +31,10 @@ func TestPerpetualPotNotExpireAfterDistribution(t *testing.T) {
 	_, err := app.IncentivesKeeper.CreatePot(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 
-	_, beginBlock := app.IncentivesKeeper.GetCurrentEpochInfo(ctx)
-	futureCtx := ctx.WithBlockHeight(beginBlock + app.IncentivesKeeper.GetParams(ctx).BlocksPerEpoch + 1)
-	futureCtx = futureCtx.WithBlockTime(time.Now().Add(time.Minute))
-	incentives.EndBlocker(futureCtx, app.IncentivesKeeper)
+	params := app.IncentivesKeeper.GetParams(ctx)
+	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
+	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, 1)
+	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, 1)
 	pots := app.IncentivesKeeper.GetUpcomingPots(futureCtx)
 	require.Len(t, pots, 0)
 	pots = app.IncentivesKeeper.GetActivePots(futureCtx)
@@ -65,10 +62,10 @@ func TestNonPerpetualPotExpireAfterDistribution(t *testing.T) {
 	_, err := app.IncentivesKeeper.CreatePot(ctx, false, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 
-	_, beginBlock := app.IncentivesKeeper.GetCurrentEpochInfo(ctx)
-	futureCtx := ctx.WithBlockHeight(beginBlock + app.IncentivesKeeper.GetParams(ctx).BlocksPerEpoch + 1)
-	futureCtx = futureCtx.WithBlockTime(time.Now().Add(time.Minute))
-	incentives.EndBlocker(futureCtx, app.IncentivesKeeper)
+	params := app.IncentivesKeeper.GetParams(ctx)
+	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
+	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, 1)
+	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, 1)
 	pots := app.IncentivesKeeper.GetUpcomingPots(futureCtx)
 	require.Len(t, pots, 0)
 	pots = app.IncentivesKeeper.GetActivePots(futureCtx)

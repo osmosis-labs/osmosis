@@ -19,9 +19,10 @@ type Keeper struct {
 	ak         authkeeper.AccountKeeper
 	bk         types.BankKeeper
 	lk         types.LockupKeeper
+	ek         types.EpochKeeper
 }
 
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
@@ -33,6 +34,7 @@ func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes
 		ak:         ak,
 		bk:         bk,
 		lk:         lk,
+		ek:         ek,
 	}
 }
 

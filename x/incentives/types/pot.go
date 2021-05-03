@@ -19,3 +19,21 @@ func NewPot(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, coi
 		DistributedCoins:  distrCoins,
 	}
 }
+
+func (pot Pot) IsUpcomingPot(curTime time.Time) bool {
+	if curTime.After(pot.StartTime) {
+		return true
+	}
+	return false
+}
+
+func (pot Pot) IsActivePot(curTime time.Time) bool {
+	if curTime.Before(pot.StartTime) && (pot.IsPerpetual || pot.FilledEpochs < pot.NumEpochsPaidOver) {
+		return true
+	}
+	return false
+}
+
+func (pot Pot) IsFinishedPot(curTime time.Time) bool {
+	return !pot.IsUpcomingPot(curTime) && !pot.IsActivePot(curTime)
+}
