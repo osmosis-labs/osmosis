@@ -9,7 +9,7 @@ parent:
 
 ## Abstract
 
-The purpose of `epochs` module is to provide generalized epoch interface to other modules so that they can easily implement epochs without keeping own code for epochs.
+Often in the SDK, we would like to run certain code every-so often. The purpose of `epochs` module is to allow other modules to set that they would like to be signaled once every period. So another module can specify it wants to execute code once a week, starting at UTC-time = x. `epochs` creates a generalized epoch interface to other modules so that they can easily be signalled upon such events.
 
 ## Implementation
 
