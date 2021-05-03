@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genState := app.ModuleBasics.DefaultGenesis(encCfg.Marshaler)
 	claimGenState := claimtypes.DefaultGenesis()
-	claimGenState.ModuleAccountBalance = sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, sdk.NewInt(30)))
+	claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30))
 	claimGenState.InitialClaimables = []banktypes.Balance{
 		{
 			Address: addr1.String(),
