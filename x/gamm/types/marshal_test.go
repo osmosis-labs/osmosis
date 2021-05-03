@@ -35,7 +35,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := `|
-  address: cosmos1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrhtwpas
+  address: osmo1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrlsa3tz
   public_key: ""
   account_number: 0
   sequence: 0
@@ -90,7 +90,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := `|
-  address: cosmos1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrhtwpas
+  address: osmo1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrlsa3tz
   public_key: ""
   account_number: 0
   sequence: 0
