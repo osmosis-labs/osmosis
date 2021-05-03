@@ -22,8 +22,17 @@ func (k Keeper) SetModuleAccountBalance(ctx sdk.Context, amount sdk.Coin) {
 	k.bankKeeper.SetBalances(ctx, moduleAccAddr, sdk.NewCoins(amount))
 }
 
+func (k Keeper) EndAirdrop(ctx sdk.Context) error {
+	err := k.fundRemainingsToCommunity(ctx)
+	if err != nil {
+		return err
+	}
+	k.clearInitialClaimables(ctx)
+	return nil
+}
+
 // ClearClaimables clear claimable amounts
-func (k Keeper) ClearInitialClaimables(ctx sdk.Context) {
+func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(types.ClaimableStoreKey))
 	for ; iterator.Valid(); iterator.Next() {
@@ -164,8 +173,8 @@ func (k Keeper) ClaimCoins(ctx sdk.Context, addr string) (sdk.Coins, error) {
 }
 
 // FundRemainingsToCommunity fund remainings to the community when airdrop period end
-func (k Keeper) FundRemainingsToCommunity(ctx sdk.Context) error {
+func (k Keeper) fundRemainingsToCommunity(ctx sdk.Context) error {
 	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	amt := k.bankKeeper.GetBalance(ctx, moduleAccAddr, k.stakingKeeper.BondDenom(ctx))
+	amt := k.GetModuleAccountBalance(ctx)
 	return k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
 }

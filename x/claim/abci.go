@@ -13,10 +13,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		panic(err)
 	}
 
+	// End Airdrop
 	goneTime := ctx.BlockTime().Sub(params.AirdropStart)
 	if goneTime > params.DurationUntilDecay+params.DurationOfDecay {
 		// airdrop time passed
-		k.FundRemainingsToCommunity(ctx)
-		k.ClearInitialClaimables(ctx)
+		k.EndAirdrop(ctx)
 	}
 }
