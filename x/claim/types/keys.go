@@ -21,4 +21,7 @@ const (
 
 	// ActionKey defines the store key to store user accomplished actions
 	ActionKey = "action"
+
+	// AirdropCompletedKey defines the store key for whether the airdrop is completed
+	AirdropCompletedKey = "completed"
 )

@@ -28,6 +28,7 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 		return err
 	}
 	k.clearInitialClaimables(ctx)
+	k.setAirdropCompleted(ctx, true)
 	return nil
 }
 
@@ -177,4 +178,25 @@ func (k Keeper) fundRemainingsToCommunity(ctx sdk.Context) error {
 	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	amt := k.GetModuleAccountBalance(ctx)
 	return k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
+}
+
+// GetAirdropCompleted returns a bool for whether EndAirdrop was already run
+func (k Keeper) GetAirdropCompleted(ctx sdk.Context) bool {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.AirdropCompletedKey))
+	if bz[0] == byte(1) {
+		return true
+	}
+	return false
+}
+
+// setAirdropCompleted sets a bool to define if EndAirdrop was already run
+func (k Keeper) setAirdropCompleted(ctx sdk.Context, completed bool) {
+	store := ctx.KVStore(k.storeKey)
+	if completed {
+		store.Set([]byte(types.AirdropCompletedKey), []byte{byte(1)})
+	} else {
+		store.Set([]byte(types.AirdropCompletedKey), []byte{byte(0)})
+	}
+	return
 }
