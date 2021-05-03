@@ -56,8 +56,6 @@ func (pa PoolAsset) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 	s := string(bz)
-	// lines := strings.Split(s, "\n")
-	// s = strings.Join(lines[1:], "")
 	return s, nil
 }
 
@@ -69,7 +67,7 @@ type poolAccountPretty struct {
 	Id                 uint64         `json:"id" yaml:"id"`
 	PoolParams         PoolParams     `json:"pool_params" yaml:"pool_params"`
 	FuturePoolGovernor string         `json:"future_pool_governor" yaml:"future_pool_governor"`
-	TotalWeight        sdk.Int        `json:"total_weight" yaml:"total_weight"`
+	TotalWeight        sdk.Dec        `json:"total_weight" yaml:"total_weight"`
 	TotalShare         sdk.Coin       `json:"total_share" yaml:"total_share"`
 	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
@@ -86,6 +84,8 @@ func (pa PoolAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
+	decTotalWeight := sdk.NewDecFromInt(pa.TotalWeight).QuoInt64(GuaranteedWeightPrecision)
+
 	bz, err := yaml.Marshal(poolAccountPretty{
 		Address:            accAddr,
 		PubKey:             "",
@@ -93,7 +93,7 @@ func (pa PoolAccount) MarshalYAML() (interface{}, error) {
 		Id:                 pa.Id,
 		PoolParams:         pa.PoolParams,
 		FuturePoolGovernor: pa.FuturePoolGovernor,
-		TotalWeight:        pa.TotalWeight,
+		TotalWeight:        decTotalWeight,
 		TotalShare:         pa.TotalShare,
 		PoolAssets:         pa.PoolAssets,
 	})
@@ -112,6 +112,8 @@ func (pa PoolAccount) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
+	decTotalWeight := sdk.NewDecFromInt(pa.TotalWeight).QuoInt64(GuaranteedWeightPrecision)
+
 	return json.Marshal(poolAccountPretty{
 		Address:            accAddr,
 		PubKey:             "",
@@ -119,7 +121,7 @@ func (pa PoolAccount) MarshalJSON() ([]byte, error) {
 		Id:                 pa.Id,
 		PoolParams:         pa.PoolParams,
 		FuturePoolGovernor: pa.FuturePoolGovernor,
-		TotalWeight:        pa.TotalWeight,
+		TotalWeight:        decTotalWeight,
 		TotalShare:         pa.TotalShare,
 		PoolAssets:         pa.PoolAssets,
 	})
@@ -136,7 +138,7 @@ func (pa *PoolAccount) UnmarshalJSON(bz []byte) error {
 	pa.Id = alias.Id
 	pa.PoolParams = alias.PoolParams
 	pa.FuturePoolGovernor = alias.FuturePoolGovernor
-	pa.TotalWeight = alias.TotalWeight
+	pa.TotalWeight = alias.TotalWeight.MulInt64(GuaranteedWeightPrecision).RoundInt()
 	pa.TotalShare = alias.TotalShare
 	pa.PoolAssets = alias.PoolAssets
 
