@@ -37,7 +37,6 @@ func ValidateFutureGovernor(governor string) error {
 		return nil
 	}
 
-	fmt.Println(err)
 
 	lockTimeStr := ""
 	splits := strings.Split(governor, ",")

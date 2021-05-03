@@ -9,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/c-osmosis/osmosis/app/params"
+	appParams "github.com/c-osmosis/osmosis/app/params"
 )
 
 func TestMsgCreatePool(t *testing.T) {
-	appparams.SetAddressPrefixes()
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")

@@ -11,7 +11,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/c-osmosis/osmosis/app/params"
+	appParams "github.com/c-osmosis/osmosis/app/params"
 )
 
 var (
@@ -575,7 +575,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 }
 
 func TestPoolAccountMarshalYAML(t *testing.T) {
-	appparams.SetAddressPrefixes()
+	appParams.SetAddressPrefixes()
 	var poolId uint64 = 10
 
 	ymlAssetTest := []PoolAsset{
