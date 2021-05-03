@@ -16,7 +16,7 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ModuleAccountBalance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
-		StartTime:            time.Now(),
+		AirdropStartTime:     time.Now(),
 		DurationUntilDecay:   DefaultDurationUntilDecay, // 1 month
 		DurationOfDecay:      DefaultDurationOfDecay,    // 5 months
 		InitialClaimables:    []banktypes.Balance{},
