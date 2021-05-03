@@ -363,6 +363,7 @@ func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
 	if len(pa.PoolAssets) != len(newWeights) {
 		panic("updateAllWeights called with invalid input, len(newWeights) != len(existingWeights)")
 	}
+	totalWeight := sdk.ZeroInt()
 	for i, asset := range pa.PoolAssets {
 		if asset.Token.Denom != newWeights[i].Token.Denom {
 			panic(fmt.Sprintf("updateAllWeights called with invalid input, "+
@@ -374,7 +375,9 @@ func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
 			panic("updateAllWeights: Tried to set an invalid weight")
 		}
 		pa.PoolAssets[i].Weight = newWeights[i].Weight
+		totalWeight = totalWeight.Add(pa.PoolAssets[i].Weight)
 	}
+	pa.TotalWeight = totalWeight
 }
 
 // PokeTokenWeights checks to see if the pool's token weights need to be updated,
