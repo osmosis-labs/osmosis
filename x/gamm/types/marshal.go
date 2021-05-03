@@ -93,7 +93,7 @@ func (pa PoolAccount) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	decTotalWeight := sdk.NewDecFromInt(pa.TotalWeight).QuoInt64(GuaranteedWeightPrecision)
+	decTotalWeight := sdk.NewDecFromInt(pa.TotalWeight)
 
 	return json.Marshal(poolAccountPretty{
 		Address:            accAddr,
@@ -119,7 +119,7 @@ func (pa *PoolAccount) UnmarshalJSON(bz []byte) error {
 	pa.Id = alias.Id
 	pa.PoolParams = alias.PoolParams
 	pa.FuturePoolGovernor = alias.FuturePoolGovernor
-	pa.TotalWeight = alias.TotalWeight.MulInt64(GuaranteedWeightPrecision).RoundInt()
+	pa.TotalWeight = alias.TotalWeight.RoundInt()
 	pa.TotalShare = alias.TotalShare
 	pa.PoolAssets = alias.PoolAssets
 
