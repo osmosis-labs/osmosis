@@ -46,6 +46,8 @@ func calcSpotPriceWithSwapFee(
 ) sdk.Dec {
 	spotPrice := calcSpotPrice(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut)
 	// Q: Why is this not just (1 - swapfee)
+	// A: Its because its being applied to the other asset.
+	// TODO: write this up more coherently
 	// 1 / (1 - swapfee)
 	scale := sdk.OneDec().Quo(sdk.OneDec().Sub(swapFee))
 

@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+	"testing"
 
 	gammcli "github.com/c-osmosis/osmosis/x/gamm/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -20,21 +21,42 @@ var commonArgs = []string{
 
 // MsgCreatePool broadcast a pool creation message.
 func MsgCreatePool(
+	t *testing.T,
 	clientCtx client.Context,
 	owner fmt.Stringer,
 	tokenWeights string,
 	initialDeposit string,
 	swapFee string,
 	exitFee string,
+	futureGovernor string,
 	extraArgs ...string,
 ) (testutil.BufferWriter, error) {
 	args := []string{}
 
+	jsonFile := testutil.WriteToNewTempFile(t,
+		fmt.Sprintf(`
+		{
+		  "%s": "%s",
+		  "%s": "%s",
+		  "%s": "%s",
+		  "%s": "%s",
+		  "%s": "%s"
+		}
+		`, gammcli.PoolFileWeights,
+			tokenWeights,
+			gammcli.PoolFileInitialDeposit,
+			initialDeposit,
+			gammcli.PoolFileSwapFee,
+			swapFee,
+			gammcli.PoolFileExitFee,
+			exitFee,
+			gammcli.PoolFileExitFee,
+			exitFee,
+		),
+	)
+
 	args = append(args,
-		tokenWeights,
-		fmt.Sprintf("--%s=%s", gammcli.FlagInitialDeposit, initialDeposit),
-		fmt.Sprintf("--%s=%s", gammcli.FlagSwapFee, swapFee),
-		fmt.Sprintf("--%s=%s", gammcli.FlagExitFee, exitFee),
+		fmt.Sprintf("--%s=%s", gammcli.FlagPoolFile, jsonFile.Name()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
 	)
 

@@ -2,9 +2,69 @@ package types
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+func ValidateUserSpecifiedWeight(weight sdk.Int) error {
+	if !weight.IsPositive() {
+		return sdkerrors.Wrap(ErrNotPositiveWeight, weight.String())
+	}
+
+	if weight.GTE(MaxUserSpecifiedWeight) {
+		return sdkerrors.Wrap(ErrWeightTooLarge, weight.String())
+	}
+	return nil
+}
+
+func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
+	// The pool must be swapping between at least two assets
+	if len(assets) < 2 {
+		return ErrTooFewPoolAssets
+	}
+
+	// TODO: Add the limit of binding token to the pool params?
+	if len(assets) > 8 {
+		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(assets))
+	}
+
+	for _, asset := range assets {
+		err := ValidateUserSpecifiedWeight(asset.Weight)
+		if err != nil {
+			return err
+		}
+
+		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
+		}
+	}
+	return nil
+}
+
+// SortPoolAssetsOutOfPlaceByDenom sorts pool assets in place, by weight
+// Doesn't deep copy the underlying weights, but it does place the assets
+// into a new slice.
+func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
+	assets_copy := make([]PoolAsset, len(assets))
+	for i, v := range assets {
+		assets_copy[i] = v
+	}
+	SortPoolAssetsByDenom(assets_copy)
+	return assets_copy
+}
+
+// SortPoolAssetsByDenom sorts pool assets in place, by weight
+func SortPoolAssetsByDenom(assets []PoolAsset) {
+	sort.Slice(assets, func(i, j int) bool {
+		PoolAssetA := assets[i]
+		PoolAssetB := assets[j]
+
+		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
+	})
+}
 
 // Validates a pool asset, to check if it has a valid weight.
 func (asset PoolAsset) ValidateWeight() error {

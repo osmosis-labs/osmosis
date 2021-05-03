@@ -8,6 +8,9 @@ import (
 
 	appparams "github.com/c-osmosis/osmosis/app/params"
 	_ "github.com/c-osmosis/osmosis/client/docs/statik"
+	"github.com/c-osmosis/osmosis/x/claim"
+	claimkeeper "github.com/c-osmosis/osmosis/x/claim/keeper"
+	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/c-osmosis/osmosis/x/epochs"
 	epochskeeper "github.com/c-osmosis/osmosis/x/epochs/keeper"
 	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
@@ -131,6 +134,7 @@ var (
 		lockup.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		epochs.AppModuleBasic{},
+		claim.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -142,6 +146,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
 		gammtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
 		incentivestypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
@@ -186,6 +191,7 @@ type OsmosisApp struct {
 	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
+	ClaimKeeper      *claimkeeper.Keeper
 	GAMMKeeper       gammkeeper.Keeper
 	IncentivesKeeper incentiveskeeper.Keeper
 	LockupKeeper     lockupkeeper.Keeper
@@ -228,7 +234,7 @@ func NewOsmosisApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gammtypes.StoreKey, incentivestypes.StoreKey, lockuptypes.StoreKey,
+		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
 		epochstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -281,15 +287,9 @@ func NewOsmosisApp(
 	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
 
-	// register the staking hooks
-	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
-	)
-
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, scopedIBCKeeper,
+		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), &stakingKeeper, scopedIBCKeeper,
 	)
 
 	// register the proposal types
@@ -299,7 +299,8 @@ func NewOsmosisApp(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper))
-	app.GovKeeper = govkeeper.NewKeeper(
+
+	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
 	)
@@ -319,11 +320,18 @@ func NewOsmosisApp(
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
+		appCodec, keys[evidencetypes.StoreKey], &stakingKeeper, app.SlashingKeeper,
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
+	app.ClaimKeeper = claimkeeper.NewKeeper(appCodec, keys[claimtypes.StoreKey], app.AccountKeeper, app.BankKeeper, stakingKeeper, app.DistrKeeper)
+
+	// register the staking hooks
+	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
+	app.StakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ClaimKeeper.Hooks()),
+	)
 	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
@@ -331,7 +339,8 @@ func NewOsmosisApp(
 
 	app.GAMMKeeper = *gammKeeper.SetHooks(
 		gammtypes.NewMultiGammHooks(
-		// insert gamm hooks receivers here
+			// insert gamm hooks receivers here
+			app.ClaimKeeper.Hooks(),
 		),
 	)
 
@@ -351,6 +360,13 @@ func NewOsmosisApp(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
 			app.IncentivesKeeper.Hooks(),
+		),
+	)
+
+	app.GovKeeper = *govKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+			// insert governance hooks receivers here
+			app.ClaimKeeper.Hooks(),
 		),
 	)
 
@@ -382,6 +398,7 @@ func NewOsmosisApp(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
+		claim.NewAppModule(appCodec, *app.ClaimKeeper),
 		gamm.NewAppModule(appCodec, app.GAMMKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper),
@@ -413,6 +430,7 @@ func NewOsmosisApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
 	)

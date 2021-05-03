@@ -1,14 +1,13 @@
 package types
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
-	"gopkg.in/yaml.v2"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +24,6 @@ type PoolAccountI interface {
 	GetTotalShare() sdk.Coin
 	AddTotalShare(amt sdk.Int)
 	SubTotalShare(amt sdk.Int)
-	AddPoolAssets(PoolAssets []PoolAsset) error
 	GetPoolAsset(denom string) (PoolAsset, error)
 	// UpdatePoolAssetBalance updates the balances for
 	// the token with denomination coin.denom
@@ -52,27 +50,48 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, sdk.Uint64ToBigEndian(poolId)...)))
 }
 
-func NewPoolAccount(poolId uint64, poolParams PoolParams, futureGovernor string) PoolAccountI {
+// NewPoolAccount returns a weighted CPMM pool with the provided parameters, and initial assets.
+// Invariants that are assumed to be satisfied and not checked:
+// TODO: Why don't we check these in here?
+// * 2 <= len(assets) <= 8
+// * FutureGovernor is valid
+// * poolID doesn't already exist
+func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (PoolAccountI, error) {
 	poolAddr := NewPoolAddress(poolId)
 	baseAcc := authtypes.NewBaseAccountWithAddress(poolAddr)
 
-	err := poolParams.Validate()
-	if err != nil {
-		panic(err)
-	}
-
-	return &PoolAccount{
+	// pool account thats created up to ensuring the assets and params are valid.
+	// We assume that FuturePoolGovernor is valid.
+	poolAcc := &PoolAccount{
 		BaseAccount:        baseAcc,
 		Id:                 poolId,
-		PoolParams:         poolParams,
+		PoolParams:         PoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
 		TotalShare:         sdk.NewCoin(GetPoolShareDenom(poolId), sdk.ZeroInt()),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
+
+	err := poolAcc.setInitialPoolAssets(assets)
+	if err != nil {
+		return &PoolAccount{}, err
+	}
+
+	sortedPoolAssets := poolAcc.GetAllPoolAssets()
+	err = poolParams.Validate(sortedPoolAssets)
+	if err != nil {
+		return &PoolAccount{}, err
+	}
+
+	err = poolAcc.setInitialPoolParams(poolParams, sortedPoolAssets, blockTime)
+	if err != nil {
+		return &PoolAccount{}, err
+	}
+
+	return poolAcc, nil
 }
 
-func (params PoolParams) Validate() error {
+func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	if params.ExitFee.IsNegative() {
 		return ErrNegativeExitFee
 	}
@@ -87,6 +106,39 @@ func (params PoolParams) Validate() error {
 
 	if params.SwapFee.GTE(sdk.OneDec()) {
 		return ErrTooMuchSwapFee
+	}
+
+	if params.SmoothWeightChangeParams != nil {
+		targetWeights := params.SmoothWeightChangeParams.TargetPoolWeights
+		// Ensure it has the right number of weights
+		if len(targetWeights) != len(poolWeights) {
+			return ErrPoolParamsInvalidNumDenoms
+		}
+		// Validate all user specified weights
+		for _, v := range targetWeights {
+			err := ValidateUserSpecifiedWeight(v.Weight)
+			if err != nil {
+				return err
+			}
+		}
+		// Ensure that all the target weight denoms are same as pool asset weights
+		sortedTargetPoolWeights := SortPoolAssetsOutOfPlaceByDenom(targetWeights)
+		sortedPoolWeights := SortPoolAssetsOutOfPlaceByDenom(poolWeights)
+		for i, v := range sortedPoolWeights {
+			if sortedTargetPoolWeights[i].Token.Denom != v.Token.Denom {
+				return ErrPoolParamsInvalidDenom
+			}
+		}
+
+		// No start time validation needed
+
+		// We do not need to validate InitialPoolWeights, as we set that ourselves
+		// in setInitialPoolParams
+
+		// TODO: Is there anything else we can validate for duration?
+		if params.SmoothWeightChangeParams.Duration <= 0 {
+			return errors.New("params.SmoothWeightChangeParams must have a positive duration")
+		}
 	}
 
 	return nil
@@ -116,9 +168,12 @@ func (pa *PoolAccount) SubTotalShare(amt sdk.Int) {
 	pa.TotalShare.Amount = pa.TotalShare.Amount.Sub(amt)
 }
 
-// AddPoolAssets adds the PoolAssets to the pool. If the same denom's PoolAsset exists, will return error.
+// setInitialPoolAssets sets the PoolAssets in the pool.
+// It is only designed to be called at the pool's creation.
+// If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
-func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
+// TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
+func (pa *PoolAccount) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
 		exists[asset.Token.Denom] = true
@@ -153,15 +208,48 @@ func (pa *PoolAccount) AddPoolAssets(PoolAssets []PoolAsset) error {
 	// Furthermore, consider changing the underlying data type to allow in-place modification if the
 	// number of PoolAssets is expected to be large.
 	pa.PoolAssets = append(pa.PoolAssets, scaledPoolAssets...)
-	sort.Slice(pa.PoolAssets, func(i, j int) bool {
-		PoolAssetA := pa.PoolAssets[i]
-		PoolAssetB := pa.PoolAssets[j]
-
-		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
-	})
+	SortPoolAssetsByDenom(pa.PoolAssets)
 
 	pa.TotalWeight = newTotalWeight
 
+	return nil
+}
+
+// setInitialPoolParams
+func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset, curBlockTime time.Time) error {
+	pa.PoolParams = params
+	if params.SmoothWeightChangeParams != nil {
+		// set initial assets
+		initialWeights := make([]PoolAsset, len(sortedAssets))
+		for i, v := range sortedAssets {
+			initialWeights[i] = PoolAsset{
+				Weight: v.Weight,
+				Token:  sdk.Coin{Denom: v.Token.Denom, Amount: sdk.ZeroInt()},
+			}
+		}
+		params.SmoothWeightChangeParams.InitialPoolWeights = initialWeights
+
+		// sort target weights by denom
+		targetPoolWeights := params.SmoothWeightChangeParams.TargetPoolWeights
+		SortPoolAssetsByDenom(targetPoolWeights)
+
+		// scale target pool weights by GuaranteedWeightPrecision
+		for i, v := range targetPoolWeights {
+			err := ValidateUserSpecifiedWeight(v.Weight)
+			if err != nil {
+				return err
+			}
+			pa.PoolParams.SmoothWeightChangeParams.TargetPoolWeights[i] = PoolAsset{
+				Weight: v.Weight.MulRaw(GuaranteedWeightPrecision),
+				Token:  v.Token,
+			}
+		}
+
+		// Set start time if not present.
+		if params.SmoothWeightChangeParams.StartTime.Unix() <= 0 {
+			params.SmoothWeightChangeParams.StartTime = time.Unix(curBlockTime.Unix(), 0)
+		}
+	}
 	return nil
 }
 
@@ -275,6 +363,7 @@ func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
 	if len(pa.PoolAssets) != len(newWeights) {
 		panic("updateAllWeights called with invalid input, len(newWeights) != len(existingWeights)")
 	}
+	totalWeight := sdk.ZeroInt()
 	for i, asset := range pa.PoolAssets {
 		if asset.Token.Denom != newWeights[i].Token.Denom {
 			panic(fmt.Sprintf("updateAllWeights called with invalid input, "+
@@ -286,12 +375,14 @@ func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
 			panic("updateAllWeights: Tried to set an invalid weight")
 		}
 		pa.PoolAssets[i].Weight = newWeights[i].Weight
+		totalWeight = totalWeight.Add(pa.PoolAssets[i].Weight)
 	}
+	pa.TotalWeight = totalWeight
 }
 
 // PokeTokenWeights checks to see if the pool's token weights need to be updated,
 // and if so, does so.
-func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
+func (pa *PoolAccount) PokeTokenWeights(blockTime time.Time) {
 	// Pool weights aren't changing, do nothing.
 	poolWeightsChanging := (pa.PoolParams.SmoothWeightChangeParams != nil)
 	if !poolWeightsChanging {
@@ -301,6 +392,7 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 	// TODO: Add intra-block cache check that we haven't already poked
 	// the block yet.
 	params := *pa.PoolParams.SmoothWeightChangeParams
+
 	// the weights w(t) for the pool at time `t` is the following:
 	//   t <= start_time: w(t) = initial_pool_weights
 	//   start_time < t <= start_time + duration:
@@ -319,8 +411,6 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 		// 		 Ensure the new asset has some token sent with it.
 		pa.updateAllWeights(params.TargetPoolWeights)
 		// We've finished updating weights, so delete this parameter
-		// TODO: This line doesn't work, since this is a non-pointer receiever,
-		// and pa.PoolParams gets copied.
 		pa.PoolParams.SmoothWeightChangeParams = nil
 		return
 	} else {
@@ -341,8 +431,6 @@ func (pa PoolAccount) PokeTokenWeights(blockTime time.Time) {
 		updatedWeights := addPoolAssetWeights(params.InitialPoolWeights, scaledDiff)
 		pa.updateAllWeights(updatedWeights)
 	}
-
-	return
 }
 
 func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
@@ -375,86 +463,4 @@ func (pa PoolAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 // SetSequence - Implements AccountI
 func (pa PoolAccount) SetSequence(seq uint64) error {
 	return fmt.Errorf("not supported for pool accounts")
-}
-
-type poolAccountPretty struct {
-	Address            sdk.AccAddress `json:"address" yaml:"address"`
-	PubKey             string         `json:"public_key" yaml:"public_key"`
-	AccountNumber      uint64         `json:"account_number" yaml:"account_number"`
-	Sequence           uint64         `json:"sequence" yaml:"sequence"`
-	Id                 uint64         `json:"id" yaml:"id"`
-	PoolParams         PoolParams     `json:"pool_params" yaml:"pool_params"`
-	FuturePoolGovernor string         `json:"future_pool_governor" yaml:"future_pool_governor"`
-	TotalWeight        sdk.Int        `json:"total_weight" yaml:"total_weight"`
-	TotalShare         sdk.Coin       `json:"total_share" yaml:"total_share"`
-	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
-}
-
-func (pa PoolAccount) String() string {
-	out, _ := pa.MarshalYAML()
-	return out.(string)
-}
-
-// MarshalYAML returns the YAML representation of a PoolAccount.
-func (pa PoolAccount) MarshalYAML() (interface{}, error) {
-	accAddr, err := sdk.AccAddressFromBech32(pa.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	bs, err := yaml.Marshal(poolAccountPretty{
-		Address:            accAddr,
-		PubKey:             "",
-		AccountNumber:      pa.AccountNumber,
-		Id:                 pa.Id,
-		PoolParams:         pa.PoolParams,
-		FuturePoolGovernor: pa.FuturePoolGovernor,
-		TotalWeight:        pa.TotalWeight,
-		TotalShare:         pa.TotalShare,
-		PoolAssets:         pa.PoolAssets,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bs), nil
-}
-
-// MarshalJSON returns the JSON representation of a PoolAccount.
-func (pa PoolAccount) MarshalJSON() ([]byte, error) {
-	accAddr, err := sdk.AccAddressFromBech32(pa.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(poolAccountPretty{
-		Address:            accAddr,
-		PubKey:             "",
-		AccountNumber:      pa.AccountNumber,
-		Id:                 pa.Id,
-		PoolParams:         pa.PoolParams,
-		FuturePoolGovernor: pa.FuturePoolGovernor,
-		TotalWeight:        pa.TotalWeight,
-		TotalShare:         pa.TotalShare,
-		PoolAssets:         pa.PoolAssets,
-	})
-}
-
-// UnmarshalJSON unmarshals raw JSON bytes into a PoolAccount.
-func (pa *PoolAccount) UnmarshalJSON(bz []byte) error {
-	var alias poolAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
-		return err
-	}
-
-	pa.BaseAccount = authtypes.NewBaseAccount(alias.Address, nil, alias.AccountNumber, alias.Sequence)
-	pa.Id = alias.Id
-	pa.PoolParams = alias.PoolParams
-	pa.FuturePoolGovernor = alias.FuturePoolGovernor
-	pa.TotalWeight = alias.TotalWeight
-	pa.TotalShare = alias.TotalShare
-	pa.PoolAssets = alias.PoolAssets
-
-	return nil
 }
