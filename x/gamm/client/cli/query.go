@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -80,7 +79,7 @@ $ %s query gamm pool 1
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
-				out, err := json.Marshal(res)
+				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
 
 				if err != nil {
 					return err
@@ -173,7 +172,7 @@ $ %s query gamm pool-params 1
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
-				out, err := json.Marshal(res)
+				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
 
 				if err != nil {
 					return err
