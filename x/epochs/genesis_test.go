@@ -15,21 +15,23 @@ func TestEpochsExportGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	chainStartTime := ctx.BlockTime()
+
 	genesis := epochs.ExportGenesis(ctx, app.EpochsKeeper)
 	require.Len(t, genesis.Epochs, 2)
 
 	require.Equal(t, genesis.Epochs[0].Identifier, "daily")
-	require.Equal(t, genesis.Epochs[0].StartTime, time.Time{})
+	require.Equal(t, genesis.Epochs[0].StartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[0].Duration, time.Hour*24)
 	require.Equal(t, genesis.Epochs[0].CurrentEpoch, int64(0))
-	require.Equal(t, genesis.Epochs[0].CurrentEpochStartTime, time.Time{})
+	require.Equal(t, genesis.Epochs[0].CurrentEpochStartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[0].EpochCountingStarted, false)
 	require.Equal(t, genesis.Epochs[0].CurrentEpochEnded, true)
 	require.Equal(t, genesis.Epochs[1].Identifier, "weekly")
-	require.Equal(t, genesis.Epochs[1].StartTime, time.Time{})
+	require.Equal(t, genesis.Epochs[1].StartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[1].Duration, time.Hour*24*7)
 	require.Equal(t, genesis.Epochs[1].CurrentEpoch, int64(0))
-	require.Equal(t, genesis.Epochs[1].CurrentEpochStartTime, time.Time{})
+	require.Equal(t, genesis.Epochs[1].CurrentEpochStartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[1].EpochCountingStarted, false)
 	require.Equal(t, genesis.Epochs[1].CurrentEpochEnded, true)
 }
