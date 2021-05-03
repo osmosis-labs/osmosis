@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
 
+	appParams "github.com/c-osmosis/osmosis/app/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,6 +24,7 @@ var ymlAssetTest = []PoolAsset{
 }
 
 func TestPoolAccountMarshalYAML(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pacc, err := NewPoolAccount(defaultPoolId, PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
@@ -63,6 +65,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 }
 
 func TestLBPPoolAccountMarshalYAML(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	lbpParams := SmoothWeightChangeParams{
 		Duration: time.Hour,
 		TargetPoolWeights: []PoolAsset{
