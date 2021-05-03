@@ -15,11 +15,10 @@ const (
 	PoolFileExitFee        = "exit-fee"
 	PoolFileFutureGovernor = "future-governor"
 
-	PoolFileSmoothWeightChangeParams = "smooth-weight-change-params"
+	PoolFileSmoothWeightChangeParams = "lbp-params"
 	PoolFileStartTime                = "start-time"
 	PoolFileDuration                 = "duration"
 	PoolFileTargetPoolWeights        = "target-pool-weights"
-
 
 	FlagPoolId = "pool-id"
 	// Will be parsed to sdk.Int
