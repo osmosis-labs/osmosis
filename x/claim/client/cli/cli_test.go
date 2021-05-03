@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+
 	"github.com/c-osmosis/osmosis/app"
 	"github.com/c-osmosis/osmosis/app/params"
 	"github.com/c-osmosis/osmosis/x/claim/client/cli"
@@ -27,14 +29,12 @@ import (
 )
 
 var addr1 sdk.AccAddress
-var mnemonic1 = "fork thank one athlete focus observe cupboard leaf unusual sad town just sunny jaguar world adult dinosaur price parade tiger jelly around kingdom false"
-var pwd1 = ""
 var addr2 sdk.AccAddress
 
 func init() {
-	params.SetBech32Prefixes()
-	addr1, _ = sdk.AccAddressFromBech32("osm11l2ptnxekj836wxmc38gus7yem9ak5khrj47t04")
-	addr2, _ = sdk.AccAddressFromBech32("osm11xwjpumw85skkh04xst8zyp6dn8mdvfvm9zvamv")
+	params.SetAddressPrefixes()
+	addr1 = ed25519.GenPrivKey().PubKey().Address().Bytes()
+	addr2 = ed25519.GenPrivKey().PubKey().Address().Bytes()
 }
 
 type IntegrationTestSuite struct {

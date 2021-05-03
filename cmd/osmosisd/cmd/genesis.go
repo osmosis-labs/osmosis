@@ -91,7 +91,7 @@ Example:
 				}
 
 				// set osmo bech32 prefixes
-				appparams.SetBech32Prefixes()
+				appparams.SetAddressPrefixes()
 
 				// airdrop balances
 				coins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance))
