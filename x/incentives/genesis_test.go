@@ -60,27 +60,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	incentives.InitGenesis(ctx, app.IncentivesKeeper, types.GenesisState{
-		Params: types.Params{
-			DistrEpochIdentifier: "weekly",
-		},
-		Pots: []types.Pot{
-			{
-				Id:                1,
-				IsPerpetual:       false,
-				DistributeTo:      distrTo,
-				Coins:             coins,
-				NumEpochsPaidOver: 2,
-				FilledEpochs:      0,
-				DistributedCoins:  sdk.Coins{},
-				StartTime:         startTime,
-			},
-		},
-	})
-
-	pots := app.IncentivesKeeper.GetPots(ctx)
-	require.Len(t, pots, 1)
-	require.Equal(t, pots[0], types.Pot{
+	pot := types.Pot{
 		Id:                1,
 		IsPerpetual:       false,
 		DistributeTo:      distrTo,
@@ -89,5 +69,15 @@ func TestIncentivesInitGenesis(t *testing.T) {
 		FilledEpochs:      0,
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime.UTC(),
+	}
+	incentives.InitGenesis(ctx, app.IncentivesKeeper, types.GenesisState{
+		Params: types.Params{
+			DistrEpochIdentifier: "weekly",
+		},
+		Pots: []types.Pot{pot},
 	})
+
+	pots := app.IncentivesKeeper.GetPots(ctx)
+	require.Len(t, pots, 1)
+	require.Equal(t, pots[0], pot)
 }
