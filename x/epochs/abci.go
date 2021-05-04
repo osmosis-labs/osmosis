@@ -18,11 +18,15 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// epoch_startblock(n+1) = epoch_endblock(n) + 1
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
 		if !epochInfo.EpochCountingStarted { // epoch counting not started
-			if epochInfo.StartTime.Before(ctx.BlockTime()) { // check time is good to start
+			if !epochInfo.StartTime.After(ctx.BlockTime()) { // check time is good to start
 				epochInfo.EpochCountingStarted = true
 				epochInfo.CurrentEpochEnded = false
 				epochInfo.CurrentEpoch = 0
 				epochInfo.CurrentEpochStartTime = ctx.BlockTime()
+
+				k.SetEpochInfo(ctx, epochInfo)
+				k.BeforeEpochStart(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+
 				ctx.EventManager().EmitEvent(
 					sdk.NewEvent(
 						types.EventTypeEpochStart,
