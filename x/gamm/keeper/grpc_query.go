@@ -104,6 +104,21 @@ func (k Keeper) Pools(
 	}, nil
 }
 
+func (k Keeper) TotalPools(
+	ctx context.Context,
+	req *types.QueryTotalPoolsRequest,
+) (*types.QueryTotalPoolsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryTotalPoolsResponse{
+		TotalPools: k.getNextPoolNumber(sdkCtx) - 1,
+	}, nil
+}
+
 func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

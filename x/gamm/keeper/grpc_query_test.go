@@ -88,6 +88,22 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestQueryTotalPools1() {
+	res, err := suite.queryClient.TotalPools(gocontext.Background(), &types.QueryTotalPoolsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(0), res.TotalPools)
+}
+
+func (suite *KeeperTestSuite) TestQueryTotalPools2() {
+	for i := 0; i < 10; i++ {
+		suite.preparePool()
+	}
+
+	res, err := suite.queryClient.TotalPools(gocontext.Background(), &types.QueryTotalPoolsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(10), res.TotalPools)
+}
+
 func (suite *KeeperTestSuite) TestQueryPoolParams() {
 	queryClient := suite.queryClient
 

@@ -19,6 +19,9 @@ service Query {
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/all";
   }
+  rpc TotalPools(QueryTotalPoolsRequest) returns (QueryTotalPoolsResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/total_pools";
+  }
   rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/params";
   }
@@ -65,6 +68,13 @@ message QueryPoolsResponse {
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+//=============================== TotalPools
+message QueryTotalPoolsRequest {
+}
+message QueryTotalPoolsResponse {
+  uint64 totalPools = 1 [ (gogoproto.moretags) = "yaml:\"total_pools\"" ];
 }
 
 //=============================== PoolParams
