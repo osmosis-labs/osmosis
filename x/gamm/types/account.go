@@ -247,6 +247,7 @@ func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []Po
 
 		// Set start time if not present.
 		if params.SmoothWeightChangeParams.StartTime.Unix() <= 0 {
+			// Per https://golang.org/pkg/time/#Time.Unix, should be timezone independent
 			params.SmoothWeightChangeParams.StartTime = time.Unix(curBlockTime.Unix(), 0)
 		}
 	}
