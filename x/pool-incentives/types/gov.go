@@ -8,39 +8,33 @@ import (
 )
 
 const (
-	ProposalTypeAddPoolIncentives    = "AddPoolIncentives"
-	ProposalTypeEditPoolIncentives   = "EditPoolIncentives"
-	ProposalTypeRemovePoolIncentives = "RemovePoolIncentives"
+	ProposalTypeUpdatePoolIncentives = "UpdatePoolIncentives"
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeAddPoolIncentives)
-	govtypes.RegisterProposalTypeCodec(&AddPoolIncentivesProposal{}, "osmosis/AddPoolIncentivesProposal")
-	govtypes.RegisterProposalType(ProposalTypeEditPoolIncentives)
-	govtypes.RegisterProposalTypeCodec(&EditPoolIncentivesProposal{}, "osmosis/EditPoolIncentivesProposal")
-	govtypes.RegisterProposalType(ProposalTypeRemovePoolIncentives)
-	govtypes.RegisterProposalTypeCodec(&RemovePoolIncentivesProposal{}, "osmosis/RemovePoolIncentivesProposal")
+	govtypes.RegisterProposalType(ProposalTypeUpdatePoolIncentives)
+	govtypes.RegisterProposalTypeCodec(&UpdatePoolIncentivesProposal{}, "osmosis/UpdatePoolIncentivesProposal")
 }
 
-var _ govtypes.Content = &AddPoolIncentivesProposal{}
+var _ govtypes.Content = &UpdatePoolIncentivesProposal{}
 
-func NewAddPoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
-	return &AddPoolIncentivesProposal{
+func NewUpdatePoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
+	return &UpdatePoolIncentivesProposal{
 		Title:       title,
 		Description: description,
 		Records:     records,
 	}
 }
 
-func (p *AddPoolIncentivesProposal) GetTitle() string { return p.Title }
+func (p *UpdatePoolIncentivesProposal) GetTitle() string { return p.Title }
 
-func (p *AddPoolIncentivesProposal) GetDescription() string { return p.Description }
+func (p *UpdatePoolIncentivesProposal) GetDescription() string { return p.Description }
 
-func (p *AddPoolIncentivesProposal) ProposalRoute() string { return RouterKey }
+func (p *UpdatePoolIncentivesProposal) ProposalRoute() string { return RouterKey }
 
-func (p *AddPoolIncentivesProposal) ProposalType() string { return ProposalTypeAddPoolIncentives }
+func (p *UpdatePoolIncentivesProposal) ProposalType() string { return ProposalTypeUpdatePoolIncentives }
 
-func (p *AddPoolIncentivesProposal) ValidateBasic() error {
+func (p *UpdatePoolIncentivesProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
 		return err
@@ -58,7 +52,7 @@ func (p *AddPoolIncentivesProposal) ValidateBasic() error {
 	return nil
 }
 
-func (p AddPoolIncentivesProposal) String() string {
+func (p UpdatePoolIncentivesProposal) String() string {
 	// TODO: Make this prettier
 	recordsStr := ""
 	for _, record := range p.Records {
@@ -66,102 +60,10 @@ func (p AddPoolIncentivesProposal) String() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Add Pool Incentives Proposal:
+	b.WriteString(fmt.Sprintf(`Update Pool Incentives Proposal:
   Title:       %s
   Description: %s
   Records:     %s
 `, p.Title, p.Description, recordsStr))
-	return b.String()
-}
-
-var _ govtypes.Content = &EditPoolIncentivesProposal{}
-
-func NewEditPoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
-	return &EditPoolIncentivesProposal{
-		Title:       title,
-		Description: description,
-		Records:     records,
-	}
-}
-
-func (p *EditPoolIncentivesProposal) GetTitle() string { return p.Title }
-
-func (p *EditPoolIncentivesProposal) GetDescription() string { return p.Description }
-
-func (p *EditPoolIncentivesProposal) ProposalRoute() string { return RouterKey }
-
-func (p *EditPoolIncentivesProposal) ProposalType() string { return ProposalTypeEditPoolIncentives }
-
-func (p *EditPoolIncentivesProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
-	if err != nil {
-		return err
-	}
-	if len(p.Records) == 0 {
-		return ErrEmptyProposalRecords
-	}
-
-	return nil
-}
-
-func (p EditPoolIncentivesProposal) String() string {
-	// TODO: Make this prettier
-	recordsStr := ""
-	for _, record := range p.Records {
-		recordsStr = recordsStr + fmt.Sprintf("(PotId: %d, Weight: %s) ", record.PotId, record.Weight.String())
-	}
-
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Remove Pool Incentives Proposal:
-  Title:       %s
-  Description: %s
-  Records:     %s
-`, p.Title, p.Description, recordsStr))
-	return b.String()
-}
-
-var _ govtypes.Content = &RemovePoolIncentivesProposal{}
-
-func NewRemovePoolIncentivesProposal(title, description string, potIds []uint64) govtypes.Content {
-	return &RemovePoolIncentivesProposal{
-		Title:       title,
-		Description: description,
-		PotIds:      potIds,
-	}
-}
-
-func (p *RemovePoolIncentivesProposal) GetTitle() string { return p.Title }
-
-func (p *RemovePoolIncentivesProposal) GetDescription() string { return p.Description }
-
-func (p *RemovePoolIncentivesProposal) ProposalRoute() string { return RouterKey }
-
-func (p *RemovePoolIncentivesProposal) ProposalType() string { return ProposalTypeRemovePoolIncentives }
-
-func (p *RemovePoolIncentivesProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
-	if err != nil {
-		return err
-	}
-	if len(p.PotIds) == 0 {
-		return ErrEmptyProposalPotIds
-	}
-
-	return nil
-}
-
-func (p RemovePoolIncentivesProposal) String() string {
-	// TODO: Make this prettier
-	potIdsStr := ""
-	for _, potId := range p.PotIds {
-		potIdsStr = potIdsStr + fmt.Sprintf("%d ", potId)
-	}
-
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Remove Pool Incentives Proposal:
-  Title:       %s
-  Description: %s
-  PotIds:     %s
-`, p.Title, p.Description, potIdsStr))
 	return b.String()
 }

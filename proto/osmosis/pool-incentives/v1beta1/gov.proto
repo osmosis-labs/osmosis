@@ -6,10 +6,10 @@ import "osmosis/pool-incentives/v1beta1/incentives.proto";
 
 option go_package = "github.com/c-osmosis/osmosis/x/pool-incentives/types";
 
-// AddPoolIncentivesProposal is a gov Content type for adding the pool incentives.
-// If a AddPoolIncentivesProposal passes, the proposal’s record is be added to the module.
+// UpdatePoolIncentivesProposal is a gov Content type for updating the pool incentives.
+// If a UpdatePoolIncentivesProposal passes, the proposal’s records are set to the module.
 // Each record has a specified pot id and weight, and the incetives are distributed to each pot according to weight/total_weight.
-message AddPoolIncentivesProposal {
+message UpdatePoolIncentivesProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
@@ -17,30 +17,4 @@ message AddPoolIncentivesProposal {
   string title = 1;
   string description = 2;
   repeated DistrRecord records = 3 [(gogoproto.nullable) = false];
-}
-
-// EditPoolIncentivesProposal is a gov Content type for editing the pool incentives.
-// If a EditPoolIncentivesProposal passes, the record of proposal’s specified index are edited.
-// Records are stored in the form of slice, and the idexes of this slice are edited.
-message EditPoolIncentivesProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  string title = 1;
-  string description = 2;
-  repeated DistrRecord records = 3 [(gogoproto.nullable) = false];
-}
-
-// RemovePoolIncentivesProposal is a gov Content type for removing the pool incentives.
-// If a RemovePoolIncentivesProposal passes, the record of proposal’s specified index are deleted.
-// Records are stored in the form of slice, and the idexes of this slice are removed.
-message RemovePoolIncentivesProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  string title = 1;
-  string description = 2;
-  repeated uint64 pot_ids = 3 [(gogoproto.moretags) = "yaml:\"pot_ids\""];
 }
