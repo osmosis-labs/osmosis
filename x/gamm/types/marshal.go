@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"gopkg.in/yaml.v2"
 )
 
 type poolAssetPretty struct {
-	Token  types.Coin `json:"token" yaml:"token"`
-	Weight sdk.Dec    `json:"weight" yaml:"weight"`
+	Token  sdk.Coin `json:"token" yaml:"token"`
+	Weight sdk.Dec  `json:"weight" yaml:"weight"`
 }
 
 func (asset PoolAsset) prettify() poolAssetPretty {

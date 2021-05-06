@@ -49,9 +49,7 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 // into a new slice.
 func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
 	assets_copy := make([]PoolAsset, len(assets))
-	for i, v := range assets {
-		assets_copy[i] = v
-	}
+	copy(assets_copy, assets)
 	SortPoolAssetsByDenom(assets_copy)
 	return assets_copy
 }
