@@ -94,7 +94,14 @@ func NewCreatePotCmd() *cobra.Command {
 				Timestamp:     time.Unix(timestamp, 0),
 			}
 
+			// TODO: Confirm this is correct logic
+			isPerpetual := false
+			if numEpochsPaidOver == 0 {
+				isPerpetual = true
+			}
+
 			msg := types.NewMsgCreatePot(
+				isPerpetual,
 				clientCtx.GetFromAddress(),
 				distributeTo,
 				coins,

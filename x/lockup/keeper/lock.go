@@ -278,7 +278,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 		}
 	}
 
-	k.hooks.OnTokenLocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
 
@@ -316,8 +316,13 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+
 	// send coins back to owner
-	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, lock.Coins); err != nil {
+	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
 		return err
 	}
 
@@ -333,6 +338,6 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		}
 	}
 
-	k.hooks.OnTokenUnlocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }

@@ -182,10 +182,10 @@ func NewUnlockByIDCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &types.MsgUnlockPeriodLock{
-				Owner: clientCtx.GetFromAddress(),
-				ID:    uint64(id),
-			}
+			msg := types.NewMsgUnlockPeriodLock(
+				clientCtx.GetFromAddress(),
+				uint64(id),
+			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},

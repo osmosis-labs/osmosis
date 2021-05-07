@@ -40,7 +40,8 @@ func (m MsgLockTokens) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgLockTokens) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Owner}
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
 }
 
 var _ sdk.Msg = &MsgBeginUnlocking{}
@@ -62,7 +63,8 @@ func (m MsgBeginUnlocking) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Owner}
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
 }
 
 var _ sdk.Msg = &MsgUnlockTokens{}
@@ -84,12 +86,13 @@ func (m MsgUnlockTokens) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgUnlockTokens) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Owner}
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
 }
 
 var _ sdk.Msg = &MsgBeginUnlockPeriodLock{}
 
-// NewMsgUnlockTokens creates a message to begin unlocking all tokens of a user
+// NewMsgBeginUnlockPeriodLock creates a message to begin unlocking the tokens of a specific lock
 //nolint:interfacer
 func NewMsgBeginUnlockPeriodLock(owner sdk.AccAddress, id uint64) *MsgBeginUnlockPeriodLock {
 	return &MsgBeginUnlockPeriodLock{
@@ -107,10 +110,20 @@ func (m MsgBeginUnlockPeriodLock) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgBeginUnlockPeriodLock) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Owner}
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
 }
 
 var _ sdk.Msg = &MsgUnlockPeriodLock{}
+
+// NewMsgUnlockPeriodLock creates a message to begin unlock tokens of a specific lockid
+//nolint:interfacer
+func NewMsgUnlockPeriodLock(owner sdk.AccAddress, id uint64) *MsgUnlockPeriodLock {
+	return &MsgUnlockPeriodLock{
+		Owner: owner.String(),
+		ID:    id,
+	}
+}
 
 func (m MsgUnlockPeriodLock) Route() string { return RouterKey }
 func (m MsgUnlockPeriodLock) Type() string  { return TypeMsgUnlockPeriodLock }
@@ -121,5 +134,6 @@ func (m MsgUnlockPeriodLock) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgUnlockPeriodLock) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Owner}
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
 }

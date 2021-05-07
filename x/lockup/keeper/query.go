@@ -201,7 +201,12 @@ func queryAccountLockedPastTimeDenom(ctx sdk.Context, req abci.RequestQuery, k K
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	locks := k.GetAccountLockedPastTimeDenom(ctx, params.Owner, params.Denom, params.Timestamp)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	locks := k.GetAccountLockedPastTimeDenom(ctx, owner, params.Denom, params.Timestamp)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, locks)
 	if err != nil {

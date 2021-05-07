@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -67,7 +66,7 @@ func (server msgServer) BeginUnlockPeriodLock(goCtx context.Context, msg *types.
 		sdk.NewEvent(
 			types.TypeEvtBeginUnlock,
 			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
-			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
 			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
 			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
 		),
@@ -100,7 +99,7 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 		event := sdk.NewEvent(
 			types.TypeEvtBeginUnlock,
 			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
-			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
 			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
 			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
 		)
@@ -119,15 +118,15 @@ func (server msgServer) UnlockPeriodLock(goCtx context.Context, msg *types.MsgUn
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	if !bytes.Equal(msg.Owner, lock.Owner) {
-		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner.String(), lock.Owner.String()))
+	if msg.Owner != lock.Owner {
+		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, lock.Owner))
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtUnlock,
 			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
-			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner.String()),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
 			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
 			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
 		),

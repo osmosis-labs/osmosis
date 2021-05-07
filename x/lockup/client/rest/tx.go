@@ -100,7 +100,7 @@ func newUnlockByIDHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgUnlockPeriodLock(
+		msg := types.NewMsgBeginUnlockPeriodLock(
 			req.Owner,
 			id,
 		)
