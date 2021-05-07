@@ -258,7 +258,11 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 
 // Lock is a utility to lock coins into module account
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.Owner, types.ModuleName, lock.Coins); err != nil {
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, lock.Coins); err != nil {
 		return err
 	}
 

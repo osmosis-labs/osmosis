@@ -67,21 +67,26 @@ func getDurationKey(duration time.Duration) []byte {
 	return combineKeys(types.KeyPrefixDuration, key)
 }
 
+// CONTRACT: lock.Owner is a valid bech32 encoded address
 func lockRefKeys(lock types.PeriodLock) [][]byte {
 	refKeys := [][]byte{}
 	timeKey := getTimeKey(lock.EndTime)
 	durationKey := getDurationKey(lock.Duration)
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		panic("violated contract that lock.Owner must be a valid bech32 encoded address")
+	}
 	refKeys = append(refKeys, combineKeys(types.KeyPrefixLockTimestamp, timeKey))
 	refKeys = append(refKeys, combineKeys(types.KeyPrefixLockDuration, durationKey))
-	refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountLockTimestamp, lock.Owner, timeKey))
-	refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountLockDuration, lock.Owner, durationKey))
+	refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountLockTimestamp, owner, timeKey))
+	refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountLockDuration, owner, durationKey))
 
 	for _, coin := range lock.Coins {
 		denomBz := []byte(coin.Denom)
 		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockTimestamp, denomBz, timeKey))
 		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockDuration, denomBz, durationKey))
-		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockTimestamp, lock.Owner, denomBz, timeKey))
-		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockDuration, lock.Owner, denomBz, durationKey))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockTimestamp, owner, denomBz, timeKey))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockDuration, owner, denomBz, durationKey))
 	}
 	return refKeys
 }

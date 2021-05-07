@@ -60,7 +60,7 @@ func queryAccountUnlockableCoinsFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		params := types.AccountUnlockableCoinsRequest{Owner: owner}
+		params := types.AccountUnlockableCoinsRequest{Owner: owner.String()}
 
 		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
@@ -89,7 +89,7 @@ func queryAccountLockedCoinsFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		params := types.AccountLockedCoinsRequest{Owner: owner}
+		params := types.AccountLockedCoinsRequest{Owner: owner.String()}
 
 		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
@@ -124,7 +124,7 @@ func queryAccountLockedPastTimeFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		params := types.AccountLockedPastTimeRequest{Owner: owner, Timestamp: time.Unix(timestamp, 0)}
+		params := types.AccountLockedPastTimeRequest{Owner: owner.String(), Timestamp: time.Unix(timestamp, 0)}
 
 		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
@@ -299,7 +299,7 @@ func queryAccountLockedLongerDurationDenomFn(clientCtx client.Context) http.Hand
 
 		denom := vars[RestDenom]
 
-		params := types.AccountLockedLongerDurationDenomRequest{Owner: owner, Duration: duration, Denom: denom}
+		params := types.AccountLockedLongerDurationDenomRequest{Owner: owner.String(), Duration: duration, Denom: denom}
 
 		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {

@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,6 +17,16 @@ const (
 )
 
 var _ sdk.Msg = &MsgLockTokens{}
+
+// NewMsgLockTokens creates a message to lock tokens
+//nolint:interfacer
+func NewMsgLockTokens(owner sdk.AccAddress, duration time.Duration, coins sdk.Coins) *MsgLockTokens {
+	return &MsgLockTokens{
+		Owner:    owner.String(),
+		Duration: duration,
+		Coins:    coins,
+	}
+}
 
 func (m MsgLockTokens) Route() string { return RouterKey }
 func (m MsgLockTokens) Type() string  { return TypeMsgLockTokens }
@@ -34,6 +45,14 @@ func (m MsgLockTokens) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgBeginUnlocking{}
 
+// NewMsgBeginUnlocking creates a message to begin unlocking tokens
+//nolint:interfacer
+func NewMsgBeginUnlocking(owner sdk.AccAddress) *MsgBeginUnlocking {
+	return &MsgBeginUnlocking{
+		Owner: owner.String(),
+	}
+}
+
 func (m MsgBeginUnlocking) Route() string { return RouterKey }
 func (m MsgBeginUnlocking) Type() string  { return TypeMsgBeginUnlocking }
 func (m MsgBeginUnlocking) ValidateBasic() error {
@@ -48,6 +67,14 @@ func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgUnlockTokens{}
 
+// NewMsgUnlockTokens creates a message to begin unlocking all tokens of a user
+//nolint:interfacer
+func NewMsgUnlockTokens(owner sdk.AccAddress) *MsgUnlockTokens {
+	return &MsgUnlockTokens{
+		Owner: owner.String(),
+	}
+}
+
 func (m MsgUnlockTokens) Route() string { return RouterKey }
 func (m MsgUnlockTokens) Type() string  { return TypeMsgUnlockTokens }
 func (m MsgUnlockTokens) ValidateBasic() error {
@@ -61,6 +88,15 @@ func (m MsgUnlockTokens) GetSigners() []sdk.AccAddress {
 }
 
 var _ sdk.Msg = &MsgBeginUnlockPeriodLock{}
+
+// NewMsgUnlockTokens creates a message to begin unlocking all tokens of a user
+//nolint:interfacer
+func NewMsgBeginUnlockPeriodLock(owner sdk.AccAddress, id uint64) *MsgBeginUnlockPeriodLock {
+	return &MsgBeginUnlockPeriodLock{
+		Owner: owner.String(),
+		ID:    id,
+	}
+}
 
 func (m MsgBeginUnlockPeriodLock) Route() string { return RouterKey }
 func (m MsgBeginUnlockPeriodLock) Type() string  { return TypeMsgBeginUnlockPeriodLock }

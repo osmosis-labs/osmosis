@@ -243,7 +243,11 @@ func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
 		if distrCoins.Empty() {
 			continue
 		}
-		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, distrCoins); err != nil {
+		owner, err := sdk.AccAddressFromBech32(lock.Owner)
+		if err != nil {
+			return nil, err
+		}
+		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, distrCoins); err != nil {
 			return nil, err
 		}
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)

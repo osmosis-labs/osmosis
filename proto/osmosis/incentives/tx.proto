@@ -17,8 +17,7 @@ service Msg {
 message MsgCreatePot {
   bool is_perpetual = 1; // flag to show if it's perpetual or multi-epoch
                          // distribution incentives by third party
-  bytes owner = 2 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   osmosis.lockup.QueryCondition distribute_to = 3 [
     (gogoproto.nullable) = false
   ]; // distribute condition of a lock which meet one of these conditions
@@ -37,8 +36,7 @@ message MsgCreatePot {
 message MsgCreatePotResponse {}
 
 message MsgAddToPot {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 pot_id = 2;
   repeated cosmos.base.v1beta1.Coin rewards = 3 [
     (gogoproto.nullable) = false,

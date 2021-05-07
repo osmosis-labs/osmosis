@@ -16,10 +16,23 @@ const (
 
 var _ sdk.Msg = &MsgCreatePot{}
 
+// NewMsgCreatePot creates a message to create a pot
+//nolint:interfacer
+func NewMsgCreatePot(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreatePot {
+	return &MsgCreatePot{
+		IsPerpetual:       isPerpetual,
+		Owner:             owner.String(),
+		DistributeTo:      distributeTo,
+		Coins:             coins,
+		StartTime:         startTime,
+		NumEpochsPaidOver: numEpochsPaidOver,
+	}
+}
+
 func (m MsgCreatePot) Route() string { return RouterKey }
 func (m MsgCreatePot) Type() string  { return TypeMsgCreatePot }
 func (m MsgCreatePot) ValidateBasic() error {
-	if m.Owner.Empty() {
+	if m.Owner == "" {
 		return errors.New("owner should be set")
 	}
 	if sdk.ValidateDenom(m.DistributeTo.Denom) != nil {
@@ -44,15 +57,26 @@ func (m MsgCreatePot) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgCreatePot) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Owner}
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
 }
 
 var _ sdk.Msg = &MsgAddToPot{}
 
+// NewMsgCreatePot creates a message to create a pot
+//nolint:interfacer
+func NewMsgAddToPot(owner sdk.AccAddress, potId uint64, rewards sdk.Coins) *MsgAddToPot {
+	return &MsgAddToPot{
+		Owner:   owner.String(),
+		PotId:   potId,
+		Rewards: rewards,
+	}
+}
+
 func (m MsgAddToPot) Route() string { return RouterKey }
 func (m MsgAddToPot) Type() string  { return TypeMsgAddToPot }
 func (m MsgAddToPot) ValidateBasic() error {
-	if m.Owner.Empty() {
+	if m.Owner == "" {
 		return errors.New("owner should be set")
 	}
 	if m.Rewards.Empty() {
@@ -65,5 +89,6 @@ func (m MsgAddToPot) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgAddToPot) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Owner}
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
 }
