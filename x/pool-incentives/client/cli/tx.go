@@ -37,7 +37,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-pool-incentives [potIds] [weights]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Submit a new record for pool incentives",
+		Short: "Submit an update to the records for pool incentives",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
