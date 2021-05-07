@@ -119,7 +119,7 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
-			poolincentivesclient.AddPoolIncentivesHandler, poolincentivesclient.EditPoolIncentivesHandler, poolincentivesclient.RemovePoolIncentiveHandler,
+			poolincentivesclient.UpdatePoolIncentivesHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},

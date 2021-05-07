@@ -6,14 +6,6 @@ import (
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
 )
 
-func (k Keeper) HandleAddPoolIncentivesProposal(ctx sdk.Context, p *types.AddPoolIncentivesProposal) error {
-	return k.AddDistrRecords(ctx, p.Records...)
-}
-
-func (k Keeper) HandleEditPoolIncentivesProposal(ctx sdk.Context, p *types.EditPoolIncentivesProposal) error {
-	return k.EditDistrRecords(ctx, p.Records...)
-}
-
-func (k Keeper) HandleRemovePoolIncentivesProposal(ctx sdk.Context, p *types.RemovePoolIncentivesProposal) error {
-	return k.RemoveDistrRecords(ctx, p.PotIds...)
+func (k Keeper) HandleUpdatePoolIncentivesProposal(ctx sdk.Context, p *types.UpdatePoolIncentivesProposal) error {
+	return k.UpdateDistrRecords(ctx, p.Records...)
 }

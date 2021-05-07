@@ -7,16 +7,12 @@ import (
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&AddPoolIncentivesProposal{}, "osmosis/AddPoolIncentivesProposal", nil)
-	cdc.RegisterConcrete(&EditPoolIncentivesProposal{}, "osmosis/EditPoolIncentivesProposal", nil)
-	cdc.RegisterConcrete(&RemovePoolIncentivesProposal{}, "osmosis/RemovePoolIncentivesProposal", nil)
+	cdc.RegisterConcrete(&UpdatePoolIncentivesProposal{}, "osmosis/UpdatePoolIncentivesProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
-		&AddPoolIncentivesProposal{},
-		&EditPoolIncentivesProposal{},
-		&RemovePoolIncentivesProposal{},
+		&UpdatePoolIncentivesProposal{},
 	)
 }

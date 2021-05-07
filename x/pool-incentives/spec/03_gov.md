@@ -17,55 +17,24 @@ type DistrRecord struct {
 	Weight github_com_cosmos_cosmos_sdk_types.Int 
 }
 ```
-`DistrInfo` internally manages the `DistrRecord` and total weight of all `DistrRecord`. Governance can't modify DistrInfo. It can only add/remove/edit the `DistrRecord`.
+`DistrInfo` internally manages the `DistrRecord` and total weight of all `DistrRecord`. Governance can modify DistrInfo via `UpdatePoolIncentivesProposal` proposal.
 
-### AddPoolIncentivesProposal
+### UpdatePoolIncentivesProposal
 ```go
-type AddPoolIncentivesProposal struct {
+type UpdatePoolIncentivesProposal struct {
 	Title       string       
 	Description string      
 	Records     []DistrRecord 
 }
 ```
-`AddPoolIncentivesProposal` can be used by governance to add new `DistrRecord`.
+`UpdatePoolIncentivesProposal` can be used by governance to update `DistrRecord`s.
 
 ```shell
-osmosisd tx gov submit-proposal add-pool-incentives [potIds] [weights]
+osmosisd tx gov submit-proposal update-pool-incentives [potIds] [weights]
 ```
 Proposals can be proposed in using the CLI command format above.  
 For example, to designate 100 weight to pot id 2 and 200 weight to pot id 3, the following command can be used.
 
-A pot id that's already registered can't be registered again. To change the weight, use the EditPoolIncentivesProposal as shown below, or RemovePoolIncentivesProposal to delete.
-
 ```shell
-osmosisd tx gov submit-proposal add-pool-incentives 2,3 100,200
-```
-
-### EditPoolIncentivesProposal
-```go
-type EditPoolIncentivesProposal struct {
-	Title       string      
-	Description string       
-	Records     []DistrRecord 
-}
-```
-`EditPoolIncentivesProposal` is used by governance to modify the DistrRecord of a specific pot.
-
-```shell
-osmosisd tx gov submit-proposal edit-pool-incentives [potIds] [weights]
-```
-If no pot id that matches exists, the proposal can't be processed. In this case, use `AddPoolIncentivesProposal` first.
-
-### RemovePoolIncentivesProposal
-```go
-type RemovePoolIncentivesProposal struct {
-	Title       string   
-	Description string   
-	PotIds      []uint64 
-}
-```
-`RemovePoolIncentivesProposal` is used by governance to delete the DistrRecord of a specific pot
-
-```go
-osmosisd tx gov submit-proposal remove-pool-incentives [potIds]
+osmosisd tx gov submit-proposal update-pool-incentives 2,3 100,200
 ```

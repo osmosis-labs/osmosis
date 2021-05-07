@@ -93,83 +93,27 @@ func (k Keeper) indexOfDistrRecordByPotId(ctx sdk.Context, potId uint64) int {
 	return -1
 }
 
-func (k Keeper) AddDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
+func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
-	deltaWeight := sdk.NewInt(0)
+	potIdFlags := make(map[uint64]bool)
+
+	totalWeight := sdk.NewInt(0)
 	for _, record := range records {
-		if k.indexOfDistrRecordByPotId(ctx, record.PotId) >= 0 {
+		if potIdFlags[record.PotId] {
 			return sdkerrors.Wrapf(
 				types.ErrDistrRecordRegisteredPot,
-				"Pot ID #%d already exists in DistrRecord. Use EditPoolIncentivesProposal instead of AddPoolIncentivesProposal",
+				"Pot ID #%d has duplications.",
 				record.PotId,
 			)
 		}
-
-		// Make sure that the pot exists.
-		_, err := k.incentivesKeeper.GetPotByID(ctx, record.PotId)
-		if err != nil {
-			return err
-		}
-
-		deltaWeight = deltaWeight.Add(record.Weight)
+		potIdFlags[record.PotId] = true
+		totalWeight = totalWeight.Add(record.Weight)
 	}
 
-	distrInfo.TotalWeight = distrInfo.TotalWeight.Add(deltaWeight)
-	distrInfo.Records = append(distrInfo.Records, records...)
+	distrInfo.Records = records
+	distrInfo.TotalWeight = totalWeight
 
 	k.SetDistrInfo(ctx, distrInfo)
-
-	return nil
-}
-
-func (k Keeper) EditDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
-	distrInfo := k.GetDistrInfo(ctx)
-
-	deltaWeight := sdk.NewInt(0)
-	for _, record := range records {
-		index := k.indexOfDistrRecordByPotId(ctx, record.PotId)
-		if index < 0 {
-			return sdkerrors.Wrapf(
-				types.ErrDistrRecordNotRegisteredPot,
-				"Pot ID #%d doesn't exist in DistrRecord. Use AddPoolIncentivesProposal first",
-				record.PotId,
-			)
-		}
-
-		priorRecord := distrInfo.Records[index]
-
-		deltaWeight = deltaWeight.Add(record.Weight.Sub(priorRecord.Weight))
-
-		distrInfo.Records[index] = record
-	}
-
-	distrInfo.TotalWeight = distrInfo.TotalWeight.Add(deltaWeight)
-
-	k.SetDistrInfo(ctx, distrInfo)
-
-	return nil
-}
-
-func (k Keeper) RemoveDistrRecords(ctx sdk.Context, potIds ...uint64) error {
-	distrInfo := k.GetDistrInfo(ctx)
-
-	for _, potId := range potIds {
-		index := k.indexOfDistrRecordByPotId(ctx, potId)
-		if index < 0 {
-			return sdkerrors.Wrapf(
-				types.ErrDistrRecordNotRegisteredPot,
-				"Pot ID #%d doesn't exist in DistrRecord. Use AddPoolIncentivesProposal first",
-				potId,
-			)
-		}
-
-		record := distrInfo.Records[index]
-		distrInfo.TotalWeight = distrInfo.TotalWeight.Sub(record.Weight)
-		distrInfo.Records = append(distrInfo.Records[0:index], distrInfo.Records[index+1:]...)
-	}
-
-	k.SetDistrInfo(ctx, distrInfo)
-
 	return nil
 }

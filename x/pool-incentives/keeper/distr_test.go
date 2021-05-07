@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	suite.NoError(err)
 
 	// Create 3 records
-	err = keeper.AddDistrRecords(suite.ctx, types.DistrRecord{
+	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
 		PotId:  pot1Id,
 		Weight: sdk.NewInt(100),
 	}, types.DistrRecord{
@@ -161,17 +161,17 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	suite.Equal("75000stake", pot3.Coins.String())
 }
 
-func (suite *KeeperTestSuite) TestAddDistrRecords() uint64 {
+func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 	suite.SetupTest()
 
 	keeper := suite.app.PoolIncentivesKeeper
 
 	// Not existent pot.
-	err := keeper.AddDistrRecords(suite.ctx, types.DistrRecord{
+	err := keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
 		PotId:  1,
 		Weight: sdk.NewInt(100),
 	})
-	suite.Error(err)
+	suite.NoError(err)
 
 	poolId := suite.preparePool()
 
@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) TestAddDistrRecords() uint64 {
 	potId, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	err = keeper.AddDistrRecords(suite.ctx, types.DistrRecord{
+	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
 		PotId:  potId,
 		Weight: sdk.NewInt(100),
 	})
@@ -193,8 +193,8 @@ func (suite *KeeperTestSuite) TestAddDistrRecords() uint64 {
 	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
 	suite.Equal(sdk.NewInt(100), distrInfo.TotalWeight)
 
-	// // Can't add the duplicated pot id, because the prior one that register the pot id will block the second one.
-	err = keeper.AddDistrRecords(suite.ctx, types.DistrRecord{
+	// add the duplicated pot id, because the prior one that register the pot id will block the second one.
+	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
 		PotId:  potId,
 		Weight: sdk.NewInt(100),
 	}, types.DistrRecord{
@@ -206,7 +206,7 @@ func (suite *KeeperTestSuite) TestAddDistrRecords() uint64 {
 	potId2 := potId + 1
 	potId3 := potId + 2
 
-	err = keeper.AddDistrRecords(suite.ctx, types.DistrRecord{
+	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
 		PotId:  potId2,
 		Weight: sdk.NewInt(100),
 	}, types.DistrRecord{
@@ -216,116 +216,19 @@ func (suite *KeeperTestSuite) TestAddDistrRecords() uint64 {
 	suite.NoError(err)
 
 	distrInfo = keeper.GetDistrInfo(suite.ctx)
-	suite.Equal(3, len(distrInfo.Records))
-	suite.Equal(potId, distrInfo.Records[0].PotId)
-	suite.Equal(potId2, distrInfo.Records[1].PotId)
-	suite.Equal(potId3, distrInfo.Records[2].PotId)
+	suite.Equal(2, len(distrInfo.Records))
+	suite.Equal(potId2, distrInfo.Records[0].PotId)
+	suite.Equal(potId3, distrInfo.Records[1].PotId)
 	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
-	suite.Equal(sdk.NewInt(100), distrInfo.Records[1].Weight)
-	suite.Equal(sdk.NewInt(200), distrInfo.Records[2].Weight)
-	suite.Equal(sdk.NewInt(400), distrInfo.TotalWeight)
+	suite.Equal(sdk.NewInt(200), distrInfo.Records[1].Weight)
+	suite.Equal(sdk.NewInt(300), distrInfo.TotalWeight)
 
-	// Can't add the registered pot id. Use EditDistrRecords instead.
-	err = keeper.AddDistrRecords(suite.ctx, types.DistrRecord{
+	// Can update the registered pot id
+	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
 		PotId:  potId2,
 		Weight: sdk.NewInt(100),
 	})
-	suite.Error(err)
+	suite.NoError(err)
 
 	return potId
-}
-
-func (suite *KeeperTestSuite) TestEditDistrRecords() {
-	suite.SetupTest()
-
-	keeper := suite.app.PoolIncentivesKeeper
-
-	// Not existent record.
-	err := keeper.EditDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  1,
-		Weight: sdk.NewInt(100),
-	})
-	suite.Error(err)
-
-	// Create 3 records
-	potId := suite.TestAddDistrRecords()
-
-	keeper = suite.app.PoolIncentivesKeeper
-
-	// Not existent record.
-	err = keeper.EditDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  potId + 3,
-		Weight: sdk.NewInt(100),
-	})
-	suite.Error(err)
-
-	priorDistrInfo := keeper.GetDistrInfo(suite.ctx)
-	// Try change the first record
-	err = keeper.EditDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  potId,
-		Weight: sdk.NewInt(200),
-	})
-	suite.NoError(err)
-	distrInfo := keeper.GetDistrInfo(suite.ctx)
-	suite.Equal(3, len(distrInfo.Records))
-	suite.Equal(potId, distrInfo.Records[0].PotId)
-	suite.Equal(sdk.NewInt(200), distrInfo.Records[0].Weight)
-	suite.Equal(priorDistrInfo.TotalWeight.Add(sdk.NewInt(100)), distrInfo.TotalWeight)
-
-	priorDistrInfo = keeper.GetDistrInfo(suite.ctx)
-	// Try change the last record.
-	err = keeper.EditDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  potId + 2,
-		Weight: sdk.NewInt(100),
-	})
-	suite.NoError(err)
-	distrInfo = keeper.GetDistrInfo(suite.ctx)
-	suite.Equal(3, len(distrInfo.Records))
-	suite.Equal(potId+2, distrInfo.Records[2].PotId)
-	suite.Equal(sdk.NewInt(100), distrInfo.Records[2].Weight)
-	suite.Equal(priorDistrInfo.TotalWeight.Sub(sdk.NewInt(100)), distrInfo.TotalWeight)
-}
-
-func (suite *KeeperTestSuite) TestRemoveDistrRecords() {
-	suite.SetupTest()
-
-	keeper := suite.app.PoolIncentivesKeeper
-
-	// Not existent record.
-	err := keeper.RemoveDistrRecords(suite.ctx, 0)
-	suite.Error(err)
-
-	// Create 3 records
-	potId := suite.TestAddDistrRecords()
-
-	keeper = suite.app.PoolIncentivesKeeper
-
-	// Not existent record.
-	err = keeper.RemoveDistrRecords(suite.ctx, potId+3)
-	suite.Error(err)
-
-	priorDistrInfo := keeper.GetDistrInfo(suite.ctx)
-	// Try remove the first record
-	err = keeper.RemoveDistrRecords(suite.ctx, potId)
-	suite.NoError(err)
-	distrInfo := keeper.GetDistrInfo(suite.ctx)
-	suite.Equal(2, len(distrInfo.Records))
-	suite.Equal(priorDistrInfo.TotalWeight.Sub(sdk.NewInt(100)), distrInfo.TotalWeight)
-
-	priorDistrInfo = keeper.GetDistrInfo(suite.ctx)
-	// Try remove the last record.
-	err = keeper.RemoveDistrRecords(suite.ctx, potId+2)
-	suite.NoError(err)
-	distrInfo = keeper.GetDistrInfo(suite.ctx)
-	suite.Equal(1, len(distrInfo.Records))
-	suite.Equal(priorDistrInfo.TotalWeight.Sub(sdk.NewInt(200)), distrInfo.TotalWeight)
-
-	priorDistrInfo = keeper.GetDistrInfo(suite.ctx)
-	// Finally, try remove the remaining record.
-	err = keeper.RemoveDistrRecords(suite.ctx, potId+1)
-	suite.NoError(err)
-	distrInfo = keeper.GetDistrInfo(suite.ctx)
-	suite.Equal(0, len(distrInfo.Records))
-	suite.Equal(priorDistrInfo.TotalWeight.Sub(sdk.NewInt(100)).String(), distrInfo.TotalWeight.String())
-	suite.Equal(sdk.NewInt(0), distrInfo.TotalWeight)
 }
