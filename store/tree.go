@@ -10,7 +10,10 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store"
 )
 
-// Tree is a B+ tree implementation.
+// Tree is a modified B+ tree implementation.
+// Branches have m sized key index slice. Each key index represents
+// the starting index of the child node's index(inclusive), and the
+// ending index of the previous node of the child node's index(exclusive).
 type Tree struct {
 	store store.KVStore
 	m uint8
@@ -55,24 +58,29 @@ func (node *node) set(data nodeData) {
 	node.tree.store.Set(node.tree.nodeKey(node.level, node.key), bz)
 }
 
+func (node *node) setLeaf(value []byte) {
+	if node.level != 0 {
+		panic("setLeaf should not be called on branch node")
+	}
+	node.tree.store.Set(node.tree.leafKey(node.key), value)
+}
+
 func (node *node) delete() {
 	node.tree.store.Delete(node.tree.nodeKey(node.level, node.key))
 }
 
-func (node *node) prev() *node {
+func (node *node) left() *node {
 	return node.tree.nodeReverseIterator(node.level, nil, node.key).node()
 }
 
-func (node *node) next() *node {
-	return node.tree.nodeIterator(node.level, node.key, nil).node()
+func (node *node) right() *node {
+	iter := node.tree.nodeIterator(node.level, node.key, nil)
+	iter.Next()
+	return iter.node()
 }
 
 func (node *node) child(n uint16) *node {
-	index := node.get().Index
-	if n == 0 {
-		node.tree.nodeReverseIterator(node.level-1, nil, index[0]).node()
-	}
-	return node.tree.nodeIterator(node.level-1, index[n-1], index[n]).node()
+	return node.tree.nodeIterator(node.level-1, index[n], nil).node()
 }
 
 func (node *node) customDataUpdate() {
@@ -85,7 +93,9 @@ func (node *node) parent() *node {
 	if parent.exists() {
 		return parent
 	}
+	return parent.left()
 
+	/*
 	// sandwitch case
 	iter := node.tree.nodeReverseIterator(node.level+1, nil, node.key)
 	parent = iter.node()
@@ -94,19 +104,7 @@ func (node *node) parent() *node {
 	if bytes.Compare(lastindex, node.key) == 1 {
 		return parent
 	}
-
-	// edge case, left parent
-	if bytes.Compare(lastindex, node.prev().key) == 1 {
-		return parent
-	}
-
-	// edge case, right parent
-	if bytes.Compare(lastindex, node.prev().key) == -1 {
-		iter.Next()
-		return iter.node()
-	}
-
-	panic("should not reach here")
+	*/
 }
 
 func (node *node) exists() bool {
@@ -115,11 +113,14 @@ func (node *node) exists() bool {
 
 func (node *node) push(key []byte) {
 	data := node.get()
-	for i, idx := range data.Index
+	for i, idx := range data.Index {
+		// ignore if key already exists
+		if bytes.Compare(idx, key) == 0 {
+			return
+		}
 		// Push new key to the appropriate position
-		if bytes.Compare(idx, key) >= 0 {
-			// XXX: look tomorrow, maybe i-1 instead of i, brain not functioning now
-			data.Index = append(append(data.Index[:i], key), data.Index[i:]...)
+		if bytes.Compare(idx, key) > 0 {
+			data.Index = append(append(data.Index[:i+1], key), data.Index[i+1:]...)
 			break
 		}
 	}
@@ -131,7 +132,7 @@ func (node *node) push(key []byte) {
 		if !parent.exists() {
 			parent = node.tree.nodeGet(node.level+1, data.Index[split])
 		}
-		parent.push(data.Index[split])	
+		parent.push(data.Index[split])
 		node.delete()
 		node.tree.nodeNew(node.level, data.Index[:split])
 		node.tree.nodeNew(node.level, data.Index[split:])
@@ -143,27 +144,42 @@ func (node *node) push(key []byte) {
 	node.set(data)
 }
 
-// XXX: or lets simply pull only when a node gets empty.
-// 
 func (node *node) pull(key []byte) {
 	data := node.get()
 	for i, idx := range data.Index {
-		if bytes.Compare(idx, key) >= 0 {
+		if bytes.Compare(idx, key) == 0 {
 			data.Index = append(data.Index[:i], data.Index[i+1:]...)
 			break
 		}
 	}
 
-	if len(data.Index) >= node.tree.m/2 {
+	// For sake of efficienty on our use case, we pull only when a node gets
+	// empty.
+	// if len(data.Index) >= int(node.tree.m/2) {
+	if len(data.Index) > 0 {
 		node.set(data)
 		return
 	}
 
-	// redistribute and pull-down if underflow
-	// XXX: redistribute
-	
-	// XXX: merge
-
+	// merge if possible
+	left := node.left()
+	right := node.right()
+	node.delete()
+	parent.pull(node.key)
+	if left.exists() && right.exists() {
+		// parent might be deleted, retrieve from left
+		parent = left.parent()
+		if bytes.Equal(parent.key, right.parent().key)) {
+			leftIndex := left.get().Index
+			rightIndex := right.get().Index
+			if len(leftIndex)+len(rightIndex) < int(node.tree.m) {
+				leftIndex = append(leftIndex, rightIndex...)
+				left.set(nodeData{Index: leftIndex})
+				right.delete()
+				parent.pull(right.key)
+			}
+		}
+	}
 }
 
 // nodeData is struct for internal nodes
@@ -252,12 +268,19 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 }
 
 func (t Tree) Set(key, value []byte) {
-	// set the leaf node
-	keybz := t.leafKey(key)
-	t.store.Set(keybz, value)
+	node := t.nodeGet(0, key)
+	if !node.exists() {
+		node.setLeaf(value)
+	}
+	node.parent().push(key)
+}
 
-
-
-	// push if not overflow
-	
+func (t Tree) Remove(key []byte) {
+	node := t.nodeGet(0, key)
+	if !node.exists() {
+		return
+	}
+	parent := node.parent()
+	node.delete()
+	parent.pull(key)
 }
