@@ -271,7 +271,10 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
 	k.setLastLockID(ctx, lockID)
 
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID); err != nil {
 			return err
@@ -285,7 +288,10 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
 func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	lockID := lock.ID
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		err := k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID)
 		if err != nil {
@@ -296,7 +302,10 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
 
-	refKeys = lockRefKeys(lock)
+	refKeys, err = lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID); err != nil {
 			return err
@@ -330,7 +339,10 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(lockID)) // remove lock from store
 
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		err := k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID)
 		if err != nil {

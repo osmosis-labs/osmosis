@@ -56,7 +56,11 @@ func (ak AdminKeeper) BreakLock(ctx sdk.Context, lockID uint64) error {
 	store := ctx.KVStore(ak.storeKey)
 	store.Delete(lockStoreKey(lockID)) // remove lock from store
 
-	refKeys := lockRefKeys(*lock)
+	refKeys, err := lockRefKeys(*lock)
+	if err != nil {
+		return err
+	}
+
 	for _, refKey := range refKeys {
 		err = ak.deleteLockRefByKey(ctx, refKey, lockID)
 		if err != nil {
