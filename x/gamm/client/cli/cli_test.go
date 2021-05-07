@@ -846,7 +846,7 @@ func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdRecords() {
+func (s *IntegrationTestSuite) TestGetCmdPoolAssets() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -855,7 +855,7 @@ func (s *IntegrationTestSuite) TestGetCmdRecords() {
 		expectErr bool
 	}{
 		{
-			"query pool records by id", // osmosisd query gamm records 1
+			"query pool assets by pool id", // osmosisd query gamm pool-assets 1
 			[]string{
 				"1",
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
@@ -868,7 +868,7 @@ func (s *IntegrationTestSuite) TestGetCmdRecords() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdRecords()
+			cmd := cli.GetCmdPoolAssets()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
