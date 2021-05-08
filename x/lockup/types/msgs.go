@@ -19,7 +19,6 @@ const (
 var _ sdk.Msg = &MsgLockTokens{}
 
 // NewMsgLockTokens creates a message to lock tokens
-//nolint:interfacer
 func NewMsgLockTokens(owner sdk.AccAddress, duration time.Duration, coins sdk.Coins) *MsgLockTokens {
 	return &MsgLockTokens{
 		Owner:    owner.String(),
@@ -47,7 +46,6 @@ func (m MsgLockTokens) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgBeginUnlocking{}
 
 // NewMsgBeginUnlocking creates a message to begin unlocking tokens
-//nolint:interfacer
 func NewMsgBeginUnlocking(owner sdk.AccAddress) *MsgBeginUnlocking {
 	return &MsgBeginUnlocking{
 		Owner: owner.String(),
@@ -70,7 +68,6 @@ func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgUnlockTokens{}
 
 // NewMsgUnlockTokens creates a message to begin unlocking all tokens of a user
-//nolint:interfacer
 func NewMsgUnlockTokens(owner sdk.AccAddress) *MsgUnlockTokens {
 	return &MsgUnlockTokens{
 		Owner: owner.String(),
@@ -93,7 +90,6 @@ func (m MsgUnlockTokens) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgBeginUnlockPeriodLock{}
 
 // NewMsgBeginUnlockPeriodLock creates a message to begin unlocking the tokens of a specific lock
-//nolint:interfacer
 func NewMsgBeginUnlockPeriodLock(owner sdk.AccAddress, id uint64) *MsgBeginUnlockPeriodLock {
 	return &MsgBeginUnlockPeriodLock{
 		Owner: owner.String(),
@@ -117,7 +113,6 @@ func (m MsgBeginUnlockPeriodLock) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgUnlockPeriodLock{}
 
 // NewMsgUnlockPeriodLock creates a message to begin unlock tokens of a specific lockid
-//nolint:interfacer
 func NewMsgUnlockPeriodLock(owner sdk.AccAddress, id uint64) *MsgUnlockPeriodLock {
 	return &MsgUnlockPeriodLock{
 		Owner: owner.String(),

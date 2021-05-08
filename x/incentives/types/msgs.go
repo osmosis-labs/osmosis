@@ -17,7 +17,6 @@ const (
 var _ sdk.Msg = &MsgCreatePot{}
 
 // NewMsgCreatePot creates a message to create a pot
-//nolint:interfacer
 func NewMsgCreatePot(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreatePot {
 	return &MsgCreatePot{
 		IsPerpetual:       isPerpetual,
@@ -64,7 +63,6 @@ func (m MsgCreatePot) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgAddToPot{}
 
 // NewMsgCreatePot creates a message to create a pot
-//nolint:interfacer
 func NewMsgAddToPot(owner sdk.AccAddress, potId uint64, rewards sdk.Coins) *MsgAddToPot {
 	return &MsgAddToPot{
 		Owner:   owner.String(),
