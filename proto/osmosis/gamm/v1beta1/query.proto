@@ -71,8 +71,7 @@ message QueryPoolsResponse {
 }
 
 //=============================== TotalPools
-message QueryTotalPoolsRequest {
-}
+message QueryTotalPoolsRequest {}
 message QueryTotalPoolsResponse {
   uint64 totalPools = 1 [ (gogoproto.moretags) = "yaml:\"total_pools\"" ];
 }

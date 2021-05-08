@@ -37,7 +37,6 @@ func ValidateFutureGovernor(governor string) error {
 		return nil
 	}
 
-
 	lockTimeStr := ""
 	splits := strings.Split(governor, ",")
 	if len(splits) > 2 {

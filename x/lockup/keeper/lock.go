@@ -258,7 +258,11 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 
 // Lock is a utility to lock coins into module account
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.Owner, types.ModuleName, lock.Coins); err != nil {
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, lock.Coins); err != nil {
 		return err
 	}
 
@@ -267,21 +271,27 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
 	k.setLastLockID(ctx, lockID)
 
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID); err != nil {
 			return err
 		}
 	}
 
-	k.hooks.OnTokenLocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
 func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	lockID := lock.ID
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		err := k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID)
 		if err != nil {
@@ -292,7 +302,10 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
 
-	refKeys = lockRefKeys(lock)
+	refKeys, err = lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID); err != nil {
 			return err
@@ -312,8 +325,13 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+
 	// send coins back to owner
-	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, lock.Coins); err != nil {
+	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
 		return err
 	}
 
@@ -321,7 +339,10 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(lockID)) // remove lock from store
 
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		err := k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID)
 		if err != nil {
@@ -329,6 +350,6 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		}
 	}
 
-	k.hooks.OnTokenUnlocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }

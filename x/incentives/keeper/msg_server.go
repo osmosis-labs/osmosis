@@ -24,7 +24,12 @@ var _ types.MsgServer = msgServer{}
 
 func (server msgServer) CreatePot(goCtx context.Context, msg *types.MsgCreatePot) (*types.MsgCreatePotResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	potID, err := server.keeper.CreatePot(ctx, msg.IsPerpetual, msg.Owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver)
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	potID, err := server.keeper.CreatePot(ctx, msg.IsPerpetual, owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -41,7 +46,11 @@ func (server msgServer) CreatePot(goCtx context.Context, msg *types.MsgCreatePot
 
 func (server msgServer) AddToPot(goCtx context.Context, msg *types.MsgAddToPot) (*types.MsgAddToPotResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := server.keeper.AddToPotRewards(ctx, msg.Owner, msg.Rewards, msg.PotId)
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+	err = server.keeper.AddToPotRewards(ctx, owner, msg.Rewards, msg.PotId)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

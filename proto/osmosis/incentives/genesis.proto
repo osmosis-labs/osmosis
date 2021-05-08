@@ -9,7 +9,7 @@ option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
 
 // GenesisState defines the incentives module's genesis state.
 message GenesisState {
-    // params defines all the parameters of the module
-    Params params = 1 [(gogoproto.nullable) = false];
-    repeated Pot pots = 2 [(gogoproto.nullable) = false];
+  // params defines all the parameters of the module
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated Pot pots = 2 [ (gogoproto.nullable) = false ];
 }
