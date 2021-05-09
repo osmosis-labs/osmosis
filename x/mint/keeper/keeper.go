@@ -17,6 +17,7 @@ type Keeper struct {
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
 	bankKeeper       types.BankKeeper
+	hooks            types.MintHooks
 	feeCollectorName string
 }
 
@@ -50,6 +51,17 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// Set the mint hooks
+func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set mint hooks twice")
+	}
+
+	k.hooks = h
+
+	return k
 }
 
 // GetEpochNum returns epoch number
@@ -154,5 +166,10 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 // AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+
+	// call an hook after deposition of coin into fee pool
+	k.hooks.AfterAddCollectedFees(ctx, fees)
+
+	return err
 }
