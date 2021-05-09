@@ -17,37 +17,47 @@ func (k Keeper) GetAllocatableAsset(ctx sdk.Context) sdk.Coin {
 	return sdk.NewCoin(asset.Denom, asset.Amount.ToDec().Mul(params.AllocationRatio).TruncateInt())
 }
 
+func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coin) error {
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, k.communityPoolName, sdk.Coins{asset})
+	if err != nil {
+		return err
+	}
+
+	feePool := k.distrKeeper.GetFeePool(ctx)
+	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(asset)...)
+	k.distrKeeper.SetFeePool(ctx, feePool)
+	return nil
+}
+
 // AllocateAsset allocates and distributes coin according a pot’s proportional weight that is recorded in the record
 func (k Keeper) AllocateAsset(ctx sdk.Context, asset sdk.Coin) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
-	if distrInfo.TotalWeight.GT(sdk.ZeroInt()) {
-		assetAmountDec := asset.Amount.ToDec()
-		totalWeightDec := distrInfo.TotalWeight.ToDec()
-		for _, record := range distrInfo.Records {
-			allocatingAmount := assetAmountDec.Mul(record.Weight.ToDec().Quo(totalWeightDec)).TruncateInt()
-			coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
-
-			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, coins)
-			if err != nil {
-				return err
-			}
-
-			err = k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
+	if distrInfo.TotalWeight.IsZero() {
 		// If there are no records, put the asset to the community pool
-		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, k.communityPoolName, sdk.Coins{asset})
+		return k.FundCommunityPoolFromFeeCollector(ctx, asset)
+	}
+
+	assetAmountDec := asset.Amount.ToDec()
+	totalWeightDec := distrInfo.TotalWeight.ToDec()
+	for _, record := range distrInfo.Records {
+		allocatingAmount := assetAmountDec.Mul(record.Weight.ToDec().Quo(totalWeightDec)).TruncateInt()
+		coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
+
+		if record.PotId == 0 { // fund community pool if potId is zero
+			k.FundCommunityPoolFromFeeCollector(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
+			continue
+		}
+
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, coins)
 		if err != nil {
 			return err
 		}
 
-		feePool := k.distrKeeper.GetFeePool(ctx)
-		feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(asset)...)
-		k.distrKeeper.SetFeePool(ctx, feePool)
+		err = k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
