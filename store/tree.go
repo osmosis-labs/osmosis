@@ -19,6 +19,10 @@ type Tree struct {
 	m uint8
 }
 
+func NewTree(store store.KVStore, m uint8) Tree {
+	return Tree{store, m}
+}
+
 // node is pointer to a specific node inside the tree
 type node struct {
 	tree Tree
@@ -34,6 +38,9 @@ type nodeIterator struct {
 }
 
 func (iter nodeIterator) node() *node {
+	if !iter.Valid() {
+		return nil
+	}
 	res := node{
 		tree: iter.tree,
 		level: iter.level,
@@ -69,18 +76,18 @@ func (node *node) delete() {
 	node.tree.store.Delete(node.tree.nodeKey(node.level, node.key))
 }
 
-func (node *node) left() *node {
+func (node *node) leftSibling() *node {
 	return node.tree.nodeReverseIterator(node.level, nil, node.key).node()
 }
 
-func (node *node) right() *node {
+func (node *node) rightSibling() *node {
 	iter := node.tree.nodeIterator(node.level, node.key, nil)
 	iter.Next()
 	return iter.node()
 }
 
 func (node *node) child(n uint16) *node {
-	return node.tree.nodeIterator(node.level-1, index[n], nil).node()
+	return node.tree.nodeIterator(node.level-1, node.get().Index[n], nil).node()
 }
 
 func (node *node) customDataUpdate() {
@@ -93,7 +100,7 @@ func (node *node) parent() *node {
 	if parent.exists() {
 		return parent
 	}
-	return parent.left()
+	return parent.leftSibling()
 
 	/*
 	// sandwitch case
@@ -112,6 +119,9 @@ func (node *node) exists() bool {
 }
 
 func (node *node) push(key []byte) {
+	if node == nil {
+		return // reached at the root
+	}
 	data := node.get()
 	for i, idx := range data.Index {
 		// ignore if key already exists
@@ -145,6 +155,9 @@ func (node *node) push(key []byte) {
 }
 
 func (node *node) pull(key []byte) {
+	if node == nil {
+		return // reached at the root
+	}
 	data := node.get()
 	for i, idx := range data.Index {
 		if bytes.Compare(idx, key) == 0 {
@@ -162,14 +175,15 @@ func (node *node) pull(key []byte) {
 	}
 
 	// merge if possible
-	left := node.left()
-	right := node.right()
+	left := node.leftSibling()
+	right := node.rightSibling()
+	parent := node.parent()
 	node.delete()
 	parent.pull(node.key)
 	if left.exists() && right.exists() {
 		// parent might be deleted, retrieve from left
 		parent = left.parent()
-		if bytes.Equal(parent.key, right.parent().key)) {
+		if bytes.Equal(parent.key, right.parent().key) {
 			leftIndex := left.get().Index
 			rightIndex := right.get().Index
 			if len(leftIndex)+len(rightIndex) < int(node.tree.m) {
@@ -268,10 +282,13 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 }
 
 func (t Tree) Set(key, value []byte) {
-	node := t.nodeGet(0, key)
-	if !node.exists() {
-		node.setLeaf(value)
+	if value == nil {
+		t.Remove(key)
+		return
 	}
+	node := t.nodeGet(0, key)
+	node.setLeaf(value)
+
 	node.parent().push(key)
 }
 
