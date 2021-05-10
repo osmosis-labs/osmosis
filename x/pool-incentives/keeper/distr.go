@@ -31,9 +31,36 @@ func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coi
 
 // AllocateAsset allocates and distributes coin according a pot’s proportional weight that is recorded in the record
 func (k Keeper) AllocateAsset(ctx sdk.Context, asset sdk.Coin) error {
+	if asset.Amount.IsZero() {
+		// when allocating asset is zero, skip execution
+		return nil
+	}
+
 	distrInfo := k.GetDistrInfo(ctx)
 
-	if distrInfo.TotalWeight.IsZero() {
+	if distrInfo.TotalWeight.GT(sdk.ZeroInt()) {
+		assetAmountDec := asset.Amount.ToDec()
+		totalWeightDec := distrInfo.TotalWeight.ToDec()
+		for _, record := range distrInfo.Records {
+			allocatingAmount := assetAmountDec.Mul(record.Weight.ToDec().Quo(totalWeightDec)).TruncateInt()
+			coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
+
+			// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
+			if !allocatingAmount.IsPositive() {
+				continue
+			}
+
+			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, coins)
+			if err != nil {
+				return err
+			}
+
+			err = k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
 		// If there are no records, put the asset to the community pool
 		return k.FundCommunityPoolFromFeeCollector(ctx, asset)
 	}
