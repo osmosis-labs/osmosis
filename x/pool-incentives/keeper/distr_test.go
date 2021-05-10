@@ -159,6 +159,63 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	pot3, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot3Id)
 	suite.NoError(err)
 	suite.Equal("75000stake", pot3.Coins.String())
+
+	// ------------ test community pool distribution when potId is zero ------------ //
+	// Mint more stake coin to the fee collector.
+	err = suite.app.BankKeeper.AddCoins(
+		suite.ctx,
+		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
+		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000))),
+	)
+	suite.NoError(err)
+
+	// record original community pool balance
+	feePoolOrigin := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+
+	// Create 3 records including community pool
+	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
+		PotId:  pot1Id,
+		Weight: sdk.NewInt(100),
+	}, types.DistrRecord{
+		PotId:  pot2Id,
+		Weight: sdk.NewInt(200),
+	}, types.DistrRecord{
+		PotId:  0,
+		Weight: sdk.NewInt(700),
+	})
+	suite.NoError(err)
+
+	// In this time, there are 3 records, so the assets to be allocated to the pots proportionally.
+	err = keeper.AllocateAsset(suite.ctx, sdk.NewCoin("stake", sdk.NewInt(100000)))
+	suite.NoError(err)
+
+	// check community pool balance increase
+	feePoolNew := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+	suite.Equal(feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(70000))), feePoolNew.CommunityPool)
+
+	// ------------ test community pool distribution when no distribution records are set ------------ //
+	// Mint more stake coin to the fee collector.
+	err = suite.app.BankKeeper.AddCoins(
+		suite.ctx,
+		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
+		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000))),
+	)
+	suite.NoError(err)
+
+	// record original community pool balance
+	feePoolOrigin = suite.app.DistrKeeper.GetFeePool(suite.ctx)
+
+	// set empty records set
+	err = keeper.UpdateDistrRecords(suite.ctx)
+	suite.NoError(err)
+
+	// In this time, all should be allocated to community pool
+	err = keeper.AllocateAsset(suite.ctx, sdk.NewCoin("stake", sdk.NewInt(100000)))
+	suite.NoError(err)
+
+	// check community pool balance increase
+	feePoolNew = suite.app.DistrKeeper.GetFeePool(suite.ctx)
+	suite.Equal(feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(100000))), feePoolNew.CommunityPool)
 }
 
 func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
