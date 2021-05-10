@@ -17,10 +17,19 @@ import (
 type Tree struct {
 	store store.KVStore
 	m uint8
+
+	// TODO: use interface{} instead of []byte
+	update func([][]byte) []byte
 }
 
 func NewTree(store store.KVStore, m uint8) Tree {
-	return Tree{store, m}
+	return Tree{store, m, nil}
+}
+
+func NewTreeWithModifier(store store.KVStore, m uint8,
+	update func([][]byte) []byte,
+) Tree {
+	return Tree{store, m, update}
 }
 
 // node is pointer to a specific node inside the tree
@@ -82,6 +91,9 @@ func (node *node) leftSibling() *node {
 
 func (node *node) rightSibling() *node {
 	iter := node.tree.nodeIterator(node.level, node.key, nil)
+	if !iter.Valid() {
+		return nil
+	}
 	iter.Next()
 	return iter.node()
 }
@@ -90,11 +102,7 @@ func (node *node) child(n uint16) *node {
 	return node.tree.nodeIterator(node.level-1, node.get().Index[n], nil).node()
 }
 
-func (node *node) customDataUpdate() {
-	// XXX
-}
-
-func (node *node) parent() *node {	
+func (node *node) parent() *node {
 	// first child inclusive case
 	parent := node.tree.nodeGet(node.level+1, node.key)
 	if parent.exists() {
@@ -119,6 +127,25 @@ func (node *node) exists() bool {
 }
 
 func (node *node) push(key []byte) {
+	node.pushWithCustomData(key, nil)
+}
+
+func (node *node) pushOnlyCustomData(key []byte, customData []byte) {
+	if node == nil {
+		return // reached at the root
+	}
+	data := node.get()
+	for i, idx := range data.Index {
+		if bytes.Compare(idx, key) == 0 {
+			data.Data[i] = customData
+			node.set(data)
+			node.parent().pushOnlyCustomData(node.key, node.tree.update(data.Data))
+			return
+		}
+	}
+}
+
+func (node *node) pushWithCustomData(key []byte, customData []byte) {
 	if node == nil {
 		return // reached at the root
 	}
@@ -126,11 +153,16 @@ func (node *node) push(key []byte) {
 	for i, idx := range data.Index {
 		// ignore if key already exists
 		if bytes.Compare(idx, key) == 0 {
+			// update and propagate custom data only
+			data.Data[i] = customData
+			node.set(data)
+			node.parent().pushOnlyCustomData(node.key, node.tree.update(data.Data))
 			return
 		}
 		// Push new key to the appropriate position
 		if bytes.Compare(idx, key) > 0 {
 			data.Index = append(append(data.Index[:i+1], key), data.Index[i+1:]...)
+			data.Data = append(append(data.Index[:i+1], customData), data.Data[i+1:]...)
 			break
 		}
 	}
@@ -142,16 +174,15 @@ func (node *node) push(key []byte) {
 		if !parent.exists() {
 			parent = node.tree.nodeGet(node.level+1, data.Index[split])
 		}
-		parent.push(data.Index[split])
-		node.delete()
-		node.tree.nodeNew(node.level, data.Index[:split])
-		node.tree.nodeNew(node.level, data.Index[split:])
-		return
+		node.tree.nodeNew(node.level, data.Index[split:], data.Data[split:])
+		parent.pushWithCustomData(data.Index[split], node.tree.update(data.Data[split:]))
+		data.Index = data.Index[:split]
+		data.Data = data.Data[:split]
+		parent.pushOnlyCustomData(node.key, node.tree.update(data.Index[:split]))
 	}
 
-	node.customDataUpdate()
-
 	node.set(data)
+
 }
 
 func (node *node) pull(key []byte) {
@@ -162,6 +193,7 @@ func (node *node) pull(key []byte) {
 	for i, idx := range data.Index {
 		if bytes.Compare(idx, key) == 0 {
 			data.Index = append(data.Index[:i], data.Index[i+1:]...)
+			data.Data = append(data.Data[:i], data.Data[i+1:]...)
 			break
 		}
 	}
@@ -171,6 +203,7 @@ func (node *node) pull(key []byte) {
 	// if len(data.Index) >= int(node.tree.m/2) {
 	if len(data.Index) > 0 {
 		node.set(data)
+		node.parent().pushOnlyCustomData(node.key, node.tree.update(data.Data))
 		return
 	}
 
@@ -188,9 +221,11 @@ func (node *node) pull(key []byte) {
 			rightIndex := right.get().Index
 			if len(leftIndex)+len(rightIndex) < int(node.tree.m) {
 				leftIndex = append(leftIndex, rightIndex...)
-				left.set(nodeData{Index: leftIndex})
+				leftData := append(left.get().Data, right.get().Data...)
+				left.set(nodeData{Index: leftIndex, Data: leftData})
 				right.delete()
 				parent.pull(right.key)
+				parent.pushOnlyCustomData(left.key, node.tree.update(leftData))
 			}
 		}
 	}
@@ -200,7 +235,7 @@ func (node *node) pull(key []byte) {
 // marshaled and stored inside the state.
 type nodeData struct {
 	Index [][]byte // max length M slice of key bytes, sorted
-	// XXX: custom data interface
+	Data [][]byte
 }
 
 // Root: (level, key) of the root node
@@ -227,10 +262,11 @@ func (t Tree) Get(key []byte) []byte {
 	return t.store.Get(keybz)
 }
 
-func (t Tree) nodeNew(level uint16, index [][]byte) *node {
+func (t Tree) nodeNew(level uint16, index [][]byte, data [][]byte) *node {
 	keybz := t.nodeKey(level, index[0])
 	bz, err := json.Marshal(nodeData{
 		Index: index,
+		Data: data,
 	})
 	if err != nil {
 		panic(err)
@@ -242,8 +278,6 @@ func (t Tree) nodeNew(level uint16, index [][]byte) *node {
 		level: level,
 		key: index[0],
 	}
-
-	node.customDataUpdate()
 
 	return &node
 }
@@ -289,7 +323,8 @@ func (t Tree) Set(key, value []byte) {
 	node := t.nodeGet(0, key)
 	node.setLeaf(value)
 
-	node.parent().push(key)
+	parent := t.nodeGet(1, key)
+	parent.push(key)
 }
 
 func (t Tree) Remove(key []byte) {
@@ -297,7 +332,7 @@ func (t Tree) Remove(key []byte) {
 	if !node.exists() {
 		return
 	}
-	parent := node.parent()
+	parent := t.nodeGet(1, key)
 	node.delete()
 	parent.pull(key)
 }
