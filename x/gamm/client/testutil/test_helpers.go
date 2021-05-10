@@ -36,6 +36,7 @@ func MsgCreatePool(
 		fmt.Sprintf("--%s=%s", gammcli.FlagSwapFee, swapFee),
 		fmt.Sprintf("--%s=%s", gammcli.FlagExitFee, exitFee),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
 
 	args = append(args, commonArgs...)
