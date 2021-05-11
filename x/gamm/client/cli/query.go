@@ -72,7 +72,7 @@ $ %s query gamm pool 1
 			}
 
 			if clientCtx.OutputFormat == "text" {
-				var pool types.PoolAccount
+				var pool types.Pool
 				pool.XXX_Unmarshal(res.GetPool().Value)
 				out, err := yaml.Marshal(pool)
 

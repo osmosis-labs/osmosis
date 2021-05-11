@@ -27,7 +27,7 @@ var (
 )
 
 // Expected is un-scaled
-func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
+func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolI) {
 	scaledExpected := expected.MulRaw(GuaranteedWeightPrecision)
 	require.Equal(t,
 		scaledExpected.String(),
@@ -37,7 +37,7 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolAccountI) {
 func TestPoolAccountShareDenom(t *testing.T) {
 	var poolId uint64 = 10
 
-	pacc, err := NewPoolAccount(poolId, defaultPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewPool(poolId, defaultPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	require.Equal(t, "gamm/pool/10", pacc.GetTotalShare().Denom)
@@ -77,7 +77,7 @@ func TestPoolAccountPoolParams(t *testing.T) {
 		if params.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 			// Check that these are also caught if passed to the underlying pool creation func
-			_, err = NewPoolAccount(1, poolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+			_, err = NewPool(1, poolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 			require.Error(t, err)
 		} else {
 			require.NoError(t, err, "unexpected error, tc %v", i)
@@ -100,7 +100,7 @@ func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 		},
 	}
 
-	pacc, err := NewPoolAccount(poolId, defaultPoolParams, initialAssets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewPool(poolId, defaultPoolParams, initialAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	_, err = pacc.GetPoolAsset("unknown")
@@ -113,7 +113,7 @@ func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 	// Break abstractions and start reasoning about the underlying internal representation's APIs.
 	// TODO: This test actually just needs to be refactored to not be doing this, and just
 	// create a different pool each time.
-	pacc_internal := pacc.(*PoolAccount)
+	pacc_internal := pacc.(*Pool)
 
 	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
 		Weight: sdk.NewInt(-1),
@@ -253,8 +253,8 @@ func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	var poolId uint64 = 10
 
 	for i, tc := range tests {
-		pacc, err := NewPoolAccount(poolId, defaultPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
-		pacc_internal := pacc.(*PoolAccount)
+		pacc, err := NewPool(poolId, defaultPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
+		pacc_internal := pacc.(*Pool)
 		if tc.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 		} else {
@@ -301,7 +301,7 @@ func TestGetPoolAssets(t *testing.T) {
 	}
 
 	// TODO: We need way more robust test cases here, and should table drive these cases
-	pacc, err := NewPoolAccount(defaultPoolId, defaultPoolParams, assets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewPool(defaultPoolId, defaultPoolParams, assets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	// Hardcoded GetPoolAssets tests.
@@ -353,7 +353,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 		},
 	}
 
-	pacc, err := NewPoolAccount(defaultPoolId, PoolParams{
+	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee:                  defaultSwapFee,
 		ExitFee:                  defaultExitFee,
 		SmoothWeightChangeParams: &params,
@@ -546,7 +546,7 @@ func TestPoolAccountPokeTokenWeights(t *testing.T) {
 			fmt.Printf("%v\n", initialPoolAssets[i])
 		}
 		// Initialize the pool
-		pacc, err := NewPoolAccount(uint64(poolNum), PoolParams{
+		pacc, err := NewPool(uint64(poolNum), PoolParams{
 			SwapFee:                  defaultSwapFee,
 			ExitFee:                  defaultExitFee,
 			SmoothWeightChangeParams: &tc.params,

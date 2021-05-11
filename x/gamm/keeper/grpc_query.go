@@ -49,7 +49,7 @@ func (k Keeper) Pool(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	switch pool := pool.(type) {
-	case *types.PoolAccount:
+	case *types.Pool:
 		any, err := codectypes.NewAnyWithValue(pool)
 		if err != nil {
 			return nil, err
@@ -70,20 +70,24 @@ func (k Keeper) Pools(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(k.storeKey)
-	poolStore := prefix.NewStore(store, types.PaginationPoolNumbers)
+	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
 	var anys []*codectypes.Any
 	pageRes, err := query.Paginate(poolStore, req.Pagination, func(_, value []byte) error {
-		poolId := sdk.BigEndianToUint64(value)
-		poolI, err := k.GetPool(sdkCtx, poolId)
-
+		poolI, err := k.UnmarshalPool(value)
 		if err != nil {
 			return err
 		}
 
-		pool, ok := poolI.(*types.PoolAccount)
+		// Use GetPool function because it runs PokeWeights
+		poolI, err = k.GetPool(sdkCtx, poolI.GetId())
+		if err != nil {
+			return err
+		}
+
+		pool, ok := poolI.(*types.Pool)
 		if !ok {
-			return fmt.Errorf("pool (%d) is not basic pool account", poolId)
+			return fmt.Errorf("pool (%d) is not basic pool account", pool.GetId())
 		}
 
 		any, err := codectypes.NewAnyWithValue(pool)

@@ -1,62 +1,98 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogotypes "github.com/gogo/protobuf/types"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/c-osmosis/osmosis/x/gamm/types"
 )
 
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolAccountI, error) {
-	acc := k.accountKeeper.GetAccount(ctx, types.NewPoolAddress(poolId))
-	if acc == nil {
-		return nil, sdkerrors.Wrapf(types.ErrPoolNotFound, "pool %d does not exist", poolId)
-	}
-
-	poolAcc, ok := acc.(types.PoolAccountI)
-	if !ok {
-		return nil, sdkerrors.Wrapf(types.ErrPoolNotFound, "pool %d does not exist", poolId)
-	}
-
-	poolAcc.PokeTokenWeights(ctx.BlockTime())
-
-	return poolAcc, nil
+func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
+	return k.cdc.MarshalInterface(pool)
 }
 
-func (k Keeper) SetPool(ctx sdk.Context, poolAcc types.PoolAccountI) error {
+func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
+	var acc types.PoolI
+	return acc, k.cdc.UnmarshalInterface(bz, &acc)
+}
+
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+
+	store := ctx.KVStore(k.storeKey)
+	poolKey := types.GetKeyPrefixPools(poolId)
+	if !store.Has(poolKey) {
+		return nil, fmt.Errorf("pool with ID %d does not exist", poolId)
+	}
+
+	bz := store.Get(poolKey)
+
+	pool, err := k.UnmarshalPool(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	pool.PokeTokenWeights(ctx.BlockTime())
+
+	return pool, nil
+}
+
+func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	// Make sure that pool exists
-	_, err := k.GetPool(ctx, poolAcc.GetId())
+	// _, err := k.GetPool(ctx, pool.GetId())
+	// if err != nil {
+	// 	return err
+	// }
+
+	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err
 	}
 
-	k.accountKeeper.SetAccount(ctx, poolAcc)
+	store := ctx.KVStore(k.storeKey)
+	poolKey := types.GetKeyPrefixPools(pool.GetId())
+	store.Set(poolKey, bz)
+
 	return nil
 }
 
 // newPool is an internal function that creates a new Pool object with the provided
 // parameters, initial assets, and future governor.
-func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolAccountI, error) {
+func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
 	poolId := k.getNextPoolNumber(ctx)
 
-	acc := k.accountKeeper.GetAccount(ctx, types.NewPoolAddress(poolId))
+	fmt.Println(poolId)
+	fmt.Println(poolParams)
+
+	pool, err := types.NewPool(poolId, poolParams, assets, futureGovernor, ctx.BlockTime())
+	if err != nil {
+		return nil, err
+	}
+
+	acc := k.accountKeeper.GetAccount(ctx, pool.GetAddress())
 	if acc != nil {
 		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
 	}
 
-	poolAcc, err := types.NewPoolAccount(poolId, poolParams, assets, futureGovernor, ctx.BlockTime())
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return nil, err
 	}
-	poolAcc = k.accountKeeper.NewAccount(ctx, poolAcc).(types.PoolAccountI)
 
-	k.accountKeeper.SetAccount(ctx, poolAcc)
+	// Create and save corresponding module account to the account keeper
+	acc = k.accountKeeper.NewAccount(ctx, authtypes.NewModuleAccount(
+		authtypes.NewBaseAccountWithAddress(
+			pool.GetAddress(),
+		),
+		pool.GetAddress().String(),
+	))
+	k.accountKeeper.SetAccount(ctx, acc)
 
-	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetKeyPaginationPoolNumbers(poolId), sdk.Uint64ToBigEndian(poolId))
-
-	return poolAcc, nil
+	return pool, nil
 }
 
 // getNextPoolNumber returns the next pool number
@@ -64,7 +100,7 @@ func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.GlobalPoolNumber)
+	bz := store.Get(types.KeyGlobalPoolNumber)
 	if bz == nil {
 		// initialize the account numbers
 		poolNumber = 1
@@ -80,7 +116,7 @@ func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
 	}
 
 	bz = k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: poolNumber + 1})
-	store.Set(types.GlobalPoolNumber, bz)
+	store.Set(types.KeyGlobalPoolNumber, bz)
 
 	return poolNumber
 }
@@ -89,7 +125,7 @@ func (k Keeper) getPoolAndInOutAssets(
 	ctx sdk.Context, poolId uint64,
 	tokenInDenom string,
 	tokenOutDenom string) (
-	pool types.PoolAccountI,
+	pool types.PoolI,
 	inAsset types.PoolAsset,
 	outAsset types.PoolAsset,
 	err error,

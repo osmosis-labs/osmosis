@@ -7,16 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/c-osmosis/osmosis/v043_temp/address"
+	proto "github.com/gogo/protobuf/proto"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// PoolAccountI defines an account interface for pools that hold tokens.
-type PoolAccountI interface {
-	authtypes.AccountI
+// PoolI defines an interface for pools that hold tokens.
+type PoolI interface {
+	proto.Message
+
+	GetAddress() sdk.AccAddress
+	String() string
 
 	GetId() uint64
 	GetPoolParams() PoolParams
@@ -41,29 +43,28 @@ type PoolAccountI interface {
 
 var (
 	// TODO: Add `GenesisAccount` type
-	_                         PoolAccountI = (*PoolAccount)(nil)
-	MaxUserSpecifiedWeight    sdk.Int      = sdk.NewIntFromUint64(1 << 20)
-	GuaranteedWeightPrecision int64        = 1 << 30
+	_                         PoolI   = (*Pool)(nil)
+	MaxUserSpecifiedWeight    sdk.Int = sdk.NewIntFromUint64(1 << 20)
+	GuaranteedWeightPrecision int64   = 1 << 30
 )
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash(append(PoolAddressPrefix, sdk.Uint64ToBigEndian(poolId)...)))
+	return address.Module(ModuleName, sdk.Uint64ToBigEndian(poolId))
 }
 
-// NewPoolAccount returns a weighted CPMM pool with the provided parameters, and initial assets.
+// NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
 // Invariants that are assumed to be satisfied and not checked:
 // TODO: Why don't we check these in here?
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (PoolAccountI, error) {
+func NewPool(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (PoolI, error) {
 	poolAddr := NewPoolAddress(poolId)
-	baseAcc := authtypes.NewBaseAccountWithAddress(poolAddr)
 
 	// pool account thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
-	poolAcc := &PoolAccount{
-		BaseAccount:        baseAcc,
+	pool := &Pool{
+		Address:            poolAddr.String(),
 		Id:                 poolId,
 		PoolParams:         PoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
@@ -72,23 +73,23 @@ func NewPoolAccount(poolId uint64, poolParams PoolParams, assets []PoolAsset, fu
 		FuturePoolGovernor: futureGovernor,
 	}
 
-	err := poolAcc.setInitialPoolAssets(assets)
+	err := pool.setInitialPoolAssets(assets)
 	if err != nil {
-		return &PoolAccount{}, err
+		return &Pool{}, err
 	}
 
-	sortedPoolAssets := poolAcc.GetAllPoolAssets()
+	sortedPoolAssets := pool.GetAllPoolAssets()
 	err = poolParams.Validate(sortedPoolAssets)
 	if err != nil {
-		return &PoolAccount{}, err
+		return &Pool{}, err
 	}
 
-	err = poolAcc.setInitialPoolParams(poolParams, sortedPoolAssets, blockTime)
+	err = pool.setInitialPoolParams(poolParams, sortedPoolAssets, blockTime)
 	if err != nil {
-		return &PoolAccount{}, err
+		return &Pool{}, err
 	}
 
-	return poolAcc, nil
+	return pool, nil
 }
 
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {
@@ -144,27 +145,37 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	return nil
 }
 
-func (pa PoolAccount) GetId() uint64 {
+// GetAddress returns the address of a pool.
+// If the pool address is not bech32 valid, it returns an empty address.
+func (pa Pool) GetAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(pa.Address)
+	if err != nil {
+		return sdk.AccAddress{}
+	}
+	return addr
+}
+
+func (pa Pool) GetId() uint64 {
 	return pa.Id
 }
 
-func (pa PoolAccount) GetPoolParams() PoolParams {
+func (pa Pool) GetPoolParams() PoolParams {
 	return pa.PoolParams
 }
 
-func (pa PoolAccount) GetTotalWeight() sdk.Int {
+func (pa Pool) GetTotalWeight() sdk.Int {
 	return pa.TotalWeight
 }
 
-func (pa PoolAccount) GetTotalShare() sdk.Coin {
+func (pa Pool) GetTotalShare() sdk.Coin {
 	return pa.TotalShare
 }
 
-func (pa *PoolAccount) AddTotalShare(amt sdk.Int) {
+func (pa *Pool) AddTotalShare(amt sdk.Int) {
 	pa.TotalShare.Amount = pa.TotalShare.Amount.Add(amt)
 }
 
-func (pa *PoolAccount) SubTotalShare(amt sdk.Int) {
+func (pa *Pool) SubTotalShare(amt sdk.Int) {
 	pa.TotalShare.Amount = pa.TotalShare.Amount.Sub(amt)
 }
 
@@ -173,7 +184,7 @@ func (pa *PoolAccount) SubTotalShare(amt sdk.Int) {
 // If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
 // TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
-func (pa *PoolAccount) setInitialPoolAssets(PoolAssets []PoolAsset) error {
+func (pa *Pool) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
 		exists[asset.Token.Denom] = true
@@ -216,7 +227,7 @@ func (pa *PoolAccount) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 }
 
 // setInitialPoolParams
-func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset, curBlockTime time.Time) error {
+func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset, curBlockTime time.Time) error {
 	pa.PoolParams = params
 	if params.SmoothWeightChangeParams != nil {
 		// set initial assets
@@ -257,13 +268,13 @@ func (pa *PoolAccount) setInitialPoolParams(params PoolParams, sortedAssets []Po
 // GetPoolAssets returns the denom's PoolAsset, If the PoolAsset doesn't exist, will return error.
 // As above, it will search the denom's PoolAsset by using binary search.
 // So, it is important to make sure that the PoolAssets are sorted.
-func (pa PoolAccount) GetPoolAsset(denom string) (PoolAsset, error) {
+func (pa Pool) GetPoolAsset(denom string) (PoolAsset, error) {
 	_, asset, err := pa.getPoolAssetAndIndex(denom)
 	return asset, err
 }
 
 // Returns a pool asset, and its index. If err != nil, then the index will be valid.
-func (pa PoolAccount) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
+func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	if denom == "" {
 		return -1, PoolAsset{}, fmt.Errorf("you tried to find the PoolAsset with empty denom")
 	}
@@ -290,7 +301,7 @@ func (pa PoolAccount) getPoolAssetAndIndex(denom string) (int, PoolAsset, error)
 	return i, pa.PoolAssets[i], nil
 }
 
-func (pa *PoolAccount) UpdatePoolAssetBalance(coin sdk.Coin) error {
+func (pa *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	// Check that PoolAsset exists.
 	assetIndex, existingAsset, err := pa.getPoolAssetAndIndex(coin.Denom)
 	if err != nil {
@@ -307,7 +318,7 @@ func (pa *PoolAccount) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	return nil
 }
 
-func (pa *PoolAccount) UpdatePoolAssetBalances(coins sdk.Coins) error {
+func (pa *Pool) UpdatePoolAssetBalances(coins sdk.Coins) error {
 	// Ensures that there are no duplicate denoms, all denom's are valid,
 	// and amount is > 0
 	err := coins.Validate()
@@ -328,7 +339,7 @@ func (pa *PoolAccount) UpdatePoolAssetBalances(coins sdk.Coins) error {
 	return nil
 }
 
-func (pa PoolAccount) GetPoolAssets(denoms ...string) ([]PoolAsset, error) {
+func (pa Pool) GetPoolAssets(denoms ...string) ([]PoolAsset, error) {
 	result := make([]PoolAsset, 0, len(denoms))
 
 	for _, denom := range denoms {
@@ -343,7 +354,7 @@ func (pa PoolAccount) GetPoolAssets(denoms ...string) ([]PoolAsset, error) {
 	return result, nil
 }
 
-func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
+func (pa Pool) GetAllPoolAssets() []PoolAsset {
 	copyslice := make([]PoolAsset, len(pa.PoolAssets))
 	copy(copyslice, pa.PoolAssets)
 	return copyslice
@@ -360,7 +371,7 @@ func (pa PoolAccount) GetAllPoolAssets() []PoolAsset {
 // TODO: (post-launch) If newWeights excludes an existing denomination,
 // remove the weight from the pool, and figure out something to do
 // with any remaining coin.
-func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
+func (pa Pool) updateAllWeights(newWeights []PoolAsset) {
 	if len(pa.PoolAssets) != len(newWeights) {
 		panic("updateAllWeights called with invalid input, len(newWeights) != len(existingWeights)")
 	}
@@ -383,7 +394,7 @@ func (pa PoolAccount) updateAllWeights(newWeights []PoolAsset) {
 
 // PokeTokenWeights checks to see if the pool's token weights need to be updated,
 // and if so, does so.
-func (pa *PoolAccount) PokeTokenWeights(blockTime time.Time) {
+func (pa *Pool) PokeTokenWeights(blockTime time.Time) {
 	// Pool weights aren't changing, do nothing.
 	poolWeightsChanging := (pa.PoolParams.SmoothWeightChangeParams != nil)
 	if !poolWeightsChanging {
@@ -434,7 +445,7 @@ func (pa *PoolAccount) PokeTokenWeights(blockTime time.Time) {
 	}
 }
 
-func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
+func (pa Pool) GetTokenWeight(denom string) (sdk.Int, error) {
 	PoolAsset, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -443,7 +454,7 @@ func (pa PoolAccount) GetTokenWeight(denom string) (sdk.Int, error) {
 	return PoolAsset.Weight, nil
 }
 
-func (pa PoolAccount) GetTokenBalance(denom string) (sdk.Int, error) {
+func (pa Pool) GetTokenBalance(denom string) (sdk.Int, error) {
 	PoolAsset, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -452,16 +463,6 @@ func (pa PoolAccount) GetTokenBalance(denom string) (sdk.Int, error) {
 	return PoolAsset.Token.Amount, nil
 }
 
-func (pa PoolAccount) NumAssets() int {
+func (pa Pool) NumAssets() int {
 	return len(pa.PoolAssets)
-}
-
-// SetPubKey - Implements AccountI
-func (pa PoolAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
-	return fmt.Errorf("not supported for pool accounts")
-}
-
-// SetSequence - Implements AccountI
-func (pa PoolAccount) SetSequence(seq uint64) error {
-	return fmt.Errorf("not supported for pool accounts")
 }

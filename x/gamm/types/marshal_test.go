@@ -27,7 +27,7 @@ var ymlAssetTest = []PoolAsset{
 
 func TestPoolAccountMarshalYAML(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pacc, err := NewPoolAccount(defaultPoolId, PoolParams{
+	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, ymlAssetTest, defaultFutureGovernor, defaultCurBlockTime)
@@ -81,7 +81,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
 			},
 		},
 	}
-	pacc, err := NewPoolAccount(defaultPoolId, PoolParams{
+	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee:                  defaultSwapFee,
 		ExitFee:                  defaultExitFee,
 		SmoothWeightChangeParams: &lbpParams,
@@ -162,13 +162,13 @@ func TestPoolAccountJson(t *testing.T) {
 			Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
 		},
 	}
-	pacc, err := NewPoolAccount(poolId, PoolParams{
+	pacc, err := NewPool(poolId, PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, jsonAssetTest, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
-	paccInternal := pacc.(*PoolAccount)
+	paccInternal := pacc.(*Pool)
 
 	bz, err := json.Marshal(pacc)
 	require.NoError(t, err)
@@ -177,7 +177,7 @@ func TestPoolAccountJson(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(bz1), string(bz))
 
-	var a PoolAccount
+	var a Pool
 	require.NoError(t, json.Unmarshal(bz, &a))
 	require.Equal(t, pacc.String(), a.String())
 }

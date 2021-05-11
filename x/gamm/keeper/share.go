@@ -6,7 +6,7 @@ import (
 	"github.com/c-osmosis/osmosis/x/gamm/types"
 )
 
-func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, poolAcc types.PoolAccountI, addr sdk.AccAddress, amount sdk.Int) error {
+func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, poolAcc types.PoolI, addr sdk.AccAddress, amount sdk.Int) error {
 	amt := sdk.Coins{
 		sdk.NewCoin(types.GetPoolShareDenom(poolAcc.GetId()), amount),
 	}
@@ -26,7 +26,7 @@ func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, poolAcc types.PoolAccoun
 	return nil
 }
 
-func (k Keeper) BurnPoolShareFromAccount(ctx sdk.Context, poolAcc types.PoolAccountI, addr sdk.AccAddress, amount sdk.Int) error {
+func (k Keeper) BurnPoolShareFromAccount(ctx sdk.Context, poolAcc types.PoolI, addr sdk.AccAddress, amount sdk.Int) error {
 	amt := sdk.Coins{
 		sdk.NewCoin(types.GetPoolShareDenom(poolAcc.GetId()), amount),
 	}

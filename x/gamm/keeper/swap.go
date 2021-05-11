@@ -110,7 +110,7 @@ func (k Keeper) SwapExactAmountOut(
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	poolAcc types.PoolAccountI,
+	poolAcc types.PoolI,
 	sender sdk.AccAddress,
 	updatedPoolAssetIn types.PoolAsset,
 	updatedPoolAssetOut types.PoolAsset,
