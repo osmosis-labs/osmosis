@@ -17,19 +17,10 @@ import (
 type Tree struct {
 	store store.KVStore
 	m uint8
-
-	// TODO: use interface{} instead of []byte
-	update func([][]byte) []byte
 }
 
 func NewTree(store store.KVStore, m uint8) Tree {
-	return Tree{store, m, nil}
-}
-
-func NewTreeWithModifier(store store.KVStore, m uint8,
-	update func([][]byte) []byte,
-) Tree {
-	return Tree{store, m, update}
+	return Tree{store, m}
 }
 
 // node is pointer to a specific node inside the tree
@@ -58,7 +49,7 @@ func (iter nodeIterator) node() *node {
 	return &res
 }
 
-func (node *node) get() (res nodeData) {
+func (node *node) children() (res Children) {
 	bz := node.tree.store.Get(node.tree.nodeKey(node.level, node.key))
 	if bz != nil {
 		json.Unmarshal(bz, &res)
@@ -66,8 +57,8 @@ func (node *node) get() (res nodeData) {
 	return
 }
 
-func (node *node) set(data nodeData) {
-	bz, err := json.Marshal(data)
+func (node *node) set(children Children) {
+	bz, err := json.Marshal(children)
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +90,7 @@ func (node *node) rightSibling() *node {
 }
 
 func (node *node) child(n uint16) *node {
-	return node.tree.nodeIterator(node.level-1, node.get().Index[n], nil).node()
+	return node.tree.nodeIterator(node.level-1, node.children()[n].Index, nil).node()
 }
 
 func (node *node) parent() *node {
@@ -109,101 +100,84 @@ func (node *node) parent() *node {
 		return parent
 	}
 	return parent.leftSibling()
-
-	/*
-	// sandwitch case
-	iter := node.tree.nodeReverseIterator(node.level+1, nil, node.key)
-	parent = iter.node()
-	index := parent.get().Index
-	lastindex := index[len(index)-1]
-	if bytes.Compare(lastindex, node.key) == 1 {
-		return parent
-	}
-	*/
 }
 
 func (node *node) exists() bool {
 	return node.tree.store.Has(node.tree.nodeKey(node.level, node.key))
 }
 
-func (node *node) push(key []byte) {
-	node.pushWithCustomData(key, nil)
+func (node *node) pushLeaf(key []byte) {
+	node.push(key, nil)
 }
 
-func (node *node) pushOnlyCustomData(key []byte, customData []byte) {
+func (node *node) updateAccumulation(c child) {
 	if node == nil {
 		return // reached at the root
 	}
-	data := node.get()
-	for i, idx := range data.Index {
-		if bytes.Compare(idx, key) == 0 {
-			data.Data[i] = customData
-			node.set(data)
-			node.parent().pushOnlyCustomData(node.key, node.tree.update(data.Data))
-			return
-		}
+
+	children := node.children()
+	idx, match := children.find(c.Index)
+	if !match {
+		panic("non existing key pushed from the child")
 	}
+	children = children.setAcc(idx, c.Acc)
+	node.set(children)
+	node.parent().updateAccumulation(child{node.key, children.accumulate()})
 }
 
-func (node *node) pushWithCustomData(key []byte, customData []byte) {
+func (node *node) push(c child) {
 	if node == nil {
 		return // reached at the root
 	}
-	data := node.get()
-	for i, idx := range data.Index {
-		// ignore if key already exists
-		if bytes.Compare(idx, key) == 0 {
-			// update and propagate custom data only
-			data.Data[i] = customData
-			node.set(data)
-			node.parent().pushOnlyCustomData(node.key, node.tree.update(data.Data))
-			return
-		}
-		// Push new key to the appropriate position
-		if bytes.Compare(idx, key) > 0 {
-			data.Index = append(append(data.Index[:i+1], key), data.Index[i+1:]...)
-			data.Data = append(append(data.Index[:i+1], customData), data.Data[i+1:]...)
-			break
-		}
+	children := node.children()
+	idx, match := children.find(c.Index)
+
+	// setting already existing child, move to updateAccumulation
+	if match {
+		node.updateAccumulation(c)
+		return
 	}
+
+	// inserting new child node
+	children = children.insert(c)
 
 	// split and push-up if overflow
-	if len(data.Index) > int(node.tree.m) {
+	if len(children) > int(node.tree.m) {
 		split := node.tree.m/2+1
 		parent := node.parent()
+		// XXX: do we need this?
 		if !parent.exists() {
-			parent = node.tree.nodeGet(node.level+1, data.Index[split])
+			parent = node.tree.nodeGet(node.level+1, children[split].Index)
 		}
-		node.tree.nodeNew(node.level, data.Index[split:], data.Data[split:])
-		parent.pushWithCustomData(data.Index[split], node.tree.update(data.Data[split:]))
-		data.Index = data.Index[:split]
-		data.Data = data.Data[:split]
-		parent.pushOnlyCustomData(node.key, node.tree.update(data.Index[:split]))
+		leftChildren, rightChildren := children.split(int(split))
+		// constructing right child
+		node.tree.nodeNew(node.level, rightChildren)
+		parent.push(child{rightChildren.key(), rightChildren.accumulate()})
+		children = leftChildren
+		parent.updateAccumulation(child{node.key, leftChildren.accumulate()})
 	}
 
-	node.set(data)
-
+	node.set(children)
 }
 
 func (node *node) pull(key []byte) {
 	if node == nil {
 		return // reached at the root
 	}
-	data := node.get()
-	for i, idx := range data.Index {
-		if bytes.Compare(idx, key) == 0 {
-			data.Index = append(data.Index[:i], data.Index[i+1:]...)
-			data.Data = append(data.Data[:i], data.Data[i+1:]...)
-			break
-		}
+	children := node.children()
+	idx, match := children.find(key)
+
+	if !match {
+		panic("pulling non existing child")
 	}
 
+	children = children.delete(idx)
 	// For sake of efficienty on our use case, we pull only when a node gets
 	// empty.
 	// if len(data.Index) >= int(node.tree.m/2) {
-	if len(data.Index) > 0 {
-		node.set(data)
-		node.parent().pushOnlyCustomData(node.key, node.tree.update(data.Data))
+	if len(children) > 0 {
+		node.set(children)
+		node.parent().updateAccumulation(child{node.key, children.accumulate()})
 		return
 	}
 
@@ -213,29 +187,84 @@ func (node *node) pull(key []byte) {
 	parent := node.parent()
 	node.delete()
 	parent.pull(node.key)
+
 	if left.exists() && right.exists() {
 		// parent might be deleted, retrieve from left
 		parent = left.parent()
 		if bytes.Equal(parent.key, right.parent().key) {
-			leftIndex := left.get().Index
-			rightIndex := right.get().Index
-			if len(leftIndex)+len(rightIndex) < int(node.tree.m) {
-				leftIndex = append(leftIndex, rightIndex...)
-				leftData := append(left.get().Data, right.get().Data...)
-				left.set(nodeData{Index: leftIndex, Data: leftData})
+			leftChildren := left.children()
+			rightChildren := right.children()
+			if len(leftChildren)+len(rightChildren) < int(node.tree.m) {
+				left.set(leftChildren.merge(rightChildren))
 				right.delete()
 				parent.pull(right.key)
-				parent.pushOnlyCustomData(left.key, node.tree.update(leftData))
+				parent.updateAccumulation(child{left.key, leftChildren.accumulate()})
 			}
 		}
 	}
 }
 
-// nodeData is struct for internal nodes
-// marshaled and stored inside the state.
-type nodeData struct {
-	Index [][]byte // max length M slice of key bytes, sorted
-	Data [][]byte
+type child struct {
+	Index []byte
+	Acc uint64
+}
+
+type Children []child // max length M slice of key bytes, sorted by index
+
+func (children Children) key() []byte {
+	return children[0].Index
+}
+
+func (children Children) accumulate() (res uint64) {
+	for _, child := range children {
+		res += child.Acc
+	}
+	return
+}
+
+// find returns the appropriate position that key should be inserted
+// if match is true, idx is the exact position for the key
+// if match is false, idx is the position where the key should be inserted
+func (children Children) find(key []byte) (idx int, match bool) {
+	for idx, child := range children {
+		if bytes.Compare(child.Index, key) == 0 {
+			return idx, true
+		}
+		// Push new key to the appropriate position
+		if bytes.Compare(child.Index, key) > 0 {
+			return idx, false 
+		}
+	}
+
+	panic("should not reach here")
+}
+
+func (children Children) set(idx int, child child) Children {
+	children[idx] = child
+	return children
+}
+
+func (children Children) setAcc(idx int, acc uint64) Children {
+	children[idx] = child{children[idx].Index, acc}
+	return children
+}
+
+func (children Children) insert(idx int, child child) Children {
+	children = append(append(children[:idx], child), children[idx:]...)
+	return children
+}
+
+func (children Children) delete(idx int) Children {
+	children = append(children[:idx], children[idx+1:]...)
+	return children
+}
+
+func (children Children) split(idx int) (Children, Children) {
+	return children[:idx], children[idx:]
+}
+
+func (children Children) merge(children2 Children) Children {
+	return append(children, children2...)
 }
 
 // Root: (level, key) of the root node
@@ -262,12 +291,9 @@ func (t Tree) Get(key []byte) []byte {
 	return t.store.Get(keybz)
 }
 
-func (t Tree) nodeNew(level uint16, index [][]byte, data [][]byte) *node {
-	keybz := t.nodeKey(level, index[0])
-	bz, err := json.Marshal(nodeData{
-		Index: index,
-		Data: data,
-	})
+func (t Tree) nodeNew(level uint16, children Children) *node {
+	keybz := t.nodeKey(level, children[0].Index)
+	bz, err := json.Marshal(children)
 	if err != nil {
 		panic(err)
 	}
@@ -276,7 +302,7 @@ func (t Tree) nodeNew(level uint16, index [][]byte, data [][]byte) *node {
 	node := node{
 		tree: t,
 		level: level,
-		key: index[0],
+		key: children.key(),
 	}
 
 	return &node
@@ -315,16 +341,12 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 	return t.nodeReverseIterator(0, begin, end)
 }
 
-func (t Tree) Set(key, value []byte) {
-	if value == nil {
-		t.Remove(key)
-		return
-	}
+func (t Tree) Set(key []byte, acc uint64) {
 	node := t.nodeGet(0, key)
 	node.setLeaf(value)
 
 	parent := t.nodeGet(1, key)
-	parent.push(key)
+	parent.pushLeaf(key, acc)
 }
 
 func (t Tree) Remove(key []byte) {
