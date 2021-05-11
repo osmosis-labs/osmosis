@@ -42,7 +42,6 @@ type PoolI interface {
 }
 
 var (
-	// TODO: Add `GenesisAccount` type
 	_                         PoolI   = (*Pool)(nil)
 	MaxUserSpecifiedWeight    sdk.Int = sdk.NewIntFromUint64(1 << 20)
 	GuaranteedWeightPrecision int64   = 1 << 30

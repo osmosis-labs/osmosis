@@ -65,9 +65,6 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
 	poolId := k.getNextPoolNumber(ctx)
 
-	fmt.Println(poolId)
-	fmt.Println(poolParams)
-
 	pool, err := types.NewPool(poolId, poolParams, assets, futureGovernor, ctx.BlockTime())
 	if err != nil {
 		return nil, err

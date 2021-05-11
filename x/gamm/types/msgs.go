@@ -28,15 +28,12 @@ func ValidateFutureGovernor(governor string) error {
 		return nil
 	}
 
-	fmt.Println(governor)
-
 	// validation for future owner
 	// "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 	_, err := sdk.AccAddressFromBech32(governor)
 	if err == nil {
 		return nil
 	}
-
 
 	lockTimeStr := ""
 	splits := strings.Split(governor, ",")
