@@ -9,9 +9,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/iavl"
+
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 
 	"github.com/c-osmosis/osmosis/store"
 )
@@ -23,7 +25,12 @@ type TreeTestSuite struct {
 }
 
 func (suite *TreeTestSuite) SetupTest() {
-	kvstore := dbadapter.Store{DB: dbm.NewMemDB()}
+	db := dbm.NewMemDB()
+	tree, err := iavl.NewMutableTree(db, 100)
+	suite.Require().NoError(err)
+	_, _, err = tree.SaveVersion()
+	suite.Require().Nil(err)
+	kvstore := iavlstore.UnsafeNewStore(tree)
 	suite.tree = store.NewTree(kvstore, 10)
 }
 
@@ -105,13 +112,16 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			suite.Require().Equal(right, tright)
 
 			key := append(pair.key, 0x00)
+			if idx == len(pairs)-1 {
+				break
+			}
 			if bytes.Equal(key, pairs[idx+1].key) {
 				break
 			}
 
 			tleft, texact, tright = suite.tree.SplitAcc(key)
 			suite.Require().Equal(left+exact, tleft)
-			suite.Require().Equal(0, texact)
+			suite.Require().Equal(uint64(0), texact)
 			suite.Require().Equal(right, tright)
 
 			left += exact

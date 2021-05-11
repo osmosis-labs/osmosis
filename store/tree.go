@@ -1,4 +1,4 @@
-/// B+ tree implementation on KVStore
+// B+ tree implementation on KVStore
 
 package store
 
@@ -22,7 +22,9 @@ type Tree struct {
 }
 
 func NewTree(store store.KVStore, m uint8) Tree {
-	return Tree{store, m}
+	tree := Tree{store, m}
+	tree.Set(nil, 0)
+	return tree
 }
 
 // node is pointer to a specific node inside the tree
@@ -40,13 +42,15 @@ type nodeIterator struct {
 }
 
 func (iter nodeIterator) node() *node {
+	start, end := iter.Domain()
+	fmt.Printf("domain %+v %+v\n", start, end)
 	if !iter.Valid() {
 		return nil
 	}
 	res := node{
 		tree:  iter.tree,
 		level: iter.level,
-		key:   iter.Key(),
+		key:   iter.Key()[7:],
 	}
 	return &res
 }
@@ -64,6 +68,7 @@ func (node *node) set(children children) {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("set %+v %+v\n", node.tree.nodeKey(node.level, node.key), bz)
 	node.tree.store.Set(node.tree.nodeKey(node.level, node.key), bz)
 }
 
@@ -75,6 +80,7 @@ func (node *node) setLeaf(acc uint64) {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("setLeaf %+v %+v\n", node.tree.leafKey(node.key), bz)
 	node.tree.store.Set(node.tree.leafKey(node.key), bz)
 }
 
@@ -87,22 +93,22 @@ func (node *node) delete() {
 }
 
 func (node *node) leftSibling() *node {
-	// TODO: set start to prefix start
 	return node.tree.nodeReverseIterator(node.level, nil, node.key).node()
 }
 
 func (node *node) rightSibling() *node {
-	fmt.Printf("%+v\n", node)
-	// TODO: set end to prefix iterator end
 	iter := node.tree.nodeIterator(node.level, node.key, nil)
-	fmt.Printf("a")
+	fmt.Printf("t")
 	if !iter.Valid() {
-		fmt.Printf("b")
 		return nil
 	}
-	fmt.Printf("c")
-	iter.Next()
-	fmt.Printf("d")
+	fmt.Printf("g")
+	if node.exists() {
+		fmt.Printf("h")
+		// exclude node itself
+		iter.Next()
+	}
+	fmt.Printf("j")
 	return iter.node()
 }
 
@@ -117,12 +123,11 @@ func (node *node) parent() *node {
 	if parent.exists() {
 		return parent
 	}
-	leftSibling := parent.leftSibling()
-	if leftSibling.exists() {
-		return leftSibling
+	parent = parent.leftSibling()
+	if parent.exists() {
+		return parent
 	}
-	// edge case: only happens when pushing new node from the leftmost side
-	return parent.rightSibling()
+	return node.tree.nodeGet(node.level+1, nil)
 }
 
 func (node *node) exists() bool {
@@ -130,6 +135,7 @@ func (node *node) exists() bool {
 		fmt.Printf("www")
 		return false
 	}
+	fmt.Printf("exists %+v\n", node.tree.nodeKey(node.level, node.key))
 	return node.tree.store.Has(node.tree.nodeKey(node.level, node.key))
 }
 
@@ -151,12 +157,12 @@ func (node *node) updateAccumulation(c child) {
 func (node *node) push(c child) {
 	fmt.Printf("push %+v %+v\n", node, c)
 	if !node.exists() {
-		node.tree.nodeNew(node.level, children{c})
+		node.create(children{c})
 		return
 	}
 
-	children := node.children()
-	idx, match := children.find(c.Index)
+	cs := node.children()
+	idx, match := cs.find(c.Index)
 
 	// setting already existing child, move to updateAccumulation
 	if match {
@@ -164,26 +170,32 @@ func (node *node) push(c child) {
 		return
 	}
 
+	fmt.Printf("prev %+v\n", cs)
 	// inserting new child node
-	children = children.insert(idx, c)
+	cs = cs.insert(idx, c)
 
+	fmt.Printf("next %+v\n", cs)
 	// split and push-up if overflow
-	if len(children) > int(node.tree.m) {
+	if len(cs) > int(node.tree.m) {
 		split := node.tree.m/2 + 1
 		parent := node.parent()
-		// XXX: do we need this?
+		leftchildren, rightchildren := cs.split(int(split))
+		node.tree.nodeGet(node.level, rightchildren.key()).create(rightchildren)
 		if !parent.exists() {
-			parent = node.tree.nodeGet(node.level+1, children[split].Index)
+			parent.create(children{
+				child{node.key, leftchildren.accumulate()},
+				child{cs[split].Index, rightchildren.accumulate()},
+			})
+			node.set(leftchildren)
+			return
 		}
-		leftchildren, rightchildren := children.split(int(split))
-		// constructing right child
-		node.tree.nodeNew(node.level, rightchildren)
+		// constructing right childdd
 		parent.push(child{rightchildren.key(), rightchildren.accumulate()})
-		children = leftchildren
+		cs = leftchildren
 		parent.updateAccumulation(child{node.key, leftchildren.accumulate()})
 	}
 
-	node.set(children)
+	node.set(cs)
 }
 
 func (node *node) pull(key []byte) {
@@ -275,7 +287,7 @@ func (children children) find(key []byte) (idx int, match bool) {
 		}
 	}
 
-	panic("should not reach here")
+	return len(children), false
 }
 
 func (children children) set(idx int, child child) children {
@@ -288,9 +300,8 @@ func (children children) setAcc(idx int, acc uint64) children {
 	return children
 }
 
-func (children children) insert(idx int, child child) children {
-	children = append(append(children[:idx], child), children[idx:]...)
-	return children
+func (cs children) insert(idx int, c child) children {
+	return append(cs[:idx], append(children{c}, cs[idx:]...)...)
 }
 
 func (children children) delete(idx int) children {
@@ -313,7 +324,7 @@ func (t Tree) rootKey() []byte {
 
 // key of the node is always the first element of the node.Index
 func (t Tree) nodeKey(level uint16, key []byte) []byte {
-	bz := make([]byte, 4)
+	bz := make([]byte, 2)
 	binary.BigEndian.PutUint16(bz, level)
 	return append(append([]byte("node/"), bz...), key...)
 }
@@ -330,8 +341,8 @@ func (t Tree) root() *node {
 	key := iter.Key()[5:]
 	return &node{
 		tree:  t,
-		level: binary.BigEndian.Uint16(key[:4]),
-		key:   key[4:],
+		level: binary.BigEndian.Uint16(key[:2]),
+		key:   key[2:],
 	}
 }
 
@@ -347,21 +358,14 @@ func (t Tree) Get(key []byte) (res uint64) {
 	return
 }
 
-func (t Tree) nodeNew(level uint16, children children) *node {
-	keybz := t.nodeKey(level, children[0].Index)
+func (node *node) create(children children) {
+	keybz := node.tree.nodeKey(node.level, node.key)
 	bz, err := json.Marshal(children)
 	if err != nil {
 		panic(err)
 	}
-	t.store.Set(keybz, bz)
-
-	node := node{
-		tree:  t,
-		level: level,
-		key:   children.key(),
-	}
-
-	return &node
+	fmt.Printf("nodeNew %+v %+v\n", keybz, bz)
+	node.tree.store.Set(keybz, bz)
 }
 
 func (t Tree) nodeGet(level uint16, key []byte) *node {
@@ -374,24 +378,30 @@ func (t Tree) nodeGet(level uint16, key []byte) *node {
 
 // XXX: store.Iterator -> custom node iterator
 func (t Tree) nodeIterator(level uint16, begin, end []byte) nodeIterator {
-	if end == nil {
-		end = stypes.PrefixEndBytes(t.nodeKey(level, end))
+	var endBytes []byte
+	if end != nil {
+		endBytes = t.nodeKey(level, end)
+	} else {
+		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
 	}
 	return nodeIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.Iterator(t.nodeKey(level, begin), t.nodeKey(level, end)),
+		Iterator: t.store.Iterator(t.nodeKey(level, begin), endBytes),
 	}
 }
 
 func (t Tree) nodeReverseIterator(level uint16, begin, end []byte) nodeIterator {
-	if end == nil {
-		end = stypes.PrefixEndBytes(t.nodeKey(level, end))
+	var endBytes []byte
+	if end != nil {
+		endBytes = t.nodeKey(level, end)
+	} else {
+		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
 	}
 	return nodeIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.ReverseIterator(t.nodeKey(level, begin), t.nodeKey(level, end)),
+		Iterator: t.store.ReverseIterator(t.nodeKey(level, begin), endBytes),
 	}
 }
 
@@ -407,12 +417,7 @@ func (t Tree) Set(key []byte, acc uint64) {
 	node := t.nodeGet(0, key)
 	node.setLeaf(acc)
 
-	parent := node.parent()
-	if !parent.exists() {
-		fmt.Printf("qqq")
-		parent = t.nodeGet(1, key)
-	}
-	parent.push(child{key, acc})
+	node.parent().push(child{key, acc})
 }
 
 func (t Tree) Remove(key []byte) {
@@ -427,23 +432,28 @@ func (t Tree) Remove(key []byte) {
 
 func (node *node) accSplit(key []byte) (left uint64, exact uint64, right uint64) {
 	if node.level == 0 {
-		if bytes.Equal(node.key, key) {
-			// exact leaf node
-			keybz := node.tree.leafKey(key)
-			err := json.Unmarshal(node.tree.store.Get(keybz), &exact)
-			if err != nil {
-				panic(err)
-			}
+		var err error
+		bz := node.tree.store.Get(node.tree.leafKey(node.key))
+		switch bytes.Compare(node.key, key) {
+		case -1:
+			err = json.Unmarshal(bz, &left)
+		case 0:
+			err = json.Unmarshal(bz, &exact)
+		case 1:
+			err = json.Unmarshal(bz, &right)
+		}
+		if err != nil {
+			panic(err)
 		}
 		return
 	}
 
 	children := node.children()
-	fmt.Printf("%+v, %+v, %+v\n", key, node, children)
 	idx, match := children.find(key)
 	if !match {
 		idx--
 	}
+	fmt.Printf("acc %+v, %+v, %+v %d\n", key, node, children, idx)
 	left, exact, right = node.tree.nodeGet(node.level-1, children[idx].Index).accSplit(key)
 	left += children[:idx].accumulate()
 	right += children[idx+1:].accumulate()
