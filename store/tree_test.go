@@ -2,9 +2,10 @@ package store_test
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
-	"testing"
 	"sort"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 
@@ -31,8 +32,8 @@ func TestTreeTestSuite(t *testing.T) {
 }
 
 type pair struct {
-	key []byte
-	value []byte
+	key   []byte
+	value uint64
 }
 
 type pairs []pair
@@ -53,18 +54,26 @@ func (p pairs) Swap(i, j int) {
 	p[j] = temp
 }
 
+func (p pairs) sum() (res uint64) {
+	for _, pair := range p {
+		res += pair.value
+	}
+	return
+}
+
 func (suite *TreeTestSuite) TestTreeInvariants() {
 	suite.SetupTest()
 
-	pairs := pairs{pair{[]byte("hello"), []byte("world")}}
-	suite.tree.Set([]byte("hello"), []byte("world"))
+	pairs := pairs{pair{[]byte("hello"), 100}}
+	suite.tree.Set([]byte("hello"), 100)
 
-	for i := 0; i < 2000; i++ {
+	// underlying memdb is not working properly when deleting on large volume,
+	// check if it is a problem from memdb side by running on iavl
+	for i := 0; i < 100; i++ {
 		// add a single element
 		key := make([]byte, rand.Int()%20)
-		value := make([]byte, rand.Int()%20)
+		value := rand.Uint64()
 		rand.Read(key)
-		rand.Read(value)
 		idx := sort.Search(len(pairs), func(n int) bool { return bytes.Compare(pairs[n].key, key) >= 0 })
 		if idx < len(pairs) {
 			if bytes.Equal(pairs[idx].key, key) {
@@ -77,8 +86,9 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			pairs = append(pairs, pair{key, value})
 		}
 
-
 		suite.tree.Set(key, value)
+
+		fmt.Printf("set %x %d\n", key, value)
 
 		// check all is right
 		for _, pair := range pairs {
@@ -86,10 +96,33 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			// XXX: check all branch nodes
 		}
 
-		// XXX: remove randomly by coin flip
-		if rand.Int() % 2 == 0 {
-			idx := rand.Int()%len(pairs)
+		// check accumulation calc is alright
+		left, exact, right := uint64(0), pairs[0].value, pairs[1:].sum()
+		for idx, pair := range pairs {
+			tleft, texact, tright := suite.tree.SplitAcc(pair.key)
+			suite.Require().Equal(left, tleft)
+			suite.Require().Equal(exact, texact)
+			suite.Require().Equal(right, tright)
+
+			key := append(pair.key, 0x00)
+			if bytes.Equal(key, pairs[idx+1].key) {
+				break
+			}
+
+			tleft, texact, tright = suite.tree.SplitAcc(key)
+			suite.Require().Equal(left+exact, tleft)
+			suite.Require().Equal(0, texact)
+			suite.Require().Equal(right, tright)
+
+			left += exact
+			exact = pairs[idx+1].value
+			right -= exact
+		}
+
+		if rand.Int()%2 == 0 {
+			idx := rand.Int() % len(pairs)
 			pair := pairs[idx]
+			fmt.Printf("remove %x", pair.key)
 			pairs = append(pairs[:idx], pairs[idx+1:]...)
 			suite.tree.Remove(pair.key)
 		}
