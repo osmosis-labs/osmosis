@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 	)
 	suite.NoError(err)
 
-	// In this time, there is no distr record, so this asset should be allocated to the community pool.
+	// At this time, there is no distr record, so the asset should be allocated to the community pool.
 	err = keeper.AllocateAsset(suite.ctx, sdk.NewCoin("stake", sdk.NewInt(100000)))
 	suite.NoError(err)
 
