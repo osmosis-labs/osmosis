@@ -250,7 +250,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
 	suite.Equal(sdk.NewInt(100), distrInfo.TotalWeight)
 
-	// add the duplicated pot id, because the prior one that register the pot id will block the second one.
+	// adding two of the same pot id at once should error
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
 		PotId:  potId,
 		Weight: sdk.NewInt(100),
