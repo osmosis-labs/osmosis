@@ -7,16 +7,6 @@ import (
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
 )
 
-// GetAllocatableAsset gets the balance of the `MintedDenom` from the `feeCollectorName` module account and returns coins according to the `AllocationRatio`
-func (k Keeper) GetAllocatableAsset(ctx sdk.Context) sdk.Coin {
-	params := k.GetParams(ctx)
-
-	feeCollector := k.accountKeeper.GetModuleAccount(ctx, k.feeCollectorName)
-	asset := k.bankKeeper.GetBalance(ctx, feeCollector.GetAddress(), params.MintedDenom)
-
-	return sdk.NewCoin(asset.Denom, asset.Amount.ToDec().Mul(params.AllocationRatio).TruncateInt())
-}
-
 func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coin) error {
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, k.communityPoolName, sdk.Coins{asset})
 	if err != nil {
@@ -30,7 +20,10 @@ func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coi
 }
 
 // AllocateAsset allocates and distributes coin according a pot’s proportional weight that is recorded in the record
-func (k Keeper) AllocateAsset(ctx sdk.Context, asset sdk.Coin) error {
+func (k Keeper) AllocateAsset(ctx sdk.Context) error {
+	params := k.GetParams(ctx)
+	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	asset := k.bankKeeper.GetBalance(ctx, moduleAddr, params.MintedDenom)
 	if asset.Amount.IsZero() {
 		// when allocating asset is zero, skip execution
 		return nil
@@ -59,12 +52,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context, asset sdk.Coin) error {
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
-		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, coins)
-		if err != nil {
-			return err
-		}
-
-		err = k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
+		err := k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
 		if err != nil {
 			return err
 		}

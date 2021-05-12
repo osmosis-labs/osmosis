@@ -3,12 +3,12 @@ package keeper
 import (
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/c-osmosis/osmosis/x/mint/types"
+	poolincentivestypes "github.com/c-osmosis/osmosis/x/pool-incentives/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Keeper of the mint store
@@ -16,6 +16,7 @@ type Keeper struct {
 	cdc              codec.BinaryMarshaler
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
+	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
 	hooks            types.MintHooks
 	feeCollectorName string
@@ -41,6 +42,7 @@ func NewKeeper(
 		cdc:              cdc,
 		storeKey:         key,
 		paramSpace:       paramSpace,
+		accountKeeper:    ak,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 	}
@@ -163,10 +165,27 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
+// GetPoolAllocatableAsset gets the balance of the `MintedDenom` from the `feeCollectorName` module account and returns coins according to the `AllocationRatio`
+func (k Keeper) GetPoolAllocatableAsset(ctx sdk.Context) sdk.Coin {
+	params := k.GetParams(ctx)
+
+	feeCollector := k.accountKeeper.GetModuleAccount(ctx, k.feeCollectorName)
+	asset := k.bankKeeper.GetBalance(ctx, feeCollector.GetAddress(), params.MintDenom)
+
+	return sdk.NewCoin(asset.Denom, asset.Amount.ToDec().Mul(params.PoolAllocationRatio).TruncateInt())
+}
+
 // AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+
+	// allocate pool allocation ratio to pool-incentives module account account
+	coins := sdk.NewCoins(k.GetPoolAllocatableAsset(ctx))
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, poolincentivestypes.ModuleName, coins)
+	if err != nil {
+		return err
+	}
 
 	// call an hook after deposition of coin into fee pool
 	k.hooks.AfterAddCollectedFees(ctx, fees)

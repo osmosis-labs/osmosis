@@ -19,6 +19,7 @@ var (
 	KeyEpochDuration           = []byte("EpochDuration")
 	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
 	KeyReductionFactor         = []byte("ReductionFactor")
+	KeyPoolAllocationRatio     = []byte("PoolAllocationRatio")
 )
 
 // ParamTable for minting module.
@@ -28,7 +29,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochDuration time.Duration,
-	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64,
+	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, poolAllocationRatio sdk.Dec,
 ) Params {
 
 	return Params{
@@ -37,6 +38,7 @@ func NewParams(
 		EpochDuration:           epochDuration,
 		ReductionPeriodInEpochs: reductionPeriodInEpochs,
 		ReductionFactor:         ReductionFactor,
+		PoolAllocationRatio:     poolAllocationRatio,
 	}
 }
 
@@ -49,6 +51,7 @@ func DefaultParams() Params {
 		EpochDuration:           epochDuration,            // 1 week
 		ReductionPeriodInEpochs: 156,                      // 3 years
 		ReductionFactor:         sdk.NewDecWithPrec(5, 1), // 0.5
+		PoolAllocationRatio:     sdk.NewDecWithPrec(2, 1), // 0.2
 	}
 }
 
@@ -70,6 +73,10 @@ func (p Params) Validate() error {
 		return err
 	}
 
+	if err := validatePoolAllocationRatio(p.PoolAllocationRatio); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -87,6 +94,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyEpochDuration, &p.EpochDuration, validateEpochDuration),
 		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
 		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
+		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.PoolAllocationRatio, validatePoolAllocationRatio),
 	}
 }
 
@@ -157,6 +165,23 @@ func validateReductionFactor(i interface{}) error {
 
 	if v.IsNegative() {
 		return fmt.Errorf("reduction factor cannot be negative")
+	}
+
+	return nil
+}
+
+func validatePoolAllocationRatio(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return errors.New("allocation ratio should not be negative")
+	}
+
+	if v.GT(sdk.NewDec(1)) {
+		return errors.New("allocation ratio should be lesser than 1")
 	}
 
 	return nil

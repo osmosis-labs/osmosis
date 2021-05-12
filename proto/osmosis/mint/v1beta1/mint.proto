@@ -45,4 +45,10 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+  // pool_allocation_ratio defines the proportion of the minted minted_denom that is to be allocated as pool incentives.
+  string pool_allocation_ratio = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"pool_allocation_ratio\"",
+    (gogoproto.nullable) = false
+  ];
 }

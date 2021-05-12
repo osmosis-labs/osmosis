@@ -12,31 +12,29 @@ import (
 )
 
 var (
-	KeyMintedDenom     = []byte("MintedDenom")
-	KeyAllocationRatio = []byte("AllocationRatio")
+	KeyMintedDenom = []byte("MintedDenom")
 )
 
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(mintedDenom string, allocationRatio sdk.Dec) Params {
+func NewParams(mintedDenom string) Params {
 	return Params{
-		MintedDenom:     mintedDenom,
-		AllocationRatio: allocationRatio,
+		MintedDenom: mintedDenom,
 	}
 }
 
 // DefaultParams is the default parameter configuration for the pool-incentives module
 func DefaultParams() Params {
-	return NewParams("stake", sdk.NewDecWithPrec(2, 1))
+	return NewParams("stake")
 }
 
 func (p Params) Validate() error {
 	if err := validateMintedDenom(p.MintedDenom); err != nil {
 		return err
 	}
-	return validateAllocationRatio(p.AllocationRatio)
+	return nil
 }
 
 // String implements the Stringer interface.
@@ -61,26 +59,8 @@ func validateMintedDenom(i interface{}) error {
 	return nil
 }
 
-func validateAllocationRatio(i interface{}) error {
-	v, ok := i.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNegative() {
-		return errors.New("allocation ratio should not be negative")
-	}
-
-	if v.GT(sdk.NewDec(1)) {
-		return errors.New("allocation ratio should be lesser than 1")
-	}
-
-	return nil
-}
-
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintedDenom, &p.MintedDenom, validateMintedDenom),
-		paramtypes.NewParamSetPair(KeyAllocationRatio, &p.AllocationRatio, validateAllocationRatio),
 	}
 }

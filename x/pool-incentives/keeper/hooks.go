@@ -39,11 +39,8 @@ func (h Hooks) AfterAddCollectedFees(ctx sdk.Context, fees sdk.Coins) {
 	// Calculate the AllocatableAsset using the AllocationRatio and the MintedDenom,
 	// then allocate the tokens to the registered pools’ pots.
 	// If there is no record, inflation is not drained and the all amounts are used by the distribution module’s next BeginBlock.
-	asset := h.k.GetAllocatableAsset(ctx)
-	if asset.IsValid() && asset.IsPositive() {
-		err := h.k.AllocateAsset(ctx, asset)
-		if err != nil {
-			panic(err)
-		}
+	err := h.k.AllocateAsset(ctx)
+	if err != nil {
+		panic(err)
 	}
 }
