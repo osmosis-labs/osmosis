@@ -232,7 +232,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 
 	poolId := suite.preparePool()
 
-	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
+	// LockableDurations should be 1, 3, 7 hours from the default genesis state for testing
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
