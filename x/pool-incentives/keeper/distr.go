@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"fmt"
 
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coin) error {
@@ -21,6 +22,7 @@ func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coi
 
 // AllocateAsset allocates and distributes coin according a pot’s proportional weight that is recorded in the record
 func (k Keeper) AllocateAsset(ctx sdk.Context) error {
+	logger := k.Logger(ctx)
 	params := k.GetParams(ctx)
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	asset := k.bankKeeper.GetBalance(ctx, moduleAddr, params.MintedDenom)
@@ -43,6 +45,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 
 		// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
 		if !allocatingAmount.IsPositive() {
+			logger.Info(fmt.Sprintf("allocating amount for (%d, %s) record is not positive", record.PotId, record.Weight.String()))
 			continue
 		}
 

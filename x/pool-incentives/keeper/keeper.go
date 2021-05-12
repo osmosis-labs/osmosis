@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
 	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
 	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 type Keeper struct {
@@ -55,6 +54,11 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 		communityPoolName: communityPoolName,
 		feeCollectorName:  feeCollectorName,
 	}
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 func (k Keeper) CreatePoolPots(ctx sdk.Context, poolId uint64) error {
