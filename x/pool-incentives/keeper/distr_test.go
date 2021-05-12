@@ -83,7 +83,6 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
 	err = mintKeeper.AddCollectedFees(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
-	// It has very small margin of error.
 	suite.Equal("80000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
 
 	pot1, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot1Id)

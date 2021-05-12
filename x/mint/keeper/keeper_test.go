@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestGetPoolAllocatableAsset() {
 
 	// At this time, the fee collector doesn't have any assets.
 	// So, it should be return the empty coins.
-	coin := mintKeeper.GetPoolAllocatableAsset(suite.ctx)
+	coin := mintKeeper.GetPoolAllocatableAsset(suite.ctx, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))))
 	suite.Equal("0stake", coin.String())
 
 	// Mint the stake coin to the fee collector.
@@ -46,17 +46,10 @@ func (suite *KeeperTestSuite) TestGetPoolAllocatableAsset() {
 	suite.NoError(err)
 
 	// In this time, should return the 20% of 100000stake
-	coin = mintKeeper.GetPoolAllocatableAsset(suite.ctx)
+	coin = mintKeeper.GetPoolAllocatableAsset(suite.ctx, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000))))
 	suite.Equal("20000stake", coin.String())
 
 	// Mint some random coins to the fee collector.
-	err = suite.app.BankKeeper.AddCoins(
-		suite.ctx,
-		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
-		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1481290)), sdk.NewCoin("test", sdk.NewInt(12389190))),
-	)
-	suite.NoError(err)
-
-	coin = mintKeeper.GetPoolAllocatableAsset(suite.ctx)
-	suite.Equal("316258stake", coin.String())
+	coin = mintKeeper.GetPoolAllocatableAsset(suite.ctx, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1481290)), sdk.NewCoin("test", sdk.NewInt(12389190))))
+	suite.Equal("296258stake", coin.String())
 }

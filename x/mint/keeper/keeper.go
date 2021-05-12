@@ -165,14 +165,12 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// GetPoolAllocatableAsset gets the balance of the `MintedDenom` from the `feeCollectorName` module account and returns coins according to the `AllocationRatio`
-func (k Keeper) GetPoolAllocatableAsset(ctx sdk.Context) sdk.Coin {
+// GetPoolAllocatableAsset gets the balance of the `MintedDenom` from fees and returns coins according to the `AllocationRatio`
+func (k Keeper) GetPoolAllocatableAsset(ctx sdk.Context, fees sdk.Coins) sdk.Coin {
+	// TODO: should we split other assets as well?
 	params := k.GetParams(ctx)
-
-	feeCollector := k.accountKeeper.GetModuleAccount(ctx, k.feeCollectorName)
-	asset := k.bankKeeper.GetBalance(ctx, feeCollector.GetAddress(), params.MintDenom)
-
-	return sdk.NewCoin(asset.Denom, asset.Amount.ToDec().Mul(params.PoolAllocationRatio).TruncateInt())
+	amount := fees.AmountOf(params.MintDenom)
+	return sdk.NewCoin(params.MintDenom, amount.ToDec().Mul(params.PoolAllocationRatio).TruncateInt())
 }
 
 // AddCollectedFees implements an alias call to the underlying supply keeper's
@@ -181,7 +179,7 @@ func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 
 	// allocate pool allocation ratio to pool-incentives module account account
-	coins := sdk.NewCoins(k.GetPoolAllocatableAsset(ctx))
+	coins := sdk.NewCoins(k.GetPoolAllocatableAsset(ctx, fees))
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, poolincentivestypes.ModuleName, coins)
 	if err != nil {
 		return err
