@@ -3,10 +3,10 @@
 package store
 
 import (
+	"fmt"
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -42,8 +42,6 @@ type nodeIterator struct {
 }
 
 func (iter nodeIterator) node() *node {
-	start, end := iter.Domain()
-	fmt.Printf("domain %+v %+v\n", start, end)
 	if !iter.Valid() {
 		return nil
 	}
@@ -68,7 +66,6 @@ func (node *node) set(children children) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("set %+v %+v\n", node.tree.nodeKey(node.level, node.key), bz)
 	node.tree.store.Set(node.tree.nodeKey(node.level, node.key), bz)
 }
 
@@ -80,16 +77,11 @@ func (node *node) setLeaf(acc uint64) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("setLeaf %+v %+v\n", node.tree.leafKey(node.key), bz)
 	node.tree.store.Set(node.tree.leafKey(node.key), bz)
 }
 
 func (node *node) delete() {
-	fmt.Printf("q")
-	key := node.tree.nodeKey(node.level, node.key)
-	fmt.Printf("%x", key)
 	node.tree.store.Delete(node.tree.nodeKey(node.level, node.key))
-	fmt.Printf("w")
 }
 
 func (node *node) leftSibling() *node {
@@ -98,17 +90,13 @@ func (node *node) leftSibling() *node {
 
 func (node *node) rightSibling() *node {
 	iter := node.tree.nodeIterator(node.level, node.key, nil)
-	fmt.Printf("t")
 	if !iter.Valid() {
 		return nil
 	}
-	fmt.Printf("g")
 	if node.exists() {
-		fmt.Printf("h")
 		// exclude node itself
 		iter.Next()
 	}
-	fmt.Printf("j")
 	return iter.node()
 }
 
@@ -132,10 +120,8 @@ func (node *node) parent() *node {
 
 func (node *node) exists() bool {
 	if node == nil {
-		fmt.Printf("www")
 		return false
 	}
-	fmt.Printf("exists %+v\n", node.tree.nodeKey(node.level, node.key))
 	return node.tree.store.Has(node.tree.nodeKey(node.level, node.key))
 }
 
@@ -155,7 +141,6 @@ func (node *node) updateAccumulation(c child) {
 }
 
 func (node *node) push(c child) {
-	fmt.Printf("push %+v %+v\n", node, c)
 	if !node.exists() {
 		node.create(children{c})
 		return
@@ -170,11 +155,9 @@ func (node *node) push(c child) {
 		return
 	}
 
-	fmt.Printf("prev %+v\n", cs)
 	// inserting new child node
 	cs = cs.insert(idx, c)
 
-	fmt.Printf("next %+v\n", cs)
 	// split and push-up if overflow
 	if len(cs) > int(node.tree.m) {
 		split := node.tree.m/2 + 1
@@ -199,7 +182,6 @@ func (node *node) push(c child) {
 }
 
 func (node *node) pull(key []byte) {
-	fmt.Printf("pull %x\n", key)
 
 	if !node.exists() {
 		return // reached at the root
@@ -207,7 +189,6 @@ func (node *node) pull(key []byte) {
 	children := node.children()
 	idx, match := children.find(key)
 
-	fmt.Printf("a")
 	if !match {
 		panic("pulling non existing child")
 	}
@@ -217,35 +198,25 @@ func (node *node) pull(key []byte) {
 	// empty.
 	// if len(data.Index) >= int(node.tree.m/2) {
 	if len(children) > 0 {
-		fmt.Println("nomerge")
 		node.set(children)
 		node.parent().updateAccumulation(child{node.key, children.accumulate()})
 		return
 	}
 
-	fmt.Printf("b")
 	// merge if possible
 	left := node.leftSibling()
-	fmt.Printf("f")
 	right := node.rightSibling()
-	fmt.Printf("g")
 	parent := node.parent()
-	fmt.Printf("h")
-	fmt.Printf("%+v", node)
 	node.delete()
-	fmt.Printf("d")
 	parent.pull(node.key)
 
-	fmt.Printf("e")
 	if left.exists() && right.exists() {
 		// parent might be deleted, retrieve from left
 		parent = left.parent()
-		fmt.Printf("c")
 		if bytes.Equal(parent.key, right.parent().key) {
 			leftchildren := left.children()
 			rightchildren := right.children()
 			if len(leftchildren)+len(rightchildren) < int(node.tree.m) {
-				fmt.Printf("merge %x %x\n", leftchildren.key(), rightchildren.key())
 				left.set(leftchildren.merge(rightchildren))
 				right.delete()
 				parent.pull(right.key)
@@ -364,7 +335,6 @@ func (node *node) create(children children) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("nodeNew %+v %+v\n", keybz, bz)
 	node.tree.store.Set(keybz, bz)
 }
 
@@ -425,13 +395,15 @@ func (t Tree) Remove(key []byte) {
 	if !node.exists() {
 		return
 	}
-	parent := t.nodeGet(1, key)
+	parent := node.parent()
 	node.delete()
 	parent.pull(key)
 }
 
 func (node *node) accSplit(key []byte) (left uint64, exact uint64, right uint64) {
+	fmt.Printf("accSplit %+v on level %d %+v\n", key, node.level, node.key)
 	if node.level == 0 {
+		fmt.Printf("leaf\n")
 		var err error
 		bz := node.tree.store.Get(node.tree.leafKey(node.key))
 		switch bytes.Compare(node.key, key) {
@@ -453,10 +425,11 @@ func (node *node) accSplit(key []byte) (left uint64, exact uint64, right uint64)
 	if !match {
 		idx--
 	}
-	fmt.Printf("acc %+v, %+v, %+v %d\n", key, node, children, idx)
+	fmt.Printf("children %d %+v\n", idx, children)
 	left, exact, right = node.tree.nodeGet(node.level-1, children[idx].Index).accSplit(key)
 	left += children[:idx].accumulate()
 	right += children[idx+1:].accumulate()
+	fmt.Printf("result %d %d %d\n", left, exact, right)
 	return
 }
 

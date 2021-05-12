@@ -95,7 +95,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 
 		suite.tree.Set(key, value)
 
-		fmt.Printf("set %x %d\n", key, value)
+		fmt.Printf("set %+v %d\n", key, value)
 
 		// check all is right
 		for _, pair := range pairs {
@@ -106,6 +106,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 		// check accumulation calc is alright
 		left, exact, right := uint64(0), pairs[0].value, pairs[1:].sum()
 		for idx, pair := range pairs {
+			fmt.Printf("acctest %+v\n", pair.key)
 			tleft, texact, tright := suite.tree.SplitAcc(pair.key)
 			suite.Require().Equal(left, tleft)
 			suite.Require().Equal(exact, texact)
@@ -132,7 +133,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 		if rand.Int()%2 == 0 {
 			idx := rand.Int() % len(pairs)
 			pair := pairs[idx]
-			fmt.Printf("remove %x", pair.key)
+			fmt.Printf("remove %+v\n", pair.key)
 			pairs = append(pairs[:idx], pairs[idx+1:]...)
 			suite.tree.Remove(pair.key)
 		}
