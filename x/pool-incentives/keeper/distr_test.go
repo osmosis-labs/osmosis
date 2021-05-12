@@ -8,6 +8,40 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+func (suite *KeeperTestSuite) TestGetAllocatableAsset() {
+	keeper := suite.app.PoolIncentivesKeeper
+
+	// Params would be set as the stake coin with 20% ratio from the default genesis state.
+
+	// At this time, the fee collector doesn't have any assets.
+	// So, it should be return the empty coins.
+	coin := keeper.GetAllocatableAsset(suite.ctx)
+	suite.Equal("0stake", coin.String())
+
+	// Mint the stake coin to the fee collector.
+	err := suite.app.BankKeeper.AddCoins(
+		suite.ctx,
+		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
+		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000))),
+	)
+	suite.NoError(err)
+
+	// In this time, should return the 20% of 100000stake
+	coin = keeper.GetAllocatableAsset(suite.ctx)
+	suite.Equal("20000stake", coin.String())
+
+	// Mint some random coins to the fee collector.
+	err = suite.app.BankKeeper.AddCoins(
+		suite.ctx,
+		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
+		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1481290)), sdk.NewCoin("test", sdk.NewInt(12389190))),
+	)
+	suite.NoError(err)
+
+	coin = keeper.GetAllocatableAsset(suite.ctx)
+	suite.Equal("316258stake", coin.String())
+}
+
 func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 	mintKeeper := suite.app.MintKeeper
 
@@ -19,7 +53,7 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 	)
 	suite.NoError(err)
 
-	// In this time, there is no distr record, so this asset should be allocated to the community pool.
+	// At this time, there is no distr record, so the asset should be allocated to the community pool.
 	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
 	err = mintKeeper.AddCollectedFees(suite.ctx, mintCoins) // this calls AllocateAsset via hook
@@ -211,7 +245,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 
 	poolId := suite.preparePool()
 
-	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
+	// LockableDurations should be 1, 3, 7 hours from the default genesis state for testing
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
@@ -229,7 +263,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
 	suite.Equal(sdk.NewInt(100), distrInfo.TotalWeight)
 
-	// add the duplicated pot id, because the prior one that register the pot id will block the second one.
+	// adding two of the same pot id at once should error
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
 		PotId:  potId,
 		Weight: sdk.NewInt(100),

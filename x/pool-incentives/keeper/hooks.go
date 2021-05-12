@@ -23,7 +23,7 @@ func (h Hooks) AfterPoolCreated(ctx sdk.Context, poolId uint64) {
 	}
 }
 
-// execute distribution after adding collected fees to fee pool
+// Distribute coins after minter module allocate assets to pool-incentives module
 func (h Hooks) AfterAddCollectedFees(ctx sdk.Context, fees sdk.Coins) {
 	// @Sunny, @Tony, @Dev, what comments should we keep after modifying own BeginBlocker to hooks?
 
