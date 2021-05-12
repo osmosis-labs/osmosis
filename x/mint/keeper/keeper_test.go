@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestGetPoolAllocatableAsset() {
 
 	// Params would be set as the stake coin with 20% ratio from the default genesis state.
 
-	// In this time, fee collector doesn't have any assets.
+	// At this time, the fee collector doesn't have any assets.
 	// So, it should be return the empty coins.
 	coin := mintKeeper.GetPoolAllocatableAsset(suite.ctx)
 	suite.Equal("0stake", coin.String())
