@@ -126,6 +126,7 @@ func (node *node) exists() bool {
 }
 
 func (node *node) updateAccumulation(c child) {
+	fmt.Printf("update on {%d %+v}\n", node.level, node.key)
 	if !node.exists() {
 		return // reached at the root
 	}
@@ -141,6 +142,7 @@ func (node *node) updateAccumulation(c child) {
 }
 
 func (node *node) push(c child) {
+	fmt.Printf("push on {%d %+x}\n", node.level, node.key)
 	if !node.exists() {
 		node.create(children{c})
 		return
@@ -148,6 +150,7 @@ func (node *node) push(c child) {
 
 	cs := node.children()
 	idx, match := cs.find(c.Index)
+	fmt.Printf("%d %v\n", idx, match)
 
 	// setting already existing child, move to updateAccumulation
 	if match {
@@ -157,13 +160,14 @@ func (node *node) push(c child) {
 
 	// inserting new child node
 	cs = cs.insert(idx, c)
-
+	parent := node.parent()
+	
 	// split and push-up if overflow
 	if len(cs) > int(node.tree.m) {
 		split := node.tree.m/2 + 1
-		parent := node.parent()
 		leftchildren, rightchildren := cs.split(int(split))
 		node.tree.nodeGet(node.level, rightchildren.key()).create(rightchildren)
+		fmt.Printf("split on %+v\n", rightchildren.key())
 		if !parent.exists() {
 			parent.create(children{
 				child{node.key, leftchildren.accumulate()},
@@ -175,9 +179,9 @@ func (node *node) push(c child) {
 		// constructing right childdd
 		parent.push(child{rightchildren.key(), rightchildren.accumulate()})
 		cs = leftchildren
-		parent.updateAccumulation(child{node.key, leftchildren.accumulate()})
 	}
 
+	parent.updateAccumulation(child{node.key, cs.accumulate()})
 	node.set(cs)
 }
 
@@ -248,12 +252,16 @@ func (children children) accumulate() (res uint64) {
 // if match is true, idx is the exact position for the key
 // if match is false, idx is the position where the key should be inserted
 func (children children) find(key []byte) (idx int, match bool) {
+	fmt.Printf("find %+v\n", key)
 	for idx, child := range children {
-		if bytes.Compare(child.Index, key) == 0 {
+		fmt.Printf("compare %d %+v\n", idx, child.Index)
+		if bytes.Equal(child.Index, key){
+			fmt.Printf("found\n")
 			return idx, true
 		}
 		// Push new key to the appropriate position
 		if bytes.Compare(child.Index, key) > 0 {
+			fmt.Printf("insertion required\n")
 			return idx, false
 		}
 	}
@@ -330,6 +338,7 @@ func (t Tree) Get(key []byte) (res uint64) {
 }
 
 func (node *node) create(children children) {
+	fmt.Printf("create {%d %+v}\n", node.level, node.key)
 	keybz := node.tree.nodeKey(node.level, node.key)
 	bz, err := json.Marshal(children)
 	if err != nil {
@@ -449,4 +458,23 @@ func (t Tree) SliceAcc(start []byte, end []byte) uint64 {
 	_, leftexact, leftrest := t.root().accSplit(start)
 	_, _, rightest := t.root().accSplit(end)
 	return leftexact + leftrest - rightest
+}
+
+func (node *node) visualize(depth int, acc uint64) {
+	if !node.exists() {
+		return
+	}
+	for i := 0; i < depth; i++ {
+		fmt.Printf(" ")
+	}
+	fmt.Printf("- ")
+	fmt.Printf("{%d %+v %d}\n", node.level, node.key, acc)
+	for i, child := range node.children() {
+		childnode := node.child(uint16(i))
+		childnode.visualize(depth+1, child.Acc)
+	}
+}
+
+func (t Tree) DebugVisualize() {
+	t.root().visualize(0, 0)
 }
