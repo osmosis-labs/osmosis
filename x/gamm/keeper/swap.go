@@ -21,7 +21,7 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	poolAcc, inPoolAsset, outPoolAsset, err :=
+	pool, inPoolAsset, outPoolAsset, err :=
 		k.getPoolAndInOutAssets(ctx, poolId, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
@@ -36,7 +36,7 @@ func (k Keeper) SwapExactAmountIn(
 		outPoolAsset.Token.Amount.ToDec(),
 		outPoolAsset.Weight.ToDec(),
 		tokenIn.Amount.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
+		pool.GetPoolParams().SwapFee,
 	).TruncateInt()
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -51,7 +51,7 @@ func (k Keeper) SwapExactAmountIn(
 
 	tokenOut := sdk.Coin{Denom: tokenOutDenom, Amount: tokenOutAmount}
 
-	err = k.updatePoolForSwap(ctx, poolAcc, sender, inPoolAsset, outPoolAsset, tokenIn, tokenOut)
+	err = k.updatePoolForSwap(ctx, pool, sender, inPoolAsset, outPoolAsset, tokenIn, tokenOut)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -71,7 +71,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	poolAcc, inPoolAsset, outPoolAsset, err :=
+	pool, inPoolAsset, outPoolAsset, err :=
 		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
@@ -83,7 +83,7 @@ func (k Keeper) SwapExactAmountOut(
 		outPoolAsset.Token.Amount.ToDec(),
 		outPoolAsset.Weight.ToDec(),
 		tokenOut.Amount.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
+		pool.GetPoolParams().SwapFee,
 	).TruncateInt()
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -98,7 +98,7 @@ func (k Keeper) SwapExactAmountOut(
 
 	tokenIn := sdk.Coin{Denom: tokenInDenom, Amount: tokenInAmount}
 
-	err = k.updatePoolForSwap(ctx, poolAcc, sender, inPoolAsset, outPoolAsset, tokenIn, tokenOut)
+	err = k.updatePoolForSwap(ctx, pool, sender, inPoolAsset, outPoolAsset, tokenIn, tokenOut)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -110,46 +110,46 @@ func (k Keeper) SwapExactAmountOut(
 // sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
-	poolAcc types.PoolAccountI,
+	pool types.PoolI,
 	sender sdk.AccAddress,
 	updatedPoolAssetIn types.PoolAsset,
 	updatedPoolAssetOut types.PoolAsset,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,
 ) error {
-	err := poolAcc.UpdatePoolAssetBalances(sdk.NewCoins(
+	err := pool.UpdatePoolAssetBalances(sdk.NewCoins(
 		updatedPoolAssetIn.Token,
 		updatedPoolAssetOut.Token,
 	))
 	if err != nil {
 		return err
 	}
-	err = k.SetPool(ctx, poolAcc)
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return err
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, sender, poolAcc.GetAddress(), sdk.Coins{
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
 		tokenIn,
 	})
 	if err != nil {
 		return err
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, poolAcc.GetAddress(), sender, sdk.Coins{
+	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
 		tokenOut,
 	})
 	if err != nil {
 		return err
 	}
 
-	k.hooks.AfterSwap(ctx, sender, poolAcc.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
+	k.hooks.AfterSwap(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 
 	return err
 }
 
 func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
-	poolAcc, inPoolAsset, outPoolAsset, err :=
+	pool, inPoolAsset, outPoolAsset, err :=
 		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -160,7 +160,7 @@ func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom,
 		inPoolAsset.Weight.ToDec(),
 		outPoolAsset.Token.Amount.ToDec(),
 		outPoolAsset.Weight.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
+		pool.GetPoolParams().SwapFee,
 	), nil
 }
 
