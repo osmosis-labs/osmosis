@@ -126,7 +126,7 @@ func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 	newWeights := make([]PoolAsset, len(base))
 	for i, asset := range base {
-		// TODO: This can adversarially panic at the moment! (as can PoolAccount.TotalWeight)
+		// TODO: This can adversarially panic at the moment! (as can Pool.TotalWeight)
 		// Ensure this won't be able to panic in the future PR where we bound
 		// each assets weight, and add precision
 		newWeight := d.MulInt(asset.Weight).RoundInt()

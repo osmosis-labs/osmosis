@@ -25,9 +25,9 @@ var ymlAssetTest = []PoolAsset{
 	},
 }
 
-func TestPoolAccountMarshalYAML(t *testing.T) {
+func TestPoolMarshalYAML(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pacc, err := NewPoolAccount(defaultPoolId, PoolParams{
+	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, ymlAssetTest, defaultFutureGovernor, defaultCurBlockTime)
@@ -37,10 +37,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := `|
-  address: osmo1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrlsa3tz
-  public_key: ""
-  account_number: 0
-  sequence: 0
+  address: osmo1krp38zzc3zz5as9ndqkyskhkzv6x9e30ckcq5g4lcsu5wpwcqy0sa3dea2
   id: 10
   pool_params:
     swap_fee: "0.025000000000000000"
@@ -66,7 +63,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	require.Equal(t, want, string(bs))
 }
 
-func TestLBPPoolAccountMarshalYAML(t *testing.T) {
+func TestLBPPoolMarshalYAML(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	lbpParams := SmoothWeightChangeParams{
 		Duration: time.Hour,
@@ -81,7 +78,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
 			},
 		},
 	}
-	pacc, err := NewPoolAccount(defaultPoolId, PoolParams{
+	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee:                  defaultSwapFee,
 		ExitFee:                  defaultExitFee,
 		SmoothWeightChangeParams: &lbpParams,
@@ -96,10 +93,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := fmt.Sprintf(`|
-  address: osmo1m48tfmd0e6yqgfhraxl9ddt7lygpsnsrlsa3tz
-  public_key: ""
-  account_number: 0
-  sequence: 0
+  address: osmo1krp38zzc3zz5as9ndqkyskhkzv6x9e30ckcq5g4lcsu5wpwcqy0sa3dea2
   id: 10
   pool_params:
     swap_fee: "0.025000000000000000"
@@ -149,7 +143,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
 	require.Equal(t, want, string(bs))
 }
 
-func TestPoolAccountJson(t *testing.T) {
+func TestPoolJson(t *testing.T) {
 	var poolId uint64 = 10
 
 	jsonAssetTest := []PoolAsset{
@@ -162,13 +156,13 @@ func TestPoolAccountJson(t *testing.T) {
 			Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
 		},
 	}
-	pacc, err := NewPoolAccount(poolId, PoolParams{
+	pacc, err := NewPool(poolId, PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, jsonAssetTest, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
-	paccInternal := pacc.(*PoolAccount)
+	paccInternal := pacc.(*Pool)
 
 	bz, err := json.Marshal(pacc)
 	require.NoError(t, err)
@@ -177,7 +171,7 @@ func TestPoolAccountJson(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(bz1), string(bz))
 
-	var a PoolAccount
+	var a Pool
 	require.NoError(t, json.Unmarshal(bz, &a))
 	require.Equal(t, pacc.String(), a.String())
 }
