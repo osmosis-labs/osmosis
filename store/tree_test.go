@@ -76,10 +76,11 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 
 	// underlying memdb is not working properly when deleting on large volume,
 	// check if it is a problem from memdb side by running on iavl
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
+		fmt.Printf("iter %d\n", i)
 		// add a single element
 		key := make([]byte, rand.Int()%20)
-		value := rand.Uint64()
+		value := rand.Uint64()%100
 		rand.Read(key)
 		idx := sort.Search(len(pairs), func(n int) bool { return bytes.Compare(pairs[n].key, key) >= 0 })
 		if idx < len(pairs) {
@@ -105,11 +106,16 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 
 		// check accumulation calc is alright
 		left, exact, right := uint64(0), pairs[0].value, pairs[1:].sum()
+		for _, pair := range pairs {
+			fmt.Printf("{%+v %d}\n", pair.key, pair.value)
+		}
+		suite.tree.DebugVisualize()
 		for idx, pair := range pairs {
 			fmt.Printf("acctest %+v\n", pair.key)
 			tleft, texact, tright := suite.tree.SplitAcc(pair.key)
 			suite.Require().Equal(left, tleft)
 			suite.Require().Equal(exact, texact)
+			fmt.Printf("%d %d\n", right, tright)
 			suite.Require().Equal(right, tright)
 
 			key := append(pair.key, 0x00)
