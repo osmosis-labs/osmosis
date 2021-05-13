@@ -48,7 +48,8 @@ var (
 )
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
-	return address.Module(ModuleName, sdk.Uint64ToBigEndian(poolId))
+	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
+	return address.Module(ModuleName, key)
 }
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
@@ -149,7 +150,7 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 func (pa Pool) GetAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(pa.Address)
 	if err != nil {
-		return sdk.AccAddress{}
+		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", pa.GetId()))
 	}
 	return addr
 }

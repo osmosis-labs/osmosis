@@ -114,7 +114,7 @@ message Pool {
   option (gogoproto.goproto_stringer) = false;
   option (cosmos_proto.implements_interface) = "PoolI";
 
-  string address = 1 [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 id = 2;
   PoolParams poolParams = 3 [
     (gogoproto.moretags) = "yaml:\"pool_params\"",

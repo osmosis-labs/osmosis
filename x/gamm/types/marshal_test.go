@@ -37,7 +37,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := `|
-  address: osmo13lddzca3scucl7928ex4kzw7sjtsr9w3p7vrdaey8wywsvc4vdpq9y5ymm
+  address: osmo1krp38zzc3zz5as9ndqkyskhkzv6x9e30ckcq5g4lcsu5wpwcqy0sa3dea2
   id: 10
   pool_params:
     swap_fee: "0.025000000000000000"
@@ -93,7 +93,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := fmt.Sprintf(`|
-  address: osmo13lddzca3scucl7928ex4kzw7sjtsr9w3p7vrdaey8wywsvc4vdpq9y5ymm
+  address: osmo1krp38zzc3zz5as9ndqkyskhkzv6x9e30ckcq5g4lcsu5wpwcqy0sa3dea2
   id: 10
   pool_params:
     swap_fee: "0.025000000000000000"
