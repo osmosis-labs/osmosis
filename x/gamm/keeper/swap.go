@@ -148,7 +148,7 @@ func (k Keeper) updatePoolForSwap(
 	return err
 }
 
-func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
+func (k Keeper) CalculateSpotPriceWithSwapFee(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
 	poolAcc, inPoolAsset, outPoolAsset, err :=
 		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
 	if err != nil {
@@ -164,7 +164,7 @@ func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom,
 	), nil
 }
 
-func (k Keeper) CalculateSpotPriceSansSwapFee(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
+func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
 	_, inPoolAsset, outPoolAsset, err :=
 		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
 	if err != nil {
