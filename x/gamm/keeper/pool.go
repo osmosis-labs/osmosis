@@ -42,12 +42,6 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 }
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
-	// Make sure that pool exists
-	// _, err := k.GetPool(ctx, pool.GetId())
-	// if err != nil {
-	// 	return err
-	// }
-
 	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err
@@ -97,7 +91,7 @@ func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.KeyGlobalPoolNumber)
+	bz := store.Get(types.KeyNextGlobalPoolNumber)
 	if bz == nil {
 		// initialize the account numbers
 		poolNumber = 1
@@ -113,7 +107,7 @@ func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
 	}
 
 	bz = k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: poolNumber + 1})
-	store.Set(types.KeyGlobalPoolNumber, bz)
+	store.Set(types.KeyNextGlobalPoolNumber, bz)
 
 	return poolNumber
 }
