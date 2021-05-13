@@ -25,7 +25,7 @@ var ymlAssetTest = []PoolAsset{
 	},
 }
 
-func TestPoolAccountMarshalYAML(t *testing.T) {
+func TestPoolMarshalYAML(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee: defaultSwapFee,
@@ -63,7 +63,7 @@ func TestPoolAccountMarshalYAML(t *testing.T) {
 	require.Equal(t, want, string(bs))
 }
 
-func TestLBPPoolAccountMarshalYAML(t *testing.T) {
+func TestLBPPoolMarshalYAML(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	lbpParams := SmoothWeightChangeParams{
 		Duration: time.Hour,
@@ -143,7 +143,7 @@ func TestLBPPoolAccountMarshalYAML(t *testing.T) {
 	require.Equal(t, want, string(bs))
 }
 
-func TestPoolAccountJson(t *testing.T) {
+func TestPoolJson(t *testing.T) {
 	var poolId uint64 = 10
 
 	jsonAssetTest := []PoolAsset{

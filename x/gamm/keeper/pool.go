@@ -93,7 +93,7 @@ func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
 
 	bz := store.Get(types.KeyNextGlobalPoolNumber)
 	if bz == nil {
-		// initialize the account numbers
+		// initialize the pool id numbers
 		poolNumber = 1
 	} else {
 		val := gogotypes.UInt64Value{}

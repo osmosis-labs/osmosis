@@ -34,7 +34,7 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolI) {
 		pool.GetTotalWeight().String())
 }
 
-func TestPoolAccountShareDenom(t *testing.T) {
+func TestPoolShareDenom(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc, err := NewPool(poolId, defaultPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
@@ -43,10 +43,10 @@ func TestPoolAccountShareDenom(t *testing.T) {
 	require.Equal(t, "gamm/pool/10", pacc.GetTotalShare().Denom)
 }
 
-func TestPoolAccountPoolParams(t *testing.T) {
+func TestPoolPoolParams(t *testing.T) {
 	// Tests that creating a pool with the given pair of swapfee and exit fee
 	// errors or succeeds as intended. Furthermore, it checks that
-	// NewPoolAccount panics in the error case.
+	// NewPool panics in the error case.
 	tests := []struct {
 		SwapFee   sdk.Dec
 		ExitFee   sdk.Dec
@@ -86,7 +86,7 @@ func TestPoolAccountPoolParams(t *testing.T) {
 }
 
 // TODO: Refactor this into multiple tests
-func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
+func TestPoolUpdatePoolAssetBalance(t *testing.T) {
 	var poolId uint64 = 10
 
 	initialAssets := []PoolAsset{
@@ -148,7 +148,7 @@ func TestPoolAccountUpdatePoolAssetBalance(t *testing.T) {
 	require.Equal(t, sdk.NewInt(1).String(), PoolAsset.Token.Amount.String())
 }
 
-func TestPoolAccountPoolAssetsWeightAndTokenBalance(t *testing.T) {
+func TestPoolPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	// TODO: Add more cases
 	// asset names should be i ascending order, starting from test1
 	tests := []struct {
@@ -276,7 +276,7 @@ func TestGetPoolAssets(t *testing.T) {
 	// Adds []PoolAssets, one after another
 	// if the addition doesn't error, adds the weight of the pool assets to a running total,
 	// and ensures the pool's total weight is equal to the expected.
-	// This also ensures that the pool assets remain sorted within the pool account.
+	// This also ensures that the pool assets remain sorted within the pool.
 	// Furthermore, it ensures that GetPoolAsset succeeds for everything in the pool,
 	// and fails for things not in it.
 	denomNotInPool := "xyzCoin"
@@ -365,7 +365,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 	require.Equal(t, pacc.GetPoolParams().SmoothWeightChangeParams.StartTime, defaultCurBlockTime)
 }
 
-func TestPoolAccountPokeTokenWeights(t *testing.T) {
+func TestPoolPokeTokenWeights(t *testing.T) {
 	// Set default date
 	defaultStartTime := time.Unix(1618703511, 0)
 	defaultStartTimeUnix := defaultStartTime.Unix()

@@ -61,7 +61,7 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 func NewPool(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (PoolI, error) {
 	poolAddr := NewPoolAddress(poolId)
 
-	// pool account thats created up to ensuring the assets and params are valid.
+	// pool thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
 	pool := &Pool{
 		Address:            poolAddr.String(),

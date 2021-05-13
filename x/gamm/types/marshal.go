@@ -38,7 +38,7 @@ func (pa PoolAsset) MarshalYAML() (interface{}, error) {
 	return s, nil
 }
 
-type poolAccountPretty struct {
+type poolPretty struct {
 	Address            sdk.AccAddress `json:"address" yaml:"address"`
 	Id                 uint64         `json:"id" yaml:"id"`
 	PoolParams         PoolParams     `json:"pool_params" yaml:"pool_params"`
@@ -53,7 +53,7 @@ func (pa Pool) String() string {
 	return out.(string)
 }
 
-// MarshalYAML returns the YAML representation of a PoolAccount.
+// MarshalYAML returns the YAML representation of a Pool.
 func (pa Pool) MarshalYAML() (interface{}, error) {
 	accAddr, err := sdk.AccAddressFromBech32(pa.Address)
 	if err != nil {
@@ -62,7 +62,7 @@ func (pa Pool) MarshalYAML() (interface{}, error) {
 
 	decTotalWeight := sdk.NewDecFromInt(pa.TotalWeight).QuoInt64(GuaranteedWeightPrecision)
 
-	bz, err := yaml.Marshal(poolAccountPretty{
+	bz, err := yaml.Marshal(poolPretty{
 		Address:            accAddr,
 		Id:                 pa.Id,
 		PoolParams:         pa.PoolParams,
@@ -79,7 +79,7 @@ func (pa Pool) MarshalYAML() (interface{}, error) {
 	return string(bz), nil
 }
 
-// MarshalJSON returns the JSON representation of a PoolAccount.
+// MarshalJSON returns the JSON representation of a Pool.
 func (pa Pool) MarshalJSON() ([]byte, error) {
 	accAddr, err := sdk.AccAddressFromBech32(pa.Address)
 	if err != nil {
@@ -88,7 +88,7 @@ func (pa Pool) MarshalJSON() ([]byte, error) {
 
 	decTotalWeight := sdk.NewDecFromInt(pa.TotalWeight)
 
-	return json.Marshal(poolAccountPretty{
+	return json.Marshal(poolPretty{
 		Address:            accAddr,
 		Id:                 pa.Id,
 		PoolParams:         pa.PoolParams,
@@ -99,9 +99,9 @@ func (pa Pool) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// UnmarshalJSON unmarshals raw JSON bytes into a PoolAccount.
+// UnmarshalJSON unmarshals raw JSON bytes into a Pool.
 func (pa *Pool) UnmarshalJSON(bz []byte) error {
-	var alias poolAccountPretty
+	var alias poolPretty
 	if err := json.Unmarshal(bz, &alias); err != nil {
 		return err
 	}

@@ -28,12 +28,12 @@ func (k Keeper) CreatePool(
 		)
 	}
 
-	poolAcc, err := k.newPool(ctx, poolParams, poolAssets, futurePoolGovernor)
+	pool, err := k.newPool(ctx, poolParams, poolAssets, futurePoolGovernor)
 	if err != nil {
 		return 0, err
 	}
 
-	// Transfer the PoolAssets tokens to the pool account from the user account.
+	// Transfer the PoolAssets tokens to the pool's module account from the user account.
 	var coins sdk.Coins
 	for _, asset := range poolAssets {
 		coins = append(coins, asset.Token)
@@ -43,23 +43,23 @@ func (k Keeper) CreatePool(
 	}
 
 	coins = coins.Sort()
-	err = k.bankKeeper.SendCoins(ctx, sender, poolAcc.GetAddress(), coins)
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), coins)
 	if err != nil {
 		return 0, err
 	}
 
 	// Mint the initial 100.000000 share token to the sender
 	initialShareSupply := sdk.NewIntWithDecimal(100, 6)
-	err = k.MintPoolShareToAccount(ctx, poolAcc, sender, initialShareSupply)
+	err = k.MintPoolShareToAccount(ctx, pool, sender, initialShareSupply)
 	if err != nil {
 		return 0, err
 	}
 
 	// Finally, add the share token's meta data to the bank keeper.
-	poolShareBaseDenom := types.GetPoolShareDenom(poolAcc.GetId())
-	poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", poolAcc.GetId())
+	poolShareBaseDenom := types.GetPoolShareDenom(pool.GetId())
+	poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", pool.GetId())
 	k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
-		Description: fmt.Sprintf("The share token of the gamm pool %d", poolAcc.GetId()),
+		Description: fmt.Sprintf("The share token of the gamm pool %d", pool.GetId()),
 		DenomUnits: []*banktypes.DenomUnit{
 			{
 				Denom:    poolShareBaseDenom,
@@ -78,14 +78,14 @@ func (k Keeper) CreatePool(
 		Display: poolShareDisplayDenom,
 	})
 
-	err = k.SetPool(ctx, poolAcc)
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return 0, err
 	}
 
-	k.hooks.AfterPoolCreated(ctx, sender, poolAcc.GetId())
+	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
 
-	return poolAcc.GetId(), nil
+	return pool.GetId(), nil
 }
 
 func (k Keeper) JoinPool(
@@ -95,12 +95,12 @@ func (k Keeper) JoinPool(
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
 ) (err error) {
-	poolAcc, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	totalShareAmount := poolAcc.GetTotalShare().Amount
+	totalShareAmount := pool.GetTotalShare().Amount
 	shareRatio := shareOutAmount.ToDec().QuoInt(totalShareAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
@@ -112,9 +112,9 @@ func (k Keeper) JoinPool(
 		tokenInMaxMap[max.Denom] = max.Amount
 	}
 
-	PoolAssets := poolAcc.GetAllPoolAssets()
+	PoolAssets := pool.GetAllPoolAssets()
 	newPoolCoins := make([]sdk.Coin, 0, len(PoolAssets))
-	// Transfer the PoolAssets tokens to the pool account from the user account.
+	// Transfer the PoolAssets tokens to the pool's module account from the user account.
 	var coins sdk.Coins
 	for _, PoolAsset := range PoolAssets {
 		tokenInAmount := shareRatio.MulInt(PoolAsset.Token.Amount).TruncateInt()
@@ -131,27 +131,27 @@ func (k Keeper) JoinPool(
 		coins = append(coins, sdk.NewCoin(PoolAsset.Token.Denom, tokenInAmount))
 	}
 
-	err = poolAcc.UpdatePoolAssetBalances(newPoolCoins)
+	err = pool.UpdatePoolAssetBalances(newPoolCoins)
 	if err != nil {
 		return err
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, sender, poolAcc.GetAddress(), coins)
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), coins)
 	if err != nil {
 		return err
 	}
 
-	err = k.MintPoolShareToAccount(ctx, poolAcc, sender, shareOutAmount)
+	err = k.MintPoolShareToAccount(ctx, pool, sender, shareOutAmount)
 	if err != nil {
 		return err
 	}
 
-	err = k.SetPool(ctx, poolAcc)
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return err
 	}
 
-	k.hooks.AfterJoinPool(ctx, sender, poolAcc.GetId(), coins, shareOutAmount)
+	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), coins, shareOutAmount)
 
 	return nil
 }
@@ -163,12 +163,12 @@ func (k Keeper) JoinSwapExternAmountIn(
 	tokenIn sdk.Coin,
 	shareOutMinAmount sdk.Int,
 ) (shareOutAmount sdk.Int, err error) {
-	poolAcc, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	PoolAsset, err := poolAcc.GetPoolAsset(tokenIn.Denom)
+	PoolAsset, err := pool.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -176,10 +176,10 @@ func (k Keeper) JoinSwapExternAmountIn(
 	shareOutAmount = calcPoolOutGivenSingleIn(
 		PoolAsset.Token.Amount.ToDec(),
 		PoolAsset.Weight.ToDec(),
-		poolAcc.GetTotalShare().Amount.ToDec(),
-		poolAcc.GetTotalWeight().ToDec(),
+		pool.GetTotalShare().Amount.ToDec(),
+		pool.GetTotalWeight().ToDec(),
 		tokenIn.Amount.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
+		pool.GetPoolParams().SwapFee,
 	).TruncateInt()
 
 	if shareOutAmount.LTE(sdk.ZeroInt()) {
@@ -191,27 +191,27 @@ func (k Keeper) JoinSwapExternAmountIn(
 	}
 
 	updatedTokenAmount := PoolAsset.Token.Add(tokenIn)
-	err = poolAcc.UpdatePoolAssetBalance(updatedTokenAmount)
+	err = pool.UpdatePoolAssetBalance(updatedTokenAmount)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, sender, poolAcc.GetAddress(), sdk.Coins{tokenIn})
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{tokenIn})
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.MintPoolShareToAccount(ctx, poolAcc, sender, shareOutAmount)
+	err = k.MintPoolShareToAccount(ctx, pool, sender, shareOutAmount)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.SetPool(ctx, poolAcc)
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	k.hooks.AfterJoinPool(ctx, sender, poolAcc.GetId(), sdk.Coins{tokenIn}, shareOutAmount)
+	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, shareOutAmount)
 
 	return shareOutAmount, nil
 }
@@ -224,12 +224,12 @@ func (k Keeper) JoinSwapShareAmountOut(
 	shareOutAmount sdk.Int,
 	tokenInMaxAmount sdk.Int,
 ) (tokenInAmount sdk.Int, err error) {
-	poolAcc, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	PoolAsset, err := poolAcc.GetPoolAsset(tokenInDenom)
+	PoolAsset, err := pool.GetPoolAsset(tokenInDenom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -237,10 +237,10 @@ func (k Keeper) JoinSwapShareAmountOut(
 	tokenInAmount = calcSingleInGivenPoolOut(
 		PoolAsset.Token.Amount.ToDec(),
 		PoolAsset.Weight.ToDec(),
-		poolAcc.GetTotalShare().Amount.ToDec(),
-		poolAcc.GetTotalWeight().ToDec(),
+		pool.GetTotalShare().Amount.ToDec(),
+		pool.GetTotalWeight().ToDec(),
 		shareOutAmount.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
+		pool.GetPoolParams().SwapFee,
 	).TruncateInt()
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
@@ -252,27 +252,27 @@ func (k Keeper) JoinSwapShareAmountOut(
 	}
 
 	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Add(tokenInAmount)
-	err = poolAcc.UpdatePoolAssetBalance(PoolAsset.Token)
+	err = pool.UpdatePoolAssetBalance(PoolAsset.Token)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, sender, poolAcc.GetAddress(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)})
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)})
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.MintPoolShareToAccount(ctx, poolAcc, sender, shareOutAmount)
+	err = k.MintPoolShareToAccount(ctx, pool, sender, shareOutAmount)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.SetPool(ctx, poolAcc)
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	k.hooks.AfterJoinPool(ctx, sender, poolAcc.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, shareOutAmount)
+	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, shareOutAmount)
 
 	return shareOutAmount, nil
 }
@@ -284,13 +284,13 @@ func (k Keeper) ExitPool(
 	shareInAmount sdk.Int,
 	tokenOutMins sdk.Coins,
 ) (err error) {
-	poolAcc, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	totalShareAmount := poolAcc.GetTotalShare().Amount
-	exitFee := poolAcc.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	totalShareAmount := pool.GetTotalShare().Amount
+	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 	shareRatio := shareInAmountAfterExitFee.ToDec().QuoInt(totalShareAmount)
 
@@ -304,9 +304,9 @@ func (k Keeper) ExitPool(
 		tokenOutMinMap[min.Denom] = min.Amount
 	}
 
-	PoolAssets := poolAcc.GetAllPoolAssets()
+	PoolAssets := pool.GetAllPoolAssets()
 	newPoolCoins := make([]sdk.Coin, 0, len(PoolAssets))
-	// Transfer the PoolAssets tokens to the user account from the pool account.
+	// Transfer the PoolAssets tokens to the user account from the pool's module account.
 	var coins sdk.Coins
 	for _, PoolAsset := range PoolAssets {
 		tokenOutAmount := shareRatio.MulInt(PoolAsset.Token.Amount).TruncateInt()
@@ -323,39 +323,39 @@ func (k Keeper) ExitPool(
 		coins = append(coins, sdk.NewCoin(PoolAsset.Token.Denom, tokenOutAmount))
 	}
 
-	err = poolAcc.UpdatePoolAssetBalances(newPoolCoins)
+	err = pool.UpdatePoolAssetBalances(newPoolCoins)
 	if err != nil {
 		return err
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, poolAcc.GetAddress(), sender, coins)
+	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, coins)
 	if err != nil {
 		return err
 	}
 
 	// TODO: `balancer` contract sends the exit fee to the `factory` contract.
 	//       But, it is unclear that how the exit fees in the `factory` contract are handled.
-	//       And, it seems to be not good way to send the exit fee to the pool account,
-	//       because the pool account doesn't have the PoolAsset about exit fee.
+	//       And, it seems to be not good way to send the exit fee to the pool,
+	//       because the pool doesn't have the PoolAsset about exit fee.
 	//       So, temporarily, just burn the exit fee.
 	if exitFee.IsPositive() {
-		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
+		err = k.BurnPoolShareFromAccount(ctx, pool, sender, exitFee)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, shareInAmountAfterExitFee)
+	err = k.BurnPoolShareFromAccount(ctx, pool, sender, shareInAmountAfterExitFee)
 	if err != nil {
 		return err
 	}
 
-	err = k.SetPool(ctx, poolAcc)
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return err
 	}
 
-	k.hooks.AfterExitPool(ctx, sender, poolAcc.GetId(), shareInAmount, coins)
+	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, coins)
 
 	return nil
 }
@@ -368,12 +368,12 @@ func (k Keeper) ExitSwapShareAmountIn(
 	shareInAmount sdk.Int,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
-	poolAcc, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	PoolAsset, err := poolAcc.GetPoolAsset(tokenOutDenom)
+	PoolAsset, err := pool.GetPoolAsset(tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -381,10 +381,10 @@ func (k Keeper) ExitSwapShareAmountIn(
 	tokenOutAmount = calcSingleOutGivenPoolIn(
 		PoolAsset.Token.Amount.ToDec(),
 		PoolAsset.Weight.ToDec(),
-		poolAcc.GetTotalShare().Amount.ToDec(),
-		poolAcc.GetTotalWeight().ToDec(),
+		pool.GetTotalShare().Amount.ToDec(),
+		pool.GetTotalWeight().ToDec(),
 		shareInAmount.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
+		pool.GetPoolParams().SwapFee,
 	).TruncateInt()
 
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
@@ -396,15 +396,15 @@ func (k Keeper) ExitSwapShareAmountIn(
 	}
 
 	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Sub(tokenOutAmount)
-	err = poolAcc.UpdatePoolAssetBalance(PoolAsset.Token)
+	err = pool.UpdatePoolAssetBalance(PoolAsset.Token)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	exitFee := poolAcc.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 
-	err = k.bankKeeper.SendCoins(ctx, poolAcc.GetAddress(), sender, sdk.Coins{
+	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
 		sdk.NewCoin(tokenOutDenom, tokenOutAmount),
 	})
 	if err != nil {
@@ -413,27 +413,27 @@ func (k Keeper) ExitSwapShareAmountIn(
 
 	// TODO: `balancer` contract sends the exit fee to the `factory` contract.
 	//       But, it is unclear that how the exit fees in the `factory` contract are handled.
-	//       And, it seems to be not good way to send the exit fee to the pool account,
-	//       because the pool account doesn't have the PoolAsset about exit fee.
+	//       And, it seems to be not good way to send the exit fee to the pool,
+	//       because the pool doesn't have the PoolAsset about exit fee.
 	//       So, temporarily, just burn the exit fee.
 	if exitFee.IsPositive() {
-		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
+		err = k.BurnPoolShareFromAccount(ctx, pool, sender, exitFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
 	}
 
-	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, shareInAmountAfterExitFee)
+	err = k.BurnPoolShareFromAccount(ctx, pool, sender, shareInAmountAfterExitFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.SetPool(ctx, poolAcc)
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	k.hooks.AfterExitPool(ctx, sender, poolAcc.GetId(), shareInAmount, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
+	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
 
 	return tokenOutAmount, nil
 }
@@ -445,12 +445,12 @@ func (k Keeper) ExitSwapExternAmountOut(
 	tokenOut sdk.Coin,
 	shareInMaxAmount sdk.Int,
 ) (shareInAmount sdk.Int, err error) {
-	poolAcc, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	PoolAsset, err := poolAcc.GetPoolAsset(tokenOut.Denom)
+	PoolAsset, err := pool.GetPoolAsset(tokenOut.Denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -458,10 +458,10 @@ func (k Keeper) ExitSwapExternAmountOut(
 	shareInAmount = calcPoolInGivenSingleOut(
 		PoolAsset.Token.Amount.ToDec(),
 		PoolAsset.Weight.ToDec(),
-		poolAcc.GetTotalShare().Amount.ToDec(),
-		poolAcc.GetTotalWeight().ToDec(),
+		pool.GetTotalShare().Amount.ToDec(),
+		pool.GetTotalWeight().ToDec(),
 		tokenOut.Amount.ToDec(),
-		poolAcc.GetPoolParams().SwapFee,
+		pool.GetPoolParams().SwapFee,
 	).TruncateInt()
 
 	if shareInAmount.LTE(sdk.ZeroInt()) {
@@ -473,15 +473,15 @@ func (k Keeper) ExitSwapExternAmountOut(
 	}
 
 	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Sub(tokenOut.Amount)
-	err = poolAcc.UpdatePoolAssetBalance(PoolAsset.Token)
+	err = pool.UpdatePoolAssetBalance(PoolAsset.Token)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	exitFee := poolAcc.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 
-	err = k.bankKeeper.SendCoins(ctx, poolAcc.GetAddress(), sender, sdk.Coins{
+	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
 		tokenOut,
 	})
 	if err != nil {
@@ -490,27 +490,27 @@ func (k Keeper) ExitSwapExternAmountOut(
 
 	// TODO: `balancer` contract sends the exit fee to the `factory` contract.
 	//       But, it is unclear that how the exit fees in the `factory` contract are handled.
-	//       And, it seems to be not good way to send the exit fee to the pool account,
-	//       because the pool account doesn't have the PoolAsset about exit fee.
+	//       And, it seems to be not good way to send the exit fee to the pool,
+	//       because the pool doesn't have the PoolAsset about exit fee.
 	//       So, temporarily, just burn the exit fee.
 	if exitFee.IsPositive() {
-		err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, exitFee)
+		err = k.BurnPoolShareFromAccount(ctx, pool, sender, exitFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
 	}
 
-	err = k.BurnPoolShareFromAccount(ctx, poolAcc, sender, shareInAmountAfterExitFee)
+	err = k.BurnPoolShareFromAccount(ctx, pool, sender, shareInAmountAfterExitFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.SetPool(ctx, poolAcc)
+	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	k.hooks.AfterExitPool(ctx, sender, poolAcc.GetId(), shareInAmount, sdk.Coins{tokenOut})
+	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, sdk.Coins{tokenOut})
 
 	return shareInAmount, nil
 }

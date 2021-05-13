@@ -25,15 +25,15 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 
 	for i := 0; i < 10; i++ {
 		poolId := suite.preparePool()
-		pool, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
-		var poolAcc types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(pool.Pool, &poolAcc)
+		var pool types.PoolI
+		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(poolId, poolAcc.GetId())
-		suite.Require().Equal(types.NewPoolAddress(poolId).String(), poolAcc.GetAddress().String())
+		suite.Require().Equal(poolId, pool.GetId())
+		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
 	}
 }
 
@@ -42,15 +42,15 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 
 	for i := 0; i < 10; i++ {
 		poolId := suite.preparePool()
-		pool, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
-		var poolAcc types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(pool.Pool, &poolAcc)
+		var pool types.PoolI
+		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(poolId, poolAcc.GetId())
-		suite.Require().Equal(types.NewPoolAddress(poolId).String(), poolAcc.GetAddress().String())
+		suite.Require().Equal(poolId, pool.GetId())
+		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
 	}
 
 	res, err := queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
@@ -63,11 +63,11 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, len(res.Pools))
 	for _, r := range res.Pools {
-		var poolAcc types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(r, &poolAcc)
+		var pool types.PoolI
+		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), poolAcc.GetAddress().String())
-		suite.Require().Equal(uint64(1), poolAcc.GetId())
+		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(uint64(1), pool.GetId())
 	}
 
 	res, err = queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
@@ -80,11 +80,11 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(5, len(res.Pools))
 	for i, r := range res.Pools {
-		var poolAcc types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(r, &poolAcc)
+		var pool types.PoolI
+		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), poolAcc.GetAddress().String())
-		suite.Require().Equal(uint64(i+1), poolAcc.GetId())
+		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(uint64(i+1), pool.GetId())
 	}
 }
 
@@ -147,11 +147,11 @@ func (suite *KeeperTestSuite) TestQueryTotalShare() {
 	suite.Require().Equal(sdk.NewIntWithDecimal(100, 6).String(), res.TotalShare.Amount.String())
 
 	// Mint more share token.
-	poolAcc, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
 	suite.Require().NoError(err)
-	err = suite.app.GAMMKeeper.MintPoolShareToAccount(suite.ctx, poolAcc, acc1, sdk.NewIntWithDecimal(10, 6))
+	err = suite.app.GAMMKeeper.MintPoolShareToAccount(suite.ctx, pool, acc1, sdk.NewIntWithDecimal(10, 6))
 	suite.Require().NoError(err)
-	suite.Require().NoError(suite.app.GAMMKeeper.SetPool(suite.ctx, poolAcc))
+	suite.Require().NoError(suite.app.GAMMKeeper.SetPool(suite.ctx, pool))
 
 	res, err = queryClient.TotalShare(gocontext.Background(), &types.QueryTotalShareRequest{PoolId: poolId})
 	suite.Require().NoError(err)

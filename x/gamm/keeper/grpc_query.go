@@ -56,7 +56,7 @@ func (k Keeper) Pool(
 		}
 		return &types.QueryPoolResponse{Pool: any}, nil
 	default:
-		return nil, status.Error(codes.Internal, "invalid type of pool account")
+		return nil, status.Error(codes.Internal, "invalid type of pool")
 	}
 }
 
@@ -87,7 +87,7 @@ func (k Keeper) Pools(
 
 		pool, ok := poolI.(*types.Pool)
 		if !ok {
-			return fmt.Errorf("pool (%d) is not basic pool account", pool.GetId())
+			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
 		}
 
 		any, err := codectypes.NewAnyWithValue(pool)
