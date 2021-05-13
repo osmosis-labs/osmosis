@@ -80,8 +80,7 @@ message UpcomingPotsResponse {
 }
 
 message RewardsEstRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   repeated lockup.PeriodLock locks = 2 [ (gogoproto.nullable) = false ];
   repeated Pot pots = 3 [ (gogoproto.nullable) = false ];
   int64 end_epoch = 4;

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 	"time"
+
 	"github.com/c-osmosis/osmosis/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"

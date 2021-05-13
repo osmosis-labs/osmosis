@@ -73,8 +73,8 @@ Example:
 				return err
 			}
 
-			balances := []banktypes.Balance{}
-			feeBalances := []banktypes.Balance{}
+			claimBalances := []banktypes.Balance{}
+			liquidBalances := []banktypes.Balance{}
 
 			totalNormalizedOsmoBalance := sdk.NewInt(0)
 			for _, acc := range snapshot {
@@ -93,13 +93,13 @@ Example:
 				// set osmo bech32 prefixes
 				appparams.SetAddressPrefixes()
 
-				// airdrop balances
-				coins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance))
-				balances = append(balances, banktypes.Balance{Address: address.String(), Coins: coins})
+				// initial liquid amounts
+				liquidCoins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance))
+				liquidBalances = append(liquidBalances, banktypes.Balance{Address: address.String(), Coins: liquidCoins})
 
-				// transaction fee balances
-				feeCoins := claimtypes.DefaultClaimModuleAcctBalance
-				feeBalances = append(feeBalances, banktypes.Balance{Address: address.String(), Coins: feeCoins})
+				// claim balances
+				claimCoins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance.Mul(sdk.NewInt(4))))
+				claimBalances = append(claimBalances, banktypes.Balance{Address: address.String(), Coins: claimCoins})
 			}
 
 			// auth module genesis
@@ -116,7 +116,7 @@ Example:
 
 			// bank module genesis
 			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
-			bankGenState.Balances = banktypes.SanitizeGenesisBalances(feeBalances)
+			bankGenState.Balances = banktypes.SanitizeGenesisBalances(liquidBalances)
 			bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal bank genesis state: %w", err)
@@ -126,7 +126,7 @@ Example:
 			// claim module genesis
 			claimGenState := claimtypes.DefaultGenesis()
 			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, totalNormalizedOsmoBalance)
-			claimGenState.InitialClaimables = balances
+			claimGenState.InitialClaimables = claimBalances
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal claim genesis state: %w", err)

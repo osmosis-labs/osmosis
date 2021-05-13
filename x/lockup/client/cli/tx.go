@@ -63,11 +63,11 @@ func NewLockTokensCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &types.MsgLockTokens{
-				Owner:    clientCtx.GetFromAddress(),
-				Duration: duration,
-				Coins:    coins,
-			}
+			msg := types.NewMsgLockTokens(
+				clientCtx.GetFromAddress(),
+				duration,
+				coins,
+			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
@@ -93,9 +93,9 @@ func NewBeginUnlockingCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			msg := &types.MsgBeginUnlocking{
-				Owner: clientCtx.GetFromAddress(),
-			}
+			msg := types.NewMsgBeginUnlocking(
+				clientCtx.GetFromAddress(),
+			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
@@ -119,9 +119,9 @@ func NewUnlockTokensCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			msg := &types.MsgUnlockTokens{
-				Owner: clientCtx.GetFromAddress(),
-			}
+			msg := types.NewMsgUnlockTokens(
+				clientCtx.GetFromAddress(),
+			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
@@ -150,10 +150,10 @@ func NewBeginUnlockByIDCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &types.MsgBeginUnlockPeriodLock{
-				Owner: clientCtx.GetFromAddress(),
-				ID:    uint64(id),
-			}
+			msg := types.NewMsgBeginUnlockPeriodLock(
+				clientCtx.GetFromAddress(),
+				uint64(id),
+			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
@@ -182,10 +182,10 @@ func NewUnlockByIDCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &types.MsgUnlockPeriodLock{
-				Owner: clientCtx.GetFromAddress(),
-				ID:    uint64(id),
-			}
+			msg := types.NewMsgUnlockPeriodLock(
+				clientCtx.GetFromAddress(),
+				uint64(id),
+			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},

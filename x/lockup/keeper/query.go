@@ -86,7 +86,12 @@ func queryAccountUnlockableCoins(ctx sdk.Context, req abci.RequestQuery, k Keepe
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	coins := k.GetAccountUnlockableCoins(ctx, params.Owner)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	coins := k.GetAccountUnlockableCoins(ctx, owner)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
 	if err != nil {
@@ -104,7 +109,12 @@ func queryAccountUnlockingCoins(ctx sdk.Context, req abci.RequestQuery, k Keeper
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	coins := k.GetAccountUnlockingCoins(ctx, params.Owner)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	coins := k.GetAccountUnlockingCoins(ctx, owner)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
 	if err != nil {
@@ -122,7 +132,12 @@ func queryAccountLockedCoins(ctx sdk.Context, req abci.RequestQuery, k Keeper, l
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	coins := k.GetAccountLockedCoins(ctx, params.Owner)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	coins := k.GetAccountLockedCoins(ctx, owner)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
 	if err != nil {
@@ -140,7 +155,12 @@ func queryAccountLockedPastTime(ctx sdk.Context, req abci.RequestQuery, k Keeper
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	locks := k.GetAccountLockedPastTime(ctx, params.Owner, params.Timestamp)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	locks := k.GetAccountLockedPastTime(ctx, owner, params.Timestamp)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, locks)
 	if err != nil {
@@ -158,7 +178,12 @@ func queryAccountUnlockedBeforeTime(ctx sdk.Context, req abci.RequestQuery, k Ke
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	unlocks := k.GetAccountUnlockedBeforeTime(ctx, params.Owner, params.Timestamp)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	unlocks := k.GetAccountUnlockedBeforeTime(ctx, owner, params.Timestamp)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, unlocks)
 	if err != nil {
@@ -176,7 +201,12 @@ func queryAccountLockedPastTimeDenom(ctx sdk.Context, req abci.RequestQuery, k K
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	locks := k.GetAccountLockedPastTimeDenom(ctx, params.Owner, params.Denom, params.Timestamp)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	locks := k.GetAccountLockedPastTimeDenom(ctx, owner, params.Denom, params.Timestamp)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, locks)
 	if err != nil {
@@ -215,7 +245,12 @@ func queryAccountLockedLongerDuration(ctx sdk.Context, req abci.RequestQuery, k 
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	locks := k.GetAccountLockedLongerDuration(ctx, params.Owner, params.Duration)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	locks := k.GetAccountLockedLongerDuration(ctx, owner, params.Duration)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, locks)
 	if err != nil {
@@ -233,7 +268,12 @@ func queryAccountLockedLongerDurationDenom(ctx sdk.Context, req abci.RequestQuer
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	locks := k.GetAccountLockedLongerDuration(ctx, params.Owner, params.Duration)
+	owner, err := sdk.AccAddressFromBech32(params.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	locks := k.GetAccountLockedLongerDuration(ctx, owner, params.Duration)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, locks)
 	if err != nil {
