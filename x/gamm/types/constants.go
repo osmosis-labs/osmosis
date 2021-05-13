@@ -5,18 +5,16 @@ import (
 )
 
 const (
-	MIN_POOL_ASSETS = 2
-	MAX_POOL_ASSETS = 8
+	MinPoolAssets = 2
+	MaxPoolAssets = 8
 
-	BONE_EXPONENT = 18
+	OneShareExponent = 18
 )
 
 var (
-	// BONE term is borrowed from Balancer Bronze Codebase
-	// source: https://github.com/balancer-labs/balancer-core/blob/master/contracts/BConst.sol#L19
-	// We assume it stands for Balancer_ONE, but it's funny enough that we decided to use it too.
-	BONE = sdk.NewIntWithDecimal(1, BONE_EXPONENT)
+	// OneShare represents the amount of subshares in a single pool share
+	OneShare = sdk.NewIntWithDecimal(1, OneShareExponent)
 
-	// INIT_POOL_SUPPLY is the amount of new shares to initialize a pool with
-	INIT_POOL_SUPPLY = BONE.MulRaw(100)
+	// InitPoolSharesSupply is the amount of new shares to initialize a pool with
+	InitPoolSharesSupply = OneShare.MulRaw(100)
 )
