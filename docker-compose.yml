@@ -3,7 +3,7 @@ version: '3'
 services:
   osmosisdnode0:
     container_name: osmosisdnode0
-    image: "c-osmosis/osmosisdnode"
+    image: "osmosis-labs/osmosisdnode"
     ports:
       - "26656-26657:26656-26657"
     environment:
@@ -17,7 +17,7 @@ services:
 
   osmosisdnode1:
     container_name: osmosisdnode1
-    image: "c-osmosis/osmosisdnode"
+    image: "osmosis-labs/osmosisdnode"
     ports:
       - "26659-26660:26656-26657"
     environment:
@@ -31,7 +31,7 @@ services:
 
   osmosisdnode2:
     container_name: osmosisdnode2
-    image: "c-osmosis/osmosisdnode"
+    image: "osmosis-labs/osmosisdnode"
     environment:
       - ID=2
       - LOG=${LOG:-osmosisd.log}
@@ -45,7 +45,7 @@ services:
 
   osmosisdnode3:
     container_name: osmosisdnode3
-    image: "c-osmosis/osmosisdnode"
+    image: "osmosis-labs/osmosisdnode"
     environment:
       - ID=3
       - LOG=${LOG:-osmosisd.log}

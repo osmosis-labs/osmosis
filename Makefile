@@ -7,7 +7,7 @@ LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-TEST_DOCKER_REPO=c-osmosis/osmosisdnode
+TEST_DOCKER_REPO=osmosis-labs/osmosisdnode
 
 export GO111MODULE = on
 
@@ -239,7 +239,7 @@ build-docker-osmosisdnode:
 
 # Run a 4-node testnet locally
 localnet-start: build-linux localnet-stop
-	@if ! [ -f build/node0/osmosisd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/osmosisd:Z c-osmosis/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+	@if ! [ -f build/node0/osmosisd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/osmosisd:Z osmosis-labs/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 # Stop testnet
