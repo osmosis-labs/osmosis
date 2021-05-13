@@ -2,7 +2,6 @@ package store_test
 
 import (
 	"bytes"
-	"fmt"
 	"math/rand"
 	"sort"
 	"testing"
@@ -74,10 +73,8 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	pairs := pairs{pair{[]byte("hello"), 100}}
 	suite.tree.Set([]byte("hello"), 100)
 
-	// underlying memdb is not working properly when deleting on large volume,
-	// check if it is a problem from memdb side by running on iavl
-	for i := 0; i < 1000; i++ {
-		fmt.Printf("iter %d\n", i)
+	// tested up to 2000
+	for i := 0; i < 500; i++ {
 		// add a single element
 		key := make([]byte, rand.Int()%20)
 		value := rand.Uint64()%100
@@ -96,8 +93,6 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 
 		suite.tree.Set(key, value)
 
-		fmt.Printf("set %+v %d\n", key, value)
-
 		// check all is right
 		for _, pair := range pairs {
 			suite.Require().Equal(suite.tree.Get(pair.key), pair.value)
@@ -106,16 +101,10 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 
 		// check accumulation calc is alright
 		left, exact, right := uint64(0), pairs[0].value, pairs[1:].sum()
-		for _, pair := range pairs {
-			fmt.Printf("{%+v %d}\n", pair.key, pair.value)
-		}
-		suite.tree.DebugVisualize()
 		for idx, pair := range pairs {
-			fmt.Printf("acctest %+v\n", pair.key)
 			tleft, texact, tright := suite.tree.SplitAcc(pair.key)
 			suite.Require().Equal(left, tleft)
 			suite.Require().Equal(exact, texact)
-			fmt.Printf("%d %d\n", right, tright)
 			suite.Require().Equal(right, tright)
 
 			key := append(pair.key, 0x00)
@@ -139,7 +128,6 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 		if rand.Int()%2 == 0 {
 			idx := rand.Int() % len(pairs)
 			pair := pairs[idx]
-			fmt.Printf("remove %+v\n", pair.key)
 			pairs = append(pairs[:idx], pairs[idx+1:]...)
 			suite.tree.Remove(pair.key)
 		}
