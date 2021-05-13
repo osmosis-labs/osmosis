@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/c-osmosis/osmosis/x/gamm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -52,7 +54,9 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 
 			pool, err := keeper.GetPool(suite.ctx, poolId)
 			suite.Require().NoError(err)
-			suite.Require().Equal("100000000", pool.GetTotalShare().Amount.String(), "share token should be minted as 100*10^6 initially")
+			suite.Require().Equal(types.INIT_POOL_SUPPLY.String(), pool.GetTotalShare().Amount.String(),
+				fmt.Sprintf("share token should be minted as %s initially", types.INIT_POOL_SUPPLY.String()),
+			)
 		},
 	}, {
 		fn: func() {
@@ -208,14 +212,14 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.app.GAMMKeeper
 				balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc2)
-				err := keeper.JoinPool(suite.ctx, acc2, poolId, sdk.NewInt(50000000), sdk.Coins{})
+				err := keeper.JoinPool(suite.ctx, acc2, poolId, types.BONE.MulRaw(50), sdk.Coins{})
 				suite.Require().NoError(err)
-				suite.Require().Equal("50000000", suite.app.BankKeeper.GetBalance(suite.ctx, acc2, "gamm/pool/1").Amount.String())
+				suite.Require().Equal(types.BONE.MulRaw(50).String(), suite.app.BankKeeper.GetBalance(suite.ctx, acc2, "gamm/pool/1").Amount.String())
 				balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc2)
 
 				deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
 				// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100000000gamm/pool/1.
-				// Thus, to get the 50000000gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be provided.
+				// Thus, to get the 50*BONE gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be provided.
 				suite.Require().Equal("5000", deltaBalances.AmountOf("foo").String())
 				suite.Require().Equal("5000", deltaBalances.AmountOf("bar").String())
 			},
@@ -238,8 +242,8 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.app.GAMMKeeper
 				// Test the "tokenInMaxs"
-				// In this case, to get the 50000000 amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
-				err := keeper.JoinPool(suite.ctx, acc2, poolId, sdk.NewInt(50000000), sdk.Coins{
+				// In this case, to get the 50 * BONE amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
+				err := keeper.JoinPool(suite.ctx, acc2, poolId, types.BONE.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("foo", sdk.NewInt(4999)),
 				})
 				suite.Require().Error(err)
@@ -249,8 +253,8 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.app.GAMMKeeper
 				// Test the "tokenInMaxs"
-				// In this case, to get the 50000000 amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
-				err := keeper.JoinPool(suite.ctx, acc2, poolId, sdk.NewInt(50000000), sdk.Coins{
+				// In this case, to get the 50 * BONE amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
+				err := keeper.JoinPool(suite.ctx, acc2, poolId, types.BONE.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("foo", sdk.NewInt(5000)),
 				})
 				suite.Require().NoError(err)
@@ -302,7 +306,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.app.GAMMKeeper
 				// Acc2 has no share token.
-				err := keeper.ExitPool(suite.ctx, acc2, poolId, sdk.NewInt(50000000), sdk.Coins{})
+				err := keeper.ExitPool(suite.ctx, acc2, poolId, types.BONE.MulRaw(50), sdk.Coins{})
 				suite.Require().Error(err)
 			},
 		},
@@ -311,15 +315,15 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				keeper := suite.app.GAMMKeeper
 
 				balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc1)
-				err := keeper.ExitPool(suite.ctx, acc1, poolId, sdk.NewInt(50000000), sdk.Coins{})
+				err := keeper.ExitPool(suite.ctx, acc1, poolId, types.INIT_POOL_SUPPLY.QuoRaw(2), sdk.Coins{})
 				suite.Require().NoError(err)
-				// (100 - 50) * 10^6 should be remain.
-				suite.Require().Equal("50000000", suite.app.BankKeeper.GetBalance(suite.ctx, acc1, "gamm/pool/1").Amount.String())
+				// (100 - 50) * BONE should be remain.
+				suite.Require().Equal(types.INIT_POOL_SUPPLY.QuoRaw(2).String(), suite.app.BankKeeper.GetBalance(suite.ctx, acc1, "gamm/pool/1").Amount.String())
 				balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc1)
 
 				deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
-				// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100000000gamm/pool/1.
-				// Thus, to refund the 50000000gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be refunded.
+				// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100000000000000000000gamm/pool/1.
+				// Thus, to refund the 50000000000000000000gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be refunded.
 				suite.Require().Equal("-5000", deltaBalances.AmountOf("foo").String())
 				suite.Require().Equal("-5000", deltaBalances.AmountOf("bar").String())
 			},
@@ -346,7 +350,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 				// Test the "tokenOutMins"
 				// In this case, to refund the 50000000 amount of share token, the foo, bar token are expected to be refunded as 5000 amounts.
-				err := keeper.ExitPool(suite.ctx, acc1, poolId, sdk.NewInt(50000000), sdk.Coins{
+				err := keeper.ExitPool(suite.ctx, acc1, poolId, types.BONE.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("foo", sdk.NewInt(5001)),
 				})
 				suite.Require().Error(err)
@@ -358,7 +362,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 				// Test the "tokenOutMins"
 				// In this case, to refund the 50000000 amount of share token, the foo, bar token are expected to be refunded as 5000 amounts.
-				err := keeper.ExitPool(suite.ctx, acc1, poolId, sdk.NewInt(50000000), sdk.Coins{
+				err := keeper.ExitPool(suite.ctx, acc1, poolId, types.BONE.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("foo", sdk.NewInt(5000)),
 				})
 				suite.Require().NoError(err)

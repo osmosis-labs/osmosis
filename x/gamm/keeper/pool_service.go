@@ -17,11 +17,11 @@ func (k Keeper) CreatePool(
 	poolAssets []types.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {
-	if len(poolAssets) < 2 {
+	if len(poolAssets) < types.MIN_POOL_ASSETS {
 		return 0, types.ErrTooFewPoolAssets
 	}
 	// TODO: Add the limit of binding token to the pool params?
-	if len(poolAssets) > 8 {
+	if len(poolAssets) > types.MAX_POOL_ASSETS {
 		return 0, sdkerrors.Wrapf(
 			types.ErrTooManyPoolAssets,
 			"pool has too many PoolAssets (%d)", len(poolAssets),
@@ -48,9 +48,8 @@ func (k Keeper) CreatePool(
 		return 0, err
 	}
 
-	// Mint the initial 100.000000 share token to the sender
-	initialShareSupply := sdk.NewIntWithDecimal(100, 6)
-	err = k.MintPoolShareToAccount(ctx, poolAcc, sender, initialShareSupply)
+	// Mint the initial 100.000000000000000000 share token to the sender
+	err = k.MintPoolShareToAccount(ctx, poolAcc, sender, types.INIT_POOL_SUPPLY)
 	if err != nil {
 		return 0, err
 	}
@@ -70,7 +69,7 @@ func (k Keeper) CreatePool(
 			},
 			{
 				Denom:    poolShareDisplayDenom,
-				Exponent: 6,
+				Exponent: types.BONE_EXPONENT,
 				Aliases:  nil,
 			},
 		},
