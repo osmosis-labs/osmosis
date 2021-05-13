@@ -12,8 +12,9 @@ option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
 service Msg {
   // LockTokens lock tokens
   rpc LockTokens(MsgLockTokens) returns (MsgLockTokensResponse);
-  // BeginUnlocking begin unlocking all tokens
-  rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
+  // BeginUnlockingAll begin unlocking all tokens
+  rpc BeginUnlockingAll(MsgBeginUnlockingAll)
+      returns (MsgBeginUnlockingAllResponse);
   // UnlockTokens unlock all unlockable tokens
   rpc UnlockTokens(MsgUnlockTokens) returns (MsgUnlockTokensResponse);
   // BeginUnlockPeriodLock begin unlocking tokens by ID
@@ -39,10 +40,10 @@ message MsgLockTokens {
 }
 message MsgLockTokensResponse { uint64 ID = 1; }
 
-message MsgBeginUnlocking {
+message MsgBeginUnlockingAll {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 }
-message MsgBeginUnlockingResponse { repeated PeriodLock unlocks = 1; }
+message MsgBeginUnlockingAllResponse { repeated PeriodLock unlocks = 1; }
 
 message MsgUnlockTokens {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
