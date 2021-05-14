@@ -18,6 +18,27 @@ message Minter {
   ];
 }
 
+message DistributionProportions {
+  // staking defines the proportion of the minted minted_denom that is to be allocated as staking rewards.
+  string staking = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"staking\"",
+    (gogoproto.nullable) = false
+  ];
+  // pool_incentives defines the proportion of the minted minted_denom that is to be allocated as pool incentives.
+  string pool_incentives = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"pool_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  // developer_rewards defines the proportion of the minted minted_denom that is to be allocated to developer rewards address.
+  string developer_rewards = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"developer_rewards\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // Params holds parameters for the mint module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
@@ -45,10 +66,6 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  // pool_allocation_ratio defines the proportion of the minted minted_denom that is to be allocated as pool incentives.
-  string pool_allocation_ratio = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"pool_allocation_ratio\"",
-    (gogoproto.nullable) = false
-  ];
+  // distribution_proportions defines the proportion of the minted denom
+  DistributionProportions distribution_proportions = 6 [(gogoproto.nullable) = false];
 }

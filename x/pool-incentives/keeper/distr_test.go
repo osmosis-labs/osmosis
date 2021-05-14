@@ -14,7 +14,7 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
 	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err := mintKeeper.AddCollectedFees(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err := mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 	// Community pool should be increased
 	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.AddCollectedFees(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	feePool = suite.app.DistrKeeper.GetFeePool(suite.ctx)
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	// In this time, there are 3 records, so the assets to be allocated to the pots proportionally.
 	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.AddCollectedFees(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 	suite.Equal("80000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
 
@@ -100,7 +100,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	// Allocate more.
 	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(50000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.AddCollectedFees(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 	// It has very small margin of error.
 	suite.Equal("104000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	// In this time, there are 3 records, so the assets to be allocated to the pots proportionally.
 	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.AddCollectedFees(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	// check community pool balance increase
@@ -158,7 +158,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	// In this time, all should be allocated to community pool
 	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.AddCollectedFees(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	// check community pool balance increase

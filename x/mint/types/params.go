@@ -29,7 +29,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochDuration time.Duration,
-	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, poolAllocationRatio sdk.Dec,
+	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
 ) Params {
 
 	return Params{
@@ -38,7 +38,7 @@ func NewParams(
 		EpochDuration:           epochDuration,
 		ReductionPeriodInEpochs: reductionPeriodInEpochs,
 		ReductionFactor:         ReductionFactor,
-		PoolAllocationRatio:     poolAllocationRatio,
+		DistributionProportions: distrProportions,
 	}
 }
 
@@ -51,7 +51,11 @@ func DefaultParams() Params {
 		EpochDuration:           epochDuration,            // 1 week
 		ReductionPeriodInEpochs: 156,                      // 3 years
 		ReductionFactor:         sdk.NewDecWithPrec(5, 1), // 0.5
-		PoolAllocationRatio:     sdk.NewDecWithPrec(2, 1), // 0.2
+		DistributionProportions: DistributionProportions{
+			Staking:          sdk.NewDecWithPrec(5, 1), // 0.5
+			PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
+			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
+		},
 	}
 }
 
@@ -73,7 +77,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validatePoolAllocationRatio(p.PoolAllocationRatio); err != nil {
+	if err := validateDistributionProportions(p.DistributionProportions); err != nil {
 		return err
 	}
 
@@ -94,7 +98,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyEpochDuration, &p.EpochDuration, validateEpochDuration),
 		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
 		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
-		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.PoolAllocationRatio, validatePoolAllocationRatio),
+		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.DistributionProportions, validateDistributionProportions),
 	}
 }
 
@@ -170,18 +174,28 @@ func validateReductionFactor(i interface{}) error {
 	return nil
 }
 
-func validatePoolAllocationRatio(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+func validateDistributionProportions(i interface{}) error {
+	v, ok := i.(DistributionProportions)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNegative() {
-		return errors.New("allocation ratio should not be negative")
+	if v.Staking.IsNegative() {
+		return errors.New("staking distribution ratio should not be negative")
 	}
 
-	if v.GT(sdk.NewDec(1)) {
-		return errors.New("allocation ratio should be lesser than 1")
+	if v.PoolIncentives.IsNegative() {
+		return errors.New("pool incentives distribution ratio should not be negative")
+	}
+
+	if v.DeveloperRewards.IsNegative() {
+		return errors.New("developer rewards distribution ratio should not be negative")
+	}
+
+	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.DeveloperRewards)
+
+	if !totalProportions.Equal(sdk.NewDec(1)) {
+		return errors.New("total distributions ratio should be 1")
 	}
 
 	return nil
