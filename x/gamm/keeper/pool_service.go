@@ -64,7 +64,7 @@ func (k Keeper) CreatePool(
 				Denom:    poolShareBaseDenom,
 				Exponent: 0,
 				Aliases: []string{
-					"micropoolshare",
+					"attopoolshare",
 				},
 			},
 			{
