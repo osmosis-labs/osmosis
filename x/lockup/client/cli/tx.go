@@ -150,7 +150,7 @@ func NewBeginUnlockByIDCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgBeginUnlockPeriodLock(
+			msg := types.NewMsgBeginUnlocking(
 				clientCtx.GetFromAddress(),
 				uint64(id),
 			)

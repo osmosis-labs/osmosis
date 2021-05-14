@@ -9,11 +9,11 @@ import (
 
 // constants
 const (
-	TypeMsgLockTokens            = "lock_tokens"
-	TypeMsgBeginUnlockingAll     = "begin_unlock_tokens_all"
-	TypeMsgUnlockTokens          = "unlock_tokens"
-	TypeMsgBeginUnlockPeriodLock = "begin_unlock_period_lock"
-	TypeMsgUnlockPeriodLock      = "unlock_period_lock"
+	TypeMsgLockTokens        = "lock_tokens"
+	TypeMsgBeginUnlockingAll = "begin_unlocking_all"
+	TypeMsgUnlockTokens      = "unlock_tokens"
+	TypeMsgBeginUnlocking    = "begin_unlocking"
+	TypeMsgUnlockPeriodLock  = "unlock_period_lock"
 )
 
 var _ sdk.Msg = &MsgLockTokens{}
@@ -87,25 +87,25 @@ func (m MsgUnlockTokens) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{owner}
 }
 
-var _ sdk.Msg = &MsgBeginUnlockPeriodLock{}
+var _ sdk.Msg = &MsgBeginUnlocking{}
 
-// NewMsgBeginUnlockPeriodLock creates a message to begin unlocking the tokens of a specific lock
-func NewMsgBeginUnlockPeriodLock(owner sdk.AccAddress, id uint64) *MsgBeginUnlockPeriodLock {
-	return &MsgBeginUnlockPeriodLock{
+// NewMsgBeginUnlocking creates a message to begin unlocking the tokens of a specific lock
+func NewMsgBeginUnlocking(owner sdk.AccAddress, id uint64) *MsgBeginUnlocking {
+	return &MsgBeginUnlocking{
 		Owner: owner.String(),
 		ID:    id,
 	}
 }
 
-func (m MsgBeginUnlockPeriodLock) Route() string { return RouterKey }
-func (m MsgBeginUnlockPeriodLock) Type() string  { return TypeMsgBeginUnlockPeriodLock }
-func (m MsgBeginUnlockPeriodLock) ValidateBasic() error {
+func (m MsgBeginUnlocking) Route() string { return RouterKey }
+func (m MsgBeginUnlocking) Type() string  { return TypeMsgBeginUnlocking }
+func (m MsgBeginUnlocking) ValidateBasic() error {
 	return nil
 }
-func (m MsgBeginUnlockPeriodLock) GetSignBytes() []byte {
+func (m MsgBeginUnlocking) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
-func (m MsgBeginUnlockPeriodLock) GetSigners() []sdk.AccAddress {
+func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }
