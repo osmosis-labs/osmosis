@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"fmt"
 
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -17,16 +19,11 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 	err := mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
+	fmt.Println("FeeCollectorName", authtypes.FeeCollectorName)
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	suite.Equal("60000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
-	suite.Equal(feePool.CommunityPool.String(), sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(20000))).String())
-	suite.Equal(
-		sdk.NewCoin("stake", sdk.NewInt(20000)),
-		suite.app.BankKeeper.GetBalance(
-			suite.ctx,
-			suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName),
-			"stake"),
-	)
+	suite.Equal("50000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
+	suite.Equal(sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(30000))).String(), feePool.CommunityPool.String())
+	suite.Equal("30000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake").String())
 
 	// Community pool should be increased
 	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}

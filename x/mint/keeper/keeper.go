@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/c-osmosis/osmosis/x/mint/types"
@@ -197,6 +198,12 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("FeeCollectorName", k.feeCollectorName)
+	fmt.Println("mintedCoins", mintedCoins)
+	fmt.Println("stakingIncentivesCoins", stakingIncentivesCoins)
+	fmt.Println("poolIncentivesCoins", poolIncentivesCoins)
+	fmt.Println("devRewardCoins", devRewardCoins)
 
 	// call an hook after deposition of coin into fee pool
 	k.hooks.AfterDistributeMintedCoins(ctx, mintedCoins)
