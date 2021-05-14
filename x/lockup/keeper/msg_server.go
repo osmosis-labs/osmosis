@@ -50,7 +50,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 	return &types.MsgLockTokensResponse{}, nil
 }
 
-func (server msgServer) BeginUnlockPeriodLock(goCtx context.Context, msg *types.MsgBeginUnlockPeriodLock) (*types.MsgBeginUnlockPeriodLockResponse, error) {
+func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBeginUnlocking) (*types.MsgBeginUnlockingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	lock, err := server.keeper.BeginUnlockPeriodLockByID(ctx, msg.ID)
@@ -72,10 +72,10 @@ func (server msgServer) BeginUnlockPeriodLock(goCtx context.Context, msg *types.
 		),
 	})
 
-	return &types.MsgBeginUnlockPeriodLockResponse{}, nil
+	return &types.MsgBeginUnlockingResponse{}, nil
 }
 
-func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBeginUnlocking) (*types.MsgBeginUnlockingResponse, error) {
+func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgBeginUnlockingAll) (*types.MsgBeginUnlockingAllResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -107,7 +107,7 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 	}
 	ctx.EventManager().EmitEvents(events)
 
-	return &types.MsgBeginUnlockingResponse{}, nil
+	return &types.MsgBeginUnlockingAllResponse{}, nil
 }
 
 func (server msgServer) UnlockPeriodLock(goCtx context.Context, msg *types.MsgUnlockPeriodLock) (*types.MsgUnlockPeriodLockResponse, error) {

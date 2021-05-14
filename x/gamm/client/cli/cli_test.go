@@ -349,7 +349,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			[]string{
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "1000000000"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "1000000000000000000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -363,7 +363,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			[]string{ // join-pool --pool-id=1 --max-amounts-in=100stake --share-amount-out=100 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "10000000"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "10000000000000000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -409,7 +409,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 			"ask too much when exit",
 			[]string{ // --min-amounts-out=100stake --pool-id=1 --share-amount-in=10 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "20000000"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "20000000000000000000"),
 				fmt.Sprintf("--%s=%s", cli.FlagMinAmountsOut, "20stake"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				// common args
@@ -423,7 +423,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 			"ask enough when exit",
 			[]string{ // --min-amounts-out=100stake --pool-id=1 --share-amount-in=10 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "20000000"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "20000000000000000000"),
 				fmt.Sprintf("--%s=%s", cli.FlagMinAmountsOut, "10stake"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				// common args
@@ -593,7 +593,7 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 		{
 			"exit swap extern amount out", // osmosisd tx gamm exit-swap-extern-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
-				"10stake", "10000000",
+				"10stake", "10000000000000000000",
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				// common args
@@ -654,7 +654,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 		{
 			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
-				"stake", "50", "5000000",
+				"stake", "50", "5000000000000000000",
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
@@ -700,7 +700,7 @@ func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 		{
 			"exit swap share amount in", // osmosisd tx gamm exit-swap-share-amount-in --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
-				"stake", "10000000", "1",
+				"stake", "10000000000000000000", "1",
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				// common args

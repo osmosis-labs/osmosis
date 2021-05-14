@@ -93,7 +93,7 @@ func NewBeginUnlockingCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			msg := types.NewMsgBeginUnlocking(
+			msg := types.NewMsgBeginUnlockingAll(
 				clientCtx.GetFromAddress(),
 			)
 
@@ -150,7 +150,7 @@ func NewBeginUnlockByIDCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgBeginUnlockPeriodLock(
+			msg := types.NewMsgBeginUnlocking(
 				clientCtx.GetFromAddress(),
 				uint64(id),
 			)
