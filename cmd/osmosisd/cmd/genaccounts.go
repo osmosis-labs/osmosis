@@ -207,11 +207,6 @@ Example:
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			// // get genesis params
-			// genesisParams := appparams.TestnetNetworkParams()
-
-			snapshotInput := args[0]
-
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
@@ -226,27 +221,31 @@ Example:
 			}
 
 			// Read snapshot file
-			snapshotJson, err := os.Open(snapshotInput)
+			snapshotInput := args[0]
+			snapshotJSON, err := os.Open(snapshotInput)
 			if err != nil {
 				return err
 			}
-			defer snapshotJson.Close()
-
-			byteValue, _ := ioutil.ReadAll(snapshotJson)
-
-			// Produce the map of address to total atom balance, both staked and unstaked
+			defer snapshotJSON.Close()
+			byteValue, _ := ioutil.ReadAll(snapshotJSON)
 			snapshot := Snapshot{}
-
 			json.Unmarshal(byteValue, &snapshot)
 			if err != nil {
 				return err
 			}
 
-			claimBalances := []banktypes.Balance{}
-			liquidBalances := []banktypes.Balance{}
+			// get genesis params
+			genesisParams := appparams.TestnetNetworkParams()
 
+			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
+			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalOsmosAirdropAmount)
+			fmt.Printf("normalization factor: %s\n", normalizationFactor)
+
+			liquidBalances := []banktypes.Balance{}
+			claimableBalances := []banktypes.Balance{}
 			claimModuleAccountBalance := sdk.NewInt(0)
 
+			// for each account in the snapshot
 			for _, acc := range snapshot.Accounts {
 				// set atom bech32 prefixes
 				setCosmosBech32Prefixes()
@@ -260,14 +259,28 @@ Example:
 				// set osmo bech32 prefixes
 				appparams.SetAddressPrefixes()
 
-				// initial liquid amounts
-				liquidCoins := sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoBalance)
-				liquidBalances = append(liquidBalances, banktypes.Balance{Address: address.String(), Coins: sdk.NewCoins(liquidCoins)})
+				// skip accounts with 0 balance
+				if !acc.OsmoBalanceBase.IsPositive() {
+					continue
+				}
 
-				// claim balances
-				claimCoins := sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoBalance.Mul(sdk.NewInt(4)))
-				claimBalances = append(claimBalances, banktypes.Balance{Address: address.String(), Coins: sdk.NewCoins(claimCoins)})
-				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimCoins.Amount)
+				// get normalized osmo balance for account
+				normalizedOsmoBalance := normalizationFactor.MulInt(acc.OsmoBalance)
+
+				// initial liquid amounts
+				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).RoundInt() // 20% of airdrop amount
+				liquidBalances = append(liquidBalances, banktypes.Balance{
+					Address: address.String(),
+					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, liquidAmount)),
+				})
+
+				// claimable balances
+				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).RoundInt()
+				claimableBalances = append(claimableBalances, banktypes.Balance{
+					Address: address.String(),
+					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimableAmount)),
+				})
+				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
 			}
 
 			// auth module genesis
@@ -294,7 +307,7 @@ Example:
 			// claim module genesis
 			claimGenState := claimtypes.DefaultGenesis()
 			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, claimModuleAccountBalance)
-			claimGenState.InitialClaimables = claimBalances
+			claimGenState.InitialClaimables = claimableBalances
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal claim genesis state: %w", err)

@@ -29,11 +29,7 @@ type AppStateV036 struct {
 type Snapshot struct {
 	TotalAtomAmount         sdk.Int `json:"total_atom_amount"`
 	TotalOsmosAirdropAmount sdk.Int `json:"total_osmo_amount"`
-
-	NormalizationFactor  sdk.Dec `json:"normalization_factor"`
-	NormalizedOsmoAmount sdk.Int `json:"normalized_osmo_amount"`
-
-	NumberAccounts uint64 `json:"num_accounts"`
+	NumberAccounts          uint64  `json:"num_accounts"`
 
 	Accounts map[string]SnapshotAccount `json:"accounts"`
 }

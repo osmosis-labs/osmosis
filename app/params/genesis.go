@@ -18,7 +18,8 @@ import (
 )
 
 type NetworkParams struct {
-	TotalSupply        sdk.Int
+	AirdropSupply sdk.Int
+
 	ChainID            string
 	GenesisTime        time.Time
 	NativeCoinMetadata banktypes.Metadata
@@ -43,7 +44,7 @@ type NetworkParams struct {
 func TestnetNetworkParams() NetworkParams {
 	testnetNetworkParams := NetworkParams{}
 
-	testnetNetworkParams.TotalSupply = sdk.NewIntWithDecimal(1, 9) // 1 Billion
+	testnetNetworkParams.AirdropSupply = sdk.NewIntWithDecimal(1, 15) // 10^15 ions, 10^9 (1 billion) osmo
 	testnetNetworkParams.ChainID = "osmo-testnet-thanatos"
 	testnetNetworkParams.GenesisTime = time.Now()
 	testnetNetworkParams.NativeCoinMetadata = banktypes.Metadata{
@@ -72,8 +73,8 @@ func TestnetNetworkParams() NetworkParams {
 	testnetNetworkParams.StakingParams.BondDenom = testnetNetworkParams.NativeCoinMetadata.Base
 
 	testnetNetworkParams.MintParams = minttypes.DefaultParams()
-	testnetNetworkParams.MintParams.EpochDuration = time.Hour * 24 * 7                                                      // 1 week
-	testnetNetworkParams.MintParams.GenesisEpochProvisions = sdk.NewDecFromInt(testnetNetworkParams.TotalSupply.QuoRaw(10)) // 10% of final supply
+	testnetNetworkParams.MintParams.EpochDuration = time.Hour * 24 * 7                                                        // 1 week
+	testnetNetworkParams.MintParams.GenesisEpochProvisions = sdk.NewDecFromInt(testnetNetworkParams.AirdropSupply.QuoRaw(10)) // 10% of airdrop supply
 	testnetNetworkParams.MintParams.MintDenom = testnetNetworkParams.NativeCoinMetadata.Base
 	testnetNetworkParams.MintParams.ReductionFactor = sdk.NewDecWithPrec(5, 1) // 0.5
 	testnetNetworkParams.MintParams.ReductionPeriodInEpochs = 52 * 3           // 3 years
@@ -88,31 +89,30 @@ func TestnetNetworkParams() NetworkParams {
 	testnetNetworkParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 7 // 1 week
 	testnetNetworkParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		testnetNetworkParams.NativeCoinMetadata.Base,
-		testnetNetworkParams.TotalSupply.QuoRaw(1_000_000), // 1 millionth of supply
+		testnetNetworkParams.AirdropSupply.QuoRaw(1_000_000), // 1 millionth of airdrop supply
 	))
 	testnetNetworkParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.25") // 25%
-	testnetNetworkParams.GovParams.VotingParams.VotingPeriod = time.Hour * 24 * 7     // 1 week
+	testnetNetworkParams.GovParams.VotingParams.VotingPeriod = time.Hour * 6          // 6 hours
 
 	testnetNetworkParams.CrisisConstantFee = sdk.NewCoin(
 		testnetNetworkParams.NativeCoinMetadata.Base,
-		testnetNetworkParams.TotalSupply.QuoRaw(100_000), // 1/100,000 of total supply
+		testnetNetworkParams.AirdropSupply.QuoRaw(100_000), // 1/100,000 of airdrop supply
 	)
 
 	testnetNetworkParams.SlashingParams = slashingtypes.DefaultParams()
 	testnetNetworkParams.SlashingParams.SignedBlocksWindow = int64(10000)
 
 	testnetNetworkParams.Epochs = epochstypes.DefaultGenesis().Epochs
-
 	for _, epoch := range testnetNetworkParams.Epochs {
 		epoch.StartTime = testnetNetworkParams.GenesisTime
 	}
 
 	testnetNetworkParams.IncentivesParams = incentivestypes.DefaultParams()
-	testnetNetworkParams.IncentivesParams.DistrEpochIdentifier = "weekly"
+	testnetNetworkParams.IncentivesParams.DistrEpochIdentifier = "daily"
 
 	testnetNetworkParams.ClaimAirdropStartTime = testnetNetworkParams.GenesisTime
-	testnetNetworkParams.ClaimDurationUntilDecay = time.Hour * 24 * 7 * 12 // 12 weeks
-	testnetNetworkParams.ClaimDurationOfDecay = time.Hour * 24 * 7 * 12    // 12 weeks
+	testnetNetworkParams.ClaimDurationUntilDecay = time.Hour            // 1 hour
+	testnetNetworkParams.ClaimDurationOfDecay = time.Hour * 24 * 7 * 12 // 12 weeks
 
 	return testnetNetworkParams
 }
