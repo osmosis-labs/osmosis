@@ -180,7 +180,6 @@ Example:
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	cmd.Flags().String(flagOsmoSupply, "", "OSMO total genesis supply")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

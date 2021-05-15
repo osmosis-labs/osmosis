@@ -200,7 +200,7 @@ Example:
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
 			cdc := depCdc.(codec.Marshaler)
-			aminoCodec := clientCtx.LegacyAmino.Amino
+			// aminoCodec := clientCtx.LegacyAmino.Amino
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -235,8 +235,9 @@ Example:
 			byteValue, _ := ioutil.ReadAll(snapshotJson)
 
 			// Produce the map of address to total atom balance, both staked and unstaked
-			snapshot := make(map[string]SnapshotAccount)
-			err = aminoCodec.UnmarshalJSON(byteValue, &snapshot)
+			snapshot := Snapshot{}
+
+			json.Unmarshal(byteValue, &snapshot)
 			if err != nil {
 				return err
 			}
@@ -244,11 +245,9 @@ Example:
 			claimBalances := []banktypes.Balance{}
 			liquidBalances := []banktypes.Balance{}
 
-			totalNormalizedOsmoBalance := sdk.NewInt(0)
-			for _, acc := range snapshot {
-				// calculate total osmo balance
-				totalNormalizedOsmoBalance = totalNormalizedOsmoBalance.Add(acc.OsmoNormalizedBalance)
+			claimModuleAccountBalance := sdk.NewInt(0)
 
+			for _, acc := range snapshot.Accounts {
 				// set atom bech32 prefixes
 				setCosmosBech32Prefixes()
 
@@ -262,12 +261,13 @@ Example:
 				appparams.SetAddressPrefixes()
 
 				// initial liquid amounts
-				liquidCoins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance))
-				liquidBalances = append(liquidBalances, banktypes.Balance{Address: address.String(), Coins: liquidCoins})
+				liquidCoins := sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoBalance)
+				liquidBalances = append(liquidBalances, banktypes.Balance{Address: address.String(), Coins: sdk.NewCoins(liquidCoins)})
 
 				// claim balances
-				claimCoins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance.Mul(sdk.NewInt(4))))
-				claimBalances = append(claimBalances, banktypes.Balance{Address: address.String(), Coins: claimCoins})
+				claimCoins := sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoBalance.Mul(sdk.NewInt(4)))
+				claimBalances = append(claimBalances, banktypes.Balance{Address: address.String(), Coins: sdk.NewCoins(claimCoins)})
+				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimCoins.Amount)
 			}
 
 			// auth module genesis
@@ -293,7 +293,7 @@ Example:
 
 			// claim module genesis
 			claimGenState := claimtypes.DefaultGenesis()
-			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, totalNormalizedOsmoBalance)
+			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, claimModuleAccountBalance)
 			claimGenState.InitialClaimables = claimBalances
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {
@@ -313,7 +313,6 @@ Example:
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	cmd.Flags().String(flagOsmoSupply, "", "OSMO total genesis supply")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,10 +13,6 @@ import (
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
 	"github.com/spf13/cobra"
-)
-
-const (
-	flagOsmoSupply = "osmo-supply"
 )
 
 // GenesisStateV036 is minimum structure to import airdrop accounts
@@ -43,17 +40,19 @@ type Snapshot struct {
 
 // SnapshotAccount provide fields of snapshot per account
 type SnapshotAccount struct {
-	AtomAddress           string  `json:"atom_address"` // Atom Balance = AtomStakedBalance + AtomUnstakedBalance
-	AtomBalance           sdk.Int `json:"atom_balance"`
-	AtomStakedBalance     sdk.Int `json:"atom_staked_balance"`
-	AtomUnstakedBalance   sdk.Int `json:"atom_unstaked_balance"` // AtomStakedPercent = AtomStakedBalance / AtomBalance
-	AtomStakedPercent     sdk.Dec `json:"atom_staked_percent"`
-	AtomOwnershipPercent  sdk.Dec `json:"atom_ownership_percent"`
-	OsmoNormalizedBalance sdk.Int `json:"osmo_balance_normalized"`
-	OsmoBalance           sdk.Int `json:"osmo_balance"`           // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
-	OsmoBalanceBonus      sdk.Int `json:"osmo_balance_bonus"`     // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
-	OsmoBalanceBase       sdk.Int `json:"osmo_balance_base"`      // OsmoBalanceBase = sqrt(atom balance)
-	OsmoPercent           sdk.Dec `json:"osmo_ownership_percent"` // OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
+	AtomAddress string `json:"atom_address"` // Atom Balance = AtomStakedBalance + AtomUnstakedBalance
+
+	AtomBalance          sdk.Int `json:"atom_balance"`
+	AtomOwnershipPercent sdk.Dec `json:"atom_ownership_percent"`
+
+	AtomStakedBalance   sdk.Int `json:"atom_staked_balance"`
+	AtomUnstakedBalance sdk.Int `json:"atom_unstaked_balance"` // AtomStakedPercent = AtomStakedBalance / AtomBalance
+	AtomStakedPercent   sdk.Dec `json:"atom_staked_percent"`
+
+	OsmoBalance      sdk.Int `json:"osmo_balance"`           // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
+	OsmoBalanceBase  sdk.Int `json:"osmo_balance_base"`      // OsmoBalanceBase = sqrt(atom balance)
+	OsmoBalanceBonus sdk.Int `json:"osmo_balance_bonus"`     // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
+	OsmoPercent      sdk.Dec `json:"osmo_ownership_percent"` // OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
 }
 
 // setCosmosBech32Prefixes set config for cosmos address system
@@ -93,16 +92,6 @@ Example:
 			denom := args[0]
 			genesisFile := args[1]
 			snapshotOutput := args[2]
-
-			// Parse CLI input for osmo supply
-			osmoSupplyStr, err := cmd.Flags().GetString(flagOsmoSupply)
-			if err != nil {
-				return fmt.Errorf("failed to get osmo total supply: %w", err)
-			}
-			osmoSupply, ok := sdk.NewIntFromString(osmoSupplyStr)
-			if !ok {
-				return fmt.Errorf("failed to parse osmo supply: %s", osmoSupplyStr)
-			}
 
 			// Read genesis file
 			genesisJson, err := os.Open(genesisFile)
@@ -228,43 +217,34 @@ Example:
 				snapshotAccs[address] = acc
 			}
 
-			// normalize to desired genesis osmo supply
-			normalizationFactor := osmoSupply.ToDec().Quo(totalOsmoBalance.ToDec())
-
+			// iterate to find Osmo ownership percentage per account
 			for address, acc := range snapshotAccs {
 				acc.OsmoPercent = acc.OsmoBalance.ToDec().Quo(totalOsmoBalance.ToDec())
-
-				acc.OsmoNormalizedBalance = acc.OsmoBalance.ToDec().Mul(normalizationFactor).RoundInt()
-
 				snapshotAccs[address] = acc
 			}
 
-			snap := Snapshot{
+			snapshot := Snapshot{
 				TotalAtomAmount:         totalAtomBalance,
 				TotalOsmosAirdropAmount: totalOsmoBalance,
-				NormalizationFactor:     normalizationFactor,
-				NormalizedOsmoAmount:    osmoSupply,
-
-				NumberAccounts: uint64(len(snapshotAccs)),
-
-				Accounts: snapshotAccs,
+				NumberAccounts:          uint64(len(snapshotAccs)),
+				Accounts:                snapshotAccs,
 			}
 
 			fmt.Printf("# accounts: %d\n", len(snapshotAccs))
 			fmt.Printf("atomTotalSupply: %s\n", totalAtomBalance.String())
-			fmt.Printf("osmoTotalSupply (pre-normalization): %s\n", totalOsmoBalance.String())
+			fmt.Printf("osmoTotalSupply: %s\n", totalOsmoBalance.String())
 
 			// export snapshot json
-			snapshotJSON, err := aminoCodec.MarshalJSON(snap)
+			snapshotJSON, err := json.MarshalIndent(snapshot, "", "    ")
 			if err != nil {
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
+
 			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
 			return err
 		},
 	}
 
-	cmd.Flags().String(flagOsmoSupply, "", "OSMO total genesis supply")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
