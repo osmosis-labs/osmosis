@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/c-osmosis/osmosis/config"
+	"github.com/c-osmosis/osmosis/simapp"
 	"github.com/c-osmosis/osmosis/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -27,7 +27,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = config.DefaultConfig()
+	s.cfg = simapp.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 

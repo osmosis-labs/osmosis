@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = "osmo"
-
 	HumanCoinUnit = "osmo"
 	BaseCoinUnit  = "ion"
 	OsmoExponent  = 6
+
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	Bech32PrefixAccAddr = "osmo"
 )
 
 var (
@@ -30,7 +30,10 @@ var (
 
 func init() {
 	SetAddressPrefixes()
+	RegisterDenoms()
+}
 
+func RegisterDenoms() {
 	sdk.RegisterDenom(HumanCoinUnit, sdk.OneDec())
 	sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, OsmoExponent))
 }

@@ -12,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/spf13/cobra"
 
+	appparams "github.com/c-osmosis/osmosis/app/params"
+
 	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
 	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
 	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
@@ -43,17 +45,18 @@ Example:
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
 			cdc := depCdc.(codec.Marshaler)
-
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
+			// get genesis params
+			genesisParams := appparams.TestnetNetworkParams()
+
+			// read genesis file
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
-
-			genesisParams := TestnetNetworkParams()
 
 			// chain params genesis
 			genDoc.GenesisTime = genesisParams.GenesisTime

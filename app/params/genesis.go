@@ -1,4 +1,4 @@
-package cmd
+package params
 
 import (
 	"fmt"
@@ -12,7 +12,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	appparams "github.com/c-osmosis/osmosis/app/params"
 	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
 	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
 	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
@@ -51,20 +50,20 @@ func TestnetNetworkParams() NetworkParams {
 		Description: fmt.Sprintf("The native token of Osmosis"),
 		DenomUnits: []*banktypes.DenomUnit{
 			{
-				Denom:    appparams.BaseCoinUnit,
+				Denom:    BaseCoinUnit,
 				Exponent: 0,
 				Aliases: []string{
-					fmt.Sprintf("u%s", appparams.HumanCoinUnit),
+					fmt.Sprintf("u%s", HumanCoinUnit),
 				},
 			},
 			{
-				Denom:    appparams.HumanCoinUnit,
-				Exponent: appparams.OsmoExponent,
+				Denom:    HumanCoinUnit,
+				Exponent: OsmoExponent,
 				Aliases:  nil,
 			},
 		},
-		Base:    appparams.BaseCoinUnit,
-		Display: appparams.HumanCoinUnit,
+		Base:    BaseCoinUnit,
+		Display: HumanCoinUnit,
 	}
 
 	testnetNetworkParams.StakingParams = stakingtypes.DefaultParams()

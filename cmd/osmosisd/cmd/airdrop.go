@@ -29,19 +29,31 @@ type AppStateV036 struct {
 	Staking  v036staking.GenesisState         `json:"staking"`
 }
 
-// SnapshotFields provide fields of snapshot per account
-type SnapshotFields struct {
+type Snapshot struct {
+	TotalAtomAmount         sdk.Int `json:"total_atom_amount"`
+	TotalOsmosAirdropAmount sdk.Int `json:"total_osmo_amount"`
+
+	NormalizationFactor  sdk.Dec `json:"normalization_factor"`
+	NormalizedOsmoAmount sdk.Int `json:"normalized_osmo_amount"`
+
+	NumberAccounts uint64 `json:"num_accounts"`
+
+	Accounts map[string]SnapshotAccount `json:"accounts"`
+}
+
+// SnapshotAccount provide fields of snapshot per account
+type SnapshotAccount struct {
 	AtomAddress           string  `json:"atom_address"` // Atom Balance = AtomStakedBalance + AtomUnstakedBalance
 	AtomBalance           sdk.Int `json:"atom_balance"`
 	AtomStakedBalance     sdk.Int `json:"atom_staked_balance"`
 	AtomUnstakedBalance   sdk.Int `json:"atom_unstaked_balance"` // AtomStakedPercent = AtomStakedBalance / AtomBalance
 	AtomStakedPercent     sdk.Dec `json:"atom_staked_percent"`
 	AtomOwnershipPercent  sdk.Dec `json:"atom_ownership_percent"`
-	OsmoNormalizedBalance sdk.Int `json:"osmo_balance_normalized"` // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
-	OsmoBalance           sdk.Int `json:"osmo_balance"`            // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
-	OsmoBalanceBonus      sdk.Int `json:"osmo_balance_bonus"`      // OsmoBalanceBase = sqrt(atom balance)
-	OsmoBalanceBase       sdk.Int `json:"osmo_balance_base"`       // OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
-	OsmoPercent           sdk.Dec `json:"osmo_ownership_percent"`
+	OsmoNormalizedBalance sdk.Int `json:"osmo_balance_normalized"`
+	OsmoBalance           sdk.Int `json:"osmo_balance"`           // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
+	OsmoBalanceBonus      sdk.Int `json:"osmo_balance_bonus"`     // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
+	OsmoBalanceBase       sdk.Int `json:"osmo_balance_base"`      // OsmoBalanceBase = sqrt(atom balance)
+	OsmoPercent           sdk.Dec `json:"osmo_ownership_percent"` // OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
 }
 
 // setCosmosBech32Prefixes set config for cosmos address system
@@ -110,7 +122,7 @@ Example:
 			}
 
 			// Produce the map of address to total atom balance, both staked and unstaked
-			snapshot := make(map[string]SnapshotFields)
+			snapshotAccs := make(map[string]SnapshotAccount)
 
 			totalAtomBalance := sdk.NewInt(0)
 			for _, account := range genStateV036.AppState.Accounts {
@@ -122,7 +134,7 @@ Example:
 					continue
 				}
 
-				snapshot[account.Address.String()] = SnapshotFields{
+				snapshotAccs[account.Address.String()] = SnapshotAccount{
 					AtomAddress:         account.Address.String(),
 					AtomBalance:         balance,
 					AtomUnstakedBalance: balance,
@@ -132,7 +144,7 @@ Example:
 
 			for _, unbonding := range genStateV036.AppState.Staking.UnbondingDelegations {
 				address := unbonding.DelegatorAddress.String()
-				acc, ok := snapshot[address]
+				acc, ok := snapshotAccs[address]
 				if !ok {
 					panic("no account found for unbonding")
 				}
@@ -145,7 +157,7 @@ Example:
 				acc.AtomBalance = acc.AtomBalance.Add(unbondingAtoms)
 				acc.AtomUnstakedBalance = acc.AtomUnstakedBalance.Add(unbondingAtoms)
 
-				snapshot[address] = acc
+				snapshotAccs[address] = acc
 			}
 
 			// Make a map from validator operator address to the v036 validator type
@@ -157,7 +169,7 @@ Example:
 			for _, delegation := range genStateV036.AppState.Staking.Delegations {
 				address := delegation.DelegatorAddress.String()
 
-				acc, ok := snapshot[address]
+				acc, ok := snapshotAccs[address]
 				if !ok {
 					panic("no account found for delegation")
 				}
@@ -168,13 +180,13 @@ Example:
 				acc.AtomBalance = acc.AtomBalance.Add(stakedAtoms)
 				acc.AtomStakedBalance = acc.AtomStakedBalance.Add(stakedAtoms)
 
-				snapshot[address] = acc
+				snapshotAccs[address] = acc
 			}
 
 			totalOsmoBalance := sdk.NewInt(0)
 			onePointFive := sdk.MustNewDecFromStr("1.5")
 
-			for address, acc := range snapshot {
+			for address, acc := range snapshotAccs {
 				allAtoms := acc.AtomBalance.ToDec()
 
 				acc.AtomOwnershipPercent = allAtoms.QuoInt(totalAtomBalance)
@@ -184,7 +196,7 @@ Example:
 					acc.OsmoBalanceBase = sdk.ZeroInt()
 					acc.OsmoBalanceBonus = sdk.ZeroInt()
 					acc.OsmoBalance = sdk.ZeroInt()
-					snapshot[address] = acc
+					snapshotAccs[address] = acc
 					continue
 				}
 
@@ -213,26 +225,37 @@ Example:
 					acc.OsmoBalance = sdk.ZeroInt()
 				}
 
-				snapshot[address] = acc
+				snapshotAccs[address] = acc
 			}
 
 			// normalize to desired genesis osmo supply
 			normalizationFactor := osmoSupply.ToDec().Quo(totalOsmoBalance.ToDec())
 
-			for address, acc := range snapshot {
+			for address, acc := range snapshotAccs {
 				acc.OsmoPercent = acc.OsmoBalance.ToDec().Quo(totalOsmoBalance.ToDec())
 
 				acc.OsmoNormalizedBalance = acc.OsmoBalance.ToDec().Mul(normalizationFactor).RoundInt()
 
-				snapshot[address] = acc
+				snapshotAccs[address] = acc
 			}
 
-			fmt.Printf("cosmos accounts: %d\n", len(snapshot))
+			snap := Snapshot{
+				TotalAtomAmount:         totalAtomBalance,
+				TotalOsmosAirdropAmount: totalOsmoBalance,
+				NormalizationFactor:     normalizationFactor,
+				NormalizedOsmoAmount:    osmoSupply,
+
+				NumberAccounts: uint64(len(snapshotAccs)),
+
+				Accounts: snapshotAccs,
+			}
+
+			fmt.Printf("# accounts: %d\n", len(snapshotAccs))
 			fmt.Printf("atomTotalSupply: %s\n", totalAtomBalance.String())
 			fmt.Printf("osmoTotalSupply (pre-normalization): %s\n", totalOsmoBalance.String())
 
 			// export snapshot json
-			snapshotJSON, err := aminoCodec.MarshalJSON(snapshot)
+			snapshotJSON, err := aminoCodec.MarshalJSON(snap)
 			if err != nil {
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}

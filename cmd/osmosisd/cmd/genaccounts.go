@@ -207,6 +207,9 @@ Example:
 
 			config.SetRoot(clientCtx.HomeDir)
 
+			// // get genesis params
+			// genesisParams := appparams.TestnetNetworkParams()
+
 			snapshotInput := args[0]
 
 			genFile := config.GenesisFile()
@@ -232,7 +235,7 @@ Example:
 			byteValue, _ := ioutil.ReadAll(snapshotJson)
 
 			// Produce the map of address to total atom balance, both staked and unstaked
-			snapshot := make(map[string]SnapshotFields)
+			snapshot := make(map[string]SnapshotAccount)
 			err = aminoCodec.UnmarshalJSON(byteValue, &snapshot)
 			if err != nil {
 				return err

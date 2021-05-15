@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/c-osmosis/osmosis/config"
+	"github.com/c-osmosis/osmosis/simapp"
 	"github.com/c-osmosis/osmosis/x/lockup/client/cli"
 	lockuptestutil "github.com/c-osmosis/osmosis/x/lockup/client/testutil"
 	"github.com/c-osmosis/osmosis/x/lockup/types"
@@ -32,7 +32,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = config.DefaultConfig()
+	s.cfg = simapp.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 
