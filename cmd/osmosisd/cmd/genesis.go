@@ -3,148 +3,183 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 
-	appparams "github.com/c-osmosis/osmosis/app/params"
-	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
+
+	appparams "github.com/c-osmosis/osmosis/app/params"
+
+	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
+	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
+	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
+	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func GenerateGenesisCmd() *cobra.Command {
+func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "export-genesis [input-snapshot-file]",
-		Short: "Export a genesis from fairdrop snapshot",
-		Long: `Export a genesis from fairdrop snapshot
+		Use:   "prepare-genesis",
+		Short: "Prepare a genesis file with initial setup",
+		Long: `Prepare a genesis file with initial setup.
+Examples include:
+	- Setting module initial params
+	- Setting denom metadata
 Example:
-	osmosisd export-genesis ../snapshot.json
+	osmosisd prepare-genesis
 	- Check input genesis:
 		file is at ~/.gaiad/config/genesis.json
 `,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
 			cdc := depCdc.(codec.Marshaler)
-			aminoCodec := clientCtx.LegacyAmino.Amino
-
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			config.SetRoot(clientCtx.HomeDir)
+			// get genesis params
+			genesisParams := appparams.TestnetNetworkParams()
 
-			snapshotInput := args[0]
-
+			// read genesis file
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
 
-			authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
-
-			accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
-			if err != nil {
-				return fmt.Errorf("failed to get accounts from any: %w", err)
-			}
-
-			// Read snapshot file
-			snapshotJson, err := os.Open(snapshotInput)
-			if err != nil {
-				return err
-			}
-			defer snapshotJson.Close()
-
-			byteValue, _ := ioutil.ReadAll(snapshotJson)
-
-			// Produce the map of address to total atom balance, both staked and unstaked
-			snapshot := make(map[string]SnapshotFields)
-			err = aminoCodec.UnmarshalJSON(byteValue, &snapshot)
-			if err != nil {
-				return err
-			}
-
-			claimBalances := []banktypes.Balance{}
-			liquidBalances := []banktypes.Balance{}
-
-			totalNormalizedOsmoBalance := sdk.NewInt(0)
-			for _, acc := range snapshot {
-				// calculate total osmo balance
-				totalNormalizedOsmoBalance = totalNormalizedOsmoBalance.Add(acc.OsmoNormalizedBalance)
-
-				// set atom bech32 prefixes
-				setCosmosBech32Prefixes()
-
-				// read address from snapshot
-				address, err := sdk.AccAddressFromBech32(acc.AtomAddress)
-				if err != nil {
-					return err
-				}
-
-				// set osmo bech32 prefixes
-				appparams.SetAddressPrefixes()
-
-				// initial liquid amounts
-				liquidCoins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance))
-				liquidBalances = append(liquidBalances, banktypes.Balance{Address: address.String(), Coins: liquidCoins})
-
-				// claim balances
-				claimCoins := sdk.NewCoins(sdk.NewCoin(claimtypes.OsmoBondDenom, acc.OsmoNormalizedBalance.Mul(sdk.NewInt(4))))
-				claimBalances = append(claimBalances, banktypes.Balance{Address: address.String(), Coins: claimCoins})
-			}
-
-			// auth module genesis
-			genAccs, err := authtypes.PackAccounts(accs)
-			if err != nil {
-				return fmt.Errorf("failed to convert accounts into any's: %w", err)
-			}
-			authGenState.Accounts = genAccs
-			authGenStateBz, err := cdc.MarshalJSON(&authGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
-			}
-			appState[authtypes.ModuleName] = authGenStateBz
+			// chain params genesis
+			genDoc.GenesisTime = genesisParams.GenesisTime
+			genDoc.ChainID = genesisParams.ChainID
 
 			// bank module genesis
 			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
-			bankGenState.Balances = banktypes.SanitizeGenesisBalances(liquidBalances)
+			bankGenState.DenomMetadata = []banktypes.Metadata{
+				genesisParams.NativeCoinMetadata,
+			}
 			bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 			}
 			appState[banktypes.ModuleName] = bankGenStateBz
 
+			// staking module genesis
+			stakingGenState := stakingtypes.GetGenesisStateFromAppState(depCdc, appState)
+			stakingGenState.Params = genesisParams.StakingParams
+			stakingGenStateBz, err := cdc.MarshalJSON(stakingGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal staking genesis state: %w", err)
+			}
+			appState[stakingtypes.ModuleName] = stakingGenStateBz
+
+			// mint module genesis
+			mintGenState := minttypes.DefaultGenesisState()
+			mintGenState.Params = genesisParams.MintParams
+			mintGenStateBz, err := cdc.MarshalJSON(mintGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal mint genesis state: %w", err)
+			}
+			appState[minttypes.ModuleName] = mintGenStateBz
+
+			// distribution module genesis
+			distributionGenState := distributiontypes.DefaultGenesisState()
+			distributionGenState.Params = genesisParams.DistributionParams
+			// TODO Set initial community pool
+			// distributionGenState.FeePool.CommunityPool = sdk.NewDecCoins()
+			distributionGenStateBz, err := cdc.MarshalJSON(distributionGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal distribution genesis state: %w", err)
+			}
+			appState[distributiontypes.ModuleName] = distributionGenStateBz
+
+			// gov module genesis
+			govGenState := govtypes.DefaultGenesisState()
+			govGenState.DepositParams = genesisParams.GovParams.DepositParams
+			govGenState.TallyParams = genesisParams.GovParams.TallyParams
+			govGenState.VotingParams = genesisParams.GovParams.VotingParams
+			govGenStateBz, err := cdc.MarshalJSON(govGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal gov genesis state: %w", err)
+			}
+			appState[govtypes.ModuleName] = govGenStateBz
+
+			// crisis module genesis
+			crisisGenState := crisistypes.DefaultGenesisState()
+			crisisGenState.ConstantFee = genesisParams.CrisisConstantFee
+			// TODO Set initial community pool
+			// distributionGenState.FeePool.CommunityPool = sdk.NewDecCoins()
+			crisisGenStateBz, err := cdc.MarshalJSON(crisisGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal crisis genesis state: %w", err)
+			}
+			appState[crisistypes.ModuleName] = crisisGenStateBz
+
+			// slashing module genesis
+			slashingGenState := slashingtypes.DefaultGenesisState()
+			slashingGenState.Params = genesisParams.SlashingParams
+			slashingGenStateBz, err := cdc.MarshalJSON(slashingGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal slashing genesis state: %w", err)
+			}
+			appState[slashingtypes.ModuleName] = slashingGenStateBz
+
+			// incentives module genesis
+			incentivesGenState := incentivestypes.DefaultGenesis()
+			incentivesGenState.Params = genesisParams.IncentivesParams
+			incentivesGenStateBz, err := cdc.MarshalJSON(incentivesGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal incentives genesis state: %w", err)
+			}
+			appState[incentivestypes.ModuleName] = incentivesGenStateBz
+
+			// epochs module genesis
+			epochsGenState := epochstypes.DefaultGenesis()
+			epochsGenState.Epochs = genesisParams.Epochs
+			epochsGenStateBz, err := cdc.MarshalJSON(epochsGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal epochs genesis state: %w", err)
+			}
+			appState[epochstypes.ModuleName] = epochsGenStateBz
+
 			// claim module genesis
-			claimGenState := claimtypes.DefaultGenesis()
-			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, totalNormalizedOsmoBalance)
-			claimGenState.InitialClaimables = claimBalances
+			claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
+			claimGenState.AirdropStartTime = genesisParams.ClaimAirdropStartTime
+			claimGenState.DurationOfDecay = genesisParams.ClaimDurationOfDecay
+			claimGenState.DurationUntilDecay = genesisParams.ClaimDurationUntilDecay
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal claim genesis state: %w", err)
 			}
 			appState[claimtypes.ModuleName] = claimGenStateBz
 
+			// validate genesis state
+			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
+				return fmt.Errorf("error validating genesis file: %s", err.Error())
+			}
+
+			// save genesis
 			appStateJSON, err := json.Marshal(appState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
 			}
-			genDoc.AppState = appStateJSON
 
+			genDoc.AppState = appStateJSON
 			err = genutil.ExportGenesisFile(genDoc, genFile)
 			return err
 		},
 	}
 
-	cmd.Flags().String(flagOsmoSupply, "", "OSMO total genesis supply")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

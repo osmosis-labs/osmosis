@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	OsmoBondDenom                 = "uosmo"
+	DefaultOsmoBondDenom          = "uosmo"
 	DefaultDurationUntilDecay     = time.Hour
-	DefaultClaimModuleAcctBalance = sdk.NewCoins(sdk.NewCoin(OsmoBondDenom, sdk.NewInt(1e6))) // 1 OSMO = 10^6 uosmo
+	DefaultClaimModuleAcctBalance = sdk.NewCoins(sdk.NewCoin(DefaultOsmoBondDenom, sdk.NewInt(1e6))) // 1 OSMO = 10^6 uosmo
 	DefaultDurationOfDecay        = time.Hour * 5
 )

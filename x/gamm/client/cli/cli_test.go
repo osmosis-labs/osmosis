@@ -7,7 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/c-osmosis/osmosis/config"
+	"github.com/c-osmosis/osmosis/simapp"
 	"github.com/c-osmosis/osmosis/x/gamm/client/cli"
 	gammtestutil "github.com/c-osmosis/osmosis/x/gamm/client/testutil"
 	"github.com/c-osmosis/osmosis/x/gamm/types"
@@ -33,7 +33,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = config.DefaultConfig()
+	s.cfg = simapp.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 
