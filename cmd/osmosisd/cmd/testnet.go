@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	appparams "github.com/c-osmosis/osmosis/app/params"
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -248,12 +249,15 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genFiles, numValidators); err != nil {
+	// get testnet genesis params
+	genesisParams := appparams.TestnetNetworkParams()
+
+	if err := initGenFiles(clientCtx, mbm, genesisParams, genAccounts, genBalances, genFiles, numValidators); err != nil {
 		return err
 	}
 
 	err := collectGenFiles(
-		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
+		clientCtx, nodeConfig, genesisParams.ChainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -265,7 +269,7 @@ func InitTestnet(
 }
 
 func initGenFiles(
-	clientCtx client.Context, mbm module.BasicManager, chainID string,
+	clientCtx client.Context, mbm module.BasicManager, genesisParams appparams.NetworkParams,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
@@ -291,16 +295,19 @@ func initGenFiles(
 	bankGenState.Balances = genBalances
 	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&bankGenState)
 
-	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
+	genDoc := &types.GenesisDoc{}
+
+	appGenState, genDoc, err = PrepareGenesis(clientCtx, appGenState, genDoc, genesisParams)
 	if err != nil {
-		return err
+		return nil
 	}
 
-	genDoc := types.GenesisDoc{
-		ChainID:    chainID,
-		AppState:   appGenStateJSON,
-		Validators: nil,
+	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal application genesis state: %w", err)
 	}
+
+	genDoc.AppState = appGenStateJSON
 
 	// generate empty genesis files for each validator and save
 	for i := 0; i < numValidators; i++ {
