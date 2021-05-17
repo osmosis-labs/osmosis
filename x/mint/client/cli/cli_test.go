@@ -51,12 +51,16 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"mint_denom":"stake","genesis_epoch_provisions":"5000000.000000000000000000","epoch_duration":"604800s","reduction_period_in_epochs":"156","reduction_factor":"0.500000000000000000"}`,
+			`{"mint_denom":"stake","genesis_epoch_provisions":"5000000.000000000000000000","epoch_duration":"604800s","reduction_period_in_epochs":"156","reduction_factor":"0.500000000000000000","distribution_proportions":{"staking":"0.500000000000000000","pool_incentives":"0.300000000000000000","developer_rewards":"0.200000000000000000"}}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`epoch_duration: 604800s
+			`distribution_proportions:
+  developer_rewards: "0.200000000000000000"
+  pool_incentives: "0.300000000000000000"
+  staking: "0.500000000000000000"
+epoch_duration: 604800s
 genesis_epoch_provisions: "5000000.000000000000000000"
 mint_denom: stake
 reduction_factor: "0.500000000000000000"

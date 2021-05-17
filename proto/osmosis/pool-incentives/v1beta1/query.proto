@@ -1,0 +1,30 @@
+syntax = "proto3";
+package osmosis.poolincentives.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/c-osmosis/osmosis/x/pool-incentives/types";
+
+service Query {
+  // PotIds takes the pool id and returns the matching pot ids and durations
+  rpc PotIds(QueryPotIdsRequest) returns (QueryPotIdsResponse) {
+    option (google.api.http).get = "/osmosis/pool-incentives/v1beta1/pot-ids/{pool_id}";
+  }
+}
+
+message QueryPotIdsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message QueryPotIdsResponse {
+  message PotIdWithDuration {
+    uint64 pot_id = 1 [(gogoproto.moretags) = "yaml:\"pot_id\"" ];
+    google.protobuf.Duration duration = 2 [
+      (gogoproto.nullable)    = false,
+      (gogoproto.stdduration) = true
+    ];
+  }
+
+  repeated PotIdWithDuration pot_ids_with_duration = 1 [(gogoproto.moretags) = "yaml:\"pot_ids_with_duration\"" ];
+}

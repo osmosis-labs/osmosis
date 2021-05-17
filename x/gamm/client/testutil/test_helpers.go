@@ -58,6 +58,7 @@ func MsgCreatePool(
 	args = append(args,
 		fmt.Sprintf("--%s=%s", gammcli.FlagPoolFile, jsonFile.Name()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
 
 	args = append(args, commonArgs...)
