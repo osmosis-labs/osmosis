@@ -2229,6 +2229,66 @@ paths:
             format: uint64
       tags:
         - Query
+  /osmosis/epochs/v1beta1/epochs:
+    get:
+      summary: EpochInfos provide running epochInfos
+      operationId: EpochInfos
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  epochs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        identifier:
+                          type: string
+                        start_time:
+                          type: string
+                          format: date-time
+                        duration:
+                          type: string
+                        current_epoch:
+                          type: string
+                          format: int64
+                        current_epoch_start_time:
+                          type: string
+                          format: date-time
+                        epoch_counting_started:
+                          type: boolean
+                        current_epoch_ended:
+                          type: boolean
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      tags:
+        - Query
   "/cosmos/auth/v1beta1/accounts/{address}":
     get:
       summary: Account returns account details based on address.
@@ -13990,6 +14050,51 @@ components:
         tokenInDenom:
           type: string
       title: ===================== MsgSwapExactAmountOut
+    osmosis.epochs.v1beta1.EpochInfo:
+      type: object
+      properties:
+        identifier:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        duration:
+          type: string
+        current_epoch:
+          type: string
+          format: int64
+        current_epoch_start_time:
+          type: string
+          format: date-time
+        epoch_counting_started:
+          type: boolean
+        current_epoch_ended:
+          type: boolean
+    osmosis.epochs.v1beta1.QueryEpochsInfoResponse:
+      type: object
+      properties:
+        epochs:
+          type: array
+          items:
+            type: object
+            properties:
+              identifier:
+                type: string
+              start_time:
+                type: string
+                format: date-time
+              duration:
+                type: string
+              current_epoch:
+                type: string
+                format: int64
+              current_epoch_start_time:
+                type: string
+                format: date-time
+              epoch_counting_started:
+                type: boolean
+              current_epoch_ended:
+                type: boolean
     cosmos.auth.v1beta1.Params:
       type: object
       properties:
