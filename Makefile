@@ -242,8 +242,7 @@ localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
 	@if ! [ -f $(BUILDDIR)/node0/osmosisd/config/genesis.json ]; \
 	then docker run --rm -v $(BUILDDIR):/osmosisd:Z osmosis-labs/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; \
 	fi
-
-# BUILDDIR=$(BUILDDIR) docker-compose up -d
+	docker-compose up -d
 
 # Stop testnet
 localnet-stop:

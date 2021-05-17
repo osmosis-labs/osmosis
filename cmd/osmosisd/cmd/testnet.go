@@ -252,17 +252,17 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	// if err := initGenFiles(clientCtx, mbm, genesisParams, genAccounts, genBalances, genFiles, numValidators); err != nil {
-	// 	return err
-	// }
+	if err := initGenFiles(clientCtx, mbm, genesisParams, genAccounts, genBalances, genFiles, numValidators); err != nil {
+		return err
+	}
 
-	// err := collectGenFiles(
-	// 	clientCtx, nodeConfig, genesisParams.ChainID, nodeIDs, valPubKeys, numValidators,
-	// 	outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
-	// )
-	// if err != nil {
-	// 	return err
-	// }
+	err := collectGenFiles(
+		clientCtx, nodeConfig, genesisParams.ChainID, nodeIDs, valPubKeys, numValidators,
+		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
+	)
+	if err != nil {
+		return err
+	}
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", numValidators)
 	return nil
@@ -396,10 +396,6 @@ func writeFile(name string, dir string, contents []byte) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(file)
-
-	fmt.Println(string(contents))
 
 	err = tmos.WriteFile(file, contents, 0644)
 	if err != nil {
