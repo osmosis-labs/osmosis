@@ -74,12 +74,13 @@ Example:
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
+			if chainID == "" {
+				chainID = "chain-" + tmrand.NewRand().Str(6)
+			}
+
 			// get testnet genesis params
 			genesisParams := appparams.TestnetNetworkParams()
-
-			if chainID != "" {
-				genesisParams.ChainID = "chain-" + tmrand.NewRand().Str(6)
-			}
+			genesisParams.ChainID = chainID
 
 			return InitTestnet(
 				clientCtx, cmd, config, mbm, genBalIterator, genesisParams, outputDir, minGasPrices,
@@ -93,7 +94,7 @@ Example:
 	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
 	cmd.Flags().String(flagNodeDaemonHome, "osmosisd", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
-	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank, a default will be used")
+	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", appparams.TestnetNetworkParams().NativeCoinMetadata.Base), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
@@ -203,7 +204,7 @@ func InitTestnet(
 		accStakingTokens := sdk.TokensFromConsensusPower(500)
 		coins := sdk.Coins{
 			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), accTokens),
-			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
+			sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, accStakingTokens),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -213,7 +214,7 @@ func InitTestnet(
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+			sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
@@ -295,9 +296,7 @@ func initGenFiles(
 	bankGenState.Balances = genBalances
 	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&bankGenState)
 
-	genDoc := &types.GenesisDoc{}
-
-	appGenState, genDoc, err = PrepareGenesis(clientCtx, appGenState, genDoc, genesisParams)
+	appGenState, _, err = PrepareGenesis(clientCtx, appGenState, &types.GenesisDoc{}, genesisParams)
 	if err != nil {
 		return nil
 	}
@@ -307,7 +306,11 @@ func initGenFiles(
 		return fmt.Errorf("failed to marshal application genesis state: %w", err)
 	}
 
-	genDoc.AppState = appGenStateJSON
+	genDoc := types.GenesisDoc{
+		ChainID:    genesisParams.ChainID,
+		AppState:   appGenStateJSON,
+		Validators: nil,
+	}
 
 	// generate empty genesis files for each validator and save
 	for i := 0; i < numValidators; i++ {
