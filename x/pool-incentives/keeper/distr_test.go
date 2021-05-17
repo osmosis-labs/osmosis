@@ -49,6 +49,10 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
+	for i, duration := range lockableDurations {
+		suite.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
+	}
+
 	pot1Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
