@@ -1,11 +1,8 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -19,7 +16,6 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 	err := mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
-	fmt.Println("FeeCollectorName", authtypes.FeeCollectorName)
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
 	suite.Equal("50000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
 	suite.Equal(sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(30000))).String(), feePool.CommunityPool.String())
@@ -32,15 +28,9 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 	suite.NoError(err)
 
 	feePool = suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	suite.Equal("76000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
-	suite.Equal(feePool.CommunityPool.String(), sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(72000))).String())
-	suite.Equal(
-		sdk.NewCoin("stake", sdk.NewInt(72000)),
-		suite.app.BankKeeper.GetBalance(
-			suite.ctx,
-			suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName),
-			"stake"),
-	)
+	suite.Equal("100000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
+	suite.Equal(feePool.CommunityPool.String(), sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(60000))).String())
+	suite.Equal(sdk.NewCoin("stake", sdk.NewInt(60000)),suite.app.BankKeeper.GetBalance(suite.ctx,suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName),"stake"))
 }
 
 func (suite *KeeperTestSuite) TestAllocateAsset() {
@@ -80,19 +70,19 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
 	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
-	suite.Equal("80000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
+	suite.Equal("50000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
 
 	pot1, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot1Id)
 	suite.NoError(err)
-	suite.Equal("3333stake", pot1.Coins.String())
+	suite.Equal("5000stake", pot1.Coins.String())
 
 	pot2, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot2Id)
 	suite.NoError(err)
-	suite.Equal("6666stake", pot2.Coins.String())
+	suite.Equal("9999stake", pot2.Coins.String())
 
 	pot3, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot3Id)
 	suite.NoError(err)
-	suite.Equal("10000stake", pot3.Coins.String())
+	suite.Equal("15000stake", pot3.Coins.String())
 
 	// Allocate more.
 	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(50000))}
@@ -100,20 +90,20 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
 	suite.NoError(err)
 	// It has very small margin of error.
-	suite.Equal("104000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
+	suite.Equal("75000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
 
 	// Allocated assets should be increased.
 	pot1, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot1Id)
 	suite.NoError(err)
-	suite.Equal("7666stake", pot1.Coins.String())
+	suite.Equal("7500stake", pot1.Coins.String())
 
 	pot2, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot2Id)
 	suite.NoError(err)
-	suite.Equal("15332stake", pot2.Coins.String())
+	suite.Equal("14999stake", pot2.Coins.String())
 
 	pot3, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot3Id)
 	suite.NoError(err)
-	suite.Equal("23000stake", pot3.Coins.String())
+	suite.Equal("22500stake", pot3.Coins.String())
 
 	// ------------ test community pool distribution when potId is zero ------------ //
 
@@ -141,7 +131,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 
 	// check community pool balance increase
 	feePoolNew := suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	suite.Equal(feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(28561))), feePoolNew.CommunityPool)
+	suite.Equal(feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(21000))), feePoolNew.CommunityPool)
 
 	// ------------ test community pool distribution when no distribution records are set ------------ //
 
@@ -160,7 +150,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 
 	// check community pool balance increase
 	feePoolNew = suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	suite.Equal(feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(75489))), feePoolNew.CommunityPool)
+	suite.Equal(feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(30001))), feePoolNew.CommunityPool)
 }
 
 func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {

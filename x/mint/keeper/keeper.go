@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/c-osmosis/osmosis/x/mint/types"
@@ -186,7 +185,7 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 
 	// allocate pool allocation ratio to pool-incentives module account account
 	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.PoolIncentives))
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, poolincentivestypes.ModuleName, poolIncentivesCoins)
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, poolincentivestypes.ModuleName, poolIncentivesCoins)
 	if err != nil {
 		return err
 	}
@@ -194,16 +193,10 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 	// allocate developer rewards to an address, for now empty address, TODO: update it
 	devRewardCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.DeveloperRewards))
 	devRewardsAddr := sdk.AccAddress{}
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, k.feeCollectorName, devRewardsAddr, devRewardCoins)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("FeeCollectorName", k.feeCollectorName)
-	fmt.Println("mintedCoins", mintedCoins)
-	fmt.Println("stakingIncentivesCoins", stakingIncentivesCoins)
-	fmt.Println("poolIncentivesCoins", poolIncentivesCoins)
-	fmt.Println("devRewardCoins", devRewardCoins)
 
 	// call an hook after deposition of coin into fee pool
 	k.hooks.AfterDistributeMintedCoins(ctx, mintedCoins)
