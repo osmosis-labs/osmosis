@@ -18,6 +18,7 @@ import (
 	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
 	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
 	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
+	poolincentivestypes "github.com/c-osmosis/osmosis/x/pool-incentives/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -161,6 +162,15 @@ Example:
 				return fmt.Errorf("failed to marshal claim genesis state: %w", err)
 			}
 			appState[claimtypes.ModuleName] = claimGenStateBz
+
+			// poolincentives module genesis
+			poolincentivesGenState := poolincentivestypes.GetGenesisStateFromAppState(depCdc, appState)
+			poolincentivesGenState.Params.MintedDenom = genesisParams.NativeCoinMetadata.Base
+			poolincentivesGenStateBz, err := cdc.MarshalJSON(poolincentivesGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal poolincentives genesis state: %w", err)
+			}
+			appState[poolincentivestypes.ModuleName] = poolincentivesGenStateBz
 
 			// validate genesis state
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
