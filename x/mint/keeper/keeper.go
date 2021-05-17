@@ -198,7 +198,7 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 		return err
 	}
 
-	// call an hook after deposition of coin into fee pool
+	// call an hook after the minting and distribution of new coins
 	k.hooks.AfterDistributeMintedCoins(ctx, mintedCoins)
 
 	return err
