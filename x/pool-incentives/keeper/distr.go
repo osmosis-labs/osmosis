@@ -8,8 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coin) error {
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, k.communityPoolName, sdk.Coins{asset})
+func (k Keeper) FundCommunityPoolFromModule(ctx sdk.Context, asset sdk.Coin) error {
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.communityPoolName, sdk.Coins{asset})
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 
 	if distrInfo.TotalWeight.IsZero() {
 		// If there are no records, put the asset to the community pool
-		return k.FundCommunityPoolFromFeeCollector(ctx, asset)
+		return k.FundCommunityPoolFromModule(ctx, asset)
 	}
 
 	assetAmountDec := asset.Amount.ToDec()
@@ -50,7 +50,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		}
 
 		if record.PotId == 0 { // fund community pool if potId is zero
-			k.FundCommunityPoolFromFeeCollector(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
+			k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
 			continue
 		}
 

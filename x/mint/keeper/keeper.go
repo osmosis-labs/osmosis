@@ -165,30 +165,41 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// GetPoolAllocatableAsset gets the balance of the `MintedDenom` from the `feeCollectorName` module account and returns coins according to the `AllocationRatio`
-func (k Keeper) GetPoolAllocatableAsset(ctx sdk.Context) sdk.Coin {
+// GetPoolAllocatableAsset gets the balance of the `MintedDenom` from fees and returns coins according to the `AllocationRatio`
+func (k Keeper) GetProportions(ctx sdk.Context, fees sdk.Coins, ratio sdk.Dec) sdk.Coin {
 	params := k.GetParams(ctx)
-
-	feeCollector := k.accountKeeper.GetModuleAccount(ctx, k.feeCollectorName)
-	asset := k.bankKeeper.GetBalance(ctx, feeCollector.GetAddress(), params.MintDenom)
-
-	return sdk.NewCoin(asset.Denom, asset.Amount.ToDec().Mul(params.PoolAllocationRatio).TruncateInt())
+	amount := fees.AmountOf(params.MintDenom)
+	return sdk.NewCoin(params.MintDenom, amount.ToDec().Mul(ratio).TruncateInt())
 }
 
-// AddCollectedFees implements an alias call to the underlying supply keeper's
-// AddCollectedFees to be used in BeginBlocker.
-func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+// DistributeMintedCoins implements distribution of minted coins from mint to external modules.
+func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) error {
+	proportions := k.GetParams(ctx).DistributionProportions
+
+	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module
+	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.Staking))
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, stakingIncentivesCoins)
+	if err != nil {
+		return err
+	}
 
 	// allocate pool allocation ratio to pool-incentives module account account
-	coins := sdk.NewCoins(k.GetPoolAllocatableAsset(ctx))
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, poolincentivestypes.ModuleName, coins)
+	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.PoolIncentives))
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, poolincentivestypes.ModuleName, poolIncentivesCoins)
+	if err != nil {
+		return err
+	}
+
+	// allocate developer rewards to an address, for now empty address, TODO: update it
+	devRewardCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.DeveloperRewards))
+	devRewardsAddr := sdk.AccAddress{}
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
 	if err != nil {
 		return err
 	}
 
 	// call an hook after deposition of coin into fee pool
-	k.hooks.AfterAddCollectedFees(ctx, fees)
+	k.hooks.AfterDistributeMintedCoins(ctx, mintedCoins)
 
 	return err
 }
