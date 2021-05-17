@@ -298,7 +298,7 @@ func initGenFiles(
 
 	appGenState, _, err = PrepareGenesis(clientCtx, appGenState, &types.GenesisDoc{}, genesisParams)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
