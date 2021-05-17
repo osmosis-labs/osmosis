@@ -179,7 +179,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 		PotId:  1,
 		Weight: sdk.NewInt(100),
 	})
-	suite.NoError(err)
+	suite.Error(err)
 
 	poolId := suite.preparePool()
 

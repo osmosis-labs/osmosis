@@ -118,6 +118,15 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 				record.PotId,
 			)
 		}
+
+		// unless PotID is 0 for the community pool, don't allow distribution records for pots that don't exist
+		if record.PotId != 0 {
+			_, err := k.incentivesKeeper.GetPotByID(ctx, record.PotId)
+			if err != nil {
+				return err
+			}
+		}
+
 		potIdFlags[record.PotId] = true
 		totalWeight = totalWeight.Add(record.Weight)
 	}
