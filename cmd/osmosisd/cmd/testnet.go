@@ -94,7 +94,7 @@ Example:
 	cmd.Flags().String(flagNodeDaemonHome, "osmosisd", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank, a default will be used")
-	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", appparams.TestnetNetworkParams().NativeCoinMetadata.Base), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
@@ -252,17 +252,17 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	if err := initGenFiles(clientCtx, mbm, genesisParams, genAccounts, genBalances, genFiles, numValidators); err != nil {
-		return err
-	}
+	// if err := initGenFiles(clientCtx, mbm, genesisParams, genAccounts, genBalances, genFiles, numValidators); err != nil {
+	// 	return err
+	// }
 
-	err := collectGenFiles(
-		clientCtx, nodeConfig, genesisParams.ChainID, nodeIDs, valPubKeys, numValidators,
-		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
-	)
-	if err != nil {
-		return err
-	}
+	// err := collectGenFiles(
+	// 	clientCtx, nodeConfig, genesisParams.ChainID, nodeIDs, valPubKeys, numValidators,
+	// 	outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
+	// )
+	// if err != nil {
+	// 	return err
+	// }
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", numValidators)
 	return nil
@@ -396,6 +396,10 @@ func writeFile(name string, dir string, contents []byte) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(file)
+
+	fmt.Println(string(contents))
 
 	err = tmos.WriteFile(file, contents, 0644)
 	if err != nil {
