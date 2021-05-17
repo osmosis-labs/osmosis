@@ -12,12 +12,6 @@ message Params {
   // minted_denom is the denomination of the coin expected to be minted by the minting module.
   // Pool-incentives module doesn’t actually mint the coin itself, but rather manages the distribution of coins that matches the defined minted_denom.
   string minted_denom = 1 [(gogoproto.moretags) = "yaml:\"minted_denom\""];
-  // allocation_ratio defines the proportion of the minted minted_denom that is to be allocated as pool incentives.
-  string allocation_ratio = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"allocation_ratio\"",
-    (gogoproto.nullable) = false
-  ];
 }
 
 message LockableDurationsInfo {

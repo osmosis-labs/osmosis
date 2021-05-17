@@ -3,12 +3,12 @@ package keeper
 import (
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/c-osmosis/osmosis/x/mint/types"
+	poolincentivestypes "github.com/c-osmosis/osmosis/x/pool-incentives/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Keeper of the mint store
@@ -16,7 +16,9 @@ type Keeper struct {
 	cdc              codec.BinaryMarshaler
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
+	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
+	hooks            types.MintHooks
 	feeCollectorName string
 }
 
@@ -40,6 +42,7 @@ func NewKeeper(
 		cdc:              cdc,
 		storeKey:         key,
 		paramSpace:       paramSpace,
+		accountKeeper:    ak,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 	}
@@ -50,6 +53,17 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// Set the mint hooks
+func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set mint hooks twice")
+	}
+
+	k.hooks = h
+
+	return k
 }
 
 // GetEpochNum returns epoch number
@@ -151,8 +165,41 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// AddCollectedFees implements an alias call to the underlying supply keeper's
-// AddCollectedFees to be used in BeginBlocker.
-func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+// GetPoolAllocatableAsset gets the balance of the `MintedDenom` from fees and returns coins according to the `AllocationRatio`
+func (k Keeper) GetProportions(ctx sdk.Context, fees sdk.Coins, ratio sdk.Dec) sdk.Coin {
+	params := k.GetParams(ctx)
+	amount := fees.AmountOf(params.MintDenom)
+	return sdk.NewCoin(params.MintDenom, amount.ToDec().Mul(ratio).TruncateInt())
+}
+
+// DistributeMintedCoins implements distribution of minted coins from mint to external modules.
+func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) error {
+	proportions := k.GetParams(ctx).DistributionProportions
+
+	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module
+	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.Staking))
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, stakingIncentivesCoins)
+	if err != nil {
+		return err
+	}
+
+	// allocate pool allocation ratio to pool-incentives module account account
+	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.PoolIncentives))
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, poolincentivestypes.ModuleName, poolIncentivesCoins)
+	if err != nil {
+		return err
+	}
+
+	// allocate developer rewards to an address, for now empty address, TODO: update it
+	devRewardCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.DeveloperRewards))
+	devRewardsAddr := sdk.AccAddress{}
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
+	if err != nil {
+		return err
+	}
+
+	// call an hook after the minting and distribution of new coins
+	k.hooks.AfterDistributeMintedCoins(ctx, mintedCoins)
+
+	return err
 }

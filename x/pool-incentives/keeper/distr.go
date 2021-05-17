@@ -1,24 +1,15 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"fmt"
 
 	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// GetAllocatableAsset gets the balance of the `MintedDenom` from the `feeCollectorName` module account and returns coins according to the `AllocationRatio`
-func (k Keeper) GetAllocatableAsset(ctx sdk.Context) sdk.Coin {
-	params := k.GetParams(ctx)
-
-	feeCollector := k.accountKeeper.GetModuleAccount(ctx, k.feeCollectorName)
-	asset := k.bankKeeper.GetBalance(ctx, feeCollector.GetAddress(), params.MintedDenom)
-
-	return sdk.NewCoin(asset.Denom, asset.Amount.ToDec().Mul(params.AllocationRatio).TruncateInt())
-}
-
-func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coin) error {
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, k.communityPoolName, sdk.Coins{asset})
+func (k Keeper) FundCommunityPoolFromModule(ctx sdk.Context, asset sdk.Coin) error {
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.communityPoolName, sdk.Coins{asset})
 	if err != nil {
 		return err
 	}
@@ -30,7 +21,11 @@ func (k Keeper) FundCommunityPoolFromFeeCollector(ctx sdk.Context, asset sdk.Coi
 }
 
 // AllocateAsset allocates and distributes coin according a pot’s proportional weight that is recorded in the record
-func (k Keeper) AllocateAsset(ctx sdk.Context, asset sdk.Coin) error {
+func (k Keeper) AllocateAsset(ctx sdk.Context) error {
+	logger := k.Logger(ctx)
+	params := k.GetParams(ctx)
+	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	asset := k.bankKeeper.GetBalance(ctx, moduleAddr, params.MintedDenom)
 	if asset.Amount.IsZero() {
 		// when allocating asset is zero, skip execution
 		return nil
@@ -38,50 +33,29 @@ func (k Keeper) AllocateAsset(ctx sdk.Context, asset sdk.Coin) error {
 
 	distrInfo := k.GetDistrInfo(ctx)
 
-	if distrInfo.TotalWeight.GT(sdk.ZeroInt()) {
-		assetAmountDec := asset.Amount.ToDec()
-		totalWeightDec := distrInfo.TotalWeight.ToDec()
-		for _, record := range distrInfo.Records {
-			allocatingAmount := assetAmountDec.Mul(record.Weight.ToDec().Quo(totalWeightDec)).TruncateInt()
-			coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
-
-			// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
-			if !allocatingAmount.IsPositive() {
-				continue
-			}
-
-			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, coins)
-			if err != nil {
-				return err
-			}
-
-			err = k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
+	if distrInfo.TotalWeight.IsZero() {
 		// If there are no records, put the asset to the community pool
-		return k.FundCommunityPoolFromFeeCollector(ctx, asset)
+		return k.FundCommunityPoolFromModule(ctx, asset)
 	}
 
 	assetAmountDec := asset.Amount.ToDec()
 	totalWeightDec := distrInfo.TotalWeight.ToDec()
 	for _, record := range distrInfo.Records {
 		allocatingAmount := assetAmountDec.Mul(record.Weight.ToDec().Quo(totalWeightDec)).TruncateInt()
-		coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
 
-		if record.PotId == 0 { // fund community pool if potId is zero
-			k.FundCommunityPoolFromFeeCollector(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
+		// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
+		if !allocatingAmount.IsPositive() {
+			logger.Info(fmt.Sprintf("allocating amount for (%d, %s) record is not positive", record.PotId, record.Weight.String()))
 			continue
 		}
 
-		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, coins)
-		if err != nil {
-			return err
+		if record.PotId == 0 { // fund community pool if potId is zero
+			k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
+			continue
 		}
 
-		err = k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
+		coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
+		err := k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
 		if err != nil {
 			return err
 		}
