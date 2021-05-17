@@ -71,6 +71,7 @@ func TestnetNetworkParams() NetworkParams {
 	testnetNetworkParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
 	testnetNetworkParams.StakingParams.MaxValidators = 100
 	testnetNetworkParams.StakingParams.BondDenom = testnetNetworkParams.NativeCoinMetadata.Base
+	testnetNetworkParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	testnetNetworkParams.MintParams = minttypes.DefaultParams()
 	testnetNetworkParams.MintParams.EpochDuration = time.Hour * 24 * 7                                                        // 1 week
