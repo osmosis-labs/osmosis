@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -28,7 +30,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShare(),
-		GetCmdRecords(),
+		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
 		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
@@ -69,7 +71,23 @@ $ %s query gamm pool 1
 				return err
 			}
 
-			return clientCtx.PrintProto(res)
+			if clientCtx.OutputFormat == "text" {
+				var pool types.Pool
+				pool.XXX_Unmarshal(res.GetPool().Value)
+				out, err := yaml.Marshal(pool)
+
+				if err != nil {
+					return err
+				}
+				return writeOutputBoilerplate(clientCtx, out)
+			} else {
+				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
+
+				if err != nil {
+					return err
+				}
+				return writeOutputBoilerplate(clientCtx, out)
+			}
 		},
 	}
 
@@ -148,13 +166,49 @@ $ %s query gamm pool-params 1
 				return err
 			}
 
-			return clientCtx.PrintProto(res)
+			if clientCtx.OutputFormat == "text" {
+				out, err := yaml.Marshal(res.GetParams())
+
+				if err != nil {
+					return err
+				}
+				return writeOutputBoilerplate(clientCtx, out)
+			} else {
+				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
+
+				if err != nil {
+					return err
+				}
+				return writeOutputBoilerplate(clientCtx, out)
+			}
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// TODO: Push this to the SDK
+func writeOutputBoilerplate(ctx client.Context, out []byte) error {
+	writer := ctx.Output
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	_, err := writer.Write(out)
+	if err != nil {
+		return err
+	}
+
+	if ctx.OutputFormat != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetCmdTotalShare return total share
@@ -199,15 +253,15 @@ $ %s query gamm total-share 1
 	return cmd
 }
 
-// GetCmdRecords return records
-func GetCmdRecords() *cobra.Command {
+// GetCmdPoolAssets return pool-assets for a pool
+func GetCmdPoolAssets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "records <poolID>",
-		Short: "Query records",
+		Use:   "pool-assets <poolID>",
+		Short: "Query pool-assets",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query records.
+			fmt.Sprintf(`Query pool assets.
 Example:
-$ %s query gamm records 1
+$ %s query gamm pool-assets 1
 `,
 				version.AppName,
 			),

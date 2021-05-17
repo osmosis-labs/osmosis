@@ -80,18 +80,17 @@ func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolPar
 
 func (suite *KeeperTestSuite) preparePool() uint64 {
 	poolId := suite.preparePoolWithPoolParams(types.PoolParams{
-		Lock:    false,
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})
 
-	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "foo", "bar")
+	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, "foo", "bar")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDec(2).String(), spotPrice.String())
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "bar", "baz")
+	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, "bar", "baz")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
+	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, "baz", "foo")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), spotPrice.String())
 

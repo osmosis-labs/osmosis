@@ -1,5 +1,7 @@
 package types
 
+import "errors"
+
 // DefaultIndex is the default capability global index
 const DefaultIndex uint64 = 1
 
@@ -7,15 +9,17 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params: Params{
-			BlocksPerEpoch: 10,
+			DistrEpochIdentifier: "weekly",
 		},
-		CurrentEpoch:    0,
-		EpochBeginBlock: 0,
+		Pots: []Pot{},
 	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
+	if gs.Params.DistrEpochIdentifier == "" {
+		return errors.New("epoch identifier should NOT be empty")
+	}
 	return nil
 }

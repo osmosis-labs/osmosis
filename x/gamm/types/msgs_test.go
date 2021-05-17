@@ -2,24 +2,26 @@ package types
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	appParams "github.com/c-osmosis/osmosis/app/params"
 )
 
 func TestMsgCreatePool(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgCreatePool) MsgCreatePool) MsgCreatePool {
 		properMsg := MsgCreatePool{
 			Sender: addr1,
 			PoolParams: PoolParams{
-				Lock:    false,
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			},
@@ -38,14 +40,14 @@ func TestMsgCreatePool(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgCreatePool) MsgCreatePool {
+	default_msg := createMsg(func(msg MsgCreatePool) MsgCreatePool {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "create_pool")
-	signers := msg.GetSigners()
+	require.Equal(t, default_msg.Route(), RouterKey)
+	require.Equal(t, default_msg.Type(), "create_pool")
+	signers := default_msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
 
@@ -140,14 +142,6 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "locked pool",
-			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.PoolParams.Lock = true
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
 			name: "negative swap fee",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
 				msg.PoolParams.SwapFee = sdk.NewDecWithPrec(-1, 2)
@@ -222,7 +216,7 @@ func TestMsgCreatePool(t *testing.T) {
 		{
 			name: "valid governor: address",
 			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
-				msg.FuturePoolGovernor = "cosmos1fqlr98d45v5ysqgp6h56kpujcj4cvsjn6mkrwy"
+				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 				return msg
 			}),
 			expectPass: true,
@@ -243,6 +237,35 @@ func TestMsgCreatePool(t *testing.T) {
 			}),
 			expectPass: true,
 		},
+		{
+			name: "too large of a weight",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolAssets[0].Weight = sdk.NewInt(1 << 21)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "Create an LBP",
+			msg: createMsg(func(msg MsgCreatePool) MsgCreatePool {
+				msg.PoolParams.SmoothWeightChangeParams = &SmoothWeightChangeParams{
+					StartTime: time.Now(),
+					Duration:  time.Hour,
+					TargetPoolWeights: []PoolAsset{
+						{
+							Weight: sdk.NewInt(200),
+							Token:  sdk.NewCoin("test", sdk.NewInt(1)),
+						},
+						{
+							Weight: sdk.NewInt(50),
+							Token:  sdk.NewCoin("test2", sdk.NewInt(1)),
+						},
+					},
+				}
+				return msg
+			}),
+			expectPass: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -255,9 +278,9 @@ func TestMsgCreatePool(t *testing.T) {
 }
 
 func TestMsgSwapExactAmountIn(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn) MsgSwapExactAmountIn {
@@ -385,9 +408,9 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 }
 
 func TestMsgSwapExactAmountOut(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut) MsgSwapExactAmountOut {
@@ -515,9 +538,9 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 }
 
 func TestMsgJoinPool(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgJoinPool) MsgJoinPool) MsgJoinPool {
@@ -615,9 +638,9 @@ func TestMsgJoinPool(t *testing.T) {
 }
 
 func TestMsgExitPool(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgExitPool) MsgExitPool) MsgExitPool {
@@ -714,9 +737,9 @@ func TestMsgExitPool(t *testing.T) {
 }
 
 func TestMsgJoinSwapExternAmountIn(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
@@ -813,9 +836,9 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 }
 
 func TestMsgJoinSwapShareAmountOut(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
@@ -913,9 +936,9 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 }
 
 func TestMsgExitSwapExternAmountOut(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
@@ -1012,9 +1035,9 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 }
 
 func TestMsgExitSwapShareAmountIn(t *testing.T) {
+	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
-	require.NoError(t, err)
+	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {

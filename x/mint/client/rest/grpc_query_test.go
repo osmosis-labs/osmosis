@@ -94,7 +94,8 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			map[string]string{},
 			&minttypes.QueryParamsResponse{},
 			&minttypes.QueryParamsResponse{
-				Params: minttypes.NewParams("stake", sdk.NewDec(5000000), 604800*time.Second, sdk.MustNewDecFromStr("0.5"), 156),
+				Params: minttypes.NewParams("stake", sdk.NewDec(5000000), 604800*time.Second, sdk.MustNewDecFromStr("0.5"), 156,
+					minttypes.DefaultParams().DistributionProportions),
 			},
 		},
 		{

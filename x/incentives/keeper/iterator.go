@@ -38,6 +38,11 @@ func (k Keeper) UpcomingPotsIteratorBeforeTime(ctx sdk.Context, time time.Time) 
 	return k.iteratorBeforeTime(ctx, types.KeyPrefixUpcomingPots, time)
 }
 
+// PotsIterator returns iterator for all pots
+func (k Keeper) PotsIterator(ctx sdk.Context) sdk.Iterator {
+	return k.iterator(ctx, types.KeyPrefixPots)
+}
+
 // UpcomingPotsIterator returns iterator for upcoming pots
 func (k Keeper) UpcomingPotsIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixUpcomingPots)

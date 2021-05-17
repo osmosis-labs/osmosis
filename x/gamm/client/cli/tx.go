@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -13,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -41,12 +44,28 @@ func NewTxCmd() *cobra.Command {
 
 func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool <token-weights> [flags]",
+		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
-		Long: `create a new pool and provide the liquidity to it.
-			e.g. create-pool 4uatom,4osmo,2uakt --initial-deposit 100uatom,5osmo,20uakt --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
-		`,
-		Args: cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`create a new pool and provide the liquidity to it.
+Pool initialization parameters must be provided through a pool JSON file.
+
+Example:
+$ %s tx gamm create-pool --pool-file="path/to/pool.json" --from mykey
+
+Where pool.json contains:
+{
+	"weights": "4uatom,4osmo,2uakt",
+	"initial-deposit": "100uatom,5osmo,20uakt",
+	"swap-fee": "0.01",
+	"exit-fee": "0.01",
+	"future-governor": "168h"
+}
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -55,7 +74,7 @@ func NewCreatePoolCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, args[0], cmd.Flags())
+			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -67,9 +86,7 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetCreatePool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagInitialDeposit)
-	_ = cmd.MarkFlagRequired(FlagSwapFee)
-	_ = cmd.MarkFlagRequired(FlagExitFee)
+	_ = cmd.MarkFlagRequired(FlagPoolFile)
 
 	return cmd
 }
@@ -314,18 +331,19 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	return cmd
 }
 
-func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeights string, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	initialDepositStr, err := fs.GetString(FlagInitialDeposit)
+func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+
+	pool, err := parseCreatePoolFlags(fs)
+	if err != nil {
+		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
+	}
+
+	deposit, err := sdk.ParseCoinsNormalized(pool.InitialDeposit)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	deposit, err := sdk.ParseCoinsNormalized(initialDepositStr)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	poolAssetCoins, err := sdk.ParseDecCoins(tokenWeights)
+	poolAssetCoins, err := sdk.ParseDecCoins(pool.Weights)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -334,20 +352,12 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 		return txf, nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	swapFeeStr, err := fs.GetString(FlagSwapFee)
-	if err != nil {
-		return txf, nil, err
-	}
-	swapFee, err := sdk.NewDecFromStr(swapFeeStr)
+	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	exitFeeStr, err := fs.GetString(FlagExitFee)
-	if err != nil {
-		return txf, nil, err
-	}
-	exitFee, err := sdk.NewDecFromStr(exitFeeStr)
+	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -365,20 +375,57 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, tokenWeight
 		})
 	}
 
-	futureGovernor, err := fs.GetString(FlagFutureGovernor)
-	if err != nil {
-		return txf, nil, err
-	}
-
 	msg := &types.MsgCreatePool{
 		Sender: clientCtx.GetFromAddress().String(),
 		PoolParams: types.PoolParams{
-			Lock:    false,
 			SwapFee: swapFee,
 			ExitFee: exitFee,
 		},
 		PoolAssets:         poolAssets,
-		FuturePoolGovernor: futureGovernor,
+		FuturePoolGovernor: pool.FutureGovernor,
+	}
+
+	if (pool.SmoothWeightChangeParams != smoothWeightChangeParamsInputs{}) {
+		duration, err := time.ParseDuration(pool.SmoothWeightChangeParams.Duration)
+		if err != nil {
+			return txf, nil, fmt.Errorf("could not parse duration: %w", err)
+		}
+
+		targetPoolAssetCoins, err := sdk.ParseDecCoins(pool.SmoothWeightChangeParams.TargetPoolWeights)
+		if err != nil {
+			return txf, nil, err
+		}
+
+		var targetPoolAssets []types.PoolAsset
+		for i := 0; i < len(targetPoolAssetCoins); i++ {
+
+			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
+				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
+			}
+
+			targetPoolAssets = append(targetPoolAssets, types.PoolAsset{
+				Weight: targetPoolAssetCoins[i].Amount.RoundInt(),
+				Token:  deposit[i],
+				// TODO: This doesn't make sense. Should only use denom, not an sdk.Coin
+			})
+		}
+
+		smoothWeightParams := types.SmoothWeightChangeParams{
+			Duration:           duration,
+			InitialPoolWeights: poolAssets,
+			TargetPoolWeights:  targetPoolAssets,
+		}
+
+		if pool.SmoothWeightChangeParams.StartTime != "" {
+			startTime, err := time.Parse(time.RFC3339, pool.SmoothWeightChangeParams.StartTime)
+			if err != nil {
+				return txf, nil, fmt.Errorf("could not parse time: %w", err)
+			}
+
+			smoothWeightParams.StartTime = startTime
+		}
+
+		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
 	}
 
 	return txf, msg, nil

@@ -87,18 +87,27 @@ func NewCreatePotCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &types.MsgCreatePot{
-				Owner: clientCtx.GetFromAddress(),
-				DistributeTo: lockuptypes.QueryCondition{
-					LockQueryType: lockuptypes.LockQueryType(queryType),
-					Denom:         denom,
-					Duration:      duration,
-					Timestamp:     time.Unix(timestamp, 0),
-				},
-				Coins:             coins,
-				StartTime:         startTime,
-				NumEpochsPaidOver: numEpochsPaidOver,
+			distributeTo := lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.LockQueryType(queryType),
+				Denom:         denom,
+				Duration:      duration,
+				Timestamp:     time.Unix(timestamp, 0),
 			}
+
+			// TODO: Confirm this is correct logic
+			isPerpetual := false
+			if numEpochsPaidOver == 0 {
+				isPerpetual = true
+			}
+
+			msg := types.NewMsgCreatePot(
+				isPerpetual,
+				clientCtx.GetFromAddress(),
+				distributeTo,
+				coins,
+				startTime,
+				numEpochsPaidOver,
+			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
@@ -133,11 +142,11 @@ func NewAddToPotCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &types.MsgAddToPot{
-				Owner:   clientCtx.GetFromAddress(),
-				PotId:   potId,
-				Rewards: rewards,
-			}
+			msg := types.NewMsgAddToPot(
+				clientCtx.GetFromAddress(),
+				potId,
+				rewards,
+			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},

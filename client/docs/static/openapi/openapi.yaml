@@ -20,233 +20,154 @@ paths:
                     items:
                       type: object
                       properties:
-                        baseAccount:
-                          type: object
-                          properties:
-                            address:
-                              type: string
-                            pub_key:
-                              type: object
-                              properties:
-                                type_url:
-                                  type: string
-                                  description: >-
-                                    A URL/resource name that uniquely identifies
-                                    the type of the serialized
-
-                                    protocol buffer message. This string must contain at least
-
-                                    one "/" character. The last segment of the URL's path must represent
-
-                                    the fully qualified name of the type (as in
-
-                                    `path/google.protobuf.Duration`). The name should be in a canonical form
-
-                                    (e.g., leading "." is not accepted).
-
-
-                                    In practice, teams usually precompile into the binary all types that they
-
-                                    expect it to use in the context of Any. However, for URLs which use the
-
-                                    scheme `http`, `https`, or no scheme, one can optionally set up a type
-
-                                    server that maps type URLs to message definitions as follows:
-
-
-                                    * If no scheme is provided, `https` is assumed.
-
-                                    * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                                      value in binary format, or produce an error.
-                                    * Applications are allowed to cache lookup results based on the
-                                      URL, or have them precompiled into a binary to avoid any
-                                      lookup. Therefore, binary compatibility needs to be preserved
-                                      on changes to types. (Use versioned type names to manage
-                                      breaking changes.)
-
-                                    Note: this functionality is not currently available in the official
-
-                                    protobuf release, and it is not used for type URLs beginning with
-
-                                    type.googleapis.com.
-
-
-                                    Schemes other than `http`, `https` (or the empty scheme) might be
-
-                                    used with implementation specific semantics.
-                                value:
-                                  type: string
-                                  format: byte
-                                  description: Must be a valid serialized protocol buffer of the above specified
-                                    type.
-                              description: >-
-                                `Any` contains an arbitrary serialized protocol
-                                buffer message along with a
-
-                                URL that describes the type of the serialized message.
-
-
-                                Protobuf library provides support to pack/unpack Any values in the form
-
-                                of utility functions or additional generated methods of the Any type.
-
-
-                                Example 1: Pack and unpack a message in C++.
-
-                                    Foo foo = ...;
-                                    Any any;
-                                    any.PackFrom(foo);
-                                    ...
-                                    if (any.UnpackTo(&foo)) {
-                                      ...
-                                    }
-
-                                Example 2: Pack and unpack a message in Java.
-
-                                    Foo foo = ...;
-                                    Any any = Any.pack(foo);
-                                    ...
-                                    if (any.is(Foo.class)) {
-                                      foo = any.unpack(Foo.class);
-                                    }
-
-                                 Example 3: Pack and unpack a message in Python.
-
-                                    foo = Foo(...)
-                                    any = Any()
-                                    any.Pack(foo)
-                                    ...
-                                    if any.Is(Foo.DESCRIPTOR):
-                                      any.Unpack(foo)
-                                      ...
-
-                                 Example 4: Pack and unpack a message in Go
-
-                                     foo := &pb.Foo{...}
-                                     any, err := ptypes.MarshalAny(foo)
-                                     ...
-                                     foo := &pb.Foo{}
-                                     if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                                       ...
-                                     }
-
-                                The pack methods provided by protobuf library will by default use
-
-                                'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-                                methods only use the fully qualified type name after the last '/'
-
-                                in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-                                name "y.z".
-
-
-
-                                JSON
-
-                                ====
-
-                                The JSON representation of an `Any` value uses the regular
-
-                                representation of the deserialized, embedded message, with an
-
-                                additional field `@type` which contains the type URL. Example:
-
-                                    package google.profile;
-                                    message Person {
-                                      string first_name = 1;
-                                      string last_name = 2;
-                                    }
-
-                                    {
-                                      "@type": "type.googleapis.com/google.profile.Person",
-                                      "firstName": <string>,
-                                      "lastName": <string>
-                                    }
-
-                                If the embedded message type is well-known and has a custom JSON
-
-                                representation, that representation will be embedded adding a field
-
-                                `value` which holds the custom JSON in addition to the `@type`
-
-                                field. Example (for message [google.protobuf.Duration][]):
-
-                                    {
-                                      "@type": "type.googleapis.com/google.protobuf.Duration",
-                                      "value": "1.212s"
-                                    }
-                            account_number:
-                              type: string
-                              format: uint64
-                            sequence:
-                              type: string
-                              format: uint64
-                          description: >-
-                            BaseAccount defines a base account type. It contains
-                            all the necessary fields
-
-                            for basic account functionality. Any custom account type should extend this
-
-                            type for additional functionality (e.g. vesting).
-                        id:
+                        type_url:
                           type: string
-                          format: uint64
-                        poolParams:
-                          type: object
-                          properties:
-                            lock:
-                              type: boolean
-                              description: If the pool is locked, users can't join, exit or swap the pool.
-                            swapFee:
-                              type: string
-                            exitFee:
-                              type: string
                           description: >-
-                            PoolParams defined the parameters that will be
-                            managed by the pool governance
+                            A URL/resource name that uniquely identifies the
+                            type of the serialized
 
-                            in the future. This params are not managed by the chain governanace.
-                        totalWeight:
+                            protocol buffer message. This string must contain at least
+
+                            one "/" character. The last segment of the URL's path must represent
+
+                            the fully qualified name of the type (as in
+
+                            `path/google.protobuf.Duration`). The name should be in a canonical form
+
+                            (e.g., leading "." is not accepted).
+
+
+                            In practice, teams usually precompile into the binary all types that they
+
+                            expect it to use in the context of Any. However, for URLs which use the
+
+                            scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+                            server that maps type URLs to message definitions as follows:
+
+
+                            * If no scheme is provided, `https` is assumed.
+
+                            * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                              value in binary format, or produce an error.
+                            * Applications are allowed to cache lookup results based on the
+                              URL, or have them precompiled into a binary to avoid any
+                              lookup. Therefore, binary compatibility needs to be preserved
+                              on changes to types. (Use versioned type names to manage
+                              breaking changes.)
+
+                            Note: this functionality is not currently available in the official
+
+                            protobuf release, and it is not used for type URLs beginning with
+
+                            type.googleapis.com.
+
+
+                            Schemes other than `http`, `https` (or the empty scheme) might be
+
+                            used with implementation specific semantics.
+                        value:
                           type: string
-                        totalShare:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
+                          format: byte
+                          description: Must be a valid serialized protocol buffer of the above specified
+                            type.
+                      description: >-
+                        `Any` contains an arbitrary serialized protocol buffer
+                        message along with a
+
+                        URL that describes the type of the serialized message.
 
 
-                            NOTE: The amount field is an Int which implements the custom method
+                        Protobuf library provides support to pack/unpack Any values in the form
 
-                            signatures required by gogoproto.
-                        records:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              weight:
-                                type: string
-                                description: Denormarized weight.
-                              token:
-                                type: object
-                                properties:
-                                  denom:
-                                    type: string
-                                  amount:
-                                    type: string
-                                description: >-
-                                  Coin defines a token with a denomination and
-                                  an amount.
+                        of utility functions or additional generated methods of the Any type.
 
 
-                                  NOTE: The amount field is an Int which implements the custom method
+                        Example 1: Pack and unpack a message in C++.
 
-                                  signatures required by gogoproto.
+                            Foo foo = ...;
+                            Any any;
+                            any.PackFrom(foo);
+                            ...
+                            if (any.UnpackTo(&foo)) {
+                              ...
+                            }
+
+                        Example 2: Pack and unpack a message in Java.
+
+                            Foo foo = ...;
+                            Any any = Any.pack(foo);
+                            ...
+                            if (any.is(Foo.class)) {
+                              foo = any.unpack(Foo.class);
+                            }
+
+                         Example 3: Pack and unpack a message in Python.
+
+                            foo = Foo(...)
+                            any = Any()
+                            any.Pack(foo)
+                            ...
+                            if any.Is(Foo.DESCRIPTOR):
+                              any.Unpack(foo)
+                              ...
+
+                         Example 4: Pack and unpack a message in Go
+
+                             foo := &pb.Foo{...}
+                             any, err := ptypes.MarshalAny(foo)
+                             ...
+                             foo := &pb.Foo{}
+                             if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                               ...
+                             }
+
+                        The pack methods provided by protobuf library will by default use
+
+                        'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+                        methods only use the fully qualified type name after the last '/'
+
+                        in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+                        name "y.z".
+
+
+
+                        JSON
+
+                        ====
+
+                        The JSON representation of an `Any` value uses the regular
+
+                        representation of the deserialized, embedded message, with an
+
+                        additional field `@type` which contains the type URL. Example:
+
+                            package google.profile;
+                            message Person {
+                              string first_name = 1;
+                              string last_name = 2;
+                            }
+
+                            {
+                              "@type": "type.googleapis.com/google.profile.Person",
+                              "firstName": <string>,
+                              "lastName": <string>
+                            }
+
+                        If the embedded message type is well-known and has a custom JSON
+
+                        representation, that representation will be embedded adding a field
+
+                        `value` which holds the custom JSON in addition to the `@type`
+
+                        field. Example (for message [google.protobuf.Duration][]):
+
+                            {
+                              "@type": "type.googleapis.com/google.protobuf.Duration",
+                              "value": "1.212s"
+                            }
                   pagination:
                     description: pagination defines the pagination in the response.
                     type: object
@@ -482,6 +403,189 @@ paths:
             type: boolean
       tags:
         - Query
+  /osmosis/gamm/v1beta1/pools/total_pools:
+    get:
+      operationId: TotalPools
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  totalPools:
+                    type: string
+                    format: uint64
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                          description: >-
+                            A URL/resource name that uniquely identifies the
+                            type of the serialized
+
+                            protocol buffer message. This string must contain at least
+
+                            one "/" character. The last segment of the URL's path must represent
+
+                            the fully qualified name of the type (as in
+
+                            `path/google.protobuf.Duration`). The name should be in a canonical form
+
+                            (e.g., leading "." is not accepted).
+
+
+                            In practice, teams usually precompile into the binary all types that they
+
+                            expect it to use in the context of Any. However, for URLs which use the
+
+                            scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+                            server that maps type URLs to message definitions as follows:
+
+
+                            * If no scheme is provided, `https` is assumed.
+
+                            * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                              value in binary format, or produce an error.
+                            * Applications are allowed to cache lookup results based on the
+                              URL, or have them precompiled into a binary to avoid any
+                              lookup. Therefore, binary compatibility needs to be preserved
+                              on changes to types. (Use versioned type names to manage
+                              breaking changes.)
+
+                            Note: this functionality is not currently available in the official
+
+                            protobuf release, and it is not used for type URLs beginning with
+
+                            type.googleapis.com.
+
+
+                            Schemes other than `http`, `https` (or the empty scheme) might be
+
+                            used with implementation specific semantics.
+                        value:
+                          type: string
+                          format: byte
+                          description: Must be a valid serialized protocol buffer of the above specified
+                            type.
+                      description: >-
+                        `Any` contains an arbitrary serialized protocol buffer
+                        message along with a
+
+                        URL that describes the type of the serialized message.
+
+
+                        Protobuf library provides support to pack/unpack Any values in the form
+
+                        of utility functions or additional generated methods of the Any type.
+
+
+                        Example 1: Pack and unpack a message in C++.
+
+                            Foo foo = ...;
+                            Any any;
+                            any.PackFrom(foo);
+                            ...
+                            if (any.UnpackTo(&foo)) {
+                              ...
+                            }
+
+                        Example 2: Pack and unpack a message in Java.
+
+                            Foo foo = ...;
+                            Any any = Any.pack(foo);
+                            ...
+                            if (any.is(Foo.class)) {
+                              foo = any.unpack(Foo.class);
+                            }
+
+                         Example 3: Pack and unpack a message in Python.
+
+                            foo = Foo(...)
+                            any = Any()
+                            any.Pack(foo)
+                            ...
+                            if any.Is(Foo.DESCRIPTOR):
+                              any.Unpack(foo)
+                              ...
+
+                         Example 4: Pack and unpack a message in Go
+
+                             foo := &pb.Foo{...}
+                             any, err := ptypes.MarshalAny(foo)
+                             ...
+                             foo := &pb.Foo{}
+                             if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                               ...
+                             }
+
+                        The pack methods provided by protobuf library will by default use
+
+                        'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+                        methods only use the fully qualified type name after the last '/'
+
+                        in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+                        name "y.z".
+
+
+
+                        JSON
+
+                        ====
+
+                        The JSON representation of an `Any` value uses the regular
+
+                        representation of the deserialized, embedded message, with an
+
+                        additional field `@type` which contains the type URL. Example:
+
+                            package google.profile;
+                            message Person {
+                              string first_name = 1;
+                              string last_name = 2;
+                            }
+
+                            {
+                              "@type": "type.googleapis.com/google.profile.Person",
+                              "firstName": <string>,
+                              "lastName": <string>
+                            }
+
+                        If the embedded message type is well-known and has a custom JSON
+
+                        representation, that representation will be embedded adding a field
+
+                        `value` which holds the custom JSON in addition to the `@type`
+
+                        field. Example (for message [google.protobuf.Duration][]):
+
+                            {
+                              "@type": "type.googleapis.com/google.protobuf.Duration",
+                              "value": "1.212s"
+                            }
+      tags:
+        - Query
   "/osmosis/gamm/v1beta1/{poolId}":
     get:
       operationId: Pool
@@ -496,233 +600,154 @@ paths:
                   pool:
                     type: object
                     properties:
-                      baseAccount:
-                        type: object
-                        properties:
-                          address:
-                            type: string
-                          pub_key:
-                            type: object
-                            properties:
-                              type_url:
-                                type: string
-                                description: >-
-                                  A URL/resource name that uniquely identifies
-                                  the type of the serialized
-
-                                  protocol buffer message. This string must contain at least
-
-                                  one "/" character. The last segment of the URL's path must represent
-
-                                  the fully qualified name of the type (as in
-
-                                  `path/google.protobuf.Duration`). The name should be in a canonical form
-
-                                  (e.g., leading "." is not accepted).
-
-
-                                  In practice, teams usually precompile into the binary all types that they
-
-                                  expect it to use in the context of Any. However, for URLs which use the
-
-                                  scheme `http`, `https`, or no scheme, one can optionally set up a type
-
-                                  server that maps type URLs to message definitions as follows:
-
-
-                                  * If no scheme is provided, `https` is assumed.
-
-                                  * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                                    value in binary format, or produce an error.
-                                  * Applications are allowed to cache lookup results based on the
-                                    URL, or have them precompiled into a binary to avoid any
-                                    lookup. Therefore, binary compatibility needs to be preserved
-                                    on changes to types. (Use versioned type names to manage
-                                    breaking changes.)
-
-                                  Note: this functionality is not currently available in the official
-
-                                  protobuf release, and it is not used for type URLs beginning with
-
-                                  type.googleapis.com.
-
-
-                                  Schemes other than `http`, `https` (or the empty scheme) might be
-
-                                  used with implementation specific semantics.
-                              value:
-                                type: string
-                                format: byte
-                                description: Must be a valid serialized protocol buffer of the above specified
-                                  type.
-                            description: >-
-                              `Any` contains an arbitrary serialized protocol
-                              buffer message along with a
-
-                              URL that describes the type of the serialized message.
-
-
-                              Protobuf library provides support to pack/unpack Any values in the form
-
-                              of utility functions or additional generated methods of the Any type.
-
-
-                              Example 1: Pack and unpack a message in C++.
-
-                                  Foo foo = ...;
-                                  Any any;
-                                  any.PackFrom(foo);
-                                  ...
-                                  if (any.UnpackTo(&foo)) {
-                                    ...
-                                  }
-
-                              Example 2: Pack and unpack a message in Java.
-
-                                  Foo foo = ...;
-                                  Any any = Any.pack(foo);
-                                  ...
-                                  if (any.is(Foo.class)) {
-                                    foo = any.unpack(Foo.class);
-                                  }
-
-                               Example 3: Pack and unpack a message in Python.
-
-                                  foo = Foo(...)
-                                  any = Any()
-                                  any.Pack(foo)
-                                  ...
-                                  if any.Is(Foo.DESCRIPTOR):
-                                    any.Unpack(foo)
-                                    ...
-
-                               Example 4: Pack and unpack a message in Go
-
-                                   foo := &pb.Foo{...}
-                                   any, err := ptypes.MarshalAny(foo)
-                                   ...
-                                   foo := &pb.Foo{}
-                                   if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                                     ...
-                                   }
-
-                              The pack methods provided by protobuf library will by default use
-
-                              'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-                              methods only use the fully qualified type name after the last '/'
-
-                              in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-                              name "y.z".
-
-
-
-                              JSON
-
-                              ====
-
-                              The JSON representation of an `Any` value uses the regular
-
-                              representation of the deserialized, embedded message, with an
-
-                              additional field `@type` which contains the type URL. Example:
-
-                                  package google.profile;
-                                  message Person {
-                                    string first_name = 1;
-                                    string last_name = 2;
-                                  }
-
-                                  {
-                                    "@type": "type.googleapis.com/google.profile.Person",
-                                    "firstName": <string>,
-                                    "lastName": <string>
-                                  }
-
-                              If the embedded message type is well-known and has a custom JSON
-
-                              representation, that representation will be embedded adding a field
-
-                              `value` which holds the custom JSON in addition to the `@type`
-
-                              field. Example (for message [google.protobuf.Duration][]):
-
-                                  {
-                                    "@type": "type.googleapis.com/google.protobuf.Duration",
-                                    "value": "1.212s"
-                                  }
-                          account_number:
-                            type: string
-                            format: uint64
-                          sequence:
-                            type: string
-                            format: uint64
-                        description: >-
-                          BaseAccount defines a base account type. It contains
-                          all the necessary fields
-
-                          for basic account functionality. Any custom account type should extend this
-
-                          type for additional functionality (e.g. vesting).
-                      id:
+                      type_url:
                         type: string
-                        format: uint64
-                      poolParams:
-                        type: object
-                        properties:
-                          lock:
-                            type: boolean
-                            description: If the pool is locked, users can't join, exit or swap the pool.
-                          swapFee:
-                            type: string
-                          exitFee:
-                            type: string
                         description: >-
-                          PoolParams defined the parameters that will be managed
-                          by the pool governance
+                          A URL/resource name that uniquely identifies the type
+                          of the serialized
 
-                          in the future. This params are not managed by the chain governanace.
-                      totalWeight:
+                          protocol buffer message. This string must contain at least
+
+                          one "/" character. The last segment of the URL's path must represent
+
+                          the fully qualified name of the type (as in
+
+                          `path/google.protobuf.Duration`). The name should be in a canonical form
+
+                          (e.g., leading "." is not accepted).
+
+
+                          In practice, teams usually precompile into the binary all types that they
+
+                          expect it to use in the context of Any. However, for URLs which use the
+
+                          scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+                          server that maps type URLs to message definitions as follows:
+
+
+                          * If no scheme is provided, `https` is assumed.
+
+                          * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                            value in binary format, or produce an error.
+                          * Applications are allowed to cache lookup results based on the
+                            URL, or have them precompiled into a binary to avoid any
+                            lookup. Therefore, binary compatibility needs to be preserved
+                            on changes to types. (Use versioned type names to manage
+                            breaking changes.)
+
+                          Note: this functionality is not currently available in the official
+
+                          protobuf release, and it is not used for type URLs beginning with
+
+                          type.googleapis.com.
+
+
+                          Schemes other than `http`, `https` (or the empty scheme) might be
+
+                          used with implementation specific semantics.
+                      value:
                         type: string
-                      totalShare:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
+                        format: byte
+                        description: Must be a valid serialized protocol buffer of the above specified
+                          type.
+                    description: >-
+                      `Any` contains an arbitrary serialized protocol buffer
+                      message along with a
+
+                      URL that describes the type of the serialized message.
 
 
-                          NOTE: The amount field is an Int which implements the custom method
+                      Protobuf library provides support to pack/unpack Any values in the form
 
-                          signatures required by gogoproto.
-                      records:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            weight:
-                              type: string
-                              description: Denormarized weight.
-                            token:
-                              type: object
-                              properties:
-                                denom:
-                                  type: string
-                                amount:
-                                  type: string
-                              description: >-
-                                Coin defines a token with a denomination and an
-                                amount.
+                      of utility functions or additional generated methods of the Any type.
 
 
-                                NOTE: The amount field is an Int which implements the custom method
+                      Example 1: Pack and unpack a message in C++.
 
-                                signatures required by gogoproto.
+                          Foo foo = ...;
+                          Any any;
+                          any.PackFrom(foo);
+                          ...
+                          if (any.UnpackTo(&foo)) {
+                            ...
+                          }
+
+                      Example 2: Pack and unpack a message in Java.
+
+                          Foo foo = ...;
+                          Any any = Any.pack(foo);
+                          ...
+                          if (any.is(Foo.class)) {
+                            foo = any.unpack(Foo.class);
+                          }
+
+                       Example 3: Pack and unpack a message in Python.
+
+                          foo = Foo(...)
+                          any = Any()
+                          any.Pack(foo)
+                          ...
+                          if any.Is(Foo.DESCRIPTOR):
+                            any.Unpack(foo)
+                            ...
+
+                       Example 4: Pack and unpack a message in Go
+
+                           foo := &pb.Foo{...}
+                           any, err := ptypes.MarshalAny(foo)
+                           ...
+                           foo := &pb.Foo{}
+                           if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                             ...
+                           }
+
+                      The pack methods provided by protobuf library will by default use
+
+                      'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+                      methods only use the fully qualified type name after the last '/'
+
+                      in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+                      name "y.z".
+
+
+
+                      JSON
+
+                      ====
+
+                      The JSON representation of an `Any` value uses the regular
+
+                      representation of the deserialized, embedded message, with an
+
+                      additional field `@type` which contains the type URL. Example:
+
+                          package google.profile;
+                          message Person {
+                            string first_name = 1;
+                            string last_name = 2;
+                          }
+
+                          {
+                            "@type": "type.googleapis.com/google.profile.Person",
+                            "firstName": <string>,
+                            "lastName": <string>
+                          }
+
+                      If the embedded message type is well-known and has a custom JSON
+
+                      representation, that representation will be embedded adding a field
+
+                      `value` which holds the custom JSON in addition to the `@type`
+
+                      field. Example (for message [google.protobuf.Duration][]):
+
+                          {
+                            "@type": "type.googleapis.com/google.protobuf.Duration",
+                            "value": "1.212s"
+                          }
         default:
           description: An unexpected error response.
           content:
@@ -1312,18 +1337,110 @@ paths:
                   params:
                     type: object
                     properties:
-                      lock:
-                        type: boolean
-                        description: If the pool is locked, users can't join, exit or swap the pool.
                       swapFee:
                         type: string
                       exitFee:
                         type: string
+                      smoothWeightChangeParams:
+                        type: object
+                        properties:
+                          start_time:
+                            type: string
+                            format: date-time
+                            description: >-
+                              The start time for beginning the weight change.
+
+                              If a parameter change / pool instantiation leaves this blank,
+
+                              it should be generated by the state_machine as the current time.
+                          duration:
+                            type: string
+                            title: Duration for the weights to change over
+                          initialPoolWeights:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                token:
+                                  description: >-
+                                    Coins we are talking about,
+
+                                    the denomination must be unique amongst all PoolAssets for this pool.
+                                  type: object
+                                  properties:
+                                    denom:
+                                      type: string
+                                    amount:
+                                      type: string
+                                weight:
+                                  type: string
+                                  title: Weight that is not normalized. This weight must be less than 2^50
+                            description: >-
+                              The initial pool weights. These are copied from
+                              the pool's settings
+
+                              at the time of weight change instantiation.
+
+                              The amount PoolAsset.token.amount field is ignored if present,
+
+                              future type refactorings should just have a type with the denom & weight
+
+                              here.
+                          targetPoolWeights:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                token:
+                                  description: >-
+                                    Coins we are talking about,
+
+                                    the denomination must be unique amongst all PoolAssets for this pool.
+                                  type: object
+                                  properties:
+                                    denom:
+                                      type: string
+                                    amount:
+                                      type: string
+                                weight:
+                                  type: string
+                                  title: Weight that is not normalized. This weight must be less than 2^50
+                            description: >-
+                              The target pool weights. The pool weights will
+                              change linearly with respect
+
+                              to time between start_time, and start_time + duration. The amount
+
+                              PoolAsset.token.amount field is ignored if present, future type
+
+                              refactorings should just have a type with the denom & weight here.
+                        title: >-
+                          Parameters for changing the weights in a balancer pool
+                          smoothly from
+
+                          a start weight and end weight over a period of time.
+
+                          Currently, the only smooth change supported is linear changing between
+
+                          the two weights, but more types may be added in the future.
+
+                          When these parameters are set, the weight w(t) for pool time `t` is the
+
+                          following:
+                            t <= start_time: w(t) = initial_pool_weights
+                            start_time < t <= start_time + duration:
+                              w(t) = initial_pool_weights + (t - start_time) *
+                                (target_pool_weights - initial_pool_weights) / (duration)
+                            t > start_time + duration: w(t) = target_pool_weights
                     description: >-
                       PoolParams defined the parameters that will be managed by
                       the pool governance
 
                       in the future. This params are not managed by the chain governanace.
+
+                      Instead they will be managed by the token holders of the pool.
+
+                      The pool's token holders are specified in future_pool_governor.
         default:
           description: An unexpected error response.
           content:
@@ -1698,7 +1815,7 @@ paths:
           required: false
           schema:
             type: string
-        - name: sansSwapFee
+        - name: withSwapFee
           in: query
           required: false
           schema:
@@ -1707,7 +1824,7 @@ paths:
         - Query
   "/osmosis/gamm/v1beta1/{poolId}/tokens":
     get:
-      operationId: Records
+      operationId: PoolAssets
       responses:
         "200":
           description: A successful response.
@@ -1716,29 +1833,25 @@ paths:
               schema:
                 type: object
                 properties:
-                  records:
+                  poolAssets:
                     type: array
                     items:
                       type: object
                       properties:
-                        weight:
-                          type: string
-                          description: Denormarized weight.
                         token:
+                          description: >-
+                            Coins we are talking about,
+
+                            the denomination must be unique amongst all PoolAssets for this pool.
                           type: object
                           properties:
                             denom:
                               type: string
                             amount:
                               type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
-
-
-                            NOTE: The amount field is an Int which implements the custom method
-
-                            signatures required by gogoproto.
+                        weight:
+                          type: string
+                          title: Weight that is not normalized. This weight must be less than 2^50
         default:
           description: An unexpected error response.
           content:
@@ -2114,6 +2227,66 @@ paths:
           schema:
             type: string
             format: uint64
+      tags:
+        - Query
+  /osmosis/epochs/v1beta1/epochs:
+    get:
+      summary: EpochInfos provide running epochInfos
+      operationId: EpochInfos
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  epochs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        identifier:
+                          type: string
+                        start_time:
+                          type: string
+                          format: date-time
+                        duration:
+                          type: string
+                        current_epoch:
+                          type: string
+                          format: int64
+                        current_epoch_start_time:
+                          type: string
+                          format: date-time
+                        epoch_counting_started:
+                          type: boolean
+                        current_epoch_ended:
+                          type: boolean
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
       tags:
         - Query
   "/cosmos/auth/v1beta1/accounts/{address}":
@@ -12762,175 +12935,6 @@ paths:
         - Query
 components:
   schemas:
-    cosmos.auth.v1beta1.BaseAccount:
-      type: object
-      properties:
-        address:
-          type: string
-        pub_key:
-          type: object
-          properties:
-            type_url:
-              type: string
-              description: >-
-                A URL/resource name that uniquely identifies the type of the
-                serialized
-
-                protocol buffer message. This string must contain at least
-
-                one "/" character. The last segment of the URL's path must represent
-
-                the fully qualified name of the type (as in
-
-                `path/google.protobuf.Duration`). The name should be in a canonical form
-
-                (e.g., leading "." is not accepted).
-
-
-                In practice, teams usually precompile into the binary all types that they
-
-                expect it to use in the context of Any. However, for URLs which use the
-
-                scheme `http`, `https`, or no scheme, one can optionally set up a type
-
-                server that maps type URLs to message definitions as follows:
-
-
-                * If no scheme is provided, `https` is assumed.
-
-                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                  value in binary format, or produce an error.
-                * Applications are allowed to cache lookup results based on the
-                  URL, or have them precompiled into a binary to avoid any
-                  lookup. Therefore, binary compatibility needs to be preserved
-                  on changes to types. (Use versioned type names to manage
-                  breaking changes.)
-
-                Note: this functionality is not currently available in the official
-
-                protobuf release, and it is not used for type URLs beginning with
-
-                type.googleapis.com.
-
-
-                Schemes other than `http`, `https` (or the empty scheme) might be
-
-                used with implementation specific semantics.
-            value:
-              type: string
-              format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
-                type.
-          description: >-
-            `Any` contains an arbitrary serialized protocol buffer message along
-            with a
-
-            URL that describes the type of the serialized message.
-
-
-            Protobuf library provides support to pack/unpack Any values in the form
-
-            of utility functions or additional generated methods of the Any type.
-
-
-            Example 1: Pack and unpack a message in C++.
-
-                Foo foo = ...;
-                Any any;
-                any.PackFrom(foo);
-                ...
-                if (any.UnpackTo(&foo)) {
-                  ...
-                }
-
-            Example 2: Pack and unpack a message in Java.
-
-                Foo foo = ...;
-                Any any = Any.pack(foo);
-                ...
-                if (any.is(Foo.class)) {
-                  foo = any.unpack(Foo.class);
-                }
-
-             Example 3: Pack and unpack a message in Python.
-
-                foo = Foo(...)
-                any = Any()
-                any.Pack(foo)
-                ...
-                if any.Is(Foo.DESCRIPTOR):
-                  any.Unpack(foo)
-                  ...
-
-             Example 4: Pack and unpack a message in Go
-
-                 foo := &pb.Foo{...}
-                 any, err := ptypes.MarshalAny(foo)
-                 ...
-                 foo := &pb.Foo{}
-                 if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                   ...
-                 }
-
-            The pack methods provided by protobuf library will by default use
-
-            'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-            methods only use the fully qualified type name after the last '/'
-
-            in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-            name "y.z".
-
-
-
-            JSON
-
-            ====
-
-            The JSON representation of an `Any` value uses the regular
-
-            representation of the deserialized, embedded message, with an
-
-            additional field `@type` which contains the type URL. Example:
-
-                package google.profile;
-                message Person {
-                  string first_name = 1;
-                  string last_name = 2;
-                }
-
-                {
-                  "@type": "type.googleapis.com/google.profile.Person",
-                  "firstName": <string>,
-                  "lastName": <string>
-                }
-
-            If the embedded message type is well-known and has a custom JSON
-
-            representation, that representation will be embedded adding a field
-
-            `value` which holds the custom JSON in addition to the `@type`
-
-            field. Example (for message [google.protobuf.Duration][]):
-
-                {
-                  "@type": "type.googleapis.com/google.protobuf.Duration",
-                  "value": "1.212s"
-                }
-        account_number:
-          type: string
-          format: uint64
-        sequence:
-          type: string
-          format: uint64
-      description: >-
-        BaseAccount defines a base account type. It contains all the necessary
-        fields
-
-        for basic account functionality. Any custom account type should extend this
-
-        type for additional functionality (e.g. vesting).
     cosmos.base.query.v1beta1.PageRequest:
       type: object
       properties:
@@ -13328,496 +13332,413 @@ components:
                     "@type": "type.googleapis.com/google.protobuf.Duration",
                     "value": "1.212s"
                   }
-    osmosis.gamm.v1beta1.PoolAccount:
+    osmosis.gamm.v1beta1.PoolAsset:
       type: object
       properties:
-        baseAccount:
-          type: object
-          properties:
-            address:
-              type: string
-            pub_key:
-              type: object
-              properties:
-                type_url:
-                  type: string
-                  description: >-
-                    A URL/resource name that uniquely identifies the type of the
-                    serialized
-
-                    protocol buffer message. This string must contain at least
-
-                    one "/" character. The last segment of the URL's path must represent
-
-                    the fully qualified name of the type (as in
-
-                    `path/google.protobuf.Duration`). The name should be in a canonical form
-
-                    (e.g., leading "." is not accepted).
-
-
-                    In practice, teams usually precompile into the binary all types that they
-
-                    expect it to use in the context of Any. However, for URLs which use the
-
-                    scheme `http`, `https`, or no scheme, one can optionally set up a type
-
-                    server that maps type URLs to message definitions as follows:
-
-
-                    * If no scheme is provided, `https` is assumed.
-
-                    * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                      value in binary format, or produce an error.
-                    * Applications are allowed to cache lookup results based on the
-                      URL, or have them precompiled into a binary to avoid any
-                      lookup. Therefore, binary compatibility needs to be preserved
-                      on changes to types. (Use versioned type names to manage
-                      breaking changes.)
-
-                    Note: this functionality is not currently available in the official
-
-                    protobuf release, and it is not used for type URLs beginning with
-
-                    type.googleapis.com.
-
-
-                    Schemes other than `http`, `https` (or the empty scheme) might be
-
-                    used with implementation specific semantics.
-                value:
-                  type: string
-                  format: byte
-                  description: Must be a valid serialized protocol buffer of the above specified
-                    type.
-              description: >-
-                `Any` contains an arbitrary serialized protocol buffer message
-                along with a
-
-                URL that describes the type of the serialized message.
-
-
-                Protobuf library provides support to pack/unpack Any values in the form
-
-                of utility functions or additional generated methods of the Any type.
-
-
-                Example 1: Pack and unpack a message in C++.
-
-                    Foo foo = ...;
-                    Any any;
-                    any.PackFrom(foo);
-                    ...
-                    if (any.UnpackTo(&foo)) {
-                      ...
-                    }
-
-                Example 2: Pack and unpack a message in Java.
-
-                    Foo foo = ...;
-                    Any any = Any.pack(foo);
-                    ...
-                    if (any.is(Foo.class)) {
-                      foo = any.unpack(Foo.class);
-                    }
-
-                 Example 3: Pack and unpack a message in Python.
-
-                    foo = Foo(...)
-                    any = Any()
-                    any.Pack(foo)
-                    ...
-                    if any.Is(Foo.DESCRIPTOR):
-                      any.Unpack(foo)
-                      ...
-
-                 Example 4: Pack and unpack a message in Go
-
-                     foo := &pb.Foo{...}
-                     any, err := ptypes.MarshalAny(foo)
-                     ...
-                     foo := &pb.Foo{}
-                     if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                       ...
-                     }
-
-                The pack methods provided by protobuf library will by default use
-
-                'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-                methods only use the fully qualified type name after the last '/'
-
-                in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-                name "y.z".
-
-
-
-                JSON
-
-                ====
-
-                The JSON representation of an `Any` value uses the regular
-
-                representation of the deserialized, embedded message, with an
-
-                additional field `@type` which contains the type URL. Example:
-
-                    package google.profile;
-                    message Person {
-                      string first_name = 1;
-                      string last_name = 2;
-                    }
-
-                    {
-                      "@type": "type.googleapis.com/google.profile.Person",
-                      "firstName": <string>,
-                      "lastName": <string>
-                    }
-
-                If the embedded message type is well-known and has a custom JSON
-
-                representation, that representation will be embedded adding a field
-
-                `value` which holds the custom JSON in addition to the `@type`
-
-                field. Example (for message [google.protobuf.Duration][]):
-
-                    {
-                      "@type": "type.googleapis.com/google.protobuf.Duration",
-                      "value": "1.212s"
-                    }
-            account_number:
-              type: string
-              format: uint64
-            sequence:
-              type: string
-              format: uint64
+        token:
           description: >-
-            BaseAccount defines a base account type. It contains all the
-            necessary fields
+            Coins we are talking about,
 
-            for basic account functionality. Any custom account type should extend this
-
-            type for additional functionality (e.g. vesting).
-        id:
-          type: string
-          format: uint64
-        poolParams:
-          type: object
-          properties:
-            lock:
-              type: boolean
-              description: If the pool is locked, users can't join, exit or swap the pool.
-            swapFee:
-              type: string
-            exitFee:
-              type: string
-          description: >-
-            PoolParams defined the parameters that will be managed by the pool
-            governance
-
-            in the future. This params are not managed by the chain governanace.
-        totalWeight:
-          type: string
-        totalShare:
+            the denomination must be unique amongst all PoolAssets for this pool.
           type: object
           properties:
             denom:
               type: string
             amount:
               type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
-        records:
-          type: array
-          items:
-            type: object
-            properties:
-              weight:
-                type: string
-                description: Denormarized weight.
-              token:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom method
-
-                  signatures required by gogoproto.
+        weight:
+          type: string
+          title: Weight that is not normalized. This weight must be less than 2^50
     osmosis.gamm.v1beta1.PoolParams:
       type: object
       properties:
-        lock:
-          type: boolean
-          description: If the pool is locked, users can't join, exit or swap the pool.
         swapFee:
           type: string
         exitFee:
           type: string
-      description: >-
-        PoolParams defined the parameters that will be managed by the pool
-        governance
-
-        in the future. This params are not managed by the chain governanace.
-    osmosis.gamm.v1beta1.QueryPoolParamsResponse:
-      type: object
-      properties:
-        params:
+        smoothWeightChangeParams:
           type: object
           properties:
-            lock:
-              type: boolean
-              description: If the pool is locked, users can't join, exit or swap the pool.
-            swapFee:
+            start_time:
               type: string
-            exitFee:
+              format: date-time
+              description: |-
+                The start time for beginning the weight change.
+                If a parameter change / pool instantiation leaves this blank,
+                it should be generated by the state_machine as the current time.
+            duration:
               type: string
-          description: >-
-            PoolParams defined the parameters that will be managed by the pool
-            governance
-
-            in the future. This params are not managed by the chain governanace.
-    osmosis.gamm.v1beta1.QueryPoolResponse:
-      type: object
-      properties:
-        pool:
-          type: object
-          properties:
-            baseAccount:
-              type: object
-              properties:
-                address:
-                  type: string
-                pub_key:
-                  type: object
-                  properties:
-                    type_url:
-                      type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at least
-
-                        one "/" character. The last segment of the URL's path must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary all types that they
-
-                        expect it to use in the context of Any. However, for URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally set up a type
-
-                        server that maps type URLs to message definitions as follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in the official
-
-                        protobuf release, and it is not used for type URLs beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme) might be
-
-                        used with implementation specific semantics.
-                    value:
-                      type: string
-                      format: byte
-                      description: Must be a valid serialized protocol buffer of the above specified
-                        type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values in the form
-
-                    of utility functions or additional generated methods of the Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-                    methods only use the fully qualified type name after the last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with an
-
-                    additional field `@type` which contains the type URL. Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom JSON
-
-                    representation, that representation will be embedded adding a field
-
-                    `value` which holds the custom JSON in addition to the `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
-                account_number:
-                  type: string
-                  format: uint64
-                sequence:
-                  type: string
-                  format: uint64
-              description: >-
-                BaseAccount defines a base account type. It contains all the
-                necessary fields
-
-                for basic account functionality. Any custom account type should extend this
-
-                type for additional functionality (e.g. vesting).
-            id:
-              type: string
-              format: uint64
-            poolParams:
-              type: object
-              properties:
-                lock:
-                  type: boolean
-                  description: If the pool is locked, users can't join, exit or swap the pool.
-                swapFee:
-                  type: string
-                exitFee:
-                  type: string
-              description: >-
-                PoolParams defined the parameters that will be managed by the
-                pool governance
-
-                in the future. This params are not managed by the chain governanace.
-            totalWeight:
-              type: string
-            totalShare:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom method
-
-                signatures required by gogoproto.
-            records:
+              title: Duration for the weights to change over
+            initialPoolWeights:
               type: array
               items:
                 type: object
                 properties:
-                  weight:
-                    type: string
-                    description: Denormarized weight.
                   token:
+                    description: >-
+                      Coins we are talking about,
+
+                      the denomination must be unique amongst all PoolAssets for this pool.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
+                  weight:
+                    type: string
+                    title: Weight that is not normalized. This weight must be less than 2^50
+              description: >-
+                The initial pool weights. These are copied from the pool's
+                settings
+
+                at the time of weight change instantiation.
+
+                The amount PoolAsset.token.amount field is ignored if present,
+
+                future type refactorings should just have a type with the denom & weight
+
+                here.
+            targetPoolWeights:
+              type: array
+              items:
+                type: object
+                properties:
+                  token:
                     description: >-
-                      Coin defines a token with a denomination and an amount.
+                      Coins we are talking about,
+
+                      the denomination must be unique amongst all PoolAssets for this pool.
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                  weight:
+                    type: string
+                    title: Weight that is not normalized. This weight must be less than 2^50
+              description: >-
+                The target pool weights. The pool weights will change linearly
+                with respect
+
+                to time between start_time, and start_time + duration. The amount
+
+                PoolAsset.token.amount field is ignored if present, future type
+
+                refactorings should just have a type with the denom & weight here.
+          title: >-
+            Parameters for changing the weights in a balancer pool smoothly from
+
+            a start weight and end weight over a period of time.
+
+            Currently, the only smooth change supported is linear changing between
+
+            the two weights, but more types may be added in the future.
+
+            When these parameters are set, the weight w(t) for pool time `t` is the
+
+            following:
+              t <= start_time: w(t) = initial_pool_weights
+              start_time < t <= start_time + duration:
+                w(t) = initial_pool_weights + (t - start_time) *
+                  (target_pool_weights - initial_pool_weights) / (duration)
+              t > start_time + duration: w(t) = target_pool_weights
+      description: >-
+        PoolParams defined the parameters that will be managed by the pool
+        governance
+
+        in the future. This params are not managed by the chain governanace.
+
+        Instead they will be managed by the token holders of the pool.
+
+        The pool's token holders are specified in future_pool_governor.
+    osmosis.gamm.v1beta1.QueryPoolAssetsResponse:
+      type: object
+      properties:
+        poolAssets:
+          type: array
+          items:
+            type: object
+            properties:
+              token:
+                description: >-
+                  Coins we are talking about,
+
+                  the denomination must be unique amongst all PoolAssets for this pool.
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+              weight:
+                type: string
+                title: Weight that is not normalized. This weight must be less than 2^50
+    osmosis.gamm.v1beta1.QueryPoolParamsResponse:
+      type: object
+      properties:
+        params:
+          type: object
+          properties:
+            swapFee:
+              type: string
+            exitFee:
+              type: string
+            smoothWeightChangeParams:
+              type: object
+              properties:
+                start_time:
+                  type: string
+                  format: date-time
+                  description: >-
+                    The start time for beginning the weight change.
+
+                    If a parameter change / pool instantiation leaves this blank,
+
+                    it should be generated by the state_machine as the current time.
+                duration:
+                  type: string
+                  title: Duration for the weights to change over
+                initialPoolWeights:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      token:
+                        description: >-
+                          Coins we are talking about,
+
+                          the denomination must be unique amongst all PoolAssets for this pool.
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                      weight:
+                        type: string
+                        title: Weight that is not normalized. This weight must be less than 2^50
+                  description: >-
+                    The initial pool weights. These are copied from the pool's
+                    settings
+
+                    at the time of weight change instantiation.
+
+                    The amount PoolAsset.token.amount field is ignored if present,
+
+                    future type refactorings should just have a type with the denom & weight
+
+                    here.
+                targetPoolWeights:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      token:
+                        description: >-
+                          Coins we are talking about,
+
+                          the denomination must be unique amongst all PoolAssets for this pool.
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                      weight:
+                        type: string
+                        title: Weight that is not normalized. This weight must be less than 2^50
+                  description: >-
+                    The target pool weights. The pool weights will change
+                    linearly with respect
+
+                    to time between start_time, and start_time + duration. The amount
+
+                    PoolAsset.token.amount field is ignored if present, future type
+
+                    refactorings should just have a type with the denom & weight here.
+              title: >-
+                Parameters for changing the weights in a balancer pool smoothly
+                from
+
+                a start weight and end weight over a period of time.
+
+                Currently, the only smooth change supported is linear changing between
+
+                the two weights, but more types may be added in the future.
+
+                When these parameters are set, the weight w(t) for pool time `t` is the
+
+                following:
+                  t <= start_time: w(t) = initial_pool_weights
+                  start_time < t <= start_time + duration:
+                    w(t) = initial_pool_weights + (t - start_time) *
+                      (target_pool_weights - initial_pool_weights) / (duration)
+                  t > start_time + duration: w(t) = target_pool_weights
+          description: >-
+            PoolParams defined the parameters that will be managed by the pool
+            governance
+
+            in the future. This params are not managed by the chain governanace.
+
+            Instead they will be managed by the token holders of the pool.
+
+            The pool's token holders are specified in future_pool_governor.
+    osmosis.gamm.v1beta1.QueryPoolResponse:
+      type: object
+      properties:
+        pool:
+          type: object
+          properties:
+            type_url:
+              type: string
+              description: >-
+                A URL/resource name that uniquely identifies the type of the
+                serialized
+
+                protocol buffer message. This string must contain at least
+
+                one "/" character. The last segment of the URL's path must represent
+
+                the fully qualified name of the type (as in
+
+                `path/google.protobuf.Duration`). The name should be in a canonical form
+
+                (e.g., leading "." is not accepted).
 
 
-                      NOTE: The amount field is an Int which implements the custom method
+                In practice, teams usually precompile into the binary all types that they
 
-                      signatures required by gogoproto.
+                expect it to use in the context of Any. However, for URLs which use the
+
+                scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+                server that maps type URLs to message definitions as follows:
+
+
+                * If no scheme is provided, `https` is assumed.
+
+                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                  value in binary format, or produce an error.
+                * Applications are allowed to cache lookup results based on the
+                  URL, or have them precompiled into a binary to avoid any
+                  lookup. Therefore, binary compatibility needs to be preserved
+                  on changes to types. (Use versioned type names to manage
+                  breaking changes.)
+
+                Note: this functionality is not currently available in the official
+
+                protobuf release, and it is not used for type URLs beginning with
+
+                type.googleapis.com.
+
+
+                Schemes other than `http`, `https` (or the empty scheme) might be
+
+                used with implementation specific semantics.
+            value:
+              type: string
+              format: byte
+              description: Must be a valid serialized protocol buffer of the above specified
+                type.
+          description: >-
+            `Any` contains an arbitrary serialized protocol buffer message along
+            with a
+
+            URL that describes the type of the serialized message.
+
+
+            Protobuf library provides support to pack/unpack Any values in the form
+
+            of utility functions or additional generated methods of the Any type.
+
+
+            Example 1: Pack and unpack a message in C++.
+
+                Foo foo = ...;
+                Any any;
+                any.PackFrom(foo);
+                ...
+                if (any.UnpackTo(&foo)) {
+                  ...
+                }
+
+            Example 2: Pack and unpack a message in Java.
+
+                Foo foo = ...;
+                Any any = Any.pack(foo);
+                ...
+                if (any.is(Foo.class)) {
+                  foo = any.unpack(Foo.class);
+                }
+
+             Example 3: Pack and unpack a message in Python.
+
+                foo = Foo(...)
+                any = Any()
+                any.Pack(foo)
+                ...
+                if any.Is(Foo.DESCRIPTOR):
+                  any.Unpack(foo)
+                  ...
+
+             Example 4: Pack and unpack a message in Go
+
+                 foo := &pb.Foo{...}
+                 any, err := ptypes.MarshalAny(foo)
+                 ...
+                 foo := &pb.Foo{}
+                 if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                   ...
+                 }
+
+            The pack methods provided by protobuf library will by default use
+
+            'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+            methods only use the fully qualified type name after the last '/'
+
+            in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+            name "y.z".
+
+
+
+            JSON
+
+            ====
+
+            The JSON representation of an `Any` value uses the regular
+
+            representation of the deserialized, embedded message, with an
+
+            additional field `@type` which contains the type URL. Example:
+
+                package google.profile;
+                message Person {
+                  string first_name = 1;
+                  string last_name = 2;
+                }
+
+                {
+                  "@type": "type.googleapis.com/google.profile.Person",
+                  "firstName": <string>,
+                  "lastName": <string>
+                }
+
+            If the embedded message type is well-known and has a custom JSON
+
+            representation, that representation will be embedded adding a field
+
+            `value` which holds the custom JSON in addition to the `@type`
+
+            field. Example (for message [google.protobuf.Duration][]):
+
+                {
+                  "@type": "type.googleapis.com/google.protobuf.Duration",
+                  "value": "1.212s"
+                }
     osmosis.gamm.v1beta1.QueryPoolsResponse:
       type: object
       properties:
@@ -13826,231 +13747,154 @@ components:
           items:
             type: object
             properties:
-              baseAccount:
-                type: object
-                properties:
-                  address:
-                    type: string
-                  pub_key:
-                    type: object
-                    properties:
-                      type_url:
-                        type: string
-                        description: >-
-                          A URL/resource name that uniquely identifies the type
-                          of the serialized
-
-                          protocol buffer message. This string must contain at least
-
-                          one "/" character. The last segment of the URL's path must represent
-
-                          the fully qualified name of the type (as in
-
-                          `path/google.protobuf.Duration`). The name should be in a canonical form
-
-                          (e.g., leading "." is not accepted).
-
-
-                          In practice, teams usually precompile into the binary all types that they
-
-                          expect it to use in the context of Any. However, for URLs which use the
-
-                          scheme `http`, `https`, or no scheme, one can optionally set up a type
-
-                          server that maps type URLs to message definitions as follows:
-
-
-                          * If no scheme is provided, `https` is assumed.
-
-                          * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                            value in binary format, or produce an error.
-                          * Applications are allowed to cache lookup results based on the
-                            URL, or have them precompiled into a binary to avoid any
-                            lookup. Therefore, binary compatibility needs to be preserved
-                            on changes to types. (Use versioned type names to manage
-                            breaking changes.)
-
-                          Note: this functionality is not currently available in the official
-
-                          protobuf release, and it is not used for type URLs beginning with
-
-                          type.googleapis.com.
-
-
-                          Schemes other than `http`, `https` (or the empty scheme) might be
-
-                          used with implementation specific semantics.
-                      value:
-                        type: string
-                        format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
-                          type.
-                    description: >-
-                      `Any` contains an arbitrary serialized protocol buffer
-                      message along with a
-
-                      URL that describes the type of the serialized message.
-
-
-                      Protobuf library provides support to pack/unpack Any values in the form
-
-                      of utility functions or additional generated methods of the Any type.
-
-
-                      Example 1: Pack and unpack a message in C++.
-
-                          Foo foo = ...;
-                          Any any;
-                          any.PackFrom(foo);
-                          ...
-                          if (any.UnpackTo(&foo)) {
-                            ...
-                          }
-
-                      Example 2: Pack and unpack a message in Java.
-
-                          Foo foo = ...;
-                          Any any = Any.pack(foo);
-                          ...
-                          if (any.is(Foo.class)) {
-                            foo = any.unpack(Foo.class);
-                          }
-
-                       Example 3: Pack and unpack a message in Python.
-
-                          foo = Foo(...)
-                          any = Any()
-                          any.Pack(foo)
-                          ...
-                          if any.Is(Foo.DESCRIPTOR):
-                            any.Unpack(foo)
-                            ...
-
-                       Example 4: Pack and unpack a message in Go
-
-                           foo := &pb.Foo{...}
-                           any, err := ptypes.MarshalAny(foo)
-                           ...
-                           foo := &pb.Foo{}
-                           if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                             ...
-                           }
-
-                      The pack methods provided by protobuf library will by default use
-
-                      'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-                      methods only use the fully qualified type name after the last '/'
-
-                      in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-                      name "y.z".
-
-
-
-                      JSON
-
-                      ====
-
-                      The JSON representation of an `Any` value uses the regular
-
-                      representation of the deserialized, embedded message, with an
-
-                      additional field `@type` which contains the type URL. Example:
-
-                          package google.profile;
-                          message Person {
-                            string first_name = 1;
-                            string last_name = 2;
-                          }
-
-                          {
-                            "@type": "type.googleapis.com/google.profile.Person",
-                            "firstName": <string>,
-                            "lastName": <string>
-                          }
-
-                      If the embedded message type is well-known and has a custom JSON
-
-                      representation, that representation will be embedded adding a field
-
-                      `value` which holds the custom JSON in addition to the `@type`
-
-                      field. Example (for message [google.protobuf.Duration][]):
-
-                          {
-                            "@type": "type.googleapis.com/google.protobuf.Duration",
-                            "value": "1.212s"
-                          }
-                  account_number:
-                    type: string
-                    format: uint64
-                  sequence:
-                    type: string
-                    format: uint64
-                description: >-
-                  BaseAccount defines a base account type. It contains all the
-                  necessary fields
-
-                  for basic account functionality. Any custom account type should extend this
-
-                  type for additional functionality (e.g. vesting).
-              id:
+              type_url:
                 type: string
-                format: uint64
-              poolParams:
-                type: object
-                properties:
-                  lock:
-                    type: boolean
-                    description: If the pool is locked, users can't join, exit or swap the pool.
-                  swapFee:
-                    type: string
-                  exitFee:
-                    type: string
                 description: >-
-                  PoolParams defined the parameters that will be managed by the
-                  pool governance
+                  A URL/resource name that uniquely identifies the type of the
+                  serialized
 
-                  in the future. This params are not managed by the chain governanace.
-              totalWeight:
+                  protocol buffer message. This string must contain at least
+
+                  one "/" character. The last segment of the URL's path must represent
+
+                  the fully qualified name of the type (as in
+
+                  `path/google.protobuf.Duration`). The name should be in a canonical form
+
+                  (e.g., leading "." is not accepted).
+
+
+                  In practice, teams usually precompile into the binary all types that they
+
+                  expect it to use in the context of Any. However, for URLs which use the
+
+                  scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+                  server that maps type URLs to message definitions as follows:
+
+
+                  * If no scheme is provided, `https` is assumed.
+
+                  * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                    value in binary format, or produce an error.
+                  * Applications are allowed to cache lookup results based on the
+                    URL, or have them precompiled into a binary to avoid any
+                    lookup. Therefore, binary compatibility needs to be preserved
+                    on changes to types. (Use versioned type names to manage
+                    breaking changes.)
+
+                  Note: this functionality is not currently available in the official
+
+                  protobuf release, and it is not used for type URLs beginning with
+
+                  type.googleapis.com.
+
+
+                  Schemes other than `http`, `https` (or the empty scheme) might be
+
+                  used with implementation specific semantics.
+              value:
                 type: string
-              totalShare:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
+                format: byte
+                description: Must be a valid serialized protocol buffer of the above specified
+                  type.
+            description: >-
+              `Any` contains an arbitrary serialized protocol buffer message
+              along with a
+
+              URL that describes the type of the serialized message.
 
 
-                  NOTE: The amount field is an Int which implements the custom method
+              Protobuf library provides support to pack/unpack Any values in the form
 
-                  signatures required by gogoproto.
-              records:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    weight:
-                      type: string
-                      description: Denormarized weight.
-                    token:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
+              of utility functions or additional generated methods of the Any type.
 
 
-                        NOTE: The amount field is an Int which implements the custom method
+              Example 1: Pack and unpack a message in C++.
 
-                        signatures required by gogoproto.
+                  Foo foo = ...;
+                  Any any;
+                  any.PackFrom(foo);
+                  ...
+                  if (any.UnpackTo(&foo)) {
+                    ...
+                  }
+
+              Example 2: Pack and unpack a message in Java.
+
+                  Foo foo = ...;
+                  Any any = Any.pack(foo);
+                  ...
+                  if (any.is(Foo.class)) {
+                    foo = any.unpack(Foo.class);
+                  }
+
+               Example 3: Pack and unpack a message in Python.
+
+                  foo = Foo(...)
+                  any = Any()
+                  any.Pack(foo)
+                  ...
+                  if any.Is(Foo.DESCRIPTOR):
+                    any.Unpack(foo)
+                    ...
+
+               Example 4: Pack and unpack a message in Go
+
+                   foo := &pb.Foo{...}
+                   any, err := ptypes.MarshalAny(foo)
+                   ...
+                   foo := &pb.Foo{}
+                   if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                     ...
+                   }
+
+              The pack methods provided by protobuf library will by default use
+
+              'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+              methods only use the fully qualified type name after the last '/'
+
+              in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+              name "y.z".
+
+
+
+              JSON
+
+              ====
+
+              The JSON representation of an `Any` value uses the regular
+
+              representation of the deserialized, embedded message, with an
+
+              additional field `@type` which contains the type URL. Example:
+
+                  package google.profile;
+                  message Person {
+                    string first_name = 1;
+                    string last_name = 2;
+                  }
+
+                  {
+                    "@type": "type.googleapis.com/google.profile.Person",
+                    "firstName": <string>,
+                    "lastName": <string>
+                  }
+
+              If the embedded message type is well-known and has a custom JSON
+
+              representation, that representation will be embedded adding a field
+
+              `value` which holds the custom JSON in addition to the `@type`
+
+              field. Example (for message [google.protobuf.Duration][]):
+
+                  {
+                    "@type": "type.googleapis.com/google.protobuf.Duration",
+                    "value": "1.212s"
+                  }
         pagination:
           description: pagination defines the pagination in the response.
           type: object
@@ -14069,31 +13913,6 @@ components:
                 PageRequest.count_total
 
                 was set, its value is undefined otherwise
-    osmosis.gamm.v1beta1.QueryRecordsResponse:
-      type: object
-      properties:
-        records:
-          type: array
-          items:
-            type: object
-            properties:
-              weight:
-                type: string
-                description: Denormarized weight.
-              token:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom method
-
-                  signatures required by gogoproto.
     osmosis.gamm.v1beta1.QuerySpotPriceResponse:
       type: object
       properties:
@@ -14110,6 +13929,12 @@ components:
       properties:
         tokenInAmount:
           type: string
+    osmosis.gamm.v1beta1.QueryTotalPoolsResponse:
+      type: object
+      properties:
+        totalPools:
+          type: string
+          format: uint64
     osmosis.gamm.v1beta1.QueryTotalShareResponse:
       type: object
       properties:
@@ -14125,24 +13950,88 @@ components:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-    osmosis.gamm.v1beta1.Record:
+    osmosis.gamm.v1beta1.SmoothWeightChangeParams:
       type: object
       properties:
-        weight:
+        start_time:
           type: string
-          description: Denormarized weight.
-        token:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
+          format: date-time
           description: |-
-            Coin defines a token with a denomination and an amount.
+            The start time for beginning the weight change.
+            If a parameter change / pool instantiation leaves this blank,
+            it should be generated by the state_machine as the current time.
+        duration:
+          type: string
+          title: Duration for the weights to change over
+        initialPoolWeights:
+          type: array
+          items:
+            type: object
+            properties:
+              token:
+                description: >-
+                  Coins we are talking about,
 
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
+                  the denomination must be unique amongst all PoolAssets for this pool.
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+              weight:
+                type: string
+                title: Weight that is not normalized. This weight must be less than 2^50
+          description: >-
+            The initial pool weights. These are copied from the pool's settings
+
+            at the time of weight change instantiation.
+
+            The amount PoolAsset.token.amount field is ignored if present,
+
+            future type refactorings should just have a type with the denom & weight
+
+            here.
+        targetPoolWeights:
+          type: array
+          items:
+            type: object
+            properties:
+              token:
+                description: >-
+                  Coins we are talking about,
+
+                  the denomination must be unique amongst all PoolAssets for this pool.
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+              weight:
+                type: string
+                title: Weight that is not normalized. This weight must be less than 2^50
+          description: >-
+            The target pool weights. The pool weights will change linearly with
+            respect
+
+            to time between start_time, and start_time + duration. The amount
+
+            PoolAsset.token.amount field is ignored if present, future type
+
+            refactorings should just have a type with the denom & weight here.
+      title: |-
+        Parameters for changing the weights in a balancer pool smoothly from
+        a start weight and end weight over a period of time.
+        Currently, the only smooth change supported is linear changing between
+        the two weights, but more types may be added in the future.
+        When these parameters are set, the weight w(t) for pool time `t` is the
+        following:
+          t <= start_time: w(t) = initial_pool_weights
+          start_time < t <= start_time + duration:
+            w(t) = initial_pool_weights + (t - start_time) *
+              (target_pool_weights - initial_pool_weights) / (duration)
+          t > start_time + duration: w(t) = target_pool_weights
     osmosis.gamm.v1beta1.SwapAmountInRoute:
       type: object
       properties:
@@ -14161,6 +14050,51 @@ components:
         tokenInDenom:
           type: string
       title: ===================== MsgSwapExactAmountOut
+    osmosis.epochs.v1beta1.EpochInfo:
+      type: object
+      properties:
+        identifier:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        duration:
+          type: string
+        current_epoch:
+          type: string
+          format: int64
+        current_epoch_start_time:
+          type: string
+          format: date-time
+        epoch_counting_started:
+          type: boolean
+        current_epoch_ended:
+          type: boolean
+    osmosis.epochs.v1beta1.QueryEpochsInfoResponse:
+      type: object
+      properties:
+        epochs:
+          type: array
+          items:
+            type: object
+            properties:
+              identifier:
+                type: string
+              start_time:
+                type: string
+                format: date-time
+              duration:
+                type: string
+              current_epoch:
+                type: string
+                format: int64
+              current_epoch_start_time:
+                type: string
+                format: date-time
+              epoch_counting_started:
+                type: boolean
+              current_epoch_ended:
+                type: boolean
     cosmos.auth.v1beta1.Params:
       type: object
       properties:

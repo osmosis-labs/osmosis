@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/c-osmosis/osmosis/x/gamm/types"
@@ -60,7 +58,7 @@ func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountIn() {
 						tokenInDenom = test.param.routes[i-1].TokenOutDenom
 					}
 
-					sp, err := keeper.CalculateSpotPrice(suite.ctx, route.PoolId, tokenInDenom, route.TokenOutDenom)
+					sp, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, route.PoolId, tokenInDenom, route.TokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
@@ -79,14 +77,14 @@ func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountIn() {
 						tokenInDenom = test.param.routes[i-1].TokenOutDenom
 					}
 
-					sp, err := keeper.CalculateSpotPrice(suite.ctx, route.PoolId, tokenInDenom, route.TokenOutDenom)
+					sp, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, route.PoolId, tokenInDenom, route.TokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
 				return dec
 			}()
 
-			// Ratio of the oken out should be between the before spot price and after spot price.
+			// Ratio of the token out should be between the before spot price and after spot price.
 			sp := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 			suite.True(sp.GT(spotPriceBefore) && sp.LT(spotPriceAfter), "test: %v", test.name)
 		} else {
@@ -148,7 +146,7 @@ func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountOut() {
 						tokenOutDenom = test.param.routes[i+1].TokenInDenom
 					}
 
-					sp, err := keeper.CalculateSpotPrice(suite.ctx, route.PoolId, route.TokenInDenom, tokenOutDenom)
+					sp, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, route.PoolId, route.TokenInDenom, tokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
@@ -167,16 +165,15 @@ func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountOut() {
 						tokenOutDenom = test.param.routes[i+1].TokenInDenom
 					}
 
-					sp, err := keeper.CalculateSpotPrice(suite.ctx, route.PoolId, route.TokenInDenom, tokenOutDenom)
+					sp, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, route.PoolId, route.TokenInDenom, tokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
 				return dec
 			}()
 
-			// Ratio of the oken out should be between the before spot price and after spot price.
+			// Ratio of the token out should be between the before spot price and after spot price.
 			sp := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
-			fmt.Println(spotPriceBefore.String(), spotPriceAfter.String(), sp.String())
 			suite.True(sp.GT(spotPriceBefore) && sp.LT(spotPriceAfter), "test: %v", test.name)
 		} else {
 			_, err := keeper.MultihopSwapExactAmountOut(suite.ctx, acc1, test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)

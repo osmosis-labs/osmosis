@@ -12,21 +12,20 @@ option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
 service Msg {
   // LockTokens lock tokens
   rpc LockTokens(MsgLockTokens) returns (MsgLockTokensResponse);
-  // BeginUnlocking begin unlocking all tokens
-  rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
+  // BeginUnlockingAll begin unlocking all tokens
+  rpc BeginUnlockingAll(MsgBeginUnlockingAll)
+      returns (MsgBeginUnlockingAllResponse);
   // UnlockTokens unlock all unlockable tokens
   rpc UnlockTokens(MsgUnlockTokens) returns (MsgUnlockTokensResponse);
-  // BeginUnlockPeriodLock begin unlocking tokens by ID
-  rpc BeginUnlockPeriodLock(MsgBeginUnlockPeriodLock)
-      returns (MsgBeginUnlockPeriodLockResponse);
+  // MsgBeginUnlocking begins unlocking tokens by lock ID
+  rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
   // UnlockPeriodLock unlock individual period lock by ID
   rpc UnlockPeriodLock(MsgUnlockPeriodLock)
       returns (MsgUnlockPeriodLockResponse);
 }
 
 message MsgLockTokens {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Duration duration = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
@@ -40,28 +39,24 @@ message MsgLockTokens {
 }
 message MsgLockTokensResponse { uint64 ID = 1; }
 
-message MsgBeginUnlocking {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+message MsgBeginUnlockingAll {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 }
-message MsgBeginUnlockingResponse { repeated PeriodLock unlocks = 1; }
+message MsgBeginUnlockingAllResponse { repeated PeriodLock unlocks = 1; }
 
 message MsgUnlockTokens {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 }
 message MsgUnlockTokensResponse { repeated PeriodLock unlocks = 1; }
 
-message MsgBeginUnlockPeriodLock {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+message MsgBeginUnlocking {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
 }
-message MsgBeginUnlockPeriodLockResponse { bool success = 1; }
+message MsgBeginUnlockingResponse { bool success = 1; }
 
 message MsgUnlockPeriodLock {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
 }
 message MsgUnlockPeriodLockResponse { bool success = 1; }

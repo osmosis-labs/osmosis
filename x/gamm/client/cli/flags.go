@@ -5,12 +5,20 @@ import (
 )
 
 const (
-	// Will be parsed to []sdk.Coin
-	FlagInitialDeposit = "initial-deposit"
-	// Will be parsed to sdk.Dec
-	FlagSwapFee = "swap-fee"
-	// Will be parsed to sdk.Dec
-	FlagExitFee = "exit-fee"
+	// Will be parsed to string
+	FlagPoolFile = "pool-file"
+
+	// Names of fields in pool json file
+	PoolFileWeights        = "weights"
+	PoolFileInitialDeposit = "initial-deposit"
+	PoolFileSwapFee        = "swap-fee"
+	PoolFileExitFee        = "exit-fee"
+	PoolFileFutureGovernor = "future-governor"
+
+	PoolFileSmoothWeightChangeParams = "lbp-params"
+	PoolFileStartTime                = "start-time"
+	PoolFileDuration                 = "duration"
+	PoolFileTargetPoolWeights        = "target-pool-weights"
 
 	FlagPoolId = "pool-id"
 	// Will be parsed to sdk.Int
@@ -29,10 +37,22 @@ const (
 	FlagSwapRouteAmounts = "swap-route-amounts"
 	// Will be parsed to []string
 	FlagSwapRouteDenoms = "swap-route-denoms"
-
-	// FlagFutureGovernor can be an address, or a This LP Token, lockup time pair
-	FlagFutureGovernor = "future-governor"
 )
+
+type createPoolInputs struct {
+	Weights                  string                         `json:"weights"`
+	InitialDeposit           string                         `json:"initial-deposit"`
+	SwapFee                  string                         `json:"swap-fee"`
+	ExitFee                  string                         `json:"exit-fee"`
+	FutureGovernor           string                         `json:"future-governor"`
+	SmoothWeightChangeParams smoothWeightChangeParamsInputs `json:"lbp-params"`
+}
+
+type smoothWeightChangeParamsInputs struct {
+	StartTime         string `json:"start-time"`
+	Duration          string `json:"duration"`
+	TargetPoolWeights string `json:"target-pool-weights"`
+}
 
 func FlagSetQuerySwapRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
@@ -53,10 +73,7 @@ func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
 func FlagSetCreatePool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagInitialDeposit, "", "The tokens to be deposited to the pool initially")
-	fs.String(FlagSwapFee, "", "Swap fee of the pool")
-	fs.String(FlagExitFee, "", "Exit fee of the pool")
-	fs.String(FlagFutureGovernor, "", "Future governor of the pool")
+	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other create pool flags should not be used)")
 	return fs
 }
 
