@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -19,6 +17,7 @@ type Keeper struct {
 	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
 	distrKeeper      types.DistrKeeper
+	epochKeeper      types.EpochKeeper
 	hooks            types.MintHooks
 	feeCollectorName string
 }
@@ -26,7 +25,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -46,6 +45,7 @@ func NewKeeper(
 		accountKeeper:    ak,
 		bankKeeper:       bk,
 		distrKeeper:      dk,
+		epochKeeper:      epochKeeper,
 		feeCollectorName: feeCollectorName,
 	}
 }
@@ -66,43 +66,6 @@ func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 	k.hooks = h
 
 	return k
-}
-
-// GetEpochNum returns epoch number
-func (k Keeper) GetEpochNum(ctx sdk.Context) int64 {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.EpochKey)
-	if b == nil {
-		return 0
-	}
-
-	return int64(sdk.BigEndianToUint64(b))
-}
-
-// SetEpochNum set epoch number
-func (k Keeper) SetEpochNum(ctx sdk.Context, epochNum int64) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(types.EpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
-}
-
-// GetLastEpochTime returns last epoch time
-func (k Keeper) GetLastEpochTime(ctx sdk.Context) time.Time {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.EpochTimeKey)
-	if b == nil {
-		return time.Time{}
-	}
-	epochTime, err := sdk.ParseTimeBytes(b)
-	if err != nil {
-		return time.Time{}
-	}
-	return epochTime
-}
-
-// SetLastEpochTime set last epoch time
-func (k Keeper) SetLastEpochTime(ctx sdk.Context, epochTime time.Time) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(types.EpochTimeKey, sdk.FormatTimeBytes(epochTime))
 }
 
 // GetLastHalvenEpochNum returns last halven epoch number

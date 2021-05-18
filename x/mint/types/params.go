@@ -4,19 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	time "time"
-
-	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Parameter store keys
 var (
 	KeyMintDenom                = []byte("MintDenom")
 	KeyGenesisEpochProvisions   = []byte("GenesisEpochProvisions")
-	KeyEpochDuration            = []byte("EpochDuration")
+	KeyEpochIdentifier          = []byte("EpochIdentifier")
 	KeyReductionPeriodInEpochs  = []byte("ReductionPeriodInEpochs")
 	KeyReductionFactor          = []byte("ReductionFactor")
 	KeyPoolAllocationRatio      = []byte("PoolAllocationRatio")
@@ -29,7 +27,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, genesisEpochProvisions sdk.Dec, epochDuration time.Duration,
+	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
 	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
 	devRewardsReceiver string,
 ) Params {
@@ -37,7 +35,7 @@ func NewParams(
 	return Params{
 		MintDenom:                mintDenom,
 		GenesisEpochProvisions:   genesisEpochProvisions,
-		EpochDuration:            epochDuration,
+		EpochIdentifier:          epochIdentifier,
 		ReductionPeriodInEpochs:  reductionPeriodInEpochs,
 		ReductionFactor:          ReductionFactor,
 		DistributionProportions:  distrProportions,
@@ -47,11 +45,10 @@ func NewParams(
 
 // default minting module parameters
 func DefaultParams() Params {
-	epochDuration, _ := time.ParseDuration("168h") // 1 week
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
 		GenesisEpochProvisions:  sdk.NewDec(5000000),
-		EpochDuration:           epochDuration,            // 1 week
+		EpochIdentifier:         "weekly",                 // 1 week
 		ReductionPeriodInEpochs: 156,                      // 3 years
 		ReductionFactor:         sdk.NewDecWithPrec(5, 1), // 0.5
 		DistributionProportions: DistributionProportions{
@@ -71,7 +68,7 @@ func (p Params) Validate() error {
 	if err := validateGenesisEpochProvisions(p.GenesisEpochProvisions); err != nil {
 		return err
 	}
-	if err := validateEpochDuration(p.EpochDuration); err != nil {
+	if err := validateEpochIdentifier(p.EpochIdentifier); err != nil {
 		return err
 	}
 	if err := validateReductionPeriodInEpochs(p.ReductionPeriodInEpochs); err != nil {
@@ -101,7 +98,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
 		paramtypes.NewParamSetPair(KeyGenesisEpochProvisions, &p.GenesisEpochProvisions, validateGenesisEpochProvisions),
-		paramtypes.NewParamSetPair(KeyEpochDuration, &p.EpochDuration, validateEpochDuration),
+		paramtypes.NewParamSetPair(KeyEpochIdentifier, &p.EpochIdentifier, validateEpochIdentifier),
 		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
 		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
 		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.DistributionProportions, validateDistributionProportions),
@@ -138,14 +135,14 @@ func validateGenesisEpochProvisions(i interface{}) error {
 	return nil
 }
 
-func validateEpochDuration(i interface{}) error {
-	v, ok := i.(time.Duration)
+func validateEpochIdentifier(i interface{}) error {
+	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v <= 0 {
-		return fmt.Errorf("epoch duration must be positive: %d", v)
+	if v == "" {
+		return fmt.Errorf("empty distribution epoch identifier: %+v", i)
 	}
 
 	return nil
