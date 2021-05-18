@@ -160,8 +160,6 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 	if params.DeveloperRewardsReceiver == "" {
 		// fund community pool when rewards address is empty
 		k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
-		// TODO: fix all the tests caused by this change
-		// TODO: add test that if DeveloperRewardsReceiver is empty, funds goes to community pool
 	} else {
 		// allocate developer rewards to an address
 		devRewardsAddr, err := sdk.AccAddressFromBech32(params.DeveloperRewardsReceiver)
