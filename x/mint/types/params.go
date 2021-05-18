@@ -14,12 +14,13 @@ import (
 
 // Parameter store keys
 var (
-	KeyMintDenom               = []byte("MintDenom")
-	KeyGenesisEpochProvisions  = []byte("GenesisEpochProvisions")
-	KeyEpochDuration           = []byte("EpochDuration")
-	KeyReductionPeriodInEpochs = []byte("ReductionPeriodInEpochs")
-	KeyReductionFactor         = []byte("ReductionFactor")
-	KeyPoolAllocationRatio     = []byte("PoolAllocationRatio")
+	KeyMintDenom                = []byte("MintDenom")
+	KeyGenesisEpochProvisions   = []byte("GenesisEpochProvisions")
+	KeyEpochDuration            = []byte("EpochDuration")
+	KeyReductionPeriodInEpochs  = []byte("ReductionPeriodInEpochs")
+	KeyReductionFactor          = []byte("ReductionFactor")
+	KeyPoolAllocationRatio      = []byte("PoolAllocationRatio")
+	KeyDeveloperRewardsReceiver = []byte("DeveloperRewardsReceiver")
 )
 
 // ParamTable for minting module.
@@ -30,15 +31,17 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochDuration time.Duration,
 	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
+	devRewardsReceiver string,
 ) Params {
 
 	return Params{
-		MintDenom:               mintDenom,
-		GenesisEpochProvisions:  genesisEpochProvisions,
-		EpochDuration:           epochDuration,
-		ReductionPeriodInEpochs: reductionPeriodInEpochs,
-		ReductionFactor:         ReductionFactor,
-		DistributionProportions: distrProportions,
+		MintDenom:                mintDenom,
+		GenesisEpochProvisions:   genesisEpochProvisions,
+		EpochDuration:            epochDuration,
+		ReductionPeriodInEpochs:  reductionPeriodInEpochs,
+		ReductionFactor:          ReductionFactor,
+		DistributionProportions:  distrProportions,
+		DeveloperRewardsReceiver: devRewardsReceiver,
 	}
 }
 
@@ -56,6 +59,7 @@ func DefaultParams() Params {
 			PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
 		},
+		DeveloperRewardsReceiver: "",
 	}
 }
 
@@ -76,8 +80,10 @@ func (p Params) Validate() error {
 	if err := validateReductionFactor(p.ReductionFactor); err != nil {
 		return err
 	}
-
 	if err := validateDistributionProportions(p.DistributionProportions); err != nil {
+		return err
+	}
+	if err := validateDeveloperRewardsReceiver(p.DeveloperRewardsReceiver); err != nil {
 		return err
 	}
 
@@ -99,6 +105,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
 		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
 		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.DistributionProportions, validateDistributionProportions),
+		paramtypes.NewParamSetPair(KeyDeveloperRewardsReceiver, &p.DeveloperRewardsReceiver, validateDeveloperRewardsReceiver),
 	}
 }
 
@@ -199,4 +206,14 @@ func validateDistributionProportions(i interface{}) error {
 	}
 
 	return nil
+}
+
+func validateDeveloperRewardsReceiver(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	_, err := sdk.AccAddressFromBech32(v)
+	return err
 }
