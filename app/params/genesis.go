@@ -74,7 +74,7 @@ func TestnetNetworkParams() NetworkParams {
 	testnetNetworkParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	testnetNetworkParams.MintParams = minttypes.DefaultParams()
-	testnetNetworkParams.MintParams.EpochDuration = time.Hour * 24 * 7                                                        // 1 week
+	testnetNetworkParams.MintParams.EpochIdentifier = "weekly"                                                                // 1 week
 	testnetNetworkParams.MintParams.GenesisEpochProvisions = sdk.NewDecFromInt(testnetNetworkParams.AirdropSupply.QuoRaw(10)) // 10% of airdrop supply
 	testnetNetworkParams.MintParams.MintDenom = testnetNetworkParams.NativeCoinMetadata.Base
 	testnetNetworkParams.MintParams.ReductionFactor = sdk.NewDecWithPrec(5, 1) // 0.5
