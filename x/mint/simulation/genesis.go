@@ -5,7 +5,6 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -30,9 +29,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// Leaving as sample code
 
 	mintDenom := sdk.DefaultBondDenom
-	epochProvisions := sdk.NewDec(500000)          // TODO: Randomize this
-	epochDuration, _ := time.ParseDuration("168h") // 1 week
-	params := types.NewParams(mintDenom, epochProvisions, epochDuration, sdk.NewDecWithPrec(5, 1), 156, types.DistributionProportions{
+	epochProvisions := sdk.NewDec(500000) // TODO: Randomize this
+	params := types.NewParams(mintDenom, epochProvisions, "weekly", sdk.NewDecWithPrec(5, 1), 156, types.DistributionProportions{
 		Staking:          sdk.NewDecWithPrec(5, 1), // 0.5
 		PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 		DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2

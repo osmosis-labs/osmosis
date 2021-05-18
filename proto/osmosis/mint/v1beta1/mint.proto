@@ -55,8 +55,8 @@ message Params {
     (gogoproto.nullable) = false
   ];
   // mint epoch identifier
-  string distr_epoch_identifier = 3
-      [ (gogoproto.moretags) = "yaml:\"distr_epoch_identifier\"" ];
+  string epoch_identifier = 3
+      [ (gogoproto.moretags) = "yaml:\"epoch_identifier\"" ];
   // number of epochs take to reduce rewards
   int64 reduction_period_in_epochs = 4
       [ (gogoproto.moretags) = "yaml:\"reduction_period_in_epochs\"" ];
