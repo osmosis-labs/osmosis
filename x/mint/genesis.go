@@ -19,7 +19,6 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, 
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	minter := keeper.GetMinter(ctx)
 	params := keeper.GetParams(ctx)
-	curEpoch := keeper.GetEpochNum(ctx)
-	lastEpoch := keeper.GetLastHalvenEpochNum(ctx)
-	return types.NewGenesisState(minter, params, curEpoch, lastEpoch)
+	lastHalvenEpoch := keeper.GetLastHalvenEpochNum(ctx)
+	return types.NewGenesisState(minter, params, lastHalvenEpoch)
 }

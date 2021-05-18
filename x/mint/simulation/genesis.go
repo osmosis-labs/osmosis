@@ -36,7 +36,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
 	})
 
-	mintGenesis := types.NewGenesisState(types.InitialMinter(), params, 0, 0)
+	mintGenesis := types.NewGenesisState(types.InitialMinter(), params, 0)
 
 	bz, err := json.MarshalIndent(&mintGenesis, "", " ")
 	if err != nil {

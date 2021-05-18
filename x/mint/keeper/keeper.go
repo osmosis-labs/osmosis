@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -66,31 +64,6 @@ func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 	k.hooks = h
 
 	return k
-}
-
-// GetEpochNum returns epoch number
-func (k Keeper) GetEpochNum(ctx sdk.Context) int64 {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.EpochKey)
-	if b == nil {
-		return 0
-	}
-
-	return int64(sdk.BigEndianToUint64(b))
-}
-
-// GetLastEpochTime returns last epoch time
-func (k Keeper) GetLastEpochTime(ctx sdk.Context) time.Time {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.EpochTimeKey)
-	if b == nil {
-		return time.Time{}
-	}
-	epochTime, err := sdk.ParseTimeBytes(b)
-	if err != nil {
-		return time.Time{}
-	}
-	return epochTime
 }
 
 // GetLastHalvenEpochNum returns last halven epoch number
