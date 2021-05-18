@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/incentives/types"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/spf13/cobra"
 )
 

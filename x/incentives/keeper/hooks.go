@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {

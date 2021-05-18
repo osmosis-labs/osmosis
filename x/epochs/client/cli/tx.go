@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	// "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/c-osmosis/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

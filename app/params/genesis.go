@@ -12,9 +12,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
-	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
-	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
 type NetworkParams struct {
@@ -71,9 +71,10 @@ func TestnetNetworkParams() NetworkParams {
 	testnetNetworkParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
 	testnetNetworkParams.StakingParams.MaxValidators = 100
 	testnetNetworkParams.StakingParams.BondDenom = testnetNetworkParams.NativeCoinMetadata.Base
+	testnetNetworkParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	testnetNetworkParams.MintParams = minttypes.DefaultParams()
-	testnetNetworkParams.MintParams.EpochDuration = time.Hour * 24 * 7                                                        // 1 week
+	testnetNetworkParams.MintParams.EpochIdentifier = "weekly"                                                                // 1 week
 	testnetNetworkParams.MintParams.GenesisEpochProvisions = sdk.NewDecFromInt(testnetNetworkParams.AirdropSupply.QuoRaw(10)) // 10% of airdrop supply
 	testnetNetworkParams.MintParams.MintDenom = testnetNetworkParams.NativeCoinMetadata.Base
 	testnetNetworkParams.MintParams.ReductionFactor = sdk.NewDecWithPrec(5, 1) // 0.5

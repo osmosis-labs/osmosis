@@ -3,8 +3,8 @@ package keeper
 import (
 	"encoding/json"
 
-	"github.com/c-osmosis/osmosis/x/epochs/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // GetEpochInfo returns epoch info by identifier

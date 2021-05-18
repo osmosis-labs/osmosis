@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 // Relock unlock previous lockID and create a new lock with newCoins with same duration and endtime

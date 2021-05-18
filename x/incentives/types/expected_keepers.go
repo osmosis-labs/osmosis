@@ -3,9 +3,9 @@ package types
 import (
 	time "time"
 
-	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

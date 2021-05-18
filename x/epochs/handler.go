@@ -3,10 +3,10 @@ package epochs
 import (
 	"fmt"
 
-	"github.com/c-osmosis/osmosis/x/epochs/keeper"
-	"github.com/c-osmosis/osmosis/x/epochs/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // NewHandler returns a handler for epochs module messages

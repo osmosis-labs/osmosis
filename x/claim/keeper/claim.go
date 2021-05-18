@@ -4,10 +4,10 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 // GetModuleAccountBalance gets the airdrop coin balance of module account

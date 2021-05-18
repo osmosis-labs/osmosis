@@ -5,9 +5,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 // Keeper struct

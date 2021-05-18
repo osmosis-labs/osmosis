@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/c-osmosis/osmosis/x/claim/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 // GetParams get params

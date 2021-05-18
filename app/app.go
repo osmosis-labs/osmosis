@@ -6,26 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	appparams "github.com/c-osmosis/osmosis/app/params"
-	_ "github.com/c-osmosis/osmosis/client/docs/statik"
-	"github.com/c-osmosis/osmosis/x/claim"
-	claimkeeper "github.com/c-osmosis/osmosis/x/claim/keeper"
-	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
-	"github.com/c-osmosis/osmosis/x/epochs"
-	epochskeeper "github.com/c-osmosis/osmosis/x/epochs/keeper"
-	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
-	"github.com/c-osmosis/osmosis/x/gamm"
-	gammkeeper "github.com/c-osmosis/osmosis/x/gamm/keeper"
-	gammtypes "github.com/c-osmosis/osmosis/x/gamm/types"
-	"github.com/c-osmosis/osmosis/x/incentives"
-	incentiveskeeper "github.com/c-osmosis/osmosis/x/incentives/keeper"
-	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
-	"github.com/c-osmosis/osmosis/x/lockup"
-	lockupkeeper "github.com/c-osmosis/osmosis/x/lockup/keeper"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
-	"github.com/c-osmosis/osmosis/x/mint"
-	mintkeeper "github.com/c-osmosis/osmosis/x/mint/keeper"
-	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -71,7 +54,6 @@ import (
 	ibctransferkeeper "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
-	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
@@ -79,7 +61,6 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -91,6 +72,30 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/gorilla/mux"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
+	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/x/claim"
+	claimkeeper "github.com/osmosis-labs/osmosis/x/claim/keeper"
+	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
+	"github.com/osmosis-labs/osmosis/x/epochs"
+	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/gamm"
+	gammkeeper "github.com/osmosis-labs/osmosis/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/incentives"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/x/lockup"
+	lockupkeeper "github.com/osmosis-labs/osmosis/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/x/mint"
+	mintkeeper "github.com/osmosis-labs/osmosis/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -120,6 +125,7 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+			poolincentivesclient.UpdatePoolIncentivesHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -133,6 +139,7 @@ var (
 		incentives.AppModuleBasic{},
 		lockup.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		poolincentives.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
 	)
@@ -150,6 +157,7 @@ var (
 		gammtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
 		incentivestypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
+		poolincentivestypes.ModuleName: nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -177,25 +185,26 @@ type OsmosisApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
-	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	StakingKeeper    stakingkeeper.Keeper
-	SlashingKeeper   slashingkeeper.Keeper
-	MintKeeper       mintkeeper.Keeper
-	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        govkeeper.Keeper
-	CrisisKeeper     crisiskeeper.Keeper
-	UpgradeKeeper    upgradekeeper.Keeper
-	ParamsKeeper     paramskeeper.Keeper
-	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	EvidenceKeeper   evidencekeeper.Keeper
-	TransferKeeper   ibctransferkeeper.Keeper
-	ClaimKeeper      *claimkeeper.Keeper
-	GAMMKeeper       gammkeeper.Keeper
-	IncentivesKeeper incentiveskeeper.Keeper
-	LockupKeeper     lockupkeeper.Keeper
-	EpochsKeeper     epochskeeper.Keeper
+	AccountKeeper        authkeeper.AccountKeeper
+	BankKeeper           bankkeeper.Keeper
+	CapabilityKeeper     *capabilitykeeper.Keeper
+	StakingKeeper        stakingkeeper.Keeper
+	SlashingKeeper       slashingkeeper.Keeper
+	MintKeeper           mintkeeper.Keeper
+	DistrKeeper          distrkeeper.Keeper
+	GovKeeper            govkeeper.Keeper
+	CrisisKeeper         crisiskeeper.Keeper
+	UpgradeKeeper        upgradekeeper.Keeper
+	ParamsKeeper         paramskeeper.Keeper
+	IBCKeeper            *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	EvidenceKeeper       evidencekeeper.Keeper
+	TransferKeeper       ibctransferkeeper.Keeper
+	ClaimKeeper          *claimkeeper.Keeper
+	GAMMKeeper           gammkeeper.Keeper
+	IncentivesKeeper     incentiveskeeper.Keeper
+	LockupKeeper         lockupkeeper.Keeper
+	EpochsKeeper         epochskeeper.Keeper
+	PoolIncentivesKeeper poolincentiveskeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -235,7 +244,7 @@ func NewOsmosisApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
-		epochstypes.StoreKey,
+		epochstypes.StoreKey, poolincentivestypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -271,10 +280,7 @@ func NewOsmosisApp(
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
-	app.MintKeeper = mintkeeper.NewKeeper(
-		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
-	)
+
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, authtypes.FeeCollectorName, app.ModuleAccountAddrs(),
@@ -290,19 +296,6 @@ func NewOsmosisApp(
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), &stakingKeeper, scopedIBCKeeper,
-	)
-
-	// register the proposal types
-	govRouter := govtypes.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper))
-
-	govKeeper := govkeeper.NewKeeper(
-		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, govRouter,
 	)
 
 	// Create Transfer Keepers
@@ -336,10 +329,41 @@ func NewOsmosisApp(
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper, epochsKeeper)
+	mintKeeper := mintkeeper.NewKeeper(
+		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName),
+		app.AccountKeeper, app.BankKeeper, epochsKeeper, authtypes.FeeCollectorName,
+	)
+
+	app.PoolIncentivesKeeper = poolincentiveskeeper.NewKeeper(
+		appCodec,
+		keys[poolincentivestypes.StoreKey],
+		app.GetSubspace(poolincentivestypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		incentivesKeeper,
+		app.DistrKeeper,
+		distrtypes.ModuleName,
+		authtypes.FeeCollectorName,
+	)
+	poolIncentivesHooks := app.PoolIncentivesKeeper.Hooks()
+
+	// register the proposal types
+	govRouter := govtypes.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
+		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
+		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(app.PoolIncentivesKeeper))
+
+	govKeeper := govkeeper.NewKeeper(
+		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+		&stakingKeeper, govRouter)
 
 	app.GAMMKeeper = *gammKeeper.SetHooks(
 		gammtypes.NewMultiGammHooks(
 			// insert gamm hooks receivers here
+			poolIncentivesHooks,
 			app.ClaimKeeper.Hooks(),
 		),
 	)
@@ -356,10 +380,18 @@ func NewOsmosisApp(
 		),
 	)
 
+	app.MintKeeper = *mintKeeper.SetHooks(
+		minttypes.NewMultiMintHooks(
+			// insert mint hooks receivers here
+			poolIncentivesHooks,
+		),
+	)
+
 	app.EpochsKeeper = *epochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
 			app.IncentivesKeeper.Hooks(),
+			app.MintKeeper.Hooks(),
 		),
 	)
 
@@ -402,6 +434,7 @@ func NewOsmosisApp(
 		gamm.NewAppModule(appCodec, app.GAMMKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper),
+		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 	)
 
@@ -412,7 +445,7 @@ func NewOsmosisApp(
 	app.mm.SetOrderBeginBlockers(
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
 		epochstypes.ModuleName,
-		upgradetypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		upgradetypes.ModuleName, minttypes.ModuleName, poolincentivestypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
@@ -430,6 +463,7 @@ func NewOsmosisApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		poolincentivestypes.ModuleName,
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
@@ -654,6 +688,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
+	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 
 	return paramsKeeper
 }

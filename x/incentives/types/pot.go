@@ -3,8 +3,8 @@ package types
 import (
 	time "time"
 
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 func NewPot(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, filledEpochs uint64, distrCoins sdk.Coins) Pot {

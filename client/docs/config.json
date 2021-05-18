@@ -15,6 +15,14 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/osmosis/epochs/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "EpochsParams"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {

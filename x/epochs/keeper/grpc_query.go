@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 
-	"github.com/c-osmosis/osmosis/x/epochs/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 var _ types.QueryServer = Keeper{}

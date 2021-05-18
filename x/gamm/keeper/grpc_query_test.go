@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/c-osmosis/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryPool() {
