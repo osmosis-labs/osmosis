@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/c-osmosis/osmosis/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
 // GetQueryCmd returns the cli query commands for the minting module.

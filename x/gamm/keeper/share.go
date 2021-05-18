@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/c-osmosis/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, pool types.PoolI, addr sdk.AccAddress, amount sdk.Int) error {

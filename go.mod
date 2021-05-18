@@ -1,4 +1,4 @@
-module github.com/c-osmosis/osmosis
+module github.com/osmosis-labs/osmosis
 
 go 1.15
 

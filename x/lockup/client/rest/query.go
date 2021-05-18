@@ -8,10 +8,10 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/c-osmosis/osmosis/x/lockup/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {

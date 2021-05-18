@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/c-osmosis/osmosis/x/gamm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 var (

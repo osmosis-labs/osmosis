@@ -1,6 +1,6 @@
 # Makefile for the "osmosisdnode" docker image.
 
 all:
-	docker build --tag c-osmosis/osmosisdnode osmosisdnode
+	docker build --tag osmosis-labs/osmosisdnode osmosisdnode
 
 .PHONY: all

@@ -3,7 +3,7 @@ package osmosis.lockup;
 
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/x/lockup/types";
 
 // GenesisState defines the lockup module's genesis state.
 message GenesisState { repeated PeriodLock locks = 1; }

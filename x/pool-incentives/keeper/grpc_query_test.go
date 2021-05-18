@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"context"
 
-	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
 func (suite *KeeperTestSuite) TestPotIds() {

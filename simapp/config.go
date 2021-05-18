@@ -16,7 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 
-	"github.com/c-osmosis/osmosis/app"
+	"github.com/osmosis-labs/osmosis/app"
 )
 
 // DefaultConfig returns a default configuration suitable for nearly all

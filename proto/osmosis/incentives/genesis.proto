@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "osmosis/incentives/params.proto";
 import "osmosis/incentives/pot.proto";
 
-option go_package = "github.com/c-osmosis/osmosis/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 
 // GenesisState defines the incentives module's genesis state.
 message GenesisState {

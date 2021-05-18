@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	simapp "github.com/c-osmosis/osmosis/app"
-	"github.com/c-osmosis/osmosis/x/incentives"
-	"github.com/c-osmosis/osmosis/x/incentives/types"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simapp "github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/x/incentives"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )

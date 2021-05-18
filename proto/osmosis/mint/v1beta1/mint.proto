@@ -1,7 +1,7 @@
 syntax = "proto3";
 package osmosis.mint.v1beta1;
 
-option go_package = "github.com/c-osmosis/osmosis/x/mint/types";
+option go_package = "github.com/osmosis-labs/osmosis/x/mint/types";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
@@ -19,19 +19,22 @@ message Minter {
 }
 
 message DistributionProportions {
-  // staking defines the proportion of the minted minted_denom that is to be allocated as staking rewards.
+  // staking defines the proportion of the minted minted_denom that is to be
+  // allocated as staking rewards.
   string staking = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"staking\"",
     (gogoproto.nullable) = false
   ];
-  // pool_incentives defines the proportion of the minted minted_denom that is to be allocated as pool incentives.
+  // pool_incentives defines the proportion of the minted minted_denom that is
+  // to be allocated as pool incentives.
   string pool_incentives = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"pool_incentives\"",
     (gogoproto.nullable) = false
   ];
-  // developer_rewards defines the proportion of the minted minted_denom that is to be allocated to developer rewards address.
+  // developer_rewards defines the proportion of the minted minted_denom that is
+  // to be allocated to developer rewards address.
   string developer_rewards = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"developer_rewards\"",
@@ -67,5 +70,6 @@ message Params {
     (gogoproto.nullable) = false
   ];
   // distribution_proportions defines the proportion of the minted denom
-  DistributionProportions distribution_proportions = 6 [(gogoproto.nullable) = false];
+  DistributionProportions distribution_proportions = 6
+      [ (gogoproto.nullable) = false ];
 }

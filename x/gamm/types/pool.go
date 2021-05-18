@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c-osmosis/osmosis/v043_temp/address"
 	proto "github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/v043_temp/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

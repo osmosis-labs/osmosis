@@ -15,10 +15,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/c-osmosis/osmosis/x/claim/keeper"
-	"github.com/c-osmosis/osmosis/x/claim/types"
-	"github.com/c-osmosis/osmosis/x/claim/client/cli"
-	"github.com/c-osmosis/osmosis/x/claim/client/rest"
+	"github.com/osmosis-labs/osmosis/x/claim/client/cli"
+	"github.com/osmosis-labs/osmosis/x/claim/client/rest"
+	"github.com/osmosis-labs/osmosis/x/claim/keeper"
+	"github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 var (
@@ -82,12 +82,12 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 
 // GetTxCmd returns the capability module's root tx command.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-    return cli.GetTxCmd()
+	return cli.GetTxCmd()
 }
 
 // GetQueryCmd returns the capability module's root query command.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-    return cli.GetQueryCmd(types.StoreKey)
+	return cli.GetQueryCmd(types.StoreKey)
 }
 
 // ----------------------------------------------------------------------------
@@ -129,7 +129,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-    types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // RegisterInvariants registers the capability module's invariants.
