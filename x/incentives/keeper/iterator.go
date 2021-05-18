@@ -3,9 +3,9 @@ package keeper
 import (
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/incentives/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
 )
 
 // Returns an iterator over all pots in the {prefix} space of state, that begin distributing rewards after a specific time

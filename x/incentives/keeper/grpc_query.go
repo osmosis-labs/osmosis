@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
-	"github.com/c-osmosis/osmosis/x/incentives/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

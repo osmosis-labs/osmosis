@@ -8,7 +8,7 @@ FROM golang:alpine AS build-env
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
 
 # Set working directory for the build
-WORKDIR /go/src/github.com/c-osmosis/osmosis
+WORKDIR /go/src/github.com/osmosis-labs/osmosis
 
 # Add source files
 COPY . .

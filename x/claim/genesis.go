@@ -1,9 +1,9 @@
 package claim
 
 import (
-	"github.com/c-osmosis/osmosis/x/claim/keeper"
-	"github.com/c-osmosis/osmosis/x/claim/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/claim/keeper"
+	"github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

@@ -3,8 +3,8 @@ package incentives
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/c-osmosis/osmosis/x/incentives/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/incentives/keeper"
 )
 
 // BeginBlocker is called on every block

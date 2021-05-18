@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/c-osmosis/osmosis/x/pool-incentives/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
 func (k Keeper) FundCommunityPoolFromModule(ctx sdk.Context, asset sdk.Coin) error {

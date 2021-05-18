@@ -3,9 +3,9 @@ package keeper
 import (
 	"encoding/json"
 
-	"github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 // GetActivities get activites of users for genesis export

@@ -12,13 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/spf13/cobra"
 
-	appparams "github.com/c-osmosis/osmosis/app/params"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
 
-	claimtypes "github.com/c-osmosis/osmosis/x/claim/types"
-	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
-	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
-	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
-	poolincentivestypes "github.com/c-osmosis/osmosis/x/pool-incentives/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -26,6 +21,11 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {

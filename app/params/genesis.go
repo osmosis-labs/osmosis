@@ -12,9 +12,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochstypes "github.com/c-osmosis/osmosis/x/epochs/types"
-	incentivestypes "github.com/c-osmosis/osmosis/x/incentives/types"
-	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
 type NetworkParams struct {

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/c-osmosis/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

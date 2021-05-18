@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	simapp "github.com/c-osmosis/osmosis/app"
-	"github.com/c-osmosis/osmosis/x/mint/simulation"
-	"github.com/c-osmosis/osmosis/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	simapp "github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
 func TestDecodeStore(t *testing.T) {
