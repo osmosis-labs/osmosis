@@ -12,8 +12,6 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, 
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)
 	ak.GetModuleAccount(ctx, types.ModuleName)
-	keeper.SetLastEpochTime(ctx, ctx.BlockTime())
-	keeper.SetEpochNum(ctx, data.CurrentEpoch)
 	keeper.SetLastHalvenEpochNum(ctx, data.HalvenStartedEpoch)
 }
 

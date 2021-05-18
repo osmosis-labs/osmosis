@@ -18,6 +18,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
+	ek               types.EpochKeeper
 	hooks            types.MintHooks
 	feeCollectorName string
 }
@@ -25,7 +26,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, ek types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -44,6 +45,7 @@ func NewKeeper(
 		paramSpace:       paramSpace,
 		accountKeeper:    ak,
 		bankKeeper:       bk,
+		ek:               ek,
 		feeCollectorName: feeCollectorName,
 	}
 }
@@ -77,12 +79,6 @@ func (k Keeper) GetEpochNum(ctx sdk.Context) int64 {
 	return int64(sdk.BigEndianToUint64(b))
 }
 
-// SetEpochNum set epoch number
-func (k Keeper) SetEpochNum(ctx sdk.Context, epochNum int64) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(types.EpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
-}
-
 // GetLastEpochTime returns last epoch time
 func (k Keeper) GetLastEpochTime(ctx sdk.Context) time.Time {
 	store := ctx.KVStore(k.storeKey)
@@ -95,12 +91,6 @@ func (k Keeper) GetLastEpochTime(ctx sdk.Context) time.Time {
 		return time.Time{}
 	}
 	return epochTime
-}
-
-// SetLastEpochTime set last epoch time
-func (k Keeper) SetLastEpochTime(ctx sdk.Context, epochTime time.Time) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(types.EpochTimeKey, sdk.FormatTimeBytes(epochTime))
 }
 
 // GetLastHalvenEpochNum returns last halven epoch number

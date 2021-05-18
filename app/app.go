@@ -391,6 +391,7 @@ func NewOsmosisApp(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
 			app.IncentivesKeeper.Hooks(),
+			app.MintKeeper.Hooks(),
 		),
 	)
 
