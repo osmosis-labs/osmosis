@@ -18,6 +18,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
+	distrKeeper      types.DistrKeeper
 	hooks            types.MintHooks
 	feeCollectorName string
 }
@@ -25,7 +26,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -44,6 +45,7 @@ func NewKeeper(
 		paramSpace:       paramSpace,
 		accountKeeper:    ak,
 		bankKeeper:       bk,
+		distrKeeper:      dk,
 		feeCollectorName: feeCollectorName,
 	}
 }
@@ -191,15 +193,22 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 		return err
 	}
 
-	// allocate developer rewards to an address
-	devRewardsAddr, err := sdk.AccAddressFromBech32(params.DeveloperRewardsReceiver)
-	if err != nil {
-		return err
-	}
 	devRewardCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.DeveloperRewards))
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
-	if err != nil {
-		return err
+	if params.DeveloperRewardsReceiver == "" {
+		// fund community pool when rewards address is empty
+		k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+		// TODO: fix all the tests caused by this change
+		// TODO: add test that if DeveloperRewardsReceiver is empty, funds goes to community pool
+	} else {
+		// allocate developer rewards to an address
+		devRewardsAddr, err := sdk.AccAddressFromBech32(params.DeveloperRewardsReceiver)
+		if err != nil {
+			return err
+		}
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
+		if err != nil {
+			return err
+		}
 	}
 
 	// call an hook after the minting and distribution of new coins

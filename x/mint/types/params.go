@@ -214,6 +214,11 @@ func validateDeveloperRewardsReceiver(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	// fund community pool when rewards address is empty
+	if v == "" {
+		return nil
+	}
+
 	_, err := sdk.AccAddressFromBech32(v)
 	return err
 }
