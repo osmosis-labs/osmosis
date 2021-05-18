@@ -6,8 +6,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/osmosis-labs/osmosis/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
@@ -44,4 +49,70 @@ func (suite *KeeperTestSuite) TestGetPoolAllocatableAsset() {
 		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000))),
 	)
 	suite.NoError(err)
+}
+
+func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty() {
+	mintKeeper := suite.app.MintKeeper
+	params := suite.app.MintKeeper.GetParams(suite.ctx)
+	devRewardsReceiver := sdk.AccAddress([]byte("addr1---------------"))
+	potCreator := sdk.AccAddress([]byte("addr2---------------"))
+	params.DeveloperRewardsReceiver = devRewardsReceiver.String()
+	suite.app.MintKeeper.SetParams(suite.ctx, params)
+
+	// Create record
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
+	suite.app.BankKeeper.SetBalances(suite.ctx, potCreator, coins)
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         "lptoken",
+		Duration:      time.Second,
+	}
+	potId, err := suite.app.IncentivesKeeper.CreatePot(suite.ctx, true, potCreator, coins, distrTo, time.Now(), 1)
+	suite.NoError(err)
+	err = suite.app.PoolIncentivesKeeper.UpdateDistrRecords(suite.ctx, poolincentivestypes.DistrRecord{
+		PotId:  potId,
+		Weight: sdk.NewInt(100),
+	})
+	suite.NoError(err)
+
+	// At this time, there is no distr record, so the asset should be allocated to the community pool.
+	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	suite.NoError(err)
+
+	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+	suite.Equal("50000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
+	suite.Equal("", feePool.CommunityPool.String())
+	suite.Equal("20000stake", suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver, "stake").String())
+}
+
+func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperRewardsAddr() {
+	mintKeeper := suite.app.MintKeeper
+
+	// At this time, there is no distr record, so the asset should be allocated to the community pool.
+	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err := mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	suite.NoError(err)
+
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+
+	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+	suite.Equal("50000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
+	suite.Equal(sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(50000))).String(), feePool.CommunityPool.String())
+	suite.Equal("50000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake").String())
+
+	// Community pool should be increased
+	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	suite.NoError(err)
+
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+
+	feePool = suite.app.DistrKeeper.GetFeePool(suite.ctx)
+	suite.Equal("100000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
+	suite.Equal(feePool.CommunityPool.String(), sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(100000))).String())
+	suite.Equal(sdk.NewCoin("stake", sdk.NewInt(100000)), suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake"))
 }
