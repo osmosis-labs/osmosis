@@ -9,8 +9,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
+func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords() {
 	mintKeeper := suite.app.MintKeeper
+	params := suite.app.MintKeeper.GetParams(suite.ctx)
+	params.DeveloperRewardsReceiver = sdk.AccAddress([]byte("addr1---------------")).String()
+	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
 	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
@@ -42,6 +45,9 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPool() {
 func (suite *KeeperTestSuite) TestAllocateAsset() {
 	keeper := suite.app.PoolIncentivesKeeper
 	mintKeeper := suite.app.MintKeeper
+	params := suite.app.MintKeeper.GetParams(suite.ctx)
+	params.DeveloperRewardsReceiver = sdk.AccAddress([]byte("addr1---------------")).String()
+	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	poolId := suite.preparePool()
 
