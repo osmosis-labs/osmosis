@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	appparams "github.com/c-osmosis/osmosis/app/params"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
