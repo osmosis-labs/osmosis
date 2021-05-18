@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 	"time"
-	// "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/osmosis-labs/osmosis/app"
@@ -38,14 +37,14 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	height := int64(1)
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
 	// correct rewards
-	for ; height < lastHalvenPeriod + app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(1500000))), feePoolNew.CommunityPool, height)
+		require.Equal(t, feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(2500000))), feePoolNew.CommunityPool, height)
 	}
 
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
@@ -54,7 +53,7 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	lastHalvenPeriod = app.MintKeeper.GetLastHalvenEpochNum(ctx)
 	require.Equal(t, lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
 
-	for ; height < lastHalvenPeriod + app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
 
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
@@ -62,6 +61,6 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 
 		// check community pool balance increase with half reduction
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(750000))), feePoolNew.CommunityPool)
+		require.Equal(t, feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(1250000))), feePoolNew.CommunityPool)
 	}
 }

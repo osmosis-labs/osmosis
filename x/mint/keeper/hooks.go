@@ -22,7 +22,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// Check if we have hit an epoch where we update the inflation parameter.
 		// Since epochs only update based on BFT time data, it is safe to store the "halvening period time"
 		// in terms of the number of epochs that have transpired.
-		fmt.Println("epochNumber", epochNumber)
 		if epochNumber >= k.GetParams(ctx).ReductionPeriodInEpochs+k.GetLastHalvenEpochNum(ctx) {
 			// Halven the reward per halven period
 			minter.EpochProvisions = minter.NextEpochProvisions(params)

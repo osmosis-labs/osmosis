@@ -24,6 +24,12 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 }
 
+// DistrKeeper defines the contract needed to be fulfilled for distribution keeper
+type DistrKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+// EpochKeeper defines the contract needed to be fulfilled for epochs keeper
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }

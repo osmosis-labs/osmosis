@@ -69,4 +69,6 @@ message Params {
   // distribution_proportions defines the proportion of the minted denom
   DistributionProportions distribution_proportions = 6
       [ (gogoproto.nullable) = false ];
+  // address to receive developer rewards
+  string developer_rewards_receiver = 7 [ (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"" ];
 }

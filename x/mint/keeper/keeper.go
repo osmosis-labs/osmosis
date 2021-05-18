@@ -16,6 +16,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
+	distrKeeper      types.DistrKeeper
 	epochKeeper      types.EpochKeeper
 	hooks            types.MintHooks
 	feeCollectorName string
@@ -24,7 +25,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper, epochKeeper types.EpochKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -43,6 +44,7 @@ func NewKeeper(
 		paramSpace:       paramSpace,
 		accountKeeper:    ak,
 		bankKeeper:       bk,
+		distrKeeper:      dk,
 		epochKeeper:      epochKeeper,
 		feeCollectorName: feeCollectorName,
 	}
@@ -137,7 +139,8 @@ func (k Keeper) GetProportions(ctx sdk.Context, fees sdk.Coins, ratio sdk.Dec) s
 
 // DistributeMintedCoins implements distribution of minted coins from mint to external modules.
 func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) error {
-	proportions := k.GetParams(ctx).DistributionProportions
+	params := k.GetParams(ctx)
+	proportions := params.DistributionProportions
 
 	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module
 	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.Staking))
@@ -153,12 +156,20 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 		return err
 	}
 
-	// allocate developer rewards to an address, for now empty address, TODO: update it
 	devRewardCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.DeveloperRewards))
-	devRewardsAddr := sdk.AccAddress{}
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
-	if err != nil {
-		return err
+	if params.DeveloperRewardsReceiver == "" {
+		// fund community pool when rewards address is empty
+		k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+	} else {
+		// allocate developer rewards to an address
+		devRewardsAddr, err := sdk.AccAddressFromBech32(params.DeveloperRewardsReceiver)
+		if err != nil {
+			return err
+		}
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
+		if err != nil {
+			return err
+		}
 	}
 
 	// call an hook after the minting and distribution of new coins

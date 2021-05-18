@@ -34,7 +34,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Staking:          sdk.NewDecWithPrec(5, 1), // 0.5
 		PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 		DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
-	})
+	}, "")
 
 	mintGenesis := types.NewGenesisState(types.InitialMinter(), params, 0)
 
