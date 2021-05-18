@@ -16,7 +16,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
-	epochkeeper      types.EpochKeeper
+	epochKeeper      types.EpochKeeper
 	hooks            types.MintHooks
 	feeCollectorName string
 }
@@ -43,7 +43,7 @@ func NewKeeper(
 		paramSpace:       paramSpace,
 		accountKeeper:    ak,
 		bankKeeper:       bk,
-		ek:               ek,
+		epochKeeper:      epochKeeper,
 		feeCollectorName: feeCollectorName,
 	}
 }
