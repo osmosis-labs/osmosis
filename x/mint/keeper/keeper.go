@@ -16,7 +16,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
-	ek               types.EpochKeeper
+	epochkeeper      types.EpochKeeper
 	hooks            types.MintHooks
 	feeCollectorName string
 }
@@ -24,7 +24,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper, ek types.EpochKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
