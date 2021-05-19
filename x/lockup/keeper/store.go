@@ -32,28 +32,28 @@ func lockStoreKey(ID uint64) []byte {
 }
 
 // getLockRefs get lock IDs specified on the prefix and timestamp key
-func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
+func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)
-	timeLock := types.LockIDs{}
+	lockIDs := []uint64{}
 	if store.Has(key) {
 		bz := store.Get(key)
-		err := json.Unmarshal(bz, &timeLock)
+		err := json.Unmarshal(bz, &lockIDs)
 		if err != nil {
 			panic(err)
 		}
 	}
-	return timeLock
+	return lockIDs
 }
 
 // addLockRefByKey append lock ID into an array associated to provided key
 func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	store := ctx.KVStore(k.storeKey)
-	timeLock := k.getLockRefs(ctx, key)
-	if findIndex(timeLock.IDs, lockID) > -1 {
+	lockIDs := k.getLockRefs(ctx, key)
+	if findIndex(lockIDs, lockID) > -1 {
 		return fmt.Errorf("lock with same ID exist: %d", lockID)
 	}
-	timeLock.IDs = append(timeLock.IDs, lockID)
-	bz, err := json.Marshal(timeLock)
+	lockIDs = append(lockIDs, lockID)
+	bz, err := json.Marshal(lockIDs)
 	if err != nil {
 		return err
 	}
@@ -65,17 +65,17 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	var index = -1
 	store := ctx.KVStore(k.storeKey)
-	timeLock := k.getLockRefs(ctx, key)
-	timeLock.IDs, index = removeValue(timeLock.IDs, lockID)
+	lockIDs := k.getLockRefs(ctx, key)
+	lockIDs, index = removeValue(lockIDs, lockID)
 	if index < 0 {
 		return fmt.Errorf("specific lock with ID %d not found", lockID)
 	}
-	if len(timeLock.IDs) == 0 {
+	if len(lockIDs) == 0 {
 		if store.Has(key) {
 			store.Delete(key)
 		}
 	} else {
-		bz, err := json.Marshal(timeLock)
+		bz, err := json.Marshal(lockIDs)
 		if err != nil {
 			return err
 		}

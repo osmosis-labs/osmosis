@@ -2,7 +2,6 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 func (k Keeper) AddLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
@@ -13,6 +12,6 @@ func (k Keeper) DeleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) e
 	return k.deleteLockRefByKey(ctx, key, lockID)
 }
 
-func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) types.LockIDs {
+func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	return k.getLockRefs(ctx, key)
 }

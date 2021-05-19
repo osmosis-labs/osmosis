@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
 )
@@ -14,12 +15,12 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	locks := []types.PeriodLock{}
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		timeLock := types.LockIDs{}
-		err := json.Unmarshal(iterator.Value(), &timeLock)
+		lockIDs := []uint64{}
+		err := json.Unmarshal(iterator.Value(), &lockIDs)
 		if err != nil {
 			panic(err)
 		}
-		for _, lockID := range timeLock.IDs {
+		for _, lockID := range lockIDs {
 			lock, err := k.GetLockByID(ctx, lockID)
 			if err != nil {
 				panic(err)
@@ -198,8 +199,8 @@ func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, 
 		return nil, fmt.Errorf("lock with ID %d does not exist", lockID)
 	}
 	bz := store.Get(lockKey)
-	k.cdc.MustUnmarshalJSON(bz, &lock)
-	return &lock, nil
+	err := proto.Unmarshal(bz, &lock)
+	return &lock, err
 }
 
 // GetPeriodLocks Returns the period locks on pool
@@ -268,7 +269,11 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	lockID := lock.ID
 	store := ctx.KVStore(k.storeKey)
-	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
+	bz, err := proto.Marshal(&lock)
+	if err != nil {
+		return err
+	}
+	store.Set(lockStoreKey(lockID), bz)
 	k.setLastLockID(ctx, lockID)
 
 	refKeys, err := lockRefKeys(lock)
@@ -300,7 +305,11 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
 	store := ctx.KVStore(k.storeKey)
-	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
+	bz, err := proto.Marshal(&lock)
+	if err != nil {
+		return err
+	}
+	store.Set(lockStoreKey(lockID), bz)
 
 	refKeys, err = lockRefKeys(lock)
 	if err != nil {
