@@ -1,6 +1,7 @@
 package epochs
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -10,15 +11,15 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/c-osmosis/osmosis/x/epochs/client/cli"
-	"github.com/c-osmosis/osmosis/x/epochs/client/rest"
-	"github.com/c-osmosis/osmosis/x/epochs/keeper"
-	"github.com/c-osmosis/osmosis/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/osmosis-labs/osmosis/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/x/epochs/client/rest"
+	"github.com/osmosis-labs/osmosis/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 var (
@@ -78,6 +79,7 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns the capability module's root tx command.

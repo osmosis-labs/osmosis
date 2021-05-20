@@ -7,10 +7,10 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/c-osmosis/osmosis/x/lockup/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
@@ -36,14 +36,11 @@ func newLockTokensHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := &types.MsgLockTokens{
-			Owner:    req.Owner,
-			Duration: duration,
-			Coins:    req.Coins,
-		}
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
+		msg := types.NewMsgLockTokens(
+			req.Owner,
+			duration,
+			req.Coins,
+		)
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
@@ -65,9 +62,9 @@ func newUnlockTokensHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := &types.MsgUnlockTokens{
-			Owner: req.Owner,
-		}
+		msg := types.NewMsgUnlockTokens(
+			req.Owner,
+		)
 
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
@@ -103,10 +100,10 @@ func newUnlockByIDHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := &types.MsgUnlockPeriodLock{
-			Owner: req.Owner,
-			ID:    id,
-		}
+		msg := types.NewMsgBeginUnlocking(
+			req.Owner,
+			id,
+		)
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}

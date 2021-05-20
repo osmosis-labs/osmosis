@@ -3,9 +3,9 @@ package keeper_test
 import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/c-osmosis/osmosis/app"
-	"github.com/c-osmosis/osmosis/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simapp "github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
 // returns context and an app with updated mint keeper

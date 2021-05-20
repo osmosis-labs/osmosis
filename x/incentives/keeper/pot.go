@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/incentives/types"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
 )
 
@@ -71,7 +72,11 @@ func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Ite
 // setPot set the pot inside store
 func (k Keeper) setPot(ctx sdk.Context, pot *types.Pot) error {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(potStoreKey(pot.Id), k.cdc.MustMarshalJSON(pot))
+	bz, err := proto.Marshal(pot)
+	if err != nil {
+		return err
+	}
+	store.Set(potStoreKey(pot.Id), bz)
 	return nil
 }
 
@@ -88,7 +93,11 @@ func (k Keeper) SetPotWithRefKey(ctx sdk.Context, pot *types.Pot) error {
 		k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixFinishedPots, timeKey), pot.Id)
 	}
 	store := ctx.KVStore(k.storeKey)
-	store.Set(potStoreKey(pot.Id), k.cdc.MustMarshalJSON(pot))
+	bz, err := proto.Marshal(pot)
+	if err != nil {
+		return err
+	}
+	store.Set(potStoreKey(pot.Id), bz)
 	return nil
 }
 
@@ -243,7 +252,11 @@ func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
 		if distrCoins.Empty() {
 			continue
 		}
-		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, distrCoins); err != nil {
+		owner, err := sdk.AccAddressFromBech32(lock.Owner)
+		if err != nil {
+			return nil, err
+		}
+		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, distrCoins); err != nil {
 			return nil, err
 		}
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
@@ -281,7 +294,7 @@ func (k Keeper) GetPotByID(ctx sdk.Context, potID uint64) (*types.Pot, error) {
 		return nil, fmt.Errorf("pot with ID %d does not exist", potID)
 	}
 	bz := store.Get(potKey)
-	k.cdc.MustUnmarshalJSON(bz, &pot)
+	proto.Unmarshal(bz, &pot)
 	return &pot, nil
 }
 

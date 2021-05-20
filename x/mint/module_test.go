@@ -7,9 +7,9 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/c-osmosis/osmosis/app"
-	"github.com/c-osmosis/osmosis/x/mint/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	simapp "github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	simapp "github.com/c-osmosis/osmosis/app"
-	"github.com/c-osmosis/osmosis/x/epochs"
-	"github.com/c-osmosis/osmosis/x/epochs/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simapp "github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/x/epochs"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -154,5 +154,63 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		require.Equal(t, epochInfo.EpochCountingStarted, true)
 		require.Equal(t, epochInfo.CurrentEpochEnded, test.expCurrentEpochEnded)
 	}
+}
 
+func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	// On init genesis, default epochs information is set
+	// To check init genesis again, should make it fresh status
+	epochInfos := app.EpochsKeeper.AllEpochInfos(ctx)
+	for _, epochInfo := range epochInfos {
+		app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+	}
+
+	now := time.Now()
+	week := time.Hour * 24 * 7
+	month := time.Hour * 24 * 30
+	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
+
+	epochs.InitGenesis(ctx, app.EpochsKeeper, types.GenesisState{
+		Epochs: []types.EpochInfo{
+			{
+				Identifier:            "monthly",
+				StartTime:             now.Add(month),
+				Duration:              time.Hour * 24 * 30,
+				CurrentEpoch:          0,
+				CurrentEpochStartTime: time.Time{},
+				EpochCountingStarted:  false,
+				CurrentEpochEnded:     true,
+			},
+		},
+	})
+
+	// epoch not started yet
+	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+	require.Equal(t, epochInfo.CurrentEpochStartTime, time.Time{})
+	require.Equal(t, epochInfo.EpochCountingStarted, false)
+	require.Equal(t, epochInfo.CurrentEpochEnded, true)
+
+	// after 1 week
+	ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(week))
+	epochs.BeginBlocker(ctx, app.EpochsKeeper)
+	epochs.EndBlocker(ctx, app.EpochsKeeper)
+
+	// epoch not started yet
+	epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+	require.Equal(t, epochInfo.CurrentEpochStartTime, time.Time{})
+	require.Equal(t, epochInfo.EpochCountingStarted, false)
+	require.Equal(t, epochInfo.CurrentEpochEnded, true)
+
+	// after 1 month
+	ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(month))
+	epochs.BeginBlocker(ctx, app.EpochsKeeper)
+	epochs.EndBlocker(ctx, app.EpochsKeeper)
+
+	// epoch started
+	epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
+	require.Equal(t, epochInfo.EpochCountingStarted, true)
+	require.Equal(t, epochInfo.CurrentEpochEnded, false)
 }

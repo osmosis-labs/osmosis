@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/c-osmosis/osmosis/app/params"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/osmosis-labs/osmosis/app/params"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,7 +33,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	osmosis "github.com/c-osmosis/osmosis/app"
+	osmosis "github.com/osmosis-labs/osmosis/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -94,7 +94,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.ValidateGenesisCmd(osmosis.ModuleBasics),
 		AddGenesisAccountCmd(osmosis.DefaultNodeHome),
 		ExportAirdropSnapshotCmd(),
-		GenerateGenesisCmd(),
+		PrepareGenesisCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
+		ImportGenesisAccountsFromSnapshotCmd(osmosis.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(osmosis.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),

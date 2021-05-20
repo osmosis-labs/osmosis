@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -19,6 +21,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
+	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 const (
@@ -174,6 +178,154 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file]",
+		Short: "Import genesis accounts from fairdrop snapshot.json",
+		Long: `Import genesis accounts from fairdrop snapshot.json
+20% of airdrop amount is liquid in accounts.
+The remaining is placed in the claims module.
+Example:
+	osmosisd import-genesis-accounts-from-snapshot ../snapshot.json
+	- Check input genesis:
+		file is at ~/.gaiad/config/genesis.json
+`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			depCdc := clientCtx.JSONMarshaler
+			cdc := depCdc.(codec.Marshaler)
+			// aminoCodec := clientCtx.LegacyAmino.Amino
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+
+			config.SetRoot(clientCtx.HomeDir)
+
+			genFile := config.GenesisFile()
+			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+			}
+
+			authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
+
+			accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
+			if err != nil {
+				return fmt.Errorf("failed to get accounts from any: %w", err)
+			}
+
+			// Read snapshot file
+			snapshotInput := args[0]
+			snapshotJSON, err := os.Open(snapshotInput)
+			if err != nil {
+				return err
+			}
+			defer snapshotJSON.Close()
+			byteValue, _ := ioutil.ReadAll(snapshotJSON)
+			snapshot := Snapshot{}
+			json.Unmarshal(byteValue, &snapshot)
+			if err != nil {
+				return err
+			}
+
+			// get genesis params
+			genesisParams := appparams.TestnetGenesisParams()
+
+			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
+			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalOsmosAirdropAmount)
+			fmt.Printf("normalization factor: %s\n", normalizationFactor)
+
+			liquidBalances := []banktypes.Balance{}
+			claimableBalances := []banktypes.Balance{}
+			claimModuleAccountBalance := sdk.NewInt(0)
+
+			// for each account in the snapshot
+			for _, acc := range snapshot.Accounts {
+				// set atom bech32 prefixes
+				setCosmosBech32Prefixes()
+
+				// read address from snapshot
+				address, err := sdk.AccAddressFromBech32(acc.AtomAddress)
+				if err != nil {
+					return err
+				}
+
+				// set osmo bech32 prefixes
+				appparams.SetAddressPrefixes()
+
+				// skip accounts with 0 balance
+				if !acc.OsmoBalanceBase.IsPositive() {
+					continue
+				}
+
+				// get normalized osmo balance for account
+				normalizedOsmoBalance := normalizationFactor.MulInt(acc.OsmoBalance)
+
+				// initial liquid amounts
+				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).RoundInt() // 20% of airdrop amount
+				liquidBalances = append(liquidBalances, banktypes.Balance{
+					Address: address.String(),
+					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, liquidAmount)),
+				})
+
+				// claimable balances
+				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).RoundInt()
+				claimableBalances = append(claimableBalances, banktypes.Balance{
+					Address: address.String(),
+					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimableAmount)),
+				})
+				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
+			}
+
+			// auth module genesis
+			genAccs, err := authtypes.PackAccounts(accs)
+			if err != nil {
+				return fmt.Errorf("failed to convert accounts into any's: %w", err)
+			}
+			authGenState.Accounts = genAccs
+			authGenStateBz, err := cdc.MarshalJSON(&authGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
+			}
+			appState[authtypes.ModuleName] = authGenStateBz
+
+			// bank module genesis
+			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
+			bankGenState.Balances = banktypes.SanitizeGenesisBalances(liquidBalances)
+			bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal bank genesis state: %w", err)
+			}
+			appState[banktypes.ModuleName] = bankGenStateBz
+
+			// claim module genesis
+			claimGenState := claimtypes.DefaultGenesis()
+			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, claimModuleAccountBalance)
+			claimGenState.InitialClaimables = claimableBalances
+			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal claim genesis state: %w", err)
+			}
+			appState[claimtypes.ModuleName] = claimGenStateBz
+
+			appStateJSON, err := json.Marshal(appState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal application genesis state: %w", err)
+			}
+			genDoc.AppState = appStateJSON
+
+			err = genutil.ExportGenesisFile(genDoc, genFile)
+			return err
+		},
+	}
+
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

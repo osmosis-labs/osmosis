@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/incentives/types"
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) TestGRPCPotByID() {
@@ -145,7 +145,7 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	// initial check
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
 	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
-		Owner: lockOwner,
+		Owner: lockOwner.String(),
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	lockOwner, _, coins, _ := suite.SetupLockAndPot(false)
 
 	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
-		Owner:    lockOwner,
+		Owner:    lockOwner.String(),
 		EndEpoch: 100,
 	})
 	suite.Require().NoError(err)

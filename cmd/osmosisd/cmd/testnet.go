@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -73,8 +74,16 @@ Example:
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
+			if chainID == "" {
+				chainID = "chain-" + tmrand.NewRand().Str(6)
+			}
+
+			// get testnet genesis params
+			genesisParams := appparams.TestnetGenesisParams()
+			genesisParams.ChainID = chainID
+
 			return InitTestnet(
-				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
+				clientCtx, cmd, config, mbm, genBalIterator, genesisParams, outputDir, minGasPrices,
 				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
 			)
 		},
@@ -86,7 +95,7 @@ Example:
 	cmd.Flags().String(flagNodeDaemonHome, "osmosisd", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", appparams.TestnetGenesisParams().NativeCoinMetadata.Base), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
@@ -102,8 +111,8 @@ func InitTestnet(
 	nodeConfig *tmconfig.Config,
 	mbm module.BasicManager,
 	genBalIterator banktypes.GenesisBalancesIterator,
+	genesisParams appparams.GenesisParams,
 	outputDir,
-	chainID,
 	minGasPrices,
 	nodeDirPrefix,
 	nodeDaemonHome,
@@ -112,10 +121,6 @@ func InitTestnet(
 	algoStr string,
 	numValidators int,
 ) error {
-
-	if chainID == "" {
-		chainID = "chain-" + tmrand.NewRand().Str(6)
-	}
 
 	nodeIDs := make([]string, numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, numValidators)
@@ -126,7 +131,7 @@ func InitTestnet(
 	simappConfig.Telemetry.Enabled = true
 	simappConfig.Telemetry.PrometheusRetentionTime = 60
 	simappConfig.Telemetry.EnableHostnameLabel = false
-	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", chainID}}
+	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", genesisParams.ChainID}}
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -199,7 +204,7 @@ func InitTestnet(
 		accStakingTokens := sdk.TokensFromConsensusPower(500)
 		coins := sdk.Coins{
 			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), accTokens),
-			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
+			sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, accStakingTokens),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -209,7 +214,7 @@ func InitTestnet(
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+			sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
@@ -227,7 +232,7 @@ func InitTestnet(
 
 		txFactory := tx.Factory{}
 		txFactory = txFactory.
-			WithChainID(chainID).
+			WithChainID(genesisParams.ChainID).
 			WithMemo(memo).
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
@@ -248,12 +253,12 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genFiles, numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, genesisParams, genAccounts, genBalances, genFiles, numValidators); err != nil {
 		return err
 	}
 
 	err := collectGenFiles(
-		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
+		clientCtx, nodeConfig, genesisParams.ChainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -265,7 +270,7 @@ func InitTestnet(
 }
 
 func initGenFiles(
-	clientCtx client.Context, mbm module.BasicManager, chainID string,
+	clientCtx client.Context, mbm module.BasicManager, genesisParams appparams.GenesisParams,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
@@ -291,13 +296,18 @@ func initGenFiles(
 	bankGenState.Balances = genBalances
 	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&bankGenState)
 
-	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
+	appGenState, _, err = PrepareGenesis(clientCtx, appGenState, &types.GenesisDoc{}, genesisParams)
 	if err != nil {
 		return err
 	}
 
+	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal application genesis state: %w", err)
+	}
+
 	genDoc := types.GenesisDoc{
-		ChainID:    chainID,
+		ChainID:    genesisParams.ChainID,
 		AppState:   appGenStateJSON,
 		Validators: nil,
 	}

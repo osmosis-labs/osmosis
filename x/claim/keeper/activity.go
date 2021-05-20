@@ -1,11 +1,10 @@
 package keeper
 
 import (
-	"encoding/json"
-
-	"github.com/c-osmosis/osmosis/x/claim/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 // GetActivities get activites of users for genesis export
@@ -18,7 +17,7 @@ func (k Keeper) GetActivities(ctx sdk.Context) []types.UserActions {
 	actionsByUser := make(map[string]types.Actions)
 	for ; iterator.Valid(); iterator.Next() {
 		value := types.UserAction{}
-		err := json.Unmarshal(iterator.Value(), &value)
+		err := proto.Unmarshal(iterator.Value(), &value)
 		if err != nil {
 			panic(err)
 		}
@@ -52,7 +51,7 @@ func (k Keeper) GetUserActions(ctx sdk.Context, address sdk.AccAddress) []types.
 	actions := []types.Action{}
 	for ; iterator.Valid(); iterator.Next() {
 		value := types.UserAction{}
-		err := json.Unmarshal(iterator.Value(), &value)
+		err := proto.Unmarshal(iterator.Value(), &value)
 		if err != nil {
 			panic(err)
 		}
@@ -73,7 +72,7 @@ func (k Keeper) CheckAndSetUserAction(ctx sdk.Context, address sdk.AccAddress, a
 		User:   address.String(),
 		Action: action,
 	}
-	valueBz, err := json.Marshal(value)
+	valueBz, err := proto.Marshal(&value)
 	if err != nil {
 		panic(err)
 	}

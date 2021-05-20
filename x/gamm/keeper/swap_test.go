@@ -80,13 +80,13 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
 		keeper := suite.app.GAMMKeeper
 
 		if test.expectPass {
-			spotPriceBefore, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+			spotPriceBefore, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 			suite.NoError(err, "test: %v", test.name)
 
 			tokenOutAmount, _, err := keeper.SwapExactAmountIn(suite.ctx, acc1, poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
 			suite.NoError(err, "test: %v", test.name)
 
-			spotPriceAfter, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+			spotPriceAfter, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 			suite.NoError(err, "test: %v", test.name)
 
 			// Ratio of the token out should be between the before spot price and after spot price.
@@ -177,16 +177,16 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 		keeper := suite.app.GAMMKeeper
 
 		if test.expectPass {
-			spotPriceBefore, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
+			spotPriceBefore, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 			suite.NoError(err, "test: %v", test.name)
 
 			tokenInAmount, _, err := keeper.SwapExactAmountOut(suite.ctx, acc1, poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
 			suite.NoError(err, "test: %v", test.name)
 
-			spotPriceAfter, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
+			spotPriceAfter, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 			suite.NoError(err, "test: %v", test.name)
 
-			// Ratio of the oken out should be between the before spot price and after spot price.
+			// Ratio of the token out should be between the before spot price and after spot price.
 			tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
 			suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 		} else {

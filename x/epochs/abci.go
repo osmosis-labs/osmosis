@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/epochs/keeper"
-	"github.com/c-osmosis/osmosis/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // BeginBlocker of epochs module
@@ -18,11 +18,16 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// epoch_startblock(n+1) = epoch_endblock(n) + 1
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
 		if !epochInfo.EpochCountingStarted { // epoch counting not started
-			if epochInfo.StartTime.Before(ctx.BlockTime()) { // check time is good to start
+			// Should start this epoch timer? (Is StartTime <= ctx.BlockTime)
+			if !epochInfo.StartTime.After(ctx.BlockTime()) {
 				epochInfo.EpochCountingStarted = true
 				epochInfo.CurrentEpochEnded = false
 				epochInfo.CurrentEpoch = 0
 				epochInfo.CurrentEpochStartTime = ctx.BlockTime()
+
+				k.SetEpochInfo(ctx, epochInfo)
+				k.BeforeEpochStart(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+
 				ctx.EventManager().EmitEvent(
 					sdk.NewEvent(
 						types.EventTypeEpochStart,

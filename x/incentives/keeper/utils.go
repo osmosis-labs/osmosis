@@ -3,8 +3,8 @@ package keeper
 import (
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/incentives/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
 )
 
 func findIndex(IDs []uint64, ID uint64) int {

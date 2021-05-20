@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/c-osmosis/osmosis/x/gamm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
@@ -30,7 +30,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShare(),
-		GetCmdRecords(),
+		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
 		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
@@ -72,7 +72,7 @@ $ %s query gamm pool 1
 			}
 
 			if clientCtx.OutputFormat == "text" {
-				var pool types.PoolAccount
+				var pool types.Pool
 				pool.XXX_Unmarshal(res.GetPool().Value)
 				out, err := yaml.Marshal(pool)
 
@@ -253,15 +253,15 @@ $ %s query gamm total-share 1
 	return cmd
 }
 
-// GetCmdRecords return records
-func GetCmdRecords() *cobra.Command {
+// GetCmdPoolAssets return pool-assets for a pool
+func GetCmdPoolAssets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "records <poolID>",
-		Short: "Query records",
+		Use:   "pool-assets <poolID>",
+		Short: "Query pool-assets",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query records.
+			fmt.Sprintf(`Query pool assets.
 Example:
-$ %s query gamm records 1
+$ %s query gamm pool-assets 1
 `,
 				version.AppName,
 			),

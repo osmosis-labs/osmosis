@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/c-osmosis/osmosis/x/gamm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 var (
@@ -49,14 +49,14 @@ func (k Keeper) Pool(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	switch pool := pool.(type) {
-	case *types.PoolAccount:
+	case *types.Pool:
 		any, err := codectypes.NewAnyWithValue(pool)
 		if err != nil {
 			return nil, err
 		}
 		return &types.QueryPoolResponse{Pool: any}, nil
 	default:
-		return nil, status.Error(codes.Internal, "invalid type of pool account")
+		return nil, status.Error(codes.Internal, "invalid type of pool")
 	}
 }
 
@@ -70,20 +70,24 @@ func (k Keeper) Pools(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(k.storeKey)
-	poolStore := prefix.NewStore(store, types.PaginationPoolNumbers)
+	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
 	var anys []*codectypes.Any
 	pageRes, err := query.Paginate(poolStore, req.Pagination, func(_, value []byte) error {
-		poolId := sdk.BigEndianToUint64(value)
-		poolI, err := k.GetPool(sdkCtx, poolId)
-
+		poolI, err := k.UnmarshalPool(value)
 		if err != nil {
 			return err
 		}
 
-		pool, ok := poolI.(*types.PoolAccount)
+		// Use GetPool function because it runs PokeWeights
+		poolI, err = k.GetPool(sdkCtx, poolI.GetId())
+		if err != nil {
+			return err
+		}
+
+		pool, ok := poolI.(*types.Pool)
 		if !ok {
-			return fmt.Errorf("pool (%d) is not basic pool account", poolId)
+			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
 		}
 
 		any, err := codectypes.NewAnyWithValue(pool)
@@ -101,6 +105,21 @@ func (k Keeper) Pools(
 	return &types.QueryPoolsResponse{
 		Pools:      anys,
 		Pagination: pageRes,
+	}, nil
+}
+
+func (k Keeper) TotalPools(
+	ctx context.Context,
+	req *types.QueryTotalPoolsRequest,
+) (*types.QueryTotalPoolsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryTotalPoolsResponse{
+		TotalPools: k.getNextPoolNumber(sdkCtx) - 1,
 	}, nil
 }
 
@@ -169,8 +188,8 @@ func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest)
 
 	var sp sdk.Dec
 	var err error
-	if req.SansSwapFee {
-		sp, err = k.CalculateSpotPriceSansSwapFee(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
+	if req.WithSwapFee {
+		sp, err = k.CalculateSpotPriceWithSwapFee(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}

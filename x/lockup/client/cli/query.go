@@ -12,8 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/c-osmosis/osmosis/x/lockup/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -139,14 +138,9 @@ $ %s query lockup account-unlockable-coins <address>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountUnlockableCoins(cmd.Context(), &types.AccountUnlockableCoinsRequest{Owner: addr})
+			res, err := queryClient.AccountUnlockableCoins(cmd.Context(), &types.AccountUnlockableCoinsRequest{Owner: args[0]})
 			if err != nil {
 				return err
 			}
@@ -181,14 +175,9 @@ $ %s query lockup account-unlocking-coins <address>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountUnlockingCoins(cmd.Context(), &types.AccountUnlockingCoinsRequest{Owner: addr})
+			res, err := queryClient.AccountUnlockingCoins(cmd.Context(), &types.AccountUnlockingCoinsRequest{Owner: args[0]})
 			if err != nil {
 				return err
 			}
@@ -223,14 +212,9 @@ $ %s query lockup account-locked-coins <address>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedCoins(cmd.Context(), &types.AccountLockedCoinsRequest{Owner: addr})
+			res, err := queryClient.AccountLockedCoins(cmd.Context(), &types.AccountLockedCoinsRequest{Owner: args[0]})
 			if err != nil {
 				return err
 			}
@@ -265,11 +249,6 @@ $ %s query lockup account-locked-pasttime <address> <timestamp>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			i, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				panic(err)
@@ -278,7 +257,7 @@ $ %s query lockup account-locked-pasttime <address> <timestamp>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedPastTime(cmd.Context(), &types.AccountLockedPastTimeRequest{Owner: addr, Timestamp: timestamp})
+			res, err := queryClient.AccountLockedPastTime(cmd.Context(), &types.AccountLockedPastTimeRequest{Owner: args[0], Timestamp: timestamp})
 			if err != nil {
 				return err
 			}
@@ -313,11 +292,6 @@ $ %s query lockup account-locked-pasttime-not-unlocking <address> <timestamp>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			i, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				panic(err)
@@ -326,7 +300,7 @@ $ %s query lockup account-locked-pasttime-not-unlocking <address> <timestamp>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedPastTimeNotUnlockingOnly(cmd.Context(), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr, Timestamp: timestamp})
+			res, err := queryClient.AccountLockedPastTimeNotUnlockingOnly(cmd.Context(), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: args[0], Timestamp: timestamp})
 			if err != nil {
 				return err
 			}
@@ -361,11 +335,6 @@ $ %s query lockup account-locked-pasttime <address> <timestamp>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			i, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				panic(err)
@@ -374,7 +343,7 @@ $ %s query lockup account-locked-pasttime <address> <timestamp>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountUnlockedBeforeTime(cmd.Context(), &types.AccountUnlockedBeforeTimeRequest{Owner: addr, Timestamp: timestamp})
+			res, err := queryClient.AccountUnlockedBeforeTime(cmd.Context(), &types.AccountUnlockedBeforeTimeRequest{Owner: args[0], Timestamp: timestamp})
 			if err != nil {
 				return err
 			}
@@ -409,11 +378,6 @@ $ %s query lockup account-locked-pasttime-denom <address> <timestamp> <denom>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			i, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				panic(err)
@@ -424,7 +388,7 @@ $ %s query lockup account-locked-pasttime-denom <address> <timestamp> <denom>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedPastTimeDenom(cmd.Context(), &types.AccountLockedPastTimeDenomRequest{Owner: addr, Timestamp: timestamp, Denom: denom})
+			res, err := queryClient.AccountLockedPastTimeDenom(cmd.Context(), &types.AccountLockedPastTimeDenomRequest{Owner: args[0], Timestamp: timestamp, Denom: denom})
 			if err != nil {
 				return err
 			}
@@ -501,11 +465,6 @@ $ %s query lockup account-locked-longer-duration <address> <duration>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			duration, err := time.ParseDuration(args[1])
 			if err != nil {
 				return err
@@ -513,7 +472,7 @@ $ %s query lockup account-locked-longer-duration <address> <duration>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedLongerDuration(cmd.Context(), &types.AccountLockedLongerDurationRequest{Owner: addr, Duration: duration})
+			res, err := queryClient.AccountLockedLongerDuration(cmd.Context(), &types.AccountLockedLongerDurationRequest{Owner: args[0], Duration: duration})
 			if err != nil {
 				return err
 			}
@@ -548,11 +507,6 @@ $ %s query lockup account-locked-longer-duration-not-unlocking <address> <durati
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			duration, err := time.ParseDuration(args[1])
 			if err != nil {
 				return err
@@ -560,7 +514,7 @@ $ %s query lockup account-locked-longer-duration-not-unlocking <address> <durati
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedLongerDurationNotUnlockingOnly(cmd.Context(), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr, Duration: duration})
+			res, err := queryClient.AccountLockedLongerDurationNotUnlockingOnly(cmd.Context(), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: args[0], Duration: duration})
 			if err != nil {
 				return err
 			}
@@ -595,11 +549,6 @@ $ %s query lockup account-locked-pasttime <address> <duration> <denom>
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
 			duration, err := time.ParseDuration(args[1])
 			if err != nil {
 				return err
@@ -609,7 +558,7 @@ $ %s query lockup account-locked-pasttime <address> <duration> <denom>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountLockedLongerDurationDenom(cmd.Context(), &types.AccountLockedLongerDurationDenomRequest{Owner: addr, Duration: duration, Denom: denom})
+			res, err := queryClient.AccountLockedLongerDurationDenom(cmd.Context(), &types.AccountLockedLongerDurationDenomRequest{Owner: args[0], Duration: duration, Denom: denom})
 			if err != nil {
 				return err
 			}

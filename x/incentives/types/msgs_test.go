@@ -4,8 +4,8 @@ import (
 	"testing"
 	time "time"
 
-	lockuptypes "github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -15,18 +15,21 @@ func TestMsgCreatePool(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address())
 
 	createMsg := func(after func(msg MsgCreatePot) MsgCreatePot) MsgCreatePot {
-		properMsg := MsgCreatePot{
-			IsPerpetual: false,
-			Owner:       addr1,
-			DistributeTo: lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
-				Denom:         "lptoken",
-				Duration:      time.Second,
-			},
-			Coins:             sdk.Coins{},
-			StartTime:         time.Now(),
-			NumEpochsPaidOver: 2,
+
+		distributeTo := lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
 		}
+
+		properMsg := *NewMsgCreatePot(
+			false,
+			addr1,
+			distributeTo,
+			sdk.Coins{},
+			time.Now(),
+			2,
+		)
 
 		return after(properMsg)
 	}
@@ -56,7 +59,7 @@ func TestMsgCreatePool(t *testing.T) {
 		{
 			name: "empty owner",
 			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
-				msg.Owner = sdk.AccAddress{}
+				msg.Owner = ""
 				return msg
 			}),
 			expectPass: false,
@@ -143,11 +146,11 @@ func TestMsgAddToPot(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address())
 
 	createMsg := func(after func(msg MsgAddToPot) MsgAddToPot) MsgAddToPot {
-		properMsg := MsgAddToPot{
-			Owner:   addr1,
-			PotId:   1,
-			Rewards: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
-		}
+		properMsg := *NewMsgAddToPot(
+			addr1,
+			1,
+			sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+		)
 
 		return after(properMsg)
 	}
@@ -177,7 +180,7 @@ func TestMsgAddToPot(t *testing.T) {
 		{
 			name: "empty owner",
 			msg: createMsg(func(msg MsgAddToPot) MsgAddToPot {
-				msg.Owner = sdk.AccAddress{}
+				msg.Owner = ""
 				return msg
 			}),
 			expectPass: false,

@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/c-osmosis/osmosis/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	gammcli "github.com/c-osmosis/osmosis/x/gamm/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gammcli "github.com/osmosis-labs/osmosis/x/gamm/client/cli"
 )
 
 // commonArgs is args for CLI test commands
@@ -58,6 +58,7 @@ func MsgCreatePool(
 	args = append(args,
 		fmt.Sprintf("--%s=%s", gammcli.FlagPoolFile, jsonFile.Name()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
 
 	args = append(args, commonArgs...)

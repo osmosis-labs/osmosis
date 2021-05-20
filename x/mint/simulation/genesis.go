@@ -5,11 +5,10 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
-	"github.com/c-osmosis/osmosis/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
 // RandomizedGenState generates a random GenesisState for mint
@@ -30,11 +29,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// Leaving as sample code
 
 	mintDenom := sdk.DefaultBondDenom
-	epochProvisions := sdk.NewDec(500000)          // TODO: Randomize this
-	epochDuration, _ := time.ParseDuration("168h") // 1 week
-	params := types.NewParams(mintDenom, epochProvisions, epochDuration, sdk.NewDecWithPrec(5, 1), 156)
+	epochProvisions := sdk.NewDec(500000) // TODO: Randomize this
+	params := types.NewParams(mintDenom, epochProvisions, "weekly", sdk.NewDecWithPrec(5, 1), 156, types.DistributionProportions{
+		Staking:          sdk.NewDecWithPrec(5, 1), // 0.5
+		PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
+		DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
+	}, "")
 
-	mintGenesis := types.NewGenesisState(types.InitialMinter(), params, 0, 0)
+	mintGenesis := types.NewGenesisState(types.InitialMinter(), params, 0)
 
 	bz, err := json.MarshalIndent(&mintGenesis, "", " ")
 	if err != nil {

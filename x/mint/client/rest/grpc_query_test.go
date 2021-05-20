@@ -18,12 +18,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/c-osmosis/osmosis/app"
-	minttypes "github.com/c-osmosis/osmosis/x/mint/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/osmosis-labs/osmosis/app"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -94,7 +94,8 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			map[string]string{},
 			&minttypes.QueryParamsResponse{},
 			&minttypes.QueryParamsResponse{
-				Params: minttypes.NewParams("stake", sdk.NewDec(5000000), 604800*time.Second, sdk.MustNewDecFromStr("0.5"), 156),
+				Params: minttypes.NewParams("stake", sdk.NewDec(5000000), "weekly", sdk.MustNewDecFromStr("0.5"), 156,
+					minttypes.DefaultParams().DistributionProportions, ""),
 			},
 		},
 		{

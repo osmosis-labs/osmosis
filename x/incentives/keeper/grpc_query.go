@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
-	"github.com/c-osmosis/osmosis/x/incentives/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -110,5 +110,9 @@ func (k Keeper) UpcomingPots(goCtx context.Context, req *types.UpcomingPotsReque
 // RewardsEst returns rewards estimation at a future specific time
 func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, req.Owner, req.Locks, req.Pots, req.EndEpoch)}, nil
+	owner, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return nil, err
+	}
+	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, owner, req.Locks, req.Pots, req.EndEpoch)}, nil
 }

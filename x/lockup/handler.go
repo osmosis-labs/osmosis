@@ -3,10 +3,10 @@ package lockup
 import (
 	"fmt"
 
-	"github.com/c-osmosis/osmosis/x/lockup/keeper"
-	"github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 // NewHandler returns a handler for "lockup" type messages.
@@ -19,14 +19,14 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgLockTokens:
 			res, err := msgServer.LockTokens(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgBeginUnlockPeriodLock:
-			res, err := msgServer.BeginUnlockPeriodLock(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgBeginUnlocking:
+			res, err := msgServer.BeginUnlocking(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgUnlockPeriodLock:
 			res, err := msgServer.UnlockPeriodLock(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgBeginUnlocking:
-			res, err := msgServer.BeginUnlocking(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgBeginUnlockingAll:
+			res, err := msgServer.BeginUnlockingAll(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgUnlockTokens:
 			res, err := msgServer.UnlockTokens(sdk.WrapSDKContext(ctx), msg)

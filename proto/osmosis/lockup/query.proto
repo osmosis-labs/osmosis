@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/c-osmosis/osmosis/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/x/lockup/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -75,8 +75,7 @@ message ModuleLockedAmountResponse {
 };
 
 message AccountUnlockableCoinsRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 };
 message AccountUnlockableCoinsResponse {
   repeated cosmos.base.v1beta1.Coin coins = 1 [
@@ -86,8 +85,7 @@ message AccountUnlockableCoinsResponse {
 };
 
 message AccountUnlockingCoinsRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 }
 message AccountUnlockingCoinsResponse {
   repeated cosmos.base.v1beta1.Coin coins = 1 [
@@ -97,8 +95,7 @@ message AccountUnlockingCoinsResponse {
 }
 
 message AccountLockedCoinsRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 };
 message AccountLockedCoinsResponse {
   repeated cosmos.base.v1beta1.Coin coins = 1 [
@@ -108,8 +105,7 @@ message AccountLockedCoinsResponse {
 };
 
 message AccountLockedPastTimeRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Timestamp timestamp = 2 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
@@ -121,8 +117,7 @@ message AccountLockedPastTimeResponse {
 };
 
 message AccountLockedPastTimeNotUnlockingOnlyRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Timestamp timestamp = 2 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
@@ -134,8 +129,7 @@ message AccountLockedPastTimeNotUnlockingOnlyResponse {
 };
 
 message AccountUnlockedBeforeTimeRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Timestamp timestamp = 2 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
@@ -147,8 +141,7 @@ message AccountUnlockedBeforeTimeResponse {
 }
 
 message AccountLockedPastTimeDenomRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Timestamp timestamp = 2 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
@@ -164,8 +157,7 @@ message LockedRequest { uint64 lock_id = 1; };
 message LockedResponse { PeriodLock lock = 1; };
 
 message AccountLockedLongerDurationRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Duration duration = 2 [
     (gogoproto.stdduration) = true,
     (gogoproto.nullable) = false,
@@ -177,8 +169,7 @@ message AccountLockedLongerDurationResponse {
 };
 
 message AccountLockedLongerDurationNotUnlockingOnlyRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Duration duration = 2 [
     (gogoproto.stdduration) = true,
     (gogoproto.nullable) = false,
@@ -190,8 +181,7 @@ message AccountLockedLongerDurationNotUnlockingOnlyResponse {
 };
 
 message AccountLockedLongerDurationDenomRequest {
-  bytes owner = 1 [ (gogoproto.casttype) =
-                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Duration duration = 2 [
     (gogoproto.stdduration) = true,
     (gogoproto.nullable) = false,

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
 )
 
@@ -14,12 +15,12 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	locks := []types.PeriodLock{}
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		timeLock := types.LockIDs{}
-		err := json.Unmarshal(iterator.Value(), &timeLock)
+		lockIDs := []uint64{}
+		err := json.Unmarshal(iterator.Value(), &lockIDs)
 		if err != nil {
 			panic(err)
 		}
-		for _, lockID := range timeLock.IDs {
+		for _, lockID := range lockIDs {
 			lock, err := k.GetLockByID(ctx, lockID)
 			if err != nil {
 				panic(err)
@@ -198,8 +199,8 @@ func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, 
 		return nil, fmt.Errorf("lock with ID %d does not exist", lockID)
 	}
 	bz := store.Get(lockKey)
-	k.cdc.MustUnmarshalJSON(bz, &lock)
-	return &lock, nil
+	err := proto.Unmarshal(bz, &lock)
+	return &lock, err
 }
 
 // GetPeriodLocks Returns the period locks on pool
@@ -258,30 +259,44 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 
 // Lock is a utility to lock coins into module account
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.Owner, types.ModuleName, lock.Coins); err != nil {
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, lock.Coins); err != nil {
 		return err
 	}
 
 	lockID := lock.ID
 	store := ctx.KVStore(k.storeKey)
-	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
+	bz, err := proto.Marshal(&lock)
+	if err != nil {
+		return err
+	}
+	store.Set(lockStoreKey(lockID), bz)
 	k.setLastLockID(ctx, lockID)
 
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID); err != nil {
 			return err
 		}
 	}
 
-	k.hooks.OnTokenLocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
 func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	lockID := lock.ID
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		err := k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixNotUnlocking, refKey), lockID)
 		if err != nil {
@@ -290,9 +305,16 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
 	store := ctx.KVStore(k.storeKey)
-	store.Set(lockStoreKey(lockID), k.cdc.MustMarshalJSON(&lock))
+	bz, err := proto.Marshal(&lock)
+	if err != nil {
+		return err
+	}
+	store.Set(lockStoreKey(lockID), bz)
 
-	refKeys = lockRefKeys(lock)
+	refKeys, err = lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID); err != nil {
 			return err
@@ -312,8 +334,13 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+
 	// send coins back to owner
-	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, lock.Owner, lock.Coins); err != nil {
+	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
 		return err
 	}
 
@@ -321,7 +348,10 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(lockID)) // remove lock from store
 
-	refKeys := lockRefKeys(lock)
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
 	for _, refKey := range refKeys {
 		err := k.deleteLockRefByKey(ctx, combineKeys(types.KeyPrefixUnlocking, refKey), lockID)
 		if err != nil {
@@ -329,6 +359,6 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		}
 	}
 
-	k.hooks.OnTokenUnlocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }

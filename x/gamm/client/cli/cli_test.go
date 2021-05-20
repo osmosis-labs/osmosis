@@ -7,10 +7,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/c-osmosis/osmosis/config"
-	"github.com/c-osmosis/osmosis/x/gamm/client/cli"
-	gammtestutil "github.com/c-osmosis/osmosis/x/gamm/client/testutil"
-	"github.com/c-osmosis/osmosis/x/gamm/types"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -19,6 +15,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/osmosis-labs/osmosis/simapp"
+	"github.com/osmosis-labs/osmosis/x/gamm/client/cli"
+	gammtestutil "github.com/osmosis-labs/osmosis/x/gamm/client/testutil"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
@@ -33,7 +33,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = config.DefaultConfig()
+	s.cfg = simapp.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -303,6 +303,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, fmt.Sprint(300000)),
 			}
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -349,7 +350,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			[]string{
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "1000000000"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "1000000000000000000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -363,7 +364,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			[]string{ // join-pool --pool-id=1 --max-amounts-in=100stake --share-amount-out=100 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "10000000"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "10000000000000000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -409,7 +410,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 			"ask too much when exit",
 			[]string{ // --min-amounts-out=100stake --pool-id=1 --share-amount-in=10 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "20000000"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "20000000000000000000"),
 				fmt.Sprintf("--%s=%s", cli.FlagMinAmountsOut, "20stake"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				// common args
@@ -423,7 +424,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 			"ask enough when exit",
 			[]string{ // --min-amounts-out=100stake --pool-id=1 --share-amount-in=10 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "20000000"),
+				fmt.Sprintf("--%s=%s", cli.FlagShareAmountIn, "20000000000000000000"),
 				fmt.Sprintf("--%s=%s", cli.FlagMinAmountsOut, "10stake"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				// common args
@@ -593,7 +594,7 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 		{
 			"exit swap extern amount out", // osmosisd tx gamm exit-swap-extern-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
-				"10stake", "10000000",
+				"10stake", "10000000000000000000",
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				// common args
@@ -654,7 +655,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 		{
 			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
-				"stake", "50", "5000000",
+				"stake", "50", "5000000000000000000",
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
@@ -700,7 +701,7 @@ func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 		{
 			"exit swap share amount in", // osmosisd tx gamm exit-swap-share-amount-in --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
 			[]string{
-				"stake", "10000000", "1",
+				"stake", "10000000000000000000", "1",
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				// common args
@@ -846,7 +847,7 @@ func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdRecords() {
+func (s *IntegrationTestSuite) TestGetCmdPoolAssets() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -855,7 +856,7 @@ func (s *IntegrationTestSuite) TestGetCmdRecords() {
 		expectErr bool
 	}{
 		{
-			"query pool records by id", // osmosisd query gamm records 1
+			"query pool assets by pool id", // osmosisd query gamm pool-assets 1
 			[]string{
 				"1",
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
@@ -868,7 +869,7 @@ func (s *IntegrationTestSuite) TestGetCmdRecords() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdRecords()
+			cmd := cli.GetCmdPoolAssets()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
