@@ -416,7 +416,7 @@ var (
 
 	pattern_Query_LockableDurations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "lockable_durations"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_IncentivizedPools_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "incentivized-pools"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_IncentivizedPools_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "incentivized_pools"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

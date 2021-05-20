@@ -2564,7 +2564,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /osmosis/pool-incentives/v1beta1/incentivized-pools:
+  /osmosis/pool-incentives/v1beta1/incentivized_pools:
     get:
       operationId: IncentivizedPools
       responses:

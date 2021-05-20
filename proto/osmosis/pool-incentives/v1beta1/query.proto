@@ -33,7 +33,7 @@ service Query {
 
   rpc IncentivizedPools(QueryIncentivizedPoolsRequest) returns (QueryIncentivizedPoolsResponse) {
     option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/incentivized-pools";
+         "/osmosis/pool-incentives/v1beta1/incentivized_pools";
   }
 }
 
