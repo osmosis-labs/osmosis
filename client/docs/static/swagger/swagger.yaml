@@ -2516,6 +2516,236 @@ paths:
                       format: byte
       tags:
         - Query
+  /osmosis/pool-incentives/v1beta1/distr_info:
+    get:
+      operationId: DistrInfo
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              distr_info:
+                type: object
+                properties:
+                  total_weight:
+                    type: string
+                  records:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pot_id:
+                          type: string
+                          format: uint64
+                        weight:
+                          type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /osmosis/pool-incentives/v1beta1/incentivized-pools:
+    get:
+      operationId: IncentivizedPools
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              incentivized_pools:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    pool_id:
+                      type: string
+                      format: uint64
+                    lockable_duration:
+                      type: string
+                    pot_id:
+                      type: string
+                      format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /osmosis/pool-incentives/v1beta1/lockable_durations:
+    get:
+      operationId: LockableDurations
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              lockable_durations:
+                type: array
+                items:
+                  type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /osmosis/pool-incentives/v1beta1/params:
+    get:
+      operationId: PoolIncentivesParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  minted_denom:
+                    type: string
+                    description: >-
+                      minted_denom is the denomination of the coin expected to
+                      be minted by the
+
+                      minting module. Pool-incentives module doesn’t actually
+                      mint the coin
+
+                      itself, but rather manages the distribution of coins that
+                      matches the
+
+                      defined minted_denom.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  '/osmosis/pool-incentives/v1beta1/pot-ids/{pool_id}':
+    get:
+      summary: PotIds takes the pool id and returns the matching pot ids and durations
+      operationId: PotIds
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              pot_ids_with_duration:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    pot_id:
+                      type: string
+                      format: uint64
+                    duration:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   '/cosmos/auth/v1beta1/accounts/{address}':
     get:
       summary: Account returns account details based on address.
@@ -10607,6 +10837,16 @@ paths:
                   bond_denom:
                     type: string
                     description: bond_denom defines the bondable coin denomination.
+                  power_reduction:
+                    type: string
+                    title: >-
+                      power_reduction is the amount of staking tokens required
+                      for 1 unit of consensus-engine power
+                  min_commission_rate:
+                    type: string
+                    title: >-
+                      min_commission_rate is the chain-wide minimum commission
+                      rate that a validator can charge their delegators
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -15327,6 +15567,135 @@ definitions:
               type: boolean
             current_epoch_ended:
               type: boolean
+  osmosis.poolincentives.v1beta1.DistrInfo:
+    type: object
+    properties:
+      total_weight:
+        type: string
+      records:
+        type: array
+        items:
+          type: object
+          properties:
+            pot_id:
+              type: string
+              format: uint64
+            weight:
+              type: string
+  osmosis.poolincentives.v1beta1.DistrRecord:
+    type: object
+    properties:
+      pot_id:
+        type: string
+        format: uint64
+      weight:
+        type: string
+  osmosis.poolincentives.v1beta1.IncentivizedPool:
+    type: object
+    properties:
+      pool_id:
+        type: string
+        format: uint64
+      lockable_duration:
+        type: string
+      pot_id:
+        type: string
+        format: uint64
+  osmosis.poolincentives.v1beta1.Params:
+    type: object
+    properties:
+      minted_denom:
+        type: string
+        description: >-
+          minted_denom is the denomination of the coin expected to be minted by
+          the
+
+          minting module. Pool-incentives module doesn’t actually mint the coin
+
+          itself, but rather manages the distribution of coins that matches the
+
+          defined minted_denom.
+  osmosis.poolincentives.v1beta1.QueryDistrInfoResponse:
+    type: object
+    properties:
+      distr_info:
+        type: object
+        properties:
+          total_weight:
+            type: string
+          records:
+            type: array
+            items:
+              type: object
+              properties:
+                pot_id:
+                  type: string
+                  format: uint64
+                weight:
+                  type: string
+  osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsResponse:
+    type: object
+    properties:
+      incentivized_pools:
+        type: array
+        items:
+          type: object
+          properties:
+            pool_id:
+              type: string
+              format: uint64
+            lockable_duration:
+              type: string
+            pot_id:
+              type: string
+              format: uint64
+  osmosis.poolincentives.v1beta1.QueryLockableDurationsResponse:
+    type: object
+    properties:
+      lockable_durations:
+        type: array
+        items:
+          type: string
+  osmosis.poolincentives.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          minted_denom:
+            type: string
+            description: >-
+              minted_denom is the denomination of the coin expected to be minted
+              by the
+
+              minting module. Pool-incentives module doesn’t actually mint the
+              coin
+
+              itself, but rather manages the distribution of coins that matches
+              the
+
+              defined minted_denom.
+  osmosis.poolincentives.v1beta1.QueryPotIdsResponse:
+    type: object
+    properties:
+      pot_ids_with_duration:
+        type: array
+        items:
+          type: object
+          properties:
+            pot_id:
+              type: string
+              format: uint64
+            duration:
+              type: string
+  osmosis.poolincentives.v1beta1.QueryPotIdsResponse.PotIdWithDuration:
+    type: object
+    properties:
+      pot_id:
+        type: string
+        format: uint64
+      duration:
+        type: string
   cosmos.auth.v1beta1.Params:
     type: object
     properties:
@@ -18270,6 +18639,16 @@ definitions:
       bond_denom:
         type: string
         description: bond_denom defines the bondable coin denomination.
+      power_reduction:
+        type: string
+        title: >-
+          power_reduction is the amount of staking tokens required for 1 unit of
+          consensus-engine power
+      min_commission_rate:
+        type: string
+        title: >-
+          min_commission_rate is the chain-wide minimum commission rate that a
+          validator can charge their delegators
     description: Params defines the parameters for the staking module.
   cosmos.staking.v1beta1.Pool:
     type: object
@@ -19179,6 +19558,16 @@ definitions:
           bond_denom:
             type: string
             description: bond_denom defines the bondable coin denomination.
+          power_reduction:
+            type: string
+            title: >-
+              power_reduction is the amount of staking tokens required for 1
+              unit of consensus-engine power
+          min_commission_rate:
+            type: string
+            title: >-
+              min_commission_rate is the chain-wide minimum commission rate that
+              a validator can charge their delegators
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   cosmos.staking.v1beta1.QueryPoolResponse:
     type: object

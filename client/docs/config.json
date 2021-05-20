@@ -23,6 +23,14 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/osmosis/pool-incentives/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "PoolIncentivesParams"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
