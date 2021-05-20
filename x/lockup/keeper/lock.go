@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/c-osmosis/osmosis/store"
 	"github.com/c-osmosis/osmosis/x/lockup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
@@ -68,6 +70,10 @@ func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getCoinsFromLocks(k.getLocksFromIterator(ctx, iterator))
+}
+
+func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
+	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
 }
 
 // GetModuleBalance Returns full balance of the module
@@ -274,6 +280,10 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 		}
 	}
 
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+	}
+
 	k.hooks.OnTokenLocked(ctx, lock.Owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
@@ -298,6 +308,11 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 			return err
 		}
 	}
+
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+	}
+
 	return nil
 }
 
