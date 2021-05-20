@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
@@ -32,7 +33,11 @@ func (ak AdminKeeper) Relock(ctx sdk.Context, lockID uint64, newCoins sdk.Coins)
 
 	// reset lock record inside store
 	store := ctx.KVStore(ak.storeKey)
-	store.Set(lockStoreKey(lockID), ak.cdc.MustMarshalJSON(lock))
+	bz, err := proto.Marshal(lock)
+	if err != nil {
+		return err
+	}
+	store.Set(lockStoreKey(lockID), bz)
 	return nil
 }
 

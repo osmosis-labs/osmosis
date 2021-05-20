@@ -1,9 +1,8 @@
 package keeper
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -15,7 +14,7 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
 	if b == nil {
 		return epoch
 	}
-	err := json.Unmarshal(b, &epoch)
+	err := proto.Unmarshal(b, &epoch)
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +24,7 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
 // SetEpochInfo set epoch info
 func (k Keeper) SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo) {
 	store := ctx.KVStore(k.storeKey)
-	value, err := json.Marshal(epoch)
+	value, err := proto.Marshal(&epoch)
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +48,7 @@ func (k Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo
 
 	for ; iterator.Valid(); iterator.Next() {
 		epoch := types.EpochInfo{}
-		err := json.Unmarshal(iterator.Value(), &epoch)
+		err := proto.Unmarshal(iterator.Value(), &epoch)
 		if err != nil {
 			panic(err)
 		}

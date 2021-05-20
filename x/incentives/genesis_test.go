@@ -44,7 +44,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 		Coins:             coins,
 		NumEpochsPaidOver: 1,
 		FilledEpochs:      0,
-		DistributedCoins:  sdk.Coins{},
+		DistributedCoins:  sdk.Coins(nil),
 		StartTime:         startTime.UTC(),
 	})
 }
@@ -67,7 +67,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 		Coins:             coins,
 		NumEpochsPaidOver: 2,
 		FilledEpochs:      0,
-		DistributedCoins:  sdk.Coins{},
+		DistributedCoins:  sdk.Coins(nil),
 		StartTime:         startTime.UTC(),
 	}
 	incentives.InitGenesis(ctx, app.IncentivesKeeper, types.GenesisState{

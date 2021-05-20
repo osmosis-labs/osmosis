@@ -151,7 +151,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualPotOperations() {
 	suite.Require().Equal(pots[0].Coins, coins)
 	suite.Require().Equal(pots[0].NumEpochsPaidOver, uint64(2))
 	suite.Require().Equal(pots[0].FilledEpochs, uint64(0))
-	suite.Require().Equal(pots[0].DistributedCoins, sdk.Coins{})
+	suite.Require().Equal(pots[0].DistributedCoins, sdk.Coins(nil))
 	suite.Require().Equal(pots[0].StartTime.Unix(), startTime.Unix())
 
 	// check rewards estimation
