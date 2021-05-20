@@ -39,3 +39,21 @@ func (k Keeper) PotIds(ctx context.Context, req *types.QueryPotIdsRequest) (*typ
 
 	return &types.QueryPotIdsResponse{PotIdsWithDuration: potIdsWithDuration}, nil
 }
+
+func (k Keeper) DistrInfo(ctx context.Context, _ *types.QueryDistrInfoRequest) (*types.QueryDistrInfoResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryDistrInfoResponse{DistrInfo: k.GetDistrInfo(sdkCtx)}, nil
+}
+
+func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryParamsResponse{Params: k.GetParams(sdkCtx)}, nil
+}
+
+func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDurationsRequest) (*types.QueryLockableDurationsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
+}
