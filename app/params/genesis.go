@@ -17,7 +17,7 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
-type NetworkParams struct {
+type GenesisParams struct {
 	AirdropSupply sdk.Int
 
 	ChainID            string
@@ -41,13 +41,13 @@ type NetworkParams struct {
 	ClaimDurationOfDecay    time.Duration
 }
 
-func TestnetNetworkParams() NetworkParams {
-	testnetNetworkParams := NetworkParams{}
+func TestnetGenesisParams() GenesisParams {
+	testnetGenesisParams := GenesisParams{}
 
-	testnetNetworkParams.AirdropSupply = sdk.NewIntWithDecimal(1, 15) // 10^15 ions, 10^9 (1 billion) osmo
-	testnetNetworkParams.ChainID = "osmo-testnet-thanatos"
-	testnetNetworkParams.GenesisTime = time.Now()
-	testnetNetworkParams.NativeCoinMetadata = banktypes.Metadata{
+	testnetGenesisParams.AirdropSupply = sdk.NewIntWithDecimal(1, 15) // 10^15 ions, 10^9 (1 billion) osmo
+	testnetGenesisParams.ChainID = "osmo-testnet-thanatos"
+	testnetGenesisParams.GenesisTime = time.Now()
+	testnetGenesisParams.NativeCoinMetadata = banktypes.Metadata{
 		Description: fmt.Sprintf("The native token of Osmosis"),
 		DenomUnits: []*banktypes.DenomUnit{
 			{
@@ -67,53 +67,53 @@ func TestnetNetworkParams() NetworkParams {
 		Display: HumanCoinUnit,
 	}
 
-	testnetNetworkParams.StakingParams = stakingtypes.DefaultParams()
-	testnetNetworkParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
-	testnetNetworkParams.StakingParams.MaxValidators = 100
-	testnetNetworkParams.StakingParams.BondDenom = testnetNetworkParams.NativeCoinMetadata.Base
-	testnetNetworkParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
+	testnetGenesisParams.StakingParams = stakingtypes.DefaultParams()
+	testnetGenesisParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
+	testnetGenesisParams.StakingParams.MaxValidators = 100
+	testnetGenesisParams.StakingParams.BondDenom = testnetGenesisParams.NativeCoinMetadata.Base
+	testnetGenesisParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
-	testnetNetworkParams.MintParams = minttypes.DefaultParams()
-	testnetNetworkParams.MintParams.EpochIdentifier = "weekly"                                                                // 1 week
-	testnetNetworkParams.MintParams.GenesisEpochProvisions = sdk.NewDecFromInt(testnetNetworkParams.AirdropSupply.QuoRaw(10)) // 10% of airdrop supply
-	testnetNetworkParams.MintParams.MintDenom = testnetNetworkParams.NativeCoinMetadata.Base
-	testnetNetworkParams.MintParams.ReductionFactor = sdk.NewDecWithPrec(5, 1) // 0.5
-	testnetNetworkParams.MintParams.ReductionPeriodInEpochs = 52 * 3           // 3 years
+	testnetGenesisParams.MintParams = minttypes.DefaultParams()
+	testnetGenesisParams.MintParams.EpochIdentifier = "weekly"                                                                // 1 week
+	testnetGenesisParams.MintParams.GenesisEpochProvisions = sdk.NewDecFromInt(testnetGenesisParams.AirdropSupply.QuoRaw(10)) // 10% of airdrop supply
+	testnetGenesisParams.MintParams.MintDenom = testnetGenesisParams.NativeCoinMetadata.Base
+	testnetGenesisParams.MintParams.ReductionFactor = sdk.NewDecWithPrec(5, 1) // 0.5
+	testnetGenesisParams.MintParams.ReductionPeriodInEpochs = 52 * 3           // 3 years
 
-	testnetNetworkParams.DistributionParams = distributiontypes.DefaultParams()
-	testnetNetworkParams.DistributionParams.BaseProposerReward = sdk.MustNewDecFromStr("0.01")
-	testnetNetworkParams.DistributionParams.BonusProposerReward = sdk.MustNewDecFromStr("0")
-	testnetNetworkParams.DistributionParams.CommunityTax = sdk.MustNewDecFromStr("0")
-	testnetNetworkParams.DistributionParams.WithdrawAddrEnabled = true
+	testnetGenesisParams.DistributionParams = distributiontypes.DefaultParams()
+	testnetGenesisParams.DistributionParams.BaseProposerReward = sdk.MustNewDecFromStr("0.01")
+	testnetGenesisParams.DistributionParams.BonusProposerReward = sdk.MustNewDecFromStr("0")
+	testnetGenesisParams.DistributionParams.CommunityTax = sdk.MustNewDecFromStr("0")
+	testnetGenesisParams.DistributionParams.WithdrawAddrEnabled = true
 
-	testnetNetworkParams.GovParams = govtypes.DefaultParams()
-	testnetNetworkParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 7 // 1 week
-	testnetNetworkParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
-		testnetNetworkParams.NativeCoinMetadata.Base,
-		testnetNetworkParams.AirdropSupply.QuoRaw(1_000_000), // 1 millionth of airdrop supply
+	testnetGenesisParams.GovParams = govtypes.DefaultParams()
+	testnetGenesisParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 7 // 1 week
+	testnetGenesisParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
+		testnetGenesisParams.NativeCoinMetadata.Base,
+		testnetGenesisParams.AirdropSupply.QuoRaw(1_000_000), // 1 millionth of airdrop supply
 	))
-	testnetNetworkParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.25") // 25%
-	testnetNetworkParams.GovParams.VotingParams.VotingPeriod = time.Hour * 6          // 6 hours
+	testnetGenesisParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.25") // 25%
+	testnetGenesisParams.GovParams.VotingParams.VotingPeriod = time.Hour * 6          // 6 hours
 
-	testnetNetworkParams.CrisisConstantFee = sdk.NewCoin(
-		testnetNetworkParams.NativeCoinMetadata.Base,
-		testnetNetworkParams.AirdropSupply.QuoRaw(100_000), // 1/100,000 of airdrop supply
+	testnetGenesisParams.CrisisConstantFee = sdk.NewCoin(
+		testnetGenesisParams.NativeCoinMetadata.Base,
+		testnetGenesisParams.AirdropSupply.QuoRaw(100_000), // 1/100,000 of airdrop supply
 	)
 
-	testnetNetworkParams.SlashingParams = slashingtypes.DefaultParams()
-	testnetNetworkParams.SlashingParams.SignedBlocksWindow = int64(10000)
+	testnetGenesisParams.SlashingParams = slashingtypes.DefaultParams()
+	testnetGenesisParams.SlashingParams.SignedBlocksWindow = int64(10000)
 
-	testnetNetworkParams.Epochs = epochstypes.DefaultGenesis().Epochs
-	for _, epoch := range testnetNetworkParams.Epochs {
-		epoch.StartTime = testnetNetworkParams.GenesisTime
+	testnetGenesisParams.Epochs = epochstypes.DefaultGenesis().Epochs
+	for _, epoch := range testnetGenesisParams.Epochs {
+		epoch.StartTime = testnetGenesisParams.GenesisTime
 	}
 
-	testnetNetworkParams.IncentivesParams = incentivestypes.DefaultParams()
-	testnetNetworkParams.IncentivesParams.DistrEpochIdentifier = "daily"
+	testnetGenesisParams.IncentivesParams = incentivestypes.DefaultParams()
+	testnetGenesisParams.IncentivesParams.DistrEpochIdentifier = "daily"
 
-	testnetNetworkParams.ClaimAirdropStartTime = testnetNetworkParams.GenesisTime
-	testnetNetworkParams.ClaimDurationUntilDecay = time.Hour            // 1 hour
-	testnetNetworkParams.ClaimDurationOfDecay = time.Hour * 24 * 7 * 12 // 12 weeks
+	testnetGenesisParams.ClaimAirdropStartTime = testnetGenesisParams.GenesisTime
+	testnetGenesisParams.ClaimDurationUntilDecay = time.Hour            // 1 hour
+	testnetGenesisParams.ClaimDurationOfDecay = time.Hour * 24 * 7 * 12 // 12 weeks
 
-	return testnetNetworkParams
+	return testnetGenesisParams
 }

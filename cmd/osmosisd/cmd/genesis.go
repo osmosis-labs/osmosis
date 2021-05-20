@@ -58,7 +58,7 @@ Example:
 			}
 
 			// get genesis params
-			genesisParams := appparams.TestnetNetworkParams()
+			genesisParams := appparams.TestnetGenesisParams()
 
 			appState, genDoc, err = PrepareGenesis(clientCtx, appState, genDoc, genesisParams)
 
@@ -94,7 +94,7 @@ Example:
 	return cmd
 }
 
-func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams appparams.NetworkParams) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
+func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams appparams.GenesisParams) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
 	depCdc := clientCtx.JSONMarshaler
 	cdc := depCdc.(codec.Marshaler)
 
