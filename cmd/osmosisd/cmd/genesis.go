@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/spf13/cobra"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 
@@ -49,9 +50,6 @@ Example:
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			// get genesis params
-			genesisParams := appparams.TestnetNetworkParams()
-
 			// read genesis file
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
@@ -59,109 +57,10 @@ Example:
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
 
-			// chain params genesis
-			genDoc.GenesisTime = genesisParams.GenesisTime
-			genDoc.ChainID = genesisParams.ChainID
+			// get genesis params
+			genesisParams := appparams.TestnetGenesisParams()
 
-			// bank module genesis
-			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
-			bankGenState.DenomMetadata = []banktypes.Metadata{
-				genesisParams.NativeCoinMetadata,
-			}
-			bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal bank genesis state: %w", err)
-			}
-			appState[banktypes.ModuleName] = bankGenStateBz
-
-			// staking module genesis
-			stakingGenState := stakingtypes.GetGenesisStateFromAppState(depCdc, appState)
-			stakingGenState.Params = genesisParams.StakingParams
-			stakingGenStateBz, err := cdc.MarshalJSON(stakingGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal staking genesis state: %w", err)
-			}
-			appState[stakingtypes.ModuleName] = stakingGenStateBz
-
-			// mint module genesis
-			mintGenState := minttypes.DefaultGenesisState()
-			mintGenState.Params = genesisParams.MintParams
-			mintGenStateBz, err := cdc.MarshalJSON(mintGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal mint genesis state: %w", err)
-			}
-			appState[minttypes.ModuleName] = mintGenStateBz
-
-			// distribution module genesis
-			distributionGenState := distributiontypes.DefaultGenesisState()
-			distributionGenState.Params = genesisParams.DistributionParams
-			// TODO Set initial community pool
-			// distributionGenState.FeePool.CommunityPool = sdk.NewDecCoins()
-			distributionGenStateBz, err := cdc.MarshalJSON(distributionGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal distribution genesis state: %w", err)
-			}
-			appState[distributiontypes.ModuleName] = distributionGenStateBz
-
-			// gov module genesis
-			govGenState := govtypes.DefaultGenesisState()
-			govGenState.DepositParams = genesisParams.GovParams.DepositParams
-			govGenState.TallyParams = genesisParams.GovParams.TallyParams
-			govGenState.VotingParams = genesisParams.GovParams.VotingParams
-			govGenStateBz, err := cdc.MarshalJSON(govGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal gov genesis state: %w", err)
-			}
-			appState[govtypes.ModuleName] = govGenStateBz
-
-			// crisis module genesis
-			crisisGenState := crisistypes.DefaultGenesisState()
-			crisisGenState.ConstantFee = genesisParams.CrisisConstantFee
-			// TODO Set initial community pool
-			// distributionGenState.FeePool.CommunityPool = sdk.NewDecCoins()
-			crisisGenStateBz, err := cdc.MarshalJSON(crisisGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal crisis genesis state: %w", err)
-			}
-			appState[crisistypes.ModuleName] = crisisGenStateBz
-
-			// slashing module genesis
-			slashingGenState := slashingtypes.DefaultGenesisState()
-			slashingGenState.Params = genesisParams.SlashingParams
-			slashingGenStateBz, err := cdc.MarshalJSON(slashingGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal slashing genesis state: %w", err)
-			}
-			appState[slashingtypes.ModuleName] = slashingGenStateBz
-
-			// incentives module genesis
-			incentivesGenState := incentivestypes.DefaultGenesis()
-			incentivesGenState.Params = genesisParams.IncentivesParams
-			incentivesGenStateBz, err := cdc.MarshalJSON(incentivesGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal incentives genesis state: %w", err)
-			}
-			appState[incentivestypes.ModuleName] = incentivesGenStateBz
-
-			// epochs module genesis
-			epochsGenState := epochstypes.DefaultGenesis()
-			epochsGenState.Epochs = genesisParams.Epochs
-			epochsGenStateBz, err := cdc.MarshalJSON(epochsGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal epochs genesis state: %w", err)
-			}
-			appState[epochstypes.ModuleName] = epochsGenStateBz
-
-			// claim module genesis
-			claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
-			claimGenState.AirdropStartTime = genesisParams.ClaimAirdropStartTime
-			claimGenState.DurationOfDecay = genesisParams.ClaimDurationOfDecay
-			claimGenState.DurationUntilDecay = genesisParams.ClaimDurationUntilDecay
-			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal claim genesis state: %w", err)
-			}
-			appState[claimtypes.ModuleName] = claimGenStateBz
+			appState, genDoc, err = PrepareGenesis(clientCtx, appState, genDoc, genesisParams)
 
 			// poolincentives module genesis
 			poolincentivesGenState := poolincentivestypes.GetGenesisStateFromAppState(depCdc, appState)
@@ -193,4 +92,116 @@ Example:
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams appparams.GenesisParams) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
+	depCdc := clientCtx.JSONMarshaler
+	cdc := depCdc.(codec.Marshaler)
+
+	// chain params genesis
+	genDoc.GenesisTime = genesisParams.GenesisTime
+	genDoc.ChainID = genesisParams.ChainID
+
+	// bank module genesis
+	bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
+	bankGenState.DenomMetadata = []banktypes.Metadata{
+		genesisParams.NativeCoinMetadata,
+	}
+	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal bank genesis state: %w", err)
+	}
+	appState[banktypes.ModuleName] = bankGenStateBz
+
+	// staking module genesis
+	stakingGenState := stakingtypes.GetGenesisStateFromAppState(depCdc, appState)
+	stakingGenState.Params = genesisParams.StakingParams
+	stakingGenStateBz, err := cdc.MarshalJSON(stakingGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal staking genesis state: %w", err)
+	}
+	appState[stakingtypes.ModuleName] = stakingGenStateBz
+
+	// mint module genesis
+	mintGenState := minttypes.DefaultGenesisState()
+	mintGenState.Params = genesisParams.MintParams
+	mintGenStateBz, err := cdc.MarshalJSON(mintGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal mint genesis state: %w", err)
+	}
+	appState[minttypes.ModuleName] = mintGenStateBz
+
+	// distribution module genesis
+	distributionGenState := distributiontypes.DefaultGenesisState()
+	distributionGenState.Params = genesisParams.DistributionParams
+	// TODO Set initial community pool
+	// distributionGenState.FeePool.CommunityPool = sdk.NewDecCoins()
+	distributionGenStateBz, err := cdc.MarshalJSON(distributionGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal distribution genesis state: %w", err)
+	}
+	appState[distributiontypes.ModuleName] = distributionGenStateBz
+
+	// gov module genesis
+	govGenState := govtypes.DefaultGenesisState()
+	govGenState.DepositParams = genesisParams.GovParams.DepositParams
+	govGenState.TallyParams = genesisParams.GovParams.TallyParams
+	govGenState.VotingParams = genesisParams.GovParams.VotingParams
+	govGenStateBz, err := cdc.MarshalJSON(govGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal gov genesis state: %w", err)
+	}
+	appState[govtypes.ModuleName] = govGenStateBz
+
+	// crisis module genesis
+	crisisGenState := crisistypes.DefaultGenesisState()
+	crisisGenState.ConstantFee = genesisParams.CrisisConstantFee
+	// TODO Set initial community pool
+	// distributionGenState.FeePool.CommunityPool = sdk.NewDecCoins()
+	crisisGenStateBz, err := cdc.MarshalJSON(crisisGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal crisis genesis state: %w", err)
+	}
+	appState[crisistypes.ModuleName] = crisisGenStateBz
+
+	// slashing module genesis
+	slashingGenState := slashingtypes.DefaultGenesisState()
+	slashingGenState.Params = genesisParams.SlashingParams
+	slashingGenStateBz, err := cdc.MarshalJSON(slashingGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal slashing genesis state: %w", err)
+	}
+	appState[slashingtypes.ModuleName] = slashingGenStateBz
+
+	// incentives module genesis
+	incentivesGenState := incentivestypes.DefaultGenesis()
+	incentivesGenState.Params = genesisParams.IncentivesParams
+	incentivesGenStateBz, err := cdc.MarshalJSON(incentivesGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal incentives genesis state: %w", err)
+	}
+	appState[incentivestypes.ModuleName] = incentivesGenStateBz
+
+	// epochs module genesis
+	epochsGenState := epochstypes.DefaultGenesis()
+	epochsGenState.Epochs = genesisParams.Epochs
+	epochsGenStateBz, err := cdc.MarshalJSON(epochsGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal epochs genesis state: %w", err)
+	}
+	appState[epochstypes.ModuleName] = epochsGenStateBz
+
+	// claim module genesis
+	claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
+	claimGenState.AirdropStartTime = genesisParams.ClaimAirdropStartTime
+	claimGenState.DurationOfDecay = genesisParams.ClaimDurationOfDecay
+	claimGenState.DurationUntilDecay = genesisParams.ClaimDurationUntilDecay
+	claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal claim genesis state: %w", err)
+	}
+	appState[claimtypes.ModuleName] = claimGenStateBz
+
+	// return appState and genDoc
+	return appState, genDoc, nil
 }
