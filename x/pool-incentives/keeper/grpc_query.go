@@ -57,3 +57,34 @@ func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDur
 
 	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
 }
+
+func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	lockableDurations := k.GetLockableDurations(sdkCtx)
+
+	distrInfo := k.GetDistrInfo(sdkCtx)
+
+	// While there are exceptions, typically the number of incentivizedPools equals to the number of incentivized pots / number of lockable durations.
+	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
+
+	for _, record := range distrInfo.Records {
+		for _, lockableDuration := range lockableDurations {
+			poolId, err := k.GetPoolIdFromPotId(sdkCtx, record.PotId, lockableDuration)
+			if err == nil {
+				incentivizedPool := types.IncentivizedPool{
+					PoolId:           poolId,
+					LockableDuration: lockableDuration,
+					PotId:            record.PotId,
+				}
+
+				incentivizedPools = append(incentivizedPools, incentivizedPool)
+			}
+		}
+
+	}
+
+	return &types.QueryIncentivizedPoolsResponse{
+		IncentivizedPools: incentivizedPools,
+	}, nil
+}
