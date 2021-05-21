@@ -32,6 +32,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdTotalShare(),
 		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
+		GetCmdQueryTotalLiquidity(),
 		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
 	)
@@ -240,6 +241,41 @@ $ %s query gamm total-share 1
 			res, err := queryClient.TotalShare(cmd.Context(), &types.QueryTotalShareRequest{
 				PoolId: uint64(poolID),
 			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryTotalLiquidity return total liquidity
+func GetCmdQueryTotalLiquidity() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-liquidity",
+		Short: "Query total-liquidity",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query total-liquidity.
+Example:
+$ %s query gamm total-liquidity
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TotalLiquidity(cmd.Context(), &types.QueryTotalLiquidityRequest{})
 			if err != nil {
 				return err
 			}

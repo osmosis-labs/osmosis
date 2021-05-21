@@ -83,6 +83,7 @@ func (k Keeper) CreatePool(
 	}
 
 	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
+	k.RecordTotalLiquidityIncrease(ctx, coins)
 
 	return pool.GetId(), nil
 }
@@ -151,6 +152,7 @@ func (k Keeper) JoinPool(
 	}
 
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), coins, shareOutAmount)
+	k.RecordTotalLiquidityIncrease(ctx, coins)
 
 	return nil
 }
@@ -211,6 +213,7 @@ func (k Keeper) JoinSwapExternAmountIn(
 	}
 
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, shareOutAmount)
+	k.RecordTotalLiquidityIncrease(ctx, sdk.Coins{tokenIn})
 
 	return shareOutAmount, nil
 }
@@ -272,6 +275,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	}
 
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, shareOutAmount)
+	k.RecordTotalLiquidityIncrease(ctx, sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)})
 
 	return shareOutAmount, nil
 }
@@ -355,6 +359,7 @@ func (k Keeper) ExitPool(
 	}
 
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, coins)
+	k.RecordTotalLiquidityDecrease(ctx, coins)
 
 	return nil
 }
@@ -433,6 +438,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 	}
 
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
+	k.RecordTotalLiquidityDecrease(ctx, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
 
 	return tokenOutAmount, nil
 }
@@ -510,6 +516,7 @@ func (k Keeper) ExitSwapExternAmountOut(
 	}
 
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, sdk.Coins{tokenOut})
+	k.RecordTotalLiquidityDecrease(ctx, sdk.Coins{tokenOut})
 
 	return shareInAmount, nil
 }
@@ -532,4 +539,14 @@ func (k Keeper) GetTotalLiquidity(ctx sdk.Context) sdk.Coins {
 func (k Keeper) SetTotalLiquidity(ctx sdk.Context, coins sdk.Coins) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.KeyTotalLiquidity, []byte(coins.String()))
+}
+
+func (k Keeper) RecordTotalLiquidityIncrease(ctx sdk.Context, coins sdk.Coins) {
+	liquidity := k.GetTotalLiquidity(ctx)
+	k.SetTotalLiquidity(ctx, liquidity.Add(coins...))
+}
+
+func (k Keeper) RecordTotalLiquidityDecrease(ctx sdk.Context, coins sdk.Coins) {
+	liquidity := k.GetTotalLiquidity(ctx)
+	k.SetTotalLiquidity(ctx, liquidity.Sub(coins))
 }
