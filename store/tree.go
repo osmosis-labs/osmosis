@@ -3,19 +3,19 @@
 package store
 
 import (
-	"fmt"
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// Tree is a modified B+ tree implementation.
+// Tree is an augmented B+ tree implementation.
 // Branches have m sized key index slice. Each key index represents
-// the starting index of the child node's index(inclusive), and the
-// ending index of the previous node of the child node's index(exclusive).
+// the starting index of the child nodePointer's index(inclusive), and the
+// ending index of the previous nodePointer of the child nodePointer's index(exclusive).
 type Tree struct {
 	store store.KVStore
 	m     uint8
@@ -27,25 +27,37 @@ func NewTree(store store.KVStore, m uint8) Tree {
 	return tree
 }
 
-// node is pointer to a specific node inside the tree
-type node struct {
+// nodePointer is a pointer to a node inside of the tree
+// This specifies how we access a node in the tree, and gets pointers to the nodes children.
+// TODO: Revisit architecture of this.
+type nodePointer struct {
 	tree  Tree
 	level uint16
 	key   []byte
 	// XXX: cache stored value?
 }
 
+// node is a node in the tree.
+type node struct {
+	Index []byte
+	Acc   uint64
+}
+
+type children []node // max length M slice of key bytes, sorted by index
+
+// nodeIterator iterates over nodes in a given level. It only iterates directly over the pointers
+// to the nodes, not the actual nodes themselves, to save loading additional data into memory.
 type nodeIterator struct {
 	tree  Tree
 	level uint16
 	store.Iterator
 }
 
-func (iter nodeIterator) node() *node {
+func (iter nodeIterator) nodePointer() *nodePointer {
 	if !iter.Valid() {
 		return nil
 	}
-	res := node{
+	res := nodePointer{
 		tree:  iter.tree,
 		level: iter.level,
 		key:   iter.Key()[7:],
@@ -53,61 +65,61 @@ func (iter nodeIterator) node() *node {
 	return &res
 }
 
-func (node *node) children() (res children) {
-	bz := node.tree.store.Get(node.tree.nodeKey(node.level, node.key))
+func (nodePointer *nodePointer) children() (res children) {
+	bz := nodePointer.tree.store.Get(nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key))
 	if bz != nil {
 		json.Unmarshal(bz, &res)
 	}
 	return
 }
 
-func (node *node) set(children children) {
+func (nodePointer *nodePointer) set(children children) {
 	bz, err := json.Marshal(children)
 	if err != nil {
 		panic(err)
 	}
-	node.tree.store.Set(node.tree.nodeKey(node.level, node.key), bz)
+	nodePointer.tree.store.Set(nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key), bz)
 }
 
-func (node *node) setLeaf(acc uint64) {
-	if node.level != 0 {
-		panic("setLeaf should not be called on branch node")
+func (nodePointer *nodePointer) setLeaf(acc uint64) {
+	if nodePointer.level != 0 {
+		panic("setLeaf should not be called on branch nodePointer")
 	}
 	bz, err := json.Marshal(acc)
 	if err != nil {
 		panic(err)
 	}
-	node.tree.store.Set(node.tree.leafKey(node.key), bz)
+	nodePointer.tree.store.Set(nodePointer.tree.leafKey(nodePointer.key), bz)
 }
 
-func (node *node) delete() {
-	node.tree.store.Delete(node.tree.nodeKey(node.level, node.key))
+func (nodePointer *nodePointer) delete() {
+	nodePointer.tree.store.Delete(nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key))
 }
 
-func (node *node) leftSibling() *node {
-	return node.tree.nodeReverseIterator(node.level, nil, node.key).node()
+func (nodePointer *nodePointer) leftSibling() *nodePointer {
+	return nodePointer.tree.nodePointerReverseIterator(nodePointer.level, nil, nodePointer.key).nodePointer()
 }
 
-func (node *node) rightSibling() *node {
-	iter := node.tree.nodeIterator(node.level, node.key, nil)
+func (nodePointer *nodePointer) rightSibling() *nodePointer {
+	iter := nodePointer.tree.nodeIterator(nodePointer.level, nodePointer.key, nil)
 	if !iter.Valid() {
 		return nil
 	}
-	if node.exists() {
-		// exclude node itself
+	if nodePointer.exists() {
+		// exclude nodePointer itself
 		iter.Next()
 	}
-	return iter.node()
+	return iter.nodePointer()
 }
 
-func (node *node) child(n uint16) *node {
+func (nodePointer *nodePointer) child(n uint16) *nodePointer {
 	// TODO: set end to prefix iterator end
-	return node.tree.nodeIterator(node.level-1, node.children()[n].Index, nil).node()
+	return nodePointer.tree.nodeIterator(nodePointer.level-1, nodePointer.children()[n].Index, nil).nodePointer()
 }
 
-func (node *node) parent() *node {
+func (nodePointer *nodePointer) parent() *nodePointer {
 	// first child inclusive case
-	parent := node.tree.nodeGet(node.level+1, node.key)
+	parent := nodePointer.tree.nodePointerGet(nodePointer.level+1, nodePointer.key)
 	if parent.exists() {
 		return parent
 	}
@@ -115,79 +127,79 @@ func (node *node) parent() *node {
 	if parent.exists() {
 		return parent
 	}
-	return node.tree.nodeGet(node.level+1, nil)
+	return nodePointer.tree.nodePointerGet(nodePointer.level+1, nil)
 }
 
-func (node *node) exists() bool {
-	if node == nil {
+func (nodePointer *nodePointer) exists() bool {
+	if nodePointer == nil {
 		return false
 	}
-	return node.tree.store.Has(node.tree.nodeKey(node.level, node.key))
+	return nodePointer.tree.store.Has(nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key))
 }
 
-func (node *node) updateAccumulation(c child) {
-	if !node.exists() {
+func (nodePointer *nodePointer) updateAccumulation(c node) {
+	if !nodePointer.exists() {
 		return // reached at the root
 	}
 
-	children := node.children()
+	children := nodePointer.children()
 	idx, match := children.find(c.Index)
 	if !match {
 		panic("non existing key pushed from the child")
 	}
 	children = children.setAcc(idx, c.Acc)
-	node.set(children)
-	node.parent().updateAccumulation(child{node.key, children.accumulate()})
+	nodePointer.set(children)
+	nodePointer.parent().updateAccumulation(node{nodePointer.key, children.accumulate()})
 }
 
-func (node *node) push(c child) {
-	if !node.exists() {
-		node.create(children{c})
+func (nodePointer *nodePointer) push(c node) {
+	if !nodePointer.exists() {
+		nodePointer.create(children{c})
 		return
 	}
 
-	cs := node.children()
+	cs := nodePointer.children()
 	idx, match := cs.find(c.Index)
 
 	// setting already existing child, move to updateAccumulation
 	if match {
-		node.updateAccumulation(c)
+		nodePointer.updateAccumulation(c)
 		return
 	}
 
-	// inserting new child node
+	// inserting new child nodePointer
 	cs = cs.insert(idx, c)
-	parent := node.parent()
-	
+	parent := nodePointer.parent()
+
 	// split and push-up if overflow
-	if len(cs) > int(node.tree.m) {
-		split := node.tree.m/2 + 1
+	if len(cs) > int(nodePointer.tree.m) {
+		split := nodePointer.tree.m/2 + 1
 		leftchildren, rightchildren := cs.split(int(split))
-		node.tree.nodeGet(node.level, cs[split].Index).create(rightchildren)
+		nodePointer.tree.nodePointerGet(nodePointer.level, cs[split].Index).create(rightchildren)
 		if !parent.exists() {
 			parent.create(children{
-				child{node.key, leftchildren.accumulate()},
-				child{cs[split].Index, rightchildren.accumulate()},
+				node{nodePointer.key, leftchildren.accumulate()},
+				node{cs[split].Index, rightchildren.accumulate()},
 			})
-			node.set(leftchildren)
+			nodePointer.set(leftchildren)
 			return
 		}
 		// constructing right childdd
-		parent.push(child{cs[split].Index, rightchildren.accumulate()})
+		parent.push(node{cs[split].Index, rightchildren.accumulate()})
 		cs = leftchildren
-		parent = node.parent() // parent might be changed during the pushing process
+		parent = nodePointer.parent() // parent might be changed during the pushing process
 	}
 
-	parent.updateAccumulation(child{node.key, cs.accumulate()})
-	node.set(cs)
+	parent.updateAccumulation(node{nodePointer.key, cs.accumulate()})
+	nodePointer.set(cs)
 }
 
-func (node *node) pull(key []byte) {
+func (nodePointer *nodePointer) pull(key []byte) {
 
-	if !node.exists() {
+	if !nodePointer.exists() {
 		return // reached at the root
 	}
-	children := node.children()
+	children := nodePointer.children()
 	idx, match := children.find(key)
 
 	if !match {
@@ -195,21 +207,21 @@ func (node *node) pull(key []byte) {
 	}
 
 	children = children.delete(idx)
-	// For sake of efficienty on our use case, we pull only when a node gets
+	// For sake of efficienty on our use case, we pull only when a nodePointer gets
 	// empty.
-	// if len(data.Index) >= int(node.tree.m/2) {
+	// if len(data.Index) >= int(nodePointer.tree.m/2) {
 	if len(children) > 0 {
-		node.set(children)
-		node.parent().updateAccumulation(child{node.key, children.accumulate()})
+		nodePointer.set(children)
+		nodePointer.parent().updateAccumulation(node{nodePointer.key, children.accumulate()})
 		return
 	}
 
 	// merge if possible
-	left := node.leftSibling()
-	right := node.rightSibling()
-	parent := node.parent()
-	node.delete()
-	parent.pull(node.key)
+	left := nodePointer.leftSibling()
+	right := nodePointer.rightSibling()
+	parent := nodePointer.parent()
+	nodePointer.delete()
+	parent.pull(nodePointer.key)
 
 	if left.exists() && right.exists() {
 		// parent might be deleted, retrieve from left
@@ -217,22 +229,15 @@ func (node *node) pull(key []byte) {
 		if bytes.Equal(parent.key, right.parent().key) {
 			leftchildren := left.children()
 			rightchildren := right.children()
-			if len(leftchildren)+len(rightchildren) < int(node.tree.m) {
+			if len(leftchildren)+len(rightchildren) < int(nodePointer.tree.m) {
 				left.set(leftchildren.merge(rightchildren))
 				right.delete()
 				parent.pull(right.key)
-				parent.updateAccumulation(child{left.key, leftchildren.accumulate()})
+				parent.updateAccumulation(node{left.key, leftchildren.accumulate()})
 			}
 		}
 	}
 }
-
-type child struct {
-	Index []byte
-	Acc   uint64
-}
-
-type children []child // max length M slice of key bytes, sorted by index
 
 func (children children) key() []byte {
 	return children[0].Index
@@ -250,7 +255,7 @@ func (children children) accumulate() (res uint64) {
 // if match is false, idx is the position where the key should be inserted
 func (children children) find(key []byte) (idx int, match bool) {
 	for idx, child := range children {
-		if bytes.Equal(child.Index, key){
+		if bytes.Equal(child.Index, key) {
 			return idx, true
 		}
 		// Push new key to the appropriate position
@@ -262,17 +267,17 @@ func (children children) find(key []byte) (idx int, match bool) {
 	return len(children), false
 }
 
-func (children children) set(idx int, child child) children {
+func (children children) set(idx int, child node) children {
 	children[idx] = child
 	return children
 }
 
 func (children children) setAcc(idx int, acc uint64) children {
-	children[idx] = child{children[idx].Index, acc}
+	children[idx] = node{children[idx].Index, acc}
 	return children
 }
 
-func (cs children) insert(idx int, c child) children {
+func (cs children) insert(idx int, c node) children {
 	return append(cs[:idx], append(children{c}, cs[idx:]...)...)
 }
 
@@ -289,29 +294,29 @@ func (children children) merge(children2 children) children {
 	return append(children, children2...)
 }
 
-// Root: (level, key) of the root node
+// Root: (level, key) of the root nodePointer
 func (t Tree) rootKey() []byte {
 	return []byte("root")
 }
 
-// key of the node is always the first element of the node.Index
-func (t Tree) nodeKey(level uint16, key []byte) []byte {
+// key of the nodePointer is always the first element of the nodePointer.Index
+func (t Tree) nodePointerKey(level uint16, key []byte) []byte {
 	bz := make([]byte, 2)
 	binary.BigEndian.PutUint16(bz, level)
-	return append(append([]byte("node/"), bz...), key...)
+	return append(append([]byte("nodePointer/"), bz...), key...)
 }
 
 func (t Tree) leafKey(key []byte) []byte {
-	return t.nodeKey(0, key)
+	return t.nodePointerKey(0, key)
 }
 
-func (t Tree) root() *node {
-	iter := stypes.KVStoreReversePrefixIterator(t.store, []byte("node/"))
+func (t Tree) root() *nodePointer {
+	iter := stypes.KVStoreReversePrefixIterator(t.store, []byte("nodePointer/"))
 	if !iter.Valid() {
 		return nil
 	}
 	key := iter.Key()[5:]
-	return &node{
+	return &nodePointer{
 		tree:  t,
 		level: binary.BigEndian.Uint16(key[:2]),
 		key:   key[2:],
@@ -330,49 +335,49 @@ func (t Tree) Get(key []byte) (res uint64) {
 	return
 }
 
-func (node *node) create(children children) {
-	keybz := node.tree.nodeKey(node.level, node.key)
+func (nodePointer *nodePointer) create(children children) {
+	keybz := nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key)
 	bz, err := json.Marshal(children)
 	if err != nil {
 		panic(err)
 	}
-	node.tree.store.Set(keybz, bz)
+	nodePointer.tree.store.Set(keybz, bz)
 }
 
-func (t Tree) nodeGet(level uint16, key []byte) *node {
-	return &node{
+func (t Tree) nodePointerGet(level uint16, key []byte) *nodePointer {
+	return &nodePointer{
 		tree:  t,
 		level: level,
 		key:   key,
 	}
 }
 
-// XXX: store.Iterator -> custom node iterator
+// XXX: store.Iterator -> custom nodePointer iterator
 func (t Tree) nodeIterator(level uint16, begin, end []byte) nodeIterator {
 	var endBytes []byte
 	if end != nil {
-		endBytes = t.nodeKey(level, end)
+		endBytes = t.nodePointerKey(level, end)
 	} else {
-		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
+		endBytes = stypes.PrefixEndBytes(t.nodePointerKey(level, nil))
 	}
 	return nodeIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.Iterator(t.nodeKey(level, begin), endBytes),
+		Iterator: t.store.Iterator(t.nodePointerKey(level, begin), endBytes),
 	}
 }
 
-func (t Tree) nodeReverseIterator(level uint16, begin, end []byte) nodeIterator {
+func (t Tree) nodePointerReverseIterator(level uint16, begin, end []byte) nodeIterator {
 	var endBytes []byte
 	if end != nil {
-		endBytes = t.nodeKey(level, end)
+		endBytes = t.nodePointerKey(level, end)
 	} else {
-		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
+		endBytes = stypes.PrefixEndBytes(t.nodePointerKey(level, nil))
 	}
 	return nodeIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.ReverseIterator(t.nodeKey(level, begin), endBytes),
+		Iterator: t.store.ReverseIterator(t.nodePointerKey(level, begin), endBytes),
 	}
 }
 
@@ -381,31 +386,31 @@ func (t Tree) Iterator(begin, end []byte) store.Iterator {
 }
 
 func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
-	return t.nodeReverseIterator(0, begin, end)
+	return t.nodePointerReverseIterator(0, begin, end)
 }
 
 func (t Tree) Set(key []byte, acc uint64) {
-	node := t.nodeGet(0, key)
-	node.setLeaf(acc)
+	nodePointer := t.nodePointerGet(0, key)
+	nodePointer.setLeaf(acc)
 
-	node.parent().push(child{key, acc})
+	nodePointer.parent().push(node{key, acc})
 }
 
 func (t Tree) Remove(key []byte) {
-	node := t.nodeGet(0, key)
-	if !node.exists() {
+	nodePointer := t.nodePointerGet(0, key)
+	if !nodePointer.exists() {
 		return
 	}
-	parent := node.parent()
-	node.delete()
+	parent := nodePointer.parent()
+	nodePointer.delete()
 	parent.pull(key)
 }
 
-func (node *node) accSplit(key []byte) (left uint64, exact uint64, right uint64) {
-	if node.level == 0 {
+func (nodePointer *nodePointer) accSplit(key []byte) (left uint64, exact uint64, right uint64) {
+	if nodePointer.level == 0 {
 		var err error
-		bz := node.tree.store.Get(node.tree.leafKey(node.key))
-		switch bytes.Compare(node.key, key) {
+		bz := nodePointer.tree.store.Get(nodePointer.tree.leafKey(nodePointer.key))
+		switch bytes.Compare(nodePointer.key, key) {
 		case -1:
 			err = json.Unmarshal(bz, &left)
 		case 0:
@@ -419,12 +424,12 @@ func (node *node) accSplit(key []byte) (left uint64, exact uint64, right uint64)
 		return
 	}
 
-	children := node.children()
+	children := nodePointer.children()
 	idx, match := children.find(key)
 	if !match {
 		idx--
 	}
-	left, exact, right = node.tree.nodeGet(node.level-1, children[idx].Index).accSplit(key)
+	left, exact, right = nodePointer.tree.nodePointerGet(nodePointer.level-1, children[idx].Index).accSplit(key)
 	left += children[:idx].accumulate()
 	right += children[idx+1:].accumulate()
 	return
@@ -448,21 +453,22 @@ func (t Tree) SliceAcc(start []byte, end []byte) uint64 {
 	return leftexact + leftrest - rightest
 }
 
-func (node *node) visualize(depth int, acc uint64) {
-	if !node.exists() {
+func (nodePointer *nodePointer) visualize(depth int, acc uint64) {
+	if !nodePointer.exists() {
 		return
 	}
 	for i := 0; i < depth; i++ {
 		fmt.Printf(" ")
 	}
 	fmt.Printf("- ")
-	fmt.Printf("{%d %+v %d}\n", node.level, node.key, acc)
-	for i, child := range node.children() {
-		childnode := node.child(uint16(i))
-		childnode.visualize(depth+1, child.Acc)
+	fmt.Printf("{%d %+v %d}\n", nodePointer.level, nodePointer.key, acc)
+	for i, child := range nodePointer.children() {
+		childnodePointer := nodePointer.child(uint16(i))
+		childnodePointer.visualize(depth+1, child.Acc)
 	}
 }
 
+// DebugVisualize prints out the entire tree to stdout
 func (t Tree) DebugVisualize() {
 	t.root().visualize(0, 0)
 }
