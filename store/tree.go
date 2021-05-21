@@ -159,21 +159,30 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 	return t.nodePointerReverseIterator(0, begin, end)
 }
 
-func (nodePointer *nodePointer) accSplit(key []byte) (left uint64, exact uint64, right uint64) {
-	// If the current node is a leaf node, then ...
+// accumulationSplit returns the accumulated value for all of the following:
+// left: all leaves under nodePointer with key < provided key
+// exact: leaf with key = provided key
+// right: all leaves under nodePointer with key > provided key
+// Note that the equalities here are _exclusive_.
+func (nodePointer *nodePointer) accumulationSplit(key []byte) (left uint64, exact uint64, right uint64) {
+	// If the current node is a leaf node, there is only one accumulated value.
 	if nodePointer.level == 0 {
-		var err error
+		var accumulatedValue uint64
 		bz := nodePointer.tree.store.Get(nodePointer.tree.leafKey(nodePointer.key))
-		switch bytes.Compare(nodePointer.key, key) {
-		case -1:
-			err = json.Unmarshal(bz, &left)
-		case 0:
-			err = json.Unmarshal(bz, &exact)
-		case 1:
-			err = json.Unmarshal(bz, &right)
-		}
+		err := json.Unmarshal(bz, &accumulatedValue)
 		if err != nil {
 			panic(err)
+		}
+		// Check if the leaf key is to the left of the input key,
+		// if so this value is on the left. Similar for the other cases.
+		// Recall that all of the output arguments default to 0, if unset internally.
+		switch bytes.Compare(nodePointer.key, key) {
+		case -1:
+			left = accumulatedValue
+		case 0:
+			exact = accumulatedValue
+		case 1:
+			right = accumulatedValue
 		}
 		return
 	}
@@ -183,7 +192,8 @@ func (nodePointer *nodePointer) accSplit(key []byte) (left uint64, exact uint64,
 	if !match {
 		idx--
 	}
-	left, exact, right = nodePointer.tree.nodePointerGet(nodePointer.level-1, children[idx].Index).accSplit(key)
+	childIdx := nodePointer.tree.nodePointerGet(nodePointer.level-1, children[idx].Index)
+	left, exact, right = childIdx.accumulationSplit(key)
 	left += children[:idx].accumulate()
 	right += children[idx+1:].accumulate()
 	return
@@ -205,20 +215,20 @@ func (t Tree) PrefixSum(key []byte) uint64 {
 // if end is nil, it is the end of the tree.
 func (t Tree) SubsetAccumulation(start []byte, end []byte) uint64 {
 	if start == nil {
-		left, exact, _ := t.root().accSplit(end)
+		left, exact, _ := t.root().accumulationSplit(end)
 		return left + exact
 	}
 	if end == nil {
-		_, exact, right := t.root().accSplit(start)
+		_, exact, right := t.root().accumulationSplit(start)
 		return exact + right
 	}
-	_, leftexact, leftrest := t.root().accSplit(start)
-	_, _, rightest := t.root().accSplit(end)
+	_, leftexact, leftrest := t.root().accumulationSplit(start)
+	_, _, rightest := t.root().accumulationSplit(end)
 	return leftexact + leftrest - rightest
 }
 
 func (t Tree) SplitAcc(key []byte) (uint64, uint64, uint64) {
-	return t.root().accSplit(key)
+	return t.root().accumulationSplit(key)
 }
 
 func (nodePointer *nodePointer) visualize(depth int, acc uint64) {
@@ -236,7 +246,7 @@ func (nodePointer *nodePointer) visualize(depth int, acc uint64) {
 	}
 }
 
-// DebugVisualize prints out the entire tree to stdout
+// DebugVisualize prints the entire tree to stdout
 func (t Tree) DebugVisualize() {
 	t.root().visualize(0, 0)
 }
