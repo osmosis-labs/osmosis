@@ -56,9 +56,9 @@ type nodeIterator struct {
 	store.Iterator
 }
 
-// nodePointerKey takes in a nodes layer, and its key, and constructs the
-// its key in the underlying datastore.
-func (t Tree) nodePointerKey(level uint16, key []byte) []byte {
+// nodeKey takes in a nodes layer, and its key, and constructs the
+// key for the underlying datastore (the chains state).
+func (t Tree) nodeKey(level uint16, key []byte) []byte {
 	bz := make([]byte, 2)
 	binary.BigEndian.PutUint16(bz, level)
 	return append(append([]byte("nodePointer/"), bz...), key...)
@@ -66,7 +66,7 @@ func (t Tree) nodePointerKey(level uint16, key []byte) []byte {
 
 // leafKey constructs a key for a node pointer representing a leaf node.
 func (t Tree) leafKey(key []byte) []byte {
-	return t.nodePointerKey(0, key)
+	return t.nodeKey(0, key)
 }
 
 // root returns the node pointer of the root of the tree.
@@ -126,28 +126,28 @@ func (t Tree) nodePointerGet(level uint16, key []byte) *nodePointer {
 func (t Tree) nodeIterator(level uint16, begin, end []byte) nodeIterator {
 	var endBytes []byte
 	if end != nil {
-		endBytes = t.nodePointerKey(level, end)
+		endBytes = t.nodeKey(level, end)
 	} else {
-		endBytes = stypes.PrefixEndBytes(t.nodePointerKey(level, nil))
+		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
 	}
 	return nodeIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.Iterator(t.nodePointerKey(level, begin), endBytes),
+		Iterator: t.store.Iterator(t.nodeKey(level, begin), endBytes),
 	}
 }
 
-func (t Tree) nodePointerReverseIterator(level uint16, begin, end []byte) nodeIterator {
+func (t Tree) nodeReverseIterator(level uint16, begin, end []byte) nodeIterator {
 	var endBytes []byte
 	if end != nil {
-		endBytes = t.nodePointerKey(level, end)
+		endBytes = t.nodeKey(level, end)
 	} else {
-		endBytes = stypes.PrefixEndBytes(t.nodePointerKey(level, nil))
+		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
 	}
 	return nodeIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.ReverseIterator(t.nodePointerKey(level, begin), endBytes),
+		Iterator: t.store.ReverseIterator(t.nodeKey(level, begin), endBytes),
 	}
 }
 
@@ -156,7 +156,7 @@ func (t Tree) Iterator(begin, end []byte) store.Iterator {
 }
 
 func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
-	return t.nodePointerReverseIterator(0, begin, end)
+	return t.nodeReverseIterator(0, begin, end)
 }
 
 // accumulationSplit returns the accumulated value for all of the following:

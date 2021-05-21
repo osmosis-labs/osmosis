@@ -18,7 +18,7 @@ func (iter nodeIterator) nodePointer() *nodePointer {
 }
 
 func (nodePointer *nodePointer) children() (res children) {
-	bz := nodePointer.tree.store.Get(nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key))
+	bz := nodePointer.tree.store.Get(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key))
 	if bz != nil {
 		json.Unmarshal(bz, &res)
 	}
@@ -30,7 +30,7 @@ func (nodePointer *nodePointer) set(children children) {
 	if err != nil {
 		panic(err)
 	}
-	nodePointer.tree.store.Set(nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key), bz)
+	nodePointer.tree.store.Set(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key), bz)
 }
 
 func (nodePointer *nodePointer) setLeaf(acc uint64) {
@@ -46,11 +46,11 @@ func (nodePointer *nodePointer) setLeaf(acc uint64) {
 
 // delete removes the corresponding node from the underlying data store,
 func (nodePointer *nodePointer) delete() {
-	nodePointer.tree.store.Delete(nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key))
+	nodePointer.tree.store.Delete(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key))
 }
 
 func (nodePointer *nodePointer) leftSibling() *nodePointer {
-	return nodePointer.tree.nodePointerReverseIterator(nodePointer.level, nil, nodePointer.key).nodePointer()
+	return nodePointer.tree.nodeReverseIterator(nodePointer.level, nil, nodePointer.key).nodePointer()
 }
 
 func (nodePointer *nodePointer) rightSibling() *nodePointer {
@@ -87,7 +87,7 @@ func (nodePointer *nodePointer) exists() bool {
 	if nodePointer == nil {
 		return false
 	}
-	return nodePointer.tree.store.Has(nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key))
+	return nodePointer.tree.store.Has(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key))
 }
 
 func (nodePointer *nodePointer) updateAccumulation(c node) {
@@ -137,7 +137,7 @@ func (nodePointer *nodePointer) push(c node) {
 			nodePointer.set(leftchildren)
 			return
 		}
-		// constructing right childdd
+		// constructing right child
 		parent.push(node{cs[split].Index, rightchildren.accumulate()})
 		cs = leftchildren
 		parent = nodePointer.parent() // parent might be changed during the pushing process
@@ -160,7 +160,7 @@ func (nodePointer *nodePointer) pull(key []byte) {
 	}
 
 	children = children.delete(idx)
-	// For sake of efficienty on our use case, we pull only when a nodePointer gets
+	// For sake of efficienty of our use case, we pull only when a nodePointer gets
 	// empty.
 	// if len(data.Index) >= int(nodePointer.tree.m/2) {
 	if len(children) > 0 {
@@ -196,6 +196,7 @@ func (children children) key() []byte {
 	return children[0].Index
 }
 
+// accumulate returns the sum of the values of all the children.
 func (children children) accumulate() (res uint64) {
 	for _, child := range children {
 		res += child.Acc
@@ -248,7 +249,7 @@ func (children children) merge(children2 children) children {
 }
 
 func (nodePointer *nodePointer) create(children children) {
-	keybz := nodePointer.tree.nodePointerKey(nodePointer.level, nodePointer.key)
+	keybz := nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key)
 	bz, err := json.Marshal(children)
 	if err != nil {
 		panic(err)
