@@ -16,6 +16,8 @@ import (
 // Branches have m sized key index slice. Each key index represents
 // the starting index of the child nodePointer's index(inclusive), and the
 // ending index of the previous nodePointer of the child nodePointer's index(exclusive).
+// TODO: We should abstract out the leaves of this tree to allow more data aside from
+// the accumulation value to go there.
 type Tree struct {
 	store store.KVStore
 	m     uint8
@@ -82,6 +84,7 @@ func (t Tree) root() *nodePointer {
 	}
 }
 
+// Get returns the (uint64) value at a given leaf.
 func (t Tree) Get(key []byte) (res uint64) {
 	keybz := t.leafKey(key)
 	if !t.store.Has(keybz) {
@@ -92,6 +95,23 @@ func (t Tree) Get(key []byte) (res uint64) {
 		panic(err)
 	}
 	return
+}
+
+func (t Tree) Set(key []byte, acc uint64) {
+	nodePointer := t.nodePointerGet(0, key)
+	nodePointer.setLeaf(acc)
+
+	nodePointer.parent().push(node{key, acc})
+}
+
+func (t Tree) Remove(key []byte) {
+	nodePointer := t.nodePointerGet(0, key)
+	if !nodePointer.exists() {
+		return
+	}
+	parent := nodePointer.parent()
+	nodePointer.delete()
+	parent.pull(key)
 }
 
 func (t Tree) nodePointerGet(level uint16, key []byte) *nodePointer {
@@ -139,24 +159,8 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 	return t.nodePointerReverseIterator(0, begin, end)
 }
 
-func (t Tree) Set(key []byte, acc uint64) {
-	nodePointer := t.nodePointerGet(0, key)
-	nodePointer.setLeaf(acc)
-
-	nodePointer.parent().push(node{key, acc})
-}
-
-func (t Tree) Remove(key []byte) {
-	nodePointer := t.nodePointerGet(0, key)
-	if !nodePointer.exists() {
-		return
-	}
-	parent := nodePointer.parent()
-	nodePointer.delete()
-	parent.pull(key)
-}
-
 func (nodePointer *nodePointer) accSplit(key []byte) (left uint64, exact uint64, right uint64) {
+	// If the current node is a leaf node, then ...
 	if nodePointer.level == 0 {
 		var err error
 		bz := nodePointer.tree.store.Get(nodePointer.tree.leafKey(nodePointer.key))
@@ -185,11 +189,21 @@ func (nodePointer *nodePointer) accSplit(key []byte) (left uint64, exact uint64,
 	return
 }
 
-func (t Tree) SplitAcc(key []byte) (uint64, uint64, uint64) {
-	return t.root().accSplit(key)
+// TotalAccumulatedValue returns the sum of the weights for all leaves
+func (t Tree) TotalAccumulatedValue() uint64 {
+	return t.SubsetAccumulation(nil, nil)
 }
 
-func (t Tree) SliceAcc(start []byte, end []byte) uint64 {
+// Prefix sum returns the total weight of all leaves with keys <= to the provided key.
+func (t Tree) PrefixSum(key []byte) uint64 {
+	return t.SubsetAccumulation(nil, key)
+}
+
+// SubsetAccumulation returns the total value of all leaves with keys
+// between start and end (inclusive of both ends)
+// if start is nil, it is the beginning of the tree.
+// if end is nil, it is the end of the tree.
+func (t Tree) SubsetAccumulation(start []byte, end []byte) uint64 {
 	if start == nil {
 		left, exact, _ := t.root().accSplit(end)
 		return left + exact
@@ -201,6 +215,10 @@ func (t Tree) SliceAcc(start []byte, end []byte) uint64 {
 	_, leftexact, leftrest := t.root().accSplit(start)
 	_, _, rightest := t.root().accSplit(end)
 	return leftexact + leftrest - rightest
+}
+
+func (t Tree) SplitAcc(key []byte) (uint64, uint64, uint64) {
+	return t.root().accSplit(key)
 }
 
 func (nodePointer *nodePointer) visualize(depth int, acc uint64) {
