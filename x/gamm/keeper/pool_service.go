@@ -513,3 +513,23 @@ func (k Keeper) ExitSwapExternAmountOut(
 
 	return shareInAmount, nil
 }
+
+func (k Keeper) GetTotalLiquidity(ctx sdk.Context) sdk.Coins {
+	store := ctx.KVStore(k.storeKey)
+	if !store.Has(types.KeyTotalLiquidity) {
+		return sdk.Coins{}
+	}
+
+	bz := store.Get(types.KeyTotalLiquidity)
+	coins, err := sdk.ParseCoinsNormalized(string(bz))
+	if err != nil {
+		panic("invalid total liquidity value set")
+	}
+
+	return coins
+}
+
+func (k Keeper) SetTotalLiquidity(ctx sdk.Context, coins sdk.Coins) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.KeyTotalLiquidity, []byte(coins.String()))
+}
