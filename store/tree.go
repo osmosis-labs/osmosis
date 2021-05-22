@@ -166,7 +166,7 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 // Note that the equalities here are _exclusive_.
 func (nodePointer *nodePointer) accumulationSplit(key []byte) (left uint64, exact uint64, right uint64) {
 	// If the current node is a leaf node, there is only one accumulated value.
-	if nodePointer.level == 0 {
+	if nodePointer.isLeaf() {
 		var accumulatedValue uint64
 		bz := nodePointer.tree.store.Get(nodePointer.tree.leafKey(nodePointer.key))
 		err := json.Unmarshal(bz, &accumulatedValue)

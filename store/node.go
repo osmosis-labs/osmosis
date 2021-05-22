@@ -17,6 +17,10 @@ func (iter nodeIterator) nodePointer() *nodePointer {
 	return &res
 }
 
+func (nodePtr *nodePointer) isLeaf() bool {
+	return nodePtr.level == 0
+}
+
 func (nodePointer *nodePointer) children() (res children) {
 	bz := nodePointer.tree.store.Get(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key))
 	if bz != nil {
@@ -34,7 +38,7 @@ func (nodePointer *nodePointer) set(children children) {
 }
 
 func (nodePointer *nodePointer) setLeaf(acc uint64) {
-	if nodePointer.level != 0 {
+	if !nodePointer.isLeaf() {
 		panic("setLeaf should not be called on branch nodePointer")
 	}
 	bz, err := json.Marshal(acc)
@@ -70,19 +74,25 @@ func (nodePointer *nodePointer) child(n uint16) *nodePointer {
 	return nodePointer.tree.nodeIterator(nodePointer.level-1, nodePointer.children()[n].Index, nil).nodePointer()
 }
 
+// parent returns the parent of the provided node pointer.
+// Behavior is not well defined if the calling node pointer does not exist in the tree.
 func (nodePointer *nodePointer) parent() *nodePointer {
-	// first child inclusive case
+	// See if there is a parent with the same 'key' as this node.
 	parent := nodePointer.tree.nodePointerGet(nodePointer.level+1, nodePointer.key)
 	if parent.exists() {
 		return parent
 	}
+	// If not, take the node in the above layer that is lexicographically the closest
+	// from the left of the key.
 	parent = parent.leftSibling()
 	if parent.exists() {
 		return parent
 	}
+	// If there is no such node (this node is not in the tree), return nil
 	return nodePointer.tree.nodePointerGet(nodePointer.level+1, nil)
 }
 
+// exists returns if the calling node is in the tree.
 func (nodePointer *nodePointer) exists() bool {
 	if nodePointer == nil {
 		return false
@@ -90,6 +100,8 @@ func (nodePointer *nodePointer) exists() bool {
 	return nodePointer.tree.store.Has(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key))
 }
 
+// updateAccumulation changes the accumulation value of a node in the tree,
+// and handles updating the accumulation for all of its parent's augmented data.
 func (nodePointer *nodePointer) updateAccumulation(c node) {
 	if !nodePointer.exists() {
 		return // reached at the root
@@ -148,7 +160,6 @@ func (nodePointer *nodePointer) push(c node) {
 }
 
 func (nodePointer *nodePointer) pull(key []byte) {
-
 	if !nodePointer.exists() {
 		return // reached at the root
 	}
@@ -190,10 +201,6 @@ func (nodePointer *nodePointer) pull(key []byte) {
 			}
 		}
 	}
-}
-
-func (children children) key() []byte {
-	return children[0].Index
 }
 
 // accumulate returns the sum of the values of all the children.
