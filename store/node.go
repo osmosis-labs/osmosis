@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 )
 
-func (iter nodeIterator) nodePointer() *nodePointer {
+func (iter nodeIterator) nodePtr() *nodePtr {
 	if !iter.Valid() {
 		return nil
 	}
-	res := nodePointer{
+	res := nodePtr{
 		tree:  iter.tree,
 		level: iter.level,
 		key:   iter.Key()[7:],
@@ -17,68 +17,68 @@ func (iter nodeIterator) nodePointer() *nodePointer {
 	return &res
 }
 
-func (nodePtr *nodePointer) isLeaf() bool {
+func (nodePtr *nodePtr) isLeaf() bool {
 	return nodePtr.level == 0
 }
 
-func (nodePointer *nodePointer) children() (res children) {
-	bz := nodePointer.tree.store.Get(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key))
+func (nodePtr *nodePtr) children() (res children) {
+	bz := nodePtr.tree.store.Get(nodePtr.tree.nodeKey(nodePtr.level, nodePtr.key))
 	if bz != nil {
 		json.Unmarshal(bz, &res)
 	}
 	return
 }
 
-func (nodePointer *nodePointer) set(children children) {
+func (nodePtr *nodePtr) set(children children) {
 	bz, err := json.Marshal(children)
 	if err != nil {
 		panic(err)
 	}
-	nodePointer.tree.store.Set(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key), bz)
+	nodePtr.tree.store.Set(nodePtr.tree.nodeKey(nodePtr.level, nodePtr.key), bz)
 }
 
-func (nodePointer *nodePointer) setLeaf(acc uint64) {
-	if !nodePointer.isLeaf() {
-		panic("setLeaf should not be called on branch nodePointer")
+func (nodePtr *nodePtr) setLeaf(acc uint64) {
+	if !nodePtr.isLeaf() {
+		panic("setLeaf should not be called on branch nodePtr")
 	}
 	bz, err := json.Marshal(acc)
 	if err != nil {
 		panic(err)
 	}
-	nodePointer.tree.store.Set(nodePointer.tree.leafKey(nodePointer.key), bz)
+	nodePtr.tree.store.Set(nodePtr.tree.leafKey(nodePtr.key), bz)
 }
 
 // delete removes the corresponding node from the underlying data store,
-func (nodePointer *nodePointer) delete() {
-	nodePointer.tree.store.Delete(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key))
+func (nodePtr *nodePtr) delete() {
+	nodePtr.tree.store.Delete(nodePtr.tree.nodeKey(nodePtr.level, nodePtr.key))
 }
 
-func (nodePointer *nodePointer) leftSibling() *nodePointer {
-	return nodePointer.tree.nodeReverseIterator(nodePointer.level, nil, nodePointer.key).nodePointer()
+func (nodePtr *nodePtr) leftSibling() *nodePtr {
+	return nodePtr.tree.nodeReverseIterator(nodePtr.level, nil, nodePtr.key).nodePtr()
 }
 
-func (nodePointer *nodePointer) rightSibling() *nodePointer {
-	iter := nodePointer.tree.nodeIterator(nodePointer.level, nodePointer.key, nil)
+func (nodePtr *nodePtr) rightSibling() *nodePtr {
+	iter := nodePtr.tree.nodeIterator(nodePtr.level, nodePtr.key, nil)
 	if !iter.Valid() {
 		return nil
 	}
-	if nodePointer.exists() {
-		// exclude nodePointer itself
+	if nodePtr.exists() {
+		// exclude nodePtr itself
 		iter.Next()
 	}
-	return iter.nodePointer()
+	return iter.nodePtr()
 }
 
-func (nodePointer *nodePointer) child(n uint16) *nodePointer {
+func (nodePtr *nodePtr) child(n uint16) *nodePtr {
 	// TODO: set end to prefix iterator end
-	return nodePointer.tree.nodeIterator(nodePointer.level-1, nodePointer.children()[n].Index, nil).nodePointer()
+	return nodePtr.tree.nodeIterator(nodePtr.level-1, nodePtr.children()[n].Index, nil).nodePtr()
 }
 
 // parent returns the parent of the provided node pointer.
 // Behavior is not well defined if the calling node pointer does not exist in the tree.
-func (nodePointer *nodePointer) parent() *nodePointer {
+func (nodePtr *nodePtr) parent() *nodePtr {
 	// See if there is a parent with the same 'key' as this node.
-	parent := nodePointer.tree.nodePointerGet(nodePointer.level+1, nodePointer.key)
+	parent := nodePtr.tree.nodePtrGet(nodePtr.level+1, nodePtr.key)
 	if parent.exists() {
 		return parent
 	}
@@ -89,81 +89,81 @@ func (nodePointer *nodePointer) parent() *nodePointer {
 		return parent
 	}
 	// If there is no such node (this node is not in the tree), return nil
-	return nodePointer.tree.nodePointerGet(nodePointer.level+1, nil)
+	return nodePtr.tree.nodePtrGet(nodePtr.level+1, nil)
 }
 
 // exists returns if the calling node is in the tree.
-func (nodePointer *nodePointer) exists() bool {
-	if nodePointer == nil {
+func (nodePtr *nodePtr) exists() bool {
+	if nodePtr == nil {
 		return false
 	}
-	return nodePointer.tree.store.Has(nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key))
+	return nodePtr.tree.store.Has(nodePtr.tree.nodeKey(nodePtr.level, nodePtr.key))
 }
 
 // updateAccumulation changes the accumulation value of a node in the tree,
 // and handles updating the accumulation for all of its parent's augmented data.
-func (nodePointer *nodePointer) updateAccumulation(c node) {
-	if !nodePointer.exists() {
+func (nodePtr *nodePtr) updateAccumulation(c node) {
+	if !nodePtr.exists() {
 		return // reached at the root
 	}
 
-	children := nodePointer.children()
+	children := nodePtr.children()
 	idx, match := children.find(c.Index)
 	if !match {
 		panic("non existing key pushed from the child")
 	}
 	children = children.setAcc(idx, c.Acc)
-	nodePointer.set(children)
-	nodePointer.parent().updateAccumulation(node{nodePointer.key, children.accumulate()})
+	nodePtr.set(children)
+	nodePtr.parent().updateAccumulation(node{nodePtr.key, children.accumulate()})
 }
 
-func (nodePointer *nodePointer) push(c node) {
-	if !nodePointer.exists() {
-		nodePointer.create(children{c})
+func (nodePtr *nodePtr) push(c node) {
+	if !nodePtr.exists() {
+		nodePtr.create(children{c})
 		return
 	}
 
-	cs := nodePointer.children()
+	cs := nodePtr.children()
 	idx, match := cs.find(c.Index)
 
 	// setting already existing child, move to updateAccumulation
 	if match {
-		nodePointer.updateAccumulation(c)
+		nodePtr.updateAccumulation(c)
 		return
 	}
 
-	// inserting new child nodePointer
+	// inserting new child nodePtr
 	cs = cs.insert(idx, c)
-	parent := nodePointer.parent()
+	parent := nodePtr.parent()
 
 	// split and push-up if overflow
-	if len(cs) > int(nodePointer.tree.m) {
-		split := nodePointer.tree.m/2 + 1
+	if len(cs) > int(nodePtr.tree.m) {
+		split := nodePtr.tree.m/2 + 1
 		leftchildren, rightchildren := cs.split(int(split))
-		nodePointer.tree.nodePointerGet(nodePointer.level, cs[split].Index).create(rightchildren)
+		nodePtr.tree.nodePtrGet(nodePtr.level, cs[split].Index).create(rightchildren)
 		if !parent.exists() {
 			parent.create(children{
-				node{nodePointer.key, leftchildren.accumulate()},
+				node{nodePtr.key, leftchildren.accumulate()},
 				node{cs[split].Index, rightchildren.accumulate()},
 			})
-			nodePointer.set(leftchildren)
+			nodePtr.set(leftchildren)
 			return
 		}
 		// constructing right child
 		parent.push(node{cs[split].Index, rightchildren.accumulate()})
 		cs = leftchildren
-		parent = nodePointer.parent() // parent might be changed during the pushing process
+		parent = nodePtr.parent() // parent might be changed during the pushing process
 	}
 
-	parent.updateAccumulation(node{nodePointer.key, cs.accumulate()})
-	nodePointer.set(cs)
+	parent.updateAccumulation(node{nodePtr.key, cs.accumulate()})
+	nodePtr.set(cs)
 }
 
-func (nodePointer *nodePointer) pull(key []byte) {
-	if !nodePointer.exists() {
+func (nodePtr *nodePtr) pull(key []byte) {
+	if !nodePtr.exists() {
 		return // reached at the root
 	}
-	children := nodePointer.children()
+	children := nodePtr.children()
 	idx, match := children.find(key)
 
 	if !match {
@@ -171,21 +171,21 @@ func (nodePointer *nodePointer) pull(key []byte) {
 	}
 
 	children = children.delete(idx)
-	// For sake of efficienty of our use case, we pull only when a nodePointer gets
+	// For sake of efficienty of our use case, we pull only when a nodePtr gets
 	// empty.
-	// if len(data.Index) >= int(nodePointer.tree.m/2) {
+	// if len(data.Index) >= int(nodePtr.tree.m/2) {
 	if len(children) > 0 {
-		nodePointer.set(children)
-		nodePointer.parent().updateAccumulation(node{nodePointer.key, children.accumulate()})
+		nodePtr.set(children)
+		nodePtr.parent().updateAccumulation(node{nodePtr.key, children.accumulate()})
 		return
 	}
 
 	// merge if possible
-	left := nodePointer.leftSibling()
-	right := nodePointer.rightSibling()
-	parent := nodePointer.parent()
-	nodePointer.delete()
-	parent.pull(nodePointer.key)
+	left := nodePtr.leftSibling()
+	right := nodePtr.rightSibling()
+	parent := nodePtr.parent()
+	nodePtr.delete()
+	parent.pull(nodePtr.key)
 
 	if left.exists() && right.exists() {
 		// parent might be deleted, retrieve from left
@@ -193,7 +193,7 @@ func (nodePointer *nodePointer) pull(key []byte) {
 		if bytes.Equal(parent.key, right.parent().key) {
 			leftchildren := left.children()
 			rightchildren := right.children()
-			if len(leftchildren)+len(rightchildren) < int(nodePointer.tree.m) {
+			if len(leftchildren)+len(rightchildren) < int(nodePtr.tree.m) {
 				left.set(leftchildren.merge(rightchildren))
 				right.delete()
 				parent.pull(right.key)
@@ -255,11 +255,11 @@ func (children children) merge(children2 children) children {
 	return append(children, children2...)
 }
 
-func (nodePointer *nodePointer) create(children children) {
-	keybz := nodePointer.tree.nodeKey(nodePointer.level, nodePointer.key)
+func (nodePtr *nodePtr) create(children children) {
+	keybz := nodePtr.tree.nodeKey(nodePtr.level, nodePtr.key)
 	bz, err := json.Marshal(children)
 	if err != nil {
 		panic(err)
 	}
-	nodePointer.tree.store.Set(keybz, bz)
+	nodePtr.tree.store.Set(keybz, bz)
 }

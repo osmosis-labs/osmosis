@@ -14,8 +14,8 @@ import (
 
 // Tree is an augmented B+ tree implementation.
 // Branches have m sized key index slice. Each key index represents
-// the starting index of the child nodePointer's index(inclusive), and the
-// ending index of the previous nodePointer of the child nodePointer's index(exclusive).
+// the starting index of the child nodePtr's index(inclusive), and the
+// ending index of the previous nodePtr of the child nodePtr's index(exclusive).
 // TODO: We should abstract out the leaves of this tree to allow more data aside from
 // the accumulation value to go there.
 type Tree struct {
@@ -29,13 +29,13 @@ func NewTree(store store.KVStore, m uint8) Tree {
 	return tree
 }
 
-// nodePointer is a pointer to a node inside of the tree
+// nodePtr is a pointer to a node inside of the tree
 // This specifies how we access a node in the tree, and gets pointers to the nodes children.
 // TODO: Revisit architecture of this.
-type nodePointer struct {
+type nodePtr struct {
 	tree  Tree
 	level uint16
-	// key of the nodePointer is always the first element of the nodePointer.Index
+	// key of the nodePtr is always the first element of the nodePtr.Index
 	key []byte
 	// XXX: cache stored value?
 }
@@ -61,7 +61,7 @@ type nodeIterator struct {
 func (t Tree) nodeKey(level uint16, key []byte) []byte {
 	bz := make([]byte, 2)
 	binary.BigEndian.PutUint16(bz, level)
-	return append(append([]byte("nodePointer/"), bz...), key...)
+	return append(append([]byte("nodePtr/"), bz...), key...)
 }
 
 // leafKey constructs a key for a node pointer representing a leaf node.
@@ -70,14 +70,14 @@ func (t Tree) leafKey(key []byte) []byte {
 }
 
 // root returns the node pointer of the root of the tree.
-func (t Tree) root() *nodePointer {
+func (t Tree) root() *nodePtr {
 	// TODO: Why does this work, what is the root key here?
-	iter := stypes.KVStoreReversePrefixIterator(t.store, []byte("nodePointer/"))
+	iter := stypes.KVStoreReversePrefixIterator(t.store, []byte("nodePtr/"))
 	if !iter.Valid() {
 		return nil
 	}
 	key := iter.Key()[5:]
-	return &nodePointer{
+	return &nodePtr{
 		tree:  t,
 		level: binary.BigEndian.Uint16(key[:2]),
 		key:   key[2:],
@@ -98,31 +98,31 @@ func (t Tree) Get(key []byte) (res uint64) {
 }
 
 func (t Tree) Set(key []byte, acc uint64) {
-	nodePointer := t.nodePointerGet(0, key)
-	nodePointer.setLeaf(acc)
+	nodePtr := t.nodePtrGet(0, key)
+	nodePtr.setLeaf(acc)
 
-	nodePointer.parent().push(node{key, acc})
+	nodePtr.parent().push(node{key, acc})
 }
 
 func (t Tree) Remove(key []byte) {
-	nodePointer := t.nodePointerGet(0, key)
-	if !nodePointer.exists() {
+	nodePtr := t.nodePtrGet(0, key)
+	if !nodePtr.exists() {
 		return
 	}
-	parent := nodePointer.parent()
-	nodePointer.delete()
+	parent := nodePtr.parent()
+	nodePtr.delete()
 	parent.pull(key)
 }
 
-func (t Tree) nodePointerGet(level uint16, key []byte) *nodePointer {
-	return &nodePointer{
+func (t Tree) nodePtrGet(level uint16, key []byte) *nodePtr {
+	return &nodePtr{
 		tree:  t,
 		level: level,
 		key:   key,
 	}
 }
 
-// XXX: store.Iterator -> custom nodePointer iterator
+// XXX: store.Iterator -> custom nodePtr iterator
 func (t Tree) nodeIterator(level uint16, begin, end []byte) nodeIterator {
 	var endBytes []byte
 	if end != nil {
@@ -160,15 +160,15 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 }
 
 // accumulationSplit returns the accumulated value for all of the following:
-// left: all leaves under nodePointer with key < provided key
+// left: all leaves under nodePtr with key < provided key
 // exact: leaf with key = provided key
-// right: all leaves under nodePointer with key > provided key
+// right: all leaves under nodePtr with key > provided key
 // Note that the equalities here are _exclusive_.
-func (nodePointer *nodePointer) accumulationSplit(key []byte) (left uint64, exact uint64, right uint64) {
+func (nodePtr *nodePtr) accumulationSplit(key []byte) (left uint64, exact uint64, right uint64) {
 	// If the current node is a leaf node, there is only one accumulated value.
-	if nodePointer.isLeaf() {
+	if nodePtr.isLeaf() {
 		var accumulatedValue uint64
-		bz := nodePointer.tree.store.Get(nodePointer.tree.leafKey(nodePointer.key))
+		bz := nodePtr.tree.store.Get(nodePtr.tree.leafKey(nodePtr.key))
 		err := json.Unmarshal(bz, &accumulatedValue)
 		if err != nil {
 			panic(err)
@@ -176,7 +176,7 @@ func (nodePointer *nodePointer) accumulationSplit(key []byte) (left uint64, exac
 		// Check if the leaf key is to the left of the input key,
 		// if so this value is on the left. Similar for the other cases.
 		// Recall that all of the output arguments default to 0, if unset internally.
-		switch bytes.Compare(nodePointer.key, key) {
+		switch bytes.Compare(nodePtr.key, key) {
 		case -1:
 			left = accumulatedValue
 		case 0:
@@ -187,12 +187,12 @@ func (nodePointer *nodePointer) accumulationSplit(key []byte) (left uint64, exac
 		return
 	}
 
-	children := nodePointer.children()
+	children := nodePtr.children()
 	idx, match := children.find(key)
 	if !match {
 		idx--
 	}
-	childIdx := nodePointer.tree.nodePointerGet(nodePointer.level-1, children[idx].Index)
+	childIdx := nodePtr.tree.nodePtrGet(nodePtr.level-1, children[idx].Index)
 	left, exact, right = childIdx.accumulationSplit(key)
 	left += children[:idx].accumulate()
 	right += children[idx+1:].accumulate()
@@ -231,18 +231,18 @@ func (t Tree) SplitAcc(key []byte) (uint64, uint64, uint64) {
 	return t.root().accumulationSplit(key)
 }
 
-func (nodePointer *nodePointer) visualize(depth int, acc uint64) {
-	if !nodePointer.exists() {
+func (nodePtr *nodePtr) visualize(depth int, acc uint64) {
+	if !nodePtr.exists() {
 		return
 	}
 	for i := 0; i < depth; i++ {
 		fmt.Printf(" ")
 	}
 	fmt.Printf("- ")
-	fmt.Printf("{%d %+v %d}\n", nodePointer.level, nodePointer.key, acc)
-	for i, child := range nodePointer.children() {
-		childnodePointer := nodePointer.child(uint16(i))
-		childnodePointer.visualize(depth+1, child.Acc)
+	fmt.Printf("{%d %+v %d}\n", nodePtr.level, nodePtr.key, acc)
+	for i, child := range nodePtr.children() {
+		childnodePtr := nodePtr.child(uint16(i))
+		childnodePtr.visualize(depth+1, child.Acc)
 	}
 }
 
