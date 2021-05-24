@@ -932,7 +932,6 @@ func (s *IntegrationTestSuite) TestGetCmdTotalLiquidity() {
 		{
 			"query total liquidity", // osmosisd query gamm total-liquidity
 			[]string{
-				"1",
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
 			false,
