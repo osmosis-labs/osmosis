@@ -285,6 +285,19 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			),
 			true, &sdk.TxResponse{}, 0,
 		},
+		{
+			"unknown fields in json",
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token",
+			  "%s": "100node0token",
+			  "%s": "0.001",
+			  "%s": "0.001"
+			  "unknown": true,
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			true, &sdk.TxResponse{}, 0,
+		},
 	}
 
 	for _, tc := range testCases {
