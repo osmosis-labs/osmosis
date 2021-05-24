@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"mint_denom":"stake","genesis_epoch_provisions":"5000000.000000000000000000","epoch_identifier":"weekly","reduction_period_in_epochs":"156","reduction_factor":"0.500000000000000000","distribution_proportions":{"staking":"0.500000000000000000","pool_incentives":"0.300000000000000000","developer_rewards":"0.200000000000000000"},"developer_rewards_receiver":""}`,
+			`{"mint_denom":"stake","genesis_epoch_provisions":"5000000.000000000000000000","epoch_identifier":"weekly","reduction_period_in_epochs":"156","reduction_factor":"0.500000000000000000","distribution_proportions":{"staking":"0.500000000000000000","pool_incentives":"0.300000000000000000","developer_rewards":"0.200000000000000000"},"developer_rewards_receiver":"","minting_rewards_distribution_start_time":"0001-01-01T00:00:00Z"}`,
 		},
 		{
 			"text output",
@@ -64,6 +64,7 @@ distribution_proportions:
 epoch_identifier: weekly
 genesis_epoch_provisions: "5000000.000000000000000000"
 mint_denom: stake
+minting_rewards_distribution_start_time: "0001-01-01T00:00:00Z"
 reduction_factor: "0.500000000000000000"
 reduction_period_in_epochs: "156"`,
 		},
