@@ -348,7 +348,9 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 			distrBeginEpoch = epochInfo.CurrentEpoch + 1 + int64(pot.StartTime.Sub(blockTime)/epochInfo.Duration)
 		}
 
+
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
+			
 			newPot, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, pot, locks)
 			if err != nil {
 				continue
