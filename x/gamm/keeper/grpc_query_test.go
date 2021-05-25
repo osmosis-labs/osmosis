@@ -158,6 +158,22 @@ func (suite *KeeperTestSuite) TestQueryTotalShare() {
 	suite.Require().Equal(types.InitPoolSharesSupply.Add(types.OneShare.MulRaw(10)).String(), res.TotalShare.Amount.String())
 }
 
+func (suite *KeeperTestSuite) TestQueryTotalLiquidity() {
+	queryClient := suite.queryClient
+
+	// Pool not exist
+	res, err := queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal("", sdk.Coins(res.Liquidity).String())
+
+	_ = suite.preparePool()
+
+	// create pool
+	res, err = queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal("5000000bar,5000000baz,5000000foo", sdk.Coins(res.Liquidity).String())
+}
+
 func (suite *KeeperTestSuite) TestQueryPoolAssets() {
 	queryClient := suite.queryClient
 

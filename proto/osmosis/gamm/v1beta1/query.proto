@@ -34,6 +34,9 @@ service Query {
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/prices";
   }
+  rpc TotalLiquidity(QueryTotalLiquidityRequest) returns (QueryTotalLiquidityResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/total_liquidity";
+  }
 
   // Estimate the swap.
   rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
@@ -150,6 +153,15 @@ message QuerySwapExactAmountOutResponse {
   string tokenInAmount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryTotalLiquidityRequest {}
+
+message QueryTotalLiquidityResponse {
+  repeated cosmos.base.v1beta1.Coin liquidity = 1 [
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
 }
