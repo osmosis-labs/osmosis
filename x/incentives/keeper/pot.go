@@ -171,16 +171,7 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 
 // FilteredLocksDistributionEst estimate distribution amount coins from pot for fitting conditions
 func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, filteredLocks []lockuptypes.PeriodLock) (types.Pot, sdk.Coins, error) {
-	filteredLockIDs := make(map[uint64]bool)
-	for _, lock := range filteredLocks {
-		filteredLockIDs[lock.ID] = true
-	}
-
-	totalDistrCoins := sdk.NewCoins()
-	filteredDistrCoins := sdk.NewCoins()
-	locks := k.GetLocksToDistribution(ctx, pot.DistributeTo)
-	lockSum := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
-
+	lockSum := k.lk.GetPeriodLocksAccumulation(ctx, pot.DistributeTo)
 	if lockSum.IsZero() {
 		return types.Pot{}, nil, nil
 	}
@@ -190,22 +181,29 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, fil
 	if !pot.IsPerpetual { // set remain epochs when it's not perpetual pot
 		remainEpochs = pot.NumEpochsPaidOver - pot.FilledEpochs
 	}
-	for _, lock := range locks {
-		distrCoins := sdk.Coins{}
+
+	filteredDistrCoins := sdk.Coins{}
+	for _, lock := range filteredLocks {
+		denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
+
 		for _, coin := range remainCoins {
 			// distribution amount = pot_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
 			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
-			if amt.IsPositive() {
-				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
-			}
+
+			filteredDistrCoins = filteredDistrCoins.Add(sdk.NewCoin(coin.Denom, amt))
 		}
-		distrCoins = distrCoins.Sort()
-		if !distrCoins.Empty() && (len(filteredLocks) == 0 || filteredLockIDs[lock.ID]) {
-			filteredDistrCoins = filteredDistrCoins.Add(distrCoins...)
-		}
-		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
+
+		filteredDistrCoins = filteredDistrCoins.Sort()
 	}
+
+	totalDistrCoins := sdk.Coins{}
+	for _, coin := range remainCoins {
+		amt := coin.Amount.Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+		if amt.IsPositive() {
+			totalDistrCoins = totalDistrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+		}
+	}
+	totalDistrCoins.Sort()
 
 	// increase filled epochs after distribution
 	pot.FilledEpochs += 1
@@ -347,7 +345,6 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 		if pot.StartTime.After(blockTime) {
 			distrBeginEpoch = epochInfo.CurrentEpoch + 1 + int64(pot.StartTime.Sub(blockTime)/epochInfo.Duration)
 		}
-
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
 			
