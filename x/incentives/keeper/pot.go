@@ -119,7 +119,11 @@ func (k Keeper) CreatePot(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddres
 	k.setPot(ctx, &pot)
 	k.setLastPotID(ctx, pot.Id)
 
+	// TODO: Do we need to be concerned with case where this should be ActivePots?
 	if err := k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, getTimeKey(pot.StartTime)), pot.Id); err != nil {
+		return 0, err
+	}
+	if err := k.addPotIDForDenom(ctx, pot.Id, pot.DistributeTo.Denom); err != nil {
 		return 0, err
 	}
 	k.hooks.AfterCreatePot(ctx, pot.Id)
@@ -162,6 +166,7 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 	timeKey := getTimeKey(pot.StartTime)
 	k.deletePotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
 	k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixFinishedPots, timeKey), pot.Id)
+	k.deletePotIDForDenom(ctx, pot.Id, pot.DistributeTo.Denom)
 	k.hooks.AfterFinishDistribution(ctx, pot.Id)
 	return nil
 }
@@ -361,9 +366,8 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 			distrBeginEpoch = epochInfo.CurrentEpoch + 1 + int64(pot.StartTime.Sub(blockTime)/epochInfo.Duration)
 		}
 
-
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
-			
+
 			newPot, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, pot, locks)
 			if err != nil {
 				continue

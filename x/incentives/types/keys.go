@@ -37,6 +37,9 @@ var (
 	// KeyPrefixFinishedPots defines prefix key for storing reference key for finished pots
 	KeyPrefixFinishedPots = []byte{0x04, 0x02}
 
+	// KeyPrefixPotsByDenom defines prefix key for storing indexes of pot IDs by denomination
+	KeyPrefixPotsByDenom = []byte{0x05}
+
 	// KeyIndexSeparator defines key for merging bytes
 	KeyIndexSeparator = []byte{0x07}
 
