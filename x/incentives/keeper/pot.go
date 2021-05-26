@@ -184,44 +184,58 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 }
 
 // FilteredLocksDistributionEst estimate distribution amount coins from pot for fitting conditions
+// Expectation: pot is a valid pot
+// filteredLocks are all locks that are valid for pot
+// It also applies an update for the pot, handling the sending of the rewards.
+// (Note this update is in-memory, it does not change state.)
 func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, filteredLocks []lockuptypes.PeriodLock) (types.Pot, sdk.Coins, error) {
-	lockSum := k.lk.GetPeriodLocksAccumulation(ctx, pot.DistributeTo)
-	if lockSum.IsZero() {
+	TotalAmtLocked := k.lk.GetPeriodLocksAccumulation(ctx, pot.DistributeTo)
+	if TotalAmtLocked.IsZero() {
 		return types.Pot{}, nil, nil
 	}
 
 	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
+	// Remaining epochs is the number of remaining epochs that the pot will pay out its rewards
+	// For a perpetual pot, it will pay out everything in the next epoch, and we don't make
+	// an assumption for what rate it will get refilled at.
 	remainEpochs := uint64(1)
-	if !pot.IsPerpetual { // set remain epochs when it's not perpetual pot
+	if !pot.IsPerpetual {
 		remainEpochs = pot.NumEpochsPaidOver - pot.FilledEpochs
 	}
+	// TODO: Should this return err
+	if remainEpochs == 0 {
+		return pot, sdk.Coins{}, nil
+	}
 
+	remainCoinsPerEpoch := sdk.Coins{}
+	for _, coin := range remainCoins {
+		// distribution amount per epoch = pot_size / (remain_epochs)
+		amt := coin.Amount.QuoRaw(int64(remainEpochs))
+		remainCoinsPerEpoch = remainCoinsPerEpoch.Add(sdk.NewCoin(coin.Denom, amt))
+	}
+
+	// Now we compute the filtered coins
 	filteredDistrCoins := sdk.Coins{}
+	if len(filteredLocks) == 0 {
+		// If were doing no filtering, we want to calculate the total amount to distributed in
+		// the next epoch.
+		// distribution in next epoch = pot_size  / (remain_epochs)
+		filteredDistrCoins = remainCoinsPerEpoch
+	}
 	for _, lock := range filteredLocks {
 		denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
 
-		for _, coin := range remainCoins {
+		for _, coin := range remainCoinsPerEpoch {
 			// distribution amount = pot_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
-
+			// distribution amount = pot_size_per_epoch * denom_lock_amount / total_denom_lock_amount
+			amt := coin.Amount.Mul(denomLockAmt).Quo(TotalAmtLocked)
 			filteredDistrCoins = filteredDistrCoins.Add(sdk.NewCoin(coin.Denom, amt))
 		}
-
-		filteredDistrCoins = filteredDistrCoins.Sort()
 	}
-
-	totalDistrCoins := sdk.Coins{}
-	for _, coin := range remainCoins {
-		amt := coin.Amount.Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
-		if amt.IsPositive() {
-			totalDistrCoins = totalDistrCoins.Add(sdk.NewCoin(coin.Denom, amt))
-		}
-	}
-	totalDistrCoins.Sort()
 
 	// increase filled epochs after distribution
 	pot.FilledEpochs += 1
-	pot.DistributedCoins = pot.DistributedCoins.Add(totalDistrCoins...)
+	pot.DistributedCoins = pot.DistributedCoins.Add(remainCoinsPerEpoch...)
 
 	return pot, filteredDistrCoins, nil
 }
