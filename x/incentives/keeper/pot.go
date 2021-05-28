@@ -358,11 +358,21 @@ func (k Keeper) GetFinishedPots(ctx sdk.Context) []types.Pot {
 }
 
 // GetRewardsEst returns rewards estimation at a future specific time
-func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, pots []types.Pot, endEpoch int64) sdk.Coins {
+// If locks are nil, it returns the rewards between now and the end epoch associated with address.
+// If locks are not nil, it returns all the rewards for the given locks between now and end epoch.
+func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, endEpoch int64) sdk.Coins {
+	// if len(locks) == 0 {
+	// 	locks := k.lk.GetAccountPeriodLocks(ctx, addr)
+
+	// 	for _, l := range locks {
+	// 		for _, c := range l.Coins {
+	// 			denomsCoinWrapper
+	// 		}
+	// 	}
+	// 	pots = k.GetNotFinishedPots(ctx)
+	// }
 	// initialize pots to active and upcomings if not set
-	if len(pots) == 0 {
-		pots = k.GetNotFinishedPots(ctx)
-	}
+	pots := k.GetNotFinishedPots(ctx)
 
 	// estimate rewards
 	estimatedRewards := sdk.Coins{}

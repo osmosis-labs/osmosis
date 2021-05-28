@@ -217,12 +217,11 @@ func (k Keeper) GetPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error) {
 }
 
 // GetAccountPeriodLocks Returns the period locks associated to an account
-func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) ([]types.PeriodLock, error) {
+func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []types.PeriodLock {
 	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, true, addr))
 	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, false, addr))
-	return combineLocks(notUnlockings, unlockings), nil
+	return combineLocks(notUnlockings, unlockings)
 }
-
 
 // GetPeriodLocksByDuration returns the period locks accumulation
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
