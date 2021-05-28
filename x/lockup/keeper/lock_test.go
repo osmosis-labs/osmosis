@@ -133,13 +133,11 @@ func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
 	suite.Require().Len(unlocks4, 1)
 
 	// check addr1 locks, no lock now
-	locks, err = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)
-	suite.Require().NoError(err)
+	locks = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)
 	suite.Require().Len(locks, 0)
 
 	// check addr2 locks, still 1 as noone unlocked it yet
-	locks, err = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr2)
-	suite.Require().NoError(err)
+	locks = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr2)
 	suite.Require().Len(locks, 1)
 
 	// totally 1 lock

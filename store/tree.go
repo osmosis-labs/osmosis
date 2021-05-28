@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -23,7 +24,7 @@ type Tree struct {
 
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
-	tree.Set(nil, 0)
+	tree.Set(nil, sdk.ZeroInt())
 	return tree
 }
 
@@ -69,7 +70,7 @@ func (node *node) set(children children) {
 	node.tree.store.Set(node.tree.nodeKey(node.level, node.key), bz)
 }
 
-func (node *node) setLeaf(acc uint64) {
+func (node *node) setLeaf(acc sdk.Int) {
 	if node.level != 0 {
 		panic("setLeaf should not be called on branch node")
 	}
@@ -229,7 +230,7 @@ func (node *node) pull(key []byte) {
 
 type child struct {
 	Index []byte
-	Acc   uint64
+	Acc   sdk.Int
 }
 
 type children []child // max length M slice of key bytes, sorted by index
@@ -238,9 +239,10 @@ func (children children) key() []byte {
 	return children[0].Index
 }
 
-func (children children) accumulate() (res uint64) {
+func (children children) accumulate() (res sdk.Int) {
+	res = sdk.ZeroInt()
 	for _, child := range children {
-		res += child.Acc
+		res = res.Add(child.Acc)
 	}
 	return
 }
@@ -267,7 +269,7 @@ func (children children) set(idx int, child child) children {
 	return children
 }
 
-func (children children) setAcc(idx int, acc uint64) children {
+func (children children) setAcc(idx int, acc sdk.Int) children {
 	children[idx] = child{children[idx].Index, acc}
 	return children
 }
@@ -318,10 +320,10 @@ func (t Tree) root() *node {
 	}
 }
 
-func (t Tree) Get(key []byte) (res uint64) {
+func (t Tree) Get(key []byte) (res sdk.Int) {
 	keybz := t.leafKey(key)
 	if !t.store.Has(keybz) {
-		return 0
+		return sdk.ZeroInt()
 	}
 	err := json.Unmarshal(t.store.Get(keybz), &res)
 	if err != nil {
@@ -384,7 +386,7 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 	return t.nodeReverseIterator(0, begin, end)
 }
 
-func (t Tree) Set(key []byte, acc uint64) {
+func (t Tree) Set(key []byte, acc sdk.Int) {
 	node := t.nodeGet(0, key)
 	node.setLeaf(acc)
 
@@ -401,7 +403,8 @@ func (t Tree) Remove(key []byte) {
 	parent.pull(key)
 }
 
-func (node *node) accSplit(key []byte) (left uint64, exact uint64, right uint64) {
+func (node *node) accSplit(key []byte) (left sdk.Int, exact sdk.Int, right sdk.Int) {
+	left, exact, right = sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt()
 	if node.level == 0 {
 		var err error
 		bz := node.tree.store.Get(node.tree.leafKey(node.key))
@@ -425,30 +428,30 @@ func (node *node) accSplit(key []byte) (left uint64, exact uint64, right uint64)
 		idx--
 	}
 	left, exact, right = node.tree.nodeGet(node.level-1, children[idx].Index).accSplit(key)
-	left += children[:idx].accumulate()
-	right += children[idx+1:].accumulate()
+	left = left.Add(children[:idx].accumulate())
+	right = right.Add(children[idx+1:].accumulate())
 	return
 }
 
-func (t Tree) SplitAcc(key []byte) (uint64, uint64, uint64) {
+func (t Tree) SplitAcc(key []byte) (sdk.Int, sdk.Int, sdk.Int) {
 	return t.root().accSplit(key)
 }
 
-func (t Tree) SliceAcc(start []byte, end []byte) uint64 {
+func (t Tree) SliceAcc(start []byte, end []byte) sdk.Int {
 	if start == nil {
 		left, exact, _ := t.root().accSplit(end)
-		return left + exact
+		return left.Add(exact)
 	}
 	if end == nil {
 		_, exact, right := t.root().accSplit(start)
-		return exact + right
+		return exact.Add(right)
 	}
 	_, leftexact, leftrest := t.root().accSplit(start)
 	_, _, rightest := t.root().accSplit(end)
-	return leftexact + leftrest - rightest
+	return leftexact.Add(leftrest).Sub(rightest)
 }
 
-func (node *node) visualize(depth int, acc uint64) {
+func (node *node) visualize(depth int, acc sdk.Int) {
 	if !node.exists() {
 		return
 	}
@@ -464,5 +467,5 @@ func (node *node) visualize(depth int, acc uint64) {
 }
 
 func (t Tree) DebugVisualize() {
-	t.root().visualize(0, 0)
+	t.root().visualize(0, sdk.ZeroInt())
 }

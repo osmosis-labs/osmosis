@@ -119,7 +119,11 @@ func (k Keeper) CreatePot(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddres
 	k.setPot(ctx, &pot)
 	k.setLastPotID(ctx, pot.Id)
 
+	// TODO: Do we need to be concerned with case where this should be ActivePots?
 	if err := k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, getTimeKey(pot.StartTime)), pot.Id); err != nil {
+		return 0, err
+	}
+	if err := k.addPotIDForDenom(ctx, pot.Id, pot.DistributeTo.Denom); err != nil {
 		return 0, err
 	}
 	k.hooks.AfterCreatePot(ctx, pot.Id)
@@ -162,6 +166,7 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
 	timeKey := getTimeKey(pot.StartTime)
 	k.deletePotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
 	k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixFinishedPots, timeKey), pot.Id)
+	k.deletePotIDForDenom(ctx, pot.Id, pot.DistributeTo.Denom)
 	k.hooks.AfterFinishDistribution(ctx, pot.Id)
 	return nil
 }
@@ -179,46 +184,58 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 }
 
 // FilteredLocksDistributionEst estimate distribution amount coins from pot for fitting conditions
+// Expectation: pot is a valid pot
+// filteredLocks are all locks that are valid for pot
+// It also applies an update for the pot, handling the sending of the rewards.
+// (Note this update is in-memory, it does not change state.)
 func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, filteredLocks []lockuptypes.PeriodLock) (types.Pot, sdk.Coins, error) {
-	filteredLockIDs := make(map[uint64]bool)
-	for _, lock := range filteredLocks {
-		filteredLockIDs[lock.ID] = true
-	}
-
-	totalDistrCoins := sdk.NewCoins()
-	filteredDistrCoins := sdk.NewCoins()
-	locks := k.GetLocksToDistribution(ctx, pot.DistributeTo)
-	lockSum := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
-
-	if lockSum.IsZero() {
+	TotalAmtLocked := k.lk.GetPeriodLocksAccumulation(ctx, pot.DistributeTo)
+	if TotalAmtLocked.IsZero() {
 		return types.Pot{}, nil, nil
 	}
 
 	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
+	// Remaining epochs is the number of remaining epochs that the pot will pay out its rewards
+	// For a perpetual pot, it will pay out everything in the next epoch, and we don't make
+	// an assumption for what rate it will get refilled at.
 	remainEpochs := uint64(1)
-	if !pot.IsPerpetual { // set remain epochs when it's not perpetual pot
+	if !pot.IsPerpetual {
 		remainEpochs = pot.NumEpochsPaidOver - pot.FilledEpochs
 	}
-	for _, lock := range locks {
-		distrCoins := sdk.Coins{}
-		for _, coin := range remainCoins {
+	// TODO: Should this return err
+	if remainEpochs == 0 {
+		return pot, sdk.Coins{}, nil
+	}
+
+	remainCoinsPerEpoch := sdk.Coins{}
+	for _, coin := range remainCoins {
+		// distribution amount per epoch = pot_size / (remain_epochs)
+		amt := coin.Amount.QuoRaw(int64(remainEpochs))
+		remainCoinsPerEpoch = remainCoinsPerEpoch.Add(sdk.NewCoin(coin.Denom, amt))
+	}
+
+	// Now we compute the filtered coins
+	filteredDistrCoins := sdk.Coins{}
+	if len(filteredLocks) == 0 {
+		// If were doing no filtering, we want to calculate the total amount to distributed in
+		// the next epoch.
+		// distribution in next epoch = pot_size  / (remain_epochs)
+		filteredDistrCoins = remainCoinsPerEpoch
+	}
+	for _, lock := range filteredLocks {
+		denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
+
+		for _, coin := range remainCoinsPerEpoch {
 			// distribution amount = pot_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
-			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
-			if amt.IsPositive() {
-				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
-			}
+			// distribution amount = pot_size_per_epoch * denom_lock_amount / total_denom_lock_amount
+			amt := coin.Amount.Mul(denomLockAmt).Quo(TotalAmtLocked)
+			filteredDistrCoins = filteredDistrCoins.Add(sdk.NewCoin(coin.Denom, amt))
 		}
-		distrCoins = distrCoins.Sort()
-		if !distrCoins.Empty() && (len(filteredLocks) == 0 || filteredLockIDs[lock.ID]) {
-			filteredDistrCoins = filteredDistrCoins.Add(distrCoins...)
-		}
-		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
 	// increase filled epochs after distribution
 	pot.FilledEpochs += 1
-	pot.DistributedCoins = pot.DistributedCoins.Add(totalDistrCoins...)
+	pot.DistributedCoins = pot.DistributedCoins.Add(remainCoinsPerEpoch...)
 
 	return pot, filteredDistrCoins, nil
 }
@@ -341,10 +358,34 @@ func (k Keeper) GetFinishedPots(ctx sdk.Context) []types.Pot {
 }
 
 // GetRewardsEst returns rewards estimation at a future specific time
-func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, pots []types.Pot, endEpoch int64) sdk.Coins {
+// If locks are nil, it returns the rewards between now and the end epoch associated with address.
+// If locks are not nil, it returns all the rewards for the given locks between now and end epoch.
+func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, endEpoch int64) sdk.Coins {
+	// If locks are nil, populate with all locks associated with the address
+	if len(locks) == 0 {
+		locks = k.lk.GetAccountPeriodLocks(ctx, addr)
+	}
+	// Get all pots that reward to these locks
+	// First get all the denominations being locked up
+	denomSet := map[string]bool{}
+	for _, l := range locks {
+		for _, c := range l.Coins {
+			denomSet[c.Denom] = true
+		}
+	}
+	pots := []types.Pot{}
 	// initialize pots to active and upcomings if not set
-	if len(pots) == 0 {
-		pots = k.GetNotFinishedPots(ctx)
+	for s, _ := range denomSet {
+		potIDs := k.getAllPotIDsByDenom(ctx, s)
+		// Each pot only rewards locks to one denom, so no duplicates
+		for _, id := range potIDs {
+			pot, err := k.GetPotByID(ctx, id)
+			// Shouldn't happen
+			if err != nil {
+				return sdk.Coins{}
+			}
+			pots = append(pots, *pot)
+		}
 	}
 
 	// estimate rewards
@@ -362,6 +403,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
+
 			newPot, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, pot, locks)
 			if err != nil {
 				continue
