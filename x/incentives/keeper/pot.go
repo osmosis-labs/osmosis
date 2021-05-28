@@ -361,18 +361,32 @@ func (k Keeper) GetFinishedPots(ctx sdk.Context) []types.Pot {
 // If locks are nil, it returns the rewards between now and the end epoch associated with address.
 // If locks are not nil, it returns all the rewards for the given locks between now and end epoch.
 func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, endEpoch int64) sdk.Coins {
-	// if len(locks) == 0 {
-	// 	locks := k.lk.GetAccountPeriodLocks(ctx, addr)
-
-	// 	for _, l := range locks {
-	// 		for _, c := range l.Coins {
-	// 			denomsCoinWrapper
-	// 		}
-	// 	}
-	// 	pots = k.GetNotFinishedPots(ctx)
-	// }
+	// If locks are nil, populate with all locks associated with the address
+	if len(locks) == 0 {
+		locks = k.lk.GetAccountPeriodLocks(ctx, addr)
+	}
+	// Get all pots that reward to these locks
+	// First get all the denominations being locked up
+	denomSet := map[string]bool{}
+	for _, l := range locks {
+		for _, c := range l.Coins {
+			denomSet[c.Denom] = true
+		}
+	}
+	pots := []types.Pot{}
 	// initialize pots to active and upcomings if not set
-	pots := k.GetNotFinishedPots(ctx)
+	for s, _ := range denomSet {
+		potIDs := k.getAllPotIDsByDenom(ctx, s)
+		// Each pot only rewards locks to one denom, so no duplicates
+		for _, id := range potIDs {
+			pot, err := k.GetPotByID(ctx, id)
+			// Shouldn't happen
+			if err != nil {
+				return sdk.Coins{}
+			}
+			pots = append(pots, *pot)
+		}
+	}
 
 	// estimate rewards
 	estimatedRewards := sdk.Coins{}
