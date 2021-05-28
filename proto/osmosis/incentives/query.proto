@@ -26,7 +26,9 @@ service Query {
   rpc ActivePots(ActivePotsRequest) returns (ActivePotsResponse);
   // returns scheduled pots
   rpc UpcomingPots(UpcomingPotsRequest) returns (UpcomingPotsResponse);
-  // returns rewards estimation at a future specific time
+  // RewardsEst returns an estimate of the rewards at a future specific time.
+  // The querier either provides an address or a set of locks
+  // for which they want to find the associated rewards.
   rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse);
 }
 
@@ -82,8 +84,7 @@ message UpcomingPotsResponse {
 message RewardsEstRequest {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   repeated lockup.PeriodLock locks = 2 [ (gogoproto.nullable) = false ];
-  repeated Pot pots = 3 [ (gogoproto.nullable) = false ];
-  int64 end_epoch = 4;
+  int64 end_epoch = 3;
 }
 message RewardsEstResponse {
   repeated cosmos.base.v1beta1.Coin coins = 1 [

@@ -34,7 +34,8 @@ service Query {
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/prices";
   }
-  rpc TotalLiquidity(QueryTotalLiquidityRequest) returns (QueryTotalLiquidityResponse) {
+  rpc TotalLiquidity(QueryTotalLiquidityRequest)
+      returns (QueryTotalLiquidityResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/total_liquidity";
   }
 
