@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	cfg "github.com/tendermint/tendermint/config"
+
+	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
@@ -20,24 +22,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/server"
+	appcfg "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // TODO: Config to change
-
-// config.toml
-// max_num_outbound_peers = 40
-// mempool
-// 	size = 10000
-// statesync
-//   enable = true
-//   trust_period = "112h0m0s"
-// fastsync
-//   version = "v2"
-// [consensus]
-//   timeout_commit = "3s"
 
 // app.toml
 
@@ -100,12 +91,24 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
+			config.P2P.MaxNumOutboundPeers = 40
+			config.Mempool.Size = 10000
+			config.StateSync.TrustPeriod = 112 * time.Hour
+			config.FastSync.Version = "v2"
+
 			config.SetRoot(clientCtx.HomeDir)
+
+			appConfig := appcfg.DefaultConfig()
+			appConfig.API.Enable = true
+			appConfig.StateSync.SnapshotInterval = 1500
+			appConfig.StateSync.SnapshotKeepRecent = 2
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}
+
+			fmt.Println("help")
 
 			// Get bip39 mnemonic
 			var mnemonic string
@@ -161,7 +164,9 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
-			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+			appcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "app.toml"), appConfig)
+
 			return displayInfo(toPrint)
 		},
 	}
