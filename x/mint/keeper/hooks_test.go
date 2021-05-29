@@ -110,7 +110,7 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	require.NotEqual(t, sdk.DecCoins{}, app.DistrKeeper.GetFeePool(ctx).CommunityPool,
 		"Tokens to community pool at start distribution epoch")
 
-	// halven period not updated as mint of tokens not going
+	// halven period should be set to mintParams.MintingRewardsDistributionStartEpoch
 	lastHalvenPeriod = app.MintKeeper.GetLastHalvenEpochNum(ctx)
-	require.Equal(t, lastHalvenPeriod, int64(0))
+	require.Equal(t, lastHalvenPeriod, mintParams.MintingRewardsDistributionStartEpoch)
 }
