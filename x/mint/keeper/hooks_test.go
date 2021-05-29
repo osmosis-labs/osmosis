@@ -70,7 +70,7 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	mintParams := app.MintKeeper.GetParams(ctx)
-	mintParams.MintingRewardsDistributionStartTime = time.Now().Add(time.Hour * 100000)
+	mintParams.MintingRewardsDistributionStartEpoch = 4
 	app.MintKeeper.SetParams(ctx, mintParams)
 
 	addr := sdk.AccAddress([]byte("addr1---------------"))
@@ -92,19 +92,23 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 
 	height := int64(1)
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
-	// correct rewards
-	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+	// Run through epochs 0 through mintParams.MintingRewardsDistributionStartEpoch - 1
+	// ensure no rewards sent out
+	for ; height < mintParams.MintingRewardsDistributionStartEpoch; height++ {
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
 		// check community pool balance not increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool, feePoolNew.CommunityPool, height)
+		require.Equal(t, feePoolOrigin.CommunityPool, feePoolNew.CommunityPool, "height = %v", height)
 	}
-
+	// Run through epochs mintParams.MintingRewardsDistributionStartEpoch
+	// ensure tokens distributed
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
+	require.NotEqual(t, sdk.DecCoins{}, app.DistrKeeper.GetFeePool(ctx).CommunityPool,
+		"Tokens to community pool at start distribution epoch")
 
 	// halven period not updated as mint of tokens not going
 	lastHalvenPeriod = app.MintKeeper.GetLastHalvenEpochNum(ctx)
