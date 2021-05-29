@@ -28,17 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
-// TODO: Config to change
-
-// app.toml
-
-// minimum-gas-prices = ""
-// [api]
-//   enable = true
-// [state-sync]
-//   snapshot-interval = 1500
-//   snapshot-keep-recent = 2
-
 const (
 	// FlagOverwrite defines a flag to overwrite an existing genesis JSON file.
 	FlagOverwrite = "overwrite"
