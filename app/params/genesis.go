@@ -101,7 +101,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadata.Base,
-		genParams.AirdropSupply.QuoRaw(1_000_000), // 1 millionth of airdrop supply
+		genParams.AirdropSupply.QuoRaw(100_000), // 1000 OSMO
 	))
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.25") // 25%
 	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 96         // 5 days  TODO: Finalize
