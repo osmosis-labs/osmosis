@@ -54,7 +54,7 @@ func DefaultParams() Params {
 		ReductionPeriodInEpochs: 156,                      // 3 years
 		ReductionFactor:         sdk.NewDecWithPrec(5, 1), // 0.5
 		DistributionProportions: DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(4, 1), // 0.5
+			Staking:          sdk.NewDecWithPrec(4, 1), // 0.4
 			PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
 			CommunityPool:    sdk.NewDecWithPrec(1, 1), // 0.5
