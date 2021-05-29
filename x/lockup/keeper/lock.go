@@ -223,10 +223,11 @@ func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []ty
 	return combineLocks(notUnlockings, unlockings)
 }
 
-// GetPeriodLocksByDuration returns the period locks accumulation
+// GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
+// query.Duration
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
 	beginKey := accumulationKey(query.Duration, 0)
-	return k.accumulationStore(ctx, query.Denom).SliceAcc(beginKey, nil)
+	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
