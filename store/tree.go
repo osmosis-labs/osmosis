@@ -76,6 +76,10 @@ func (iter nodeIterator) node() *node {
 	return &res
 }
 
+func (node *node) isLeaf() bool {
+	return node.level == 0
+}
+
 func (node *node) children() (res children) {
 	bz := node.tree.store.Get(node.tree.nodeKey(node.level, node.key))
 	if bz != nil {
@@ -93,7 +97,7 @@ func (node *node) set(children children) {
 }
 
 func (node *node) setLeaf(acc sdk.Int) {
-	if node.level != 0 {
+	if !node.isLeaf() {
 		panic("setLeaf should not be called on branch node")
 	}
 	bz, err := json.Marshal(acc)
@@ -128,19 +132,25 @@ func (node *node) child(n uint16) *node {
 	return node.tree.nodeIterator(node.level-1, node.children()[n].Index, nil).node()
 }
 
+// parent returns the parent of the provided node pointer.
+// Behavior is not well defined if the calling node pointer does not exist in the tree.
 func (node *node) parent() *node {
-	// first child inclusive case
+	// See if there is a parent with the same 'key' as this node.
 	parent := node.tree.nodeGet(node.level+1, node.key)
 	if parent.exists() {
 		return parent
 	}
+	// If not, take the node in the above layer that is lexicographically the closest
+	// from the left of the key.
 	parent = parent.leftSibling()
 	if parent.exists() {
 		return parent
 	}
+	// If there is no such node (this node is not in the tree), return nil
 	return node.tree.nodeGet(node.level+1, nil)
 }
 
+// exists returns if the calling node is in the tree.
 func (node *node) exists() bool {
 	if node == nil {
 		return false
@@ -148,6 +158,8 @@ func (node *node) exists() bool {
 	return node.tree.store.Has(node.tree.nodeKey(node.level, node.key))
 }
 
+// updateAccumulation changes the accumulation value of a node in the tree,
+// and handles updating the accumulation for all of its parent's augmented data.
 func (node *node) updateAccumulation(c child) {
 	if !node.exists() {
 		return // reached at the root
@@ -206,7 +218,6 @@ func (node *node) push(c child) {
 }
 
 func (node *node) pull(key []byte) {
-
 	if !node.exists() {
 		return // reached at the root
 	}
@@ -256,10 +267,6 @@ type child struct {
 }
 
 type children []child // max length M slice of key bytes, sorted by index
-
-func (children children) key() []byte {
-	return children[0].Index
-}
 
 func (children children) accumulate() (res sdk.Int) {
 	res = sdk.ZeroInt()
@@ -414,8 +421,7 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 // Note that the equalities here are _exclusive_.
 func (node *node) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, right sdk.Int) {
 	left, exact, right = sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt()
-	// If the current node is a leaf node, then ...
-	if node.level == 0 {
+	if node.isLeaf() {
 		accumulatedValue := sdk.ZeroInt()
 		bz := node.tree.store.Get(node.tree.leafKey(node.key))
 		err := json.Unmarshal(bz, &accumulatedValue)
@@ -494,7 +500,7 @@ func (node *node) visualize(depth int, acc sdk.Int) {
 	}
 }
 
-// DebugVisualize prints out the entire tree to stdout
+// DebugVisualize prints the entire tree to stdout
 func (t Tree) DebugVisualize() {
 	t.root().visualize(0, sdk.ZeroInt())
 }
