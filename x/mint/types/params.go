@@ -54,9 +54,10 @@ func DefaultParams() Params {
 		ReductionPeriodInEpochs: 156,                      // 3 years
 		ReductionFactor:         sdk.NewDecWithPrec(5, 1), // 0.5
 		DistributionProportions: DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(5, 1), // 0.5
+			Staking:          sdk.NewDecWithPrec(4, 1), // 0.5
 			PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
+			CommunityPool:    sdk.NewDecWithPrec(1, 1), // 0.5
 		},
 		DeveloperRewardsReceiver:             "",
 		MintingRewardsDistributionStartEpoch: 0,
@@ -203,7 +204,13 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("developer rewards distribution ratio should not be negative")
 	}
 
-	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.DeveloperRewards)
+	// TODO: Maybe we should allow this :joy:, lets you burn osmo from community pool
+	// for new chains
+	if v.CommunityPool.IsNegative() {
+		return errors.New("community pool distribution ratio should not be negative")
+	}
+
+	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.DeveloperRewards).Add(v.CommunityPool)
 
 	if !totalProportions.Equal(sdk.NewDec(1)) {
 		return errors.New("total distributions ratio should be 1")

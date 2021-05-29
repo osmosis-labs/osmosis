@@ -86,7 +86,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          sdk.MustNewDecFromStr("0.25"), // 25%
 		DeveloperRewards: sdk.MustNewDecFromStr("0.25"), // 25%
-		PoolIncentives:   sdk.MustNewDecFromStr("0.5"),  // 50%  TODO: Reduce to 45% once Community Pool Allocation exists
+		PoolIncentives:   sdk.MustNewDecFromStr("0.45"), // 45%
+		CommunityPool:    sdk.MustNewDecFromStr("0.05"), // 5%
 	}
 	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1 // TODO: Finalize
 	// genParams.MintParams.DeveloperRewardsReceiver

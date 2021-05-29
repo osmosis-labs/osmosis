@@ -40,6 +40,13 @@ message DistributionProportions {
     (gogoproto.moretags) = "yaml:\"developer_rewards\"",
     (gogoproto.nullable) = false
   ];
+  // community_pool defines the proportion of the minted minted_denom that is
+  // to be allocated to the community pool.
+  string community_pool = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"community_pool\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Params holds parameters for the mint module.
