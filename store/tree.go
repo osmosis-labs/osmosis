@@ -1,19 +1,19 @@
-// B+ tree implementation on KVStore
+/// B+ tree implementation on KVStore
 
 package store
 
 import (
-	"fmt"
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Tree is a modified B+ tree implementation.
+// Tree is an augmented B+ tree implementation.
 // Branches have m sized key index slice. Each key index represents
 // the starting index of the child node's index(inclusive), and the
 // ending index of the previous node of the child node's index(exclusive).
@@ -32,10 +32,13 @@ func NewTree(store store.KVStore, m uint8) Tree {
 type node struct {
 	tree  Tree
 	level uint16
-	key   []byte
+	// key of the node is always the first element of the node.Index
+	key []byte
 	// XXX: cache stored value?
 }
 
+// nodeIterator iterates over nodes in a given level. It only iterates directly over the pointers
+// to the nodes, not the actual nodes themselves, to save loading additional data into memory.
 type nodeIterator struct {
 	tree  Tree
 	level uint16
@@ -159,7 +162,7 @@ func (node *node) push(c child) {
 	// inserting new child node
 	cs = cs.insert(idx, c)
 	parent := node.parent()
-	
+
 	// split and push-up if overflow
 	if len(cs) > int(node.tree.m) {
 		split := node.tree.m/2 + 1
@@ -252,7 +255,7 @@ func (children children) accumulate() (res sdk.Int) {
 // if match is false, idx is the position where the key should be inserted
 func (children children) find(key []byte) (idx int, match bool) {
 	for idx, child := range children {
-		if bytes.Equal(child.Index, key){
+		if bytes.Equal(child.Index, key) {
 			return idx, true
 		}
 		// Push new key to the appropriate position
@@ -278,6 +281,7 @@ func (cs children) insert(idx int, c child) children {
 	return append(cs[:idx], append(children{c}, cs[idx:]...)...)
 }
 
+// delete removes the corresponding node from the underlying data store,
 func (children children) delete(idx int) children {
 	children = append(children[:idx], children[idx+1:]...)
 	return children
@@ -291,18 +295,15 @@ func (children children) merge(children2 children) children {
 	return append(children, children2...)
 }
 
-// Root: (level, key) of the root node
-func (t Tree) rootKey() []byte {
-	return []byte("root")
-}
-
-// key of the node is always the first element of the node.Index
+// nodeKey takes in a nodes layer, and its key, and constructs the
+// its key in the underlying datastore.
 func (t Tree) nodeKey(level uint16, key []byte) []byte {
 	bz := make([]byte, 2)
 	binary.BigEndian.PutUint16(bz, level)
 	return append(append([]byte("node/"), bz...), key...)
 }
 
+// leafKey constructs a key for a node pointer representing a leaf node.
 func (t Tree) leafKey(key []byte) []byte {
 	return t.nodeKey(0, key)
 }
@@ -466,6 +467,7 @@ func (node *node) visualize(depth int, acc sdk.Int) {
 	}
 }
 
+// DebugVisualize prints out the entire tree to stdout
 func (t Tree) DebugVisualize() {
 	t.root().visualize(0, sdk.ZeroInt())
 }
