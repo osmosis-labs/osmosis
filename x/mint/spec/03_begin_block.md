@@ -2,10 +2,10 @@
 order: 3
 -->
 
-# Begin-Block
+# Begin-Epoch
 
 Minting parameters are recalculated and inflation
-paid at the beginning of each block.
+paid at the beginning of each epoch. An epoch is signalled by x/epochs
 
 ## NextEpochProvisions
 
