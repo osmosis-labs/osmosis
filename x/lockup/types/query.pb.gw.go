@@ -1372,7 +1372,7 @@ var (
 
 	pattern_Query_AccountLockedPastTimeNotUnlockingOnly_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_pasttime_not_unlocking_only", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AccountUnlockedBeforeTime_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_unlcoked_before_time", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountUnlockedBeforeTime_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_unlocked_before_time", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_AccountLockedPastTimeDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_pasttime_denom", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
 

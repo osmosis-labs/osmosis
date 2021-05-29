@@ -61,7 +61,7 @@ service Query {
   rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest)
       returns (AccountUnlockedBeforeTimeResponse) {
     option (google.api.http).get =
-           "/osmosis/lockup/v1beta1/account_unlcoked_before_time/{owner}";
+           "/osmosis/lockup/v1beta1/account_unlocked_before_time/{owner}";
   }
 
   // Returns lock records by address, timestamp, denom
