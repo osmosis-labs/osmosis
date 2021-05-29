@@ -58,7 +58,7 @@ message QueryPoolRequest {
 }
 message QueryPoolResponse {
   google.protobuf.Any pool = 1
-      [ (cosmos_proto.accepts_interface) = "AccountI" ];
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 
 //=============================== Pools
@@ -68,7 +68,7 @@ message QueryPoolsRequest {
 }
 message QueryPoolsResponse {
   repeated google.protobuf.Any pools = 1
-      [ (cosmos_proto.accepts_interface) = "AccountI" ];
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
