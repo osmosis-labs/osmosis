@@ -5,7 +5,6 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -35,7 +34,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Staking:          sdk.NewDecWithPrec(5, 1), // 0.5
 		PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 		DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
-	}, "", time.Time{})
+	}, "", 0)
 
 	mintGenesis := types.NewGenesisState(types.InitialMinter(), params, 0)
 

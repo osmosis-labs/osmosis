@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -13,14 +12,14 @@ import (
 
 // Parameter store keys
 var (
-	KeyMintDenom                           = []byte("MintDenom")
-	KeyGenesisEpochProvisions              = []byte("GenesisEpochProvisions")
-	KeyEpochIdentifier                     = []byte("EpochIdentifier")
-	KeyReductionPeriodInEpochs             = []byte("ReductionPeriodInEpochs")
-	KeyReductionFactor                     = []byte("ReductionFactor")
-	KeyPoolAllocationRatio                 = []byte("PoolAllocationRatio")
-	KeyDeveloperRewardsReceiver            = []byte("DeveloperRewardsReceiver")
-	KeyMintingRewardsDistributionStartTime = []byte("MintingRewardsDistributionStartTime")
+	KeyMintDenom                            = []byte("MintDenom")
+	KeyGenesisEpochProvisions               = []byte("GenesisEpochProvisions")
+	KeyEpochIdentifier                      = []byte("EpochIdentifier")
+	KeyReductionPeriodInEpochs              = []byte("ReductionPeriodInEpochs")
+	KeyReductionFactor                      = []byte("ReductionFactor")
+	KeyPoolAllocationRatio                  = []byte("PoolAllocationRatio")
+	KeyDeveloperRewardsReceiver             = []byte("DeveloperRewardsReceiver")
+	KeyMintingRewardsDistributionStartEpoch = []byte("MintingRewardsDistributionStartEpoch")
 )
 
 // ParamTable for minting module.
@@ -31,18 +30,18 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
 	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
-	devRewardsReceiver string, mintingRewardsDistributionStartTime time.Time,
+	devRewardsReceiver string, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 
 	return Params{
-		MintDenom:                           mintDenom,
-		GenesisEpochProvisions:              genesisEpochProvisions,
-		EpochIdentifier:                     epochIdentifier,
-		ReductionPeriodInEpochs:             reductionPeriodInEpochs,
-		ReductionFactor:                     ReductionFactor,
-		DistributionProportions:             distrProportions,
-		DeveloperRewardsReceiver:            devRewardsReceiver,
-		MintingRewardsDistributionStartTime: mintingRewardsDistributionStartTime,
+		MintDenom:                            mintDenom,
+		GenesisEpochProvisions:               genesisEpochProvisions,
+		EpochIdentifier:                      epochIdentifier,
+		ReductionPeriodInEpochs:              reductionPeriodInEpochs,
+		ReductionFactor:                      ReductionFactor,
+		DistributionProportions:              distrProportions,
+		DeveloperRewardsReceiver:             devRewardsReceiver,
+		MintingRewardsDistributionStartEpoch: mintingRewardsDistributionStartEpoch,
 	}
 }
 
@@ -59,8 +58,8 @@ func DefaultParams() Params {
 			PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
 		},
-		DeveloperRewardsReceiver:            "",
-		MintingRewardsDistributionStartTime: time.Time{},
+		DeveloperRewardsReceiver:             "",
+		MintingRewardsDistributionStartEpoch: 0,
 	}
 }
 
@@ -87,7 +86,7 @@ func (p Params) Validate() error {
 	if err := validateDeveloperRewardsReceiver(p.DeveloperRewardsReceiver); err != nil {
 		return err
 	}
-	if err := validateMintingRewardsDistributionStartTime(p.MintingRewardsDistributionStartTime); err != nil {
+	if err := validateMintingRewardsDistributionStartEpoch(p.MintingRewardsDistributionStartEpoch); err != nil {
 		return err
 	}
 
@@ -110,7 +109,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
 		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.DistributionProportions, validateDistributionProportions),
 		paramtypes.NewParamSetPair(KeyDeveloperRewardsReceiver, &p.DeveloperRewardsReceiver, validateDeveloperRewardsReceiver),
-		paramtypes.NewParamSetPair(KeyMintingRewardsDistributionStartTime, &p.MintingRewardsDistributionStartTime, validateMintingRewardsDistributionStartTime),
+		paramtypes.NewParamSetPair(KeyMintingRewardsDistributionStartEpoch, &p.MintingRewardsDistributionStartEpoch, validateMintingRewardsDistributionStartEpoch),
 	}
 }
 
@@ -228,10 +227,14 @@ func validateDeveloperRewardsReceiver(i interface{}) error {
 	return err
 }
 
-func validateMintingRewardsDistributionStartTime(i interface{}) error {
-	_, ok := i.(time.Time)
+func validateMintingRewardsDistributionStartEpoch(i interface{}) error {
+	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < 0 {
+		return fmt.Errorf("start epoch must be non-negative")
 	}
 
 	return nil

@@ -88,7 +88,7 @@ func MainnetGenesisParams() GenesisParams {
 		DeveloperRewards: sdk.MustNewDecFromStr("0.25"), // 25%
 		PoolIncentives:   sdk.MustNewDecFromStr("0.5"),  // 50%  TODO: Reduce to 45% once Community Pool Allocation exists
 	}
-	genParams.MintParams.MintingRewardsDistributionStartTime = genParams.GenesisTime.Add(24 * time.Hour) // TODO: Finalize
+	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1 // TODO: Finalize
 	// genParams.MintParams.DeveloperRewardsReceiver
 
 	genParams.DistributionParams = distributiontypes.DefaultParams()

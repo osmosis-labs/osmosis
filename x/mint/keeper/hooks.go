@@ -17,10 +17,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	if epochIdentifier == params.EpochIdentifier {
 		// not distribute rewards if it's not time yet for rewards distribution
-		if ctx.BlockTime().Before(params.MintingRewardsDistributionStartTime) {
+		if epochNumber < params.MintingRewardsDistributionStartEpoch {
 			return
+		} else if epochNumber == params.MintingRewardsDistributionStartEpoch {
+			k.SetLastHalvenEpochNum(ctx, epochNumber)
 		}
-
 		// fetch stored minter & params
 		minter := k.GetMinter(ctx)
 		params := k.GetParams(ctx)
