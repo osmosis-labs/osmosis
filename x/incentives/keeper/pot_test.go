@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualPotOperations() {
 	suite.Require().Equal(pots[0].StartTime.Unix(), startTime.Unix())
 
 	// check rewards estimation
-	rewardsEst := suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, []types.Pot{}, 100)
+	rewardsEst := suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, 100)
 	suite.Require().Equal(coins.String(), rewardsEst.String())
 
 	// add to pot
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualPotOperations() {
 	suite.Require().Error(err)
 
 	// check rewards estimation
-	rewardsEst = suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, []types.Pot{}, 100)
+	rewardsEst = suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, 100)
 	suite.Require().Equal(sdk.Coins{}, rewardsEst)
 }
 
@@ -259,7 +259,7 @@ func (suite *KeeperTestSuite) TestPerpetualPotOperations() {
 	suite.Require().Equal(pots[0].String(), expectedPot.String())
 
 	// check rewards estimation
-	rewardsEst := suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, []types.Pot{}, 100)
+	rewardsEst := suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, 100)
 	suite.Require().Equal(coins.String(), rewardsEst.String())
 
 	// check pots
@@ -328,6 +328,6 @@ func (suite *KeeperTestSuite) TestPerpetualPotOperations() {
 	suite.Require().Len(pots, 0)
 
 	// check rewards estimation
-	rewardsEst = suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, []types.Pot{}, 100)
+	rewardsEst = suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, 100)
 	suite.Require().Equal(sdk.Coins(nil), rewardsEst)
 }

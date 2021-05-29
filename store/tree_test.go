@@ -12,6 +12,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 
 	"github.com/osmosis-labs/osmosis/store"
@@ -71,7 +72,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	suite.SetupTest()
 
 	pairs := pairs{pair{[]byte("hello"), 100}}
-	suite.tree.Set([]byte("hello"), 100)
+	suite.tree.Set([]byte("hello"), sdk.NewIntFromUint64(100))
 
 	// tested up to 2000
 	for i := 0; i < 500; i++ {
@@ -91,11 +92,11 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			pairs = append(pairs, pair{key, value})
 		}
 
-		suite.tree.Set(key, value)
+		suite.tree.Set(key, sdk.NewIntFromUint64(value))
 
 		// check all is right
 		for _, pair := range pairs {
-			suite.Require().Equal(suite.tree.Get(pair.key), pair.value)
+			suite.Require().Equal(suite.tree.Get(pair.key).Uint64(), pair.value)
 			// XXX: check all branch nodes
 		}
 
@@ -103,9 +104,9 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 		left, exact, right := uint64(0), pairs[0].value, pairs[1:].sum()
 		for idx, pair := range pairs {
 			tleft, texact, tright := suite.tree.SplitAcc(pair.key)
-			suite.Require().Equal(left, tleft)
-			suite.Require().Equal(exact, texact)
-			suite.Require().Equal(right, tright)
+			suite.Require().Equal(left, tleft.Uint64())
+			suite.Require().Equal(exact, texact.Uint64())
+			suite.Require().Equal(right, tright.Uint64())
 
 			key := append(pair.key, 0x00)
 			if idx == len(pairs)-1 {
@@ -116,9 +117,9 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			}
 
 			tleft, texact, tright = suite.tree.SplitAcc(key)
-			suite.Require().Equal(left+exact, tleft)
-			suite.Require().Equal(uint64(0), texact)
-			suite.Require().Equal(right, tright)
+			suite.Require().Equal(left+exact, tleft.Uint64())
+			suite.Require().Equal(uint64(0), texact.Uint64())
+			suite.Require().Equal(right, tright.Uint64())
 
 			left += exact
 			exact = pairs[idx+1].value
