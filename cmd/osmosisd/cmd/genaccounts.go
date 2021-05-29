@@ -235,7 +235,7 @@ Example:
 			}
 
 			// get genesis params
-			genesisParams := appparams.TestnetGenesisParams()
+			genesisParams := appparams.MainnetGenesisParams()
 
 			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
 			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalOsmosAirdropAmount)
