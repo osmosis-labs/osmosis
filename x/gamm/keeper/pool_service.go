@@ -317,6 +317,8 @@ func (k Keeper) ExitPool(
 			return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 		}
 
+		// Check if a minimum token amount is specified for this token,
+		// and if so ensure that the minimum is less than the amount returned.
 		if tokenOutMinAmount, ok := tokenOutMinMap[PoolAsset.Token.Denom]; ok && tokenOutAmount.LT(tokenOutMinAmount) {
 			return sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
 		}
@@ -336,11 +338,8 @@ func (k Keeper) ExitPool(
 		return err
 	}
 
-	// TODO: `balancer` contract sends the exit fee to the `factory` contract.
-	//       But, it is unclear that how the exit fees in the `factory` contract are handled.
-	//       And, it seems to be not good way to send the exit fee to the pool,
-	//       because the pool doesn't have the PoolAsset about exit fee.
-	//       So, temporarily, just burn the exit fee.
+	// Remove the exit fee shares from the pool.
+	// This distributes the exit fee liquidity to every other LP remaining in the pool.
 	if exitFee.IsPositive() {
 		err = k.BurnPoolShareFromAccount(ctx, pool, sender, exitFee)
 		if err != nil {
