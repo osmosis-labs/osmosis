@@ -1,7 +1,11 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
@@ -195,3 +199,60 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 		}
 	}
 }
+
+func (suite *KeeperTestSuite) TestActivePoolSwap() {
+	type testCase struct {
+		blockTime time.Time
+		startTime time.Time
+		expectPass bool
+	}
+
+	testCases := []testCase{
+		{time.Unix(1000, 0), time.Unix(1000, 0), true},
+		{time.Unix(2000, 0), time.Unix(1000, 0), true},
+		{time.Unix(1000, 0), time.Unix(2000, 0), false},
+	}
+
+	for _, tc := range testCases {
+		suite.SetupTest()
+
+		// Mint some assets to the accounts.
+		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
+			err := suite.app.BankKeeper.AddCoins(
+				suite.ctx,
+				acc,
+				sdk.NewCoins(
+					sdk.NewCoin("foo", sdk.NewInt(10000000)),
+					sdk.NewCoin("bar", sdk.NewInt(10000000)),
+					sdk.NewCoin("baz", sdk.NewInt(10000000)),
+				),
+			)
+			if err != nil {
+				panic(err)
+			}
+
+			poolId := suite.preparePoolWithPoolParams(types.PoolParams{
+				SwapFee: sdk.NewDec(0),
+				ExitFee: sdk.NewDec(0),
+				StartTime: tc.startTime,
+			})
+
+			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
+
+			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
+
+			if tc.expectPass {
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				suite.Require().NoError(err)
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				suite.Require().NoError(err)
+			} else {
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				suite.Require().Error(err)
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				suite.Require().Error(err)
+			}
+		}
+	}
+}
+

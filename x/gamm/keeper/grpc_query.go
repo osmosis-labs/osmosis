@@ -184,6 +184,8 @@ func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest)
 		return nil, status.Error(codes.InvalidArgument, "invalid denom")
 	}
 
+	// XXX: return error if inactive
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	var sp sdk.Dec
