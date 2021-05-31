@@ -101,6 +101,9 @@ func (k Keeper) JoinPool(
 	}
 
 	totalShareAmount := pool.GetTotalShare().Amount
+	// shareRatio is the desired number of shares, divided by the total number of
+	// shares currently in the pool. It is intended to be used in scenarios where you want
+	// (tokens per share) * number of shares out = # tokens * (# shares out / cur total shares)
 	shareRatio := shareOutAmount.ToDec().QuoInt(totalShareAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
