@@ -51,7 +51,6 @@ func (t Tree) Remove(key []byte) {
 type node struct {
 	tree  Tree
 	level uint16
-	// key of the node is always the first element of the node.Index
 	key []byte
 	// XXX: cache stored value?
 }
