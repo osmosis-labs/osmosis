@@ -3143,7 +3143,67 @@ paths:
             format: date-time
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_unlcoked_before_time/{owner}":
+  "/osmosis/lockup/v1beta1/account_unlockable_coins/{owner}":
+    get:
+      summary: Returns unlockable coins which are not withdrawn yet
+      operationId: AccountUnlockableCoins
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  coins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the custom method
+
+                        signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_unlocked_before_time/{owner}":
     get:
       summary: Returns unlocked records with unlock time before timestamp
       operationId: AccountUnlockedBeforeTime
@@ -3230,66 +3290,6 @@ paths:
           schema:
             type: string
             format: date-time
-      tags:
-        - Query
-  "/osmosis/lockup/v1beta1/account_unlockable_coins/{owner}":
-    get:
-      summary: Returns unlockable coins which are not withdrawn yet
-      operationId: AccountUnlockableCoins
-      responses:
-        "200":
-          description: A successful response.
-          content:
-            "*/*":
-              schema:
-                type: object
-                properties:
-                  coins:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the custom method
-
-                        signatures required by gogoproto.
-        default:
-          description: An unexpected error response.
-          content:
-            "*/*":
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  code:
-                    type: integer
-                    format: int32
-                  message:
-                    type: string
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        type_url:
-                          type: string
-                        value:
-                          type: string
-                          format: byte
-      parameters:
-        - name: owner
-          in: path
-          required: true
-          schema:
-            type: string
       tags:
         - Query
   "/osmosis/lockup/v1beta1/account_unlocking_coins/{owner}":
