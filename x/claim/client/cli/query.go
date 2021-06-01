@@ -120,7 +120,8 @@ $ %s query claim claimable-for-action osmo1ey69r37gfxvxg62sh4r0ktpuc46pzjrm23kcr
 
 			action, ok := types.Action_value[args[1]]
 			if !ok {
-				return fmt.Errorf("invalid Action type: %s", args[1])
+				return fmt.Errorf("invalid Action type: %s.  Valid actions are %s, %s, %s, %s", args[1],
+					types.ActionAddLiquidity, types.ActionSwap, types.ActionVote, types.ActionDelegateStake)
 			}
 
 			// Query store
