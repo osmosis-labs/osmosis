@@ -195,9 +195,7 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 
 	// claim module genesis
 	claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
-	claimGenState.AirdropStartTime = genesisParams.ClaimAirdropStartTime
-	claimGenState.DurationOfDecay = genesisParams.ClaimDurationOfDecay
-	claimGenState.DurationUntilDecay = genesisParams.ClaimDurationUntilDecay
+	claimGenState.Params = genesisParams.ClaimParams
 	claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to marshal claim genesis state: %w", err)

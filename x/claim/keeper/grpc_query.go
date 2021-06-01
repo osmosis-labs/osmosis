@@ -11,45 +11,77 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// Claimable returns claimable amount per user
-func (k Keeper) Claimable(
-	goCtx context.Context,
-	req *types.ClaimableRequest,
-) (*types.ClaimableResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	coins, err := k.GetClaimable(ctx, req.Sender)
-	return &types.ClaimableResponse{Coins: coins}, err
-}
-
-// Activities returns activities
-func (k Keeper) Activities(
-	goCtx context.Context,
-	req *types.ActivitiesRequest,
-) (*types.ActivitiesResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	address, err := sdk.AccAddressFromBech32(req.Sender)
+// Params returns params of the mint module.
+func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params, err := k.GetParams(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	allActions := []types.Action{
-		types.ActionAddLiquidity,
-		types.ActionSwap,
-		types.ActionVote,
-		types.ActionDelegateStake,
+	return &types.QueryParamsResponse{Params: params}, nil
+}
+
+// Claimable returns claimable amount per user
+func (k Keeper) ClaimRecord(
+	goCtx context.Context,
+	req *types.QueryClaimRecordRequest,
+) (*types.QueryClaimRecordResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	completedActions := k.GetUserActions(ctx, address)
-	return &types.ActivitiesResponse{
-		All:       types.ActionToNames(allActions),
-		Completed: types.ActionToNames(completedActions),
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	claimRecord, err := k.GetClaimRecord(ctx, addr)
+	return &types.QueryClaimRecordResponse{ClaimRecord: claimRecord}, err
+}
+
+// Activities returns activities
+func (k Keeper) ClaimableForAction(
+	goCtx context.Context,
+	req *types.QueryClaimableForActionRequest,
+) (*types.QueryClaimableForActionResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	coins, err := k.GetClaimableAmountForAction(ctx, addr, req.Action)
+
+	return &types.QueryClaimableForActionResponse{
+		Coins: coins,
+	}, err
+}
+
+// Activities returns activities
+func (k Keeper) TotalClaimable(
+	goCtx context.Context,
+	req *types.QueryTotalClaimableRequest,
+) (*types.QueryTotalClaimableResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	coins, err := k.GetUserTotalClaimable(ctx, addr)
+
+	return &types.QueryTotalClaimableResponse{
+		Coins: coins,
 	}, err
 }

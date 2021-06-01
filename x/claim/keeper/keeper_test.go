@@ -23,12 +23,16 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 
+	airdropStartTime := time.Now()
+
 	suite.app.ClaimKeeper.SetModuleAccountBalance(suite.ctx, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
 	suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
-		AirdropStart:       time.Now(),
+		AirdropStartTime:   airdropStartTime,
 		DurationUntilDecay: types.DefaultDurationUntilDecay,
 		DurationOfDecay:    types.DefaultDurationOfDecay,
 	})
+
+	suite.ctx = suite.ctx.WithBlockTime(airdropStartTime)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

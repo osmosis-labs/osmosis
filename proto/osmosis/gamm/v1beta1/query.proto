@@ -57,8 +57,7 @@ message QueryPoolRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message QueryPoolResponse {
-  google.protobuf.Any pool = 1
-      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+  google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 
 //=============================== Pools

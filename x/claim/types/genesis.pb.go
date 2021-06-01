@@ -6,23 +6,20 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -30,167 +27,21 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type Action int32
-
-const (
-	ActionAddLiquidity  Action = 0
-	ActionSwap          Action = 1
-	ActionVote          Action = 2
-	ActionDelegateStake Action = 3
-)
-
-var Action_name = map[int32]string{
-	0: "ActionAddLiquidity",
-	1: "ActionSwap",
-	2: "ActionVote",
-	3: "ActionDelegateStake",
-}
-
-var Action_value = map[string]int32{
-	"ActionAddLiquidity":  0,
-	"ActionSwap":          1,
-	"ActionVote":          2,
-	"ActionDelegateStake": 3,
-}
-
-func (x Action) String() string {
-	return proto.EnumName(Action_name, int32(x))
-}
-
-func (Action) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_9236f2c69911ca0c, []int{0}
-}
-
-type UserActions struct {
-	User    string   `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Actions []Action `protobuf:"varint,2,rep,packed,name=actions,proto3,enum=osmosis.claim.v1beta1.Action" json:"actions,omitempty"`
-}
-
-func (m *UserActions) Reset()         { *m = UserActions{} }
-func (m *UserActions) String() string { return proto.CompactTextString(m) }
-func (*UserActions) ProtoMessage()    {}
-func (*UserActions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9236f2c69911ca0c, []int{0}
-}
-func (m *UserActions) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *UserActions) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UserActions.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *UserActions) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserActions.Merge(m, src)
-}
-func (m *UserActions) XXX_Size() int {
-	return m.Size()
-}
-func (m *UserActions) XXX_DiscardUnknown() {
-	xxx_messageInfo_UserActions.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_UserActions proto.InternalMessageInfo
-
-func (m *UserActions) GetUser() string {
-	if m != nil {
-		return m.User
-	}
-	return ""
-}
-
-func (m *UserActions) GetActions() []Action {
-	if m != nil {
-		return m.Actions
-	}
-	return nil
-}
-
-type UserAction struct {
-	User   string `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Action Action `protobuf:"varint,2,opt,name=action,proto3,enum=osmosis.claim.v1beta1.Action" json:"action,omitempty"`
-}
-
-func (m *UserAction) Reset()         { *m = UserAction{} }
-func (m *UserAction) String() string { return proto.CompactTextString(m) }
-func (*UserAction) ProtoMessage()    {}
-func (*UserAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9236f2c69911ca0c, []int{1}
-}
-func (m *UserAction) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *UserAction) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UserAction.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *UserAction) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserAction.Merge(m, src)
-}
-func (m *UserAction) XXX_Size() int {
-	return m.Size()
-}
-func (m *UserAction) XXX_DiscardUnknown() {
-	xxx_messageInfo_UserAction.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_UserAction proto.InternalMessageInfo
-
-func (m *UserAction) GetUser() string {
-	if m != nil {
-		return m.User
-	}
-	return ""
-}
-
-func (m *UserAction) GetAction() Action {
-	if m != nil {
-		return m.Action
-	}
-	return ActionAddLiquidity
-}
-
 // GenesisState defines the claim module's genesis state.
 type GenesisState struct {
 	// balance of the claim module's account
 	ModuleAccountBalance types.Coin `protobuf:"bytes,1,opt,name=module_account_balance,json=moduleAccountBalance,proto3" json:"module_account_balance" yaml:"module_account_balance"`
-	// airdrop start time
-	AirdropStartTime time.Time `protobuf:"bytes,2,opt,name=airdrop_start_time,json=airdropStartTime,proto3,stdtime" json:"airdrop_start_time" yaml:"airdrop_start_time"`
-	// duration until decay start to happen from airdrop start time
-	DurationUntilDecay time.Duration `protobuf:"bytes,3,opt,name=duration_until_decay,json=durationUntilDecay,proto3,stdduration" json:"duration_until_decay,omitempty" yaml:"duration_until_decay"`
-	// duration of decay from decay start time
-	DurationOfDecay time.Duration `protobuf:"bytes,4,opt,name=duration_of_decay,json=durationOfDecay,proto3,stdduration" json:"duration_of_decay,omitempty" yaml:"duration_of_decay"`
-	// this is the initial amount that is claimable per address
-	// because the claimable amount decays over time, this is also the maximum
-	// claimable amount
-	// [(account_string, max_claimable), (account_string, max_claimable) ... ]
-	InitialClaimables []types1.Balance `protobuf:"bytes,5,rep,name=initial_claimables,json=initialClaimables,proto3" json:"initial_claimables"`
-	// the actions done per address
-	// [(account_string, [done_action1, done_action2]), (account_string,
-	// [done_action1]) ... ]
-	Activities []UserActions `protobuf:"bytes,6,rep,name=activities,proto3" json:"activities"`
+	// params defines all the parameters of the module.
+	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params" yaml:"params"`
+	// list of claim records, one for every airdrop recipient
+	ClaimRecords []ClaimRecord `protobuf:"bytes,3,rep,name=claim_records,json=claimRecords,proto3" json:"claim_records" yaml:"claim_records"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
 func (m *GenesisState) String() string { return proto.CompactTextString(m) }
 func (*GenesisState) ProtoMessage()    {}
 func (*GenesisState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9236f2c69911ca0c, []int{2}
+	return fileDescriptor_9236f2c69911ca0c, []int{0}
 }
 func (m *GenesisState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -226,45 +77,21 @@ func (m *GenesisState) GetModuleAccountBalance() types.Coin {
 	return types.Coin{}
 }
 
-func (m *GenesisState) GetAirdropStartTime() time.Time {
+func (m *GenesisState) GetParams() Params {
 	if m != nil {
-		return m.AirdropStartTime
+		return m.Params
 	}
-	return time.Time{}
+	return Params{}
 }
 
-func (m *GenesisState) GetDurationUntilDecay() time.Duration {
+func (m *GenesisState) GetClaimRecords() []ClaimRecord {
 	if m != nil {
-		return m.DurationUntilDecay
-	}
-	return 0
-}
-
-func (m *GenesisState) GetDurationOfDecay() time.Duration {
-	if m != nil {
-		return m.DurationOfDecay
-	}
-	return 0
-}
-
-func (m *GenesisState) GetInitialClaimables() []types1.Balance {
-	if m != nil {
-		return m.InitialClaimables
-	}
-	return nil
-}
-
-func (m *GenesisState) GetActivities() []UserActions {
-	if m != nil {
-		return m.Activities
+		return m.ClaimRecords
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterEnum("osmosis.claim.v1beta1.Action", Action_name, Action_value)
-	proto.RegisterType((*UserActions)(nil), "osmosis.claim.v1beta1.UserActions")
-	proto.RegisterType((*UserAction)(nil), "osmosis.claim.v1beta1.UserAction")
 	proto.RegisterType((*GenesisState)(nil), "osmosis.claim.v1beta1.GenesisState")
 }
 
@@ -273,131 +100,31 @@ func init() {
 }
 
 var fileDescriptor_9236f2c69911ca0c = []byte{
-	// 643 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x54, 0x41, 0x4f, 0xd4, 0x40,
-	0x14, 0xde, 0xb2, 0xcb, 0x1a, 0x67, 0x0d, 0x2e, 0x23, 0x62, 0x59, 0xa4, 0xbb, 0xd6, 0x98, 0x10,
-	0x23, 0x6d, 0x58, 0x63, 0x4c, 0xbc, 0xb1, 0x90, 0xa0, 0x89, 0x89, 0x71, 0x57, 0x34, 0xe1, 0xd2,
-	0x4c, 0xdb, 0xa1, 0x4e, 0x68, 0x3b, 0xb5, 0x33, 0x45, 0xf7, 0x1f, 0x18, 0x4f, 0x9c, 0x8c, 0x77,
-	0xff, 0x85, 0xbf, 0x80, 0x23, 0x47, 0x4f, 0xab, 0x81, 0x9b, 0x47, 0x7e, 0x81, 0x99, 0xce, 0xb4,
-	0xe0, 0x52, 0xc3, 0x6d, 0xde, 0xfb, 0xbe, 0xf7, 0xbd, 0x6f, 0xde, 0xbc, 0x16, 0xdc, 0xa7, 0x2c,
-	0xa2, 0x8c, 0x30, 0xdb, 0x0b, 0x11, 0x89, 0xec, 0x83, 0x75, 0x17, 0x73, 0xb4, 0x6e, 0x07, 0x38,
-	0xc6, 0x8c, 0x30, 0x2b, 0x49, 0x29, 0xa7, 0xf0, 0xb6, 0x22, 0x59, 0x39, 0xc9, 0x52, 0xa4, 0xce,
-	0x42, 0x40, 0x03, 0x9a, 0x33, 0x6c, 0x71, 0x92, 0xe4, 0x8e, 0xe1, 0xe5, 0x6c, 0xdb, 0x45, 0x0c,
-	0x97, 0x7a, 0x1e, 0x25, 0xb1, 0xc2, 0xef, 0x95, 0x78, 0xbc, 0x5f, 0xdd, 0xaf, 0x63, 0x04, 0x94,
-	0x06, 0x21, 0xb6, 0xf3, 0xc8, 0xcd, 0xf6, 0x6c, 0x3f, 0x4b, 0x11, 0x27, 0xb4, 0x90, 0xe8, 0x4e,
-	0xe3, 0x9c, 0x44, 0x98, 0x71, 0x14, 0x25, 0x92, 0x60, 0xee, 0x82, 0xd6, 0x0e, 0xc3, 0xe9, 0x86,
-	0x27, 0x8a, 0x18, 0x84, 0xa0, 0x91, 0x31, 0x9c, 0xea, 0x5a, 0x4f, 0x5b, 0xbd, 0x3e, 0xcc, 0xcf,
-	0xf0, 0x29, 0xb8, 0x86, 0x24, 0xac, 0xcf, 0xf4, 0xea, 0xab, 0x73, 0xfd, 0x15, 0xab, 0xf2, 0x96,
-	0x96, 0x14, 0x19, 0x16, 0x6c, 0xf3, 0x1d, 0x00, 0xe7, 0xda, 0x95, 0xd2, 0x4f, 0x40, 0x53, 0x92,
-	0xf5, 0x99, 0x9e, 0x76, 0xb5, 0xb2, 0x22, 0x9b, 0x3f, 0x66, 0xc1, 0x8d, 0x6d, 0x39, 0x87, 0x11,
-	0x47, 0x1c, 0xc3, 0x03, 0xb0, 0x18, 0x51, 0x3f, 0x0b, 0xb1, 0x83, 0x3c, 0x8f, 0x66, 0x31, 0x77,
-	0x5c, 0x14, 0xa2, 0xd8, 0xc3, 0x79, 0xb7, 0x56, 0x7f, 0xc9, 0x92, 0xa3, 0xb4, 0xc4, 0xa8, 0x4b,
-	0xd5, 0x4d, 0x4a, 0xe2, 0xc1, 0x83, 0xa3, 0x49, 0xb7, 0x76, 0x36, 0xe9, 0xae, 0x8c, 0x51, 0x14,
-	0x3e, 0x33, 0xab, 0x65, 0xcc, 0xe1, 0x82, 0x04, 0x36, 0x64, 0x7e, 0x20, 0xd3, 0x90, 0x02, 0x88,
-	0x48, 0xea, 0xa7, 0x34, 0x71, 0x18, 0x47, 0x29, 0x77, 0xc4, 0x78, 0xf3, 0xbb, 0xb4, 0xfa, 0x1d,
-	0x4b, 0xce, 0xde, 0x2a, 0x66, 0x6f, 0xbd, 0x29, 0x66, 0x5f, 0x36, 0x5d, 0x92, 0x4d, 0x2f, 0x6b,
-	0x98, 0x87, 0xbf, 0xba, 0xda, 0xb0, 0xad, 0x80, 0x91, 0xc8, 0x8b, 0x6a, 0xf8, 0x55, 0x03, 0x0b,
-	0xc5, 0x13, 0x3b, 0x59, 0xcc, 0x49, 0xe8, 0xf8, 0xd8, 0x43, 0x63, 0xbd, 0xae, 0xee, 0x39, 0xdd,
-	0x73, 0x4b, 0x91, 0x07, 0x2f, 0x44, 0xcb, 0x3f, 0x93, 0xae, 0x51, 0x55, 0xfe, 0x88, 0x46, 0x84,
-	0xe3, 0x28, 0xe1, 0xe3, 0xb3, 0x49, 0x77, 0x59, 0x9a, 0xaa, 0xe2, 0x99, 0xdf, 0x84, 0x2d, 0x58,
-	0x40, 0x3b, 0x02, 0xd9, 0x12, 0x00, 0xfc, 0xa2, 0x81, 0xf9, 0xb2, 0x82, 0xee, 0x29, 0x57, 0x8d,
-	0xab, 0x5c, 0x6d, 0x2a, 0x57, 0xcb, 0x97, 0x6a, 0xff, 0xb1, 0xa4, 0x4f, 0x59, 0x2a, 0x48, 0xd2,
-	0xcf, 0xcd, 0x22, 0xff, 0x6a, 0x4f, 0x9a, 0x79, 0x0d, 0x20, 0x89, 0x09, 0x27, 0x28, 0x74, 0xf2,
-	0x3d, 0x42, 0x6e, 0x88, 0x99, 0x3e, 0xdb, 0xab, 0xaf, 0xb6, 0xfa, 0x77, 0xcf, 0x57, 0x21, 0xde,
-	0x2f, 0x57, 0x41, 0x3d, 0xe8, 0xa0, 0x21, 0xfc, 0x0c, 0xe7, 0x55, 0xf5, 0x66, 0x59, 0x0c, 0x9f,
-	0x03, 0x20, 0x96, 0xef, 0x80, 0x70, 0x82, 0x99, 0xde, 0xcc, 0xa5, 0xcc, 0xff, 0x6c, 0xeb, 0x85,
-	0x0f, 0x4a, 0x09, 0x5e, 0xa8, 0x7d, 0xe8, 0x80, 0xa6, 0xfa, 0x22, 0x16, 0x01, 0x94, 0xa7, 0x0d,
-	0xdf, 0x7f, 0x49, 0x3e, 0x64, 0xc4, 0x27, 0x7c, 0xdc, 0xae, 0xc1, 0x39, 0x00, 0x64, 0x7e, 0xf4,
-	0x11, 0x25, 0x6d, 0xed, 0x3c, 0x7e, 0x4b, 0x39, 0x6e, 0xcf, 0xc0, 0x3b, 0xe0, 0x96, 0x8c, 0xb7,
-	0x70, 0x88, 0x03, 0xc4, 0xf1, 0x88, 0xa3, 0x7d, 0xdc, 0xae, 0x77, 0x1a, 0x9f, 0xbf, 0x1b, 0xb5,
-	0xc1, 0xf6, 0xd1, 0x89, 0xa1, 0x1d, 0x9f, 0x18, 0xda, 0xef, 0x13, 0x43, 0x3b, 0x3c, 0x35, 0x6a,
-	0xc7, 0xa7, 0x46, 0xed, 0xe7, 0xa9, 0x51, 0xdb, 0x5d, 0x0b, 0x08, 0x7f, 0x9f, 0xb9, 0x96, 0x47,
-	0x23, 0x5b, 0x59, 0x5f, 0x0b, 0x91, 0xcb, 0x8a, 0xc0, 0xfe, 0xa4, 0x7e, 0x6e, 0x7c, 0x9c, 0x60,
-	0xe6, 0x36, 0xf3, 0xf7, 0x7a, 0xfc, 0x37, 0x00, 0x00, 0xff, 0xff, 0x7c, 0x0b, 0x6b, 0xb1, 0xfa,
-	0x04, 0x00, 0x00,
-}
-
-func (m *UserActions) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *UserActions) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UserActions) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Actions) > 0 {
-		dAtA2 := make([]byte, len(m.Actions)*10)
-		var j1 int
-		for _, num := range m.Actions {
-			for num >= 1<<7 {
-				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j1++
-			}
-			dAtA2[j1] = uint8(num)
-			j1++
-		}
-		i -= j1
-		copy(dAtA[i:], dAtA2[:j1])
-		i = encodeVarintGenesis(dAtA, i, uint64(j1))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.User) > 0 {
-		i -= len(m.User)
-		copy(dAtA[i:], m.User)
-		i = encodeVarintGenesis(dAtA, i, uint64(len(m.User)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *UserAction) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *UserAction) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UserAction) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Action != 0 {
-		i = encodeVarintGenesis(dAtA, i, uint64(m.Action))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.User) > 0 {
-		i -= len(m.User)
-		copy(dAtA[i:], m.User)
-		i = encodeVarintGenesis(dAtA, i, uint64(len(m.User)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
+	// 383 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0xb1, 0x8e, 0xda, 0x30,
+	0x18, 0xc7, 0x13, 0x90, 0x18, 0x02, 0x2c, 0x11, 0x54, 0x14, 0x15, 0x43, 0x53, 0x55, 0x62, 0xc1,
+	0x16, 0x74, 0xeb, 0xd6, 0x30, 0xb0, 0x74, 0xa8, 0xd2, 0xad, 0x0b, 0x72, 0x8c, 0x9b, 0xb3, 0x2e,
+	0x8e, 0xa3, 0xd8, 0x41, 0xc7, 0x5b, 0xdc, 0xfb, 0xdc, 0x0b, 0x30, 0x32, 0xde, 0x84, 0x4e, 0xf0,
+	0x06, 0xf7, 0x04, 0x27, 0x6c, 0x87, 0xd3, 0x9d, 0x72, 0x5b, 0x3e, 0x7f, 0xbf, 0xef, 0xff, 0xff,
+	0x7f, 0xf9, 0xbc, 0x6f, 0x42, 0x72, 0x21, 0x99, 0x44, 0x24, 0xc5, 0x8c, 0xa3, 0xed, 0x3c, 0xa6,
+	0x0a, 0xcf, 0x51, 0x42, 0x33, 0x2a, 0x99, 0x84, 0x79, 0x21, 0x94, 0xf0, 0xfb, 0x16, 0x82, 0x1a,
+	0x82, 0x16, 0x1a, 0xf6, 0x12, 0x91, 0x08, 0x4d, 0xa0, 0xcb, 0x97, 0x81, 0x87, 0x80, 0x68, 0x1a,
+	0xc5, 0x58, 0xd2, 0xab, 0x1e, 0x11, 0x2c, 0xb3, 0xfd, 0xaf, 0xd7, 0x7e, 0x76, 0x5b, 0xef, 0x37,
+	0x04, 0x89, 0x10, 0x49, 0x4a, 0x91, 0xae, 0xe2, 0xf2, 0x3f, 0xda, 0x94, 0x05, 0x56, 0x4c, 0x54,
+	0x12, 0xe3, 0xf7, 0x7d, 0xc5, 0x38, 0x95, 0x0a, 0xf3, 0xbc, 0xf2, 0xa8, 0xdf, 0xca, 0xc4, 0x37,
+	0x48, 0x50, 0x8f, 0xe4, 0xb8, 0xc0, 0xdc, 0xe6, 0x08, 0x1e, 0x1a, 0x5e, 0x67, 0x65, 0x92, 0xfd,
+	0x55, 0x58, 0x51, 0x7f, 0xeb, 0x7d, 0xe2, 0x62, 0x53, 0xa6, 0x74, 0x8d, 0x09, 0x11, 0x65, 0xa6,
+	0xd6, 0x31, 0x4e, 0x71, 0x46, 0xe8, 0xc0, 0x9d, 0xb8, 0xd3, 0xf6, 0xe2, 0x33, 0x34, 0xcb, 0xc1,
+	0xcb, 0xf2, 0xd5, 0x7f, 0x82, 0x4b, 0xc1, 0xb2, 0xf0, 0xfb, 0xfe, 0x38, 0x76, 0x9e, 0x8f, 0xe3,
+	0xd1, 0x0e, 0xf3, 0xf4, 0x67, 0x50, 0x2f, 0x13, 0x44, 0x3d, 0xd3, 0xf8, 0x65, 0xde, 0x43, 0xf3,
+	0xec, 0xff, 0xf6, 0x5a, 0x26, 0xd8, 0xa0, 0xa1, 0x7d, 0x46, 0xb0, 0xf6, 0x22, 0xf0, 0x8f, 0x86,
+	0xc2, 0xbe, 0xf5, 0xea, 0x1a, 0x2f, 0x33, 0x1a, 0x44, 0x56, 0xc3, 0xa7, 0x5e, 0x57, 0x8f, 0xad,
+	0x0b, 0x4a, 0x44, 0xb1, 0x91, 0x83, 0xe6, 0xa4, 0x39, 0x6d, 0x2f, 0x82, 0x0f, 0x44, 0x97, 0x97,
+	0x2a, 0xd2, 0x68, 0xf8, 0xc5, 0x2a, 0xf7, 0x8c, 0xf2, 0x1b, 0x99, 0x20, 0xea, 0x90, 0x57, 0x54,
+	0x86, 0xab, 0xfd, 0x09, 0xb8, 0x87, 0x13, 0x70, 0x9f, 0x4e, 0xc0, 0xbd, 0x3f, 0x03, 0xe7, 0x70,
+	0x06, 0xce, 0xe3, 0x19, 0x38, 0xff, 0x66, 0x09, 0x53, 0x37, 0x65, 0x0c, 0x89, 0xe0, 0xc8, 0x7a,
+	0xce, 0x52, 0x1c, 0xcb, 0xaa, 0x40, 0x77, 0xf6, 0x2a, 0x6a, 0x97, 0x53, 0x19, 0xb7, 0xf4, 0x35,
+	0x7e, 0xbc, 0x04, 0x00, 0x00, 0xff, 0xff, 0x36, 0x82, 0x93, 0xdd, 0xac, 0x02, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -420,10 +147,10 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Activities) > 0 {
-		for iNdEx := len(m.Activities) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.ClaimRecords) > 0 {
+		for iNdEx := len(m.ClaimRecords) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Activities[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.ClaimRecords[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -431,45 +158,17 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintGenesis(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x32
+			dAtA[i] = 0x1a
 		}
 	}
-	if len(m.InitialClaimables) > 0 {
-		for iNdEx := len(m.InitialClaimables) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.InitialClaimables[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintGenesis(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x2a
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
 	}
-	n3, err3 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.DurationOfDecay, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.DurationOfDecay):])
-	if err3 != nil {
-		return 0, err3
-	}
-	i -= n3
-	i = encodeVarintGenesis(dAtA, i, uint64(n3))
-	i--
-	dAtA[i] = 0x22
-	n4, err4 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.DurationUntilDecay, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.DurationUntilDecay):])
-	if err4 != nil {
-		return 0, err4
-	}
-	i -= n4
-	i = encodeVarintGenesis(dAtA, i, uint64(n4))
-	i--
-	dAtA[i] = 0x1a
-	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.AirdropStartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.AirdropStartTime):])
-	if err5 != nil {
-		return 0, err5
-	}
-	i -= n5
-	i = encodeVarintGenesis(dAtA, i, uint64(n5))
 	i--
 	dAtA[i] = 0x12
 	{
@@ -496,42 +195,6 @@ func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *UserActions) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.User)
-	if l > 0 {
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	if len(m.Actions) > 0 {
-		l = 0
-		for _, e := range m.Actions {
-			l += sovGenesis(uint64(e))
-		}
-		n += 1 + sovGenesis(uint64(l)) + l
-	}
-	return n
-}
-
-func (m *UserAction) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.User)
-	if l > 0 {
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	if m.Action != 0 {
-		n += 1 + sovGenesis(uint64(m.Action))
-	}
-	return n
-}
-
 func (m *GenesisState) Size() (n int) {
 	if m == nil {
 		return 0
@@ -540,20 +203,10 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	l = m.ModuleAccountBalance.Size()
 	n += 1 + l + sovGenesis(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.AirdropStartTime)
+	l = m.Params.Size()
 	n += 1 + l + sovGenesis(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.DurationUntilDecay)
-	n += 1 + l + sovGenesis(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.DurationOfDecay)
-	n += 1 + l + sovGenesis(uint64(l))
-	if len(m.InitialClaimables) > 0 {
-		for _, e := range m.InitialClaimables {
-			l = e.Size()
-			n += 1 + l + sovGenesis(uint64(l))
-		}
-	}
-	if len(m.Activities) > 0 {
-		for _, e := range m.Activities {
+	if len(m.ClaimRecords) > 0 {
+		for _, e := range m.ClaimRecords {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
@@ -566,264 +219,6 @@ func sovGenesis(x uint64) (n int) {
 }
 func sozGenesis(x uint64) (n int) {
 	return sovGenesis(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *UserActions) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGenesis
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: UserActions: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UserActions: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.User = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType == 0 {
-				var v Action
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowGenesis
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= Action(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.Actions = append(m.Actions, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowGenesis
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthGenesis
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthGenesis
-				}
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				var elementCount int
-				if elementCount != 0 && len(m.Actions) == 0 {
-					m.Actions = make([]Action, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v Action
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGenesis
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= Action(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.Actions = append(m.Actions, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field Actions", wireType)
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGenesis(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *UserAction) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGenesis
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: UserAction: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UserAction: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.User = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
-			}
-			m.Action = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Action |= Action(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGenesis(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -889,7 +284,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AirdropStartTime", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -916,13 +311,13 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.AirdropStartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DurationUntilDecay", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimRecords", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -949,108 +344,8 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.DurationUntilDecay, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DurationOfDecay", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.DurationOfDecay, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InitialClaimables", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.InitialClaimables = append(m.InitialClaimables, types1.Balance{})
-			if err := m.InitialClaimables[len(m.InitialClaimables)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Activities", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Activities = append(m.Activities, UserActions{})
-			if err := m.Activities[len(m.Activities)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.ClaimRecords = append(m.ClaimRecords, ClaimRecord{})
+			if err := m.ClaimRecords[len(m.ClaimRecords)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

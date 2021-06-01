@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/x/claim/client/cli"
@@ -52,14 +51,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genState := app.ModuleBasics.DefaultGenesis(encCfg.Marshaler)
 	claimGenState := claimtypes.DefaultGenesis()
 	claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30))
-	claimGenState.InitialClaimables = []banktypes.Balance{
+	claimGenState.ClaimRecords = []types.ClaimRecord{
 		{
-			Address: addr1.String(),
-			Coins:   sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)),
+			Address:                addr1.String(),
+			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)),
+			ActionCompleted:        []bool{false, false, false, false},
 		},
 		{
-			Address: addr2.String(),
-			Coins:   sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 20)),
+			Address:                addr2.String(),
+			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 20)),
+			ActionCompleted:        []bool{false, false, false, false},
 		},
 	}
 	claimGenStateBz := encCfg.Marshaler.MustMarshalJSON(claimGenState)
@@ -105,7 +106,80 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestCmdQueryClaimable() {
+// TODO: Figure out how to get genesis time from IntegrationTestSuite
+// Because right now, verifying the correctness of the airdrop_start_time
+// isn't possible.
+// Other than that, this works
+
+// func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+// 	val := s.network.Validators[0]
+
+// 	testCases := []struct {
+// 		name           string
+// 		args           []string
+// 		expectedOutput string
+// 	}{
+// 		{
+// 			"json output",
+// 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+// 			`{"airdrop_start_time":"1970-01-01T00:00:00Z","duration_until_decay":"3600s","duration_of_decay":"18000s"}`,
+// 		},
+// 		{
+// 			"text output",
+// 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+// 			`airdrop_start_time: "1970-01-01T00:00:00Z"
+// duration_of_decay: 18000s
+// duration_until_decay: 3600s`,
+// 		},
+// 	}
+
+// 	for _, tc := range testCases {
+// 		tc := tc
+
+// 		s.Run(tc.name, func() {
+// 			cmd := cli.GetCmdQueryParams()
+// 			clientCtx := val.ClientCtx
+
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+// 			s.Require().NoError(err)
+// 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+// 		})
+// 	}
+// }
+
+func (s *IntegrationTestSuite) TestCmdQueryClaimRecord() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name string
+		args []string
+	}{
+		{
+			"query claim record",
+			[]string{
+				addr1.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryClaimRecord()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result types.QueryClaimRecordResponse
+			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -114,12 +188,13 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimable() {
 		coins sdk.Coins
 	}{
 		{
-			"query claimable amount",
+			"query claimable-for-action amount",
 			[]string{
 				addr2.String(),
+				types.ActionAddLiquidity.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))},
+			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5))},
 		},
 	}
 
@@ -127,49 +202,15 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimable() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryClaimable()
+			cmd := cli.GetCmdQueryClaimableForAction()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			s.Require().NoError(err)
 
-			var result types.ClaimableResponse
+			var result types.QueryClaimableForActionResponse
 			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-			s.Require().Equal(tc.coins.String(), sdk.Coins(result.Coins).String())
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestCmdQueryActivities() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name string
-		args []string
-	}{
-		{
-			"query activities amount",
-			[]string{
-				addr2.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryActivities()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			s.Require().NoError(err)
-
-			var result types.ActivitiesResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-			s.Require().Equal([]string{"ActionAddLiquidity", "ActionSwap", "ActionVote", "ActionDelegateStake"}, result.All)
-			s.Require().Equal([]string(nil), result.Completed)
+			s.Require().Equal(result.Coins.String(), tc.coins.String())
 		})
 	}
 }
