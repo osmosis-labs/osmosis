@@ -59,9 +59,9 @@ func TestGenesisStateMarshalUnmarshal(t *testing.T) {
 	for _, test := range tests {
 		bz, err := proto.Marshal(test.state)
 		require.NoError(t, err)
-		decodedState := types.GenesisState{}
-		err = proto.Unmarshal(bz, &decodedState)
+		decoded := types.GenesisState{}
+		err = proto.Unmarshal(bz, &decoded)
 		require.NoError(t, err)
-		require.Equal(t, *test.state, decodedState)
+		require.Equal(t, *test.state, decoded)
 	}
 }
