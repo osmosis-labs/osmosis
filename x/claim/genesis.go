@@ -1,6 +1,8 @@
 package claim
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/claim/keeper"
 	"github.com/osmosis-labs/osmosis/x/claim/types"
@@ -11,7 +13,7 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetModuleAccountBalance(ctx, genState.ModuleAccountBalance)
 
-	if !genState.Params.AirdropStartTime.After(ctx.BlockTime()) {
+	if genState.Params.AirdropStartTime.Equal(time.Time{}) {
 		genState.Params.AirdropStartTime = ctx.BlockTime()
 	}
 
