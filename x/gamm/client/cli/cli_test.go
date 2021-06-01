@@ -285,6 +285,19 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			),
 			true, &sdk.TxResponse{}, 0,
 		},
+		{
+			"unknown fields in json",
+			fmt.Sprintf(`
+			{
+			  "%s": "1node0token",
+			  "%s": "100node0token",
+			  "%s": "0.001",
+			  "%s": "0.001"
+			  "unknown": true,
+			}
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			true, &sdk.TxResponse{}, 0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -914,6 +927,42 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShare() {
 				s.Require().Error(err)
 			} else {
 				resp := types.QueryTotalShareResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdTotalLiquidity() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query total liquidity", // osmosisd query gamm total-liquidity
+			[]string{
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryTotalLiquidity()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryTotalLiquidityResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}

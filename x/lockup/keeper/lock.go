@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/store"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
 )
@@ -69,6 +71,10 @@ func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getCoinsFromLocks(k.getLocksFromIterator(ctx, iterator))
+}
+
+func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
+	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
 }
 
 // GetModuleBalance Returns full balance of the module
@@ -211,10 +217,17 @@ func (k Keeper) GetPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error) {
 }
 
 // GetAccountPeriodLocks Returns the period locks associated to an account
-func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) ([]types.PeriodLock, error) {
+func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []types.PeriodLock {
 	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, true, addr))
 	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, false, addr))
-	return combineLocks(notUnlockings, unlockings), nil
+	return combineLocks(notUnlockings, unlockings)
+}
+
+// GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
+// query.Duration
+func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
+	beginKey := accumulationKey(query.Duration, 0)
+	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
@@ -286,6 +299,10 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 		}
 	}
 
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+	}
+
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
@@ -320,6 +337,11 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 			return err
 		}
 	}
+
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+	}
+
 	return nil
 }
 

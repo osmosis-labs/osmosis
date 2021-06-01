@@ -83,6 +83,7 @@ func (k Keeper) CreatePool(
 	}
 
 	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
+	k.RecordTotalLiquidityIncrease(ctx, coins)
 
 	return pool.GetId(), nil
 }
@@ -100,6 +101,9 @@ func (k Keeper) JoinPool(
 	}
 
 	totalShareAmount := pool.GetTotalShare().Amount
+	// shareRatio is the desired number of shares, divided by the total number of
+	// shares currently in the pool. It is intended to be used in scenarios where you want
+	// (tokens per share) * number of shares out = # tokens * (# shares out / cur total shares)
 	shareRatio := shareOutAmount.ToDec().QuoInt(totalShareAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
@@ -151,6 +155,7 @@ func (k Keeper) JoinPool(
 	}
 
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), coins, shareOutAmount)
+	k.RecordTotalLiquidityIncrease(ctx, coins)
 
 	return nil
 }
@@ -211,6 +216,7 @@ func (k Keeper) JoinSwapExternAmountIn(
 	}
 
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, shareOutAmount)
+	k.RecordTotalLiquidityIncrease(ctx, sdk.Coins{tokenIn})
 
 	return shareOutAmount, nil
 }
@@ -272,6 +278,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	}
 
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, shareOutAmount)
+	k.RecordTotalLiquidityIncrease(ctx, sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)})
 
 	return shareOutAmount, nil
 }
@@ -313,6 +320,8 @@ func (k Keeper) ExitPool(
 			return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 		}
 
+		// Check if a minimum token amount is specified for this token,
+		// and if so ensure that the minimum is less than the amount returned.
 		if tokenOutMinAmount, ok := tokenOutMinMap[PoolAsset.Token.Denom]; ok && tokenOutAmount.LT(tokenOutMinAmount) {
 			return sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
 		}
@@ -332,11 +341,8 @@ func (k Keeper) ExitPool(
 		return err
 	}
 
-	// TODO: `balancer` contract sends the exit fee to the `factory` contract.
-	//       But, it is unclear that how the exit fees in the `factory` contract are handled.
-	//       And, it seems to be not good way to send the exit fee to the pool,
-	//       because the pool doesn't have the PoolAsset about exit fee.
-	//       So, temporarily, just burn the exit fee.
+	// Remove the exit fee shares from the pool.
+	// This distributes the exit fee liquidity to every other LP remaining in the pool.
 	if exitFee.IsPositive() {
 		err = k.BurnPoolShareFromAccount(ctx, pool, sender, exitFee)
 		if err != nil {
@@ -355,6 +361,7 @@ func (k Keeper) ExitPool(
 	}
 
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, coins)
+	k.RecordTotalLiquidityDecrease(ctx, coins)
 
 	return nil
 }
@@ -433,6 +440,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 	}
 
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
+	k.RecordTotalLiquidityDecrease(ctx, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
 
 	return tokenOutAmount, nil
 }
@@ -510,6 +518,37 @@ func (k Keeper) ExitSwapExternAmountOut(
 	}
 
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, sdk.Coins{tokenOut})
+	k.RecordTotalLiquidityDecrease(ctx, sdk.Coins{tokenOut})
 
 	return shareInAmount, nil
+}
+
+func (k Keeper) GetTotalLiquidity(ctx sdk.Context) sdk.Coins {
+	store := ctx.KVStore(k.storeKey)
+	if !store.Has(types.KeyTotalLiquidity) {
+		return sdk.Coins{}
+	}
+
+	bz := store.Get(types.KeyTotalLiquidity)
+	coins, err := sdk.ParseCoinsNormalized(string(bz))
+	if err != nil {
+		panic("invalid total liquidity value set")
+	}
+
+	return coins
+}
+
+func (k Keeper) SetTotalLiquidity(ctx sdk.Context, coins sdk.Coins) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.KeyTotalLiquidity, []byte(coins.String()))
+}
+
+func (k Keeper) RecordTotalLiquidityIncrease(ctx sdk.Context, coins sdk.Coins) {
+	liquidity := k.GetTotalLiquidity(ctx)
+	k.SetTotalLiquidity(ctx, liquidity.Add(coins...))
+}
+
+func (k Keeper) RecordTotalLiquidityDecrease(ctx sdk.Context, coins sdk.Coins) {
+	liquidity := k.GetTotalLiquidity(ctx)
+	k.SetTotalLiquidity(ctx, liquidity.Sub(coins))
 }

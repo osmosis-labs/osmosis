@@ -57,6 +57,9 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShare().Amount.String(),
 				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
 			)
+
+			liquidity := suite.app.GAMMKeeper.GetTotalLiquidity(suite.ctx)
+			suite.Require().Equal("10000bar,10000foo", liquidity.String())
 		},
 	}, {
 		fn: func() {
@@ -222,6 +225,9 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 				// Thus, to get the 50*OneShare gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be provided.
 				suite.Require().Equal("5000", deltaBalances.AmountOf("foo").String())
 				suite.Require().Equal("5000", deltaBalances.AmountOf("bar").String())
+
+				liquidity := suite.app.GAMMKeeper.GetTotalLiquidity(suite.ctx)
+				suite.Require().Equal("15000bar,15000foo", liquidity.String())
 			},
 		},
 		{
@@ -258,6 +264,9 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 					sdk.NewCoin("foo", sdk.NewInt(5000)),
 				})
 				suite.Require().NoError(err)
+
+				liquidity := suite.app.GAMMKeeper.GetTotalLiquidity(suite.ctx)
+				suite.Require().Equal("15000bar,15000foo", liquidity.String())
 			},
 		},
 	}

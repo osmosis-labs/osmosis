@@ -12,13 +12,14 @@ import (
 
 // Parameter store keys
 var (
-	KeyMintDenom                = []byte("MintDenom")
-	KeyGenesisEpochProvisions   = []byte("GenesisEpochProvisions")
-	KeyEpochIdentifier          = []byte("EpochIdentifier")
-	KeyReductionPeriodInEpochs  = []byte("ReductionPeriodInEpochs")
-	KeyReductionFactor          = []byte("ReductionFactor")
-	KeyPoolAllocationRatio      = []byte("PoolAllocationRatio")
-	KeyDeveloperRewardsReceiver = []byte("DeveloperRewardsReceiver")
+	KeyMintDenom                            = []byte("MintDenom")
+	KeyGenesisEpochProvisions               = []byte("GenesisEpochProvisions")
+	KeyEpochIdentifier                      = []byte("EpochIdentifier")
+	KeyReductionPeriodInEpochs              = []byte("ReductionPeriodInEpochs")
+	KeyReductionFactor                      = []byte("ReductionFactor")
+	KeyPoolAllocationRatio                  = []byte("PoolAllocationRatio")
+	KeyDeveloperRewardsReceiver             = []byte("DeveloperRewardsReceiver")
+	KeyMintingRewardsDistributionStartEpoch = []byte("MintingRewardsDistributionStartEpoch")
 )
 
 // ParamTable for minting module.
@@ -29,17 +30,18 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
 	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
-	devRewardsReceiver string,
+	devRewardsReceiver string, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 
 	return Params{
-		MintDenom:                mintDenom,
-		GenesisEpochProvisions:   genesisEpochProvisions,
-		EpochIdentifier:          epochIdentifier,
-		ReductionPeriodInEpochs:  reductionPeriodInEpochs,
-		ReductionFactor:          ReductionFactor,
-		DistributionProportions:  distrProportions,
-		DeveloperRewardsReceiver: devRewardsReceiver,
+		MintDenom:                            mintDenom,
+		GenesisEpochProvisions:               genesisEpochProvisions,
+		EpochIdentifier:                      epochIdentifier,
+		ReductionPeriodInEpochs:              reductionPeriodInEpochs,
+		ReductionFactor:                      ReductionFactor,
+		DistributionProportions:              distrProportions,
+		DeveloperRewardsReceiver:             devRewardsReceiver,
+		MintingRewardsDistributionStartEpoch: mintingRewardsDistributionStartEpoch,
 	}
 }
 
@@ -52,11 +54,13 @@ func DefaultParams() Params {
 		ReductionPeriodInEpochs: 156,                      // 3 years
 		ReductionFactor:         sdk.NewDecWithPrec(5, 1), // 0.5
 		DistributionProportions: DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(5, 1), // 0.5
+			Staking:          sdk.NewDecWithPrec(4, 1), // 0.4
 			PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
+			CommunityPool:    sdk.NewDecWithPrec(1, 1), // 0.5
 		},
-		DeveloperRewardsReceiver: "",
+		DeveloperRewardsReceiver:             "",
+		MintingRewardsDistributionStartEpoch: 0,
 	}
 }
 
@@ -83,6 +87,9 @@ func (p Params) Validate() error {
 	if err := validateDeveloperRewardsReceiver(p.DeveloperRewardsReceiver); err != nil {
 		return err
 	}
+	if err := validateMintingRewardsDistributionStartEpoch(p.MintingRewardsDistributionStartEpoch); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -103,6 +110,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
 		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.DistributionProportions, validateDistributionProportions),
 		paramtypes.NewParamSetPair(KeyDeveloperRewardsReceiver, &p.DeveloperRewardsReceiver, validateDeveloperRewardsReceiver),
+		paramtypes.NewParamSetPair(KeyMintingRewardsDistributionStartEpoch, &p.MintingRewardsDistributionStartEpoch, validateMintingRewardsDistributionStartEpoch),
 	}
 }
 
@@ -196,7 +204,13 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("developer rewards distribution ratio should not be negative")
 	}
 
-	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.DeveloperRewards)
+	// TODO: Maybe we should allow this :joy:, lets you burn osmo from community pool
+	// for new chains
+	if v.CommunityPool.IsNegative() {
+		return errors.New("community pool distribution ratio should not be negative")
+	}
+
+	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.DeveloperRewards).Add(v.CommunityPool)
 
 	if !totalProportions.Equal(sdk.NewDec(1)) {
 		return errors.New("total distributions ratio should be 1")
@@ -218,4 +232,17 @@ func validateDeveloperRewardsReceiver(i interface{}) error {
 
 	_, err := sdk.AccAddressFromBech32(v)
 	return err
+}
+
+func validateMintingRewardsDistributionStartEpoch(i interface{}) error {
+	v, ok := i.(int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < 0 {
+		return fmt.Errorf("start epoch must be non-negative")
+	}
+
+	return nil
 }

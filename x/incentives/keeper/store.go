@@ -31,7 +31,11 @@ func potStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodPot, sdk.Uint64ToBigEndian(ID))
 }
 
-// getPotRefs get pot IDs specified on the prefix and timestamp key
+func potDenomStoreKey(denom string) []byte {
+	return combineKeys(types.KeyPrefixPotsByDenom, []byte(denom))
+}
+
+// getPotRefs get pot IDs specified on the provided key
 func (k Keeper) getPotRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)
 	potIDs := []uint64{}
@@ -79,4 +83,19 @@ func (k Keeper) deletePotRefByKey(ctx sdk.Context, key []byte, potID uint64) {
 		}
 		store.Set(key, bz)
 	}
+}
+
+// getAllPotIDsByDenom returns all active pot-IDs associated with lockups of denomination `denom`
+func (k Keeper) getAllPotIDsByDenom(ctx sdk.Context, denom string) []uint64 {
+	return k.getPotRefs(ctx, potDenomStoreKey(denom))
+}
+
+// deletePotIDForDenom deletes ID from the list of pot ID's associated with denomination `denom`
+func (k Keeper) deletePotIDForDenom(ctx sdk.Context, ID uint64, denom string) {
+	k.deletePotRefByKey(ctx, potDenomStoreKey(denom), ID)
+}
+
+// addPotIDForDenom adds ID to the list of pot ID's associated with denomination `denom`
+func (k Keeper) addPotIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
+	return k.addPotRefByKey(ctx, potDenomStoreKey(denom), ID)
 }

@@ -235,16 +235,21 @@ format:
 ###############################################################################
 
 build-docker-osmosisdnode:
-	$(MAKE) -C networks/local
+	$(MAKE) -C networks/local 
 
 # Run a 4-node testnet locally
-localnet-start: build-linux localnet-stop
-	@if ! [ -f build/node0/osmosisd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/osmosisd:Z osmosis-labs/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
+	@if ! [ -f $(BUILDDIR)/node0/osmosisd/config/genesis.json ]; \
+	then docker run --rm -v $(BUILDDIR):/osmosisd:Z osmosis-labs/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; \
+	fi
 	docker-compose up -d
 
 # Stop testnet
 localnet-stop:
 	docker-compose down
+
+clean-localnet: localnet-stop
+	rm -rf $(BUILDDIR)/node* $(BUILDDIR)/gentxs
 
 test-docker:
 	@docker build -f contrib/Dockerfile.test -t ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) .

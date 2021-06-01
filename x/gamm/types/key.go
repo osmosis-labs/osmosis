@@ -21,6 +21,8 @@ var (
 	KeyNextGlobalPoolNumber = []byte{0x01}
 	// KeyPrefixPools defines prefix to store pools
 	KeyPrefixPools = []byte{0x02}
+	// KeyTotalLiquidity defines key to store total liquidity
+	KeyTotalLiquidity = []byte{0x03}
 )
 
 func GetPoolShareDenom(poolId uint64) string {

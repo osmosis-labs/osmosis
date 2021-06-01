@@ -114,5 +114,5 @@ func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) 
 	if err != nil {
 		return nil, err
 	}
-	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, owner, req.Locks, req.Pots, req.EndEpoch)}, nil
+	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, owner, req.Locks, req.EndEpoch)}, nil
 }

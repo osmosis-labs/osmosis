@@ -172,6 +172,9 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 		}
 	}
 
+	communityPoolCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.CommunityPool))
+	k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+
 	// call an hook after the minting and distribution of new coins
 	k.hooks.AfterDistributeMintedCoins(ctx, mintedCoins)
 

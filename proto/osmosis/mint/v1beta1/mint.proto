@@ -40,6 +40,13 @@ message DistributionProportions {
     (gogoproto.moretags) = "yaml:\"developer_rewards\"",
     (gogoproto.nullable) = false
   ];
+  // community_pool defines the proportion of the minted minted_denom that is
+  // to be allocated to the community pool.
+  string community_pool = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"community_pool\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Params holds parameters for the mint module.
@@ -70,5 +77,10 @@ message Params {
   DistributionProportions distribution_proportions = 6
       [ (gogoproto.nullable) = false ];
   // address to receive developer rewards
-  string developer_rewards_receiver = 7 [ (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"" ];
+  string developer_rewards_receiver = 7
+      [ (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"" ];
+  // start epoch to distribute minting rewards
+  int64 minting_rewards_distribution_start_epoch = 8
+      [ (gogoproto.moretags) =
+            "yaml:\"minting_rewards_distribution_start_epoch\"" ];
 }

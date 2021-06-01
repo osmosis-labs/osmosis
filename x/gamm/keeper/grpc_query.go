@@ -204,6 +204,18 @@ func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest)
 	}, nil
 }
 
+func (k Keeper) TotalLiquidity(ctx context.Context, req *types.QueryTotalLiquidityRequest) (*types.QueryTotalLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryTotalLiquidityResponse{
+		Liquidity: k.GetTotalLiquidity(sdkCtx),
+	}, nil
+}
+
 func (k Keeper) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

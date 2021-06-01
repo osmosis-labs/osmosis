@@ -34,6 +34,10 @@ service Query {
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/prices";
   }
+  rpc TotalLiquidity(QueryTotalLiquidityRequest)
+      returns (QueryTotalLiquidityResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/total_liquidity";
+  }
 
   // Estimate the swap.
   rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
@@ -54,7 +58,7 @@ message QueryPoolRequest {
 }
 message QueryPoolResponse {
   google.protobuf.Any pool = 1
-      [ (cosmos_proto.accepts_interface) = "AccountI" ];
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 
 //=============================== Pools
@@ -64,7 +68,7 @@ message QueryPoolsRequest {
 }
 message QueryPoolsResponse {
   repeated google.protobuf.Any pools = 1
-      [ (cosmos_proto.accepts_interface) = "AccountI" ];
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -150,6 +154,15 @@ message QuerySwapExactAmountOutResponse {
   string tokenInAmount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryTotalLiquidityRequest {}
+
+message QueryTotalLiquidityResponse {
+  repeated cosmos.base.v1beta1.Coin liquidity = 1 [
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
 }
