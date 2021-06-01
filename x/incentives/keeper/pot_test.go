@@ -332,11 +332,11 @@ func (suite *KeeperTestSuite) TestPerpetualPotOperations() {
 	suite.Require().Equal(sdk.Coins(nil), rewardsEst)
 }
 
-func (suite *KeeperTestSuite) TestNoLockPotDistribution() {
+func (suite *KeeperTestSuite) TestNoLockPerpetualPotDistribution() {
 	// test for module get pots
 	suite.SetupTest()
 
-	// setup no lock pot
+	// setup no lock perpetual pot
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	potID, _, _, startTime := suite.SetupNewPot(true, coins)
 
@@ -353,6 +353,51 @@ func (suite *KeeperTestSuite) TestNoLockPotDistribution() {
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 1,
+		FilledEpochs:      0,
+		DistributedCoins:  sdk.Coins{},
+		StartTime:         startTime,
+	}
+	suite.Require().Equal(pots[0].String(), expectedPot.String())
+
+	// start distribution
+	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potID)
+	suite.Require().NoError(err)
+	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *pot)
+	suite.Require().NoError(err)
+
+	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *pot)
+	suite.Require().NoError(err)
+	suite.Require().Equal(distrCoins, sdk.Coins(nil))
+
+	// check state is same after distribution
+	pots = suite.app.IncentivesKeeper.GetNotFinishedPots(suite.ctx)
+	suite.Require().Len(pots, 1)
+	suite.Require().Equal(pots[0].String(), expectedPot.String())
+}
+
+func (suite *KeeperTestSuite) TestNoLockNonPerpetualPotDistribution() {
+	// test for module get pots
+	suite.SetupTest()
+
+	// setup no lock non-perpetual pot
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	potID, _, _, startTime := suite.SetupNewPot(false, coins)
+
+	// check pots
+	pots := suite.app.IncentivesKeeper.GetNotFinishedPots(suite.ctx)
+	suite.Require().Len(pots, 1)
+	expectedPot := types.Pot{
+		Id:          potID,
+		IsPerpetual: false,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
+		},
+		Coins:             coins,
+		NumEpochsPaidOver: 2,
 		FilledEpochs:      0,
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
