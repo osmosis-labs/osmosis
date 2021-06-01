@@ -85,9 +85,16 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	suite.NoError(err)
 
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	suite.Equal("40000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
-	suite.Equal("10000.000000000000000000stake", feePool.CommunityPool.String())
-	suite.Equal("20000stake", suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver, "stake").String())
+	feeCollector := suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
+		suite.app.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf("stake"))
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
+		feePool.CommunityPool.AmountOf("stake"))
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).TruncateInt(),
+		suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver, "stake").Amount)
 }
 
 func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperRewardsAddr() {
