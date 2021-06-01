@@ -10,6 +10,11 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetModuleAccountBalance(ctx, genState.ModuleAccountBalance)
+
+	if !genState.AirdropStartTime.After(ctx.BlockTime()) {
+		genState.AirdropStartTime = ctx.BlockTime()
+	}
+
 	k.SetParams(ctx, types.Params{
 		AirdropStart:       genState.AirdropStartTime,
 		DurationUntilDecay: genState.DurationUntilDecay,

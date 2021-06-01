@@ -1,9 +1,6 @@
 package keeper
 
 import (
-	"math/big"
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -105,19 +102,14 @@ func (k Keeper) GetClaimable(ctx sdk.Context, addr string) (sdk.Coins, error) {
 	}
 
 	claimableCoins := sdk.Coins{}
-	monthlyDecayPercent := 10
-	monthDuration := time.Hour * 24 * 30
+
 	// Positive, since goneTime > params.DurationUntilDecay
 	decayTime := goneTime - params.DurationUntilDecay
 	for _, coin := range coins {
-		// decayPercent = decay_percent_per_month * (time_decayed) / (1 month)
-		// claimable_percent = 100 - decayPercent
-		// claimable_amt = claimable_coins * claimable_percent / 100
-		decayPercent := monthlyDecayPercent * int(decayTime) / int(monthDuration)
-		claimablePercent := int64(100) - int64(decayPercent)
-		claimableAmt := big.NewInt(0).Div(coin.Amount.Mul(sdk.NewInt(claimablePercent)).BigInt(), big.NewInt(100))
-		claimableCoinsWithDecay := sdk.NewCoin(coin.Denom, sdk.NewIntFromBigInt(claimableAmt))
-		claimableCoins = sdk.Coins{claimableCoinsWithDecay}
+		decayPercent := sdk.NewDec(decayTime.Nanoseconds()).QuoInt64(params.DurationOfDecay.Nanoseconds())
+		claimablePercent := sdk.OneDec().Sub(decayPercent)
+
+		claimableCoins = claimableCoins.Add(sdk.NewCoin(coin.Denom, coin.Amount.ToDec().Mul(claimablePercent).RoundInt()))
 	}
 
 	return claimableCoins, nil

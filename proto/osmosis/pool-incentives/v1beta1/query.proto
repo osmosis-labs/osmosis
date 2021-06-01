@@ -18,22 +18,23 @@ service Query {
 
   rpc DistrInfo(QueryDistrInfoRequest) returns (QueryDistrInfoResponse) {
     option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/distr_info";
+        "/osmosis/pool-incentives/v1beta1/distr_info";
   }
 
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/params";
+    option (google.api.http).get = "/osmosis/pool-incentives/v1beta1/params";
   }
 
-  rpc LockableDurations(QueryLockableDurationsRequest) returns (QueryLockableDurationsResponse) {
+  rpc LockableDurations(QueryLockableDurationsRequest)
+      returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/lockable_durations";
+        "/osmosis/pool-incentives/v1beta1/lockable_durations";
   }
 
-  rpc IncentivizedPools(QueryIncentivizedPoolsRequest) returns (QueryIncentivizedPoolsResponse) {
+  rpc IncentivizedPools(QueryIncentivizedPoolsRequest)
+      returns (QueryIncentivizedPoolsResponse) {
     option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/incentivized_pools";
+        "/osmosis/pool-incentives/v1beta1/incentivized_pools";
   }
 }
 
@@ -51,8 +52,7 @@ message QueryPotIdsResponse {
       [ (gogoproto.moretags) = "yaml:\"pot_ids_with_duration\"" ];
 }
 
-message QueryDistrInfoRequest {
-}
+message QueryDistrInfoRequest {}
 message QueryDistrInfoResponse {
   DistrInfo distr_info = 1 [
     (gogoproto.nullable) = false,
@@ -60,14 +60,12 @@ message QueryDistrInfoResponse {
   ];
 }
 
-message QueryParamsRequest {
-}
+message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-message QueryLockableDurationsRequest {
-}
+message QueryLockableDurationsRequest {}
 message QueryLockableDurationsResponse {
   repeated google.protobuf.Duration lockable_durations = 1 [
     (gogoproto.nullable) = false,
@@ -76,8 +74,7 @@ message QueryLockableDurationsResponse {
   ];
 }
 
-message QueryIncentivizedPoolsRequest {
-}
+message QueryIncentivizedPoolsRequest {}
 message IncentivizedPool {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   google.protobuf.Duration lockable_duration = 2 [

@@ -105,6 +105,44 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
+// TODO: Make sure CLI replaces with genesis time of chain.
+
+// func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+// 	val := s.network.Validators[0]
+
+// 	testCases := []struct {
+// 		name           string
+// 		args           []string
+// 		expectedOutput string
+// 	}{
+// 		{
+// 			"json output",
+// 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+// 			`{"airdrop_start":"1970-01-01T00:00:00Z","duration_until_decay":"3600s","duration_of_decay":"18000s"}`,
+// 		},
+// 		{
+// 			"text output",
+// 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+// 			`airdrop_start: "1970-01-01T00:00:00Z"
+// duration_of_decay: 18000s
+// duration_until_decay: 3600s`,
+// 		},
+// 	}
+
+// 	for _, tc := range testCases {
+// 		tc := tc
+
+// 		s.Run(tc.name, func() {
+// 			cmd := cli.GetCmdQueryParams()
+// 			clientCtx := val.ClientCtx
+
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+// 			s.Require().NoError(err)
+// 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+// 		})
+// 	}
+// }
+
 func (s *IntegrationTestSuite) TestCmdQueryClaimable() {
 	val := s.network.Validators[0]
 

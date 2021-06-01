@@ -281,9 +281,17 @@ Example:
 					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimableAmount)),
 				})
 				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
+
+				// Add the new account to the set of genesis accounts
+				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
+				if err := baseAccount.Validate(); err != nil {
+					return fmt.Errorf("failed to validate new genesis account: %w", err)
+				}
+				accs = append(accs, baseAccount)
 			}
 
 			// auth module genesis
+			accs = authtypes.SanitizeGenesisAccounts(accs)
 			genAccs, err := authtypes.PackAccounts(accs)
 			if err != nil {
 				return fmt.Errorf("failed to convert accounts into any's: %w", err)
@@ -305,8 +313,8 @@ Example:
 			appState[banktypes.ModuleName] = bankGenStateBz
 
 			// claim module genesis
-			claimGenState := claimtypes.DefaultGenesis()
-			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, claimModuleAccountBalance)
+			claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
+			claimGenState.ModuleAccountBalance = sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimModuleAccountBalance)
 			claimGenState.InitialClaimables = claimableBalances
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {

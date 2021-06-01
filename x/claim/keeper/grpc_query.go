@@ -11,6 +11,17 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+// Params returns params of the mint module.
+func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryParamsResponse{Params: params}, nil
+}
+
 // Claimable returns claimable amount per user
 func (k Keeper) Claimable(
 	goCtx context.Context,

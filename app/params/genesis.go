@@ -144,7 +144,7 @@ func TestnetGenesisParams() GenesisParams {
 
 	genParams.AirdropSupply = sdk.NewIntWithDecimal(1, 14) // 10^15 uosmo, 10^8 (100 million) osmo
 	genParams.ChainID = "osmo-testnet-thanatos"
-	// genParams.GenesisTime = time.Now() // TODO: Finalize date
+	genParams.GenesisTime = time.Now()
 
 	genParams.NativeCoinMetadata = banktypes.Metadata{
 		Description: fmt.Sprintf("The native token of Osmosis"),
@@ -220,8 +220,8 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.IncentivesParams.DistrEpochIdentifier = "daily"
 
 	genParams.ClaimAirdropStartTime = genParams.GenesisTime
-	genParams.ClaimDurationUntilDecay = time.Hour * 24  // 60 days = ~2 months
-	genParams.ClaimDurationOfDecay = time.Hour * 24 * 5 // 120 days = ~4 months
+	genParams.ClaimDurationUntilDecay = time.Second * 10 // 60 days = ~2 months
+	genParams.ClaimDurationOfDecay = time.Hour * 5       // 120 days = ~4 months
 
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
 	genParams.ConsensusParams.Evidence.MaxAgeDuration = genParams.StakingParams.UnbondingTime

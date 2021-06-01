@@ -3,14 +3,10 @@
 ## Abstract
 
 This specifies the `claim` module of Osmosis project, provide commands for claimable amount query and claim airdrop.
-We apply real-time decay after `DurationUntilDecay` pass where monthly decay rate is `-10%` of inital airdrop amount.
+We apply real-time decay after `DurationUntilDecay` pass where it decays linearly to 0 over a `DurationOfDecay`-long period.
 When `DurationUntilDecay + DurationOfDecay` time passes, all unclaimed coins will be sent to the community pool.
 
 ## Genesis State
-
-### Accounts
-
-All genesis accounts have `1 Osmo`, intended for tx fees as they perform actions to claim the rest of their Osmo
 
 ### Claimables
 

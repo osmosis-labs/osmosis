@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 
 	// do rest of actions
 	suite.app.ClaimKeeper.AfterProposalVote(suite.ctx, 1, addr1)
-	suite.app.ClaimKeeper.BeforeDelegationCreated(suite.ctx, addr1, sdk.ValAddress(addr1))
+	suite.app.ClaimKeeper.AfterDelegationModified(suite.ctx, addr1, sdk.ValAddress(addr1))
 
 	// get balance after rest actions done
 	coins1 = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
