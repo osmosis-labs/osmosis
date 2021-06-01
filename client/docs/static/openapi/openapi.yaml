@@ -2485,6 +2485,1259 @@ paths:
                           format: byte
       tags:
         - Query
+  /osmosis/pool-incentives/v1beta1/distr_info:
+    get:
+      operationId: DistrInfo
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  distr_info:
+                    type: object
+                    properties:
+                      total_weight:
+                        type: string
+                      records:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            pot_id:
+                              type: string
+                              format: uint64
+                            weight:
+                              type: string
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      tags:
+        - Query
+  /osmosis/pool-incentives/v1beta1/incentivized_pools:
+    get:
+      operationId: IncentivizedPools
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  incentivized_pools:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pool_id:
+                          type: string
+                          format: uint64
+                        lockable_duration:
+                          type: string
+                        pot_id:
+                          type: string
+                          format: uint64
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      tags:
+        - Query
+  /osmosis/pool-incentives/v1beta1/lockable_durations:
+    get:
+      operationId: LockableDurations
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  lockable_durations:
+                    type: array
+                    items:
+                      type: string
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      tags:
+        - Query
+  /osmosis/pool-incentives/v1beta1/params:
+    get:
+      operationId: PoolIncentivesParams
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  params:
+                    type: object
+                    properties:
+                      minted_denom:
+                        type: string
+                        description: >-
+                          minted_denom is the denomination of the coin expected
+                          to be minted by the
+
+                          minting module. Pool-incentives module doesn’t actually mint the coin
+
+                          itself, but rather manages the distribution of coins that matches the
+
+                          defined minted_denom.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      tags:
+        - Query
+  "/osmosis/pool-incentives/v1beta1/pot-ids/{pool_id}":
+    get:
+      summary: PotIds takes the pool id and returns the matching pot ids and durations
+      operationId: PotIds
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  pot_ids_with_duration:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pot_id:
+                          type: string
+                          format: uint64
+                        duration:
+                          type: string
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uint64
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_locked_coins/{owner}":
+    get:
+      summary: Return a locked coins that can't be withdrawn
+      operationId: AccountLockedCoins
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  coins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the custom method
+
+                        signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}":
+    get:
+      summary: Returns account locked records with longer duration
+      operationId: AccountLockedLongerDuration
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  locks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                          format: uint64
+                        owner:
+                          type: string
+                        duration:
+                          type: string
+                        end_time:
+                          type: string
+                          format: date-time
+                        coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements the custom method
+
+                              signatures required by gogoproto.
+                      description: >-
+                        PeriodLock is a single unit of lock by period. It's a
+                        record of locked coin
+
+                        at a specific time. It stores owner, duration, unlock time and the amount of
+
+                        coins locked.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: duration
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}":
+    get:
+      summary: Returns account's locked records for a denom with longer duration
+      operationId: AccountLockedLongerDurationDenom
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  locks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                          format: uint64
+                        owner:
+                          type: string
+                        duration:
+                          type: string
+                        end_time:
+                          type: string
+                          format: date-time
+                        coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements the custom method
+
+                              signatures required by gogoproto.
+                      description: >-
+                        PeriodLock is a single unit of lock by period. It's a
+                        record of locked coin
+
+                        at a specific time. It stores owner, duration, unlock time and the amount of
+
+                        coins locked.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: duration
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: denom
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_locked_longer_duration_not_unlocking_only/{owner}":
+    get:
+      summary: |-
+        Returns account locked records with longer duration excluding tokens
+        started unlocking
+      operationId: AccountLockedLongerDurationNotUnlockingOnly
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  locks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                          format: uint64
+                        owner:
+                          type: string
+                        duration:
+                          type: string
+                        end_time:
+                          type: string
+                          format: date-time
+                        coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements the custom method
+
+                              signatures required by gogoproto.
+                      description: >-
+                        PeriodLock is a single unit of lock by period. It's a
+                        record of locked coin
+
+                        at a specific time. It stores owner, duration, unlock time and the amount of
+
+                        coins locked.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: duration
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_locked_pasttime/{owner}":
+    get:
+      summary: Returns locked records of an account with unlock time beyond timestamp
+      operationId: AccountLockedPastTime
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  locks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                          format: uint64
+                        owner:
+                          type: string
+                        duration:
+                          type: string
+                        end_time:
+                          type: string
+                          format: date-time
+                        coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements the custom method
+
+                              signatures required by gogoproto.
+                      description: >-
+                        PeriodLock is a single unit of lock by period. It's a
+                        record of locked coin
+
+                        at a specific time. It stores owner, duration, unlock time and the amount of
+
+                        coins locked.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: timestamp
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_locked_pasttime_denom/{owner}":
+    get:
+      summary: Returns lock records by address, timestamp, denom
+      operationId: AccountLockedPastTimeDenom
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  locks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                          format: uint64
+                        owner:
+                          type: string
+                        duration:
+                          type: string
+                        end_time:
+                          type: string
+                          format: date-time
+                        coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements the custom method
+
+                              signatures required by gogoproto.
+                      description: >-
+                        PeriodLock is a single unit of lock by period. It's a
+                        record of locked coin
+
+                        at a specific time. It stores owner, duration, unlock time and the amount of
+
+                        coins locked.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: timestamp
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: denom
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_locked_pasttime_not_unlocking_only/{owner}":
+    get:
+      summary: |-
+        Returns locked records of an account with unlock time beyond timestamp
+        excluding tokens started unlocking
+      operationId: AccountLockedPastTimeNotUnlockingOnly
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  locks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                          format: uint64
+                        owner:
+                          type: string
+                        duration:
+                          type: string
+                        end_time:
+                          type: string
+                          format: date-time
+                        coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements the custom method
+
+                              signatures required by gogoproto.
+                      description: >-
+                        PeriodLock is a single unit of lock by period. It's a
+                        record of locked coin
+
+                        at a specific time. It stores owner, duration, unlock time and the amount of
+
+                        coins locked.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: timestamp
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_unlockable_coins/{owner}":
+    get:
+      summary: Returns unlockable coins which are not withdrawn yet
+      operationId: AccountUnlockableCoins
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  coins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the custom method
+
+                        signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_unlocked_before_time/{owner}":
+    get:
+      summary: Returns unlocked records with unlock time before timestamp
+      operationId: AccountUnlockedBeforeTime
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  locks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                          format: uint64
+                        owner:
+                          type: string
+                        duration:
+                          type: string
+                        end_time:
+                          type: string
+                          format: date-time
+                        coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements the custom method
+
+                              signatures required by gogoproto.
+                      description: >-
+                        PeriodLock is a single unit of lock by period. It's a
+                        record of locked coin
+
+                        at a specific time. It stores owner, duration, unlock time and the amount of
+
+                        coins locked.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: timestamp
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/account_unlocking_coins/{owner}":
+    get:
+      summary: Returns unlocking coins
+      operationId: AccountUnlockingCoins
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  coins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the custom method
+
+                        signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/lockup/v1beta1/locked_by_id/{lock_id}":
+    get:
+      summary: Returns lock record by id
+      operationId: LockedByID
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  lock:
+                    type: object
+                    properties:
+                      ID:
+                        type: string
+                        format: uint64
+                      owner:
+                        type: string
+                      duration:
+                        type: string
+                      end_time:
+                        type: string
+                        format: date-time
+                      coins:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an
+                            amount.
+
+
+                            NOTE: The amount field is an Int which implements the custom method
+
+                            signatures required by gogoproto.
+                    description: >-
+                      PeriodLock is a single unit of lock by period. It's a
+                      record of locked coin
+
+                      at a specific time. It stores owner, duration, unlock time and the amount of
+
+                      coins locked.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: lock_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uint64
+      tags:
+        - Query
+  /osmosis/lockup/v1beta1/module_balance:
+    get:
+      summary: Return full balance of the module
+      operationId: ModuleBalance
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  coins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the custom method
+
+                        signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      tags:
+        - Query
+  /osmosis/lockup/v1beta1/module_locked_amount:
+    get:
+      summary: Return locked balance of the module
+      operationId: ModuleLockedAmount
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  coins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the custom method
+
+                        signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      tags:
+        - Query
   "/cosmos/auth/v1beta1/accounts/{address}":
     get:
       summary: Account returns account details based on address.
@@ -14318,6 +15571,590 @@ components:
                 type: boolean
               current_epoch_ended:
                 type: boolean
+    osmosis.poolincentives.v1beta1.DistrInfo:
+      type: object
+      properties:
+        total_weight:
+          type: string
+        records:
+          type: array
+          items:
+            type: object
+            properties:
+              pot_id:
+                type: string
+                format: uint64
+              weight:
+                type: string
+    osmosis.poolincentives.v1beta1.DistrRecord:
+      type: object
+      properties:
+        pot_id:
+          type: string
+          format: uint64
+        weight:
+          type: string
+    osmosis.poolincentives.v1beta1.IncentivizedPool:
+      type: object
+      properties:
+        pool_id:
+          type: string
+          format: uint64
+        lockable_duration:
+          type: string
+        pot_id:
+          type: string
+          format: uint64
+    osmosis.poolincentives.v1beta1.Params:
+      type: object
+      properties:
+        minted_denom:
+          type: string
+          description: >-
+            minted_denom is the denomination of the coin expected to be minted
+            by the
+
+            minting module. Pool-incentives module doesn’t actually mint the coin
+
+            itself, but rather manages the distribution of coins that matches the
+
+            defined minted_denom.
+    osmosis.poolincentives.v1beta1.QueryDistrInfoResponse:
+      type: object
+      properties:
+        distr_info:
+          type: object
+          properties:
+            total_weight:
+              type: string
+            records:
+              type: array
+              items:
+                type: object
+                properties:
+                  pot_id:
+                    type: string
+                    format: uint64
+                  weight:
+                    type: string
+    osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsResponse:
+      type: object
+      properties:
+        incentivized_pools:
+          type: array
+          items:
+            type: object
+            properties:
+              pool_id:
+                type: string
+                format: uint64
+              lockable_duration:
+                type: string
+              pot_id:
+                type: string
+                format: uint64
+    osmosis.poolincentives.v1beta1.QueryLockableDurationsResponse:
+      type: object
+      properties:
+        lockable_durations:
+          type: array
+          items:
+            type: string
+    osmosis.poolincentives.v1beta1.QueryParamsResponse:
+      type: object
+      properties:
+        params:
+          type: object
+          properties:
+            minted_denom:
+              type: string
+              description: >-
+                minted_denom is the denomination of the coin expected to be
+                minted by the
+
+                minting module. Pool-incentives module doesn’t actually mint the coin
+
+                itself, but rather manages the distribution of coins that matches the
+
+                defined minted_denom.
+    osmosis.poolincentives.v1beta1.QueryPotIdsResponse:
+      type: object
+      properties:
+        pot_ids_with_duration:
+          type: array
+          items:
+            type: object
+            properties:
+              pot_id:
+                type: string
+                format: uint64
+              duration:
+                type: string
+    osmosis.poolincentives.v1beta1.QueryPotIdsResponse.PotIdWithDuration:
+      type: object
+      properties:
+        pot_id:
+          type: string
+          format: uint64
+        duration:
+          type: string
+    osmosis.lockup.AccountLockedCoinsResponse:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom method
+
+              signatures required by gogoproto.
+    osmosis.lockup.AccountLockedLongerDurationDenomResponse:
+      type: object
+      properties:
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              ID:
+                type: string
+                format: uint64
+              owner:
+                type: string
+              duration:
+                type: string
+              end_time:
+                type: string
+                format: date-time
+              coins:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom method
+
+                    signatures required by gogoproto.
+            description: >-
+              PeriodLock is a single unit of lock by period. It's a record of
+              locked coin
+
+              at a specific time. It stores owner, duration, unlock time and the amount of
+
+              coins locked.
+    osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse:
+      type: object
+      properties:
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              ID:
+                type: string
+                format: uint64
+              owner:
+                type: string
+              duration:
+                type: string
+              end_time:
+                type: string
+                format: date-time
+              coins:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom method
+
+                    signatures required by gogoproto.
+            description: >-
+              PeriodLock is a single unit of lock by period. It's a record of
+              locked coin
+
+              at a specific time. It stores owner, duration, unlock time and the amount of
+
+              coins locked.
+    osmosis.lockup.AccountLockedLongerDurationResponse:
+      type: object
+      properties:
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              ID:
+                type: string
+                format: uint64
+              owner:
+                type: string
+              duration:
+                type: string
+              end_time:
+                type: string
+                format: date-time
+              coins:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom method
+
+                    signatures required by gogoproto.
+            description: >-
+              PeriodLock is a single unit of lock by period. It's a record of
+              locked coin
+
+              at a specific time. It stores owner, duration, unlock time and the amount of
+
+              coins locked.
+    osmosis.lockup.AccountLockedPastTimeDenomResponse:
+      type: object
+      properties:
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              ID:
+                type: string
+                format: uint64
+              owner:
+                type: string
+              duration:
+                type: string
+              end_time:
+                type: string
+                format: date-time
+              coins:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom method
+
+                    signatures required by gogoproto.
+            description: >-
+              PeriodLock is a single unit of lock by period. It's a record of
+              locked coin
+
+              at a specific time. It stores owner, duration, unlock time and the amount of
+
+              coins locked.
+    osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyResponse:
+      type: object
+      properties:
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              ID:
+                type: string
+                format: uint64
+              owner:
+                type: string
+              duration:
+                type: string
+              end_time:
+                type: string
+                format: date-time
+              coins:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom method
+
+                    signatures required by gogoproto.
+            description: >-
+              PeriodLock is a single unit of lock by period. It's a record of
+              locked coin
+
+              at a specific time. It stores owner, duration, unlock time and the amount of
+
+              coins locked.
+    osmosis.lockup.AccountLockedPastTimeResponse:
+      type: object
+      properties:
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              ID:
+                type: string
+                format: uint64
+              owner:
+                type: string
+              duration:
+                type: string
+              end_time:
+                type: string
+                format: date-time
+              coins:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom method
+
+                    signatures required by gogoproto.
+            description: >-
+              PeriodLock is a single unit of lock by period. It's a record of
+              locked coin
+
+              at a specific time. It stores owner, duration, unlock time and the amount of
+
+              coins locked.
+    osmosis.lockup.AccountUnlockableCoinsResponse:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom method
+
+              signatures required by gogoproto.
+    osmosis.lockup.AccountUnlockedBeforeTimeResponse:
+      type: object
+      properties:
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              ID:
+                type: string
+                format: uint64
+              owner:
+                type: string
+              duration:
+                type: string
+              end_time:
+                type: string
+                format: date-time
+              coins:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom method
+
+                    signatures required by gogoproto.
+            description: >-
+              PeriodLock is a single unit of lock by period. It's a record of
+              locked coin
+
+              at a specific time. It stores owner, duration, unlock time and the amount of
+
+              coins locked.
+    osmosis.lockup.AccountUnlockingCoinsResponse:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom method
+
+              signatures required by gogoproto.
+    osmosis.lockup.LockedResponse:
+      type: object
+      properties:
+        lock:
+          type: object
+          properties:
+            ID:
+              type: string
+              format: uint64
+            owner:
+              type: string
+            duration:
+              type: string
+            end_time:
+              type: string
+              format: date-time
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom method
+
+                  signatures required by gogoproto.
+          description: >-
+            PeriodLock is a single unit of lock by period. It's a record of
+            locked coin
+
+            at a specific time. It stores owner, duration, unlock time and the amount of
+
+            coins locked.
+    osmosis.lockup.ModuleBalanceResponse:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom method
+
+              signatures required by gogoproto.
+    osmosis.lockup.ModuleLockedAmountResponse:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom method
+
+              signatures required by gogoproto.
+    osmosis.lockup.PeriodLock:
+      type: object
+      properties:
+        ID:
+          type: string
+          format: uint64
+        owner:
+          type: string
+        duration:
+          type: string
+        end_time:
+          type: string
+          format: date-time
+        coins:
+          type: array
+          items:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom method
+
+              signatures required by gogoproto.
+      description: >-
+        PeriodLock is a single unit of lock by period. It's a record of locked
+        coin
+
+        at a specific time. It stores owner, duration, unlock time and the amount of
+
+        coins locked.
     cosmos.auth.v1beta1.Params:
       type: object
       properties:

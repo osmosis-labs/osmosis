@@ -93,6 +93,9 @@ func (k Keeper) SetPoolPotId(ctx sdk.Context, poolId uint64, lockableDuration ti
 	key := types.GetPoolPotIdStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, sdk.Uint64ToBigEndian(potId))
+
+	key = types.GetPoolIdFromPotIdStoreKey(potId, lockableDuration)
+	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
 func (k Keeper) GetPoolPotId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error) {
@@ -102,6 +105,18 @@ func (k Keeper) GetPoolPotId(ctx sdk.Context, poolId uint64, lockableDuration ti
 
 	if len(bz) == 0 {
 		return 0, sdkerrors.Wrapf(types.ErrNoPotIdExist, "pot id for pool (%d) with duration (%s) not exist", poolId, lockableDuration.String())
+	}
+
+	return sdk.BigEndianToUint64(bz), nil
+}
+
+func (k Keeper) GetPoolIdFromPotId(ctx sdk.Context, potId uint64, lockableDuration time.Duration) (uint64, error) {
+	key := types.GetPoolIdFromPotIdStoreKey(potId, lockableDuration)
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(key)
+
+	if len(bz) == 0 {
+		return 0, sdkerrors.Wrapf(types.ErrNoPotIdExist, "pool for pot id (%d) with duration (%s) not exist", potId, lockableDuration.String())
 	}
 
 	return sdk.BigEndianToUint64(bz), nil
