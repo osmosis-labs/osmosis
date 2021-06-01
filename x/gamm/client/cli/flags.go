@@ -44,6 +44,7 @@ type createPoolInputs struct {
 	InitialDeposit           string                         `json:"initial-deposit"`
 	SwapFee                  string                         `json:"swap-fee"`
 	ExitFee                  string                         `json:"exit-fee"`
+	StartTime                string                         `json:"start-time"`
 	FutureGovernor           string                         `json:"future-governor"`
 	SmoothWeightChangeParams smoothWeightChangeParamsInputs `json:"lbp-params"`
 }
