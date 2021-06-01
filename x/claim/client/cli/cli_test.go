@@ -106,7 +106,9 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-// TODO: Make sure CLI replaces with genesis time of chain.
+// TODO: Figure out how to get genesis time from IntegrationTestSuite
+// Because right now, verifying the correctness of the airdrop_start_time
+// isn't possible.
 // Other than that, this works
 
 // func (s *IntegrationTestSuite) TestGetCmdQueryParams() {

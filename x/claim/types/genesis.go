@@ -41,5 +41,14 @@ func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]js
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
+	totalClaimable := sdk.Coins{}
+
+	for _, claimRecord := range gs.ClaimRecords {
+		totalClaimable = totalClaimable.Add(claimRecord.InitialClaimableAmount...)
+	}
+
+	if !totalClaimable.IsEqual(sdk.NewCoins(gs.ModuleAccountBalance)) {
+		return ErrIncorrectModuleAccountBalance
+	}
 	return nil
 }
