@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/incentives/pot.proto";
@@ -13,23 +14,37 @@ option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 service Query {
   // returns coins that is going to be distributed
   rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest)
-      returns (ModuleToDistributeCoinsResponse);
+      returns (ModuleToDistributeCoinsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/module_to_distribute_coins";
+  }
   // returns coins that are distributed by module so far
   rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest)
-      returns (ModuleDistributedCoinsResponse);
+      returns (ModuleDistributedCoinsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/module_distributed_coins";
+  }
 
   // returns Pot by id
-  rpc PotByID(PotByIDRequest) returns (PotByIDResponse);
+  rpc PotByID(PotByIDRequest) returns (PotByIDResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/pot_by_id/{id}";
+  }
   // returns pots both upcoming and active
-  rpc Pots(PotsRequest) returns (PotsResponse);
+  rpc Pots(PotsRequest) returns (PotsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/pots";
+  }
   // returns active pots
-  rpc ActivePots(ActivePotsRequest) returns (ActivePotsResponse);
+  rpc ActivePots(ActivePotsRequest) returns (ActivePotsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/active_pots";
+  }
   // returns scheduled pots
-  rpc UpcomingPots(UpcomingPotsRequest) returns (UpcomingPotsResponse);
+  rpc UpcomingPots(UpcomingPotsRequest) returns (UpcomingPotsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/upcoming_pots";
+  }
   // RewardsEst returns an estimate of the rewards at a future specific time.
   // The querier either provides an address or a set of locks
   // for which they want to find the associated rewards.
-  rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse);
+  rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {
+    // XXX: Due to the limitation of GRPC HTTP Gateway, it is impossible to query with repeated message type.
+  }
 }
 
 message ModuleToDistributeCoinsRequest {}
