@@ -9,19 +9,31 @@ import (
 )
 
 func (k Keeper) AfterAddLiquidity(ctx sdk.Context, sender sdk.AccAddress) {
-	k.ClaimCoinsForAction(ctx, sender, types.ActionAddLiquidity)
+	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionAddLiquidity)
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func (k Keeper) AfterSwap(ctx sdk.Context, sender sdk.AccAddress) {
-	k.ClaimCoinsForAction(ctx, sender, types.ActionSwap)
+	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionSwap)
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func (k Keeper) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	k.ClaimCoinsForAction(ctx, voterAddr, types.ActionVote)
+	_, err := k.ClaimCoinsForAction(ctx, voterAddr, types.ActionVote)
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
+	_, err := k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 //_________________________________________________________________________________________
