@@ -13,8 +13,8 @@ const (
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
 
-	// ClaimableStoreKey defines the store key for claimable amounts
-	ClaimableStoreKey = "claimable"
+	// ClaimRecordsStorePrefix defines the store prefix for the claim records
+	ClaimRecordsStorePrefix = "claimrecords"
 
 	// ParamsKey defines the store key for claim module parameters
 	ParamsKey = "params"

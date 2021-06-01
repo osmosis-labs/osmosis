@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type Actions []Action
@@ -18,11 +17,12 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ModuleAccountBalance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
-		AirdropStartTime:     time.Unix(0, 0),
-		DurationUntilDecay:   DefaultDurationUntilDecay, // 1 month
-		DurationOfDecay:      DefaultDurationOfDecay,    // 5 months
-		InitialClaimables:    []banktypes.Balance{},
-		Activities:           []UserActions{},
+		Params: Params{
+			AirdropStartTime:   time.Unix(0, 0),
+			DurationUntilDecay: DefaultDurationUntilDecay, // 2 month
+			DurationOfDecay:    DefaultDurationOfDecay,    // 4 months
+		},
+		ClaimRecords: []ClaimRecord{},
 	}
 }
 

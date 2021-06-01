@@ -242,7 +242,7 @@ Example:
 			fmt.Printf("normalization factor: %s\n", normalizationFactor)
 
 			liquidBalances := []banktypes.Balance{}
-			claimableBalances := []banktypes.Balance{}
+			claimRecords := []claimtypes.ClaimRecord{}
 			claimModuleAccountBalance := sdk.NewInt(0)
 
 			// for each account in the snapshot
@@ -276,10 +276,13 @@ Example:
 
 				// claimable balances
 				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).RoundInt()
-				claimableBalances = append(claimableBalances, banktypes.Balance{
-					Address: address.String(),
-					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimableAmount)),
+
+				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
+					Address:                address.String(),
+					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimableAmount)),
+					ActionCompleted:        []bool{false, false, false, false},
 				})
+
 				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
 
 				// Add the new account to the set of genesis accounts
@@ -315,7 +318,8 @@ Example:
 			// claim module genesis
 			claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
 			claimGenState.ModuleAccountBalance = sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimModuleAccountBalance)
-			claimGenState.InitialClaimables = claimableBalances
+
+			claimGenState.ClaimRecords = claimRecords
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal claim genesis state: %w", err)

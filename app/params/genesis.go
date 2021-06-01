@@ -15,6 +15,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
@@ -41,9 +42,7 @@ type GenesisParams struct {
 
 	Epochs []epochstypes.EpochInfo
 
-	ClaimAirdropStartTime   time.Time
-	ClaimDurationUntilDecay time.Duration
-	ClaimDurationOfDecay    time.Duration
+	ClaimParams claimtypes.Params
 }
 
 func MainnetGenesisParams() GenesisParams {
@@ -127,9 +126,11 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.IncentivesParams = incentivestypes.DefaultParams()
 	genParams.IncentivesParams.DistrEpochIdentifier = "daily"
 
-	genParams.ClaimAirdropStartTime = genParams.GenesisTime
-	genParams.ClaimDurationUntilDecay = time.Hour * 24 * 60 // 60 days = ~2 months
-	genParams.ClaimDurationOfDecay = time.Hour * 24 * 120   // 120 days = ~4 months
+	genParams.ClaimParams = claimtypes.Params{
+		AirdropStartTime:   genParams.GenesisTime,
+		DurationUntilDecay: time.Hour * 24 * 60,  // 60 days = ~2 months
+		DurationOfDecay:    time.Hour * 24 * 120, // 120 days = ~4 months
+	}
 
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
 	genParams.ConsensusParams.Evidence.MaxAgeDuration = genParams.StakingParams.UnbondingTime
@@ -219,9 +220,11 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.IncentivesParams = incentivestypes.DefaultParams()
 	genParams.IncentivesParams.DistrEpochIdentifier = "daily"
 
-	genParams.ClaimAirdropStartTime = genParams.GenesisTime
-	genParams.ClaimDurationUntilDecay = time.Second * 10 // 60 days = ~2 months
-	genParams.ClaimDurationOfDecay = time.Hour * 5       // 120 days = ~4 months
+	genParams.ClaimParams = claimtypes.Params{
+		AirdropStartTime:   genParams.GenesisTime,
+		DurationUntilDecay: time.Second * 10, // 60 days = ~2 months
+		DurationOfDecay:    time.Hour * 5,    // 120 days = ~4 months
+	}
 
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
 	genParams.ConsensusParams.Evidence.MaxAgeDuration = genParams.StakingParams.UnbondingTime

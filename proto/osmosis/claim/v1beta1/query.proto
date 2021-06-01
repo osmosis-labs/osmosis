@@ -4,6 +4,7 @@ package osmosis.claim.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/claim/v1beta1/claim.proto";
 import "osmosis/claim/v1beta1/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/claim/types";
@@ -13,11 +14,19 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/claim/v1beta1/params";
   }
-  rpc Claimable(ClaimableRequest) returns (ClaimableResponse) {
-    option (google.api.http).get = "/osmosis/claim/v1beta1/claimable/{sender}";
+  rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
+    option (google.api.http).get =
+        "/osmosis/claim/v1beta1/claim_record/{address}";
   }
-  rpc Activities(ActivitiesRequest) returns (ActivitiesResponse) {
-    option (google.api.http).get = "/osmosis/claim/v1beta1/activites/{sender}";
+  rpc ClaimableForAction(QueryClaimableForActionRequest)
+      returns (QueryClaimableForActionResponse) {
+    option (google.api.http).get =
+        "/osmosis/claim/v1beta1/claimable_for_action/{address}/{action}";
+  }
+  rpc TotalClaimable(QueryTotalClaimableRequest)
+      returns (QueryTotalClaimableResponse) {
+    option (google.api.http).get =
+        "/osmosis/claim/v1beta1/total_claimable/{address}";
   }
 }
 
@@ -30,21 +39,38 @@ message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-message ClaimableRequest {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+message QueryClaimRecordRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 }
 
-message ClaimableResponse {
-  repeated cosmos.base.v1beta1.Coin coins = 1
-      [ (gogoproto.moretags) = "yaml:\"coins\"", (gogoproto.nullable) = false ];
+message QueryClaimRecordResponse {
+  ClaimRecord claim_record = 1 [
+    (gogoproto.moretags) = "yaml:\"claim_record\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
-message ActivitiesRequest {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+message QueryClaimableForActionRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  Action action = 2 [ (gogoproto.moretags) = "yaml:\"action\"" ];
 }
 
-message ActivitiesResponse {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  repeated string all = 2;
-  repeated string completed = 3;
+message QueryClaimableForActionResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message QueryTotalClaimableRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+
+message QueryTotalClaimableResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
