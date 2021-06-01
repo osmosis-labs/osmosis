@@ -32,23 +32,26 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) TestGetPoolAllocatableAsset() {
+func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	mintKeeper := suite.app.MintKeeper
 
-	// Params would be set as the stake coin with 20% ratio from the default genesis state.
-
-	// At this time, the fee collector doesn't have any assets.
-	// So, it should be return the empty coins.
-	coin := mintKeeper.GetProportions(suite.ctx, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))), sdk.NewDecWithPrec(2, 1))
+	// When coin is minted to the fee collector
+	fees := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0)))
+	coin := mintKeeper.GetProportions(suite.ctx, fees, sdk.NewDecWithPrec(2, 1))
 	suite.Equal("0stake", coin.String())
 
-	// Mint the stake coin to the fee collector.
+	// When mint the 100K stake coin to the fee collector
+	fees = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
 	err := suite.app.BankKeeper.AddCoins(
 		suite.ctx,
 		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
-		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000))),
+		fees,
 	)
 	suite.NoError(err)
+
+	// check propotion for 20%
+	coin = mintKeeper.GetProportions(suite.ctx, fees, sdk.NewDecWithPrec(2, 1))
+	suite.Equal(fees[0].Amount.Quo(sdk.NewInt(5)), coin.Amount)
 }
 
 func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty() {
