@@ -2,9 +2,11 @@ package cli_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -109,41 +111,41 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 // TODO: Make sure CLI replaces with genesis time of chain.
 // Other than that, this works
 
-// func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
-// 	val := s.network.Validators[0]
+func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+	val := s.network.Validators[0]
 
-// 	testCases := []struct {
-// 		name           string
-// 		args           []string
-// 		expectedOutput string
-// 	}{
-// 		{
-// 			"json output",
-// 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-// 			`{"airdrop_start_time":"1970-01-01T00:00:00Z","duration_until_decay":"3600s","duration_of_decay":"18000s"}`,
-// 		},
-// 		{
-// 			"text output",
-// 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-// 			`airdrop_start_time: "1970-01-01T00:00:00Z"
-// duration_of_decay: 18000s
-// duration_until_decay: 3600s`,
-// 		},
-// 	}
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"json output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`{"airdrop_start_time":"1970-01-01T00:00:00Z","duration_until_decay":"3600s","duration_of_decay":"18000s"}`,
+		},
+		{
+			"text output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			`airdrop_start_time: "1970-01-01T00:00:00Z"
+duration_of_decay: 18000s
+duration_until_decay: 3600s`,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdQueryParams()
-// 			clientCtx := val.ClientCtx
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParams()
+			clientCtx := val.ClientCtx
 
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-// 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-// 		})
-// 	}
-// }
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
 
 func (s *IntegrationTestSuite) TestCmdQueryClaimRecord() {
 	val := s.network.Validators[0]

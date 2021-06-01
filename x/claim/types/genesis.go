@@ -18,7 +18,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ModuleAccountBalance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
 		Params: Params{
-			AirdropStartTime:   time.Unix(0, 0),
+			AirdropStartTime:   time.Time{},
 			DurationUntilDecay: DefaultDurationUntilDecay, // 2 month
 			DurationOfDecay:    DefaultDurationOfDecay,    // 4 months
 		},

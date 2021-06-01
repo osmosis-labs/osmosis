@@ -130,6 +130,10 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 		return nil, err
 	}
 
+	if ctx.BlockTime().Before(params.AirdropStartTime) {
+		return sdk.Coins{}, nil
+	}
+
 	InitialClaimablePerAction := sdk.Coins{}
 	for _, coin := range claimRecord.InitialClaimableAmount {
 		InitialClaimablePerAction = InitialClaimablePerAction.Add(

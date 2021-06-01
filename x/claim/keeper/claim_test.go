@@ -56,7 +56,8 @@ func (suite *KeeperTestSuite) TestHookBeforeAirdropStart() {
 
 	coins, err := suite.app.ClaimKeeper.GetUserTotalClaimable(suite.ctx, addr1)
 	suite.NoError(err)
-	suite.Equal(claimRecords[0].InitialClaimableAmount, coins)
+	// Now, it is before starting air drop, so this value should return the empty coins
+	suite.True(coins.Empty())
 
 	coins, err = suite.app.ClaimKeeper.GetClaimableAmountForAction(suite.ctx, addr1, types.ActionSwap)
 	suite.NoError(err)
