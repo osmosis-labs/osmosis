@@ -57,7 +57,7 @@ func DefaultParams() Params {
 			Staking:          sdk.NewDecWithPrec(4, 1), // 0.4
 			PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
 			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
-			CommunityPool:    sdk.NewDecWithPrec(1, 1), // 0.5
+			CommunityPool:    sdk.NewDecWithPrec(1, 1), // 0.1
 		},
 		DeveloperRewardsReceiver:             "",
 		MintingRewardsDistributionStartEpoch: 0,

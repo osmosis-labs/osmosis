@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
@@ -32,23 +31,26 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) TestGetPoolAllocatableAsset() {
+func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	mintKeeper := suite.app.MintKeeper
 
-	// Params would be set as the stake coin with 20% ratio from the default genesis state.
-
-	// At this time, the fee collector doesn't have any assets.
-	// So, it should be return the empty coins.
-	coin := mintKeeper.GetProportions(suite.ctx, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))), sdk.NewDecWithPrec(2, 1))
+	// When coin is minted to the fee collector
+	fees := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0)))
+	coin := mintKeeper.GetProportions(suite.ctx, fees, sdk.NewDecWithPrec(2, 1))
 	suite.Equal("0stake", coin.String())
 
-	// Mint the stake coin to the fee collector.
+	// When mint the 100K stake coin to the fee collector
+	fees = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
 	err := suite.app.BankKeeper.AddCoins(
 		suite.ctx,
 		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
-		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000))),
+		fees,
 	)
 	suite.NoError(err)
+
+	// check propotion for 20%
+	coin = mintKeeper.GetProportions(suite.ctx, fees, sdk.NewDecWithPrec(2, 1))
+	suite.Equal(fees[0].Amount.Quo(sdk.NewInt(5)), coin.Amount)
 }
 
 func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty() {
@@ -82,14 +84,22 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	suite.NoError(err)
 
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	suite.Equal("40000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
-	suite.Equal("10000.000000000000000000stake", feePool.CommunityPool.String())
-	suite.Equal("20000stake", suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver, "stake").String())
+	feeCollector := suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
+		suite.app.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf("stake"))
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
+		feePool.CommunityPool.AmountOf("stake"))
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).TruncateInt(),
+		suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver, "stake").Amount)
 }
 
 func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperRewardsAddr() {
 	mintKeeper := suite.app.MintKeeper
 
+	params := suite.app.MintKeeper.GetParams(suite.ctx)
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
 	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
@@ -99,12 +109,19 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
 
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	suite.Equal("40000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
-	suite.Equal(sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(60000))).String(), feePool.CommunityPool.String())
-	suite.Equal("60000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake").String())
+	feeCollector := suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	// PoolIncentives + DeveloperRewards + CommunityPool => CommunityPool
+	proportionToCommunity := params.DistributionProportions.PoolIncentives.
+		Add(params.DistributionProportions.DeveloperRewards).
+		Add(params.DistributionProportions.CommunityPool)
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
+		suite.app.BankKeeper.GetBalance(suite.ctx, feeCollector, "stake").Amount)
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(proportionToCommunity),
+		feePool.CommunityPool.AmountOf("stake"))
 
-	// Community pool should be increased
-	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	// Mint more and community pool should be increased
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
 	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins)
 	suite.NoError(err)
@@ -112,7 +129,10 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
 
 	feePool = suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	suite.Equal("80000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
-	suite.Equal(feePool.CommunityPool.String(), sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(120000))).String())
-	suite.Equal(sdk.NewCoin("stake", sdk.NewInt(120000)), suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake"))
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt().Mul(sdk.NewInt(2)),
+		suite.app.BankKeeper.GetBalance(suite.ctx, feeCollector, "stake").Amount)
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(proportionToCommunity).Mul(sdk.NewDec(2)),
+		feePool.CommunityPool.AmountOf("stake"))
 }
