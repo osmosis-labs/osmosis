@@ -19,7 +19,7 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	setupPotForLPIncentives(t, app, ctx)
+	setupGaugeForLPIncentives(t, app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -77,7 +77,7 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	setupPotForLPIncentives(t, app, ctx)
+	setupGaugeForLPIncentives(t, app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -134,7 +134,7 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	setupPotForLPIncentives(t, app, ctx)
+	setupGaugeForLPIncentives(t, app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -163,7 +163,7 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	require.Equal(t, lastHalvenPeriod, mintParams.MintingRewardsDistributionStartEpoch)
 }
 
-func setupPotForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Context) {
+func setupGaugeForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Context) {
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
 	app.BankKeeper.SetBalances(ctx, addr, coins)
@@ -172,6 +172,6 @@ func setupPotForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Conte
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	_, err := app.IncentivesKeeper.CreatePot(ctx, true, addr, coins, distrTo, time.Now(), 1)
+	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 }

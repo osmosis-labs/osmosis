@@ -23,22 +23,22 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetCmdPots(),
+		GetCmdGauges(),
 	)
 
 	return cmd
 }
 
-// GetCmdPots returns full available pots
-func GetCmdPots() *cobra.Command {
+// GetCmdGauges returns full available gauges
+func GetCmdGauges() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pots",
-		Short: "Query available pots",
+		Use:   "gauges",
+		Short: "Query available gauges",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query available pots.
+			fmt.Sprintf(`Query available gauges.
 
 Example:
-$ %s query incentives pots
+$ %s query incentives gauges
 `,
 				version.AppName,
 			),
@@ -56,7 +56,7 @@ $ %s query incentives pots
 				return err
 			}
 
-			res, err := queryClient.Pots(cmd.Context(), &types.PotsRequest{
+			res, err := queryClient.Gauges(cmd.Context(), &types.GaugesRequest{
 				Pagination: pageReq,
 			})
 			if err != nil {
@@ -78,13 +78,13 @@ $ %s query incentives pots
 // rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest) returns (ModuleToDistributeCoinsResponse);
 // // returns coins that are distributed by module so far
 // rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest) returns (ModuleDistributedCoinsResponse);
-// // returns Pot by id
-// rpc PotByID(PotByIDRequest) returns (PotByIDResponse);
-// // returns pots both upcoming and active
-// rpc Pots(PotsRequest) returns (PotsResponse);
-// // returns active pots
-// rpc ActivePots(ActivePotsRequest) returns (ActivePotsResponse);
-// // returns scheduled pots
-// rpc UpcomingPots(UpcomingPotsRequest) returns (UpcomingPotsResponse);
+// // returns Gauge by id
+// rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse);
+// // returns gauges both upcoming and active
+// rpc Gauges(GaugesRequest) returns (GaugesResponse);
+// // returns active gauges
+// rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse);
+// // returns scheduled gauges
+// rpc UpcomingGauges(UpcomingGaugesRequest) returns (UpcomingGaugesResponse);
 // // returns rewards estimation at a future specific time
 // rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse);

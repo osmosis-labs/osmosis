@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "osmosis/incentives/pot.proto";
+import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
@@ -15,35 +15,40 @@ service Query {
   // returns coins that is going to be distributed
   rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest)
       returns (ModuleToDistributeCoinsResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/module_to_distribute_coins";
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/module_to_distribute_coins";
   }
   // returns coins that are distributed by module so far
   rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest)
       returns (ModuleDistributedCoinsResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/module_distributed_coins";
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/module_distributed_coins";
   }
 
-  // returns Pot by id
-  rpc PotByID(PotByIDRequest) returns (PotByIDResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/pot_by_id/{id}";
+  // returns Gauge by id
+  rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/gauge_by_id/{id}";
   }
-  // returns pots both upcoming and active
-  rpc Pots(PotsRequest) returns (PotsResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/pots";
+  // returns gauges both upcoming and active
+  rpc Gauges(GaugesRequest) returns (GaugesResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/gauges";
   }
-  // returns active pots
-  rpc ActivePots(ActivePotsRequest) returns (ActivePotsResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/active_pots";
+  // returns active gauges
+  rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/active_gauges";
   }
-  // returns scheduled pots
-  rpc UpcomingPots(UpcomingPotsRequest) returns (UpcomingPotsResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/upcoming_pots";
+  // returns scheduled gauges
+  rpc UpcomingGauges(UpcomingGaugesRequest) returns (UpcomingGaugesResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/upcoming_gauges";
   }
   // RewardsEst returns an estimate of the rewards at a future specific time.
   // The querier either provides an address or a set of locks
   // for which they want to find the associated rewards.
   rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/rewards_est/{owner}";
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/rewards_est/{owner}";
   }
 }
 
@@ -63,35 +68,35 @@ message ModuleDistributedCoinsResponse {
   ];
 }
 
-message PotByIDRequest { uint64 id = 1; }
-message PotByIDResponse { Pot pot = 1; }
+message GaugeByIDRequest { uint64 id = 1; }
+message GaugeByIDResponse { Gauge gauge = 1; }
 
-message PotsRequest {
+message GaugesRequest {
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-message PotsResponse {
-  repeated Pot data = 1 [ (gogoproto.nullable) = false ];
+message GaugesResponse {
+  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message ActivePotsRequest {
+message ActiveGaugesRequest {
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-message ActivePotsResponse {
-  repeated Pot data = 1 [ (gogoproto.nullable) = false ];
+message ActiveGaugesResponse {
+  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message UpcomingPotsRequest {
+message UpcomingGaugesRequest {
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-message UpcomingPotsResponse {
-  repeated Pot data = 1 [ (gogoproto.nullable) = false ];
+message UpcomingGaugesResponse {
+  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

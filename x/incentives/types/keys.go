@@ -19,26 +19,26 @@ var (
 	// KeyPrefixTimestamp defines prefix key for timestamp iterator key
 	KeyPrefixTimestamp = []byte{0x01}
 
-	// KeyLastPotID defines key for setting last pot ID
-	KeyLastPotID = []byte{0x02}
+	// KeyLastGaugeID defines key for setting last gauge ID
+	KeyLastGaugeID = []byte{0x02}
 
-	// KeyPrefixPeriodPot defines prefix key for storing pots
-	KeyPrefixPeriodPot = []byte{0x03}
+	// KeyPrefixPeriodGauge defines prefix key for storing gauges
+	KeyPrefixPeriodGauge = []byte{0x03}
 
-	// KeyPrefixPots defines prefix key for storing reference key for all pots
-	KeyPrefixPots = []byte{0x04}
+	// KeyPrefixGauges defines prefix key for storing reference key for all gauges
+	KeyPrefixGauges = []byte{0x04}
 
-	// KeyPrefixUpcomingPots defines prefix key for storing reference key for upcoming pots
-	KeyPrefixUpcomingPots = []byte{0x04, 0x00}
+	// KeyPrefixUpcomingGauges defines prefix key for storing reference key for upcoming gauges
+	KeyPrefixUpcomingGauges = []byte{0x04, 0x00}
 
-	// KeyPrefixActivePots defines prefix key for storing reference key for active pots
-	KeyPrefixActivePots = []byte{0x04, 0x01}
+	// KeyPrefixActiveGauges defines prefix key for storing reference key for active gauges
+	KeyPrefixActiveGauges = []byte{0x04, 0x01}
 
-	// KeyPrefixFinishedPots defines prefix key for storing reference key for finished pots
-	KeyPrefixFinishedPots = []byte{0x04, 0x02}
+	// KeyPrefixFinishedGauges defines prefix key for storing reference key for finished gauges
+	KeyPrefixFinishedGauges = []byte{0x04, 0x02}
 
-	// KeyPrefixPotsByDenom defines prefix key for storing indexes of pot IDs by denomination
-	KeyPrefixPotsByDenom = []byte{0x05}
+	// KeyPrefixGaugesByDenom defines prefix key for storing indexes of gauge IDs by denomination
+	KeyPrefixGaugesByDenom = []byte{0x05}
 
 	// KeyIndexSeparator defines key for merging bytes
 	KeyIndexSeparator = []byte{0x07}

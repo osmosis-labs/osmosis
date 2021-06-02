@@ -35,7 +35,7 @@ func NewTxCmd() *cobra.Command {
 
 func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-pool-incentives [potIds] [weights]",
+		Use:   "update-pool-incentives [gaugeIds] [weights]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit an update to the records for pool incentives",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,15 +44,15 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			var potIds []uint64
-			for _, potIdStr := range strings.Split(args[0], ",") {
-				potIdStr = strings.TrimSpace(potIdStr)
+			var gaugeIds []uint64
+			for _, gaugeIdStr := range strings.Split(args[0], ",") {
+				gaugeIdStr = strings.TrimSpace(gaugeIdStr)
 
-				parsed, err := strconv.ParseUint(potIdStr, 10, 64)
+				parsed, err := strconv.ParseUint(gaugeIdStr, 10, 64)
 				if err != nil {
 					return err
 				}
-				potIds = append(potIds, parsed)
+				gaugeIds = append(gaugeIds, parsed)
 			}
 
 			var weights []sdk.Int
@@ -66,19 +66,19 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				weights = append(weights, sdk.NewIntFromUint64(parsed))
 			}
 
-			if len(potIds) != len(weights) {
-				return fmt.Errorf("the length of pot ids and wieghts not matched")
+			if len(gaugeIds) != len(weights) {
+				return fmt.Errorf("the length of gauge ids and wieghts not matched")
 			}
 
-			if len(potIds) == 0 {
+			if len(gaugeIds) == 0 {
 				return fmt.Errorf("records is empty")
 			}
 
 			var records []types.DistrRecord
-			for i, potId := range potIds {
+			for i, gaugeId := range gaugeIds {
 				records = append(records, types.DistrRecord{
-					PotId:  potId,
-					Weight: weights[i],
+					GaugeId: gaugeId,
+					Weight:  weights[i],
 				})
 			}
 

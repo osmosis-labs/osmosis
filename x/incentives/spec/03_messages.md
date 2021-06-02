@@ -4,12 +4,12 @@ order: 3
 
 # Messages
 
-## Create Pot
+## Create Gauge
 
-`MsgCreatePot` can be submitted by any account to create a `Pot`.
+`MsgCreateGauge` can be submitted by any account to create a `Gauge`.
 
 ```go
-type MsgCreatePot struct {
+type MsgCreateGauge struct {
 	Owner             sdk.AccAddress
   DistributeTo      QueryCondition
   Rewards           sdk.Coins
@@ -21,17 +21,17 @@ type MsgCreatePot struct {
 **State modifications:**
 
 - Validate `Owner` has enough tokens for rewards
-- Generate new `Pot` record
+- Generate new `Gauge` record
 - Save the record inside the keeper's time basis unlock queue
 - Transfer the tokens from the `Owner` to incentives `ModuleAccount`.
 
-## Adding balance to Pot
+## Adding balance to Gauge
 
-`MsgAddToPot` can be submitted by any account to add more incentives to a `Pot`.
+`MsgAddToGauge` can be submitted by any account to add more incentives to a `Gauge`.
 
 ```go
-type MsgAddToPot struct {
-	PotID uint64
+type MsgAddToGauge struct {
+	GaugeID uint64
   Rewards sdk.Coins
 }
 ```
@@ -39,6 +39,6 @@ type MsgAddToPot struct {
 **State modifications:**
 
 - Validate `Owner` has enough tokens for rewards
-- Check if `Pot` with specified `msg.PotID` is available
-- Modify the `Pot` record by adding `msg.Rewards`
+- Check if `Gauge` with specified `msg.GaugeID` is available
+- Modify the `Gauge` record by adding `msg.Rewards`
 - Transfer the tokens from the `Owner` to incentives `ModuleAccount`.

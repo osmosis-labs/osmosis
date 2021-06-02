@@ -10,15 +10,15 @@ import (
 
 // constants
 const (
-	TypeMsgCreatePot = "create_pot"
-	TypeMsgAddToPot  = "add_to_pot"
+	TypeMsgCreateGauge = "create_gauge"
+	TypeMsgAddToGauge  = "add_to_gauge"
 )
 
-var _ sdk.Msg = &MsgCreatePot{}
+var _ sdk.Msg = &MsgCreateGauge{}
 
-// NewMsgCreatePot creates a message to create a pot
-func NewMsgCreatePot(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreatePot {
-	return &MsgCreatePot{
+// NewMsgCreateGauge creates a message to create a gauge
+func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreateGauge {
+	return &MsgCreateGauge{
 		IsPerpetual:       isPerpetual,
 		Owner:             owner.String(),
 		DistributeTo:      distributeTo,
@@ -28,9 +28,9 @@ func NewMsgCreatePot(isPerpetual bool, owner sdk.AccAddress, distributeTo lockup
 	}
 }
 
-func (m MsgCreatePot) Route() string { return RouterKey }
-func (m MsgCreatePot) Type() string  { return TypeMsgCreatePot }
-func (m MsgCreatePot) ValidateBasic() error {
+func (m MsgCreateGauge) Route() string { return RouterKey }
+func (m MsgCreateGauge) Type() string  { return TypeMsgCreateGauge }
+func (m MsgCreateGauge) ValidateBasic() error {
 	if m.Owner == "" {
 		return errors.New("owner should be set")
 	}
@@ -47,33 +47,33 @@ func (m MsgCreatePot) ValidateBasic() error {
 		return errors.New("distribution period should be at least 1 epoch")
 	}
 	if m.IsPerpetual && m.NumEpochsPaidOver != 1 {
-		return errors.New("distribution period should be 1 epoch for perpetual pot")
+		return errors.New("distribution period should be 1 epoch for perpetual gauge")
 	}
 
 	return nil
 }
-func (m MsgCreatePot) GetSignBytes() []byte {
+func (m MsgCreateGauge) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
-func (m MsgCreatePot) GetSigners() []sdk.AccAddress {
+func (m MsgCreateGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }
 
-var _ sdk.Msg = &MsgAddToPot{}
+var _ sdk.Msg = &MsgAddToGauge{}
 
-// NewMsgCreatePot creates a message to create a pot
-func NewMsgAddToPot(owner sdk.AccAddress, potId uint64, rewards sdk.Coins) *MsgAddToPot {
-	return &MsgAddToPot{
+// NewMsgCreateGauge creates a message to create a gauge
+func NewMsgAddToGauge(owner sdk.AccAddress, gaugeId uint64, rewards sdk.Coins) *MsgAddToGauge {
+	return &MsgAddToGauge{
 		Owner:   owner.String(),
-		PotId:   potId,
+		GaugeId: gaugeId,
 		Rewards: rewards,
 	}
 }
 
-func (m MsgAddToPot) Route() string { return RouterKey }
-func (m MsgAddToPot) Type() string  { return TypeMsgAddToPot }
-func (m MsgAddToPot) ValidateBasic() error {
+func (m MsgAddToGauge) Route() string { return RouterKey }
+func (m MsgAddToGauge) Type() string  { return TypeMsgAddToGauge }
+func (m MsgAddToGauge) ValidateBasic() error {
 	if m.Owner == "" {
 		return errors.New("owner should be set")
 	}
@@ -83,10 +83,10 @@ func (m MsgAddToPot) ValidateBasic() error {
 
 	return nil
 }
-func (m MsgAddToPot) GetSignBytes() []byte {
+func (m MsgAddToGauge) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
-func (m MsgAddToPot) GetSigners() []sdk.AccAddress {
+func (m MsgAddToGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }

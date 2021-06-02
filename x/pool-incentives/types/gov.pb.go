@@ -25,10 +25,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // UpdatePoolIncentivesProposal is a gov Content type for updating the pool
 // incentives. If a UpdatePoolIncentivesProposal passes, the proposal’s records
-// are set to the module. Each record has a specified pot id and weight, and the
-// incetives are distributed to each pot according to weight/total_weight. The
-// incentives are put in the fee pool and it is allocated to pots and community
-// pool by the DistrRecords configuration. Note. when potId=0, the amount is
+// are set to the module. Each record has a specified gauge id and weight, and the
+// incetives are distributed to each gauge according to weight/total_weight. The
+// incentives are put in the fee pool and it is allocated to gauges and community
+// pool by the DistrRecords configuration. Note. when gaugeId=0, the amount is
 // distributed to community pool.
 type UpdatePoolIncentivesProposal struct {
 	Title       string        `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`

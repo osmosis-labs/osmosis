@@ -33,22 +33,22 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type QueryPotIdsRequest struct {
+type QueryGaugeIdsRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
 
-func (m *QueryPotIdsRequest) Reset()         { *m = QueryPotIdsRequest{} }
-func (m *QueryPotIdsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryPotIdsRequest) ProtoMessage()    {}
-func (*QueryPotIdsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGaugeIdsRequest) Reset()         { *m = QueryGaugeIdsRequest{} }
+func (m *QueryGaugeIdsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGaugeIdsRequest) ProtoMessage()    {}
+func (*QueryGaugeIdsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_302873ecccbc7636, []int{0}
 }
-func (m *QueryPotIdsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGaugeIdsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryPotIdsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGaugeIdsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryPotIdsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGaugeIdsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -58,41 +58,41 @@ func (m *QueryPotIdsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *QueryPotIdsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPotIdsRequest.Merge(m, src)
+func (m *QueryGaugeIdsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGaugeIdsRequest.Merge(m, src)
 }
-func (m *QueryPotIdsRequest) XXX_Size() int {
+func (m *QueryGaugeIdsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryPotIdsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPotIdsRequest.DiscardUnknown(m)
+func (m *QueryGaugeIdsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGaugeIdsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryPotIdsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGaugeIdsRequest proto.InternalMessageInfo
 
-func (m *QueryPotIdsRequest) GetPoolId() uint64 {
+func (m *QueryGaugeIdsRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-type QueryPotIdsResponse struct {
-	PotIdsWithDuration []*QueryPotIdsResponse_PotIdWithDuration `protobuf:"bytes,1,rep,name=pot_ids_with_duration,json=potIdsWithDuration,proto3" json:"pot_ids_with_duration,omitempty" yaml:"pot_ids_with_duration"`
+type QueryGaugeIdsResponse struct {
+	GaugeIdsWithDuration []*QueryGaugeIdsResponse_GaugeIdWithDuration `protobuf:"bytes,1,rep,name=gauge_ids_with_duration,json=gaugeIdsWithDuration,proto3" json:"gauge_ids_with_duration,omitempty" yaml:"gauge_ids_with_duration"`
 }
 
-func (m *QueryPotIdsResponse) Reset()         { *m = QueryPotIdsResponse{} }
-func (m *QueryPotIdsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryPotIdsResponse) ProtoMessage()    {}
-func (*QueryPotIdsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryGaugeIdsResponse) Reset()         { *m = QueryGaugeIdsResponse{} }
+func (m *QueryGaugeIdsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGaugeIdsResponse) ProtoMessage()    {}
+func (*QueryGaugeIdsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_302873ecccbc7636, []int{1}
 }
-func (m *QueryPotIdsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryGaugeIdsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryPotIdsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGaugeIdsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryPotIdsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGaugeIdsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -102,42 +102,46 @@ func (m *QueryPotIdsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *QueryPotIdsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPotIdsResponse.Merge(m, src)
+func (m *QueryGaugeIdsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGaugeIdsResponse.Merge(m, src)
 }
-func (m *QueryPotIdsResponse) XXX_Size() int {
+func (m *QueryGaugeIdsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryPotIdsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPotIdsResponse.DiscardUnknown(m)
+func (m *QueryGaugeIdsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGaugeIdsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryPotIdsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryGaugeIdsResponse proto.InternalMessageInfo
 
-func (m *QueryPotIdsResponse) GetPotIdsWithDuration() []*QueryPotIdsResponse_PotIdWithDuration {
+func (m *QueryGaugeIdsResponse) GetGaugeIdsWithDuration() []*QueryGaugeIdsResponse_GaugeIdWithDuration {
 	if m != nil {
-		return m.PotIdsWithDuration
+		return m.GaugeIdsWithDuration
 	}
 	return nil
 }
 
-type QueryPotIdsResponse_PotIdWithDuration struct {
-	PotId    uint64        `protobuf:"varint,1,opt,name=pot_id,json=potId,proto3" json:"pot_id,omitempty" yaml:"pot_id"`
+type QueryGaugeIdsResponse_GaugeIdWithDuration struct {
+	GaugeId  uint64        `protobuf:"varint,1,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty" yaml:"gauge_id"`
 	Duration time.Duration `protobuf:"bytes,2,opt,name=duration,proto3,stdduration" json:"duration"`
 }
 
-func (m *QueryPotIdsResponse_PotIdWithDuration) Reset()         { *m = QueryPotIdsResponse_PotIdWithDuration{} }
-func (m *QueryPotIdsResponse_PotIdWithDuration) String() string { return proto.CompactTextString(m) }
-func (*QueryPotIdsResponse_PotIdWithDuration) ProtoMessage()    {}
-func (*QueryPotIdsResponse_PotIdWithDuration) Descriptor() ([]byte, []int) {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) Reset() {
+	*m = QueryGaugeIdsResponse_GaugeIdWithDuration{}
+}
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGaugeIdsResponse_GaugeIdWithDuration) ProtoMessage() {}
+func (*QueryGaugeIdsResponse_GaugeIdWithDuration) Descriptor() ([]byte, []int) {
 	return fileDescriptor_302873ecccbc7636, []int{1, 0}
 }
-func (m *QueryPotIdsResponse_PotIdWithDuration) XXX_Unmarshal(b []byte) error {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryPotIdsResponse_PotIdWithDuration) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryPotIdsResponse_PotIdWithDuration.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGaugeIdsResponse_GaugeIdWithDuration.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -147,26 +151,26 @@ func (m *QueryPotIdsResponse_PotIdWithDuration) XXX_Marshal(b []byte, determinis
 		return b[:n], nil
 	}
 }
-func (m *QueryPotIdsResponse_PotIdWithDuration) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPotIdsResponse_PotIdWithDuration.Merge(m, src)
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGaugeIdsResponse_GaugeIdWithDuration.Merge(m, src)
 }
-func (m *QueryPotIdsResponse_PotIdWithDuration) XXX_Size() int {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryPotIdsResponse_PotIdWithDuration) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPotIdsResponse_PotIdWithDuration.DiscardUnknown(m)
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGaugeIdsResponse_GaugeIdWithDuration.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryPotIdsResponse_PotIdWithDuration proto.InternalMessageInfo
+var xxx_messageInfo_QueryGaugeIdsResponse_GaugeIdWithDuration proto.InternalMessageInfo
 
-func (m *QueryPotIdsResponse_PotIdWithDuration) GetPotId() uint64 {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) GetGaugeId() uint64 {
 	if m != nil {
-		return m.PotId
+		return m.GaugeId
 	}
 	return 0
 }
 
-func (m *QueryPotIdsResponse_PotIdWithDuration) GetDuration() time.Duration {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) GetDuration() time.Duration {
 	if m != nil {
 		return m.Duration
 	}
@@ -452,7 +456,7 @@ var xxx_messageInfo_QueryIncentivizedPoolsRequest proto.InternalMessageInfo
 type IncentivizedPool struct {
 	PoolId           uint64        `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 	LockableDuration time.Duration `protobuf:"bytes,2,opt,name=lockable_duration,json=lockableDuration,proto3,stdduration" json:"lockable_duration" yaml:"lockable_duration"`
-	PotId            uint64        `protobuf:"varint,3,opt,name=pot_id,json=potId,proto3" json:"pot_id,omitempty" yaml:"pot_id"`
+	GaugeId          uint64        `protobuf:"varint,3,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty" yaml:"gauge_id"`
 }
 
 func (m *IncentivizedPool) Reset()         { *m = IncentivizedPool{} }
@@ -502,9 +506,9 @@ func (m *IncentivizedPool) GetLockableDuration() time.Duration {
 	return 0
 }
 
-func (m *IncentivizedPool) GetPotId() uint64 {
+func (m *IncentivizedPool) GetGaugeId() uint64 {
 	if m != nil {
-		return m.PotId
+		return m.GaugeId
 	}
 	return 0
 }
@@ -554,9 +558,9 @@ func (m *QueryIncentivizedPoolsResponse) GetIncentivizedPools() []IncentivizedPo
 }
 
 func init() {
-	proto.RegisterType((*QueryPotIdsRequest)(nil), "osmosis.poolincentives.v1beta1.QueryPotIdsRequest")
-	proto.RegisterType((*QueryPotIdsResponse)(nil), "osmosis.poolincentives.v1beta1.QueryPotIdsResponse")
-	proto.RegisterType((*QueryPotIdsResponse_PotIdWithDuration)(nil), "osmosis.poolincentives.v1beta1.QueryPotIdsResponse.PotIdWithDuration")
+	proto.RegisterType((*QueryGaugeIdsRequest)(nil), "osmosis.poolincentives.v1beta1.QueryGaugeIdsRequest")
+	proto.RegisterType((*QueryGaugeIdsResponse)(nil), "osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse")
+	proto.RegisterType((*QueryGaugeIdsResponse_GaugeIdWithDuration)(nil), "osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration")
 	proto.RegisterType((*QueryDistrInfoRequest)(nil), "osmosis.poolincentives.v1beta1.QueryDistrInfoRequest")
 	proto.RegisterType((*QueryDistrInfoResponse)(nil), "osmosis.poolincentives.v1beta1.QueryDistrInfoResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "osmosis.poolincentives.v1beta1.QueryParamsRequest")
@@ -573,57 +577,58 @@ func init() {
 }
 
 var fileDescriptor_302873ecccbc7636 = []byte{
-	// 797 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0xcd, 0x6e, 0xd3, 0x4a,
-	0x14, 0xce, 0xf4, 0x27, 0x6d, 0xa7, 0xba, 0x57, 0xcd, 0xdc, 0xf6, 0xde, 0x36, 0xea, 0x75, 0xc2,
-	0x88, 0x9f, 0x54, 0x55, 0xec, 0x36, 0xa1, 0x20, 0x15, 0x01, 0x22, 0x2a, 0x8b, 0x48, 0x2c, 0x5a,
-	0x6f, 0x90, 0x60, 0x11, 0x39, 0xb1, 0x9b, 0x8e, 0x70, 0x3c, 0x6e, 0xc6, 0x29, 0x14, 0x54, 0x16,
-	0x7d, 0x02, 0x10, 0x1b, 0xc4, 0x12, 0x89, 0x25, 0x42, 0xea, 0x53, 0x74, 0x47, 0x25, 0x16, 0xb0,
-	0x0a, 0xa8, 0xe5, 0x09, 0xf2, 0x04, 0xc8, 0xe3, 0xb1, 0x9b, 0xda, 0x4d, 0x9d, 0x74, 0x97, 0xf8,
-	0x9c, 0xf3, 0x9d, 0xef, 0x3b, 0xe7, 0xcc, 0x07, 0x17, 0x29, 0x6b, 0x50, 0x46, 0x98, 0x62, 0x53,
-	0x6a, 0xe6, 0x89, 0x55, 0x33, 0x2c, 0x87, 0xec, 0x18, 0x4c, 0xd9, 0x59, 0xae, 0x1a, 0x8e, 0xb6,
-	0xac, 0x6c, 0xb7, 0x8c, 0xe6, 0xae, 0x6c, 0x37, 0xa9, 0x43, 0x91, 0x24, 0x92, 0x65, 0x37, 0xf9,
-	0x34, 0x57, 0x16, 0xb9, 0xe9, 0xe9, 0x3a, 0xad, 0x53, 0x9e, 0xaa, 0xb8, 0xbf, 0xbc, 0xaa, 0xf4,
-	0x7c, 0x9d, 0xd2, 0xba, 0x69, 0x28, 0x9a, 0x4d, 0x14, 0xcd, 0xb2, 0xa8, 0xa3, 0x39, 0x84, 0x5a,
-	0x4c, 0x44, 0x25, 0x11, 0xe5, 0xff, 0xaa, 0xad, 0x4d, 0x45, 0x6f, 0x35, 0x79, 0x82, 0x88, 0x2f,
-	0xc5, 0x11, 0xec, 0xe2, 0xc1, 0x2b, 0xf0, 0x03, 0x88, 0x36, 0x5c, 0xd2, 0xeb, 0xd4, 0x29, 0xeb,
-	0x4c, 0x35, 0xb6, 0x5b, 0x06, 0x73, 0xd0, 0x22, 0x1c, 0x73, 0x11, 0x2a, 0x44, 0x9f, 0x05, 0x59,
-	0x90, 0x1b, 0x29, 0xa1, 0x4e, 0x3b, 0xf3, 0xf7, 0xae, 0xd6, 0x30, 0x57, 0xb1, 0x08, 0x60, 0x35,
-	0xe9, 0xfe, 0x2a, 0xeb, 0xf8, 0x60, 0x08, 0xfe, 0x73, 0x06, 0x83, 0xd9, 0xd4, 0x62, 0x06, 0xfa,
-	0x00, 0xe0, 0x8c, 0x4d, 0x9d, 0x0a, 0xd1, 0x59, 0xe5, 0x39, 0x71, 0xb6, 0x2a, 0x3e, 0xd9, 0x59,
-	0x90, 0x1d, 0xce, 0x4d, 0x16, 0x1e, 0xca, 0x17, 0x4f, 0x48, 0x3e, 0x07, 0x54, 0xe6, 0x7f, 0x1f,
-	0x13, 0x67, 0x6b, 0x4d, 0x80, 0x95, 0xb2, 0x9d, 0x76, 0x66, 0xde, 0xa7, 0x76, 0x4e, 0x37, 0xac,
-	0x22, 0x9b, 0x63, 0x74, 0x57, 0xa5, 0x5f, 0xc3, 0x54, 0x04, 0x0a, 0xe5, 0x60, 0xd2, 0x83, 0x10,
-	0xaa, 0x53, 0x9d, 0x76, 0xe6, 0xaf, 0x6e, 0x68, 0xac, 0x8e, 0x72, 0x2c, 0x74, 0x1f, 0x8e, 0x07,
-	0x6a, 0x86, 0xb2, 0x20, 0x37, 0x59, 0x98, 0x93, 0xbd, 0xdd, 0xc8, 0xfe, 0x6e, 0xe4, 0x80, 0xe1,
-	0xf8, 0x61, 0x3b, 0x93, 0x78, 0xff, 0x33, 0x03, 0xd4, 0xa0, 0x08, 0xff, 0x07, 0x67, 0xb8, 0xbc,
-	0x35, 0xc2, 0x9c, 0x66, 0xd9, 0xda, 0xa4, 0x62, 0xf4, 0x78, 0x0f, 0xfe, 0x1b, 0x0e, 0x88, 0x79,
-	0xd6, 0x20, 0xd4, 0xdd, 0x8f, 0x15, 0x62, 0x6d, 0x52, 0xce, 0x70, 0xb2, 0xb0, 0x10, 0x37, 0xc3,
-	0x00, 0xa6, 0x34, 0xe7, 0xb2, 0xe8, 0xb4, 0x33, 0x29, 0x4f, 0xd0, 0x29, 0x14, 0x56, 0x27, 0x74,
-	0x3f, 0x0b, 0x4f, 0xfb, 0xf7, 0xa0, 0x35, 0xb5, 0x86, 0x7f, 0x0f, 0xf8, 0xa9, 0xbf, 0x61, 0xf1,
-	0x55, 0x30, 0x5a, 0x83, 0x49, 0x9b, 0x7f, 0x11, 0x6c, 0xae, 0xc7, 0xb1, 0xf1, 0xea, 0x4b, 0x23,
-	0x2e, 0x15, 0x55, 0xd4, 0xe2, 0x0c, 0xfc, 0x9f, 0x83, 0x3f, 0xa2, 0xb5, 0x67, 0x5a, 0xd5, 0x34,
-	0xfc, 0xb9, 0x05, 0xdd, 0xdf, 0x02, 0x28, 0xf5, 0xca, 0x10, 0x4c, 0x28, 0x44, 0xa6, 0x08, 0x06,
-	0x8b, 0x67, 0xe2, 0xce, 0x2e, 0xd8, 0xcc, 0x35, 0x31, 0x93, 0x39, 0x6f, 0x26, 0x51, 0x08, 0xcc,
-	0xd7, 0x96, 0x32, 0xc3, 0x8d, 0x03, 0xd2, 0x65, 0x21, 0x92, 0xbc, 0x34, 0xf4, 0x75, 0x4a, 0xcd,
-	0x80, 0xf4, 0x77, 0x00, 0xa7, 0xc2, 0xc1, 0x81, 0xde, 0x15, 0x32, 0x61, 0x2a, 0x42, 0x28, 0xfe,
-	0xd8, 0xae, 0x0a, 0x49, 0xb3, 0x3d, 0x24, 0x79, 0x8a, 0xa6, 0xc2, 0x8a, 0xba, 0x6e, 0x7f, 0xf8,
-	0xe2, 0xdb, 0xc7, 0x9f, 0xfc, 0x75, 0x9c, 0xa3, 0x5d, 0xac, 0x63, 0x1f, 0x40, 0x44, 0xba, 0xa2,
-	0x15, 0x57, 0x92, 0xbf, 0x8f, 0xa5, 0xb8, 0x2b, 0x09, 0xe3, 0x96, 0xae, 0x9c, 0x5d, 0x53, 0x14,
-	0x19, 0xab, 0x29, 0x12, 0x26, 0x53, 0x38, 0x18, 0x83, 0xa3, 0x9c, 0x27, 0xfa, 0x0c, 0x60, 0xd2,
-	0xf3, 0x11, 0x54, 0x18, 0xc8, 0x74, 0xf8, 0x2a, 0xd3, 0xc5, 0x4b, 0x18, 0x15, 0x5e, 0xdd, 0xff,
-	0xf6, 0xfb, 0xdd, 0xd0, 0x4d, 0x54, 0x50, 0xe2, 0x3c, 0xd9, 0xa6, 0x4e, 0x9e, 0xe8, 0x4c, 0x79,
-	0x25, 0x2e, 0x60, 0x0f, 0x7d, 0x01, 0x70, 0x22, 0x78, 0xb8, 0x68, 0xa5, 0xaf, 0xf6, 0x61, 0x23,
-	0x49, 0xdf, 0x1a, 0xb4, 0x4c, 0x10, 0x2f, 0x72, 0xe2, 0x79, 0xb4, 0x18, 0x4b, 0xfc, 0xd4, 0x42,
-	0xd0, 0x47, 0x77, 0xc2, 0xfc, 0x39, 0xf7, 0x3b, 0xe1, 0x6e, 0x7f, 0xe9, 0x77, 0xc2, 0x67, 0xdc,
-	0x07, 0x2b, 0x9c, 0xe8, 0x02, 0xba, 0x11, 0x3f, 0x61, 0x8f, 0xd9, 0x57, 0x00, 0x53, 0x11, 0x0b,
-	0x41, 0x77, 0xfb, 0xea, 0xdd, 0xcb, 0x9c, 0xd2, 0xf7, 0x2e, 0x5b, 0x2e, 0x54, 0xdc, 0xe1, 0x2a,
-	0x56, 0x50, 0x31, 0x56, 0x45, 0xd4, 0x9d, 0xb8, 0xa2, 0xc8, 0x2b, 0xec, 0x53, 0x51, 0x2f, 0xe7,
-	0xea, 0x53, 0x51, 0xcf, 0xc7, 0x3f, 0x80, 0xa2, 0xe8, 0x43, 0x2e, 0x6d, 0x1c, 0x1e, 0x4b, 0xe0,
-	0xe8, 0x58, 0x02, 0xbf, 0x8e, 0x25, 0xf0, 0xe6, 0x44, 0x4a, 0x1c, 0x9d, 0x48, 0x89, 0x1f, 0x27,
-	0x52, 0xe2, 0xc9, 0xed, 0x3a, 0x71, 0xb6, 0x5a, 0x55, 0xb9, 0x46, 0x1b, 0x3e, 0x70, 0xde, 0xd4,
-	0xaa, 0x2c, 0xe8, 0xf2, 0x22, 0xd2, 0xc7, 0xd9, 0xb5, 0x0d, 0x56, 0x4d, 0x72, 0x93, 0x2c, 0xfe,
-	0x09, 0x00, 0x00, 0xff, 0xff, 0x6f, 0x05, 0xee, 0x7b, 0xbe, 0x09, 0x00, 0x00,
+	// 808 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x4f, 0x4f, 0xdb, 0x48,
+	0x14, 0xcf, 0xf0, 0x27, 0xc0, 0xa0, 0x5d, 0x91, 0x01, 0x76, 0x21, 0x62, 0x9d, 0xec, 0x68, 0xff,
+	0x04, 0xa1, 0xd8, 0x90, 0xc0, 0xae, 0xc4, 0x6a, 0x5b, 0x29, 0x45, 0xaa, 0x22, 0xf5, 0x00, 0xbe,
+	0x54, 0x6a, 0x0f, 0x91, 0x13, 0x9b, 0x30, 0xaa, 0xe3, 0x31, 0x19, 0x87, 0x96, 0x56, 0x48, 0x15,
+	0x9f, 0xa0, 0x55, 0x2f, 0x3d, 0xf5, 0x50, 0xa9, 0xe7, 0x1e, 0x7a, 0xa9, 0xd4, 0x2f, 0xc0, 0xad,
+	0x48, 0x3d, 0xb4, 0xa7, 0xb4, 0x82, 0x7e, 0x82, 0x7c, 0x82, 0xca, 0xe3, 0xb1, 0x09, 0x76, 0x82,
+	0x13, 0x6e, 0x89, 0xdf, 0x7b, 0xbf, 0xf7, 0xfb, 0xbd, 0xf7, 0xe6, 0x07, 0x57, 0x28, 0x6b, 0x50,
+	0x46, 0x98, 0x62, 0x53, 0x6a, 0xe6, 0x89, 0x55, 0x33, 0x2c, 0x87, 0x1c, 0x18, 0x4c, 0x39, 0x58,
+	0xab, 0x1a, 0x8e, 0xb6, 0xa6, 0xec, 0xb7, 0x8c, 0xe6, 0xa1, 0x6c, 0x37, 0xa9, 0x43, 0x91, 0x24,
+	0x92, 0x65, 0x37, 0xf9, 0x22, 0x57, 0x16, 0xb9, 0xe9, 0xb9, 0x3a, 0xad, 0x53, 0x9e, 0xaa, 0xb8,
+	0xbf, 0xbc, 0xaa, 0xf4, 0x52, 0x9d, 0xd2, 0xba, 0x69, 0x28, 0x9a, 0x4d, 0x14, 0xcd, 0xb2, 0xa8,
+	0xa3, 0x39, 0x84, 0x5a, 0x4c, 0x44, 0x25, 0x11, 0xe5, 0xff, 0xaa, 0xad, 0x5d, 0x45, 0x6f, 0x35,
+	0x79, 0x82, 0x88, 0xaf, 0xc6, 0x11, 0xec, 0xe2, 0xc1, 0x2b, 0xf0, 0x2d, 0x38, 0xb7, 0xe3, 0x92,
+	0xbe, 0xad, 0xb5, 0xea, 0x46, 0x59, 0x67, 0xaa, 0xb1, 0xdf, 0x32, 0x98, 0x83, 0x56, 0xe0, 0x84,
+	0x8b, 0x51, 0x21, 0xfa, 0x02, 0xc8, 0x82, 0xdc, 0x58, 0x09, 0x75, 0xda, 0x99, 0x9f, 0x0f, 0xb5,
+	0x86, 0xb9, 0x89, 0x45, 0x00, 0xab, 0x49, 0xf7, 0x57, 0x59, 0xc7, 0x1f, 0x46, 0xe0, 0x7c, 0x08,
+	0x85, 0xd9, 0xd4, 0x62, 0x06, 0x7a, 0x05, 0xe0, 0xbc, 0x4d, 0x9d, 0x0a, 0xd1, 0x59, 0xe5, 0x21,
+	0x71, 0xf6, 0x2a, 0x3e, 0xe1, 0x05, 0x90, 0x1d, 0xcd, 0x4d, 0x17, 0xca, 0xf2, 0xd5, 0x53, 0x92,
+	0x7b, 0xc2, 0xca, 0xe2, 0xc3, 0x5d, 0xe2, 0xec, 0x6d, 0x09, 0xc0, 0x52, 0xb6, 0xd3, 0xce, 0x2c,
+	0xf9, 0x04, 0x7b, 0x74, 0xc4, 0x2a, 0xb2, 0xa9, 0x53, 0xd6, 0x59, 0x77, 0x55, 0xfa, 0x29, 0x80,
+	0xb3, 0x3d, 0xd0, 0x50, 0x0e, 0x26, 0x3d, 0x14, 0x21, 0x3f, 0xd5, 0x69, 0x67, 0x7e, 0xea, 0x46,
+	0xc7, 0xea, 0x38, 0x87, 0x43, 0x37, 0xe1, 0x64, 0x20, 0x6a, 0x24, 0x0b, 0x72, 0xd3, 0x85, 0x45,
+	0xd9, 0x5b, 0x93, 0xec, 0xaf, 0x49, 0x0e, 0x48, 0x4e, 0x9e, 0xb4, 0x33, 0x89, 0x97, 0x5f, 0x33,
+	0x40, 0x0d, 0x8a, 0xf0, 0xaf, 0x62, 0x78, 0x5b, 0x84, 0x39, 0xcd, 0xb2, 0xb5, 0x4b, 0xc5, 0x0e,
+	0xf0, 0x11, 0xfc, 0x25, 0x1c, 0x10, 0x63, 0xad, 0x41, 0xa8, 0xbb, 0x1f, 0x2b, 0xc4, 0xda, 0xa5,
+	0x9c, 0xe1, 0x74, 0x61, 0x39, 0x6e, 0x94, 0x01, 0x4c, 0x69, 0xd1, 0x65, 0xd1, 0x69, 0x67, 0x52,
+	0x9e, 0xa0, 0x0b, 0x28, 0xac, 0x4e, 0xe9, 0x7e, 0x16, 0x9e, 0x83, 0x88, 0xb7, 0xdf, 0xd6, 0x9a,
+	0x5a, 0xc3, 0x3f, 0x0c, 0x7c, 0x1f, 0xce, 0x5e, 0xfa, 0x2a, 0x18, 0x6d, 0xc1, 0xa4, 0xcd, 0xbf,
+	0x08, 0x36, 0x7f, 0xc5, 0xb1, 0xf1, 0xea, 0x4b, 0x63, 0x2e, 0x15, 0x55, 0xd4, 0xe2, 0x0c, 0xfc,
+	0x8d, 0x83, 0xdf, 0xa1, 0xb5, 0x07, 0x5a, 0xd5, 0x34, 0xfc, 0xb9, 0x05, 0xdd, 0x9f, 0x03, 0x28,
+	0xf5, 0xcb, 0x10, 0x4c, 0x28, 0x44, 0xa6, 0x08, 0x06, 0xbb, 0x67, 0xe2, 0xdc, 0xae, 0xd8, 0xcc,
+	0x9f, 0x62, 0x26, 0x8b, 0xde, 0x4c, 0xa2, 0x10, 0x98, 0xaf, 0x2d, 0x65, 0x86, 0x1b, 0x07, 0xa4,
+	0xcb, 0x42, 0x24, 0x79, 0x6c, 0xe8, 0xdb, 0x94, 0x9a, 0x01, 0xe9, 0xcf, 0x00, 0xce, 0x84, 0x83,
+	0x43, 0x3d, 0x30, 0x64, 0xc2, 0x54, 0x84, 0x50, 0xfc, 0xb1, 0xfd, 0x21, 0x24, 0x2d, 0xf4, 0x91,
+	0xe4, 0x29, 0x9a, 0x09, 0x2b, 0xea, 0xba, 0xfd, 0xd1, 0xab, 0x6f, 0x1f, 0xbf, 0xf1, 0xd7, 0xd1,
+	0x43, 0xbb, 0x58, 0xc7, 0x31, 0x80, 0x88, 0x74, 0x45, 0x2b, 0xae, 0x24, 0x7f, 0x1f, 0xab, 0x71,
+	0x57, 0x12, 0xc6, 0x2d, 0xfd, 0x7e, 0x79, 0x4d, 0x51, 0x64, 0xac, 0xa6, 0x48, 0x98, 0x4c, 0xe1,
+	0xfd, 0x04, 0x1c, 0xe7, 0x3c, 0xd1, 0x3b, 0x00, 0x27, 0x7d, 0x3b, 0x41, 0xeb, 0x43, 0xba, 0x0f,
+	0x5f, 0x67, 0x7a, 0xe3, 0x5a, 0x9e, 0x85, 0x37, 0x8f, 0x3f, 0x7d, 0x7f, 0x31, 0xb2, 0x8e, 0x0a,
+	0x4a, 0x9c, 0x49, 0xdb, 0xd4, 0xc9, 0x13, 0x9d, 0x29, 0x4f, 0xc4, 0x1d, 0x1c, 0xa1, 0xb7, 0x00,
+	0x4e, 0x05, 0xcf, 0x17, 0x0d, 0x46, 0x20, 0x6c, 0x27, 0xe9, 0x7f, 0x86, 0x2d, 0x13, 0xc4, 0x8b,
+	0x9c, 0x78, 0x1e, 0xad, 0xc4, 0x12, 0xbf, 0x30, 0x12, 0xf4, 0x1a, 0xc0, 0xa4, 0xf7, 0xc4, 0x51,
+	0x61, 0xa0, 0xbe, 0x97, 0x5c, 0x26, 0x5d, 0x1c, 0xaa, 0x46, 0x10, 0x55, 0x38, 0xd1, 0x65, 0xf4,
+	0x77, 0xfc, 0x84, 0x3d, 0x66, 0x1f, 0x01, 0x4c, 0x45, 0x8c, 0x04, 0xfd, 0x3f, 0x50, 0xef, 0x7e,
+	0x16, 0x95, 0xbe, 0x71, 0xdd, 0x72, 0xa1, 0xe2, 0x3f, 0xae, 0x62, 0x03, 0x15, 0x63, 0x55, 0x44,
+	0x3d, 0x8a, 0x2b, 0x8a, 0xbc, 0xc5, 0x01, 0x15, 0xf5, 0xf3, 0xaf, 0x01, 0x15, 0xf5, 0xb5, 0x80,
+	0x21, 0x14, 0x45, 0x9f, 0x73, 0x69, 0xe7, 0xe4, 0x4c, 0x02, 0xa7, 0x67, 0x12, 0xf8, 0x76, 0x26,
+	0x81, 0x67, 0xe7, 0x52, 0xe2, 0xf4, 0x5c, 0x4a, 0x7c, 0x39, 0x97, 0x12, 0xf7, 0xfe, 0xad, 0x13,
+	0x67, 0xaf, 0x55, 0x95, 0x6b, 0xb4, 0xe1, 0x03, 0xe7, 0x4d, 0xad, 0xca, 0x82, 0x2e, 0x8f, 0x22,
+	0x7d, 0x9c, 0x43, 0xdb, 0x60, 0xd5, 0x24, 0xb7, 0xca, 0xe2, 0x8f, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0x46, 0xd2, 0xbe, 0xe6, 0xcf, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -638,8 +643,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// PotIds takes the pool id and returns the matching pot ids and durations
-	PotIds(ctx context.Context, in *QueryPotIdsRequest, opts ...grpc.CallOption) (*QueryPotIdsResponse, error)
+	// GaugeIds takes the pool id and returns the matching gauge ids and durations
+	GaugeIds(ctx context.Context, in *QueryGaugeIdsRequest, opts ...grpc.CallOption) (*QueryGaugeIdsResponse, error)
 	DistrInfo(ctx context.Context, in *QueryDistrInfoRequest, opts ...grpc.CallOption) (*QueryDistrInfoResponse, error)
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	LockableDurations(ctx context.Context, in *QueryLockableDurationsRequest, opts ...grpc.CallOption) (*QueryLockableDurationsResponse, error)
@@ -654,9 +659,9 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) PotIds(ctx context.Context, in *QueryPotIdsRequest, opts ...grpc.CallOption) (*QueryPotIdsResponse, error) {
-	out := new(QueryPotIdsResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.poolincentives.v1beta1.Query/PotIds", in, out, opts...)
+func (c *queryClient) GaugeIds(ctx context.Context, in *QueryGaugeIdsRequest, opts ...grpc.CallOption) (*QueryGaugeIdsResponse, error) {
+	out := new(QueryGaugeIdsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolincentives.v1beta1.Query/GaugeIds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -701,8 +706,8 @@ func (c *queryClient) IncentivizedPools(ctx context.Context, in *QueryIncentiviz
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// PotIds takes the pool id and returns the matching pot ids and durations
-	PotIds(context.Context, *QueryPotIdsRequest) (*QueryPotIdsResponse, error)
+	// GaugeIds takes the pool id and returns the matching gauge ids and durations
+	GaugeIds(context.Context, *QueryGaugeIdsRequest) (*QueryGaugeIdsResponse, error)
 	DistrInfo(context.Context, *QueryDistrInfoRequest) (*QueryDistrInfoResponse, error)
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	LockableDurations(context.Context, *QueryLockableDurationsRequest) (*QueryLockableDurationsResponse, error)
@@ -713,8 +718,8 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) PotIds(ctx context.Context, req *QueryPotIdsRequest) (*QueryPotIdsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PotIds not implemented")
+func (*UnimplementedQueryServer) GaugeIds(ctx context.Context, req *QueryGaugeIdsRequest) (*QueryGaugeIdsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GaugeIds not implemented")
 }
 func (*UnimplementedQueryServer) DistrInfo(ctx context.Context, req *QueryDistrInfoRequest) (*QueryDistrInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DistrInfo not implemented")
@@ -733,20 +738,20 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_PotIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryPotIdsRequest)
+func _Query_GaugeIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGaugeIdsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).PotIds(ctx, in)
+		return srv.(QueryServer).GaugeIds(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.poolincentives.v1beta1.Query/PotIds",
+		FullMethod: "/osmosis.poolincentives.v1beta1.Query/GaugeIds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).PotIds(ctx, req.(*QueryPotIdsRequest))
+		return srv.(QueryServer).GaugeIds(ctx, req.(*QueryGaugeIdsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -828,8 +833,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "PotIds",
-			Handler:    _Query_PotIds_Handler,
+			MethodName: "GaugeIds",
+			Handler:    _Query_GaugeIds_Handler,
 		},
 		{
 			MethodName: "DistrInfo",
@@ -852,7 +857,7 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	Metadata: "osmosis/pool-incentives/v1beta1/query.proto",
 }
 
-func (m *QueryPotIdsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGaugeIdsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -862,12 +867,12 @@ func (m *QueryPotIdsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryPotIdsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGaugeIdsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryPotIdsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGaugeIdsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -880,7 +885,7 @@ func (m *QueryPotIdsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryPotIdsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryGaugeIdsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -890,20 +895,20 @@ func (m *QueryPotIdsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryPotIdsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGaugeIdsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryPotIdsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGaugeIdsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.PotIdsWithDuration) > 0 {
-		for iNdEx := len(m.PotIdsWithDuration) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.GaugeIdsWithDuration) > 0 {
+		for iNdEx := len(m.GaugeIdsWithDuration) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.PotIdsWithDuration[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.GaugeIdsWithDuration[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -917,7 +922,7 @@ func (m *QueryPotIdsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryPotIdsResponse_PotIdWithDuration) Marshal() (dAtA []byte, err error) {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -927,12 +932,12 @@ func (m *QueryPotIdsResponse_PotIdWithDuration) Marshal() (dAtA []byte, err erro
 	return dAtA[:n], nil
 }
 
-func (m *QueryPotIdsResponse_PotIdWithDuration) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryPotIdsResponse_PotIdWithDuration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -945,8 +950,8 @@ func (m *QueryPotIdsResponse_PotIdWithDuration) MarshalToSizedBuffer(dAtA []byte
 	i = encodeVarintQuery(dAtA, i, uint64(n1))
 	i--
 	dAtA[i] = 0x12
-	if m.PotId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.PotId))
+	if m.GaugeId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.GaugeId))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -1166,8 +1171,8 @@ func (m *IncentivizedPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.PotId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.PotId))
+	if m.GaugeId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.GaugeId))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -1235,7 +1240,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryPotIdsRequest) Size() (n int) {
+func (m *QueryGaugeIdsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1247,14 +1252,14 @@ func (m *QueryPotIdsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryPotIdsResponse) Size() (n int) {
+func (m *QueryGaugeIdsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.PotIdsWithDuration) > 0 {
-		for _, e := range m.PotIdsWithDuration {
+	if len(m.GaugeIdsWithDuration) > 0 {
+		for _, e := range m.GaugeIdsWithDuration {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -1262,14 +1267,14 @@ func (m *QueryPotIdsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryPotIdsResponse_PotIdWithDuration) Size() (n int) {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.PotId != 0 {
-		n += 1 + sovQuery(uint64(m.PotId))
+	if m.GaugeId != 0 {
+		n += 1 + sovQuery(uint64(m.GaugeId))
 	}
 	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
 	n += 1 + l + sovQuery(uint64(l))
@@ -1360,8 +1365,8 @@ func (m *IncentivizedPool) Size() (n int) {
 	}
 	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDuration)
 	n += 1 + l + sovQuery(uint64(l))
-	if m.PotId != 0 {
-		n += 1 + sovQuery(uint64(m.PotId))
+	if m.GaugeId != 0 {
+		n += 1 + sovQuery(uint64(m.GaugeId))
 	}
 	return n
 }
@@ -1387,7 +1392,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryPotIdsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGaugeIdsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1410,10 +1415,10 @@ func (m *QueryPotIdsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryPotIdsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGaugeIdsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryPotIdsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGaugeIdsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1459,7 +1464,7 @@ func (m *QueryPotIdsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryPotIdsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryGaugeIdsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1482,15 +1487,15 @@ func (m *QueryPotIdsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryPotIdsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGaugeIdsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryPotIdsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGaugeIdsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PotIdsWithDuration", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GaugeIdsWithDuration", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1517,8 +1522,8 @@ func (m *QueryPotIdsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PotIdsWithDuration = append(m.PotIdsWithDuration, &QueryPotIdsResponse_PotIdWithDuration{})
-			if err := m.PotIdsWithDuration[len(m.PotIdsWithDuration)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.GaugeIdsWithDuration = append(m.GaugeIdsWithDuration, &QueryGaugeIdsResponse_GaugeIdWithDuration{})
+			if err := m.GaugeIdsWithDuration[len(m.GaugeIdsWithDuration)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1546,7 +1551,7 @@ func (m *QueryPotIdsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryPotIdsResponse_PotIdWithDuration) Unmarshal(dAtA []byte) error {
+func (m *QueryGaugeIdsResponse_GaugeIdWithDuration) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1569,17 +1574,17 @@ func (m *QueryPotIdsResponse_PotIdWithDuration) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PotIdWithDuration: wiretype end group for non-group")
+			return fmt.Errorf("proto: GaugeIdWithDuration: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PotIdWithDuration: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GaugeIdWithDuration: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PotId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GaugeId", wireType)
 			}
-			m.PotId = 0
+			m.GaugeId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -1589,7 +1594,7 @@ func (m *QueryPotIdsResponse_PotIdWithDuration) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PotId |= uint64(b&0x7F) << shift
+				m.GaugeId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2205,9 +2210,9 @@ func (m *IncentivizedPool) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PotId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GaugeId", wireType)
 			}
-			m.PotId = 0
+			m.GaugeId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -2217,7 +2222,7 @@ func (m *IncentivizedPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PotId |= uint64(b&0x7F) << shift
+				m.GaugeId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

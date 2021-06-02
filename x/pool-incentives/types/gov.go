@@ -56,7 +56,7 @@ func (p UpdatePoolIncentivesProposal) String() string {
 	// TODO: Make this prettier
 	recordsStr := ""
 	for _, record := range p.Records {
-		recordsStr = recordsStr + fmt.Sprintf("(PotId: %d, Weight: %s) ", record.PotId, record.Weight.String())
+		recordsStr = recordsStr + fmt.Sprintf("(GaugeId: %d, Weight: %s) ", record.GaugeId, record.Weight.String())
 	}
 
 	var b strings.Builder

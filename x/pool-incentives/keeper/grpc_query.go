@@ -13,7 +13,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-func (k Keeper) PotIds(ctx context.Context, req *types.QueryPotIdsRequest) (*types.QueryPotIdsResponse, error) {
+func (k Keeper) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (*types.QueryGaugeIdsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -22,22 +22,22 @@ func (k Keeper) PotIds(ctx context.Context, req *types.QueryPotIdsRequest) (*typ
 
 	lockableDurations := k.GetLockableDurations(sdkCtx)
 
-	potIdsWithDuration := make([]*types.QueryPotIdsResponse_PotIdWithDuration, len(lockableDurations))
+	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
 
 	for i, duration := range lockableDurations {
-		potId, err := k.GetPoolPotId(sdkCtx, req.PoolId, duration)
+		gaugeId, err := k.GetPoolGaugeId(sdkCtx, req.PoolId, duration)
 
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		potIdsWithDuration[i] = &types.QueryPotIdsResponse_PotIdWithDuration{
-			PotId:    potId,
+		gaugeIdsWithDuration[i] = &types.QueryGaugeIdsResponse_GaugeIdWithDuration{
+			GaugeId:  gaugeId,
 			Duration: duration,
 		}
 	}
 
-	return &types.QueryPotIdsResponse{PotIdsWithDuration: potIdsWithDuration}, nil
+	return &types.QueryGaugeIdsResponse{GaugeIdsWithDuration: gaugeIdsWithDuration}, nil
 }
 
 func (k Keeper) DistrInfo(ctx context.Context, _ *types.QueryDistrInfoRequest) (*types.QueryDistrInfoResponse, error) {
@@ -65,17 +65,17 @@ func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivize
 
 	distrInfo := k.GetDistrInfo(sdkCtx)
 
-	// While there are exceptions, typically the number of incentivizedPools equals to the number of incentivized pots / number of lockable durations.
+	// While there are exceptions, typically the number of incentivizedPools equals to the number of incentivized gauges / number of lockable durations.
 	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
 
 	for _, record := range distrInfo.Records {
 		for _, lockableDuration := range lockableDurations {
-			poolId, err := k.GetPoolIdFromPotId(sdkCtx, record.PotId, lockableDuration)
+			poolId, err := k.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
 			if err == nil {
 				incentivizedPool := types.IncentivizedPool{
 					PoolId:           poolId,
 					LockableDuration: lockableDuration,
-					PotId:            record.PotId,
+					GaugeId:          record.GaugeId,
 				}
 
 				incentivizedPools = append(incentivizedPools, incentivizedPool)

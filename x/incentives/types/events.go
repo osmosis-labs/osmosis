@@ -2,8 +2,8 @@ package types
 
 // event types
 const (
-	TypeEvtCreatePot = "create_pot"
-	TypeEvtAddToPot  = "add_to_pot"
+	TypeEvtCreateGauge = "create_gauge"
+	TypeEvtAddToGauge  = "add_to_gauge"
 
-	AttributePotID = "pot_id"
+	AttributeGaugeID = "gauge_id"
 )

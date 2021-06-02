@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	)
 	suite.NoError(err)
 
-	// check propotion for 20%
+	// check proportion for 20%
 	coin = mintKeeper.GetProportions(suite.ctx, fees, sdk.NewDecWithPrec(2, 1))
 	suite.Equal(fees[0].Amount.Quo(sdk.NewInt(5)), coin.Amount)
 }
@@ -57,23 +57,23 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	mintKeeper := suite.app.MintKeeper
 	params := suite.app.MintKeeper.GetParams(suite.ctx)
 	devRewardsReceiver := sdk.AccAddress([]byte("addr1---------------"))
-	potCreator := sdk.AccAddress([]byte("addr2---------------"))
+	gaugeCreator := sdk.AccAddress([]byte("addr2---------------"))
 	params.DeveloperRewardsReceiver = devRewardsReceiver.String()
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	// Create record
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, potCreator, coins)
+	suite.app.BankKeeper.SetBalances(suite.ctx, gaugeCreator, coins)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	potId, err := suite.app.IncentivesKeeper.CreatePot(suite.ctx, true, potCreator, coins, distrTo, time.Now(), 1)
+	gaugeId, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, true, gaugeCreator, coins, distrTo, time.Now(), 1)
 	suite.NoError(err)
 	err = suite.app.PoolIncentivesKeeper.UpdateDistrRecords(suite.ctx, poolincentivestypes.DistrRecord{
-		PotId:  potId,
-		Weight: sdk.NewInt(100),
+		GaugeId: gaugeId,
+		Weight:  sdk.NewInt(100),
 	})
 	suite.NoError(err)
 

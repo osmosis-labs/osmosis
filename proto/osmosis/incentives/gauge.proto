@@ -9,8 +9,8 @@ import "osmosis/lockup/lock.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 
-message Pot {
-  uint64 id = 1;         // unique ID of a Pot
+message Gauge {
+  uint64 id = 1;         // unique ID of a Gauge
   bool is_perpetual = 2; // flag to show if it's perpetual or multi-epoch
                          // distribution incentives by third party
   // Rewards are distributed to lockups that are are returned by at least one of

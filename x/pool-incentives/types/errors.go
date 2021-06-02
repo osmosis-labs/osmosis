@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	ErrNoPotIdExist                 = sdkerrors.Register(ModuleName, 1, "no pot id exist")
-	ErrDistrRecordNotPositiveWeight = sdkerrors.Register(ModuleName, 2, "weight in record should be positive")
-	ErrDistrRecordNotRegisteredPot  = sdkerrors.Register(ModuleName, 3, "pot was not registered")
-	ErrDistrRecordRegisteredPot     = sdkerrors.Register(ModuleName, 4, "pot was already registered")
+	ErrNoGaugeIdExist                = sdkerrors.Register(ModuleName, 1, "no gauge id exist")
+	ErrDistrRecordNotPositiveWeight  = sdkerrors.Register(ModuleName, 2, "weight in record should be positive")
+	ErrDistrRecordNotRegisteredGauge = sdkerrors.Register(ModuleName, 3, "gauge was not registered")
+	ErrDistrRecordRegisteredGauge    = sdkerrors.Register(ModuleName, 4, "gauge was already registered")
 
-	ErrEmptyProposalRecords = sdkerrors.Register(ModuleName, 10, "records are empty")
-	ErrEmptyProposalPotIds  = sdkerrors.Register(ModuleName, 11, "pot ids are empty")
+	ErrEmptyProposalRecords  = sdkerrors.Register(ModuleName, 10, "records are empty")
+	ErrEmptyProposalGaugeIds = sdkerrors.Register(ModuleName, 11, "gauge ids are empty")
 )
