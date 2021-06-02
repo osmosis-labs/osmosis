@@ -329,7 +329,7 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTimeDenom() {
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 
-	// try querying with prefix coins like "stak" for gaugeential attack
+	// try querying with prefix coins like "stak" for potential attack
 	res, err = suite.app.LockupKeeper.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stak", Timestamp: now})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
@@ -460,7 +460,7 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 
-	// try querying with prefix coins like "stak" for gaugeential attack
+	// try querying with prefix coins like "stak" for potential attack
 	res, err = suite.app.LockupKeeper.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: 0, Denom: "sta"})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)

@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	)
 	suite.NoError(err)
 
-	// check progaugeion for 20%
+	// check proportion for 20%
 	coin = mintKeeper.GetProportions(suite.ctx, fees, sdk.NewDecWithPrec(2, 1))
 	suite.Equal(fees[0].Amount.Quo(sdk.NewInt(5)), coin.Amount)
 }
