@@ -104,7 +104,7 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 	bz := store.Get(key)
 
 	if len(bz) == 0 {
-		return 0, sdkerrors.Wrapf(types.ErrNoGaugeIdExist, "gaugege id for pool (%d) with duration (%s) not exist", poolId, lockableDuration.String())
+		return 0, sdkerrors.Wrapf(types.ErrNoGaugeIdExist, "gauge id for pool (%d) with duration (%s) not exist", poolId, lockableDuration.String())
 	}
 
 	return sdk.BigEndianToUint64(bz), nil
