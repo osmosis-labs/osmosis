@@ -22,45 +22,45 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (server msgServer) CreatePot(goCtx context.Context, msg *types.MsgCreatePot) (*types.MsgCreatePotResponse, error) {
+func (server msgServer) CreateGauge(goCtx context.Context, msg *types.MsgCreateGauge) (*types.MsgCreateGaugeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, err
 	}
 
-	potID, err := server.keeper.CreatePot(ctx, msg.IsPerpetual, owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver)
+	gaugeID, err := server.keeper.CreateGauge(ctx, msg.IsPerpetual, owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.TypeEvtCreatePot,
-			sdk.NewAttribute(types.AttributePotID, utils.Uint64ToString(potID)),
+			types.TypeEvtCreateGauge,
+			sdk.NewAttribute(types.AttributeGaugeID, utils.Uint64ToString(gaugeID)),
 		),
 	})
 
-	return &types.MsgCreatePotResponse{}, nil
+	return &types.MsgCreateGaugeResponse{}, nil
 }
 
-func (server msgServer) AddToPot(goCtx context.Context, msg *types.MsgAddToPot) (*types.MsgAddToPotResponse, error) {
+func (server msgServer) AddToGauge(goCtx context.Context, msg *types.MsgAddToGauge) (*types.MsgAddToGaugeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, err
 	}
-	err = server.keeper.AddToPotRewards(ctx, owner, msg.Rewards, msg.PotId)
+	err = server.keeper.AddToGaugeRewards(ctx, owner, msg.Rewards, msg.GaugeId)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.TypeEvtAddToPot,
-			sdk.NewAttribute(types.AttributePotID, utils.Uint64ToString(msg.PotId)),
+			types.TypeEvtAddToGauge,
+			sdk.NewAttribute(types.AttributeGaugeID, utils.Uint64ToString(msg.GaugeId)),
 		),
 	})
 
-	return &types.MsgAddToPotResponse{}, nil
+	return &types.MsgAddToGaugeResponse{}, nil
 }

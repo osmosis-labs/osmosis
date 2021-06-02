@@ -15,9 +15,9 @@ var _ gammtypes.GammHooks = Hooks{}
 // Create new pool incentives hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-// AfterPoolCreated creates a pot for each pool’s lockable duration
+// AfterPoolCreated creates a gauge for each pool’s lockable duration
 func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	err := h.k.CreatePoolPots(ctx, poolId)
+	err := h.k.CreatePoolGauges(ctx, poolId)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +52,7 @@ func (h Hooks) AfterDistributeMintedCoins(ctx sdk.Context, fees sdk.Coins) {
 	// the distribution uses the remaining 80% to calculate–which means if the community pool is set to receive 10% of newly minted OSMO, community pool is 8% of the total inflation.
 
 	// Calculate the AllocatableAsset using the AllocationRatio and the MintedDenom,
-	// then allocate the tokens to the registered pools’ pots.
+	// then allocate the tokens to the registered pools’ gauges.
 	// If there is no record, inflation is not drained and the all amounts are used by the distribution module’s next BeginBlock.
 	err := h.k.AllocateAsset(ctx)
 	if err != nil {

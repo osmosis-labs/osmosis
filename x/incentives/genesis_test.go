@@ -19,7 +19,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 	genesis := incentives.ExportGenesis(ctx, app.IncentivesKeeper)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "weekly")
-	require.Len(t, genesis.Pots, 0)
+	require.Len(t, genesis.Gauges, 0)
 
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
@@ -30,15 +30,15 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	}
 	startTime := time.Now()
 	app.BankKeeper.SetBalances(ctx, addr, coins)
-	potID, err := app.IncentivesKeeper.CreatePot(ctx, true, addr, coins, distrTo, startTime, 1)
+	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1)
 	require.NoError(t, err)
 
 	genesis = incentives.ExportGenesis(ctx, app.IncentivesKeeper)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "weekly")
-	require.Len(t, genesis.Pots, 1)
+	require.Len(t, genesis.Gauges, 1)
 
-	require.Equal(t, genesis.Pots[0], types.Pot{
-		Id:                potID,
+	require.Equal(t, genesis.Gauges[0], types.Gauge{
+		Id:                gaugeID,
 		IsPerpetual:       true,
 		DistributeTo:      distrTo,
 		Coins:             coins,
@@ -60,7 +60,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	pot := types.Pot{
+	gauge := types.Gauge{
 		Id:                1,
 		IsPerpetual:       false,
 		DistributeTo:      distrTo,
@@ -74,10 +74,10 @@ func TestIncentivesInitGenesis(t *testing.T) {
 		Params: types.Params{
 			DistrEpochIdentifier: "weekly",
 		},
-		Pots: []types.Pot{pot},
+		Gauges: []types.Gauge{gauge},
 	})
 
-	pots := app.IncentivesKeeper.GetPots(ctx)
-	require.Len(t, pots, 1)
-	require.Equal(t, pots[0], pot)
+	gauges := app.IncentivesKeeper.GetGauges(ctx)
+	require.Len(t, gauges, 1)
+	require.Equal(t, gauges[0], gauge)
 }

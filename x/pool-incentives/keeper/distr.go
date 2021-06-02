@@ -20,7 +20,7 @@ func (k Keeper) FundCommunityPoolFromModule(ctx sdk.Context, asset sdk.Coin) err
 	return nil
 }
 
-// AllocateAsset allocates and distributes coin according a pot’s proportional weight that is recorded in the record
+// AllocateAsset allocates and distributes coin according a gauge’s proportional weight that is recorded in the record
 func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 	logger := k.Logger(ctx)
 	params := k.GetParams(ctx)
@@ -45,17 +45,17 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 
 		// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
 		if !allocatingAmount.IsPositive() {
-			logger.Info(fmt.Sprintf("allocating amount for (%d, %s) record is not positive", record.PotId, record.Weight.String()))
+			logger.Info(fmt.Sprintf("allocating amount for (%d, %s) record is not positive", record.GaugeId, record.Weight.String()))
 			continue
 		}
 
-		if record.PotId == 0 { // fund community pool if potId is zero
+		if record.GaugeId == 0 { // fund community pool if gaugeId is zero
 			k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
 			continue
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
-		err := k.incentivesKeeper.AddToPotRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.PotId)
+		err := k.incentivesKeeper.AddToGaugeRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.GaugeId)
 		if err != nil {
 			return err
 		}
@@ -91,13 +91,13 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 	store.Set(types.DistrInfoKey, bz)
 }
 
-// indexOfDistrRecordByPotId returns the index of the record for the specific pot id.
-// If there is no record matched to the pot id, return -1.
-func (k Keeper) indexOfDistrRecordByPotId(ctx sdk.Context, potId uint64) int {
+// indexOfDistrRecordByGaugeId returns the index of the record for the specific gauge id.
+// If there is no record matched to the gauge id, return -1.
+func (k Keeper) indexOfDistrRecordByGaugeId(ctx sdk.Context, gaugeId uint64) int {
 	distrInfo := k.GetDistrInfo(ctx)
 	records := distrInfo.Records
 	for i, record := range records {
-		if record.PotId == potId {
+		if record.GaugeId == gaugeId {
 			return i
 		}
 	}
@@ -107,27 +107,27 @@ func (k Keeper) indexOfDistrRecordByPotId(ctx sdk.Context, potId uint64) int {
 func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
-	potIdFlags := make(map[uint64]bool)
+	gaugeIdFlags := make(map[uint64]bool)
 
 	totalWeight := sdk.NewInt(0)
 	for _, record := range records {
-		if potIdFlags[record.PotId] {
+		if gaugeIdFlags[record.GaugeId] {
 			return sdkerrors.Wrapf(
-				types.ErrDistrRecordRegisteredPot,
-				"Pot ID #%d has duplications.",
-				record.PotId,
+				types.ErrDistrRecordRegisteredGauge,
+				"Gauge ID #%d has duplications.",
+				record.GaugeId,
 			)
 		}
 
-		// unless PotID is 0 for the community pool, don't allow distribution records for pots that don't exist
-		if record.PotId != 0 {
-			_, err := k.incentivesKeeper.GetPotByID(ctx, record.PotId)
+		// unless GaugeID is 0 for the community pool, don't allow distribution records for gauges that don't exist
+		if record.GaugeId != 0 {
+			_, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
 			if err != nil {
 				return err
 			}
 		}
 
-		potIdFlags[record.PotId] = true
+		gaugeIdFlags[record.GaugeId] = true
 		totalWeight = totalWeight.Add(record.Weight)
 	}
 

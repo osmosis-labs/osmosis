@@ -14,14 +14,14 @@ service Query {
 	// returns coins that are distributed by module so far
 	rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest) returns ModuleToDistributeCoinsResponse;
 
-	// returns Pot by id
-	rpc PotByID(PotByIDRequest) returns PotByIDResponse;
-	// returns pots both upcoming and active
-	rpc Pots(PotsRequest) returns PotsResponse;
-	// returns active pots
-	rpc ActivePots(ActivePotsRequest) returns ActivePotsResponse;
-	// returns scheduled pots
-	rpc UpcomingPots(UpcomingPotsRequest) returns UpcomingPotsResponse;
+	// returns Gauge by id
+	rpc GaugeByID(GaugeByIDRequest) returns GaugeByIDResponse;
+	// returns gauges both upcoming and active
+	rpc Gauges(GaugesRequest) returns GaugesResponse;
+	// returns active gauges
+	rpc ActiveGauges(ActiveGaugesRequest) returns ActiveGaugesResponse;
+	// returns scheduled gauges
+	rpc UpcomingGauges(UpcomingGaugesRequest) returns UpcomingGaugesResponse;
 	// returns rewards estimation at a future specific time
 	rpc RewardsEst(RewardsEstRequest) returns RewardsEstResponse;
 }

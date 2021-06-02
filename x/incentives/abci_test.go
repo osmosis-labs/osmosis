@@ -12,7 +12,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-func TestPerpetualPotNotExpireAfterDistribution(t *testing.T) {
+func TestPerpetualGaugeNotExpireAfterDistribution(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -28,22 +28,22 @@ func TestPerpetualPotNotExpireAfterDistribution(t *testing.T) {
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	_, err := app.IncentivesKeeper.CreatePot(ctx, true, addr, coins, distrTo, time.Now(), 1)
+	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, 1)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, 1)
-	pots := app.IncentivesKeeper.GetUpcomingPots(futureCtx)
-	require.Len(t, pots, 0)
-	pots = app.IncentivesKeeper.GetActivePots(futureCtx)
-	require.Len(t, pots, 1)
-	pots = app.IncentivesKeeper.GetFinishedPots(futureCtx)
-	require.Len(t, pots, 0)
+	gauges := app.IncentivesKeeper.GetUpcomingGauges(futureCtx)
+	require.Len(t, gauges, 0)
+	gauges = app.IncentivesKeeper.GetActiveGauges(futureCtx)
+	require.Len(t, gauges, 1)
+	gauges = app.IncentivesKeeper.GetFinishedGauges(futureCtx)
+	require.Len(t, gauges, 0)
 }
 
-func TestNonPerpetualPotExpireAfterDistribution(t *testing.T) {
+func TestNonPerpetualGaugeExpireAfterDistribution(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -59,17 +59,17 @@ func TestNonPerpetualPotExpireAfterDistribution(t *testing.T) {
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	_, err := app.IncentivesKeeper.CreatePot(ctx, false, addr, coins, distrTo, time.Now(), 1)
+	_, err := app.IncentivesKeeper.CreateGauge(ctx, false, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, 1)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, 1)
-	pots := app.IncentivesKeeper.GetUpcomingPots(futureCtx)
-	require.Len(t, pots, 0)
-	pots = app.IncentivesKeeper.GetActivePots(futureCtx)
-	require.Len(t, pots, 0)
-	pots = app.IncentivesKeeper.GetFinishedPots(futureCtx)
-	require.Len(t, pots, 1)
+	gauges := app.IncentivesKeeper.GetUpcomingGauges(futureCtx)
+	require.Len(t, gauges, 0)
+	gauges = app.IncentivesKeeper.GetActiveGauges(futureCtx)
+	require.Len(t, gauges, 0)
+	gauges = app.IncentivesKeeper.GetFinishedGauges(futureCtx)
+	require.Len(t, gauges, 1)
 }

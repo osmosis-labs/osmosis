@@ -7,8 +7,8 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-func NewPot(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, filledEpochs uint64, distrCoins sdk.Coins) Pot {
-	return Pot{
+func NewGauge(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, filledEpochs uint64, distrCoins sdk.Coins) Gauge {
+	return Gauge{
 		Id:                id,
 		IsPerpetual:       isPerpetual,
 		DistributeTo:      distrTo,
@@ -20,20 +20,20 @@ func NewPot(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, coi
 	}
 }
 
-func (pot Pot) IsUpcomingPot(curTime time.Time) bool {
-	if curTime.After(pot.StartTime) {
+func (gauge Gauge) IsUpcomingGauge(curTime time.Time) bool {
+	if curTime.After(gauge.StartTime) {
 		return true
 	}
 	return false
 }
 
-func (pot Pot) IsActivePot(curTime time.Time) bool {
-	if curTime.Before(pot.StartTime) && (pot.IsPerpetual || pot.FilledEpochs < pot.NumEpochsPaidOver) {
+func (gauge Gauge) IsActiveGauge(curTime time.Time) bool {
+	if curTime.Before(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
 		return true
 	}
 	return false
 }
 
-func (pot Pot) IsFinishedPot(curTime time.Time) bool {
-	return !pot.IsUpcomingPot(curTime) && !pot.IsActivePot(curTime)
+func (gauge Gauge) IsFinishedGauge(curTime time.Time) bool {
+	return !gauge.IsUpcomingGauge(curTime) && !gauge.IsActiveGauge(curTime)
 }

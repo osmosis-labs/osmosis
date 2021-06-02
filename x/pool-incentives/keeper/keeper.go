@@ -61,10 +61,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-func (k Keeper) CreatePoolPots(ctx sdk.Context, poolId uint64) error {
-	// Create the same number of pots as there are LockableDurations
+func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
+	// Create the same number of gaugeges as there are LockableDurations
 	for _, lockableDuration := range k.GetLockableDurations(ctx) {
-		potId, err := k.incentivesKeeper.CreatePot(
+		gaugeId, err := k.incentivesKeeper.CreateGauge(
 			ctx,
 			true,
 			k.accountKeeper.GetModuleAddress(types.ModuleName),
@@ -83,40 +83,40 @@ func (k Keeper) CreatePoolPots(ctx sdk.Context, poolId uint64) error {
 			return err
 		}
 
-		k.SetPoolPotId(ctx, poolId, lockableDuration, potId)
+		k.SetPoolGaugeId(ctx, poolId, lockableDuration, gaugeId)
 	}
 
 	return nil
 }
 
-func (k Keeper) SetPoolPotId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration, potId uint64) {
-	key := types.GetPoolPotIdStoreKey(poolId, lockableDuration)
+func (k Keeper) SetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration, gaugeId uint64) {
+	key := types.GetPoolGaugeIdStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
-	store.Set(key, sdk.Uint64ToBigEndian(potId))
+	store.Set(key, sdk.Uint64ToBigEndian(gaugeId))
 
-	key = types.GetPoolIdFromPotIdStoreKey(potId, lockableDuration)
+	key = types.GetPoolIdFromGaugeIdStoreKey(gaugeId, lockableDuration)
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
-func (k Keeper) GetPoolPotId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error) {
-	key := types.GetPoolPotIdStoreKey(poolId, lockableDuration)
+func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error) {
+	key := types.GetPoolGaugeIdStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(key)
 
 	if len(bz) == 0 {
-		return 0, sdkerrors.Wrapf(types.ErrNoPotIdExist, "pot id for pool (%d) with duration (%s) not exist", poolId, lockableDuration.String())
+		return 0, sdkerrors.Wrapf(types.ErrNoGaugeIdExist, "gaugege id for pool (%d) with duration (%s) not exist", poolId, lockableDuration.String())
 	}
 
 	return sdk.BigEndianToUint64(bz), nil
 }
 
-func (k Keeper) GetPoolIdFromPotId(ctx sdk.Context, potId uint64, lockableDuration time.Duration) (uint64, error) {
-	key := types.GetPoolIdFromPotIdStoreKey(potId, lockableDuration)
+func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDuration time.Duration) (uint64, error) {
+	key := types.GetPoolIdFromGaugeIdStoreKey(gaugeId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(key)
 
 	if len(bz) == 0 {
-		return 0, sdkerrors.Wrapf(types.ErrNoPotIdExist, "pool for pot id (%d) with duration (%s) not exist", potId, lockableDuration.String())
+		return 0, sdkerrors.Wrapf(types.ErrNoGaugeIdExist, "pool for gauge id (%d) with duration (%s) not exist", gaugeId, lockableDuration.String())
 	}
 
 	return sdk.BigEndianToUint64(bz), nil

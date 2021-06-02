@@ -59,29 +59,29 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		suite.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
 	}
 
-	pot1Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	pot2Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
 	suite.NoError(err)
 
-	pot3Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 3 records
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  pot1Id,
-		Weight: sdk.NewInt(100),
+		GaugeId: gauge1Id,
+		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
-		PotId:  pot2Id,
-		Weight: sdk.NewInt(200),
+		GaugeId: gauge2Id,
+		Weight:  sdk.NewInt(200),
 	}, types.DistrRecord{
-		PotId:  pot3Id,
-		Weight: sdk.NewInt(300),
+		GaugeId: gauge3Id,
+		Weight:  sdk.NewInt(300),
 	})
 	suite.NoError(err)
 
-	// In this time, there are 3 records, so the assets to be allocated to the pots proportionally.
+	// In this time, there are 3 records, so the assets to be allocated to the gauges proportionally.
 	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
 	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
@@ -91,17 +91,17 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 
 	suite.Equal("40000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
 
-	pot1, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot1Id)
+	gauge1, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gauge1Id)
 	suite.NoError(err)
-	suite.Equal("5000stake", pot1.Coins.String())
+	suite.Equal("5000stake", gauge1.Coins.String())
 
-	pot2, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot2Id)
+	gauge2, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gauge2Id)
 	suite.NoError(err)
-	suite.Equal("9999stake", pot2.Coins.String())
+	suite.Equal("9999stake", gauge2.Coins.String())
 
-	pot3, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot3Id)
+	gauge3, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gauge3Id)
 	suite.NoError(err)
-	suite.Equal("15000stake", pot3.Coins.String())
+	suite.Equal("15000stake", gauge3.Coins.String())
 
 	// Allocate more.
 	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(50000))}
@@ -115,37 +115,37 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	suite.Equal("60000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
 
 	// Allocated assets should be increased.
-	pot1, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot1Id)
+	gauge1, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gauge1Id)
 	suite.NoError(err)
-	suite.Equal("7500stake", pot1.Coins.String())
+	suite.Equal("7500stake", gauge1.Coins.String())
 
-	pot2, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot2Id)
+	gauge2, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gauge2Id)
 	suite.NoError(err)
-	suite.Equal("14999stake", pot2.Coins.String())
+	suite.Equal("14999stake", gauge2.Coins.String())
 
-	pot3, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, pot3Id)
+	gauge3, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gauge3Id)
 	suite.NoError(err)
-	suite.Equal("22500stake", pot3.Coins.String())
+	suite.Equal("22500stake", gauge3.Coins.String())
 
-	// ------------ test community pool distribution when potId is zero ------------ //
+	// ------------ test community pool distribution when gaugeId is zero ------------ //
 
 	// record original community pool balance
 	feePoolOrigin := suite.app.DistrKeeper.GetFeePool(suite.ctx)
 
 	// Create 3 records including community pool
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  pot1Id,
-		Weight: sdk.NewInt(100),
+		GaugeId: gauge1Id,
+		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
-		PotId:  pot2Id,
-		Weight: sdk.NewInt(200),
+		GaugeId: gauge2Id,
+		Weight:  sdk.NewInt(200),
 	}, types.DistrRecord{
-		PotId:  0,
-		Weight: sdk.NewInt(700),
+		GaugeId: 0,
+		Weight:  sdk.NewInt(700),
 	})
 	suite.NoError(err)
 
-	// In this time, there are 3 records, so the assets to be allocated to the pots proportionally.
+	// In this time, there are 3 records, so the assets to be allocated to the gauges proportionally.
 	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
 	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
@@ -184,10 +184,10 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 
 	keeper := suite.app.PoolIncentivesKeeper
 
-	// Not existent pot.
+	// Not existent gauge.
 	err := keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  1,
-		Weight: sdk.NewInt(100),
+		GaugeId: 1,
+		Weight:  sdk.NewInt(100),
 	})
 	suite.Error(err)
 
@@ -197,56 +197,56 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	potId, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[0])
+	gaugeId, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  potId,
-		Weight: sdk.NewInt(100),
+		GaugeId: gaugeId,
+		Weight:  sdk.NewInt(100),
 	})
 	suite.NoError(err)
 	distrInfo := keeper.GetDistrInfo(suite.ctx)
 	suite.Equal(1, len(distrInfo.Records))
-	suite.Equal(potId, distrInfo.Records[0].PotId)
+	suite.Equal(gaugeId, distrInfo.Records[0].GaugeId)
 	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
 	suite.Equal(sdk.NewInt(100), distrInfo.TotalWeight)
 
-	// adding two of the same pot id at once should error
+	// adding two of the same gauge id at once should error
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  potId,
-		Weight: sdk.NewInt(100),
+		GaugeId: gaugeId,
+		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
-		PotId:  potId,
-		Weight: sdk.NewInt(200),
+		GaugeId: gaugeId,
+		Weight:  sdk.NewInt(200),
 	})
 	suite.Error(err)
 
-	potId2 := potId + 1
-	potId3 := potId + 2
+	gaugeId2 := gaugeId + 1
+	gaugeId3 := gaugeId + 2
 
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  potId2,
-		Weight: sdk.NewInt(100),
+		GaugeId: gaugeId2,
+		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
-		PotId:  potId3,
-		Weight: sdk.NewInt(200),
+		GaugeId: gaugeId3,
+		Weight:  sdk.NewInt(200),
 	})
 	suite.NoError(err)
 
 	distrInfo = keeper.GetDistrInfo(suite.ctx)
 	suite.Equal(2, len(distrInfo.Records))
-	suite.Equal(potId2, distrInfo.Records[0].PotId)
-	suite.Equal(potId3, distrInfo.Records[1].PotId)
+	suite.Equal(gaugeId2, distrInfo.Records[0].GaugeId)
+	suite.Equal(gaugeId3, distrInfo.Records[1].GaugeId)
 	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
 	suite.Equal(sdk.NewInt(200), distrInfo.Records[1].Weight)
 	suite.Equal(sdk.NewInt(300), distrInfo.TotalWeight)
 
-	// Can update the registered pot id
+	// Can update the registered gauge id
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  potId2,
-		Weight: sdk.NewInt(100),
+		GaugeId: gaugeId2,
+		Weight:  sdk.NewInt(100),
 	})
 	suite.NoError(err)
 
-	return potId
+	return gaugeId
 }

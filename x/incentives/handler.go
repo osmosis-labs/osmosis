@@ -16,11 +16,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		msgServer := keeper.NewMsgServerImpl(k)
 
 		switch msg := msg.(type) {
-		case *types.MsgCreatePot:
-			res, err := msgServer.CreatePot(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgCreateGauge:
+			res, err := msgServer.CreateGauge(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgAddToPot:
-			res, err := msgServer.AddToPot(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgAddToGauge:
+			res, err := msgServer.AddToGauge(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)

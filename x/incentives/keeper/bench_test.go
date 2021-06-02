@@ -7,5 +7,5 @@ import (
 func (suite *KeeperTestSuite) setupBenchmarkState(ctx *sdk.Context) {
 
 	// suite.Require().NoError(err)
-	// return potID, pot
+	// return gaugeID, gauge
 }

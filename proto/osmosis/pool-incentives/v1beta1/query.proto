@@ -10,8 +10,8 @@ import "osmosis/pool-incentives/v1beta1/incentives.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/pool-incentives/types";
 
 service Query {
-  // PotIds takes the pool id and returns the matching pot ids and durations
-  rpc PotIds(QueryPotIdsRequest) returns (QueryPotIdsResponse) {
+  // GaugeIds takes the pool id and returns the matching pot ids and durations
+  rpc GaugeIds(QueryGaugeIdsRequest) returns (QueryGaugeIdsResponse) {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/pot-ids/{pool_id}";
   }
@@ -38,17 +38,17 @@ service Query {
   }
 }
 
-message QueryPotIdsRequest {
+message QueryGaugeIdsRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryPotIdsResponse {
-  message PotIdWithDuration {
+message QueryGaugeIdsResponse {
+  message GaugeIdWithDuration {
     uint64 pot_id = 1 [ (gogoproto.moretags) = "yaml:\"pot_id\"" ];
     google.protobuf.Duration duration = 2
         [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
   }
 
-  repeated PotIdWithDuration pot_ids_with_duration = 1
+  repeated GaugeIdWithDuration pot_ids_with_duration = 1
       [ (gogoproto.moretags) = "yaml:\"pot_ids_with_duration\"" ];
 }
 

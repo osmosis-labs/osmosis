@@ -27,29 +27,29 @@ func (k Keeper) ModuleDistributedCoins(goCtx context.Context, req *types.ModuleD
 	return &types.ModuleDistributedCoinsResponse{Coins: k.GetModuleDistributedCoins(ctx)}, nil
 }
 
-// PotByID returns Pot by id
-func (k Keeper) PotByID(goCtx context.Context, req *types.PotByIDRequest) (*types.PotByIDResponse, error) {
+// GaugeByID returns Gauge by id
+func (k Keeper) GaugeByID(goCtx context.Context, req *types.GaugeByIDRequest) (*types.GaugeByIDResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	pot, err := k.GetPotByID(ctx, req.Id)
+	gauge, err := k.GetGaugeByID(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	return &types.PotByIDResponse{Pot: pot}, nil
+	return &types.GaugeByIDResponse{Gauge: gauge}, nil
 }
 
-// Pots returns pots both upcoming and active
-func (k Keeper) Pots(goCtx context.Context, req *types.PotsRequest) (*types.PotsResponse, error) {
+// Gauges returns gauges both upcoming and active
+func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.GaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	pots := []types.Pot{}
+	gauges := []types.Gauge{}
 	store := ctx.KVStore(k.storeKey)
-	valStore := prefix.NewStore(store, types.KeyPrefixPots)
+	valStore := prefix.NewStore(store, types.KeyPrefixGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newPots, err := k.GetPotFromIDs(ctx, value)
+		newGauges, err := k.GetGaugeFromIDs(ctx, value)
 		if err != nil {
 			panic(err)
 		}
-		pots = append(pots, newPots...)
+		gauges = append(gauges, newGauges...)
 
 		return true, nil
 	})
@@ -58,22 +58,22 @@ func (k Keeper) Pots(goCtx context.Context, req *types.PotsRequest) (*types.Pots
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.PotsResponse{Data: pots, Pagination: pageRes}, nil
+	return &types.GaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// ActivePots returns active pots
-func (k Keeper) ActivePots(goCtx context.Context, req *types.ActivePotsRequest) (*types.ActivePotsResponse, error) {
+// ActiveGauges returns active gauges
+func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesRequest) (*types.ActiveGaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	pots := []types.Pot{}
+	gauges := []types.Gauge{}
 	store := ctx.KVStore(k.storeKey)
-	valStore := prefix.NewStore(store, types.KeyPrefixActivePots)
+	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newPots, err := k.GetPotFromIDs(ctx, value)
+		newGauges, err := k.GetGaugeFromIDs(ctx, value)
 		if err != nil {
 			panic(err)
 		}
-		pots = append(pots, newPots...)
+		gauges = append(gauges, newGauges...)
 
 		return true, nil
 	})
@@ -82,22 +82,22 @@ func (k Keeper) ActivePots(goCtx context.Context, req *types.ActivePotsRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.ActivePotsResponse{Data: pots, Pagination: pageRes}, nil
+	return &types.ActiveGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// UpcomingPots returns scheduled pots
-func (k Keeper) UpcomingPots(goCtx context.Context, req *types.UpcomingPotsRequest) (*types.UpcomingPotsResponse, error) {
+// UpcomingGauges returns scheduled gauges
+func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesRequest) (*types.UpcomingGaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	pots := []types.Pot{}
+	gauges := []types.Gauge{}
 	store := ctx.KVStore(k.storeKey)
-	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingPots)
+	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newPots, err := k.GetPotFromIDs(ctx, value)
+		newGauges, err := k.GetGaugeFromIDs(ctx, value)
 		if err != nil {
 			panic(err)
 		}
-		pots = append(pots, newPots...)
+		gauges = append(gauges, newGauges...)
 
 		return true, nil
 	})
@@ -106,7 +106,7 @@ func (k Keeper) UpcomingPots(goCtx context.Context, req *types.UpcomingPotsReque
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.UpcomingPotsResponse{Data: pots, Pagination: pageRes}, nil
+	return &types.UpcomingGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
 // RewardsEst returns rewards estimation at a future specific time

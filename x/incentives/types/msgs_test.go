@@ -14,7 +14,7 @@ func TestMsgCreatePool(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
 
-	createMsg := func(after func(msg MsgCreatePot) MsgCreatePot) MsgCreatePot {
+	createMsg := func(after func(msg MsgCreateGauge) MsgCreateGauge) MsgCreateGauge {
 
 		distributeTo := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
@@ -22,7 +22,7 @@ func TestMsgCreatePool(t *testing.T) {
 			Duration:      time.Second,
 		}
 
-		properMsg := *NewMsgCreatePot(
+		properMsg := *NewMsgCreateGauge(
 			false,
 			addr1,
 			distributeTo,
@@ -34,31 +34,31 @@ func TestMsgCreatePool(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgCreatePot) MsgCreatePot {
+	msg := createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 		return msg
 	})
 
 	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "create_pot")
+	require.Equal(t, msg.Type(), "create_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1.String())
 
 	tests := []struct {
 		name       string
-		msg        MsgCreatePot
+		msg        MsgCreateGauge
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				return msg
 			}),
 			expectPass: true,
 		},
 		{
 			name: "empty owner",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.Owner = ""
 				return msg
 			}),
@@ -66,7 +66,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "empty distribution denom",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.DistributeTo.Denom = ""
 				return msg
 			}),
@@ -74,7 +74,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid distribution denom",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.DistributeTo.Denom = "111"
 				return msg
 			}),
@@ -82,7 +82,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid lock query type",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = -1
 				return msg
 			}),
@@ -90,7 +90,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid lock query type",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = -1
 				return msg
 			}),
@@ -98,7 +98,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid distribution start time",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.StartTime = time.Time{}
 				return msg
 			}),
@@ -106,15 +106,15 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid num epochs paid over",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.NumEpochsPaidOver = 0
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "invalid num epochs paid over for perpetual pot",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			name: "invalid num epochs paid over for perpetual gauge",
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.NumEpochsPaidOver = 2
 				msg.IsPerpetual = true
 				return msg
@@ -122,8 +122,8 @@ func TestMsgCreatePool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "valid num epochs paid over for perpetual pot",
-			msg: createMsg(func(msg MsgCreatePot) MsgCreatePot {
+			name: "valid num epochs paid over for perpetual gauge",
+			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 				msg.NumEpochsPaidOver = 1
 				msg.IsPerpetual = true
 				return msg
@@ -141,12 +141,12 @@ func TestMsgCreatePool(t *testing.T) {
 	}
 }
 
-func TestMsgAddToPot(t *testing.T) {
+func TestMsgAddToGauge(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
 
-	createMsg := func(after func(msg MsgAddToPot) MsgAddToPot) MsgAddToPot {
-		properMsg := *NewMsgAddToPot(
+	createMsg := func(after func(msg MsgAddToGauge) MsgAddToGauge) MsgAddToGauge {
+		properMsg := *NewMsgAddToGauge(
 			addr1,
 			1,
 			sdk.Coins{sdk.NewInt64Coin("stake", 10)},
@@ -155,31 +155,31 @@ func TestMsgAddToPot(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgAddToPot) MsgAddToPot {
+	msg := createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
 		return msg
 	})
 
 	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "add_to_pot")
+	require.Equal(t, msg.Type(), "add_to_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1.String())
 
 	tests := []struct {
 		name       string
-		msg        MsgAddToPot
+		msg        MsgAddToGauge
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgAddToPot) MsgAddToPot {
+			msg: createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
 				return msg
 			}),
 			expectPass: true,
 		},
 		{
 			name: "empty owner",
-			msg: createMsg(func(msg MsgAddToPot) MsgAddToPot {
+			msg: createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
 				msg.Owner = ""
 				return msg
 			}),
@@ -187,7 +187,7 @@ func TestMsgAddToPot(t *testing.T) {
 		},
 		{
 			name: "empty rewards",
-			msg: createMsg(func(msg MsgAddToPot) MsgAddToPot {
+			msg: createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
 				msg.Rewards = sdk.Coins{}
 				return msg
 			}),

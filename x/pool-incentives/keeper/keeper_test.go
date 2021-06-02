@@ -86,20 +86,20 @@ func (suite *KeeperTestSuite) preparePool() uint64 {
 		ExitFee: sdk.NewDec(0),
 	})
 
-	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "foo", "bar")
+	sgaugePrice, err := suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "foo", "bar")
 	suite.NoError(err)
-	suite.Equal(sdk.NewDec(2).String(), spotPrice.String())
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "bar", "baz")
+	suite.Equal(sdk.NewDec(2).String(), sgaugePrice.String())
+	sgaugePrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "bar", "baz")
 	suite.NoError(err)
-	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
+	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), sgaugePrice.String())
+	sgaugePrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
 	suite.NoError(err)
-	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), spotPrice.String())
+	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), sgaugePrice.String())
 
 	return poolId
 }
 
-func (suite *KeeperTestSuite) TestCreatePoolPots() {
+func (suite *KeeperTestSuite) TestCreatePoolGauges() {
 	suite.SetupTest()
 
 	keeper := suite.app.PoolIncentivesKeeper
@@ -113,32 +113,32 @@ func (suite *KeeperTestSuite) TestCreatePoolPots() {
 		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
 		suite.NoError(err)
 
-		// Same amount of pots as lockableDurations must be created for every pool created.
-		potId, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[0])
+		// Same amount of gauges as lockableDurations must be created for every pool created.
+		gaugeId, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
 		suite.NoError(err)
-		pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potId)
+		gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)
-		suite.Equal(0, len(pot.Coins))
-		suite.Equal(true, pot.IsPerpetual)
-		suite.Equal(pool.GetTotalShare().Denom, pot.DistributeTo.Denom)
-		suite.Equal(lockableDurations[0], pot.DistributeTo.Duration)
+		suite.Equal(0, len(gauge.Coins))
+		suite.Equal(true, gauge.IsPerpetual)
+		suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
-		potId, err = keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[1])
+		gaugeId, err = keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
 		suite.NoError(err)
-		pot, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potId)
+		gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)
-		suite.Equal(0, len(pot.Coins))
-		suite.Equal(true, pot.IsPerpetual)
-		suite.Equal(pool.GetTotalShare().Denom, pot.DistributeTo.Denom)
-		suite.Equal(lockableDurations[1], pot.DistributeTo.Duration)
+		suite.Equal(0, len(gauge.Coins))
+		suite.Equal(true, gauge.IsPerpetual)
+		suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
-		potId, err = keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[2])
+		gaugeId, err = keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
 		suite.NoError(err)
-		pot, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, potId)
+		gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)
-		suite.Equal(0, len(pot.Coins))
-		suite.Equal(true, pot.IsPerpetual)
-		suite.Equal(pool.GetTotalShare().Denom, pot.DistributeTo.Denom)
-		suite.Equal(lockableDurations[2], pot.DistributeTo.Duration)
+		suite.Equal(0, len(gauge.Coins))
+		suite.Equal(true, gauge.IsPerpetual)
+		suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 	}
 }

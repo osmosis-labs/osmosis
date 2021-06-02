@@ -12,20 +12,20 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.DistrEpochIdentifier {
 		// begin distribution if it's start time
-		pots := k.GetUpcomingPots(ctx)
-		for _, pot := range pots {
-			if pot.StartTime.Before(ctx.BlockTime()) {
-				k.BeginDistribution(ctx, pot)
+		gauges := k.GetUpcomingGauges(ctx)
+		for _, gauge := range gauges {
+			if gauge.StartTime.Before(ctx.BlockTime()) {
+				k.BeginDistribution(ctx, gauge)
 			}
 		}
 
 		// distribute due to epoch event
-		pots = k.GetActivePots(ctx)
-		for _, pot := range pots {
-			k.Distribute(ctx, pot)
+		gauges = k.GetActiveGauges(ctx)
+		for _, gauge := range gauges {
+			k.Distribute(ctx, gauge)
 			// filled epoch is increased in this step and we compare with +1
-			if !pot.IsPerpetual && pot.NumEpochsPaidOver <= pot.FilledEpochs+1 {
-				k.FinishDistribution(ctx, pot)
+			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
+				k.FinishDistribution(ctx, gauge)
 			}
 		}
 	}

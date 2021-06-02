@@ -12,99 +12,99 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
-// Iterate over everything in a pots iterator, until it reaches the end. Return all pots iterated over.
-func (k Keeper) getPotsFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Pot {
-	pots := []types.Pot{}
+// Iterate over everything in a gauges iterator, until it reaches the end. Return all gauges iterated over.
+func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
+	gauges := []types.Gauge{}
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		potIDs := []uint64{}
-		err := json.Unmarshal(iterator.Value(), &potIDs)
+		gaugeIDs := []uint64{}
+		err := json.Unmarshal(iterator.Value(), &gaugeIDs)
 		if err != nil {
 			panic(err)
 		}
-		for _, potID := range potIDs {
-			pot, err := k.GetPotByID(ctx, potID)
+		for _, gaugeID := range gaugeIDs {
+			gauge, err := k.GetGaugeByID(ctx, gaugeID)
 			if err != nil {
 				panic(err)
 			}
-			pots = append(pots, *pot)
+			gauges = append(gauges, *gauge)
 		}
 	}
-	return pots
+	return gauges
 }
 
-// Compute the total amount of coins in all the pots
-func (k Keeper) getCoinsFromPots(pots []types.Pot) sdk.Coins {
+// Compute the total amount of coins in all the gauges
+func (k Keeper) getCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	coins := sdk.Coins{}
-	for _, pot := range pots {
-		coins = coins.Add(pot.Coins...)
+	for _, gauge := range gauges {
+		coins = coins.Add(gauge.Coins...)
 	}
 	return coins
 }
 
-func (k Keeper) getDistributedCoinsFromPots(pots []types.Pot) sdk.Coins {
+func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	coins := sdk.Coins{}
-	for _, pot := range pots {
-		coins = coins.Add(pot.DistributedCoins...)
+	for _, gauge := range gauges {
+		coins = coins.Add(gauge.DistributedCoins...)
 	}
 	return coins
 }
 
-func (k Keeper) getToDistributeCoinsFromPots(pots []types.Pot) sdk.Coins {
-	// TODO: Consider optimizing this in the future to only require one iteration over all pots.
-	coins := k.getCoinsFromPots(pots)
-	distributed := k.getDistributedCoinsFromPots(pots)
+func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
+	// TODO: Consider optimizing this in the future to only require one iteration over all gauges.
+	coins := k.getCoinsFromGauges(gauges)
+	distributed := k.getDistributedCoinsFromGauges(gauges)
 	return coins.Sub(distributed)
 }
 
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
+	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
 func (k Keeper) getToDistributeCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getToDistributeCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
+	return k.getToDistributeCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
 func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getDistributedCoinsFromPots(k.getPotsFromIterator(ctx, iterator))
+	return k.getDistributedCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
-// setPot set the pot inside store
-func (k Keeper) setPot(ctx sdk.Context, pot *types.Pot) error {
+// setGauge set the gauge inside store
+func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(pot)
+	bz, err := proto.Marshal(gauge)
 	if err != nil {
 		return err
 	}
-	store.Set(potStoreKey(pot.Id), bz)
+	store.Set(gaugeStoreKey(gauge.Id), bz)
 	return nil
 }
 
-func (k Keeper) SetPotWithRefKey(ctx sdk.Context, pot *types.Pot) error {
-	k.setPot(ctx, pot)
+func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
+	k.setGauge(ctx, gauge)
 
 	curTime := ctx.BlockTime()
-	timeKey := getTimeKey(pot.StartTime)
-	if pot.IsUpcomingPot(curTime) {
-		k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, timeKey), pot.Id)
-	} else if pot.IsActivePot(curTime) {
-		k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
+	timeKey := getTimeKey(gauge.StartTime)
+	if gauge.IsUpcomingGauge(curTime) {
+		k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id)
+	} else if gauge.IsActiveGauge(curTime) {
+		k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
 	} else {
-		k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixFinishedPots, timeKey), pot.Id)
+		k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixFinishedGauges, timeKey), gauge.Id)
 	}
 	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(pot)
+	bz, err := proto.Marshal(gauge)
 	if err != nil {
 		return err
 	}
-	store.Set(potStoreKey(pot.Id), bz)
+	store.Set(gaugeStoreKey(gauge.Id), bz)
 	return nil
 }
 
-// CreatePot create a pot and send coins to the pot
-func (k Keeper) CreatePot(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
-	pot := types.Pot{
-		Id:                k.getLastPotID(ctx) + 1,
+// CreateGauge create a gauge and send coins to the gauge
+func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
+	gauge := types.Gauge{
+		Id:                k.getLastGaugeID(ctx) + 1,
 		IsPerpetual:       isPerpetual,
 		DistributeTo:      distrTo,
 		Coins:             coins,
@@ -112,27 +112,27 @@ func (k Keeper) CreatePot(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddres
 		NumEpochsPaidOver: numEpochsPaidOver,
 	}
 
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, pot.Coins); err != nil {
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, gauge.Coins); err != nil {
 		return 0, err
 	}
 
-	k.setPot(ctx, &pot)
-	k.setLastPotID(ctx, pot.Id)
+	k.setGauge(ctx, &gauge)
+	k.setLastGaugeID(ctx, gauge.Id)
 
-	// TODO: Do we need to be concerned with case where this should be ActivePots?
-	if err := k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, getTimeKey(pot.StartTime)), pot.Id); err != nil {
+	// TODO: Do we need to be concerned with case where this should be ActiveGauges?
+	if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime)), gauge.Id); err != nil {
 		return 0, err
 	}
-	if err := k.addPotIDForDenom(ctx, pot.Id, pot.DistributeTo.Denom); err != nil {
+	if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 		return 0, err
 	}
-	k.hooks.AfterCreatePot(ctx, pot.Id)
-	return pot.Id, nil
+	k.hooks.AfterCreateGauge(ctx, gauge.Id)
+	return gauge.Id, nil
 }
 
-// AddToPot add coins to pot
-func (k Keeper) AddToPotRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, potID uint64) error {
-	pot, err := k.GetPotByID(ctx, potID)
+// AddToGauge add coins to gauge
+func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
+	gauge, err := k.GetGaugeByID(ctx, gaugeID)
 	if err != nil {
 		return err
 	}
@@ -140,34 +140,34 @@ func (k Keeper) AddToPotRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk
 		return err
 	}
 
-	pot.Coins = pot.Coins.Add(coins...)
-	k.setPot(ctx, pot)
-	k.hooks.AfterAddToPot(ctx, pot.Id)
+	gauge.Coins = gauge.Coins.Add(coins...)
+	k.setGauge(ctx, gauge)
+	k.hooks.AfterAddToGauge(ctx, gauge.Id)
 	return nil
 }
 
-// BeginDistribution is a utility to begin distribution for a specific pot
-func (k Keeper) BeginDistribution(ctx sdk.Context, pot types.Pot) error {
+// BeginDistribution is a utility to begin distribution for a specific gauge
+func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	// validation for current time and distribution start time
 	curTime := ctx.BlockTime()
-	if curTime.Before(pot.StartTime) {
-		return fmt.Errorf("pot is not able to start distribution yet: %s >= %s", curTime.String(), pot.StartTime.String())
+	if curTime.Before(gauge.StartTime) {
+		return fmt.Errorf("gauge is not able to start distribution yet: %s >= %s", curTime.String(), gauge.StartTime.String())
 	}
 
-	timeKey := getTimeKey(pot.StartTime)
-	k.deletePotRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingPots, timeKey), pot.Id)
-	k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
-	k.hooks.AfterFinishDistribution(ctx, pot.Id)
+	timeKey := getTimeKey(gauge.StartTime)
+	k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id)
+	k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
+	k.hooks.AfterFinishDistribution(ctx, gauge.Id)
 	return nil
 }
 
-// FinishDistribution is a utility to finish distribution for a specific pot
-func (k Keeper) FinishDistribution(ctx sdk.Context, pot types.Pot) error {
-	timeKey := getTimeKey(pot.StartTime)
-	k.deletePotRefByKey(ctx, combineKeys(types.KeyPrefixActivePots, timeKey), pot.Id)
-	k.addPotRefByKey(ctx, combineKeys(types.KeyPrefixFinishedPots, timeKey), pot.Id)
-	k.deletePotIDForDenom(ctx, pot.Id, pot.DistributeTo.Denom)
-	k.hooks.AfterFinishDistribution(ctx, pot.Id)
+// FinishDistribution is a utility to finish distribution for a specific gauge
+func (k Keeper) FinishDistribution(ctx sdk.Context, gauge types.Gauge) error {
+	timeKey := getTimeKey(gauge.StartTime)
+	k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
+	k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixFinishedGauges, timeKey), gauge.Id)
+	k.deleteGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom)
+	k.hooks.AfterFinishDistribution(ctx, gauge.Id)
 	return nil
 }
 
@@ -183,33 +183,33 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 	return []lockuptypes.PeriodLock{}
 }
 
-// FilteredLocksDistributionEst estimate distribution amount coins from pot for fitting conditions
-// Expectation: pot is a valid pot
-// filteredLocks are all locks that are valid for pot
-// It also applies an update for the pot, handling the sending of the rewards.
+// FilteredLocksDistributionEst estimate distribution amount coins from gauge for fitting conditions
+// Expectation: gauge is a valid gauge
+// filteredLocks are all locks that are valid for gauge
+// It also applies an update for the gauge, handling the sending of the rewards.
 // (Note this update is in-memory, it does not change state.)
-func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, filteredLocks []lockuptypes.PeriodLock) (types.Pot, sdk.Coins, error) {
-	TotalAmtLocked := k.lk.GetPeriodLocksAccumulation(ctx, pot.DistributeTo)
+func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge, filteredLocks []lockuptypes.PeriodLock) (types.Gauge, sdk.Coins, error) {
+	TotalAmtLocked := k.lk.GetPeriodLocksAccumulation(ctx, gauge.DistributeTo)
 	if TotalAmtLocked.IsZero() {
-		return types.Pot{}, nil, nil
+		return types.Gauge{}, nil, nil
 	}
 
-	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
-	// Remaining epochs is the number of remaining epochs that the pot will pay out its rewards
-	// For a perpetual pot, it will pay out everything in the next epoch, and we don't make
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	// Remaining epochs is the number of remaining epochs that the gauge will pay out its rewards
+	// For a perpetual gauge, it will pay out everything in the next epoch, and we don't make
 	// an assumption for what rate it will get refilled at.
 	remainEpochs := uint64(1)
-	if !pot.IsPerpetual {
-		remainEpochs = pot.NumEpochsPaidOver - pot.FilledEpochs
+	if !gauge.IsPerpetual {
+		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
 	// TODO: Should this return err
 	if remainEpochs == 0 {
-		return pot, sdk.Coins{}, nil
+		return gauge, sdk.Coins{}, nil
 	}
 
 	remainCoinsPerEpoch := sdk.Coins{}
 	for _, coin := range remainCoins {
-		// distribution amount per epoch = pot_size / (remain_epochs)
+		// distribution amount per epoch = gauge_size / (remain_epochs)
 		amt := coin.Amount.QuoRaw(int64(remainEpochs))
 		remainCoinsPerEpoch = remainCoinsPerEpoch.Add(sdk.NewCoin(coin.Denom, amt))
 	}
@@ -219,47 +219,47 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, pot types.Pot, fil
 	if len(filteredLocks) == 0 {
 		// If were doing no filtering, we want to calculate the total amount to distributed in
 		// the next epoch.
-		// distribution in next epoch = pot_size  / (remain_epochs)
+		// distribution in next epoch = gauge_size  / (remain_epochs)
 		filteredDistrCoins = remainCoinsPerEpoch
 	}
 	for _, lock := range filteredLocks {
-		denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
+		denomLockAmt := lock.Coins.AmountOf(gauge.DistributeTo.Denom)
 
 		for _, coin := range remainCoinsPerEpoch {
-			// distribution amount = pot_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			// distribution amount = pot_size_per_epoch * denom_lock_amount / total_denom_lock_amount
+			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
+			// distribution amount = gauge_size_per_epoch * denom_lock_amount / total_denom_lock_amount
 			amt := coin.Amount.Mul(denomLockAmt).Quo(TotalAmtLocked)
 			filteredDistrCoins = filteredDistrCoins.Add(sdk.NewCoin(coin.Denom, amt))
 		}
 	}
 
 	// increase filled epochs after distribution
-	pot.FilledEpochs += 1
-	pot.DistributedCoins = pot.DistributedCoins.Add(remainCoinsPerEpoch...)
+	gauge.FilledEpochs += 1
+	gauge.DistributedCoins = gauge.DistributedCoins.Add(remainCoinsPerEpoch...)
 
-	return pot, filteredDistrCoins, nil
+	return gauge, filteredDistrCoins, nil
 }
 
-// Distribute coins from pot according to its conditions
-func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
+// Distribute coins from gauge according to its conditions
+func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
-	locks := k.GetLocksToDistribution(ctx, pot.DistributeTo)
-	lockSum := lockuptypes.SumLocksByDenom(locks, pot.DistributeTo.Denom)
+	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
+	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
 
 	if lockSum.IsZero() {
 		return nil, nil
 	}
 
-	remainCoins := pot.Coins.Sub(pot.DistributedCoins)
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 	remainEpochs := uint64(1)
-	if !pot.IsPerpetual { // set remain epochs when it's not perpetual pot
-		remainEpochs = pot.NumEpochsPaidOver - pot.FilledEpochs
+	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
+		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
 	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
-			// distribution amount = pot_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			denomLockAmt := lock.Coins.AmountOf(pot.DistributeTo.Denom)
+			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
+			denomLockAmt := lock.Coins.AmountOf(gauge.DistributeTo.Denom)
 			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 			if amt.IsPositive() {
 				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
@@ -280,81 +280,81 @@ func (k Keeper) Distribute(ctx sdk.Context, pot types.Pot) (sdk.Coins, error) {
 	}
 
 	// increase filled epochs after distribution
-	pot.FilledEpochs += 1
-	pot.DistributedCoins = pot.DistributedCoins.Add(totalDistrCoins...)
-	k.setPot(ctx, &pot)
+	gauge.FilledEpochs += 1
+	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
+	k.setGauge(ctx, &gauge)
 
-	k.hooks.AfterDistribute(ctx, pot.Id)
+	k.hooks.AfterDistribute(ctx, gauge.Id)
 	return totalDistrCoins, nil
 }
 
 // GetModuleToDistributeCoins returns sum of to distribute coins for all of the module
 func (k Keeper) GetModuleToDistributeCoins(ctx sdk.Context) sdk.Coins {
-	activePotsDistr := k.getToDistributeCoinsFromIterator(ctx, k.ActivePotsIterator(ctx))
-	upcomingPotsDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingPotsIteratorAfterTime(ctx, ctx.BlockTime()))
-	return activePotsDistr.Add(upcomingPotsDistr...)
+	activeGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
+	upcomingGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingGaugesIteratorAfterTime(ctx, ctx.BlockTime()))
+	return activeGaugesDistr.Add(upcomingGaugesDistr...)
 }
 
 // GetModuleDistributedCoins returns sum of distributed coins so far
 func (k Keeper) GetModuleDistributedCoins(ctx sdk.Context) sdk.Coins {
-	activePotsDistr := k.getDistributedCoinsFromIterator(ctx, k.ActivePotsIterator(ctx))
-	finishedPotsDistr := k.getDistributedCoinsFromIterator(ctx, k.FinishedPotsIterator(ctx))
-	return activePotsDistr.Add(finishedPotsDistr...)
+	activeGaugesDistr := k.getDistributedCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
+	finishedGaugesDistr := k.getDistributedCoinsFromIterator(ctx, k.FinishedGaugesIterator(ctx))
+	return activeGaugesDistr.Add(finishedGaugesDistr...)
 }
 
-// GetPotByID Returns pot from pot ID
-func (k Keeper) GetPotByID(ctx sdk.Context, potID uint64) (*types.Pot, error) {
-	pot := types.Pot{}
+// GetGaugeByID Returns gauge from gauge ID
+func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, error) {
+	gauge := types.Gauge{}
 	store := ctx.KVStore(k.storeKey)
-	potKey := potStoreKey(potID)
-	if !store.Has(potKey) {
-		return nil, fmt.Errorf("pot with ID %d does not exist", potID)
+	gaugeKey := gaugeStoreKey(gaugeID)
+	if !store.Has(gaugeKey) {
+		return nil, fmt.Errorf("gauge with ID %d does not exist", gaugeID)
 	}
-	bz := store.Get(potKey)
-	proto.Unmarshal(bz, &pot)
-	return &pot, nil
+	bz := store.Get(gaugeKey)
+	proto.Unmarshal(bz, &gauge)
+	return &gauge, nil
 }
 
-// GetPotFromIDs returns pots from pot ids reference
-func (k Keeper) GetPotFromIDs(ctx sdk.Context, refValue []byte) ([]types.Pot, error) {
-	pots := []types.Pot{}
-	potIDs := []uint64{}
-	err := json.Unmarshal(refValue, &potIDs)
+// GetGaugeFromIDs returns gauges from gauge ids reference
+func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
+	gauges := []types.Gauge{}
+	gaugeIDs := []uint64{}
+	err := json.Unmarshal(refValue, &gaugeIDs)
 	if err != nil {
-		return pots, err
+		return gauges, err
 	}
-	for _, potID := range potIDs {
-		pot, err := k.GetPotByID(ctx, potID)
+	for _, gaugeID := range gaugeIDs {
+		gauge, err := k.GetGaugeByID(ctx, gaugeID)
 		if err != nil {
 			panic(err)
 		}
-		pots = append(pots, *pot)
+		gauges = append(gauges, *gauge)
 	}
-	return pots, nil
+	return gauges, nil
 }
 
-// GetPots returns pots both upcoming and active
-func (k Keeper) GetPots(ctx sdk.Context) []types.Pot {
-	return k.getPotsFromIterator(ctx, k.PotsIterator(ctx))
+// GetGauges returns gauges both upcoming and active
+func (k Keeper) GetGauges(ctx sdk.Context) []types.Gauge {
+	return k.getGaugesFromIterator(ctx, k.GaugesIterator(ctx))
 }
 
-func (k Keeper) GetNotFinishedPots(ctx sdk.Context) []types.Pot {
-	return append(k.GetActivePots(ctx), k.GetUpcomingPots(ctx)...)
+func (k Keeper) GetNotFinishedGauges(ctx sdk.Context) []types.Gauge {
+	return append(k.GetActiveGauges(ctx), k.GetUpcomingGauges(ctx)...)
 }
 
-// GetActivePots returns active pots
-func (k Keeper) GetActivePots(ctx sdk.Context) []types.Pot {
-	return k.getPotsFromIterator(ctx, k.ActivePotsIterator(ctx))
+// GetActiveGauges returns active gauges
+func (k Keeper) GetActiveGauges(ctx sdk.Context) []types.Gauge {
+	return k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 }
 
-// GetUpcomingPots returns scheduled pots
-func (k Keeper) GetUpcomingPots(ctx sdk.Context) []types.Pot {
-	return k.getPotsFromIterator(ctx, k.UpcomingPotsIterator(ctx))
+// GetUpcomingGauges returns scheduled gauges
+func (k Keeper) GetUpcomingGauges(ctx sdk.Context) []types.Gauge {
+	return k.getGaugesFromIterator(ctx, k.UpcomingGaugesIterator(ctx))
 }
 
-// GetFinishedPots returns finished pots
-func (k Keeper) GetFinishedPots(ctx sdk.Context) []types.Pot {
-	return k.getPotsFromIterator(ctx, k.FinishedPotsIterator(ctx))
+// GetFinishedGauges returns finished gauges
+func (k Keeper) GetFinishedGauges(ctx sdk.Context) []types.Gauge {
+	return k.getGaugesFromIterator(ctx, k.FinishedGaugesIterator(ctx))
 }
 
 // GetRewardsEst returns rewards estimation at a future specific time
@@ -365,7 +365,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	if len(locks) == 0 {
 		locks = k.lk.GetAccountPeriodLocks(ctx, addr)
 	}
-	// Get all pots that reward to these locks
+	// Get all gauges that reward to these locks
 	// First get all the denominations being locked up
 	denomSet := map[string]bool{}
 	for _, l := range locks {
@@ -373,18 +373,18 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 			denomSet[c.Denom] = true
 		}
 	}
-	pots := []types.Pot{}
-	// initialize pots to active and upcomings if not set
+	gauges := []types.Gauge{}
+	// initialize gauges to active and upcomings if not set
 	for s, _ := range denomSet {
-		potIDs := k.getAllPotIDsByDenom(ctx, s)
-		// Each pot only rewards locks to one denom, so no duplicates
-		for _, id := range potIDs {
-			pot, err := k.GetPotByID(ctx, id)
+		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, s)
+		// Each gauge only rewards locks to one denom, so no duplicates
+		for _, id := range gaugeIDs {
+			gauge, err := k.GetGaugeByID(ctx, id)
 			// Shouldn't happen
 			if err != nil {
 				return sdk.Coins{}
 			}
-			pots = append(pots, *pot)
+			gauges = append(gauges, *gauge)
 		}
 	}
 
@@ -395,21 +395,21 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 
 	// no need to change storage while doing estimation and we use cached context
 	cacheCtx, _ := ctx.CacheContext()
-	for _, pot := range pots {
+	for _, gauge := range gauges {
 		distrBeginEpoch := epochInfo.CurrentEpoch
 		blockTime := ctx.BlockTime()
-		if pot.StartTime.After(blockTime) {
-			distrBeginEpoch = epochInfo.CurrentEpoch + 1 + int64(pot.StartTime.Sub(blockTime)/epochInfo.Duration)
+		if gauge.StartTime.After(blockTime) {
+			distrBeginEpoch = epochInfo.CurrentEpoch + 1 + int64(gauge.StartTime.Sub(blockTime)/epochInfo.Duration)
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
 
-			newPot, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, pot, locks)
+			newGauge, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
 			if err != nil {
 				continue
 			}
 			estimatedRewards = estimatedRewards.Add(distrCoins...)
-			pot = newPot
+			gauge = newGauge
 		}
 	}
 

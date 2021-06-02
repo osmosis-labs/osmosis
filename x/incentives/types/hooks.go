@@ -3,11 +3,11 @@ package types
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type IncentiveHooks interface {
-	AfterCreatePot(ctx sdk.Context, potId uint64)
-	AfterAddToPot(ctx sdk.Context, potId uint64)
-	AfterStartDistribution(ctx sdk.Context, potId uint64)
-	AfterFinishDistribution(ctx sdk.Context, potId uint64)
-	AfterDistribute(ctx sdk.Context, potId uint64)
+	AfterCreateGauge(ctx sdk.Context, gaugeId uint64)
+	AfterAddToGauge(ctx sdk.Context, gaugeId uint64)
+	AfterStartDistribution(ctx sdk.Context, gaugeId uint64)
+	AfterFinishDistribution(ctx sdk.Context, gaugeId uint64)
+	AfterDistribute(ctx sdk.Context, gaugeId uint64)
 }
 
 var _ IncentiveHooks = MultiIncentiveHooks{}
@@ -19,32 +19,32 @@ func NewMultiIncentiveHooks(hooks ...IncentiveHooks) MultiIncentiveHooks {
 	return hooks
 }
 
-func (h MultiIncentiveHooks) AfterCreatePot(ctx sdk.Context, potId uint64) {
+func (h MultiIncentiveHooks) AfterCreateGauge(ctx sdk.Context, gaugeId uint64) {
 	for i := range h {
-		h[i].AfterCreatePot(ctx, potId)
+		h[i].AfterCreateGauge(ctx, gaugeId)
 	}
 }
 
-func (h MultiIncentiveHooks) AfterAddToPot(ctx sdk.Context, potId uint64) {
+func (h MultiIncentiveHooks) AfterAddToGauge(ctx sdk.Context, gaugeId uint64) {
 	for i := range h {
-		h[i].AfterAddToPot(ctx, potId)
+		h[i].AfterAddToGauge(ctx, gaugeId)
 	}
 }
 
-func (h MultiIncentiveHooks) AfterStartDistribution(ctx sdk.Context, potId uint64) {
+func (h MultiIncentiveHooks) AfterStartDistribution(ctx sdk.Context, gaugeId uint64) {
 	for i := range h {
-		h[i].AfterStartDistribution(ctx, potId)
+		h[i].AfterStartDistribution(ctx, gaugeId)
 	}
 }
 
-func (h MultiIncentiveHooks) AfterFinishDistribution(ctx sdk.Context, potId uint64) {
+func (h MultiIncentiveHooks) AfterFinishDistribution(ctx sdk.Context, gaugeId uint64) {
 	for i := range h {
-		h[i].AfterFinishDistribution(ctx, potId)
+		h[i].AfterFinishDistribution(ctx, gaugeId)
 	}
 }
 
-func (h MultiIncentiveHooks) AfterDistribute(ctx sdk.Context, potId uint64) {
+func (h MultiIncentiveHooks) AfterDistribute(ctx sdk.Context, gaugeId uint64) {
 	for i := range h {
-		h[i].AfterDistribute(ctx, potId)
+		h[i].AfterDistribute(ctx, gaugeId)
 	}
 }

@@ -8,11 +8,11 @@ import (
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 )
 
-// getLastPotID returns ID used last time
-func (k Keeper) getLastPotID(ctx sdk.Context) uint64 {
+// getLastGaugeID returns ID used last time
+func (k Keeper) getLastGaugeID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.KeyLastPotID)
+	bz := store.Get(types.KeyLastGaugeID)
 	if bz == nil {
 		return 0
 	}
@@ -20,44 +20,44 @@ func (k Keeper) getLastPotID(ctx sdk.Context) uint64 {
 	return sdk.BigEndianToUint64(bz)
 }
 
-// setLastPotID save ID used by last pot
-func (k Keeper) setLastPotID(ctx sdk.Context, ID uint64) {
+// setLastGaugeID save ID used by last gauge
+func (k Keeper) setLastGaugeID(ctx sdk.Context, ID uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.KeyLastPotID, sdk.Uint64ToBigEndian(ID))
+	store.Set(types.KeyLastGaugeID, sdk.Uint64ToBigEndian(ID))
 }
 
-// potStoreKey returns action store key from ID
-func potStoreKey(ID uint64) []byte {
-	return combineKeys(types.KeyPrefixPeriodPot, sdk.Uint64ToBigEndian(ID))
+// gaugeStoreKey returns action store key from ID
+func gaugeStoreKey(ID uint64) []byte {
+	return combineKeys(types.KeyPrefixPeriodGauge, sdk.Uint64ToBigEndian(ID))
 }
 
-func potDenomStoreKey(denom string) []byte {
-	return combineKeys(types.KeyPrefixPotsByDenom, []byte(denom))
+func gaugeDenomStoreKey(denom string) []byte {
+	return combineKeys(types.KeyPrefixGaugesByDenom, []byte(denom))
 }
 
-// getPotRefs get pot IDs specified on the provided key
-func (k Keeper) getPotRefs(ctx sdk.Context, key []byte) []uint64 {
+// getGaugeRefs get gauge IDs specified on the provided key
+func (k Keeper) getGaugeRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)
-	potIDs := []uint64{}
+	gaugeIDs := []uint64{}
 	if store.Has(key) {
 		bz := store.Get(key)
-		err := json.Unmarshal(bz, &potIDs)
+		err := json.Unmarshal(bz, &gaugeIDs)
 		if err != nil {
 			panic(err)
 		}
 	}
-	return potIDs
+	return gaugeIDs
 }
 
-// addPotRefByKey append pot ID into an array associated to provided key
-func (k Keeper) addPotRefByKey(ctx sdk.Context, key []byte, potID uint64) error {
+// addGaugeRefByKey append gauge ID into an array associated to provided key
+func (k Keeper) addGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
 	store := ctx.KVStore(k.storeKey)
-	potIDs := k.getPotRefs(ctx, key)
-	if findIndex(potIDs, potID) > -1 {
-		return fmt.Errorf("pot with same ID exist: %d", potID)
+	gaugeIDs := k.getGaugeRefs(ctx, key)
+	if findIndex(gaugeIDs, gaugeID) > -1 {
+		return fmt.Errorf("gauge with same ID exist: %d", gaugeID)
 	}
-	potIDs = append(potIDs, potID)
-	bz, err := json.Marshal(potIDs)
+	gaugeIDs = append(gaugeIDs, gaugeID)
+	bz, err := json.Marshal(gaugeIDs)
 	if err != nil {
 		return err
 	}
@@ -65,19 +65,19 @@ func (k Keeper) addPotRefByKey(ctx sdk.Context, key []byte, potID uint64) error 
 	return nil
 }
 
-// deletePotRefByKey removes pot ID from an array associated to provided key
-func (k Keeper) deletePotRefByKey(ctx sdk.Context, key []byte, potID uint64) {
+// deleteGaugeRefByKey removes gauge ID from an array associated to provided key
+func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) {
 	var index = -1
 	store := ctx.KVStore(k.storeKey)
-	potIDs := k.getPotRefs(ctx, key)
-	potIDs, index = removeValue(potIDs, potID)
+	gaugeIDs := k.getGaugeRefs(ctx, key)
+	gaugeIDs, index = removeValue(gaugeIDs, gaugeID)
 	if index < 0 {
-		panic(fmt.Sprintf("specific pot with ID %d not found", potID))
+		panic(fmt.Sprintf("specific gauge with ID %d not found", gaugeID))
 	}
-	if len(potIDs) == 0 {
+	if len(gaugeIDs) == 0 {
 		store.Delete(key)
 	} else {
-		bz, err := json.Marshal(potIDs)
+		bz, err := json.Marshal(gaugeIDs)
 		if err != nil {
 			panic(err)
 		}
@@ -85,17 +85,17 @@ func (k Keeper) deletePotRefByKey(ctx sdk.Context, key []byte, potID uint64) {
 	}
 }
 
-// getAllPotIDsByDenom returns all active pot-IDs associated with lockups of denomination `denom`
-func (k Keeper) getAllPotIDsByDenom(ctx sdk.Context, denom string) []uint64 {
-	return k.getPotRefs(ctx, potDenomStoreKey(denom))
+// getAllGaugeIDsByDenom returns all active gauge-IDs associated with lockups of denomination `denom`
+func (k Keeper) getAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
+	return k.getGaugeRefs(ctx, gaugeDenomStoreKey(denom))
 }
 
-// deletePotIDForDenom deletes ID from the list of pot ID's associated with denomination `denom`
-func (k Keeper) deletePotIDForDenom(ctx sdk.Context, ID uint64, denom string) {
-	k.deletePotRefByKey(ctx, potDenomStoreKey(denom), ID)
+// deleteGaugeIDForDenom deletes ID from the list of gauge ID's associated with denomination `denom`
+func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) {
+	k.deleteGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
 }
 
-// addPotIDForDenom adds ID to the list of pot ID's associated with denomination `denom`
-func (k Keeper) addPotIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
-	return k.addPotRefByKey(ctx, potDenomStoreKey(denom), ID)
+// addGaugeIDForDenom adds ID to the list of gauge ID's associated with denomination `denom`
+func (k Keeper) addGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
+	return k.addGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
 }

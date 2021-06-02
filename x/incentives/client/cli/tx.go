@@ -26,18 +26,18 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		NewCreatePotCmd(),
-		NewAddToPotCmd(),
+		NewCreateGaugeCmd(),
+		NewAddToGaugeCmd(),
 	)
 
 	return cmd
 }
 
-// NewCreatePotCmd broadcast MsgCreatePot
-func NewCreatePotCmd() *cobra.Command {
+// NewCreateGaugeCmd broadcast MsgCreateGauge
+func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pot [coins] [start_time] [num_epochs_paid_over] [flags]",
-		Short: "create a pot to distribute rewards to users",
+		Use:   "create-gauge [coins] [start_time] [num_epochs_paid_over] [flags]",
+		Short: "create a gauge to distribute rewards to users",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -100,7 +100,7 @@ func NewCreatePotCmd() *cobra.Command {
 				isPerpetual = true
 			}
 
-			msg := types.NewMsgCreatePot(
+			msg := types.NewMsgCreateGauge(
 				isPerpetual,
 				clientCtx.GetFromAddress(),
 				distributeTo,
@@ -113,16 +113,16 @@ func NewCreatePotCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetCreatePot())
+	cmd.Flags().AddFlagSet(FlagSetCreateGauge())
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
-// NewAddToPotCmd broadcast MsgAddToPot
-func NewAddToPotCmd() *cobra.Command {
+// NewAddToGaugeCmd broadcast MsgAddToGauge
+func NewAddToGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-to-pot [pot_id] [rewards] [flags]",
-		Short: "add coins to pot to distribute more rewards to users",
+		Use:   "add-to-gauge [gauge_id] [rewards] [flags]",
+		Short: "add coins to gauge to distribute more rewards to users",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -132,7 +132,7 @@ func NewAddToPotCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			potId, err := strconv.ParseUint(args[1], 10, 64)
+			gaugeId, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -142,9 +142,9 @@ func NewAddToPotCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgAddToPot(
+			msg := types.NewMsgAddToGauge(
 				clientCtx.GetFromAddress(),
-				potId,
+				gaugeId,
 				rewards,
 			)
 
@@ -152,7 +152,7 @@ func NewAddToPotCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetCreatePot())
+	cmd.Flags().AddFlagSet(FlagSetCreateGauge())
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

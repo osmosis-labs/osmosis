@@ -8,9 +8,9 @@ order: 2
 
 All the incentives that are going to be provided are locked into `IncentivePool` until released to the appropriate recipients after a specific period of time.
 
-### Pot
+### Gauge
 
-Rewards to be distributed are organized by `Pot`. The `Pot` describes how users can get reward, stores the amount of coins in the pot, the cadence at which rewards are to be distributed, and the number of epochs to distribute the reward over.
+Rewards to be distributed are organized by `Gauge`. The `Gauge` describes how users can get reward, stores the amount of coins in the gauge, the cadence at which rewards are to be distributed, and the number of epochs to distribute the reward over.
 
 ```go
 type LockQueryType int
@@ -26,8 +26,8 @@ type QueryCondition struct {
   Timestamp time.Time // condition for lock start time, not valid if unset value
 }
 
-type Pot struct {
-  ID                   uint64 // unique ID of a Pot
+type Gauge struct {
+  ID                   uint64 // unique ID of a Gauge
   DistributeTo         QueryCondition // distribute condition of a lock
   TotalRewards         sdk.Coins // can distribute multiple coins
   StartTime            time.Time // start time to start distribution
@@ -50,8 +50,8 @@ message QueryCondition {
   google.protobuf.Timestamp timestamp = 4; // condition for lock start time, not valid if unset value
 }
 
-message Pot {
-  uint64 id = 1; // unique ID of a Pot
+message Gauge {
+  uint64 id = 1; // unique ID of a Gauge
   QueryCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
   repeated cosmos.base.v1beta1.Coin coins = 3; // can distribute multiple coins
   google.protobuf.Timestamp start_time = 4; // condition for lock start time, not valid if unset value
@@ -59,12 +59,12 @@ message Pot {
 }
 ```
 
-### Pot queues
+### Gauge queues
 
 #### Upcoming queue
 
-To release from `Pots` every epoch, we schedule distribution start time with time key queue.
+To release from `Gauges` every epoch, we schedule distribution start time with time key queue.
 
 #### Active queue
 
-Active queue has all the `Pots` that are distributing and after distribution period finish, it's removed from the queue.
+Active queue has all the `Gauges` that are distributing and after distribution period finish, it's removed from the queue.

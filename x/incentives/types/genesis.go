@@ -11,7 +11,7 @@ func DefaultGenesis() *GenesisState {
 		Params: Params{
 			DistrEpochIdentifier: "weekly",
 		},
-		Pots: []Pot{},
+		Gauges: []Gauge{},
 	}
 }
 
