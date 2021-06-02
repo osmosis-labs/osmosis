@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	osmo_simulation "github.com/osmosis-labs/osmosis/x/simulation"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -105,7 +105,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		simCoins := bk.GetAllBalances(ctx, simAccount.Address)
+		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.Len() <= 1 {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgCreatePool, "Account doesn't have 2 different coin types"), nil, nil
@@ -123,39 +123,10 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 			PoolParams:         poolParams,
 		}
 
-		account := ak.GetAccount(ctx, simAccount.Address)
-		// spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
-		var fees sdk.Coins
-
-		// coins, hasNeg := spendable.SafeSub(sdk.Coins{selfDelegation})
-		// if !hasNeg {
-		// 	fees, err = simtypes.RandomFees(r, ctx, coins)
-		// 	if err != nil {
-		// 		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateValidator, "unable to generate fees"), nil, err
-		// 	}
-		// }
+		spentCoins := sdk.Coins{}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
-			txGen,
-			[]sdk.Msg{&msg},
-			fees,
-			helpers.DefaultGenTxGas,
-			chainID,
-			[]uint64{account.GetAccountNumber()},
-			[]uint64{account.GetSequence()},
-			simAccount.PrivKey,
-		)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
-		}
-
-		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
-		}
-
-		return simtypes.NewOperationMsg(&msg, true, ""), nil, nil
+		return osmo_simulation.GenAndDeliverTxWithRandFees(
+			r, app, txGen, &msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
