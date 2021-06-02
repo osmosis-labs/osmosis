@@ -2915,8 +2915,10 @@ paths:
         - Query
   '/osmosis/pool-incentives/v1beta1/pot-ids/{pool_id}':
     get:
-      summary: PotIds takes the pool id and returns the matching pot ids and durations
-      operationId: PotIds
+      summary: >-
+        GaugeIds takes the pool id and returns the matching pot ids and
+        durations
+      operationId: GaugeIds
       responses:
         '200':
           description: A successful response.
@@ -3915,10 +3917,307 @@ paths:
                       format: byte
       tags:
         - Query
-  /osmosis/incentives/v1beta1/active_pots:
+  /osmosis/incentives/v1beta1/active_gauges:
     get:
-      summary: returns active pots
-      operationId: ActivePots
+      summary: returns active gauges
+      operationId: ActiveGauges
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uint64
+                    is_perpetual:
+                      type: boolean
+                    distribute_to:
+                      title: >-
+                        distribution incentives by third party
+
+                        Rewards are distributed to lockups that are are returned
+                        by at least one of
+
+                        these queries
+                      type: object
+                      properties:
+                        lock_query_type:
+                          type: string
+                          enum:
+                            - ByDuration
+                            - ByTime
+                          default: ByDuration
+                        denom:
+                          type: string
+                        duration:
+                          type: string
+                          title: valid when query condition is ByDuration
+                        timestamp:
+                          type: string
+                          format: date-time
+                          title: valid when query condition is ByTime
+                    coins:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                    start_time:
+                      type: string
+                      format: date-time
+                      title: distribution start time
+                    num_epochs_paid_over:
+                      type: string
+                      format: uint64
+                    filled_epochs:
+                      type: string
+                      format: uint64
+                    distributed_coins:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+              pagination:
+                description: pagination defines an pagination for the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/osmosis/incentives/v1beta1/gauge_by_id/{id}':
+    get:
+      summary: returns Gauge by id
+      operationId: GaugeByID
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              gauge:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uint64
+                  is_perpetual:
+                    type: boolean
+                  distribute_to:
+                    title: >-
+                      distribution incentives by third party
+
+                      Rewards are distributed to lockups that are are returned
+                      by at least one of
+
+                      these queries
+                    type: object
+                    properties:
+                      lock_query_type:
+                        type: string
+                        enum:
+                          - ByDuration
+                          - ByTime
+                        default: ByDuration
+                      denom:
+                        type: string
+                      duration:
+                        type: string
+                        title: valid when query condition is ByDuration
+                      timestamp:
+                        type: string
+                        format: date-time
+                        title: valid when query condition is ByTime
+                  coins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  start_time:
+                    type: string
+                    format: date-time
+                    title: distribution start time
+                  num_epochs_paid_over:
+                    type: string
+                    format: uint64
+                  filled_epochs:
+                    type: string
+                    format: uint64
+                  distributed_coins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  /osmosis/incentives/v1beta1/gauges:
+    get:
+      summary: returns gauges both upcoming and active
+      operationId: Gauges
       responses:
         '200':
           description: A successful response.
@@ -4197,303 +4496,6 @@ paths:
                       format: byte
       tags:
         - Query
-  '/osmosis/incentives/v1beta1/pot_by_id/{id}':
-    get:
-      summary: returns Pot by id
-      operationId: PotByID
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              pot:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    format: uint64
-                  is_perpetual:
-                    type: boolean
-                  distribute_to:
-                    title: >-
-                      distribution incentives by third party
-
-                      Rewards are distributed to lockups that are are returned
-                      by at least one of
-
-                      these queries
-                    type: object
-                    properties:
-                      lock_query_type:
-                        type: string
-                        enum:
-                          - ByDuration
-                          - ByTime
-                        default: ByDuration
-                      denom:
-                        type: string
-                      duration:
-                        type: string
-                        title: valid when query condition is ByDuration
-                      timestamp:
-                        type: string
-                        format: date-time
-                        title: valid when query condition is ByTime
-                  coins:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                  start_time:
-                    type: string
-                    format: date-time
-                    title: distribution start time
-                  num_epochs_paid_over:
-                    type: string
-                    format: uint64
-                  filled_epochs:
-                    type: string
-                    format: uint64
-                  distributed_coins:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    type_url:
-                      type: string
-                    value:
-                      type: string
-                      format: byte
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-      tags:
-        - Query
-  /osmosis/incentives/v1beta1/pots:
-    get:
-      summary: returns pots both upcoming and active
-      operationId: Pots
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              data:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uint64
-                    is_perpetual:
-                      type: boolean
-                    distribute_to:
-                      title: >-
-                        distribution incentives by third party
-
-                        Rewards are distributed to lockups that are are returned
-                        by at least one of
-
-                        these queries
-                      type: object
-                      properties:
-                        lock_query_type:
-                          type: string
-                          enum:
-                            - ByDuration
-                            - ByTime
-                          default: ByDuration
-                        denom:
-                          type: string
-                        duration:
-                          type: string
-                          title: valid when query condition is ByDuration
-                        timestamp:
-                          type: string
-                          format: date-time
-                          title: valid when query condition is ByTime
-                    coins:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                    start_time:
-                      type: string
-                      format: date-time
-                      title: distribution start time
-                    num_epochs_paid_over:
-                      type: string
-                      format: uint64
-                    filled_epochs:
-                      type: string
-                      format: uint64
-                    distributed_coins:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-              pagination:
-                description: pagination defines an pagination for the response.
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    type_url:
-                      type: string
-                    value:
-                      type: string
-                      format: byte
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
   '/osmosis/incentives/v1beta1/rewards_est/{owner}':
     get:
       summary: |-
@@ -4566,10 +4568,10 @@ paths:
           format: int64
       tags:
         - Query
-  /osmosis/incentives/v1beta1/upcoming_pots:
+  /osmosis/incentives/v1beta1/upcoming_gauges:
     get:
-      summary: returns scheduled pots
-      operationId: UpcomingPots
+      summary: returns scheduled gauges
+      operationId: UpcomingGauges
       responses:
         '200':
           description: A successful response.
@@ -18215,6 +18217,27 @@ definitions:
                   format: uint64
                 weight:
                   type: string
+  osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse:
+    type: object
+    properties:
+      pot_ids_with_duration:
+        type: array
+        items:
+          type: object
+          properties:
+            pot_id:
+              type: string
+              format: uint64
+            duration:
+              type: string
+  osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration:
+    type: object
+    properties:
+      pot_id:
+        type: string
+        format: uint64
+      duration:
+        type: string
   osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsResponse:
     type: object
     properties:
@@ -18257,27 +18280,6 @@ definitions:
               the
 
               defined minted_denom.
-  osmosis.poolincentives.v1beta1.QueryPotIdsResponse:
-    type: object
-    properties:
-      pot_ids_with_duration:
-        type: array
-        items:
-          type: object
-          properties:
-            pot_id:
-              type: string
-              format: uint64
-            duration:
-              type: string
-  osmosis.poolincentives.v1beta1.QueryPotIdsResponse.PotIdWithDuration:
-    type: object
-    properties:
-      pot_id:
-        type: string
-        format: uint64
-      duration:
-        type: string
   osmosis.lockup.AccountLockedCoinsResponse:
     type: object
     properties:
@@ -18740,7 +18742,258 @@ definitions:
       of
 
       coins locked.
-  osmosis.incentives.ActivePotsResponse:
+  osmosis.incentives.ActiveGaugesResponse:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uint64
+            is_perpetual:
+              type: boolean
+            distribute_to:
+              title: >-
+                distribution incentives by third party
+
+                Rewards are distributed to lockups that are are returned by at
+                least one of
+
+                these queries
+              type: object
+              properties:
+                lock_query_type:
+                  type: string
+                  enum:
+                    - ByDuration
+                    - ByTime
+                  default: ByDuration
+                denom:
+                  type: string
+                duration:
+                  type: string
+                  title: valid when query condition is ByDuration
+                timestamp:
+                  type: string
+                  format: date-time
+                  title: valid when query condition is ByTime
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            start_time:
+              type: string
+              format: date-time
+              title: distribution start time
+            num_epochs_paid_over:
+              type: string
+              format: uint64
+            filled_epochs:
+              type: string
+              format: uint64
+            distributed_coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+      pagination:
+        description: pagination defines an pagination for the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+  osmosis.incentives.Gauge:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      is_perpetual:
+        type: boolean
+      distribute_to:
+        title: >-
+          distribution incentives by third party
+
+          Rewards are distributed to lockups that are are returned by at least
+          one of
+
+          these queries
+        type: object
+        properties:
+          lock_query_type:
+            type: string
+            enum:
+              - ByDuration
+              - ByTime
+            default: ByDuration
+          denom:
+            type: string
+          duration:
+            type: string
+            title: valid when query condition is ByDuration
+          timestamp:
+            type: string
+            format: date-time
+            title: valid when query condition is ByTime
+      coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+      start_time:
+        type: string
+        format: date-time
+        title: distribution start time
+      num_epochs_paid_over:
+        type: string
+        format: uint64
+      filled_epochs:
+        type: string
+        format: uint64
+      distributed_coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  osmosis.incentives.GaugeByIDResponse:
+    type: object
+    properties:
+      gauge:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uint64
+          is_perpetual:
+            type: boolean
+          distribute_to:
+            title: >-
+              distribution incentives by third party
+
+              Rewards are distributed to lockups that are are returned by at
+              least one of
+
+              these queries
+            type: object
+            properties:
+              lock_query_type:
+                type: string
+                enum:
+                  - ByDuration
+                  - ByTime
+                default: ByDuration
+              denom:
+                type: string
+              duration:
+                type: string
+                title: valid when query condition is ByDuration
+              timestamp:
+                type: string
+                format: date-time
+                title: valid when query condition is ByTime
+          coins:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+          start_time:
+            type: string
+            format: date-time
+            title: distribution start time
+          num_epochs_paid_over:
+            type: string
+            format: uint64
+          filled_epochs:
+            type: string
+            format: uint64
+          distributed_coins:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+  osmosis.incentives.GaugesResponse:
     type: object
     properties:
       data:
@@ -18874,257 +19127,6 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-  osmosis.incentives.Pot:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uint64
-      is_perpetual:
-        type: boolean
-      distribute_to:
-        title: >-
-          distribution incentives by third party
-
-          Rewards are distributed to lockups that are are returned by at least
-          one of
-
-          these queries
-        type: object
-        properties:
-          lock_query_type:
-            type: string
-            enum:
-              - ByDuration
-              - ByTime
-            default: ByDuration
-          denom:
-            type: string
-          duration:
-            type: string
-            title: valid when query condition is ByDuration
-          timestamp:
-            type: string
-            format: date-time
-            title: valid when query condition is ByTime
-      coins:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
-      start_time:
-        type: string
-        format: date-time
-        title: distribution start time
-      num_epochs_paid_over:
-        type: string
-        format: uint64
-      filled_epochs:
-        type: string
-        format: uint64
-      distributed_coins:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
-  osmosis.incentives.PotByIDResponse:
-    type: object
-    properties:
-      pot:
-        type: object
-        properties:
-          id:
-            type: string
-            format: uint64
-          is_perpetual:
-            type: boolean
-          distribute_to:
-            title: >-
-              distribution incentives by third party
-
-              Rewards are distributed to lockups that are are returned by at
-              least one of
-
-              these queries
-            type: object
-            properties:
-              lock_query_type:
-                type: string
-                enum:
-                  - ByDuration
-                  - ByTime
-                default: ByDuration
-              denom:
-                type: string
-              duration:
-                type: string
-                title: valid when query condition is ByDuration
-              timestamp:
-                type: string
-                format: date-time
-                title: valid when query condition is ByTime
-          coins:
-            type: array
-            items:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-          start_time:
-            type: string
-            format: date-time
-            title: distribution start time
-          num_epochs_paid_over:
-            type: string
-            format: uint64
-          filled_epochs:
-            type: string
-            format: uint64
-          distributed_coins:
-            type: array
-            items:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-  osmosis.incentives.PotsResponse:
-    type: object
-    properties:
-      data:
-        type: array
-        items:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uint64
-            is_perpetual:
-              type: boolean
-            distribute_to:
-              title: >-
-                distribution incentives by third party
-
-                Rewards are distributed to lockups that are are returned by at
-                least one of
-
-                these queries
-              type: object
-              properties:
-                lock_query_type:
-                  type: string
-                  enum:
-                    - ByDuration
-                    - ByTime
-                  default: ByDuration
-                denom:
-                  type: string
-                duration:
-                  type: string
-                  title: valid when query condition is ByDuration
-                timestamp:
-                  type: string
-                  format: date-time
-                  title: valid when query condition is ByTime
-            coins:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            start_time:
-              type: string
-              format: date-time
-              title: distribution start time
-            num_epochs_paid_over:
-              type: string
-              format: uint64
-            filled_epochs:
-              type: string
-              format: uint64
-            distributed_coins:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-      pagination:
-        description: pagination defines an pagination for the response.
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
   osmosis.incentives.RewardsEstResponse:
     type: object
     properties:
@@ -19142,7 +19144,7 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-  osmosis.incentives.UpcomingPotsResponse:
+  osmosis.incentives.UpcomingGaugesResponse:
     type: object
     properties:
       data:
