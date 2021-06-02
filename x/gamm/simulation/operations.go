@@ -63,12 +63,16 @@ func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) s
 func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
 	numCoins := 2 + r.Intn(Min(coins.Len(), 6))
 	denomIndices := r.Perm(numCoins)
-	denoms := make([]string, numCoins)
+	assets := []types.PoolAsset{}
 	for i := 0; i < numCoins; i++ {
-		denoms[i] = coins[denomIndices[i]].Denom
+		denom := coins[denomIndices[i]].Denom
+		amt, _ := simtypes.RandPositiveInt(r, coins[i].Amount)
+		reserveAmt := sdk.NewCoin(denom, amt)
+		weight := sdk.OneInt()
+		assets = append(assets, types.PoolAsset{Token: reserveAmt, Weight: weight})
 	}
 
-	return []types.PoolAsset{}
+	return assets
 }
 
 func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.PoolParams {
@@ -80,8 +84,9 @@ func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) 
 
 	// TODO: Randomly generate LBP params
 	return types.PoolParams{
-		SwapFee: swapFee,
-		ExitFee: exitFee,
+		SwapFee:                  swapFee,
+		ExitFee:                  exitFee,
+		SmoothWeightChangeParams: nil,
 	}
 }
 
@@ -123,7 +128,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 			PoolParams:         poolParams,
 		}
 
-		spentCoins := sdk.Coins{}
+		spentCoins := types.PoolAssetsCoins(poolAssets)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
