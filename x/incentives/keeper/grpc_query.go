@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -114,5 +116,13 @@ func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) 
 	if err != nil {
 		return nil, err
 	}
-	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, owner, req.Locks, req.EndEpoch)}, nil
+	locks := make([]lockuptypes.PeriodLock, 0, len(req.LockIds))
+	for _, lockId := range req.LockIds {
+		lock, err := k.lk.GetLockByID(ctx, lockId)
+		if err != nil {
+			return nil, err
+		}
+		locks = append(locks, *lock)
+	}
+	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, owner, locks, req.EndEpoch)}, nil
 }

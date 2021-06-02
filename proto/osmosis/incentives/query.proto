@@ -43,7 +43,7 @@ service Query {
   // The querier either provides an address or a set of locks
   // for which they want to find the associated rewards.
   rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {
-    // XXX: Due to the limitation of GRPC HTTP Gateway, it is impossible to query with repeated message type.
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/rewards_est/{owner}";
   }
 }
 
@@ -98,7 +98,7 @@ message UpcomingPotsResponse {
 
 message RewardsEstRequest {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  repeated lockup.PeriodLock locks = 2 [ (gogoproto.nullable) = false ];
+  repeated uint64 lock_ids = 2;
   int64 end_epoch = 3;
 }
 message RewardsEstResponse {
