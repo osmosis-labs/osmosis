@@ -1,4 +1,4 @@
-package simapp
+package app
 
 import (
 	"encoding/json"
@@ -7,14 +7,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/c-osmosis/osmosis/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/osmosis-labs/osmosis/app"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // Profile with:
