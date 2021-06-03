@@ -13,6 +13,26 @@ import (
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+type SimulationContext struct {
+	R          *rand.Rand
+	SdkCtx     sdk.Context
+	App        *baseapp.BaseApp
+	Accs       []simtypes.Account
+	simAccount *simtypes.Account
+}
+
+func NewSimulationContext(r *rand.Rand, ctx sdk.Context, app *baseapp.BaseApp, accs []simtypes.Account) SimulationContext {
+	return SimulationContext{r, ctx, app, accs, nil}
+}
+
+func (ctx *SimulationContext) GetMsgSender() simtypes.Account {
+	if ctx.simAccount == nil {
+		sel := ctx.R.Intn(len(ctx.Accs))
+		ctx.simAccount = &ctx.Accs[sel]
+	}
+	return *ctx.simAccount
+}
+
 func GenAndDeliverTxWithRandFees(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
