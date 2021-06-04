@@ -270,6 +270,7 @@ Example:
 				normalizedOsmoBalance := acc.OsmoBalance.ToDec().Mul(normalizationFactor)
 
 				// initial liquid amounts
+				// We consistently round down to the nearest uosmo
 				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
 				liquidBalances = append(liquidBalances, banktypes.Balance{
 					Address: address.String(),
@@ -328,6 +329,9 @@ Example:
 			appState[claimtypes.ModuleName] = claimGenStateBz
 
 			// TODO: add remaining extra to community pool
+			// The total airdrop osmo is a smidge short (~1 osmo) short of the stated 50M supply.
+			// This is due to consistently rounding down.
+			// We place this remaining 1 osmo into the community pool at genesis
 
 			// sumAirdrop := sdk.Coins{}
 			// for _, balance := range bankGenState.Balances {
