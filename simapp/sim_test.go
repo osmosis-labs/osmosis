@@ -1,4 +1,4 @@
-package app
+package simapp
 
 import (
 	"encoding/json"
@@ -7,12 +7,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/c-osmosis/osmosis/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
+	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/osmosis-labs/osmosis/app"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -21,7 +23,7 @@ import (
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/GaiaApp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
-	config, db, dir, logger, _, err := simapp.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, dir, logger, _, err := sdkSimapp.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		b.Fatalf("simulation setup failed: %s", err.Error())
 	}
@@ -34,23 +36,23 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := app.NewOsmosisApp(logger, db, nil, true, map[int64]bool{}, app.DefaultNodeHome, simapp.FlagPeriodValue, app.MakeEncodingConfig(), simapp.EmptyAppOptions{}, interBlockCacheOpt())
+	app := app.NewOsmosisApp(logger, db, nil, true, map[int64]bool{}, app.DefaultNodeHome, sdkSimapp.FlagPeriodValue, app.MakeEncodingConfig(), sdkSimapp.EmptyAppOptions{}, interBlockCacheOpt())
 
-	// Run randomized simulation:w
+	// Run randomized simulation:
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
-		AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simapp.SimulationOperations(app, app.AppCodec(), config),
+		sdkSimapp.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = simapp.CheckExportSimulation(app, config, simParams); err != nil {
+	if err = sdkSimapp.CheckExportSimulation(app, config, simParams); err != nil {
 		b.Fatal(err)
 	}
 
@@ -59,7 +61,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		simapp.PrintStats(db)
+		sdkSimapp.PrintStats(db)
 	}
 }
 
@@ -72,11 +74,11 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 //// TODO: Make another test for the fuzzer itself, which just has noOp txs
 //// and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !simapp.FlagEnabledValue {
+	if !sdkSimapp.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := simapp.NewConfigFromFlags()
+	config := sdkSimapp.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = false
@@ -92,14 +94,17 @@ func TestAppStateDeterminism(t *testing.T) {
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			if simapp.FlagVerboseValue {
+			if sdkSimapp.FlagVerboseValue {
 				logger = log.TestingLogger()
 			} else {
 				logger = log.NewNopLogger()
 			}
 
 			db := dbm.NewMemDB()
-			app := gaia.NewGaiaApp(logger, db, nil, true, map[int64]bool{}, gaia.DefaultNodeHome, simapp.FlagPeriodValue, gaia.MakeEncodingConfig(), simapp.EmptyAppOptions{}, interBlockCacheOpt())
+			app := app.NewOsmosisApp(
+				logger, db, nil, true, map[int64]bool{},
+				app.DefaultNodeHome, sdkSimapp.FlagPeriodValue, app.MakeEncodingConfig(),
+				sdkSimapp.EmptyAppOptions{}, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -112,7 +117,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.BaseApp,
 				simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
 				simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simapp.SimulationOperations(app, app.AppCodec(), config),
+				sdkSimapp.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),
 				config,
 				app.AppCodec(),
@@ -120,7 +125,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			require.NoError(t, err)
 
 			if config.Commit {
-				simapp.PrintStats(db)
+				sdkSimapp.PrintStats(db)
 			}
 
 			appHash := app.LastCommitID().Hash
