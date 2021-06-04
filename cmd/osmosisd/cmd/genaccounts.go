@@ -241,7 +241,9 @@ Example:
 			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalOsmosAirdropAmount)
 			fmt.Printf("normalization factor: %s\n", normalizationFactor)
 
-			liquidBalances := []banktypes.Balance{}
+			bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
+
+			liquidBalances := bankGenState.Balances
 			claimRecords := []claimtypes.ClaimRecord{}
 			claimModuleAccountBalance := sdk.NewInt(0)
 
@@ -307,7 +309,6 @@ Example:
 			appState[authtypes.ModuleName] = authGenStateBz
 
 			// bank module genesis
-			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(liquidBalances)
 			bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
 			if err != nil {
