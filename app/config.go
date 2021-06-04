@@ -1,4 +1,4 @@
-package simapp
+package app
 
 import (
 	"fmt"
@@ -7,22 +7,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-
-	"github.com/osmosis-labs/osmosis/app"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // DefaultConfig returns a default configuration suitable for nearly all
 // testing requirements.
 func DefaultConfig() network.Config {
-	encCfg := app.MakeEncodingConfig()
+	encCfg := MakeEncodingConfig()
 
 	return network.Config{
 		Codec:             encCfg.Marshaler,
@@ -31,14 +29,14 @@ func DefaultConfig() network.Config {
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor: func(val network.Validator) servertypes.Application {
-			return app.NewOsmosisApp(
+			return NewOsmosisApp(
 				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 				encCfg,
 				simapp.EmptyAppOptions{},
 				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 			)
 		},
-		GenesisState:    app.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		GenesisState:    ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:   2 * time.Second,
 		ChainID:         "osmosis-1",
 		NumValidators:   1,

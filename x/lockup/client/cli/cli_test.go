@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/osmosis-labs/osmosis/simapp"
+	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/x/lockup/client/cli"
 	lockuptestutil "github.com/osmosis-labs/osmosis/x/lockup/client/testutil"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -32,7 +32,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = simapp.DefaultConfig()
+	s.cfg = app.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 
