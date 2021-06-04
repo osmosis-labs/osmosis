@@ -48,7 +48,7 @@ type GenesisParams struct {
 func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5^13 uosmo, 5^7 (50 million) osmo
+	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5*10^13 uosmo, 5*10^7 (50 million) osmo
 	genParams.ChainID = "osmosis-1"
 	genParams.GenesisTime = time.Date(2021, 6, 16, 17, 0, 0, 0, time.UTC) // Jun 16, 2021 - 17:00 UTC
 
@@ -143,7 +143,7 @@ func MainnetGenesisParams() GenesisParams {
 func TestnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5^13 uosmo, 5^7 (50 million) osmo
+	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5*10^13 uosmo, 5*10^7 (50 million) osmo
 	genParams.ChainID = "osmo-testnet-thanatos"
 	genParams.GenesisTime = time.Now()
 
