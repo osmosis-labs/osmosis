@@ -9,19 +9,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQueryPotIdsResponseMarshalUnmarshal(t *testing.T) {
+func TestQueryGaugeIdsResponseMarshalUnmarshal(t *testing.T) {
 
 	tests := []struct {
-		response *types.QueryPotIdsResponse
+		response *types.QueryGaugeIdsResponse
 	}{
 		{ // empty struct
-			response: &types.QueryPotIdsResponse{},
+			response: &types.QueryGaugeIdsResponse{},
 		},
 		{ // length one value
-			response: &types.QueryPotIdsResponse{
-				PotIdsWithDuration: []*types.QueryPotIdsResponse_PotIdWithDuration{
+			response: &types.QueryGaugeIdsResponse{
+				GaugeIdsWithDuration: []*types.QueryGaugeIdsResponse_GaugeIdWithDuration{
 					{
-						PotId:    1,
+						GaugeId:  1,
 						Duration: time.Second,
 					},
 				},
@@ -32,7 +32,7 @@ func TestQueryPotIdsResponseMarshalUnmarshal(t *testing.T) {
 	for _, test := range tests {
 		bz, err := proto.Marshal(test.response)
 		require.NoError(t, err)
-		decoded := types.QueryPotIdsResponse{}
+		decoded := types.QueryGaugeIdsResponse{}
 		err = proto.Unmarshal(bz, &decoded)
 		require.NoError(t, err)
 		require.Equal(t, *test.response, decoded)
@@ -53,7 +53,7 @@ func TestQueryIncentivizedPoolsResponseMarshalUnmarshal(t *testing.T) {
 					{
 						PoolId:           1,
 						LockableDuration: time.Second,
-						PotId:            1,
+						GaugeId:          1,
 					},
 				},
 			},

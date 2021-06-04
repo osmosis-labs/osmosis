@@ -40,8 +40,8 @@ func TestGenesisStateMarshalUnmarshal(t *testing.T) {
 					TotalWeight: sdk.NewInt(1),
 					Records: []types.DistrRecord{
 						{
-							PotId:  1,
-							Weight: sdk.NewInt(1),
+							GaugeId: 1,
+							Weight:  sdk.NewInt(1),
 						},
 					},
 				},
