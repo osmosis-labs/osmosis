@@ -21,7 +21,7 @@ import (
 )
 
 // Profile with:
-// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/GaiaApp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
+// /usr/local/go/bin/go test -benchmem -run=^$ github.com/osmosis-labs/osmosis/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	config, db, dir, logger, _, err := sdkSimapp.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
@@ -74,9 +74,9 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 //// TODO: Make another test for the fuzzer itself, which just has noOp txs
 //// and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !sdkSimapp.FlagEnabledValue {
-		t.Skip("skipping application simulation")
-	}
+	// if !sdkSimapp.FlagEnabledValue {
+	// 	t.Skip("skipping application simulation")
+	// }
 
 	config := sdkSimapp.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
