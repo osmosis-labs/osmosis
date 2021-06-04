@@ -202,13 +202,13 @@ Example:
 				// OsmoBalance = sqrt( all atoms) * (1 + 1.5) * (staked atom percent) =
 				acc.OsmoBalance = allOsmo.RoundInt()
 
-				totalOsmoBalance = totalOsmoBalance.Add(allOsmo.RoundInt())
-
 				if allAtoms.LTE(sdk.NewDec(1000000)) {
 					acc.OsmoBalanceBase = sdk.ZeroInt()
 					acc.OsmoBalanceBonus = sdk.ZeroInt()
 					acc.OsmoBalance = sdk.ZeroInt()
 				}
+
+				totalOsmoBalance = totalOsmoBalance.Add(acc.OsmoBalance)
 
 				snapshotAccs[address] = acc
 			}

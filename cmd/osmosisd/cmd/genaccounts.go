@@ -267,17 +267,17 @@ Example:
 				}
 
 				// get normalized osmo balance for account
-				normalizedOsmoBalance := normalizationFactor.MulInt(acc.OsmoBalance)
+				normalizedOsmoBalance := acc.OsmoBalance.ToDec().Mul(normalizationFactor)
 
 				// initial liquid amounts
-				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).RoundInt() // 20% of airdrop amount
+				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
 				liquidBalances = append(liquidBalances, banktypes.Balance{
 					Address: address.String(),
 					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, liquidAmount)),
 				})
 
 				// claimable balances
-				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).RoundInt()
+				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
 
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 					Address:                address.String(),
@@ -326,6 +326,40 @@ Example:
 				return fmt.Errorf("failed to marshal claim genesis state: %w", err)
 			}
 			appState[claimtypes.ModuleName] = claimGenStateBz
+
+			// TODO: add remaining extra to community pool
+
+			// sumAirdrop := sdk.Coins{}
+			// for _, balance := range bankGenState.Balances {
+			// 	sumAirdrop = sumAirdrop.Add(balance.Coins...)
+			// }
+			// for _, claim := range claimGenState.ClaimRecords {
+			// 	sumAirdrop = sumAirdrop.Add(claim.InitialClaimableAmount...)
+			// }
+
+			// var distributionGenState distributiontypes.GenesisState
+
+			// if appState[distributiontypes.ModuleName] != nil {
+			// 	cdc.MustUnmarshalJSON(appState[distributiontypes.ModuleName], &distributionGenState)
+			// }
+
+			// communityPoolExtra := sdk.NewCoins(
+			// 	sdk.NewCoin(
+			// 		genesisParams.NativeCoinMetadata.Base,
+			// 		genesisParams.AirdropSupply,
+			// 	),
+			// ).Sub(sumAirdrop)
+
+			// fmt.Printf("community pool amount: %s\n", communityPoolExtra)
+
+			// distributionGenState.FeePool.CommunityPool = sdk.NewDecCoinsFromCoins(communityPoolExtra...)
+			// distributionGenStateBz, err := cdc.MarshalJSON(&distributionGenState)
+			// if err != nil {
+			// 	return fmt.Errorf("failed to marshal distribution genesis state: %w", err)
+			// }
+			// appState[distributiontypes.ModuleName] = distributionGenStateBz
+
+			// save entire genesis state to json
 
 			appStateJSON, err := json.Marshal(appState)
 			if err != nil {
