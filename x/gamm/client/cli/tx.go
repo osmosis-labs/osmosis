@@ -362,6 +362,14 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, err
 	}
 
+	var startTime time.Time
+	if pool.StartTime != "" {
+		startTime, err = time.Parse(time.RFC3339, pool.StartTime)
+		if err != nil {
+			return txf, nil, err
+		}
+	}
+
 	var poolAssets []types.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
 
@@ -380,6 +388,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		PoolParams: types.PoolParams{
 			SwapFee: swapFee,
 			ExitFee: exitFee,
+			StartTime: startTime,
 		},
 		PoolAssets:         poolAssets,
 		FuturePoolGovernor: pool.FutureGovernor,
