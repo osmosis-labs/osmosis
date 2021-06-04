@@ -134,3 +134,12 @@ func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 	}
 	return newWeights
 }
+
+// PoolAssetsCoins returns all the coins corresponding to a slice of pool assets
+func PoolAssetsCoins(assets []PoolAsset) sdk.Coins {
+	coins := sdk.Coins{}
+	for _, asset := range assets {
+		coins.Add(asset.Token)
+	}
+	return coins
+}
