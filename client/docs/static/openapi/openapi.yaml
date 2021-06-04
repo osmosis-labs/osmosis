@@ -1628,6 +1628,9 @@ paths:
                               w(t) = initial_pool_weights + (t - start_time) *
                                 (target_pool_weights - initial_pool_weights) / (duration)
                             t > start_time + duration: w(t) = target_pool_weights
+                      start_time:
+                        type: string
+                        format: date-time
                     description: >-
                       PoolParams defined the parameters that will be managed by
                       the pool governance
@@ -2506,7 +2509,7 @@ paths:
                         items:
                           type: object
                           properties:
-                            pot_id:
+                            gauge_id:
                               type: string
                               format: uint64
                             weight:
@@ -2537,6 +2540,62 @@ paths:
                           format: byte
       tags:
         - Query
+  "/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}":
+    get:
+      summary: GaugeIds takes the pool id and returns the matching gauge ids and
+        durations
+      operationId: GaugeIds
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  gauge_ids_with_duration:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        gauge_id:
+                          type: string
+                          format: uint64
+                        duration:
+                          type: string
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                        value:
+                          type: string
+                          format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uint64
+      tags:
+        - Query
   /osmosis/pool-incentives/v1beta1/incentivized_pools:
     get:
       operationId: IncentivizedPools
@@ -2558,7 +2617,7 @@ paths:
                           format: uint64
                         lockable_duration:
                           type: string
-                        pot_id:
+                        gauge_id:
                           type: string
                           format: uint64
         default:
@@ -2677,61 +2736,6 @@ paths:
                         value:
                           type: string
                           format: byte
-      tags:
-        - Query
-  "/osmosis/pool-incentives/v1beta1/pot-ids/{pool_id}":
-    get:
-      summary: GaugeIds takes the pool id and returns the matching pot ids and durations
-      operationId: GaugeIds
-      responses:
-        "200":
-          description: A successful response.
-          content:
-            "*/*":
-              schema:
-                type: object
-                properties:
-                  pot_ids_with_duration:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        pot_id:
-                          type: string
-                          format: uint64
-                        duration:
-                          type: string
-        default:
-          description: An unexpected error response.
-          content:
-            "*/*":
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  code:
-                    type: integer
-                    format: int32
-                  message:
-                    type: string
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        type_url:
-                          type: string
-                        value:
-                          type: string
-                          format: byte
-      parameters:
-        - name: pool_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uint64
       tags:
         - Query
   "/osmosis/lockup/v1beta1/account_locked_coins/{owner}":
@@ -16282,6 +16286,9 @@ components:
                 w(t) = initial_pool_weights + (t - start_time) *
                   (target_pool_weights - initial_pool_weights) / (duration)
               t > start_time + duration: w(t) = target_pool_weights
+        start_time:
+          type: string
+          format: date-time
       description: >-
         PoolParams defined the parameters that will be managed by the pool
         governance
@@ -16414,6 +16421,9 @@ components:
                     w(t) = initial_pool_weights + (t - start_time) *
                       (target_pool_weights - initial_pool_weights) / (duration)
                   t > start_time + duration: w(t) = target_pool_weights
+            start_time:
+              type: string
+              format: date-time
           description: >-
             PoolParams defined the parameters that will be managed by the pool
             governance
@@ -16962,7 +16972,7 @@ components:
           items:
             type: object
             properties:
-              pot_id:
+              gauge_id:
                 type: string
                 format: uint64
               weight:
@@ -16970,7 +16980,7 @@ components:
     osmosis.poolincentives.v1beta1.DistrRecord:
       type: object
       properties:
-        pot_id:
+        gauge_id:
           type: string
           format: uint64
         weight:
@@ -16983,7 +16993,7 @@ components:
           format: uint64
         lockable_duration:
           type: string
-        pot_id:
+        gauge_id:
           type: string
           format: uint64
     osmosis.poolincentives.v1beta1.Params:
@@ -17013,7 +17023,7 @@ components:
               items:
                 type: object
                 properties:
-                  pot_id:
+                  gauge_id:
                     type: string
                     format: uint64
                   weight:
@@ -17021,12 +17031,12 @@ components:
     osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse:
       type: object
       properties:
-        pot_ids_with_duration:
+        gauge_ids_with_duration:
           type: array
           items:
             type: object
             properties:
-              pot_id:
+              gauge_id:
                 type: string
                 format: uint64
               duration:
@@ -17034,7 +17044,7 @@ components:
     osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration:
       type: object
       properties:
-        pot_id:
+        gauge_id:
           type: string
           format: uint64
         duration:
@@ -17052,7 +17062,7 @@ components:
                 format: uint64
               lockable_duration:
                 type: string
-              pot_id:
+              gauge_id:
                 type: string
                 format: uint64
     osmosis.poolincentives.v1beta1.QueryLockableDurationsResponse:

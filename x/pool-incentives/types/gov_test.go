@@ -41,8 +41,8 @@ func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
 				Description: "proposal to update pool incentives",
 				Records: []types.DistrRecord{
 					{
-						PotId:  1,
-						Weight: sdk.NewInt(1),
+						GaugeId: 1,
+						Weight:  sdk.NewInt(1),
 					},
 				},
 			},
@@ -53,12 +53,12 @@ func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
 				Description: "proposal to update pool incentives",
 				Records: []types.DistrRecord{
 					{
-						PotId:  1,
-						Weight: sdk.NewInt(1),
+						GaugeId: 1,
+						Weight:  sdk.NewInt(1),
 					},
 					{
-						PotId:  2,
-						Weight: sdk.NewInt(1),
+						GaugeId: 2,
+						Weight:  sdk.NewInt(1),
 					},
 				},
 			},

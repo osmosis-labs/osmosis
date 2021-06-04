@@ -83,8 +83,8 @@ func TestDistrInfoMarshalUnmarshal(t *testing.T) {
 				TotalWeight: sdk.NewInt(1),
 				Records: []types.DistrRecord{
 					{
-						PotId:  1,
-						Weight: sdk.NewInt(1),
+						GaugeId: 1,
+						Weight:  sdk.NewInt(1),
 					},
 				},
 			},
@@ -94,12 +94,12 @@ func TestDistrInfoMarshalUnmarshal(t *testing.T) {
 				TotalWeight: sdk.NewInt(2),
 				Records: []types.DistrRecord{
 					{
-						PotId:  1,
-						Weight: sdk.NewInt(1),
+						GaugeId: 1,
+						Weight:  sdk.NewInt(1),
 					},
 					{
-						PotId:  2,
-						Weight: sdk.NewInt(1),
+						GaugeId: 2,
+						Weight:  sdk.NewInt(1),
 					},
 				},
 			},
@@ -126,8 +126,8 @@ func TestDistrRecordMarshalUnmarshal(t *testing.T) {
 		},
 		{ // filled struct
 			info: &types.DistrRecord{
-				PotId:  1,
-				Weight: sdk.NewInt(1),
+				GaugeId: 1,
+				Weight:  sdk.NewInt(1),
 			},
 		},
 	}
