@@ -48,9 +48,9 @@ type GenesisParams struct {
 func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = sdk.NewIntWithDecimal(1, 14) // 10^15 uosmo, 10^8 (100 million) osmo
+	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5^13 uosmo, 5^7 (50 million) osmo
 	genParams.ChainID = "osmosis-1"
-	// genParams.GenesisTime = time.Now() // TODO: Finalize date
+	genParams.GenesisTime = time.Date(2021, 6, 16, 17, 0, 0, 0, time.UTC) // Jun 16, 2021 - 17:00 UTC
 
 	genParams.NativeCoinMetadata = banktypes.Metadata{
 		Description: fmt.Sprintf("The native token of Osmosis"),
@@ -104,7 +104,7 @@ func MainnetGenesisParams() GenesisParams {
 		genParams.AirdropSupply.QuoRaw(100_000), // 1000 OSMO
 	))
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.25") // 25%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 96         // 5 days  TODO: Finalize
+	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 72         // 3 days
 
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadata.Base,
@@ -143,7 +143,7 @@ func MainnetGenesisParams() GenesisParams {
 func TestnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = sdk.NewIntWithDecimal(1, 14) // 10^15 uosmo, 10^8 (100 million) osmo
+	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5^13 uosmo, 5^7 (50 million) osmo
 	genParams.ChainID = "osmo-testnet-thanatos"
 	genParams.GenesisTime = time.Now()
 
@@ -180,7 +180,8 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          sdk.MustNewDecFromStr("0.25"), // 25%
 		DeveloperRewards: sdk.MustNewDecFromStr("0.25"), // 25%
-		PoolIncentives:   sdk.MustNewDecFromStr("0.5"),  // 50%  TODO: Reduce to 45% once Community Pool Allocation exists
+		PoolIncentives:   sdk.MustNewDecFromStr("0.45"), // 45%
+		CommunityPool:    sdk.MustNewDecFromStr("0.05"), // 5%
 	}
 	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1 // TODO: Finalize
 	// genParams.MintParams.DeveloperRewardsReceiver
