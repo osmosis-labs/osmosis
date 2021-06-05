@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/osmosis-labs/osmosis/simapp"
+	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/x/mint/client/cli"
 )
 
@@ -27,7 +27,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = simapp.DefaultConfig()
+	s.cfg = app.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"mint_denom":"stake","genesis_epoch_provisions":"5000000.000000000000000000","epoch_identifier":"weekly","reduction_period_in_epochs":"156","reduction_factor":"0.500000000000000000","distribution_proportions":{"staking":"0.400000000000000000","pool_incentives":"0.300000000000000000","developer_rewards":"0.200000000000000000","community_pool":"0.100000000000000000"},"developer_rewards_receiver":"","minting_rewards_distribution_start_epoch":"0"}`,
+			`{"mint_denom":"stake","genesis_epoch_provisions":"5000000.000000000000000000","epoch_identifier":"week","reduction_period_in_epochs":"156","reduction_factor":"0.500000000000000000","distribution_proportions":{"staking":"0.400000000000000000","pool_incentives":"0.300000000000000000","developer_rewards":"0.200000000000000000","community_pool":"0.100000000000000000"},"developer_rewards_receiver":"","minting_rewards_distribution_start_epoch":"0"}`,
 		},
 		{
 			"text output",
@@ -62,7 +62,7 @@ distribution_proportions:
   developer_rewards: "0.200000000000000000"
   pool_incentives: "0.300000000000000000"
   staking: "0.400000000000000000"
-epoch_identifier: weekly
+epoch_identifier: week
 genesis_epoch_provisions: "5000000.000000000000000000"
 mint_denom: stake
 minting_rewards_distribution_start_epoch: "0"

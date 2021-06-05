@@ -18,7 +18,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	genesis := incentives.ExportGenesis(ctx, app.IncentivesKeeper)
-	require.Equal(t, genesis.Params.DistrEpochIdentifier, "weekly")
+	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
 	require.Len(t, genesis.Gauges, 0)
 
 	addr := sdk.AccAddress([]byte("addr1---------------"))
@@ -34,7 +34,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	genesis = incentives.ExportGenesis(ctx, app.IncentivesKeeper)
-	require.Equal(t, genesis.Params.DistrEpochIdentifier, "weekly")
+	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
 	require.Len(t, genesis.Gauges, 1)
 
 	require.Equal(t, genesis.Gauges[0], types.Gauge{
@@ -72,7 +72,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	}
 	incentives.InitGenesis(ctx, app.IncentivesKeeper, types.GenesisState{
 		Params: types.Params{
-			DistrEpochIdentifier: "weekly",
+			DistrEpochIdentifier: "week",
 		},
 		Gauges: []types.Gauge{gauge},
 	})
