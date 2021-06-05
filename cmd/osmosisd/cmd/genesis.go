@@ -40,11 +40,11 @@ Examples include:
 	- Setting module initial params
 	- Setting denom metadata
 Example:
-	osmosisd prepare-genesis
+	osmosisd prepare-genesis mainnet
 	- Check input genesis:
 		file is at ~/.gaiad/config/genesis.json
 `,
-		Args: cobra.ExactArgs(0),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
@@ -60,18 +60,18 @@ Example:
 			}
 
 			// get genesis params
-			genesisParams := appparams.TestnetGenesisParams()
-
-			appState, genDoc, err = PrepareGenesis(clientCtx, appState, genDoc, genesisParams)
-
-			// poolincentives module genesis
-			poolincentivesGenState := poolincentivestypes.GetGenesisStateFromAppState(depCdc, appState)
-			poolincentivesGenState.Params.MintedDenom = genesisParams.NativeCoinMetadata.Base
-			poolincentivesGenStateBz, err := cdc.MarshalJSON(poolincentivesGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal poolincentives genesis state: %w", err)
+			var genesisParams appparams.GenesisParams
+			network := args[0]
+			if network == "testnet" {
+				genesisParams = appparams.TestnetGenesisParams()
+			} else if network == "mainnet" {
+				genesisParams = appparams.MainnetGenesisParams()
+			} else {
+				return fmt.Errorf("please choose 'mainnet' or 'testnet'")
 			}
-			appState[poolincentivestypes.ModuleName] = poolincentivesGenStateBz
+
+			// run Prepare Genesis
+			appState, genDoc, err = PrepareGenesis(clientCtx, appState, genDoc, genesisParams)
 
 			// validate genesis state
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
@@ -201,6 +201,15 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 		return nil, nil, fmt.Errorf("failed to marshal claim genesis state: %w", err)
 	}
 	appState[claimtypes.ModuleName] = claimGenStateBz
+
+	// poolincentives module genesis
+	poolincentivesGenState := poolincentivestypes.GetGenesisStateFromAppState(depCdc, appState)
+	poolincentivesGenState.Params.MintedDenom = genesisParams.NativeCoinMetadata.Base
+	poolincentivesGenStateBz, err := cdc.MarshalJSON(poolincentivesGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal poolincentives genesis state: %w", err)
+	}
+	appState[poolincentivestypes.ModuleName] = poolincentivesGenStateBz
 
 	// return appState and genDoc
 	return appState, genDoc, nil
