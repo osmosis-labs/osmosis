@@ -203,8 +203,7 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	appState[claimtypes.ModuleName] = claimGenStateBz
 
 	// poolincentives module genesis
-	poolincentivesGenState := poolincentivestypes.GetGenesisStateFromAppState(depCdc, appState)
-	poolincentivesGenState.Params.MintedDenom = genesisParams.NativeCoinMetadata.Base
+	poolincentivesGenState := &genesisParams.PoolIncentivesGenesis
 	poolincentivesGenStateBz, err := cdc.MarshalJSON(poolincentivesGenState)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to marshal poolincentives genesis state: %w", err)

@@ -19,6 +19,7 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
 type GenesisParams struct {
@@ -39,6 +40,8 @@ type GenesisParams struct {
 
 	SlashingParams   slashingtypes.Params
 	IncentivesParams incentivestypes.Params
+
+	PoolIncentivesGenesis poolincentivestypes.GenesisState
 
 	Epochs []epochstypes.EpochInfo
 
@@ -77,7 +80,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	genParams.MintParams = minttypes.DefaultParams()
-	genParams.MintParams.EpochIdentifier = "daily"                                      // 1 week
+	genParams.MintParams.EpochIdentifier = "day"                                        // 1 week
 	genParams.MintParams.GenesisEpochProvisions = sdk.NewDec(300_000_000).QuoInt64(365) // 300M / 365 = ~821917.8082191781
 	genParams.MintParams.MintDenom = genParams.NativeCoinMetadata.Base
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3) // 2/3
@@ -124,7 +127,7 @@ func MainnetGenesisParams() GenesisParams {
 	}
 
 	genParams.IncentivesParams = incentivestypes.DefaultParams()
-	genParams.IncentivesParams.DistrEpochIdentifier = "daily"
+	genParams.IncentivesParams.DistrEpochIdentifier = "day"
 
 	genParams.ClaimParams = claimtypes.Params{
 		AirdropStartTime:   genParams.GenesisTime,
@@ -137,6 +140,23 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Evidence.MaxAgeNumBlocks = int64(genParams.StakingParams.UnbondingTime.Seconds()) / 3
 	genParams.ConsensusParams.Version.AppVersion = 1
 
+	genParams.PoolIncentivesGenesis = *poolincentivestypes.DefaultGenesisState()
+	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadata.Base
+	genParams.PoolIncentivesGenesis.LockableDurations = []time.Duration{
+		time.Hour * 24,      // 1 day
+		time.Hour * 24 * 7,  // 7 day
+		time.Hour * 24 * 14, // 14 days
+	}
+	genParams.PoolIncentivesGenesis.DistrInfo = &poolincentivestypes.DistrInfo{
+		TotalWeight: sdk.NewInt(1),
+		Records: []poolincentivestypes.DistrRecord{
+			{
+				GaugeId: 0,
+				Weight:  sdk.NewInt(1),
+			},
+		},
+	}
+
 	return genParams
 }
 
@@ -144,7 +164,7 @@ func TestnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
 	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5*10^13 uosmo, 5*10^7 (50 million) osmo
-	genParams.ChainID = "osmo-testnet-thanatos"
+	genParams.ChainID = "osmo-testnet-1"
 	genParams.GenesisTime = time.Now()
 
 	genParams.NativeCoinMetadata = banktypes.Metadata{
@@ -172,11 +192,11 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	genParams.MintParams = minttypes.DefaultParams()
-	genParams.MintParams.EpochIdentifier = "daily"                                      // 1 week
+	genParams.MintParams.EpochIdentifier = "hour"                                       // 1 hour
 	genParams.MintParams.GenesisEpochProvisions = sdk.NewDec(300_000_000).QuoInt64(365) // 300M / 365 = ~821917.8082191781
 	genParams.MintParams.MintDenom = genParams.NativeCoinMetadata.Base
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3) // 2/3
-	genParams.MintParams.ReductionPeriodInEpochs = 2                 // 2 days
+	genParams.MintParams.ReductionPeriodInEpochs = 6                 // 6 hours
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          sdk.MustNewDecFromStr("0.25"), // 25%
 		DeveloperRewards: sdk.MustNewDecFromStr("0.25"), // 25%
@@ -196,10 +216,10 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadata.Base,
-		genParams.AirdropSupply.QuoRaw(100_000), // 1000 OSMO
+		sdk.NewInt(1000000), // 1 OSMO
 	))
-	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.25") // 25%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 12         // 12 hours  TODO: Finalize
+	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.0000001") // 25%
+	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 3               // 3 hours
 
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadata.Base,
@@ -214,12 +234,23 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.SlashingParams.SlashFractionDowntime = sdk.ZeroDec()                   // 0% liveness slashing
 
 	genParams.Epochs = epochstypes.DefaultGenesis().Epochs
+
+	genParams.Epochs = append(genParams.Epochs, epochstypes.EpochInfo{
+		Identifier:            "hour",
+		StartTime:             time.Time{},
+		Duration:              time.Hour,
+		CurrentEpoch:          0,
+		CurrentEpochStartTime: time.Time{},
+		EpochCountingStarted:  false,
+		CurrentEpochEnded:     true,
+	})
+
 	for _, epoch := range genParams.Epochs {
 		epoch.StartTime = genParams.GenesisTime
 	}
 
 	genParams.IncentivesParams = incentivestypes.DefaultParams()
-	genParams.IncentivesParams.DistrEpochIdentifier = "daily"
+	genParams.IncentivesParams.DistrEpochIdentifier = "hour"
 
 	genParams.ClaimParams = claimtypes.Params{
 		AirdropStartTime:   genParams.GenesisTime,
@@ -231,6 +262,23 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Evidence.MaxAgeDuration = genParams.StakingParams.UnbondingTime
 	genParams.ConsensusParams.Evidence.MaxAgeNumBlocks = int64(genParams.StakingParams.UnbondingTime.Seconds()) / 3
 	genParams.ConsensusParams.Version.AppVersion = 1
+
+	genParams.PoolIncentivesGenesis = *poolincentivestypes.DefaultGenesisState()
+	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadata.Base
+	genParams.PoolIncentivesGenesis.LockableDurations = []time.Duration{
+		time.Hour * 1, // 1 hour
+		time.Hour * 3, // 3 hours
+		time.Hour * 7, // 7 hours
+	}
+	genParams.PoolIncentivesGenesis.DistrInfo = &poolincentivestypes.DistrInfo{
+		TotalWeight: sdk.NewInt(1),
+		Records: []poolincentivestypes.DistrRecord{
+			{
+				GaugeId: 0,
+				Weight:  sdk.NewInt(1),
+			},
+		},
+	}
 
 	return genParams
 }
