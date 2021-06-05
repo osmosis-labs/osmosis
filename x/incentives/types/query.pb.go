@@ -12,7 +12,8 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	types1 "github.com/osmosis-labs/osmosis/x/lockup/types"
+	_ "github.com/osmosis-labs/osmosis/x/lockup/types"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -192,22 +193,22 @@ func (m *ModuleDistributedCoinsResponse) GetCoins() github_com_cosmos_cosmos_sdk
 	return nil
 }
 
-type PotByIDRequest struct {
+type GaugeByIDRequest struct {
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (m *PotByIDRequest) Reset()         { *m = PotByIDRequest{} }
-func (m *PotByIDRequest) String() string { return proto.CompactTextString(m) }
-func (*PotByIDRequest) ProtoMessage()    {}
-func (*PotByIDRequest) Descriptor() ([]byte, []int) {
+func (m *GaugeByIDRequest) Reset()         { *m = GaugeByIDRequest{} }
+func (m *GaugeByIDRequest) String() string { return proto.CompactTextString(m) }
+func (*GaugeByIDRequest) ProtoMessage()    {}
+func (*GaugeByIDRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8124258a89427f98, []int{4}
 }
-func (m *PotByIDRequest) XXX_Unmarshal(b []byte) error {
+func (m *GaugeByIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PotByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GaugeByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PotByIDRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GaugeByIDRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -217,41 +218,41 @@ func (m *PotByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *PotByIDRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PotByIDRequest.Merge(m, src)
+func (m *GaugeByIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GaugeByIDRequest.Merge(m, src)
 }
-func (m *PotByIDRequest) XXX_Size() int {
+func (m *GaugeByIDRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *PotByIDRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_PotByIDRequest.DiscardUnknown(m)
+func (m *GaugeByIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GaugeByIDRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PotByIDRequest proto.InternalMessageInfo
+var xxx_messageInfo_GaugeByIDRequest proto.InternalMessageInfo
 
-func (m *PotByIDRequest) GetId() uint64 {
+func (m *GaugeByIDRequest) GetId() uint64 {
 	if m != nil {
 		return m.Id
 	}
 	return 0
 }
 
-type PotByIDResponse struct {
-	Pot *Pot `protobuf:"bytes,1,opt,name=pot,proto3" json:"pot,omitempty"`
+type GaugeByIDResponse struct {
+	Gauge *Gauge `protobuf:"bytes,1,opt,name=gauge,proto3" json:"gauge,omitempty"`
 }
 
-func (m *PotByIDResponse) Reset()         { *m = PotByIDResponse{} }
-func (m *PotByIDResponse) String() string { return proto.CompactTextString(m) }
-func (*PotByIDResponse) ProtoMessage()    {}
-func (*PotByIDResponse) Descriptor() ([]byte, []int) {
+func (m *GaugeByIDResponse) Reset()         { *m = GaugeByIDResponse{} }
+func (m *GaugeByIDResponse) String() string { return proto.CompactTextString(m) }
+func (*GaugeByIDResponse) ProtoMessage()    {}
+func (*GaugeByIDResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8124258a89427f98, []int{5}
 }
-func (m *PotByIDResponse) XXX_Unmarshal(b []byte) error {
+func (m *GaugeByIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PotByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GaugeByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PotByIDResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GaugeByIDResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -261,42 +262,42 @@ func (m *PotByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *PotByIDResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PotByIDResponse.Merge(m, src)
+func (m *GaugeByIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GaugeByIDResponse.Merge(m, src)
 }
-func (m *PotByIDResponse) XXX_Size() int {
+func (m *GaugeByIDResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *PotByIDResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_PotByIDResponse.DiscardUnknown(m)
+func (m *GaugeByIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GaugeByIDResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PotByIDResponse proto.InternalMessageInfo
+var xxx_messageInfo_GaugeByIDResponse proto.InternalMessageInfo
 
-func (m *PotByIDResponse) GetPot() *Pot {
+func (m *GaugeByIDResponse) GetGauge() *Gauge {
 	if m != nil {
-		return m.Pot
+		return m.Gauge
 	}
 	return nil
 }
 
-type PotsRequest struct {
+type GaugesRequest struct {
 	// pagination defines an pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *PotsRequest) Reset()         { *m = PotsRequest{} }
-func (m *PotsRequest) String() string { return proto.CompactTextString(m) }
-func (*PotsRequest) ProtoMessage()    {}
-func (*PotsRequest) Descriptor() ([]byte, []int) {
+func (m *GaugesRequest) Reset()         { *m = GaugesRequest{} }
+func (m *GaugesRequest) String() string { return proto.CompactTextString(m) }
+func (*GaugesRequest) ProtoMessage()    {}
+func (*GaugesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8124258a89427f98, []int{6}
 }
-func (m *PotsRequest) XXX_Unmarshal(b []byte) error {
+func (m *GaugesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GaugesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PotsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GaugesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -306,43 +307,43 @@ func (m *PotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *PotsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PotsRequest.Merge(m, src)
+func (m *GaugesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GaugesRequest.Merge(m, src)
 }
-func (m *PotsRequest) XXX_Size() int {
+func (m *GaugesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *PotsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_PotsRequest.DiscardUnknown(m)
+func (m *GaugesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GaugesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PotsRequest proto.InternalMessageInfo
+var xxx_messageInfo_GaugesRequest proto.InternalMessageInfo
 
-func (m *PotsRequest) GetPagination() *query.PageRequest {
+func (m *GaugesRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-type PotsResponse struct {
-	Data []Pot `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
+type GaugesResponse struct {
+	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
 	// pagination defines an pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *PotsResponse) Reset()         { *m = PotsResponse{} }
-func (m *PotsResponse) String() string { return proto.CompactTextString(m) }
-func (*PotsResponse) ProtoMessage()    {}
-func (*PotsResponse) Descriptor() ([]byte, []int) {
+func (m *GaugesResponse) Reset()         { *m = GaugesResponse{} }
+func (m *GaugesResponse) String() string { return proto.CompactTextString(m) }
+func (*GaugesResponse) ProtoMessage()    {}
+func (*GaugesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8124258a89427f98, []int{7}
 }
-func (m *PotsResponse) XXX_Unmarshal(b []byte) error {
+func (m *GaugesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GaugesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PotsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GaugesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -352,49 +353,49 @@ func (m *PotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *PotsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PotsResponse.Merge(m, src)
+func (m *GaugesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GaugesResponse.Merge(m, src)
 }
-func (m *PotsResponse) XXX_Size() int {
+func (m *GaugesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *PotsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_PotsResponse.DiscardUnknown(m)
+func (m *GaugesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GaugesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PotsResponse proto.InternalMessageInfo
+var xxx_messageInfo_GaugesResponse proto.InternalMessageInfo
 
-func (m *PotsResponse) GetData() []Pot {
+func (m *GaugesResponse) GetData() []Gauge {
 	if m != nil {
 		return m.Data
 	}
 	return nil
 }
 
-func (m *PotsResponse) GetPagination() *query.PageResponse {
+func (m *GaugesResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-type ActivePotsRequest struct {
+type ActiveGaugesRequest struct {
 	// pagination defines an pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *ActivePotsRequest) Reset()         { *m = ActivePotsRequest{} }
-func (m *ActivePotsRequest) String() string { return proto.CompactTextString(m) }
-func (*ActivePotsRequest) ProtoMessage()    {}
-func (*ActivePotsRequest) Descriptor() ([]byte, []int) {
+func (m *ActiveGaugesRequest) Reset()         { *m = ActiveGaugesRequest{} }
+func (m *ActiveGaugesRequest) String() string { return proto.CompactTextString(m) }
+func (*ActiveGaugesRequest) ProtoMessage()    {}
+func (*ActiveGaugesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8124258a89427f98, []int{8}
 }
-func (m *ActivePotsRequest) XXX_Unmarshal(b []byte) error {
+func (m *ActiveGaugesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ActivePotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ActiveGaugesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ActivePotsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ActiveGaugesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -404,43 +405,43 @@ func (m *ActivePotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *ActivePotsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ActivePotsRequest.Merge(m, src)
+func (m *ActiveGaugesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActiveGaugesRequest.Merge(m, src)
 }
-func (m *ActivePotsRequest) XXX_Size() int {
+func (m *ActiveGaugesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *ActivePotsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ActivePotsRequest.DiscardUnknown(m)
+func (m *ActiveGaugesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActiveGaugesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ActivePotsRequest proto.InternalMessageInfo
+var xxx_messageInfo_ActiveGaugesRequest proto.InternalMessageInfo
 
-func (m *ActivePotsRequest) GetPagination() *query.PageRequest {
+func (m *ActiveGaugesRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-type ActivePotsResponse struct {
-	Data []Pot `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
+type ActiveGaugesResponse struct {
+	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
 	// pagination defines an pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *ActivePotsResponse) Reset()         { *m = ActivePotsResponse{} }
-func (m *ActivePotsResponse) String() string { return proto.CompactTextString(m) }
-func (*ActivePotsResponse) ProtoMessage()    {}
-func (*ActivePotsResponse) Descriptor() ([]byte, []int) {
+func (m *ActiveGaugesResponse) Reset()         { *m = ActiveGaugesResponse{} }
+func (m *ActiveGaugesResponse) String() string { return proto.CompactTextString(m) }
+func (*ActiveGaugesResponse) ProtoMessage()    {}
+func (*ActiveGaugesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8124258a89427f98, []int{9}
 }
-func (m *ActivePotsResponse) XXX_Unmarshal(b []byte) error {
+func (m *ActiveGaugesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ActivePotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ActiveGaugesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ActivePotsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ActiveGaugesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -450,49 +451,49 @@ func (m *ActivePotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *ActivePotsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ActivePotsResponse.Merge(m, src)
+func (m *ActiveGaugesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActiveGaugesResponse.Merge(m, src)
 }
-func (m *ActivePotsResponse) XXX_Size() int {
+func (m *ActiveGaugesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *ActivePotsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ActivePotsResponse.DiscardUnknown(m)
+func (m *ActiveGaugesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActiveGaugesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ActivePotsResponse proto.InternalMessageInfo
+var xxx_messageInfo_ActiveGaugesResponse proto.InternalMessageInfo
 
-func (m *ActivePotsResponse) GetData() []Pot {
+func (m *ActiveGaugesResponse) GetData() []Gauge {
 	if m != nil {
 		return m.Data
 	}
 	return nil
 }
 
-func (m *ActivePotsResponse) GetPagination() *query.PageResponse {
+func (m *ActiveGaugesResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-type UpcomingPotsRequest struct {
+type UpcomingGaugesRequest struct {
 	// pagination defines an pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *UpcomingPotsRequest) Reset()         { *m = UpcomingPotsRequest{} }
-func (m *UpcomingPotsRequest) String() string { return proto.CompactTextString(m) }
-func (*UpcomingPotsRequest) ProtoMessage()    {}
-func (*UpcomingPotsRequest) Descriptor() ([]byte, []int) {
+func (m *UpcomingGaugesRequest) Reset()         { *m = UpcomingGaugesRequest{} }
+func (m *UpcomingGaugesRequest) String() string { return proto.CompactTextString(m) }
+func (*UpcomingGaugesRequest) ProtoMessage()    {}
+func (*UpcomingGaugesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8124258a89427f98, []int{10}
 }
-func (m *UpcomingPotsRequest) XXX_Unmarshal(b []byte) error {
+func (m *UpcomingGaugesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpcomingPotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *UpcomingGaugesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpcomingPotsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_UpcomingGaugesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -502,43 +503,43 @@ func (m *UpcomingPotsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *UpcomingPotsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpcomingPotsRequest.Merge(m, src)
+func (m *UpcomingGaugesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpcomingGaugesRequest.Merge(m, src)
 }
-func (m *UpcomingPotsRequest) XXX_Size() int {
+func (m *UpcomingGaugesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpcomingPotsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpcomingPotsRequest.DiscardUnknown(m)
+func (m *UpcomingGaugesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpcomingGaugesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpcomingPotsRequest proto.InternalMessageInfo
+var xxx_messageInfo_UpcomingGaugesRequest proto.InternalMessageInfo
 
-func (m *UpcomingPotsRequest) GetPagination() *query.PageRequest {
+func (m *UpcomingGaugesRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-type UpcomingPotsResponse struct {
-	Data []Pot `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
+type UpcomingGaugesResponse struct {
+	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
 	// pagination defines an pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *UpcomingPotsResponse) Reset()         { *m = UpcomingPotsResponse{} }
-func (m *UpcomingPotsResponse) String() string { return proto.CompactTextString(m) }
-func (*UpcomingPotsResponse) ProtoMessage()    {}
-func (*UpcomingPotsResponse) Descriptor() ([]byte, []int) {
+func (m *UpcomingGaugesResponse) Reset()         { *m = UpcomingGaugesResponse{} }
+func (m *UpcomingGaugesResponse) String() string { return proto.CompactTextString(m) }
+func (*UpcomingGaugesResponse) ProtoMessage()    {}
+func (*UpcomingGaugesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8124258a89427f98, []int{11}
 }
-func (m *UpcomingPotsResponse) XXX_Unmarshal(b []byte) error {
+func (m *UpcomingGaugesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpcomingPotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *UpcomingGaugesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpcomingPotsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_UpcomingGaugesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -548,26 +549,26 @@ func (m *UpcomingPotsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *UpcomingPotsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpcomingPotsResponse.Merge(m, src)
+func (m *UpcomingGaugesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpcomingGaugesResponse.Merge(m, src)
 }
-func (m *UpcomingPotsResponse) XXX_Size() int {
+func (m *UpcomingGaugesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpcomingPotsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpcomingPotsResponse.DiscardUnknown(m)
+func (m *UpcomingGaugesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpcomingGaugesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpcomingPotsResponse proto.InternalMessageInfo
+var xxx_messageInfo_UpcomingGaugesResponse proto.InternalMessageInfo
 
-func (m *UpcomingPotsResponse) GetData() []Pot {
+func (m *UpcomingGaugesResponse) GetData() []Gauge {
 	if m != nil {
 		return m.Data
 	}
 	return nil
 }
 
-func (m *UpcomingPotsResponse) GetPagination() *query.PageResponse {
+func (m *UpcomingGaugesResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
@@ -575,9 +576,9 @@ func (m *UpcomingPotsResponse) GetPagination() *query.PageResponse {
 }
 
 type RewardsEstRequest struct {
-	Owner    string              `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
-	Locks    []types1.PeriodLock `protobuf:"bytes,2,rep,name=locks,proto3" json:"locks"`
-	EndEpoch int64               `protobuf:"varint,3,opt,name=end_epoch,json=endEpoch,proto3" json:"end_epoch,omitempty"`
+	Owner    string   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
+	LockIds  []uint64 `protobuf:"varint,2,rep,packed,name=lock_ids,json=lockIds,proto3" json:"lock_ids,omitempty"`
+	EndEpoch int64    `protobuf:"varint,3,opt,name=end_epoch,json=endEpoch,proto3" json:"end_epoch,omitempty"`
 }
 
 func (m *RewardsEstRequest) Reset()         { *m = RewardsEstRequest{} }
@@ -620,9 +621,9 @@ func (m *RewardsEstRequest) GetOwner() string {
 	return ""
 }
 
-func (m *RewardsEstRequest) GetLocks() []types1.PeriodLock {
+func (m *RewardsEstRequest) GetLockIds() []uint64 {
 	if m != nil {
-		return m.Locks
+		return m.LockIds
 	}
 	return nil
 }
@@ -683,14 +684,14 @@ func init() {
 	proto.RegisterType((*ModuleToDistributeCoinsResponse)(nil), "osmosis.incentives.ModuleToDistributeCoinsResponse")
 	proto.RegisterType((*ModuleDistributedCoinsRequest)(nil), "osmosis.incentives.ModuleDistributedCoinsRequest")
 	proto.RegisterType((*ModuleDistributedCoinsResponse)(nil), "osmosis.incentives.ModuleDistributedCoinsResponse")
-	proto.RegisterType((*PotByIDRequest)(nil), "osmosis.incentives.PotByIDRequest")
-	proto.RegisterType((*PotByIDResponse)(nil), "osmosis.incentives.PotByIDResponse")
-	proto.RegisterType((*PotsRequest)(nil), "osmosis.incentives.PotsRequest")
-	proto.RegisterType((*PotsResponse)(nil), "osmosis.incentives.PotsResponse")
-	proto.RegisterType((*ActivePotsRequest)(nil), "osmosis.incentives.ActivePotsRequest")
-	proto.RegisterType((*ActivePotsResponse)(nil), "osmosis.incentives.ActivePotsResponse")
-	proto.RegisterType((*UpcomingPotsRequest)(nil), "osmosis.incentives.UpcomingPotsRequest")
-	proto.RegisterType((*UpcomingPotsResponse)(nil), "osmosis.incentives.UpcomingPotsResponse")
+	proto.RegisterType((*GaugeByIDRequest)(nil), "osmosis.incentives.GaugeByIDRequest")
+	proto.RegisterType((*GaugeByIDResponse)(nil), "osmosis.incentives.GaugeByIDResponse")
+	proto.RegisterType((*GaugesRequest)(nil), "osmosis.incentives.GaugesRequest")
+	proto.RegisterType((*GaugesResponse)(nil), "osmosis.incentives.GaugesResponse")
+	proto.RegisterType((*ActiveGaugesRequest)(nil), "osmosis.incentives.ActiveGaugesRequest")
+	proto.RegisterType((*ActiveGaugesResponse)(nil), "osmosis.incentives.ActiveGaugesResponse")
+	proto.RegisterType((*UpcomingGaugesRequest)(nil), "osmosis.incentives.UpcomingGaugesRequest")
+	proto.RegisterType((*UpcomingGaugesResponse)(nil), "osmosis.incentives.UpcomingGaugesResponse")
 	proto.RegisterType((*RewardsEstRequest)(nil), "osmosis.incentives.RewardsEstRequest")
 	proto.RegisterType((*RewardsEstResponse)(nil), "osmosis.incentives.RewardsEstResponse")
 }
@@ -698,52 +699,61 @@ func init() {
 func init() { proto.RegisterFile("osmosis/incentives/query.proto", fileDescriptor_8124258a89427f98) }
 
 var fileDescriptor_8124258a89427f98 = []byte{
-	// 719 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0x4f, 0x4f, 0x13, 0x41,
-	0x18, 0xc6, 0x3b, 0xfd, 0xa3, 0xf2, 0x42, 0x50, 0x46, 0x22, 0x65, 0xd5, 0x6d, 0xb3, 0x46, 0xa8,
-	0x26, 0xec, 0xda, 0x92, 0x78, 0x30, 0x5e, 0xac, 0xa0, 0x21, 0xc1, 0xa4, 0x6e, 0xe4, 0x22, 0x31,
-	0x66, 0xbb, 0x3b, 0x29, 0x13, 0xda, 0x9d, 0xa5, 0x33, 0x05, 0x7b, 0x32, 0x51, 0x4f, 0x9e, 0x88,
-	0x1f, 0xc3, 0x4f, 0x82, 0x37, 0x8e, 0x9e, 0xd0, 0xc0, 0x37, 0xf0, 0x13, 0x98, 0xdd, 0x9d, 0x76,
-	0xb7, 0xe9, 0x2e, 0x84, 0x03, 0x84, 0xd3, 0xb2, 0xbc, 0xcf, 0xbc, 0xf3, 0x7b, 0xa6, 0xef, 0x3c,
-	0x59, 0x50, 0x19, 0xef, 0x30, 0x4e, 0xb9, 0x41, 0x5d, 0x9b, 0xb8, 0x82, 0xee, 0x12, 0x6e, 0xec,
-	0xf4, 0x48, 0xb7, 0xaf, 0x7b, 0x5d, 0x26, 0x18, 0xc6, 0xb2, 0xae, 0x47, 0x75, 0x65, 0xb6, 0xc5,
-	0x5a, 0x2c, 0x28, 0x1b, 0xfe, 0x5f, 0xa1, 0x52, 0x51, 0xed, 0x40, 0x6a, 0x34, 0x2d, 0x4e, 0x8c,
-	0xdd, 0x6a, 0x93, 0x08, 0xab, 0x6a, 0xd8, 0x8c, 0xba, 0xb2, 0xfe, 0x38, 0x5e, 0x0f, 0xb6, 0x18,
-	0xaa, 0x3c, 0xab, 0x45, 0x5d, 0x4b, 0x50, 0x36, 0xd0, 0xde, 0x4b, 0xa0, 0xf2, 0x98, 0x90, 0xd5,
-	0xf9, 0x41, 0xb5, 0xcd, 0xec, 0xed, 0x9e, 0x17, 0x3c, 0xc2, 0x92, 0x56, 0x06, 0xf5, 0x0d, 0x73,
-	0x7a, 0x6d, 0xf2, 0x8e, 0xad, 0x50, 0x2e, 0xba, 0xb4, 0xd9, 0x13, 0xe4, 0x25, 0xa3, 0x2e, 0x37,
-	0xc9, 0x4e, 0x8f, 0x70, 0xa1, 0x7d, 0x43, 0x50, 0x4a, 0x95, 0x70, 0x8f, 0xb9, 0x9c, 0x60, 0x0b,
-	0x0a, 0x3e, 0x38, 0x2f, 0xa2, 0x72, 0xae, 0x32, 0x59, 0x9b, 0xd7, 0x43, 0x74, 0xdd, 0x47, 0xd7,
-	0x25, 0xb4, 0xee, 0x2f, 0xa9, 0x3f, 0x39, 0x38, 0x2a, 0x65, 0x7e, 0xfe, 0x29, 0x55, 0x5a, 0x54,
-	0x6c, 0xf5, 0x9a, 0xba, 0xcd, 0x3a, 0x86, 0xf4, 0x19, 0x3e, 0x96, 0xb8, 0xb3, 0x6d, 0x88, 0xbe,
-	0x47, 0xb8, 0x1e, 0xee, 0x11, 0x76, 0xd6, 0x4a, 0x70, 0x3f, 0xa4, 0x88, 0x18, 0x9c, 0x11, 0xce,
-	0xaf, 0x68, 0x60, 0x65, 0x5c, 0x71, 0x79, 0x98, 0x65, 0x98, 0x6e, 0x30, 0x51, 0xef, 0xaf, 0xad,
-	0x48, 0x2e, 0x3c, 0x0d, 0x59, 0xea, 0x14, 0x51, 0x19, 0x55, 0xf2, 0x66, 0x96, 0x3a, 0xda, 0x73,
-	0xb8, 0x39, 0x54, 0x48, 0xae, 0x47, 0x90, 0xf3, 0x98, 0x08, 0x34, 0x93, 0xb5, 0x39, 0x7d, 0x7c,
-	0x82, 0xf4, 0x06, 0x13, 0xa6, 0xaf, 0xd1, 0x36, 0x60, 0xb2, 0xc1, 0xc4, 0xc0, 0x34, 0x7e, 0x05,
-	0x10, 0xcd, 0x82, 0x6c, 0xb0, 0x30, 0x62, 0x2b, 0x9c, 0xcd, 0x81, 0xb9, 0x86, 0xd5, 0x22, 0x72,
-	0xad, 0x19, 0x5b, 0xa9, 0x7d, 0x47, 0x30, 0x15, 0xf6, 0x95, 0x48, 0x55, 0xc8, 0x3b, 0x96, 0xb0,
-	0xe4, 0x49, 0xa5, 0x31, 0xd5, 0xf3, 0xfe, 0x39, 0x99, 0x81, 0x14, 0xbf, 0x1e, 0x61, 0xc9, 0x06,
-	0x2c, 0x8b, 0x67, 0xb2, 0x84, 0xfb, 0x8d, 0xc0, 0x6c, 0xc2, 0xcc, 0x0b, 0xdb, 0xdf, 0xe3, 0x22,
-	0x9c, 0xee, 0x23, 0xc0, 0xf1, 0xee, 0x57, 0xc0, 0xef, 0x07, 0xb8, 0xbd, 0xe1, 0xd9, 0xac, 0x43,
-	0xdd, 0xd6, 0x45, 0x38, 0xfe, 0x81, 0x60, 0x76, 0xb4, 0xff, 0x15, 0xf0, 0xbc, 0x8f, 0x60, 0xc6,
-	0x24, 0x7b, 0x56, 0xd7, 0xe1, 0xab, 0x5c, 0x0c, 0x2c, 0x2f, 0x40, 0x81, 0xed, 0xb9, 0xa4, 0x1b,
-	0xb8, 0x9d, 0xa8, 0xdf, 0xfa, 0x77, 0x54, 0x9a, 0xea, 0x5b, 0x9d, 0xf6, 0x33, 0x2d, 0xf8, 0xb7,
-	0x66, 0x86, 0x65, 0xfc, 0x14, 0x0a, 0x7e, 0x86, 0xf1, 0x62, 0x36, 0x40, 0x57, 0x86, 0xe8, 0x61,
-	0xc0, 0xe9, 0x0d, 0xd2, 0xa5, 0xcc, 0x59, 0x67, 0xf6, 0xb6, 0xa4, 0x0f, 0xe5, 0xf8, 0x2e, 0x4c,
-	0x10, 0xd7, 0xf9, 0x48, 0x3c, 0x66, 0x6f, 0x15, 0x73, 0x65, 0x54, 0xc9, 0x99, 0x37, 0x88, 0xeb,
-	0xac, 0xfa, 0xef, 0xda, 0x1e, 0xe0, 0x38, 0xd1, 0xa5, 0x65, 0x46, 0xed, 0x57, 0x01, 0x0a, 0x6f,
-	0xfd, 0x63, 0xc3, 0x5f, 0x10, 0xcc, 0xa5, 0x64, 0x2d, 0xae, 0x25, 0xfd, 0x3e, 0xa7, 0x67, 0xb7,
-	0xb2, 0x7c, 0xae, 0x35, 0xd2, 0xf1, 0x67, 0xb8, 0x93, 0x9c, 0xa3, 0xb8, 0x9a, 0xde, 0x2e, 0x25,
-	0x95, 0x95, 0xda, 0x79, 0x96, 0x48, 0x00, 0x13, 0xae, 0xcb, 0x84, 0xc4, 0x5a, 0xda, 0x50, 0x46,
-	0x01, 0xab, 0x3c, 0x38, 0x55, 0x23, 0x7b, 0xae, 0x41, 0xde, 0x9f, 0x7d, 0x5c, 0x4a, 0x11, 0x0f,
-	0x81, 0xcb, 0xe9, 0x02, 0xd9, 0x6a, 0x13, 0x20, 0x0a, 0x10, 0xfc, 0x30, 0x49, 0x3f, 0x16, 0x5f,
-	0xca, 0xc2, 0x59, 0xb2, 0xe1, 0xb8, 0x4d, 0xc5, 0xef, 0x2a, 0x5e, 0x4c, 0x5a, 0x97, 0x90, 0x16,
-	0x4a, 0xe5, 0x6c, 0x61, 0xc4, 0x1f, 0xcd, 0x79, 0x32, 0xff, 0xd8, 0xcd, 0x4c, 0xe6, 0x1f, 0xbf,
-	0x2e, 0xf5, 0xf5, 0x83, 0x63, 0x15, 0x1d, 0x1e, 0xab, 0xe8, 0xef, 0xb1, 0x8a, 0xf6, 0x4f, 0xd4,
-	0xcc, 0xe1, 0x89, 0x9a, 0xf9, 0x7d, 0xa2, 0x66, 0xde, 0xd7, 0x62, 0xd7, 0x42, 0xf6, 0x5a, 0x6a,
-	0x5b, 0x4d, 0x3e, 0x78, 0x31, 0x3e, 0xc5, 0x3f, 0x5e, 0x82, 0x6b, 0xd2, 0xbc, 0x16, 0x7c, 0xa4,
-	0x2c, 0xff, 0x0f, 0x00, 0x00, 0xff, 0xff, 0xcb, 0x93, 0xad, 0x7d, 0x75, 0x09, 0x00, 0x00,
+	// 862 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0x4d, 0x4f, 0xe3, 0x46,
+	0x18, 0xc7, 0x33, 0x79, 0xa1, 0x30, 0xa5, 0x08, 0xa6, 0x94, 0x06, 0xb7, 0x75, 0x52, 0x8b, 0x42,
+	0x80, 0x62, 0x37, 0x09, 0xa2, 0x55, 0x55, 0x55, 0x6a, 0x0a, 0x45, 0x48, 0xad, 0xd4, 0x5a, 0xad,
+	0x2a, 0x55, 0xaa, 0x2c, 0xc7, 0x1e, 0x99, 0x11, 0x89, 0xc7, 0x64, 0x6c, 0x68, 0x84, 0xb8, 0xb4,
+	0x3d, 0xa3, 0x4a, 0x45, 0x3d, 0xf5, 0x13, 0xf4, 0x3b, 0xf4, 0xb2, 0x27, 0x8e, 0x48, 0x7b, 0xd9,
+	0x13, 0xbb, 0x82, 0x95, 0xf6, 0xbe, 0x9f, 0x60, 0xe5, 0xf1, 0x38, 0x2f, 0x8b, 0x93, 0xc0, 0x01,
+	0xc4, 0xc9, 0x71, 0x9e, 0xb7, 0xdf, 0xff, 0xf1, 0xe4, 0xef, 0x40, 0x99, 0xb2, 0x26, 0x65, 0x84,
+	0x69, 0xc4, 0xb5, 0xb0, 0xeb, 0x93, 0x03, 0xcc, 0xb4, 0xfd, 0x00, 0xb7, 0xda, 0xaa, 0xd7, 0xa2,
+	0x3e, 0x45, 0x48, 0xc4, 0xd5, 0x6e, 0x5c, 0x9a, 0x75, 0xa8, 0x43, 0x79, 0x58, 0x0b, 0x3f, 0x45,
+	0x99, 0xd2, 0xfb, 0x0e, 0xa5, 0x4e, 0x03, 0x6b, 0xa6, 0x47, 0x34, 0xd3, 0x75, 0xa9, 0x6f, 0xfa,
+	0x84, 0xba, 0x4c, 0x44, 0x65, 0x8b, 0x37, 0xd2, 0xea, 0x26, 0xc3, 0xda, 0x41, 0xb9, 0x8e, 0x7d,
+	0xb3, 0xac, 0x59, 0x94, 0xb8, 0x22, 0xbe, 0xd2, 0x1b, 0xe7, 0x00, 0x9d, 0x2c, 0xcf, 0x74, 0x88,
+	0xcb, 0x9b, 0xc5, 0xbd, 0x12, 0x98, 0x1d, 0x33, 0x70, 0xb0, 0x88, 0xcf, 0xc7, 0xf1, 0x06, 0xb5,
+	0xf6, 0x02, 0x8f, 0x5f, 0xa2, 0x90, 0x52, 0x84, 0xf2, 0x77, 0xd4, 0x0e, 0x1a, 0xf8, 0x47, 0xba,
+	0x49, 0x98, 0xdf, 0x22, 0xf5, 0xc0, 0xc7, 0x5f, 0x53, 0xe2, 0x32, 0x1d, 0xef, 0x07, 0x98, 0xf9,
+	0xca, 0x9f, 0x00, 0x16, 0x06, 0xa6, 0x30, 0x8f, 0xba, 0x0c, 0x23, 0x13, 0xe6, 0x42, 0x74, 0x96,
+	0x07, 0xc5, 0x4c, 0xe9, 0xcd, 0xca, 0xbc, 0x1a, 0xc1, 0xab, 0x21, 0xbc, 0x2a, 0xb0, 0xd5, 0xb0,
+	0xa4, 0xf6, 0xc9, 0xd9, 0x45, 0x21, 0xf5, 0xdf, 0xd3, 0x42, 0xc9, 0x21, 0xfe, 0x6e, 0x50, 0x57,
+	0x2d, 0xda, 0xd4, 0x84, 0xd2, 0xe8, 0xb2, 0xc6, 0xec, 0x3d, 0xcd, 0x6f, 0x7b, 0x98, 0xa9, 0xd1,
+	0x8c, 0xa8, 0xb3, 0x52, 0x80, 0x1f, 0x44, 0x14, 0x5d, 0x06, 0xbb, 0x8f, 0xf3, 0x0f, 0x10, 0x4b,
+	0xb9, 0x9e, 0x71, 0x7f, 0x98, 0x0a, 0x9c, 0xde, 0x0e, 0x37, 0x5f, 0x6b, 0xef, 0x6c, 0x0a, 0x32,
+	0x34, 0x05, 0xd3, 0xc4, 0xce, 0x83, 0x22, 0x28, 0x65, 0xf5, 0x34, 0xb1, 0x95, 0x4d, 0x38, 0xd3,
+	0x93, 0x23, 0xd8, 0x34, 0x98, 0xe3, 0x8f, 0x8c, 0xe7, 0x85, 0x6c, 0xd7, 0xcf, 0x99, 0xca, 0xab,
+	0xf4, 0x28, 0x4f, 0xf9, 0x19, 0xbe, 0xc5, 0xef, 0xe3, 0x05, 0xa0, 0x6f, 0x20, 0xec, 0x9e, 0x0c,
+	0xd1, 0x66, 0xb1, 0x4f, 0x62, 0x74, 0x8e, 0x63, 0xa1, 0xdf, 0x9b, 0x0e, 0x16, 0xb5, 0x7a, 0x4f,
+	0xa5, 0x72, 0x02, 0xe0, 0x54, 0xdc, 0x59, 0xc0, 0x55, 0x61, 0xd6, 0x36, 0x7d, 0xb3, 0xb3, 0xb7,
+	0x41, 0x6c, 0xb5, 0x6c, 0xb8, 0x37, 0x9d, 0x27, 0xa3, 0xed, 0x3e, 0x9e, 0x34, 0xe7, 0x59, 0x1a,
+	0xc9, 0x13, 0x4d, 0xec, 0x03, 0xfa, 0x15, 0xbe, 0xfd, 0x95, 0x15, 0x4e, 0xb9, 0x1b, 0xbd, 0xa7,
+	0x00, 0xce, 0xf6, 0xf7, 0x7f, 0x10, 0xaa, 0x0d, 0xf8, 0xce, 0x4f, 0x9e, 0x45, 0x9b, 0xc4, 0x75,
+	0xee, 0x46, 0xf7, 0x3f, 0x00, 0xce, 0xbd, 0x3e, 0xe1, 0x41, 0x28, 0x67, 0x70, 0x46, 0xc7, 0x87,
+	0x66, 0xcb, 0x66, 0x5b, 0xcc, 0x8f, 0x55, 0x2f, 0xc2, 0x1c, 0x3d, 0x74, 0x71, 0x8b, 0x0b, 0x9e,
+	0xa8, 0x4d, 0xbf, 0xbc, 0x28, 0x4c, 0xb6, 0xcd, 0x66, 0xe3, 0x73, 0x85, 0x7f, 0xad, 0xe8, 0x51,
+	0x18, 0xcd, 0xc3, 0xf1, 0xd0, 0xde, 0x0c, 0x62, 0xb3, 0x7c, 0xba, 0x98, 0x29, 0x65, 0xf5, 0x37,
+	0xc2, 0xfb, 0x1d, 0x9b, 0xa1, 0xf7, 0xe0, 0x04, 0x76, 0x6d, 0x03, 0x7b, 0xd4, 0xda, 0xcd, 0x67,
+	0x8a, 0xa0, 0x94, 0xd1, 0xc7, 0xb1, 0x6b, 0x6f, 0x85, 0xf7, 0xca, 0x21, 0x44, 0xbd, 0x43, 0xef,
+	0xcd, 0x31, 0x2a, 0x2f, 0xc6, 0x61, 0xee, 0x87, 0x70, 0x31, 0xe8, 0x11, 0x80, 0xef, 0x0e, 0x70,
+	0x5a, 0x54, 0x49, 0x7a, 0x06, 0xc3, 0x9d, 0x5b, 0xaa, 0xde, 0xaa, 0x26, 0x52, 0xac, 0x7c, 0xf9,
+	0xfb, 0xe3, 0xe7, 0x7f, 0xa7, 0x3f, 0x43, 0x1b, 0x5a, 0xc2, 0x4b, 0x25, 0x7e, 0x03, 0x35, 0x79,
+	0x13, 0xc3, 0xa7, 0x86, 0xdd, 0x69, 0x63, 0x70, 0x39, 0xe8, 0x7f, 0x00, 0xe7, 0x92, 0x6d, 0x18,
+	0x95, 0x07, 0xf3, 0x0c, 0x30, 0x75, 0xa9, 0x72, 0x9b, 0x12, 0xa1, 0xe0, 0x0b, 0xae, 0x60, 0x03,
+	0xad, 0xdf, 0x40, 0x41, 0x17, 0xdf, 0x16, 0xfc, 0x27, 0x00, 0x4e, 0x74, 0xdc, 0x19, 0x2d, 0x0c,
+	0x3e, 0xfa, 0x5d, 0x83, 0x97, 0x3e, 0x1a, 0x91, 0x25, 0xc0, 0xd6, 0x39, 0x98, 0x8a, 0x3e, 0x1e,
+	0x06, 0xc6, 0xcd, 0xdd, 0xa8, 0xb7, 0x0d, 0x62, 0x6b, 0x47, 0xc4, 0x3e, 0x46, 0x47, 0x70, 0x2c,
+	0xfa, 0x75, 0xa2, 0x0f, 0x07, 0x8e, 0xe9, 0xec, 0x4b, 0x19, 0x96, 0x22, 0x30, 0x56, 0x38, 0xc6,
+	0x02, 0x52, 0x46, 0x62, 0x30, 0x74, 0x0a, 0xe0, 0x64, 0xaf, 0x37, 0xa2, 0xa5, 0xa4, 0x01, 0x09,
+	0xee, 0x2c, 0x95, 0x46, 0x27, 0x0a, 0x9e, 0x32, 0xe7, 0x59, 0x45, 0xcb, 0xc3, 0x78, 0x4c, 0x5e,
+	0x69, 0x08, 0xac, 0x7f, 0x01, 0x9c, 0xea, 0xb7, 0x2e, 0xb4, 0x9c, 0x34, 0x2f, 0xd1, 0x40, 0xa5,
+	0x95, 0x9b, 0xa4, 0x0a, 0xb8, 0x2a, 0x87, 0x5b, 0x43, 0xab, 0xc3, 0xe0, 0x02, 0x51, 0x6b, 0x74,
+	0xb7, 0x06, 0xbb, 0x66, 0x82, 0x12, 0x8f, 0xc7, 0x35, 0x87, 0x93, 0x16, 0x47, 0xa5, 0x09, 0xa4,
+	0x4f, 0x39, 0x52, 0x19, 0x69, 0xc3, 0x90, 0x5a, 0x51, 0x9d, 0x81, 0x99, 0xaf, 0x1d, 0x71, 0x67,
+	0x3c, 0xae, 0x7d, 0x7b, 0x76, 0x29, 0x83, 0xf3, 0x4b, 0x19, 0x3c, 0xbb, 0x94, 0xc1, 0x5f, 0x57,
+	0x72, 0xea, 0xfc, 0x4a, 0x4e, 0x3d, 0xb9, 0x92, 0x53, 0xbf, 0x54, 0x7a, 0x4c, 0x4b, 0x34, 0x5d,
+	0x6b, 0x98, 0x75, 0xd6, 0x99, 0xf0, 0x5b, 0xef, 0x0c, 0x6e, 0x62, 0xf5, 0x31, 0xfe, 0x07, 0xb2,
+	0xfa, 0x2a, 0x00, 0x00, 0xff, 0xff, 0xa0, 0x30, 0x49, 0x0c, 0x31, 0x0b, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -762,14 +772,14 @@ type QueryClient interface {
 	ModuleToDistributeCoins(ctx context.Context, in *ModuleToDistributeCoinsRequest, opts ...grpc.CallOption) (*ModuleToDistributeCoinsResponse, error)
 	// returns coins that are distributed by module so far
 	ModuleDistributedCoins(ctx context.Context, in *ModuleDistributedCoinsRequest, opts ...grpc.CallOption) (*ModuleDistributedCoinsResponse, error)
-	// returns Pot by id
-	PotByID(ctx context.Context, in *PotByIDRequest, opts ...grpc.CallOption) (*PotByIDResponse, error)
-	// returns pots both upcoming and active
-	Pots(ctx context.Context, in *PotsRequest, opts ...grpc.CallOption) (*PotsResponse, error)
-	// returns active pots
-	ActivePots(ctx context.Context, in *ActivePotsRequest, opts ...grpc.CallOption) (*ActivePotsResponse, error)
-	// returns scheduled pots
-	UpcomingPots(ctx context.Context, in *UpcomingPotsRequest, opts ...grpc.CallOption) (*UpcomingPotsResponse, error)
+	// returns Gauge by id
+	GaugeByID(ctx context.Context, in *GaugeByIDRequest, opts ...grpc.CallOption) (*GaugeByIDResponse, error)
+	// returns gauges both upcoming and active
+	Gauges(ctx context.Context, in *GaugesRequest, opts ...grpc.CallOption) (*GaugesResponse, error)
+	// returns active gauges
+	ActiveGauges(ctx context.Context, in *ActiveGaugesRequest, opts ...grpc.CallOption) (*ActiveGaugesResponse, error)
+	// returns scheduled gauges
+	UpcomingGauges(ctx context.Context, in *UpcomingGaugesRequest, opts ...grpc.CallOption) (*UpcomingGaugesResponse, error)
 	// RewardsEst returns an estimate of the rewards at a future specific time.
 	// The querier either provides an address or a set of locks
 	// for which they want to find the associated rewards.
@@ -802,36 +812,36 @@ func (c *queryClient) ModuleDistributedCoins(ctx context.Context, in *ModuleDist
 	return out, nil
 }
 
-func (c *queryClient) PotByID(ctx context.Context, in *PotByIDRequest, opts ...grpc.CallOption) (*PotByIDResponse, error) {
-	out := new(PotByIDResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/PotByID", in, out, opts...)
+func (c *queryClient) GaugeByID(ctx context.Context, in *GaugeByIDRequest, opts ...grpc.CallOption) (*GaugeByIDResponse, error) {
+	out := new(GaugeByIDResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/GaugeByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) Pots(ctx context.Context, in *PotsRequest, opts ...grpc.CallOption) (*PotsResponse, error) {
-	out := new(PotsResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/Pots", in, out, opts...)
+func (c *queryClient) Gauges(ctx context.Context, in *GaugesRequest, opts ...grpc.CallOption) (*GaugesResponse, error) {
+	out := new(GaugesResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/Gauges", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) ActivePots(ctx context.Context, in *ActivePotsRequest, opts ...grpc.CallOption) (*ActivePotsResponse, error) {
-	out := new(ActivePotsResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/ActivePots", in, out, opts...)
+func (c *queryClient) ActiveGauges(ctx context.Context, in *ActiveGaugesRequest, opts ...grpc.CallOption) (*ActiveGaugesResponse, error) {
+	out := new(ActiveGaugesResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/ActiveGauges", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) UpcomingPots(ctx context.Context, in *UpcomingPotsRequest, opts ...grpc.CallOption) (*UpcomingPotsResponse, error) {
-	out := new(UpcomingPotsResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/UpcomingPots", in, out, opts...)
+func (c *queryClient) UpcomingGauges(ctx context.Context, in *UpcomingGaugesRequest, opts ...grpc.CallOption) (*UpcomingGaugesResponse, error) {
+	out := new(UpcomingGaugesResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/UpcomingGauges", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -853,14 +863,14 @@ type QueryServer interface {
 	ModuleToDistributeCoins(context.Context, *ModuleToDistributeCoinsRequest) (*ModuleToDistributeCoinsResponse, error)
 	// returns coins that are distributed by module so far
 	ModuleDistributedCoins(context.Context, *ModuleDistributedCoinsRequest) (*ModuleDistributedCoinsResponse, error)
-	// returns Pot by id
-	PotByID(context.Context, *PotByIDRequest) (*PotByIDResponse, error)
-	// returns pots both upcoming and active
-	Pots(context.Context, *PotsRequest) (*PotsResponse, error)
-	// returns active pots
-	ActivePots(context.Context, *ActivePotsRequest) (*ActivePotsResponse, error)
-	// returns scheduled pots
-	UpcomingPots(context.Context, *UpcomingPotsRequest) (*UpcomingPotsResponse, error)
+	// returns Gauge by id
+	GaugeByID(context.Context, *GaugeByIDRequest) (*GaugeByIDResponse, error)
+	// returns gauges both upcoming and active
+	Gauges(context.Context, *GaugesRequest) (*GaugesResponse, error)
+	// returns active gauges
+	ActiveGauges(context.Context, *ActiveGaugesRequest) (*ActiveGaugesResponse, error)
+	// returns scheduled gauges
+	UpcomingGauges(context.Context, *UpcomingGaugesRequest) (*UpcomingGaugesResponse, error)
 	// RewardsEst returns an estimate of the rewards at a future specific time.
 	// The querier either provides an address or a set of locks
 	// for which they want to find the associated rewards.
@@ -877,17 +887,17 @@ func (*UnimplementedQueryServer) ModuleToDistributeCoins(ctx context.Context, re
 func (*UnimplementedQueryServer) ModuleDistributedCoins(ctx context.Context, req *ModuleDistributedCoinsRequest) (*ModuleDistributedCoinsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ModuleDistributedCoins not implemented")
 }
-func (*UnimplementedQueryServer) PotByID(ctx context.Context, req *PotByIDRequest) (*PotByIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PotByID not implemented")
+func (*UnimplementedQueryServer) GaugeByID(ctx context.Context, req *GaugeByIDRequest) (*GaugeByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GaugeByID not implemented")
 }
-func (*UnimplementedQueryServer) Pots(ctx context.Context, req *PotsRequest) (*PotsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Pots not implemented")
+func (*UnimplementedQueryServer) Gauges(ctx context.Context, req *GaugesRequest) (*GaugesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Gauges not implemented")
 }
-func (*UnimplementedQueryServer) ActivePots(ctx context.Context, req *ActivePotsRequest) (*ActivePotsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ActivePots not implemented")
+func (*UnimplementedQueryServer) ActiveGauges(ctx context.Context, req *ActiveGaugesRequest) (*ActiveGaugesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActiveGauges not implemented")
 }
-func (*UnimplementedQueryServer) UpcomingPots(ctx context.Context, req *UpcomingPotsRequest) (*UpcomingPotsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpcomingPots not implemented")
+func (*UnimplementedQueryServer) UpcomingGauges(ctx context.Context, req *UpcomingGaugesRequest) (*UpcomingGaugesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpcomingGauges not implemented")
 }
 func (*UnimplementedQueryServer) RewardsEst(ctx context.Context, req *RewardsEstRequest) (*RewardsEstResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RewardsEst not implemented")
@@ -933,74 +943,74 @@ func _Query_ModuleDistributedCoins_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_PotByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PotByIDRequest)
+func _Query_GaugeByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GaugeByIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).PotByID(ctx, in)
+		return srv.(QueryServer).GaugeByID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.incentives.Query/PotByID",
+		FullMethod: "/osmosis.incentives.Query/GaugeByID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).PotByID(ctx, req.(*PotByIDRequest))
+		return srv.(QueryServer).GaugeByID(ctx, req.(*GaugeByIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Pots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PotsRequest)
+func _Query_Gauges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GaugesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Pots(ctx, in)
+		return srv.(QueryServer).Gauges(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.incentives.Query/Pots",
+		FullMethod: "/osmosis.incentives.Query/Gauges",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Pots(ctx, req.(*PotsRequest))
+		return srv.(QueryServer).Gauges(ctx, req.(*GaugesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ActivePots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ActivePotsRequest)
+func _Query_ActiveGauges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActiveGaugesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ActivePots(ctx, in)
+		return srv.(QueryServer).ActiveGauges(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.incentives.Query/ActivePots",
+		FullMethod: "/osmosis.incentives.Query/ActiveGauges",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ActivePots(ctx, req.(*ActivePotsRequest))
+		return srv.(QueryServer).ActiveGauges(ctx, req.(*ActiveGaugesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UpcomingPots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpcomingPotsRequest)
+func _Query_UpcomingGauges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpcomingGaugesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).UpcomingPots(ctx, in)
+		return srv.(QueryServer).UpcomingGauges(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.incentives.Query/UpcomingPots",
+		FullMethod: "/osmosis.incentives.Query/UpcomingGauges",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).UpcomingPots(ctx, req.(*UpcomingPotsRequest))
+		return srv.(QueryServer).UpcomingGauges(ctx, req.(*UpcomingGaugesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1036,20 +1046,20 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ModuleDistributedCoins_Handler,
 		},
 		{
-			MethodName: "PotByID",
-			Handler:    _Query_PotByID_Handler,
+			MethodName: "GaugeByID",
+			Handler:    _Query_GaugeByID_Handler,
 		},
 		{
-			MethodName: "Pots",
-			Handler:    _Query_Pots_Handler,
+			MethodName: "Gauges",
+			Handler:    _Query_Gauges_Handler,
 		},
 		{
-			MethodName: "ActivePots",
-			Handler:    _Query_ActivePots_Handler,
+			MethodName: "ActiveGauges",
+			Handler:    _Query_ActiveGauges_Handler,
 		},
 		{
-			MethodName: "UpcomingPots",
-			Handler:    _Query_UpcomingPots_Handler,
+			MethodName: "UpcomingGauges",
+			Handler:    _Query_UpcomingGauges_Handler,
 		},
 		{
 			MethodName: "RewardsEst",
@@ -1180,7 +1190,7 @@ func (m *ModuleDistributedCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *PotByIDRequest) Marshal() (dAtA []byte, err error) {
+func (m *GaugeByIDRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1190,12 +1200,12 @@ func (m *PotByIDRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PotByIDRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *GaugeByIDRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PotByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GaugeByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1208,7 +1218,7 @@ func (m *PotByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *PotByIDResponse) Marshal() (dAtA []byte, err error) {
+func (m *GaugeByIDResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1218,19 +1228,19 @@ func (m *PotByIDResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PotByIDResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *GaugeByIDResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PotByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GaugeByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Pot != nil {
+	if m.Gauge != nil {
 		{
-			size, err := m.Pot.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.Gauge.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1243,7 +1253,7 @@ func (m *PotByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *PotsRequest) Marshal() (dAtA []byte, err error) {
+func (m *GaugesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1253,12 +1263,12 @@ func (m *PotsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PotsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *GaugesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GaugesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1278,7 +1288,7 @@ func (m *PotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *PotsResponse) Marshal() (dAtA []byte, err error) {
+func (m *GaugesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1288,12 +1298,12 @@ func (m *PotsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PotsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *GaugesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PotsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GaugesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1327,7 +1337,7 @@ func (m *PotsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ActivePotsRequest) Marshal() (dAtA []byte, err error) {
+func (m *ActiveGaugesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1337,12 +1347,12 @@ func (m *ActivePotsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ActivePotsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *ActiveGaugesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ActivePotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ActiveGaugesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1362,7 +1372,7 @@ func (m *ActivePotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ActivePotsResponse) Marshal() (dAtA []byte, err error) {
+func (m *ActiveGaugesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1372,12 +1382,12 @@ func (m *ActivePotsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ActivePotsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *ActiveGaugesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ActivePotsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ActiveGaugesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1411,7 +1421,7 @@ func (m *ActivePotsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *UpcomingPotsRequest) Marshal() (dAtA []byte, err error) {
+func (m *UpcomingGaugesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1421,12 +1431,12 @@ func (m *UpcomingPotsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpcomingPotsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *UpcomingGaugesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpcomingPotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *UpcomingGaugesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1446,7 +1456,7 @@ func (m *UpcomingPotsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *UpcomingPotsResponse) Marshal() (dAtA []byte, err error) {
+func (m *UpcomingGaugesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1456,12 +1466,12 @@ func (m *UpcomingPotsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpcomingPotsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *UpcomingGaugesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpcomingPotsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *UpcomingGaugesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1520,19 +1530,23 @@ func (m *RewardsEstRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x18
 	}
-	if len(m.Locks) > 0 {
-		for iNdEx := len(m.Locks) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Locks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.LockIds) > 0 {
+		dAtA9 := make([]byte, len(m.LockIds)*10)
+		var j8 int
+		for _, num := range m.LockIds {
+			for num >= 1<<7 {
+				dAtA9[j8] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j8++
 			}
-			i--
-			dAtA[i] = 0x12
+			dAtA9[j8] = uint8(num)
+			j8++
 		}
+		i -= j8
+		copy(dAtA[i:], dAtA9[:j8])
+		i = encodeVarintQuery(dAtA, i, uint64(j8))
+		i--
+		dAtA[i] = 0x12
 	}
 	if len(m.Owner) > 0 {
 		i -= len(m.Owner)
@@ -1640,7 +1654,7 @@ func (m *ModuleDistributedCoinsResponse) Size() (n int) {
 	return n
 }
 
-func (m *PotByIDRequest) Size() (n int) {
+func (m *GaugeByIDRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1652,20 +1666,20 @@ func (m *PotByIDRequest) Size() (n int) {
 	return n
 }
 
-func (m *PotByIDResponse) Size() (n int) {
+func (m *GaugeByIDResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Pot != nil {
-		l = m.Pot.Size()
+	if m.Gauge != nil {
+		l = m.Gauge.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *PotsRequest) Size() (n int) {
+func (m *GaugesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1678,7 +1692,7 @@ func (m *PotsRequest) Size() (n int) {
 	return n
 }
 
-func (m *PotsResponse) Size() (n int) {
+func (m *GaugesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1697,7 +1711,7 @@ func (m *PotsResponse) Size() (n int) {
 	return n
 }
 
-func (m *ActivePotsRequest) Size() (n int) {
+func (m *ActiveGaugesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1710,7 +1724,7 @@ func (m *ActivePotsRequest) Size() (n int) {
 	return n
 }
 
-func (m *ActivePotsResponse) Size() (n int) {
+func (m *ActiveGaugesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1729,7 +1743,7 @@ func (m *ActivePotsResponse) Size() (n int) {
 	return n
 }
 
-func (m *UpcomingPotsRequest) Size() (n int) {
+func (m *UpcomingGaugesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1742,7 +1756,7 @@ func (m *UpcomingPotsRequest) Size() (n int) {
 	return n
 }
 
-func (m *UpcomingPotsResponse) Size() (n int) {
+func (m *UpcomingGaugesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1771,11 +1785,12 @@ func (m *RewardsEstRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if len(m.Locks) > 0 {
-		for _, e := range m.Locks {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
+	if len(m.LockIds) > 0 {
+		l = 0
+		for _, e := range m.LockIds {
+			l += sovQuery(uint64(e))
 		}
+		n += 1 + sovQuery(uint64(l)) + l
 	}
 	if m.EndEpoch != 0 {
 		n += 1 + sovQuery(uint64(m.EndEpoch))
@@ -2084,7 +2099,7 @@ func (m *ModuleDistributedCoinsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PotByIDRequest) Unmarshal(dAtA []byte) error {
+func (m *GaugeByIDRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2107,10 +2122,10 @@ func (m *PotByIDRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PotByIDRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: GaugeByIDRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PotByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GaugeByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2156,7 +2171,7 @@ func (m *PotByIDRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PotByIDResponse) Unmarshal(dAtA []byte) error {
+func (m *GaugeByIDResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2179,15 +2194,15 @@ func (m *PotByIDResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PotByIDResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: GaugeByIDResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PotByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GaugeByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pot", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Gauge", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2214,10 +2229,10 @@ func (m *PotByIDResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Pot == nil {
-				m.Pot = &Pot{}
+			if m.Gauge == nil {
+				m.Gauge = &Gauge{}
 			}
-			if err := m.Pot.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Gauge.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2245,7 +2260,7 @@ func (m *PotByIDResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PotsRequest) Unmarshal(dAtA []byte) error {
+func (m *GaugesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2268,10 +2283,10 @@ func (m *PotsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PotsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: GaugesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PotsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GaugesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2334,7 +2349,7 @@ func (m *PotsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PotsResponse) Unmarshal(dAtA []byte) error {
+func (m *GaugesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2357,10 +2372,10 @@ func (m *PotsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PotsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: GaugesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PotsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GaugesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2392,7 +2407,7 @@ func (m *PotsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Data = append(m.Data, Pot{})
+			m.Data = append(m.Data, Gauge{})
 			if err := m.Data[len(m.Data)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2457,7 +2472,7 @@ func (m *PotsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ActivePotsRequest) Unmarshal(dAtA []byte) error {
+func (m *ActiveGaugesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2480,10 +2495,10 @@ func (m *ActivePotsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ActivePotsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: ActiveGaugesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ActivePotsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ActiveGaugesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2546,7 +2561,7 @@ func (m *ActivePotsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ActivePotsResponse) Unmarshal(dAtA []byte) error {
+func (m *ActiveGaugesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2569,10 +2584,10 @@ func (m *ActivePotsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ActivePotsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: ActiveGaugesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ActivePotsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ActiveGaugesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2604,7 +2619,7 @@ func (m *ActivePotsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Data = append(m.Data, Pot{})
+			m.Data = append(m.Data, Gauge{})
 			if err := m.Data[len(m.Data)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2669,7 +2684,7 @@ func (m *ActivePotsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpcomingPotsRequest) Unmarshal(dAtA []byte) error {
+func (m *UpcomingGaugesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2692,10 +2707,10 @@ func (m *UpcomingPotsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpcomingPotsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: UpcomingGaugesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpcomingPotsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: UpcomingGaugesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2758,7 +2773,7 @@ func (m *UpcomingPotsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpcomingPotsResponse) Unmarshal(dAtA []byte) error {
+func (m *UpcomingGaugesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2781,10 +2796,10 @@ func (m *UpcomingPotsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpcomingPotsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: UpcomingGaugesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpcomingPotsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: UpcomingGaugesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2816,7 +2831,7 @@ func (m *UpcomingPotsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Data = append(m.Data, Pot{})
+			m.Data = append(m.Data, Gauge{})
 			if err := m.Data[len(m.Data)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2943,39 +2958,81 @@ func (m *RewardsEstRequest) Unmarshal(dAtA []byte) error {
 			m.Owner = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Locks", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQuery
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.LockIds = append(m.LockIds, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQuery
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthQuery
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthQuery
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
 				}
+				elementCount = count
+				if elementCount != 0 && len(m.LockIds) == 0 {
+					m.LockIds = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowQuery
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.LockIds = append(m.LockIds, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockIds", wireType)
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Locks = append(m.Locks, types1.PeriodLock{})
-			if err := m.Locks[len(m.Locks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EndEpoch", wireType)

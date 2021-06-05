@@ -10,13 +10,13 @@ import (
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
-func (suite *KeeperTestSuite) TestPotIds() {
+func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.SetupTest()
 
 	queryClient := suite.queryClient
 
 	// Unexisted pool
-	_, err := queryClient.PotIds(context.Background(), &types.QueryPotIdsRequest{
+	_, err := queryClient.GaugeIds(context.Background(), &types.QueryGaugeIdsRequest{
 		PoolId: 1,
 	})
 	suite.Error(err)
@@ -29,35 +29,35 @@ func (suite *KeeperTestSuite) TestPotIds() {
 	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
 	suite.NoError(err)
 
-	res, err := queryClient.PotIds(context.Background(), &types.QueryPotIdsRequest{
+	res, err := queryClient.GaugeIds(context.Background(), &types.QueryGaugeIdsRequest{
 		PoolId: poolId,
 	})
 	suite.NoError(err)
-	suite.Equal(3, len(res.PotIdsWithDuration))
-	suite.Equal(lockableDurations[0], res.PotIdsWithDuration[0].Duration)
-	suite.Equal(lockableDurations[1], res.PotIdsWithDuration[1].Duration)
-	suite.Equal(lockableDurations[2], res.PotIdsWithDuration[2].Duration)
+	suite.Equal(3, len(res.GaugeIdsWithDuration))
+	suite.Equal(lockableDurations[0], res.GaugeIdsWithDuration[0].Duration)
+	suite.Equal(lockableDurations[1], res.GaugeIdsWithDuration[1].Duration)
+	suite.Equal(lockableDurations[2], res.GaugeIdsWithDuration[2].Duration)
 
-	pot, err := suite.app.IncentivesKeeper.GetPotByID(suite.ctx, res.PotIdsWithDuration[0].PotId)
+	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[0].GaugeId)
 	suite.NoError(err)
-	suite.Equal(0, len(pot.Coins))
-	suite.Equal(true, pot.IsPerpetual)
-	suite.Equal(pool.GetTotalShare().Denom, pot.DistributeTo.Denom)
-	suite.Equal(lockableDurations[0], pot.DistributeTo.Duration)
+	suite.Equal(0, len(gauge.Coins))
+	suite.Equal(true, gauge.IsPerpetual)
+	suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
-	pot, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, res.PotIdsWithDuration[1].PotId)
+	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[1].GaugeId)
 	suite.NoError(err)
-	suite.Equal(0, len(pot.Coins))
-	suite.Equal(true, pot.IsPerpetual)
-	suite.Equal(pool.GetTotalShare().Denom, pot.DistributeTo.Denom)
-	suite.Equal(lockableDurations[1], pot.DistributeTo.Duration)
+	suite.Equal(0, len(gauge.Coins))
+	suite.Equal(true, gauge.IsPerpetual)
+	suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
-	pot, err = suite.app.IncentivesKeeper.GetPotByID(suite.ctx, res.PotIdsWithDuration[2].PotId)
+	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[2].GaugeId)
 	suite.NoError(err)
-	suite.Equal(0, len(pot.Coins))
-	suite.Equal(true, pot.IsPerpetual)
-	suite.Equal(pool.GetTotalShare().Denom, pot.DistributeTo.Denom)
-	suite.Equal(lockableDurations[2], pot.DistributeTo.Duration)
+	suite.Equal(0, len(gauge.Coins))
+	suite.Equal(true, gauge.IsPerpetual)
+	suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 }
 
 func (suite *KeeperTestSuite) TestDistrInfo() {
@@ -84,25 +84,25 @@ func (suite *KeeperTestSuite) TestDistrInfo2() {
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	pot1Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	pot2Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
 	suite.NoError(err)
 
-	pot3Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 3 records
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  pot1Id,
-		Weight: sdk.NewInt(100),
+		GaugeId: gauge1Id,
+		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
-		PotId:  pot2Id,
-		Weight: sdk.NewInt(200),
+		GaugeId: gauge2Id,
+		Weight:  sdk.NewInt(200),
 	}, types.DistrRecord{
-		PotId:  pot3Id,
-		Weight: sdk.NewInt(300),
+		GaugeId: gauge3Id,
+		Weight:  sdk.NewInt(300),
 	})
 	suite.NoError(err)
 
@@ -164,31 +164,31 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	pot1Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	pot2Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
 	suite.NoError(err)
 
-	pot3Id, err := keeper.GetPoolPotId(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
 	suite.NoError(err)
 
-	pot4Id, err := keeper.GetPoolPotId(suite.ctx, poolId2, lockableDurations[2])
+	gauge4Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId2, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 4 records
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  pot1Id,
-		Weight: sdk.NewInt(100),
+		GaugeId: gauge1Id,
+		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
-		PotId:  pot2Id,
-		Weight: sdk.NewInt(200),
+		GaugeId: gauge2Id,
+		Weight:  sdk.NewInt(200),
 	}, types.DistrRecord{
-		PotId:  pot3Id,
-		Weight: sdk.NewInt(300),
+		GaugeId: gauge3Id,
+		Weight:  sdk.NewInt(300),
 	}, types.DistrRecord{
-		PotId:  pot4Id,
-		Weight: sdk.NewInt(300),
+		GaugeId: gauge4Id,
+		Weight:  sdk.NewInt(300),
 	})
 	suite.NoError(err)
 
@@ -198,24 +198,24 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	suite.Equal(4, len(res.IncentivizedPools))
 
 	suite.Equal(poolId, res.IncentivizedPools[0].PoolId)
-	suite.Equal(pot1Id, res.IncentivizedPools[0].PotId)
+	suite.Equal(gauge1Id, res.IncentivizedPools[0].GaugeId)
 	suite.Equal(time.Hour, res.IncentivizedPools[0].LockableDuration)
 
 	suite.Equal(poolId, res.IncentivizedPools[1].PoolId)
-	suite.Equal(pot2Id, res.IncentivizedPools[1].PotId)
+	suite.Equal(gauge2Id, res.IncentivizedPools[1].GaugeId)
 	suite.Equal(time.Hour*3, res.IncentivizedPools[1].LockableDuration)
 
 	suite.Equal(poolId, res.IncentivizedPools[2].PoolId)
-	suite.Equal(pot3Id, res.IncentivizedPools[2].PotId)
+	suite.Equal(gauge3Id, res.IncentivizedPools[2].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[2].LockableDuration)
 
 	suite.Equal(poolId2, res.IncentivizedPools[3].PoolId)
-	suite.Equal(pot4Id, res.IncentivizedPools[3].PotId)
+	suite.Equal(gauge4Id, res.IncentivizedPools[3].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[3].LockableDuration)
 
-	// Actually, the pool incentives module can add incentives to any pot, even if the pot is not directly related to a pool.
+	// Actually, the pool incentives module can add incentives to any gauge, even if the gauge is not directly related to a pool.
 	// However, these records must be excluded in incentivizedPools.
-	pot5Id, err := suite.app.IncentivesKeeper.CreatePot(suite.ctx, false, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
+	gauge5Id, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "stake",
 		Duration:      time.Hour,
@@ -223,20 +223,20 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	suite.NoError(err)
 
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
-		PotId:  pot1Id,
-		Weight: sdk.NewInt(100),
+		GaugeId: gauge1Id,
+		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
-		PotId:  pot2Id,
-		Weight: sdk.NewInt(200),
+		GaugeId: gauge2Id,
+		Weight:  sdk.NewInt(200),
 	}, types.DistrRecord{
-		PotId:  pot3Id,
-		Weight: sdk.NewInt(300),
+		GaugeId: gauge3Id,
+		Weight:  sdk.NewInt(300),
 	}, types.DistrRecord{
-		PotId:  pot4Id,
-		Weight: sdk.NewInt(300),
+		GaugeId: gauge4Id,
+		Weight:  sdk.NewInt(300),
 	}, types.DistrRecord{
-		PotId:  pot5Id,
-		Weight: sdk.NewInt(300),
+		GaugeId: gauge5Id,
+		Weight:  sdk.NewInt(300),
 	})
 	suite.NoError(err)
 
@@ -246,18 +246,18 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	suite.Equal(4, len(res.IncentivizedPools))
 
 	suite.Equal(poolId, res.IncentivizedPools[0].PoolId)
-	suite.Equal(pot1Id, res.IncentivizedPools[0].PotId)
+	suite.Equal(gauge1Id, res.IncentivizedPools[0].GaugeId)
 	suite.Equal(time.Hour, res.IncentivizedPools[0].LockableDuration)
 
 	suite.Equal(poolId, res.IncentivizedPools[1].PoolId)
-	suite.Equal(pot2Id, res.IncentivizedPools[1].PotId)
+	suite.Equal(gauge2Id, res.IncentivizedPools[1].GaugeId)
 	suite.Equal(time.Hour*3, res.IncentivizedPools[1].LockableDuration)
 
 	suite.Equal(poolId, res.IncentivizedPools[2].PoolId)
-	suite.Equal(pot3Id, res.IncentivizedPools[2].PotId)
+	suite.Equal(gauge3Id, res.IncentivizedPools[2].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[2].LockableDuration)
 
 	suite.Equal(poolId2, res.IncentivizedPools[3].PoolId)
-	suite.Equal(pot4Id, res.IncentivizedPools[3].PotId)
+	suite.Equal(gauge4Id, res.IncentivizedPools[3].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[3].LockableDuration)
 }

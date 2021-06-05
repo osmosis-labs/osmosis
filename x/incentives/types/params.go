@@ -25,7 +25,7 @@ func NewParams(distrEpochIdentifier string) Params {
 // default minting module parameters
 func DefaultParams() Params {
 	return Params{
-		DistrEpochIdentifier: "weekly",
+		DistrEpochIdentifier: "week",
 	}
 }
 

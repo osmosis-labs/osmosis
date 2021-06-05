@@ -27,6 +27,10 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
+	if !pool.IsActive(ctx.BlockTime()) {
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
+	}
+
 	// TODO: Understand if we are handling swap fee consistently,
 	// with the global swap fee and the pool swap fee
 
@@ -75,6 +79,10 @@ func (k Keeper) SwapExactAmountOut(
 		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
+	}
+
+	if !pool.IsActive(ctx.BlockTime()) {
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
 	}
 
 	tokenInAmount = calcInGivenOut(

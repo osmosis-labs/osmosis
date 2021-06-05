@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
@@ -60,6 +61,8 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 
 			liquidity := suite.app.GAMMKeeper.GetTotalLiquidity(suite.ctx)
 			suite.Require().Equal("10000bar,10000foo", liquidity.String())
+
+			suite.Require().Equal(suite.ctx.BlockTime(), pool.GetPoolParams().StartTime)
 		},
 	}, {
 		fn: func() {
@@ -414,3 +417,74 @@ func (suite *KeeperTestSuite) TestExitPool() {
 		}
 	}
 }
+
+func (suite *KeeperTestSuite) TestActivePool() {
+	type testCase struct {
+		blockTime time.Time
+		startTime time.Time
+		expectPass bool
+	}
+
+	testCases := []testCase{
+		{time.Unix(1000, 0), time.Unix(1000, 0), true},
+		{time.Unix(2000, 0), time.Unix(1000, 0), true},
+		{time.Unix(1000, 0), time.Unix(2000, 0), false},
+	}
+
+	for _, tc := range testCases {
+		suite.SetupTest()
+
+		// Mint some assets to the accounts.
+		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
+			err := suite.app.BankKeeper.AddCoins(
+				suite.ctx,
+				acc,
+				sdk.NewCoins(
+					sdk.NewCoin("foo", sdk.NewInt(10000000)),
+					sdk.NewCoin("bar", sdk.NewInt(10000000)),
+					sdk.NewCoin("baz", sdk.NewInt(10000000)),
+				),
+			)
+			if err != nil {
+				panic(err)
+			}
+
+			// Create the pool at first
+			poolId := suite.preparePoolWithPoolParams(types.PoolParams{
+				SwapFee: sdk.NewDec(0),
+				ExitFee: sdk.NewDec(0),
+				StartTime: tc.startTime,
+			})
+			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
+		
+			// uneffected by start time
+			err = suite.app.GAMMKeeper.JoinPool(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
+			suite.Require().NoError(err)
+			err = suite.app.GAMMKeeper.ExitPool(suite.ctx, acc1, poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
+			suite.Require().NoError(err)
+
+			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
+
+			if tc.expectPass {
+				_, err = suite.app.GAMMKeeper.JoinSwapExternAmountIn(suite.ctx, acc1, poolId, foocoin, sdk.ZeroInt())
+				suite.Require().NoError(err)
+				_, err = suite.app.GAMMKeeper.JoinSwapShareAmountOut(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
+				suite.Require().NoError(err)
+				_, err = suite.app.GAMMKeeper.ExitSwapShareAmountIn(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
+				suite.Require().NoError(err)
+				_, err = suite.app.GAMMKeeper.ExitSwapExternAmountOut(suite.ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
+				suite.Require().NoError(err)
+			} else {
+				_, err = suite.app.GAMMKeeper.JoinSwapExternAmountIn(suite.ctx, acc1, poolId, foocoin, sdk.ZeroInt())
+				suite.Require().Error(err)
+				_, err = suite.app.GAMMKeeper.JoinSwapShareAmountOut(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
+				suite.Require().Error(err)
+				_, err = suite.app.GAMMKeeper.ExitSwapShareAmountIn(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
+				suite.Require().Error(err)
+				_, err = suite.app.GAMMKeeper.ExitSwapExternAmountOut(suite.ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
+				suite.Require().Error(err)
+			}
+		}
+	}
+}
+

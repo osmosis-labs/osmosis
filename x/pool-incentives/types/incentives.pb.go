@@ -165,8 +165,8 @@ func (m *DistrInfo) GetRecords() []DistrRecord {
 }
 
 type DistrRecord struct {
-	PotId  uint64                                 `protobuf:"varint,1,opt,name=pot_id,json=potId,proto3" json:"pot_id,omitempty" yaml:"pot_id"`
-	Weight github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"weight"`
+	GaugeId uint64                                 `protobuf:"varint,1,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty" yaml:"gauge_id"`
+	Weight  github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"weight"`
 }
 
 func (m *DistrRecord) Reset()         { *m = DistrRecord{} }
@@ -202,9 +202,9 @@ func (m *DistrRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DistrRecord proto.InternalMessageInfo
 
-func (m *DistrRecord) GetPotId() uint64 {
+func (m *DistrRecord) GetGaugeId() uint64 {
 	if m != nil {
-		return m.PotId
+		return m.GaugeId
 	}
 	return 0
 }
@@ -272,7 +272,7 @@ func (this *DistrRecord) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.PotId != that1.PotId {
+	if this.GaugeId != that1.GaugeId {
 		return false
 	}
 	if !this.Weight.Equal(that1.Weight) {
@@ -422,8 +422,8 @@ func (m *DistrRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x12
-	if m.PotId != 0 {
-		i = encodeVarintIncentives(dAtA, i, uint64(m.PotId))
+	if m.GaugeId != 0 {
+		i = encodeVarintIncentives(dAtA, i, uint64(m.GaugeId))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -492,8 +492,8 @@ func (m *DistrRecord) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.PotId != 0 {
-		n += 1 + sovIncentives(uint64(m.PotId))
+	if m.GaugeId != 0 {
+		n += 1 + sovIncentives(uint64(m.GaugeId))
 	}
 	l = m.Weight.Size()
 	n += 1 + l + sovIncentives(uint64(l))
@@ -830,9 +830,9 @@ func (m *DistrRecord) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PotId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GaugeId", wireType)
 			}
-			m.PotId = 0
+			m.GaugeId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowIncentives
@@ -842,7 +842,7 @@ func (m *DistrRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PotId |= uint64(b&0x7F) << shift
+				m.GaugeId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

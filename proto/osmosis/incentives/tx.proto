@@ -4,17 +4,17 @@ package osmosis.incentives;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "osmosis/incentives/pot.proto";
+import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 
 service Msg {
-  rpc CreatePot(MsgCreatePot) returns (MsgCreatePotResponse);
-  rpc AddToPot(MsgAddToPot) returns (MsgAddToPotResponse);
+  rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);
+  rpc AddToGauge(MsgAddToGauge) returns (MsgAddToGaugeResponse);
 }
 
-message MsgCreatePot {
+message MsgCreateGauge {
   bool is_perpetual = 1; // flag to show if it's perpetual or multi-epoch
                          // distribution incentives by third party
   string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
@@ -33,14 +33,14 @@ message MsgCreatePot {
   ];
   uint64 num_epochs_paid_over = 6; // number of epochs distribution will be done
 }
-message MsgCreatePotResponse {}
+message MsgCreateGaugeResponse {}
 
-message MsgAddToPot {
+message MsgAddToGauge {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  uint64 pot_id = 2;
+  uint64 gauge_id = 2;
   repeated cosmos.base.v1beta1.Coin rewards = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
-message MsgAddToPotResponse {}
+message MsgAddToGaugeResponse {}

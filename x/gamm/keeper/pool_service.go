@@ -172,6 +172,10 @@ func (k Keeper) JoinSwapExternAmountIn(
 		return sdk.Int{}, err
 	}
 
+	if !pool.IsActive(ctx.BlockTime()) {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrPoolLocked, "join swap on inactive pool")
+	}
+
 	PoolAsset, err := pool.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -232,6 +236,10 @@ func (k Keeper) JoinSwapShareAmountOut(
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
+	}
+
+	if !pool.IsActive(ctx.BlockTime()) {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrPoolLocked, "join swap on inactive pool")
 	}
 
 	PoolAsset, err := pool.GetPoolAsset(tokenInDenom)
@@ -379,6 +387,10 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
+	if !pool.IsActive(ctx.BlockTime()) {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrPoolLocked, "exit swap on inactive pool")
+	}
+
 	PoolAsset, err := pool.GetPoolAsset(tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -455,6 +467,10 @@ func (k Keeper) ExitSwapExternAmountOut(
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
+	}
+
+	if !pool.IsActive(ctx.BlockTime()) {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrPoolLocked, "exit swap on inactive pool")
 	}
 
 	PoolAsset, err := pool.GetPoolAsset(tokenOut.Denom)

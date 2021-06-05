@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type Actions []Action
@@ -18,11 +17,12 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ModuleAccountBalance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
-		AirdropStartTime:     time.Now(),
-		DurationUntilDecay:   DefaultDurationUntilDecay, // 1 month
-		DurationOfDecay:      DefaultDurationOfDecay,    // 5 months
-		InitialClaimables:    []banktypes.Balance{},
-		Activities:           []UserActions{},
+		Params: Params{
+			AirdropStartTime:   time.Time{},
+			DurationUntilDecay: DefaultDurationUntilDecay, // 2 month
+			DurationOfDecay:    DefaultDurationOfDecay,    // 4 months
+		},
+		ClaimRecords: []ClaimRecord{},
 	}
 }
 
@@ -41,5 +41,14 @@ func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]js
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
+	totalClaimable := sdk.Coins{}
+
+	for _, claimRecord := range gs.ClaimRecords {
+		totalClaimable = totalClaimable.Add(claimRecord.InitialClaimableAmount...)
+	}
+
+	if !totalClaimable.IsEqual(sdk.NewCoins(gs.ModuleAccountBalance)) {
+		return ErrIncorrectModuleAccountBalance
+	}
 	return nil
 }

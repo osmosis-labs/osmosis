@@ -3,7 +3,7 @@ package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
 import "osmosis/incentives/params.proto";
-import "osmosis/incentives/pot.proto";
+import "osmosis/incentives/gauge.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 
@@ -11,5 +11,5 @@ option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 message GenesisState {
   // params defines all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
-  repeated Pot pots = 2 [ (gogoproto.nullable) = false ];
+  repeated Gauge gauges = 2 [ (gogoproto.nullable) = false ];
 }

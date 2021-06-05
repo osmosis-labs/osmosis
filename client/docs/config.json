@@ -39,6 +39,30 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/osmosis/incentives/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IncentivesParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/osmosis/claim/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ClaimParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/osmosis/mint/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MintParams"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -75,14 +99,6 @@
       "operationIds": {
         "rename": {
           "Params": "GovParams"
-        }
-      }
-    },
-    {
-      "url": "../../tmp-swagger-gen/cosmos/mint/v1beta1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "MintParams"
         }
       }
     },

@@ -12,8 +12,8 @@ const (
 	FlagTimestamp     = "timestamp"
 )
 
-// FlagSetCreatePot returns flags for creating pot
-func FlagSetCreatePot() *flag.FlagSet {
+// FlagSetCreateGauge returns flags for creating gauge
+func FlagSetCreateGauge() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.String(FlagLockQueryType, "ByDuration", "ByDuration | ByTime")

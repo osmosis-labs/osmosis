@@ -10,8 +10,8 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
-	for _, pot := range genState.Pots {
-		k.SetPotWithRefKey(ctx, &pot)
+	for _, gauge := range genState.Gauges {
+		k.SetGaugeWithRefKey(ctx, &gauge)
 	}
 }
 
@@ -19,6 +19,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		Params: k.GetParams(ctx),
-		Pots:   k.GetNotFinishedPots(ctx),
+		Gauges: k.GetNotFinishedGauges(ctx),
 	}
 }

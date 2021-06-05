@@ -9,10 +9,10 @@ option go_package = "github.com/osmosis-labs/osmosis/x/claim/types";
 
 // Params defines the claim module's parameters.
 message Params {
-  google.protobuf.Timestamp airdrop_start = 1 [
+  google.protobuf.Timestamp airdrop_start_time = 1 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"airdrop_start\""
+    (gogoproto.moretags) = "yaml:\"airdrop_start_time\""
   ];
   google.protobuf.Duration duration_until_decay = 2 [
     (gogoproto.nullable) = false,

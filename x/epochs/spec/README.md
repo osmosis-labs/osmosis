@@ -86,7 +86,7 @@ type Keeper interface {
 
 On hook receiver function of other modules, they need to filter `epochIdentifier` and only do executions for only specific epochIdentifier.
 Filtering epochIdentifier could be in `Params` of other modules so that they can be modified by governance.
-Governance can change epoch from `weekly` to `daily` as their need.
+Governance can change epoch from `week` to `day` as their need.
 
 ### Lack point using this module
 

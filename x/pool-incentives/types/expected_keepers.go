@@ -30,10 +30,10 @@ type GAMMKeeper interface {
 }
 
 type IncentivesKeeper interface {
-	CreatePot(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
-	GetPotByID(ctx sdk.Context, potID uint64) (*incentivestypes.Pot, error)
+	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
+	GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*incentivestypes.Gauge, error)
 
-	AddToPotRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, potID uint64) error
+	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 }
 
 type DistrKeeper interface {

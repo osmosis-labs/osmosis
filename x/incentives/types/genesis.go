@@ -9,9 +9,9 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params: Params{
-			DistrEpochIdentifier: "weekly",
+			DistrEpochIdentifier: "week",
 		},
-		Pots: []Pot{},
+		Gauges: []Gauge{},
 	}
 }
 

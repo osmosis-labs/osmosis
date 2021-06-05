@@ -25,7 +25,7 @@ func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
 	return IDs[:len(IDs)-1], index
 }
 
-// getTimeKey returns the key used for getting a set of pots
+// getTimeKey returns the key used for getting a set of gauges
 func getTimeKey(timestamp time.Time) []byte {
 	timeBz := sdk.FormatTimeBytes(timestamp)
 	timeBzL := len(timeBz)

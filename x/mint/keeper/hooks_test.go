@@ -12,8 +12,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-// TODO: Remove magic numbers from this test
-
 func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -21,10 +19,15 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	setupPotForLPIncentives(t, app, ctx)
+	setupGaugeForLPIncentives(t, app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
+
+	// set developer rewards address
+	mintParams := app.MintKeeper.GetParams(ctx)
+	mintParams.DeveloperRewardsReceiver = sdk.AccAddress([]byte("addr1---------------")).String()
+	app.MintKeeper.SetParams(ctx, mintParams)
 
 	height := int64(1)
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
@@ -34,9 +37,14 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
+		mintParams = app.MintKeeper.GetParams(ctx)
+		mintedCoins := sdk.NewCoins(app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams))
+		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.Staking).Amount
+		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
+
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(3000000))), feePoolNew.CommunityPool, height)
+		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
 	}
 
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
@@ -51,9 +59,67 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
-		// check community pool balance increase with half reduction
+		mintParams = app.MintKeeper.GetParams(ctx)
+		mintedCoins := sdk.NewCoins(app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams))
+		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.Staking).Amount
+		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
+
+		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(1500000))), feePoolNew.CommunityPool)
+		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
+	}
+}
+
+func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	setupGaugeForLPIncentives(t, app, ctx)
+
+	params := app.IncentivesKeeper.GetParams(ctx)
+	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
+
+	height := int64(1)
+	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
+	// correct rewards
+	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
+		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
+		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
+
+		mintParams := app.MintKeeper.GetParams(ctx)
+		mintedCoins := sdk.NewCoins(app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams))
+		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards)).Amount
+		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
+
+		// check community pool balance increase
+		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
+		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
+	}
+
+	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
+	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
+
+	lastHalvenPeriod = app.MintKeeper.GetLastHalvenEpochNum(ctx)
+	require.Equal(t, lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
+
+	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
+
+		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
+		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
+
+		mintParams := app.MintKeeper.GetParams(ctx)
+		mintedCoins := sdk.NewCoins(app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams))
+		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards)).Amount
+		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
+
+		// check community pool balance increase
+		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
+		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
 	}
 }
 
@@ -68,7 +134,7 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	setupPotForLPIncentives(t, app, ctx)
+	setupGaugeForLPIncentives(t, app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -97,7 +163,7 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	require.Equal(t, lastHalvenPeriod, mintParams.MintingRewardsDistributionStartEpoch)
 }
 
-func setupPotForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Context) {
+func setupGaugeForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Context) {
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
 	app.BankKeeper.SetBalances(ctx, addr, coins)
@@ -106,6 +172,6 @@ func setupPotForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Conte
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	_, err := app.IncentivesKeeper.CreatePot(ctx, true, addr, coins, distrTo, time.Now(), 1)
+	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 }

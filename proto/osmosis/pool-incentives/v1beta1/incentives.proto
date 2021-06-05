@@ -36,7 +36,7 @@ message DistrInfo {
 message DistrRecord {
   option (gogoproto.equal) = true;
 
-  uint64 pot_id = 1 [ (gogoproto.moretags) = "yaml:\"pot_id\"" ];
+  uint64 gauge_id = 1 [ (gogoproto.moretags) = "yaml:\"gauge_id\"" ];
   string weight = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false

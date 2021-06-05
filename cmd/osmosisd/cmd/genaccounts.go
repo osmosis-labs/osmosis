@@ -235,14 +235,16 @@ Example:
 			}
 
 			// get genesis params
-			genesisParams := appparams.MainnetGenesisParams()
+			genesisParams := MainnetGenesisParams()
 
 			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
 			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalOsmosAirdropAmount)
 			fmt.Printf("normalization factor: %s\n", normalizationFactor)
 
-			liquidBalances := []banktypes.Balance{}
-			claimableBalances := []banktypes.Balance{}
+			bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
+
+			liquidBalances := bankGenState.Balances
+			claimRecords := []claimtypes.ClaimRecord{}
 			claimModuleAccountBalance := sdk.NewInt(0)
 
 			// for each account in the snapshot
@@ -265,25 +267,37 @@ Example:
 				}
 
 				// get normalized osmo balance for account
-				normalizedOsmoBalance := normalizationFactor.MulInt(acc.OsmoBalance)
+				normalizedOsmoBalance := acc.OsmoBalance.ToDec().Mul(normalizationFactor)
 
 				// initial liquid amounts
-				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).RoundInt() // 20% of airdrop amount
+				// We consistently round down to the nearest uosmo
+				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
 				liquidBalances = append(liquidBalances, banktypes.Balance{
 					Address: address.String(),
 					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, liquidAmount)),
 				})
 
 				// claimable balances
-				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).RoundInt()
-				claimableBalances = append(claimableBalances, banktypes.Balance{
-					Address: address.String(),
-					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimableAmount)),
+				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
+
+				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
+					Address:                address.String(),
+					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimableAmount)),
+					ActionCompleted:        []bool{false, false, false, false},
 				})
+
 				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
+
+				// Add the new account to the set of genesis accounts
+				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
+				if err := baseAccount.Validate(); err != nil {
+					return fmt.Errorf("failed to validate new genesis account: %w", err)
+				}
+				accs = append(accs, baseAccount)
 			}
 
 			// auth module genesis
+			accs = authtypes.SanitizeGenesisAccounts(accs)
 			genAccs, err := authtypes.PackAccounts(accs)
 			if err != nil {
 				return fmt.Errorf("failed to convert accounts into any's: %w", err)
@@ -296,7 +310,6 @@ Example:
 			appState[authtypes.ModuleName] = authGenStateBz
 
 			// bank module genesis
-			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(liquidBalances)
 			bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
 			if err != nil {
@@ -305,14 +318,52 @@ Example:
 			appState[banktypes.ModuleName] = bankGenStateBz
 
 			// claim module genesis
-			claimGenState := claimtypes.DefaultGenesis()
-			claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, claimModuleAccountBalance)
-			claimGenState.InitialClaimables = claimableBalances
+			claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
+			claimGenState.ModuleAccountBalance = sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimModuleAccountBalance)
+
+			claimGenState.ClaimRecords = claimRecords
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal claim genesis state: %w", err)
 			}
 			appState[claimtypes.ModuleName] = claimGenStateBz
+
+			// TODO: add remaining extra to community pool
+			// The total airdrop osmo is a smidge short (~1 osmo) short of the stated 50M supply.
+			// This is due to consistently rounding down.
+			// We place this remaining 1 osmo into the community pool at genesis
+
+			// sumAirdrop := sdk.Coins{}
+			// for _, balance := range bankGenState.Balances {
+			// 	sumAirdrop = sumAirdrop.Add(balance.Coins...)
+			// }
+			// for _, claim := range claimGenState.ClaimRecords {
+			// 	sumAirdrop = sumAirdrop.Add(claim.InitialClaimableAmount...)
+			// }
+
+			// var distributionGenState distributiontypes.GenesisState
+
+			// if appState[distributiontypes.ModuleName] != nil {
+			// 	cdc.MustUnmarshalJSON(appState[distributiontypes.ModuleName], &distributionGenState)
+			// }
+
+			// communityPoolExtra := sdk.NewCoins(
+			// 	sdk.NewCoin(
+			// 		genesisParams.NativeCoinMetadata.Base,
+			// 		genesisParams.AirdropSupply,
+			// 	),
+			// ).Sub(sumAirdrop)
+
+			// fmt.Printf("community pool amount: %s\n", communityPoolExtra)
+
+			// distributionGenState.FeePool.CommunityPool = sdk.NewDecCoinsFromCoins(communityPoolExtra...)
+			// distributionGenStateBz, err := cdc.MarshalJSON(&distributionGenState)
+			// if err != nil {
+			// 	return fmt.Errorf("failed to marshal distribution genesis state: %w", err)
+			// }
+			// appState[distributiontypes.ModuleName] = distributionGenStateBz
+
+			// save entire genesis state to json
 
 			appStateJSON, err := json.Marshal(appState)
 			if err != nil {

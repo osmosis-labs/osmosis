@@ -10,49 +10,49 @@ import "osmosis/pool-incentives/v1beta1/incentives.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/pool-incentives/types";
 
 service Query {
-  // PotIds takes the pool id and returns the matching pot ids and durations
-  rpc PotIds(QueryPotIdsRequest) returns (QueryPotIdsResponse) {
+  // GaugeIds takes the pool id and returns the matching gauge ids and durations
+  rpc GaugeIds(QueryGaugeIdsRequest) returns (QueryGaugeIdsResponse) {
     option (google.api.http).get =
-        "/osmosis/pool-incentives/v1beta1/pot-ids/{pool_id}";
+        "/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}";
   }
 
   rpc DistrInfo(QueryDistrInfoRequest) returns (QueryDistrInfoResponse) {
     option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/distr_info";
+        "/osmosis/pool-incentives/v1beta1/distr_info";
   }
 
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/params";
+    option (google.api.http).get = "/osmosis/pool-incentives/v1beta1/params";
   }
 
-  rpc LockableDurations(QueryLockableDurationsRequest) returns (QueryLockableDurationsResponse) {
+  rpc LockableDurations(QueryLockableDurationsRequest)
+      returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/lockable_durations";
+        "/osmosis/pool-incentives/v1beta1/lockable_durations";
   }
 
-  rpc IncentivizedPools(QueryIncentivizedPoolsRequest) returns (QueryIncentivizedPoolsResponse) {
+  rpc IncentivizedPools(QueryIncentivizedPoolsRequest)
+      returns (QueryIncentivizedPoolsResponse) {
     option (google.api.http).get =
-         "/osmosis/pool-incentives/v1beta1/incentivized_pools";
+        "/osmosis/pool-incentives/v1beta1/incentivized_pools";
   }
 }
 
-message QueryPotIdsRequest {
+message QueryGaugeIdsRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryPotIdsResponse {
-  message PotIdWithDuration {
-    uint64 pot_id = 1 [ (gogoproto.moretags) = "yaml:\"pot_id\"" ];
+message QueryGaugeIdsResponse {
+  message GaugeIdWithDuration {
+    uint64 gauge_id = 1 [ (gogoproto.moretags) = "yaml:\"gauge_id\"" ];
     google.protobuf.Duration duration = 2
         [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
   }
 
-  repeated PotIdWithDuration pot_ids_with_duration = 1
-      [ (gogoproto.moretags) = "yaml:\"pot_ids_with_duration\"" ];
+  repeated GaugeIdWithDuration gauge_ids_with_duration = 1
+      [ (gogoproto.moretags) = "yaml:\"gauge_ids_with_duration\"" ];
 }
 
-message QueryDistrInfoRequest {
-}
+message QueryDistrInfoRequest {}
 message QueryDistrInfoResponse {
   DistrInfo distr_info = 1 [
     (gogoproto.nullable) = false,
@@ -60,14 +60,12 @@ message QueryDistrInfoResponse {
   ];
 }
 
-message QueryParamsRequest {
-}
+message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-message QueryLockableDurationsRequest {
-}
+message QueryLockableDurationsRequest {}
 message QueryLockableDurationsResponse {
   repeated google.protobuf.Duration lockable_durations = 1 [
     (gogoproto.nullable) = false,
@@ -76,8 +74,7 @@ message QueryLockableDurationsResponse {
   ];
 }
 
-message QueryIncentivizedPoolsRequest {
-}
+message QueryIncentivizedPoolsRequest {}
 message IncentivizedPool {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   google.protobuf.Duration lockable_duration = 2 [
@@ -85,7 +82,7 @@ message IncentivizedPool {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_duration\""
   ];
-  uint64 pot_id = 3 [ (gogoproto.moretags) = "yaml:\"pot_id\"" ];
+  uint64 gauge_id = 3 [ (gogoproto.moretags) = "yaml:\"gauge_id\"" ];
 }
 message QueryIncentivizedPoolsResponse {
   repeated IncentivizedPool incentivized_pools = 1 [
