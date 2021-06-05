@@ -21,9 +21,9 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Params: DefaultParams(),
 		LockableDurations: []time.Duration{
-			time.Hour * 24,      // 1 day
-			time.Hour * 24 * 7,  // 7 day
-			time.Hour * 24 * 14, // 14 days
+			time.Hour,
+			time.Hour * 3,
+			time.Hour * 7,
 		},
 		DistrInfo: nil,
 	}
