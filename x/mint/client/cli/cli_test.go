@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/osmosis-labs/osmosis/simapp"
+	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/x/mint/client/cli"
 )
 
@@ -27,7 +27,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = simapp.DefaultConfig()
+	s.cfg = app.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 
