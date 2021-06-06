@@ -23,6 +23,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	claimQueryCmd.AddCommand(
+		GetCmdQueryModuleAccountBalance(),
 		GetCmdQueryParams(),
 		GetCmdQueryClaimRecord(),
 		GetCmdQueryClaimableForAction(),
@@ -30,6 +31,36 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	)
 
 	return claimQueryCmd
+}
+
+// GetCmdQueryParams implements a command to return the current minting
+// parameters.
+func GetCmdQueryModuleAccountBalance() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module-account-balance",
+		Short: "Query the current claim module's account balance",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryModuleAccountBalanceRequest{}
+			res, err := queryClient.ModuleAccountBalance(context.Background(), req)
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryParams implements a command to return the current minting

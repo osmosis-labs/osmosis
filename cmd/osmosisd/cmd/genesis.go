@@ -329,6 +329,7 @@ func MainnetGenesisParams() GenesisParams {
 		AirdropStartTime:   genParams.GenesisTime,
 		DurationUntilDecay: time.Hour * 24 * 60,  // 60 days = ~2 months
 		DurationOfDecay:    time.Hour * 24 * 120, // 120 days = ~4 months
+		ClaimDenom:         genParams.NativeCoinMetadata.Base,
 	}
 
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
@@ -451,7 +452,8 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.ClaimParams = claimtypes.Params{
 		AirdropStartTime:   genParams.GenesisTime,
 		DurationUntilDecay: time.Second * 10, // 60 days = ~2 months
-		DurationOfDecay:    time.Hour * 5,    // 120 days = ~4 months
+		DurationOfDecay:    time.Second * 30, // 120 days = ~4 months
+		ClaimDenom:         genParams.NativeCoinMetadata.Base,
 	}
 
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
