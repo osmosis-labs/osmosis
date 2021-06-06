@@ -488,9 +488,9 @@ func NewOsmosisApp(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
@@ -498,7 +498,7 @@ func NewOsmosisApp(
 		// incentives.NewAppModule(appCodec, app.IncentivesKeeper),
 		// lockup.NewAppModule(appCodec, app.LockupKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
-		// epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		transferModule,
 	)
 
