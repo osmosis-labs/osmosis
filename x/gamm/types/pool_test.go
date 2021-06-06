@@ -575,7 +575,7 @@ func TestPoolParamStartTime(t *testing.T) {
 
 	type testCase struct {
 		blockTime time.Time
-		startTime	time.Time
+		startTime time.Time
 		valid     bool
 	}
 
@@ -589,7 +589,7 @@ func TestPoolParamStartTime(t *testing.T) {
 
 	for tcn, tc := range testCases {
 		params := defaultPoolParams
-		params.StartTime = tc.startTime
+		params.StartTime = &tc.startTime
 		pool, err := NewPool(poolId, params, dummyPoolAssets, defaultFutureGovernor, tc.blockTime)
 		require.NoError(t, err)
 
@@ -598,4 +598,3 @@ func TestPoolParamStartTime(t *testing.T) {
 		)
 	}
 }
-

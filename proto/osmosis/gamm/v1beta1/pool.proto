@@ -109,7 +109,7 @@ message PoolParams {
   ];
   google.protobuf.Timestamp start_time = 4 [
     (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable) = true,
     (gogoproto.moretags) = "yaml:\"start_time\""
   ];
 }

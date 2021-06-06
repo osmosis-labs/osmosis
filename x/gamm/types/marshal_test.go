@@ -43,7 +43,7 @@ func TestPoolMarshalYAML(t *testing.T) {
     swap_fee: "0.025000000000000000"
     exit_fee: "0.025000000000000000"
     smooth_weight_change_params: null
-    start_time: 0001-01-01T00:00:00Z
+    start_time: null
   future_pool_governor: ""
   total_weight: "300.000000000000000000"
   total_share:
@@ -124,7 +124,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
           denom: test2
           amount: "0"
         weight: "300.000000000000000000"
-    start_time: 0001-01-01T00:00:00Z
+    start_time: null
   future_pool_governor: ""
   total_weight: "300.000000000000000000"
   total_share:

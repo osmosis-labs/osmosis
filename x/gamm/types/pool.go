@@ -265,8 +265,9 @@ func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset
 	}
 
 	// Set pool start time if not present.
-	if params.StartTime.Unix() <= 0 {
-		params.StartTime = time.Unix(curBlockTime.Unix(), 0)
+	if params.StartTime == nil {
+		startTime := time.Unix(curBlockTime.Unix(), 0)
+		params.StartTime = &startTime
 	}
 
 	return nil
