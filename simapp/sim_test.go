@@ -36,7 +36,18 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := app.NewOsmosisApp(logger, db, nil, true, map[int64]bool{}, app.DefaultNodeHome, sdkSimapp.FlagPeriodValue, app.MakeEncodingConfig(), sdkSimapp.EmptyAppOptions{}, interBlockCacheOpt())
+	// TODO: This is crashing on init chain after randomly generating consensus params
+	app := app.NewOsmosisApp(
+		logger,
+		db,
+		nil,
+		false, // load latest
+		map[int64]bool{},
+		app.DefaultNodeHome,
+		sdkSimapp.FlagPeriodValue,
+		app.MakeEncodingConfig(),
+		sdkSimapp.EmptyAppOptions{},
+		interBlockCacheOpt())
 
 	// Run randomized simulation:
 	_, simParams, simErr := simulation.SimulateFromSeed(
