@@ -229,7 +229,6 @@ func (pa *Pool) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 
 // setInitialPoolParams
 func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset, curBlockTime time.Time) error {
-	pa.PoolParams = params
 	if params.SmoothWeightChangeParams != nil {
 		// set initial assets
 		initialWeights := make([]PoolAsset, len(sortedAssets))
@@ -251,7 +250,7 @@ func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset
 			if err != nil {
 				return err
 			}
-			pa.PoolParams.SmoothWeightChangeParams.TargetPoolWeights[i] = PoolAsset{
+			params.SmoothWeightChangeParams.TargetPoolWeights[i] = PoolAsset{
 				Weight: v.Weight.MulRaw(GuaranteedWeightPrecision),
 				Token:  v.Token,
 			}
@@ -265,10 +264,12 @@ func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset
 	}
 
 	// Set pool start time if not present.
-	if params.StartTime.Unix() <= 0 {
-		params.StartTime = time.Unix(curBlockTime.Unix(), 0)
+	if params.StartTime.Unix() <= curBlockTime.Unix() {
+		params.StartTime = curBlockTime
 	}
 
+	pa.PoolParams = params
+	
 	return nil
 }
 

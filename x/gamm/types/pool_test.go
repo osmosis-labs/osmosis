@@ -583,7 +583,7 @@ func TestPoolParamStartTime(t *testing.T) {
 		{time.Unix(123456, 0), time.Unix(123456, 0), true},
 		{time.Unix(9999, 0), time.Unix(8888, 0), true},
 		{time.Unix(8888, 0), time.Unix(9999, 0), false},
-		{time.Unix(8888, 0), time.Unix(8888, 1), false},
+		{time.Unix(8888, 0), time.Unix(8888, 1), true}, // value under second ignored, passing
 		{time.Unix(1, 0), time.Unix(0, 0), true},
 	}
 
