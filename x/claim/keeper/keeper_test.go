@@ -30,6 +30,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		AirdropStartTime:   airdropStartTime,
 		DurationUntilDecay: types.DefaultDurationUntilDecay,
 		DurationOfDecay:    types.DefaultDurationOfDecay,
+		ClaimDenom:         sdk.DefaultBondDenom,
 	})
 
 	suite.ctx = suite.ctx.WithBlockTime(airdropStartTime)
