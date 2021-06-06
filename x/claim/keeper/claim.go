@@ -3,20 +3,29 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
 // GetModuleAccountBalance gets the airdrop coin balance of module account
+func (k Keeper) GetModuleAccountAddress(ctx sdk.Context) sdk.AccAddress {
+	return k.accountKeeper.GetModuleAddress(types.ModuleName)
+}
+
+// GetModuleAccountBalance gets the airdrop coin balance of module account
 func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, sdk.DefaultBondDenom)
+	moduleAccAddr := k.GetModuleAccountAddress(ctx)
+	params, _ := k.GetParams(ctx)
+	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, params.ClaimDenom)
 }
 
 // SetModuleAccountBalance set balance of airdrop module
-func (k Keeper) SetModuleAccountBalance(ctx sdk.Context, amount sdk.Coin) {
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	k.bankKeeper.SetBalances(ctx, moduleAccAddr, sdk.NewCoins(amount))
+func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
+	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
+	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+
+	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
 }
 
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {
@@ -230,7 +239,7 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 
 // FundRemainingsToCommunity fund remainings to the community when airdrop period end
 func (k Keeper) fundRemainingsToCommunity(ctx sdk.Context) error {
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	moduleAccAddr := k.GetModuleAccountAddress(ctx)
 	amt := k.GetModuleAccountBalance(ctx)
 	return k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
 }
