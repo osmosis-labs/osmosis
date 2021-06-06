@@ -229,7 +229,6 @@ func (pa *Pool) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 
 // setInitialPoolParams
 func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset, curBlockTime time.Time) error {
-	pa.PoolParams = params
 	if params.SmoothWeightChangeParams != nil {
 		// set initial assets
 		initialWeights := make([]PoolAsset, len(sortedAssets))
@@ -251,7 +250,7 @@ func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset
 			if err != nil {
 				return err
 			}
-			pa.PoolParams.SmoothWeightChangeParams.TargetPoolWeights[i] = PoolAsset{
+			params.SmoothWeightChangeParams.TargetPoolWeights[i] = PoolAsset{
 				Weight: v.Weight.MulRaw(GuaranteedWeightPrecision),
 				Token:  v.Token,
 			}
@@ -269,6 +268,8 @@ func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset
 		startTime := time.Unix(curBlockTime.Unix(), 0)
 		params.StartTime = &startTime
 	}
+
+	pa.PoolParams = params
 
 	return nil
 }
@@ -476,6 +477,13 @@ func (pa Pool) NumAssets() int {
 }
 
 func (pa Pool) IsActive(curBlockTime time.Time) bool {
+	// StartTime should not be nil in principle, as it get
+	// set to the current block time when creating the pool.
+	// In case of nil startime, we treat it as infinite past.
+	if pa.PoolParams.StartTime == nil {
+		return true
+	}
+
 	if pa.PoolParams.StartTime.After(curBlockTime) {
 		return false
 	}

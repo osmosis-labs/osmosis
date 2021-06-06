@@ -19,6 +19,7 @@ var (
 )
 
 func (suite *KeeperTestSuite) TestCreatePool() {
+
 	func() {
 		keeper := suite.app.GAMMKeeper
 
@@ -40,11 +41,12 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		fn func()
 	}{{
 		fn: func() {
-			keeper := suite.app.GAMMKeeper
-			poolId, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
+			params := types.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.PoolAsset{{
+			}
+			keeper := suite.app.GAMMKeeper
+			poolId, err := keeper.CreatePool(suite.ctx, acc1, params, []types.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -62,7 +64,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			liquidity := suite.app.GAMMKeeper.GetTotalLiquidity(suite.ctx)
 			suite.Require().Equal("10000bar,10000foo", liquidity.String())
 
-			suite.Require().Equal(suite.ctx.BlockTime(), pool.GetPoolParams().StartTime)
+			suite.Require().Equal(suite.ctx.BlockTime().Unix(), pool.GetPoolParams().StartTime.Unix())
 		},
 	}, {
 		fn: func() {
@@ -420,8 +422,8 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 func (suite *KeeperTestSuite) TestActivePool() {
 	type testCase struct {
-		blockTime time.Time
-		startTime time.Time
+		blockTime  time.Time
+		startTime  time.Time
 		expectPass bool
 	}
 
@@ -451,12 +453,12 @@ func (suite *KeeperTestSuite) TestActivePool() {
 
 			// Create the pool at first
 			poolId := suite.preparePoolWithPoolParams(types.PoolParams{
-				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
-				StartTime: tc.startTime,
+				SwapFee:   sdk.NewDec(0),
+				ExitFee:   sdk.NewDec(0),
+				StartTime: &tc.startTime,
 			})
 			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
-		
+
 			// uneffected by start time
 			err = suite.app.GAMMKeeper.JoinPool(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
@@ -487,4 +489,3 @@ func (suite *KeeperTestSuite) TestActivePool() {
 		}
 	}
 }
-

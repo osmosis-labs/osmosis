@@ -4,7 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	
+
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -202,8 +202,8 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 
 func (suite *KeeperTestSuite) TestActivePoolSwap() {
 	type testCase struct {
-		blockTime time.Time
-		startTime time.Time
+		blockTime  time.Time
+		startTime  time.Time
 		expectPass bool
 	}
 
@@ -232,9 +232,9 @@ func (suite *KeeperTestSuite) TestActivePoolSwap() {
 			}
 
 			poolId := suite.preparePoolWithPoolParams(types.PoolParams{
-				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
-				StartTime: tc.startTime,
+				SwapFee:   sdk.NewDec(0),
+				ExitFee:   sdk.NewDec(0),
+				StartTime: &tc.startTime,
 			})
 
 			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
@@ -255,4 +255,3 @@ func (suite *KeeperTestSuite) TestActivePoolSwap() {
 		}
 	}
 }
-
