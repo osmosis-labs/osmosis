@@ -451,8 +451,8 @@ func TestnetGenesisParams() GenesisParams {
 
 	genParams.ClaimParams = claimtypes.Params{
 		AirdropStartTime:   genParams.GenesisTime,
-		DurationUntilDecay: time.Second * 10, // 60 days = ~2 months
-		DurationOfDecay:    time.Second * 30, // 120 days = ~4 months
+		DurationUntilDecay: time.Hour * 12,  // 12 hour
+		DurationOfDecay:    time.Hour * 120, // 5 days
 		ClaimDenom:         genParams.NativeCoinMetadata.Base,
 	}
 
