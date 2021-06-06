@@ -89,7 +89,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			appConfig := appcfg.DefaultConfig()
 			appConfig.API.Enable = true
-			appConfig.API.Swagger = true
 			appConfig.StateSync.SnapshotInterval = 1500
 			appConfig.StateSync.SnapshotKeepRecent = 2
 
