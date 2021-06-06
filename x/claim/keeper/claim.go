@@ -15,8 +15,7 @@ func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
 
 // SetModuleAccountBalance set balance of airdrop module
 func (k Keeper) SetModuleAccountBalance(ctx sdk.Context, amount sdk.Coin) {
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	k.bankKeeper.SetBalances(ctx, moduleAccAddr, sdk.NewCoins(amount))
+	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
 }
 
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {
