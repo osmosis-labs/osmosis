@@ -26,4 +26,6 @@ message Params {
     (gogoproto.jsontag) = "duration_of_decay,omitempty",
     (gogoproto.moretags) = "yaml:\"duration_of_decay\""
   ];
+  // denom of claimable asset
+  string claim_denom = 4;
 }
