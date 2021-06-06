@@ -36,14 +36,18 @@ func TestPoolMarshalYAML(t *testing.T) {
 	bs, err := yaml.Marshal(pacc)
 	require.NoError(t, err)
 
-	want := `|
+	expectedStartTimeBz, err := yaml.Marshal(defaultCurBlockTime)
+	expectedStartTimeString := strings.Trim(string(expectedStartTimeBz), "\n")
+	require.NoError(t, err)
+
+	want := fmt.Sprintf(`|
   address: osmo1krp38zzc3zz5as9ndqkyskhkzv6x9e30ckcq5g4lcsu5wpwcqy0sa3dea2
   id: 10
   pool_params:
     swap_fee: "0.025000000000000000"
     exit_fee: "0.025000000000000000"
     smooth_weight_change_params: null
-    start_time: 2021-04-18T07:53:20+09:00
+    start_time: %s
   future_pool_governor: ""
   total_weight: "300.000000000000000000"
   total_share:
@@ -60,7 +64,7 @@ func TestPoolMarshalYAML(t *testing.T) {
       denom: test2
       amount: "50000"
     weight: "200.000000000000000000"
-`
+`, expectedStartTimeString)
 	require.Equal(t, want, string(bs))
 }
 
@@ -124,7 +128,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
           denom: test2
           amount: "0"
         weight: "300.000000000000000000"
-    start_time: 2021-04-18T07:53:20+09:00
+    start_time: %s
   future_pool_governor: ""
   total_weight: "300.000000000000000000"
   total_share:
@@ -141,7 +145,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
       denom: test2
       amount: "50000"
     weight: "200.000000000000000000"
-`, expectedStartTimeString)
+`, expectedStartTimeString, expectedStartTimeString)
 	require.Equal(t, want, string(bs))
 }
 
