@@ -13,30 +13,36 @@ import "cosmos_proto/cosmos.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";
 
 service Query {
-  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}";
-  }
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/all";
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
   }
-  rpc TotalPools(QueryTotalPoolsRequest) returns (QueryTotalPoolsResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/total_pools";
-  }
-  rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/params";
-  }
-  rpc TotalShare(QueryTotalShareRequest) returns (QueryTotalShareResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/total_share";
-  }
-  rpc PoolAssets(QueryPoolAssetsRequest) returns (QueryPoolAssetsResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/tokens";
-  }
-  rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/prices";
+  rpc NumPools(QueryNumPoolsRequest) returns (QueryNumPoolsResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
   }
   rpc TotalLiquidity(QueryTotalLiquidityRequest)
       returns (QueryTotalLiquidityResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/total_liquidity";
+  }
+
+  // Per Pool gRPC Endpoints
+  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{poolId}";
+  }
+  rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{poolId}/params";
+  }
+  rpc TotalShare(QueryTotalShareRequest) returns (QueryTotalShareResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{poolId}/total_share";
+  }
+  rpc PoolAssets(QueryPoolAssetsRequest) returns (QueryPoolAssetsResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{poolId}/tokens";
+  }
+  rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{poolId}/prices";
   }
 
   // Estimate the swap.
@@ -73,10 +79,10 @@ message QueryPoolsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-//=============================== TotalPools
-message QueryTotalPoolsRequest {}
-message QueryTotalPoolsResponse {
-  uint64 totalPools = 1 [ (gogoproto.moretags) = "yaml:\"total_pools\"" ];
+//=============================== NumPools
+message QueryNumPoolsRequest {}
+message QueryNumPoolsResponse {
+  uint64 numPools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
 }
 
 //=============================== PoolParams

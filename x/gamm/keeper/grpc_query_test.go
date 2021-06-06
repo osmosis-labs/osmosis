@@ -88,20 +88,20 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryTotalPools1() {
-	res, err := suite.queryClient.TotalPools(gocontext.Background(), &types.QueryTotalPoolsRequest{})
+func (suite *KeeperTestSuite) TestQueryNumPools1() {
+	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(0), res.TotalPools)
+	suite.Require().Equal(uint64(0), res.NumPools)
 }
 
-func (suite *KeeperTestSuite) TestQueryTotalPools2() {
+func (suite *KeeperTestSuite) TestQueryNumPools2() {
 	for i := 0; i < 10; i++ {
 		suite.preparePool()
 	}
 
-	res, err := suite.queryClient.TotalPools(gocontext.Background(), &types.QueryTotalPoolsRequest{})
+	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(10), res.TotalPools)
+	suite.Require().Equal(uint64(10), res.NumPools)
 }
 
 func (suite *KeeperTestSuite) TestQueryPoolParams() {
