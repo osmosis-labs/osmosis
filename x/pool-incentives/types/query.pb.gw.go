@@ -408,7 +408,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_GaugeIds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "pool-incentives", "v1beta1", "pot-ids", "pool_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GaugeIds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "pool-incentives", "v1beta1", "gauge-ids", "pool_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_DistrInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "distr_info"}, "", runtime.AssumeColonVerbOpt(true)))
 
