@@ -20,29 +20,29 @@ import (
 
 // Simulation operation weights constants
 const (
-	DefaultWeightMsgCreatePot int = 10
-	OpWeightMsgCreatePot          = "op_weight_msg_create_pool"
+	DefaultWeightMsgCreateGauge int = 10
+	OpWeightMsgCreateGauge          = "op_weight_msg_create_pool"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak stakingTypes.AccountKeeper,
-	bk stakingTypes.BankKeeper, k keeper.Keeper,
+	bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgCreatePot int
+		weightMsgCreateGauge int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePot, &weightMsgCreatePot, nil,
+	appParams.GetOrGenerate(cdc, OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreatePot = simappparams.DefaultWeightMsgCreateValidator
+			weightMsgCreateGauge = simappparams.DefaultWeightMsgCreateValidator
 		},
 	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
-			weightMsgCreatePot,
-			SimulateMsgCreatePot(ak, bk, k),
+			weightMsgCreateGauge,
+			SimulateMsgCreateGauge(ak, bk, ek, k),
 		),
 	}
 }
@@ -88,8 +88,8 @@ func Max(x, y int) int {
 	return y
 }
 
-// SimulateMsgCreatePot generates a MsgCreatePot with random values
-func SimulateMsgCreatePot(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
+// SimulateMsgCreateGauge generates a MsgCreateGauge with random values
+func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -97,7 +97,7 @@ func SimulateMsgCreatePot(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKee
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.Len() <= 1 {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgCreatePot, "Account doesn't have 2 different coin types"), nil, nil
+				types.ModuleName, types.TypeMsgCreateGauge, "Account doesn't have 2 different coin types"), nil, nil
 		}
 
 		isPerpetual := r.Int()%2 == 0
@@ -105,9 +105,9 @@ func SimulateMsgCreatePot(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKee
 		rewards := genRewardCoins(r, simCoins)
 		yearSecs := r.Intn(1*60*60*24*365)
 		startTime := time.Date(0, 0, 0, 0, 0, 0, yearSecs, time.UTC)
-		numEpochsPaidOver := r.Int63n(int64(yearSecs/types.DefaultParams().DistrEpochIdentifier.Duration.Seconds()))
+		numEpochsPaidOver := uint64(r.Int63n(int64(yearSecs)/(ek.GetEpochInfo(ctx, k.GetParams(ctx).DistrEpochIdentifier).Duration.Milliseconds()/1000)))
 
-		msg := types.MsgCreatePot{
+		msg := types.MsgCreateGauge{
 			IsPerpetual: isPerpetual,
 			Owner: simAccount.Address.String(),
 			DistributeTo: distributeTo,
