@@ -361,7 +361,7 @@ func TestnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
 	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5*10^13 uosmo, 5*10^7 (50 million) osmo
-	genParams.ChainID = "osmo-testnet-1"
+	genParams.ChainID = "osmo-testnet-2"
 	genParams.GenesisTime = time.Now()
 
 	genParams.NativeCoinMetadata = banktypes.Metadata{
