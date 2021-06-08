@@ -8,30 +8,33 @@ import (
 // DefaultIndex is the default capability global index
 const DefaultIndex uint64 = 1
 
+func NewGenesisState(epochs []EpochInfo) *GenesisState {
+	return &GenesisState{Epochs: epochs}
+}
+
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
-	return &GenesisState{
-		Epochs: []EpochInfo{
-			{
-				Identifier:            "week",
-				StartTime:             time.Time{},
-				Duration:              time.Hour * 24 * 7,
-				CurrentEpoch:          0,
-				CurrentEpochStartTime: time.Time{},
-				EpochCountingStarted:  false,
-				CurrentEpochEnded:     true,
-			},
-			{
-				Identifier:            "day",
-				StartTime:             time.Time{},
-				Duration:              time.Hour * 24,
-				CurrentEpoch:          0,
-				CurrentEpochStartTime: time.Time{},
-				EpochCountingStarted:  false,
-				CurrentEpochEnded:     true,
-			},
+	epochs := []EpochInfo{
+		{
+			Identifier:            "week",
+			StartTime:             time.Time{},
+			Duration:              time.Hour * 24 * 7,
+			CurrentEpoch:          0,
+			CurrentEpochStartTime: time.Time{},
+			EpochCountingStarted:  false,
+			CurrentEpochEnded:     true,
+		},
+		{
+			Identifier:            "day",
+			StartTime:             time.Time{},
+			Duration:              time.Hour * 24,
+			CurrentEpoch:          0,
+			CurrentEpochStartTime: time.Time{},
+			EpochCountingStarted:  false,
+			CurrentEpochEnded:     true,
 		},
 	}
+	return NewGenesisState(epochs)
 }
 
 // Validate performs basic genesis state validation returning an error upon any
