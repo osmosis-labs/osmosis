@@ -1,17 +1,14 @@
 package cli_test
 
 import (
-	"fmt"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type IntegrationTestSuite struct {
@@ -44,21 +41,20 @@ func (s *IntegrationTestSuite) TestGetCmdCurrentEpoch() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name         string
-		identifier   string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
+		name       string
+		identifier string
+		expectErr  bool
+		respType   proto.Message
 	}{
 		{
 			"query weekly epoch number",
 			"weekly",
-			false, &sdk.TxResponse{}, 0,
+			false, &types.QueryCurrentEpochResponse{},
 		},
 		{
 			"query unavailable epoch number",
 			"unavailable",
-			false, &sdk.TxResponse{}, 0,
+			false, &types.QueryCurrentEpochResponse{},
 		},
 	}
 
@@ -71,11 +67,6 @@ func (s *IntegrationTestSuite) TestGetCmdCurrentEpoch() {
 
 			args := []string{
 				tc.identifier,
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, fmt.Sprint(300000)),
 			}
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -84,9 +75,40 @@ func (s *IntegrationTestSuite) TestGetCmdCurrentEpoch() {
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+func (s *IntegrationTestSuite) TestGetCmdEpochsInfos() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query epoch infos",
+			false, &types.QueryEpochsInfoResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdCurrentEpoch()
+			clientCtx := val.ClientCtx
+
+			args := []string{}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
