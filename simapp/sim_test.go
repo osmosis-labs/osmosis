@@ -22,25 +22,48 @@ import (
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/osmosis-labs/osmosis/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
+	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
+	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
+	sdkSimapp.FlagEnabledValue = true
+	sdkSimapp.FlagNumBlocksValue = 1000
+	sdkSimapp.FlagBlockSizeValue = 200
+	sdkSimapp.FlagCommitValue = true
+	sdkSimapp.FlagVerboseValue = true
+	// sdkSimapp.FlagPeriodValue = 1000
+	fullAppSimulation(b)
+}
+
+func TestFullAppSimulation(t *testing.T) {
+	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
+	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
+	sdkSimapp.FlagEnabledValue = true
+	sdkSimapp.FlagNumBlocksValue = 25
+	sdkSimapp.FlagBlockSizeValue = 25
+	sdkSimapp.FlagCommitValue = true
+	sdkSimapp.FlagVerboseValue = true
+	sdkSimapp.FlagPeriodValue = 1
+	fullAppSimulation(t)
+}
+
+func fullAppSimulation(tb testing.TB) {
 	config, db, dir, logger, _, err := sdkSimapp.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
-		b.Fatalf("simulation setup failed: %s", err.Error())
+		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
 
 	defer func() {
 		db.Close()
 		err = os.RemoveAll(dir)
 		if err != nil {
-			b.Fatal(err)
+			tb.Fatal(err)
 		}
 	}()
 
-	// TODO: This is crashing on init chain after randomly generating consensus params
-	app := app.NewOsmosisApp(
+	osmosis := app.NewOsmosisApp(
 		logger,
 		db,
 		nil,
-		false, // load latest
+		true, // load latest
 		map[int64]bool{},
 		app.DefaultNodeHome,
 		sdkSimapp.FlagPeriodValue,
@@ -50,24 +73,24 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// Run randomized simulation:
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		b,
+		tb,
 		os.Stdout,
-		app.BaseApp,
-		AppStateFn(app.AppCodec(), app.SimulationManager()),
-		simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		sdkSimapp.SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		osmosis.BaseApp,
+		AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
+		simulation2.RandomAccounts,                                          // Replace with own random account function if using keys other than secp256k1
+		sdkSimapp.SimulationOperations(osmosis, osmosis.AppCodec(), config), // Run all registered operations
+		osmosis.ModuleAccountAddrs(),
 		config,
-		app.AppCodec(),
+		osmosis.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = sdkSimapp.CheckExportSimulation(app, config, simParams); err != nil {
-		b.Fatal(err)
+	if err = sdkSimapp.CheckExportSimulation(osmosis, config, simParams); err != nil {
+		tb.Fatal(err)
 	}
 
 	if simErr != nil {
-		b.Fatal(simErr)
+		tb.Fatal(simErr)
 	}
 
 	if config.Commit {
@@ -112,9 +135,16 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			db := dbm.NewMemDB()
 			app := app.NewOsmosisApp(
-				logger, db, nil, true, map[int64]bool{},
-				app.DefaultNodeHome, sdkSimapp.FlagPeriodValue, app.MakeEncodingConfig(),
-				sdkSimapp.EmptyAppOptions{}, interBlockCacheOpt())
+				logger,
+				db,
+				nil,
+				true,
+				map[int64]bool{},
+				app.DefaultNodeHome,
+				sdkSimapp.FlagPeriodValue,
+				app.MakeEncodingConfig(),
+				sdkSimapp.EmptyAppOptions{},
+				interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
