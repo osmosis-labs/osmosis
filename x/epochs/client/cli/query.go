@@ -23,8 +23,45 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		GetCmdEpochsInfos(),
 		GetCmdCurrentEpoch(),
 	)
+
+	return cmd
+}
+
+// GetCmdEpochsInfos provide running epochInfos
+func GetCmdEpochsInfos() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "epoch-infos",
+		Short: "Query running epochInfos",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query running epoch infos.
+
+Example:
+$ %s query epochs epoch-infos
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.EpochInfos(cmd.Context(), &types.QueryEpochsInfoRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
