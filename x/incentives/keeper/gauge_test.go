@@ -205,6 +205,10 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	gauges = suite.app.IncentivesKeeper.GetActiveGauges(suite.ctx)
 	suite.Require().Len(gauges, 1)
 
+	// check gauge ids by denom
+	gaugeIds := suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
+	suite.Require().Len(gaugeIds, 1)
+
 	// finish distribution
 	err = suite.app.IncentivesKeeper.FinishDistribution(suite.ctx, *gauge)
 	suite.Require().NoError(err)
@@ -322,6 +326,10 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	// check active gauges
 	gauges = suite.app.IncentivesKeeper.GetActiveGauges(suite.ctx)
 	suite.Require().Len(gauges, 1)
+
+	// check gauge ids by denom
+	gaugeIds := suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
+	suite.Require().Len(gaugeIds, 1)
 
 	// check finished gauges
 	gauges = suite.app.IncentivesKeeper.GetFinishedGauges(suite.ctx)
