@@ -785,6 +785,44 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetCmdNumPools() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query num-pools",
+			[]string{
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdNumPools() // osmosisd query gamm num-pools
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryNumPoolsResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+
+				s.Require().Greater(resp.NumPools, uint64(0), out.String())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestGetCmdPool() {
 	val := s.network.Validators[0]
 

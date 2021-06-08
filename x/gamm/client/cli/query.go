@@ -28,6 +28,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(
 		GetCmdPool(),
 		GetCmdPools(),
+		GetCmdNumPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShare(),
 		GetCmdPoolAssets(),
@@ -121,6 +122,41 @@ $ %s query gamm pools
 			res, err := queryClient.Pools(cmd.Context(), &types.QueryPoolsRequest{
 				Pagination: nil,
 			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdNumPools return number of pools available
+func GetCmdNumPools() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "num-pools",
+		Short: "Query number of pools",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query number of pools.
+Example:
+$ %s query gamm num-pools
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.NumPools(cmd.Context(), &types.QueryNumPoolsRequest{})
 			if err != nil {
 				return err
 			}
