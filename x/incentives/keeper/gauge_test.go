@@ -497,6 +497,14 @@ func (suite *KeeperTestSuite) TestPerpetualActiveGaugesByDenom() {
 	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
 	suite.Require().Len(gaugeIds, 1)
 
+	// check gauge ids by other denom
+	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lpt")
+	suite.Require().Len(gaugeIds, 0)
+
+	// check gauge ids by other denom
+	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "token")
+	suite.Require().Len(gaugeIds, 0)
+
 	// distribute coins to stakers
 	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
 	suite.Require().NoError(err)
