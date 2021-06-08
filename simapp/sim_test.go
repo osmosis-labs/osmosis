@@ -39,9 +39,9 @@ func TestFullAppSimulation(t *testing.T) {
 	sdkSimapp.FlagEnabledValue = true
 	sdkSimapp.FlagNumBlocksValue = 25
 	sdkSimapp.FlagBlockSizeValue = 25
-	sdkSimapp.FlagCommitValue = true
+	sdkSimapp.FlagCommitValue = false
 	sdkSimapp.FlagVerboseValue = true
-	sdkSimapp.FlagPeriodValue = 1
+	sdkSimapp.FlagPeriodValue = 5
 	fullAppSimulation(t)
 }
 
