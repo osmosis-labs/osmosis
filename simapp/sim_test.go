@@ -30,7 +30,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	sdkSimapp.FlagCommitValue = true
 	sdkSimapp.FlagVerboseValue = true
 	// sdkSimapp.FlagPeriodValue = 1000
-	fullAppSimulation(b)
+	fullAppSimulation(b, false)
 }
 
 func TestFullAppSimulation(t *testing.T) {
@@ -40,12 +40,13 @@ func TestFullAppSimulation(t *testing.T) {
 	sdkSimapp.FlagNumBlocksValue = 20
 	sdkSimapp.FlagBlockSizeValue = 25
 	sdkSimapp.FlagCommitValue = true
-	sdkSimapp.FlagVerboseValue = false
+	sdkSimapp.FlagVerboseValue = true
 	sdkSimapp.FlagPeriodValue = 10
-	fullAppSimulation(t)
+	sdkSimapp.FlagSeedValue = 10
+	fullAppSimulation(t, true)
 }
 
-func fullAppSimulation(tb testing.TB) {
+func fullAppSimulation(tb testing.TB, is_testing bool) {
 	config, db, dir, logger, _, err := sdkSimapp.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
@@ -59,6 +60,14 @@ func fullAppSimulation(tb testing.TB) {
 		}
 	}()
 
+	// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+	// an IAVLStore for faster simulation speed.
+	fauxMerkleModeOpt := func(bapp *baseapp.BaseApp) {
+		if is_testing {
+			bapp.SetFauxMerkleMode()
+		}
+	}
+
 	osmosis := app.NewOsmosisApp(
 		logger,
 		db,
@@ -69,7 +78,8 @@ func fullAppSimulation(tb testing.TB) {
 		sdkSimapp.FlagPeriodValue,
 		app.MakeEncodingConfig(),
 		sdkSimapp.EmptyAppOptions{},
-		interBlockCacheOpt())
+		interBlockCacheOpt(),
+		fauxMerkleModeOpt)
 
 	// Run randomized simulation:
 	_, simParams, simErr := simulation.SimulateFromSeed(
