@@ -25,7 +25,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { distrEpochIdentifier = GenParamsDistrEpochIdentifier(r) },
 	)
 
-	incentivesGenesis := &types.GenesisState{
+	incentivesGenesis := types.GenesisState{
 		Params: types.Params {
 			DistrEpochIdentifier: distrEpochIdentifier,
 		},
@@ -36,6 +36,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", bz)
+	fmt.Printf("Selected randomly generated incentives parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(incentivesGenesis)
 }

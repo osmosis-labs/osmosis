@@ -3,7 +3,6 @@ package simulation
 import (
 	"math/rand"
 	"time"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	osmo_simulation "github.com/osmosis-labs/osmosis/x/simulation"
@@ -22,7 +21,7 @@ import (
 // Simulation operation weights constants
 const (
 	DefaultWeightMsgCreateGauge int = 10
-	OpWeightMsgCreateGauge          = "op_weight_msg_create_pool"
+	OpWeightMsgCreateGauge          = "op_weight_msg_create_gauge"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -63,16 +62,16 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins) lockuptypes.QueryCondition {
 	lockQueryType := r.Intn(2)
 	denom := coins[r.Intn(len(coins))].Denom
-	durationSecs := r.Intn(1*60*60*24*7)+1*60*60 // range of 1 week, min 1 hour
+	durationSecs := r.Intn(1*60*60*24*7) + 1*60*60 // range of 1 week, min 1 hour
 	duration := time.Duration(durationSecs) * time.Second
-	timestampSecs := r.Intn(1*60*60*24*7) // range of 1 week
+	timestampSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 	timestamp := blocktime.Add(time.Duration(timestampSecs) * time.Second)
 
 	return lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.LockQueryType(lockQueryType),
-		Denom: denom,
-		Duration: duration,
-		Timestamp: timestamp,
+		Denom:         denom,
+		Duration:      duration,
+		Timestamp:     timestamp,
 	}
 }
 
@@ -105,19 +104,22 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 		isPerpetual := r.Int()%2 == 0
 		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins)
 		rewards := genRewardCoins(r, simCoins)
-		startTimeSecs := r.Intn(1*60*60*24*7) // range of 1 week
-		startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs)*time.Second)
-		durationSecs := r.Intn(1*60*60*24*7)+1*60*60 // range of 1 week, min 1 hour 
-		numEpochsPaidOver := uint64(r.Int63n(int64(durationSecs)/(ek.GetEpochInfo(ctx, k.GetParams(ctx).DistrEpochIdentifier).Duration.Milliseconds()/1000)))
+		startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
+		startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
+		durationSecs := r.Intn(1*60*60*24*7) + 1*60*60*24 // range of 1 week, min 1 day
+		numEpochsPaidOver := uint64(r.Int63n(int64(durationSecs) / (ek.GetEpochInfo(ctx, k.GetParams(ctx).DistrEpochIdentifier).Duration.Milliseconds() / 1000)))+1
 
-		fmt.Printf("bbbbb %+v\n", distributeTo)
+		if isPerpetual {
+			numEpochsPaidOver = 1
+		}
+
 
 		msg := types.MsgCreateGauge{
-			IsPerpetual: isPerpetual,
-			Owner: simAccount.Address.String(),
-			DistributeTo: distributeTo,
-			Coins: rewards,
-			StartTime: startTime,
+			IsPerpetual:       isPerpetual,
+			Owner:             simAccount.Address.String(),
+			DistributeTo:      distributeTo,
+			Coins:             rewards,
+			StartTime:         startTime,
 			NumEpochsPaidOver: numEpochsPaidOver,
 		}
 
