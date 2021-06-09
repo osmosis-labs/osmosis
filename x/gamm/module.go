@@ -11,15 +11,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/osmosis-labs/osmosis/x/gamm/simulation"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/x/gamm/client/rest"
 	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -81,6 +82,9 @@ type AppModule struct {
 	ak     types.AccountKeeper
 	bk     types.BankKeeper
 	keeper keeper.Keeper
+
+	accountKeeper stakingtypes.AccountKeeper
+	bankKeeper    stakingtypes.BankKeeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
