@@ -73,23 +73,146 @@ $ %s query pool-incentives gauge-ids 1
 	return cmd
 }
 
-//   rpc DistrInfo(QueryDistrInfoRequest) returns (QueryDistrInfoResponse) {
-//     option (google.api.http).get =
-//         "/osmosis/pool-incentives/v1beta1/distr_info";
-//   }
+// GetCmdDistrInfo takes the pool id and returns the matching gauge ids and durations
+func GetCmdDistrInfo() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "distr-info",
+		Short: "Query distribution info",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query distribution info.
 
-//   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-//     option (google.api.http).get = "/osmosis/pool-incentives/v1beta1/params";
-//   }
+Example:
+$ %s query pool-incentives distr-info
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
 
-//   rpc LockableDurations(QueryLockableDurationsRequest)
-//       returns (QueryLockableDurationsResponse) {
-//     option (google.api.http).get =
-//         "/osmosis/pool-incentives/v1beta1/lockable_durations";
-//   }
+			res, err := queryClient.DistrInfo(cmd.Context(), &types.QueryDistrInfoRequest{})
+			if err != nil {
+				return err
+			}
 
-//   rpc IncentivizedPools(QueryIncentivizedPoolsRequest)
-//       returns (QueryIncentivizedPoolsResponse) {
-//     option (google.api.http).get =
-//         "/osmosis/pool-incentives/v1beta1/incentivized_pools";
-//   }
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdParams returns module params
+func GetCmdParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params",
+		Short: "Query module params",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query module params.
+
+Example:
+$ %s query pool-incentives params
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdLockableDurations returns lockable durations
+func GetCmdLockableDurations() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "lockable-durations",
+		Short: "Query lockable durations",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query lockable durations.
+
+Example:
+$ %s query pool-incentives lockable-durations
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.LockableDurations(cmd.Context(), &types.QueryLockableDurationsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdIncentivizedPools returns incentivized pools
+func GetCmdIncentivizedPools() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "incentivized-pools",
+		Short: "Query incentivized pools",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query incentivized pools.
+
+Example:
+$ %s query pool-incentives incentivized-pools
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.IncentivizedPools(cmd.Context(), &types.QueryIncentivizedPoolsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

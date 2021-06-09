@@ -67,3 +67,139 @@ func (s *IntegrationTestSuite) TestGetCmdGaugeIds() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestGetCmdDistrInfo() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query distr-info",
+			false, &types.QueryDistrInfoResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdDistrInfo()
+			clientCtx := val.ClientCtx
+
+			args := []string{}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdParams() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query module params",
+			false, &types.QueryParamsResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdParams()
+			clientCtx := val.ClientCtx
+
+			args := []string{}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdLockableDurations() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query lockable durations",
+			false, &types.QueryLockableDurationsResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdLockableDurations()
+			clientCtx := val.ClientCtx
+
+			args := []string{}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdIncentivizedPools() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query incentivized pools",
+			false, &types.QueryIncentivizedPoolsResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdIncentivizedPools()
+			clientCtx := val.ClientCtx
+
+			args := []string{}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
