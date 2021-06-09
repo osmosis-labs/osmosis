@@ -12,13 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// flags for module tx commands
-const (
-	FlagOwner    = "owner"
-	FlagLockIds  = "lock-ids"
-	FlagEndEpoch = "end-epoch"
-)
-
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group incentives queries under a subcommand
@@ -32,6 +25,12 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(
 		GetCmdGauges(),
+		GetCmdToDistributeCoins(),
+		GetCmdDistributedCoins(),
+		GetCmdGaugeByID(),
+		GetCmdActiveGauges(),
+		GetCmdUpcomingGauges(),
+		GetCmdRewardsEst(),
 	)
 
 	return cmd
@@ -311,7 +310,7 @@ $ %s query incentives rewards-estimation
 			lockIdStrs := strings.Split(lockIdsCombined, ",")
 			lockIds := []uint64{}
 			for _, lockIdStr := range lockIdStrs {
-				lockId, err := strconv.ParseUint64(lockIdStr, 10, 64)
+				lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
 				if err != nil {
 					return err
 				}
@@ -339,11 +338,7 @@ $ %s query incentives rewards-estimation
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().String(FlagOwner, "", "Owner to receive rewards, optionally used when lock-ids flag is NOT set")
 	cmd.Flags().String(FlagLockIds, "", "the lock ids to receive rewards, when it is empty, all lock ids of the owner are used")
-	cmd.Flags().Int64(FlagEndEpoch, "", "the end epoch number to participate in rewards calculation")
+	cmd.Flags().Int64(FlagEndEpoch, 0, "the end epoch number to participate in rewards calculation")
 
 	return cmd
 }
-
-// TODO: implement all the queries in proto
-// // returns rewards estimation at a future specific time
-// rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse);

@@ -10,6 +10,9 @@ const (
 	FlagDenom         = "denom"
 	FlagDuration      = "duration"
 	FlagTimestamp     = "timestamp"
+	FlagOwner         = "owner"
+	FlagLockIds       = "lock-ids"
+	FlagEndEpoch      = "end-epoch"
 )
 
 // FlagSetCreateGauge returns flags for creating gauge
