@@ -3,6 +3,7 @@ package simulation
 import (
 	"math/rand"
 	"time"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	osmo_simulation "github.com/osmosis-labs/osmosis/x/simulation"
@@ -48,7 +49,7 @@ func WeightedOperations(
 }
 
 func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
-	numCoins := r.Intn(Min(coins.Len()-1, 2))+1
+	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
 	for i := 0; i < numCoins; i++ {
 		denom := coins[denomIndices[i]].Denom
@@ -59,12 +60,13 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	return
 }
 
-func genQueryCondition(r *rand.Rand, coins sdk.Coins) lockuptypes.QueryCondition {
+func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins) lockuptypes.QueryCondition {
 	lockQueryType := r.Intn(2)
 	denom := coins[r.Intn(len(coins))].Denom
-	durationSecs := r.Intn(1*60*60)
+	durationSecs := r.Intn(1*60*60*24*7)+1*60*60 // range of 1 week, min 1 hour
 	duration := time.Duration(durationSecs) * time.Second
-	timestamp := time.Date(0, 0, 0, 0, 0, durationSecs, 0, time.UTC)
+	timestampSecs := r.Intn(1*60*60*24*7) // range of 1 week
+	timestamp := blocktime.Add(time.Duration(timestampSecs) * time.Second)
 
 	return lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.LockQueryType(lockQueryType),
@@ -95,17 +97,20 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 1 {
+		if simCoins.Len() <= 0 {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgCreateGauge, "Account doesn't have 2 different coin types"), nil, nil
+				types.ModuleName, types.TypeMsgCreateGauge, "Account have no coin"), nil, nil
 		}
 
 		isPerpetual := r.Int()%2 == 0
-		distributeTo := genQueryCondition(r, simCoins)
+		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins)
 		rewards := genRewardCoins(r, simCoins)
-		yearSecs := r.Intn(1*60*60*24*365)
-		startTime := time.Date(0, 0, 0, 0, 0, 0, yearSecs, time.UTC)
-		numEpochsPaidOver := uint64(r.Int63n(int64(yearSecs)/(ek.GetEpochInfo(ctx, k.GetParams(ctx).DistrEpochIdentifier).Duration.Milliseconds()/1000)))
+		startTimeSecs := r.Intn(1*60*60*24*7) // range of 1 week
+		startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs)*time.Second)
+		durationSecs := r.Intn(1*60*60*24*7)+1*60*60 // range of 1 week, min 1 hour 
+		numEpochsPaidOver := uint64(r.Int63n(int64(durationSecs)/(ek.GetEpochInfo(ctx, k.GetParams(ctx).DistrEpochIdentifier).Duration.Milliseconds()/1000)))
+
+		fmt.Printf("bbbbb %+v\n", distributeTo)
 
 		msg := types.MsgCreateGauge{
 			IsPerpetual: isPerpetual,

@@ -47,7 +47,7 @@ func WeightedOperations(
 }
 
 func genLockTokens(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) (res sdk.Coins) {
-	numCoins := r.Intn(Min(coins.Len(), 6)-1)+1
+	numCoins := 1 + r.Intn(Min(coins.Len(), 6))
 	denomIndices := r.Perm(numCoins)
 	for i := 0; i < numCoins; i++ {
 		denom := coins[denomIndices[i]].Denom
@@ -80,10 +80,13 @@ func SimulateMsgLockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
+		if simCoins.Len() <= 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgLockTokens, "Account have no coin"), nil, nil
+		}
 		lockTokens := genLockTokens(r, simAccount, simCoins)
 
-		// random duration within 1 hour
-		durationSecs := r.Intn(1*60*60)
+		durationSecs := r.Intn(1*60*60*24*7) // range of 1 week
 		duration := time.Duration(durationSecs) * time.Second
 
 		msg := types.MsgLockTokens{
