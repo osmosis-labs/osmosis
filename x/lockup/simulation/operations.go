@@ -82,9 +82,9 @@ func SimulateMsgLockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		lockTokens := genLockTokens(r, simAccount, simCoins)
 
-		// random duration within 1 year
-		durationSecs := r.Intn(1*60*60*24*360)
-		duration := time.Date(0, 0, 0, 0, 0, durationSecs, 0, nil).Sub(time.Date(0, 0, 0, 0, 0, 0, 0, nil))
+		// random duration within 1 hour
+		durationSecs := r.Intn(1*60*60)
+		duration := time.Duration(durationSecs) * time.Second
 
 		msg := types.MsgLockTokens{
 			Owner: simAccount.Address.String(),

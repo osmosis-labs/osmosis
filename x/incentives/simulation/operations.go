@@ -62,9 +62,9 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 func genQueryCondition(r *rand.Rand, coins sdk.Coins) lockuptypes.QueryCondition {
 	lockQueryType := r.Intn(2)
 	denom := coins[r.Intn(len(coins))].Denom
-	yearSecs := r.Intn(1*60*60*24*365)
-	duration := time.Date(0, 0, 0, 0, 0, yearSecs, 0, time.UTC).Sub(time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC))
-	timestamp := time.Date(0, 0, 0, 0, 0, yearSecs, 0, time.UTC)
+	durationSecs := r.Intn(1*60*60)
+	duration := time.Duration(durationSecs) * time.Second
+	timestamp := time.Date(0, 0, 0, 0, 0, durationSecs, 0, time.UTC)
 
 	return lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.LockQueryType(lockQueryType),
