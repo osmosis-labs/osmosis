@@ -37,5 +37,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated incentives parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(incentivesGenesis)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&incentivesGenesis)
 }

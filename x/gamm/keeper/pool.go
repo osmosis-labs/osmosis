@@ -41,6 +41,31 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	return pool, nil
 }
 
+func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return sdk.KVStorePrefixIterator(store, prefix)
+}
+
+func (k Keeper) GetPools(ctx sdk.Context) (res []types.PoolI, err error) {
+	iter := k.iterator(ctx, types.KeyPrefixPools)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		bz := iter.Value()
+
+		pool, err := k.UnmarshalPool(bz)
+		if err != nil {
+			return nil, err
+		}
+
+		pool.PokeTokenWeights(ctx.BlockTime())
+
+		res = append(res, pool)
+	}
+
+	return
+}
+
 func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	bz, err := k.MarshalPool(pool)
 	if err != nil {

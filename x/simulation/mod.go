@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -72,7 +71,6 @@ func GenAndDeliverTx(
 	ak stakingTypes.AccountKeeper,
 	moduleName string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
-	fmt.Printf("aaaaa %s %+v\n", moduleName, msg)
 	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},

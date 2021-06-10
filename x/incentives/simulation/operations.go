@@ -21,7 +21,9 @@ import (
 // Simulation operation weights constants
 const (
 	DefaultWeightMsgCreateGauge int = 10
+	DefaultWeightMsgAddToGauge int = 10
 	OpWeightMsgCreateGauge          = "op_weight_msg_create_gauge"
+	OpWeightMsgAddToGauge           = "op_weight_msg_add_to_gauge"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -31,6 +33,7 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGauge int
+		weightMsgAddToGauge int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
@@ -39,10 +42,20 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgAddToGauge, &weightMsgAddToGauge, nil,
+		func(_ *rand.Rand) {
+			weightMsgAddToGauge = simappparams.DefaultWeightMsgCreateValidator
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateGauge,
 			SimulateMsgCreateGauge(ak, bk, ek, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgAddToGauge,
+			SimulateMsgAddToGauge(ak, bk, k),
 		),
 	}
 }
@@ -127,4 +140,45 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName)
 	}
+}
+
+func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
+		if simCoins.Len() <= 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgAddToGauge, "Account have no coin"), nil, nil
+		}
+
+		gauge := RandomGauge(ctx, r, k)
+		if gauge == nil {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgAddToGauge, "No gauge exists"), nil, nil
+		}
+		gaugeId := RandomGauge(ctx, r, k).Id
+
+		rewards := genRewardCoins(r, simCoins)
+
+		msg := types.MsgAddToGauge {
+			Owner: simAccount.Address.String(),
+			GaugeId: gaugeId,
+			Rewards: rewards,
+		}
+
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		return osmo_simulation.GenAndDeliverTxWithRandFees(
+			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName,
+		)
+	}
+}
+
+func RandomGauge(ctx sdk.Context, r *rand.Rand, k keeper.Keeper) *types.Gauge {
+	gauges := k.GetGauges(ctx)
+	if len(gauges) == 0 {
+		return nil
+	}
+	return &gauges[r.Intn(len(gauges))]
 }
