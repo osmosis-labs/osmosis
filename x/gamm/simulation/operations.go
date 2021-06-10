@@ -84,7 +84,7 @@ func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) s
 }
 
 func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
-	numCoins := 2 + r.Intn(Min(coins.Len(), 6))
+	numCoins := Max(2, r.Intn(Min(coins.Len(), 6)))
 	denomIndices := r.Perm(numCoins)
 	assets := []types.PoolAsset{}
 	for i := 0; i < numCoins; i++ {
@@ -175,8 +175,6 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 				types.ModuleName, types.TypeMsgSwapExactAmountIn, "Account have no coin"), nil, nil
 		}
 
-		poolAssets := genPoolAssets(r, simAccount, simCoins)
-
 		coin := simCoins[r.Intn(len(simCoins))]
 		amt, _ := simtypes.RandPositiveInt(r, coin.Amount)
 
@@ -200,11 +198,9 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 			TokenOutMinAmount: tokenOutMin,
 		}
 
-		spentCoins := types.PoolAssetsCoins(poolAssets)
-
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)
+			r, app, txGen, &msg, sdk.Coins{tokenIn}, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
 
