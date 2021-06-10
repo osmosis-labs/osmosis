@@ -19,6 +19,7 @@ const (
 
 // RandomizedGenState generates a random GenesisState for gov
 func RandomizedGenState(simState *module.SimulationState) {
+      // Parameter for how often rewards get distributed
 	var distrEpochIdentifier string
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, ParamsDistrEpochIdentifier, &distrEpochIdentifier, simState.Rand,
