@@ -4,17 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/osmosis-labs/osmosis/x/lockup/client/cli"
 	"github.com/osmosis-labs/osmosis/x/lockup/client/rest"
 	"github.com/osmosis-labs/osmosis/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/x/lockup/simulation"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -98,13 +102,20 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper keeper.Keeper
+	keeper        keeper.Keeper
+	accountKeeper stakingtypes.AccountKeeper
+	bankKeeper    stakingtypes.BankKeeper
 }
 
-func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper,
+	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
+
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
 	}
 }
 
@@ -160,4 +171,36 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // returns no validator updates.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+//____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the pool-incentives module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	// TODO
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil // TODO
+}
+
+// RandomizedParams creates randomized pool-incentives param changes for the simulator.
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	return nil // TODO
+}
+
+// RegisterStoreDecoder registers a decoder for supply module's types
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	// TODO
+}
+
+// WeightedOperations returns the all the lockup module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc,
+		am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }
