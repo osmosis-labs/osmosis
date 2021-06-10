@@ -166,7 +166,7 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 		if err != nil {
 			return err
 		}
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
+		err = k.bankKeeper.SendCoinsFromModuleToAccountOriginalVesting(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
 		if err != nil {
 			return err
 		}
