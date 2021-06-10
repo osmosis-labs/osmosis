@@ -19,4 +19,4 @@ jobs:
       - name: Run all tests
         run: go test ./... -race -coverprofile=coverage.txt -covermode=atomic
       - name: Codecov
-        uses: bash <(curl -s https://codecov.io/bash)
+        uses: codecov/codecov-action@v1.5.2
