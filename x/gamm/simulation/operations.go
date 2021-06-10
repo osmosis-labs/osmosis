@@ -30,7 +30,7 @@ const (
 	OpWeightMsgExitSwapShareAmountIn   = "op_weight_exit_swap_share_amount_in"
 
 	DefaultWeightMsgCreatePool              int = 10
-	DefaultWeightMsgSwapExactAmountIn       int = 10
+	DefaultWeightMsgSwapExactAmountIn       int = 25
 	DefaultWeightMsgSwapExactAmountOut      int = 10
 	DefaultWeightMsgJoinPool                int = 10
 	DefaultWeightMsgExitPool                int = 10
