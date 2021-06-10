@@ -84,7 +84,8 @@ func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) s
 }
 
 func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
-	numCoins := Max(2, r.Intn(Min(coins.Len(), 6)))
+	// selecting random number between [2, Min(coins.Len, 6)]
+	numCoins := 2 + r.Intn(Min(coins.Len(), 6) - 1)
 	denomIndices := r.Perm(numCoins)
 	assets := []types.PoolAsset{}
 	for i := 0; i < numCoins; i++ {
