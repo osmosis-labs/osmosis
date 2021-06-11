@@ -78,18 +78,4 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 			fmt.Sprintf("\tgamm all pool calculated and stored total weight match\n")), false
 	}
 }
-/*
-func SpotPriceInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
-	return func(ctx sdk.Context) (string, bool) {
-		pools, err := keeper.GetPools(ctx)
-		if err != nil {
-			return sdk.FormatInvariant(types.ModuleName, "spot-price",
-				fmt.Sprintf("\tgamm pool retrieval failed")), true
-		}
 
-		for _, pool := range pools {
-			
-		}
-	}
-}
-*/
