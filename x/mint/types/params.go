@@ -232,10 +232,12 @@ func validateWeightedDeveloperRewardsReceivers(i interface{}) error {
 
 	weightSum := sdk.NewDec(0)
 	for i, w := range v {
-		// TODO: should we allow portion to be "" to go to community pool?
-		_, err := sdk.AccAddressFromBech32(w.Address)
-		if err != nil {
-			return fmt.Errorf("invalid address at %dth", i)
+		// we allow address to be "" to go to community pool
+		if w.Address != "" {
+			_, err := sdk.AccAddressFromBech32(w.Address)
+			if err != nil {
+				return fmt.Errorf("invalid address at %dth", i)
+			}
 		}
 		if !w.Weight.IsPositive() {
 			return fmt.Errorf("non-positive weight at %dth", i)

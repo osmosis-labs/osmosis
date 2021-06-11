@@ -163,14 +163,18 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range params.WeightedDeveloperRewardsReceivers {
-			devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
-			if err != nil {
-				return err
-			}
 			devRewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, devRewardCoins, w.Weight))
-			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardPortionCoins)
-			if err != nil {
-				return err
+			if w.Address == "" {
+				k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+			} else {
+				devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
+				if err != nil {
+					return err
+				}
+				err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardPortionCoins)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
