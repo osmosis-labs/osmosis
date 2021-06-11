@@ -29,3 +29,12 @@ func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	}
 	return sum
 }
+
+func (lock1 PeriodLock) Equal(lock2 PeriodLock) bool {
+	return (
+		lock1.ID == lock2.ID &&
+		lock1.Owner == lock2.Owner &&
+		lock1.Duration == lock2.Duration &&
+		lock1.EndTime.Equal(lock2.EndTime) &&
+		lock1.Coins.IsEqual(lock2.Coins))
+}
