@@ -5,6 +5,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -12,7 +13,12 @@ import (
 func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords() {
 	mintKeeper := suite.app.MintKeeper
 	params := suite.app.MintKeeper.GetParams(suite.ctx)
-	params.DeveloperRewardsReceiver = sdk.AccAddress([]byte("addr1---------------")).String()
+	params.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{
+		{
+			Address: sdk.AccAddress([]byte("addr1---------------")).String(),
+			Weight:  sdk.NewDec(1),
+		},
+	}
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
@@ -46,7 +52,12 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	keeper := suite.app.PoolIncentivesKeeper
 	mintKeeper := suite.app.MintKeeper
 	params := suite.app.MintKeeper.GetParams(suite.ctx)
-	params.DeveloperRewardsReceiver = sdk.AccAddress([]byte("addr1---------------")).String()
+	params.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{
+		{
+			Address: sdk.AccAddress([]byte("addr1---------------")).String(),
+			Weight:  sdk.NewDec(1),
+		},
+	}
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	poolId := suite.preparePool()

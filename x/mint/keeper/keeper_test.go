@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -58,7 +59,12 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	params := suite.app.MintKeeper.GetParams(suite.ctx)
 	devRewardsReceiver := sdk.AccAddress([]byte("addr1---------------"))
 	gaugeCreator := sdk.AccAddress([]byte("addr2---------------"))
-	params.DeveloperRewardsReceiver = devRewardsReceiver.String()
+	params.WeightedDeveloperRewardsReceivers = []types.WeightedAddress{
+		{
+			Address: devRewardsReceiver.String(),
+			Weight:  sdk.NewDec(1),
+		},
+	}
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	// Create record
