@@ -23,9 +23,9 @@ type PoolI interface {
 	GetId() uint64
 	GetPoolParams() PoolParams
 	GetTotalWeight() sdk.Int
-	GetTotalShare() sdk.Coin
-	AddTotalShare(amt sdk.Int)
-	SubTotalShare(amt sdk.Int)
+	GetTotalShares() sdk.Coin
+	AddTotalShares(amt sdk.Int)
+	SubTotalShares(amt sdk.Int)
 	GetPoolAsset(denom string) (PoolAsset, error)
 	// UpdatePoolAssetBalance updates the balances for
 	// the token with denomination coin.denom
@@ -69,7 +69,7 @@ func NewPool(poolId uint64, poolParams PoolParams, assets []PoolAsset, futureGov
 		Id:                 poolId,
 		PoolParams:         PoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
-		TotalShare:         sdk.NewCoin(GetPoolShareDenom(poolId), sdk.ZeroInt()),
+		TotalShares:        sdk.NewCoin(GetPoolShareDenom(poolId), sdk.ZeroInt()),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
@@ -168,16 +168,16 @@ func (pa Pool) GetTotalWeight() sdk.Int {
 	return pa.TotalWeight
 }
 
-func (pa Pool) GetTotalShare() sdk.Coin {
-	return pa.TotalShare
+func (pa Pool) GetTotalShares() sdk.Coin {
+	return pa.TotalShares
 }
 
-func (pa *Pool) AddTotalShare(amt sdk.Int) {
-	pa.TotalShare.Amount = pa.TotalShare.Amount.Add(amt)
+func (pa *Pool) AddTotalShares(amt sdk.Int) {
+	pa.TotalShares.Amount = pa.TotalShares.Amount.Add(amt)
 }
 
-func (pa *Pool) SubTotalShare(amt sdk.Int) {
-	pa.TotalShare.Amount = pa.TotalShare.Amount.Sub(amt)
+func (pa *Pool) SubTotalShares(amt sdk.Int) {
+	pa.TotalShares.Amount = pa.TotalShares.Amount.Sub(amt)
 }
 
 // setInitialPoolAssets sets the PoolAssets in the pool.

@@ -15,7 +15,8 @@ service Query {
     option (google.api.http).get = "/osmosis/epochs/v1beta1/epochs";
   }
   // CurrentEpoch provide current epoch of specified identifier
-  rpc CurrentEpoch(QueryCurrentEpochRequest) returns (QueryCurrentEpochResponse) {
+  rpc CurrentEpoch(QueryCurrentEpochRequest)
+      returns (QueryCurrentEpochResponse) {
     option (google.api.http).get = "/osmosis/epochs/v1beta1/current_epoch";
   }
 }
@@ -25,9 +26,5 @@ message QueryEpochsInfoResponse {
   repeated EpochInfo epochs = 1 [ (gogoproto.nullable) = false ];
 }
 
-message QueryCurrentEpochRequest {
-  string identifier = 1;
-}
-message QueryCurrentEpochResponse {
-  int64 current_epoch = 1;
-}
+message QueryCurrentEpochRequest { string identifier = 1; }
+message QueryCurrentEpochResponse { int64 current_epoch = 1; }

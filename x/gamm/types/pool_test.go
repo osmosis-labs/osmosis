@@ -40,7 +40,7 @@ func TestPoolShareDenom(t *testing.T) {
 	pacc, err := NewPool(poolId, defaultPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
-	require.Equal(t, "gamm/pool/10", pacc.GetTotalShare().Denom)
+	require.Equal(t, "gamm/pool/10", pacc.GetTotalShares().Denom)
 }
 
 func TestPoolPoolParams(t *testing.T) {
@@ -575,7 +575,7 @@ func TestPoolParamStartTime(t *testing.T) {
 
 	type testCase struct {
 		blockTime time.Time
-		startTime	time.Time
+		startTime time.Time
 		valid     bool
 	}
 
@@ -598,4 +598,3 @@ func TestPoolParamStartTime(t *testing.T) {
 		)
 	}
 }
-

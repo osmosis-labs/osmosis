@@ -42,21 +42,21 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
-	suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 	suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[1].GaugeId)
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
-	suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 	suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[2].GaugeId)
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
-	suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 	suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 }
 

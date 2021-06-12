@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) TestCreatePoolGauges() {
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
 		suite.Equal(true, gauge.IsPerpetual)
-		suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
 		gaugeId, err = keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) TestCreatePoolGauges() {
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
 		suite.Equal(true, gauge.IsPerpetual)
-		suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
 		gaugeId, err = keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) TestCreatePoolGauges() {
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
 		suite.Equal(true, gauge.IsPerpetual)
-		suite.Equal(pool.GetTotalShare().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 	}
 }

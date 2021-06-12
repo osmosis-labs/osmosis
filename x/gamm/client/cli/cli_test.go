@@ -935,7 +935,7 @@ func (s *IntegrationTestSuite) TestGetCmdPoolAssets() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdTotalShare() {
+func (s *IntegrationTestSuite) TestGetCmdTotalShares() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -957,14 +957,14 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShare() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdTotalShare()
+			cmd := cli.GetCmdTotalShares()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryTotalShareResponse{}
+				resp := types.QueryTotalSharesResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
