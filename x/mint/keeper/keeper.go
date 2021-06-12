@@ -50,7 +50,7 @@ func NewKeeper(
 	}
 }
 
-//______________________________________________________________________
+// _____________________________________________________________________
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -104,7 +104,7 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store.Set(types.MinterKey, b)
 }
 
-//______________________________________________________________________
+// _____________________________________________________________________
 
 // GetParams returns the total set of minting parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
@@ -117,7 +117,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-//______________________________________________________________________
+// _____________________________________________________________________
 
 // MintCoins implements an alias call to the underlying supply keeper's
 // MintCoins to be used in BeginBlocker.
@@ -171,7 +171,8 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 				if err != nil {
 					return err
 				}
-				err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, devRewardsAddr, devRewardPortionCoins)
+        // If recipient is vesting account, pay to account according to its vesting condition
+				err = k.bankKeeper.SendCoinsFromModuleToAccountOriginalVesting(ctx, types.ModuleName, devRewardsAddr, devRewardPortionCoins)
 				if err != nil {
 					return err
 				}

@@ -36,7 +36,7 @@ func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 }
 
-//_________________________________________________________________________________________
+// ________________________________________________________________________________________
 
 // Hooks wrapper struct for slashing keeper
 type Hooks struct {

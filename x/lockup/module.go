@@ -173,7 +173,7 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 	return []abci.ValidatorUpdate{}
 }
 
-//____________________________________________________________________________
+// ___________________________________________________________________________
 
 // AppModuleSimulation functions
 
