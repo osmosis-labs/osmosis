@@ -66,7 +66,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	}
 }
 
-//____________________________________________________________________________________________________
+// ___________________________________________________________________________________________________
 
 // Hooks wrapper struct for incentives keeper
 type Hooks struct {

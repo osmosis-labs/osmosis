@@ -141,7 +141,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-//____________________________________________________________________________
+// ___________________________________________________________________________
 
 // AppModuleSimulation functions
 
