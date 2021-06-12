@@ -38,6 +38,7 @@ func (suite *KeeperTestSuite) TestHookBeforeAirdropStart() {
 		DurationUntilDecay: time.Hour,
 		DurationOfDecay:    time.Hour * 4,
 	})
+	suite.Require().NoError(err)
 
 	pub1 := secp256k1.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pub1.Address())
@@ -243,7 +244,7 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	// get claimable after withdrawing all
 	coins1, err = suite.app.ClaimKeeper.GetUserTotalClaimable(suite.ctx, addr1)
 	suite.Require().NoError(err)
-	suite.Require().Equal(coins3, sdk.Coins{})
+	suite.Require().True(coins1.Empty())
 
 	err = suite.app.ClaimKeeper.EndAirdrop(suite.ctx)
 	suite.Require().NoError(err)

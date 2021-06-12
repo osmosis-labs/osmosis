@@ -139,6 +139,9 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 		return nil, err
 	}
 
+	// If we are before the start time, do nothing.
+	// This case _shouldn't_ occur on chain, since the
+	// start time ought to be chain start time.
 	if ctx.BlockTime().Before(params.AirdropStartTime) {
 		return sdk.Coins{}, nil
 	}
@@ -152,19 +155,19 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 		)
 	}
 
-	goneTime := ctx.BlockTime().Sub(params.AirdropStartTime)
-	if goneTime <= params.DurationUntilDecay {
-		// still not the time for decay
+	elapsedAirdropTime := ctx.BlockTime().Sub(params.AirdropStartTime)
+	// Are we early enough in the airdrop s.t. theres no decay?
+	if elapsedAirdropTime <= params.DurationUntilDecay {
 		return InitialClaimablePerAction, nil
 	}
 
-	if goneTime > params.DurationUntilDecay+params.DurationOfDecay {
-		// airdrop time passed
+	// The entire airdrop has completed
+	if elapsedAirdropTime > params.DurationUntilDecay+params.DurationOfDecay {
 		return sdk.Coins{}, nil
 	}
 
 	// Positive, since goneTime > params.DurationUntilDecay
-	decayTime := goneTime - params.DurationUntilDecay
+	decayTime := elapsedAirdropTime - params.DurationUntilDecay
 	decayPercent := sdk.NewDec(decayTime.Nanoseconds()).QuoInt64(params.DurationOfDecay.Nanoseconds())
 	claimablePercent := sdk.OneDec().Sub(decayPercent)
 

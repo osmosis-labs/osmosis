@@ -14,9 +14,9 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx     sdk.Context
-	querier sdk.Querier
-	app     *app.OsmosisApp
+	ctx sdk.Context
+	// querier sdk.Querier
+	app *app.OsmosisApp
 }
 
 func (suite *KeeperTestSuite) SetupTest() {

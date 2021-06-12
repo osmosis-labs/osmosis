@@ -82,3 +82,19 @@ Note that even if the decay process hasn't begun yet, this is not always *exactl
 ```sh
 osmosisd query claim total-claimable $(osmosisd keys show -a {your key name}) ActionAddLiquidity
 ```
+
+## Params
+
+The airdrop logic has 4 parameters:
+
+```golang
+type Params struct {
+    // Time that marks the beginning of the airdrop disbursal,
+    // should be set to chain launch time.
+    AirdropStartTime   time.Time
+    DurationUntilDecay time.Duration
+    DurationOfDecay    time.Duration
+    // denom of claimable asset
+    ClaimDenom string
+}
+```
