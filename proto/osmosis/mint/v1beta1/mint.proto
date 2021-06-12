@@ -19,7 +19,7 @@ message Minter {
 }
 
 message WeightedAddress {
-  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   string weight = 2 [
     (gogoproto.moretags) = "yaml:\"weight\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -86,7 +86,7 @@ message Params {
   DistributionProportions distribution_proportions = 6
       [ (gogoproto.nullable) = false ];
   // address to receive developer rewards
-  repeated WeightedAddress weighted_developer_rewards_receivers = 7 [ 
+  repeated WeightedAddress weighted_developer_rewards_receivers = 7 [
     (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"",
     (gogoproto.nullable) = false
   ];
