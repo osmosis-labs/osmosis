@@ -30,7 +30,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
 	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
-	devRewardsReceiver string, mintingRewardsDistributionStartEpoch int64,
+	weightedDevRewardsReceivers []WeightedAddress, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 
 	return Params{
@@ -40,7 +40,7 @@ func NewParams(
 		ReductionPeriodInEpochs:              reductionPeriodInEpochs,
 		ReductionFactor:                      ReductionFactor,
 		DistributionProportions:              distrProportions,
-		DeveloperRewardsReceiver:             devRewardsReceiver,
+		WeightedDeveloperRewardsReceivers:    weightedDevRewardsReceivers,
 		MintingRewardsDistributionStartEpoch: mintingRewardsDistributionStartEpoch,
 	}
 }
@@ -59,7 +59,7 @@ func DefaultParams() Params {
 			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
 			CommunityPool:    sdk.NewDecWithPrec(1, 1), // 0.1
 		},
-		DeveloperRewardsReceiver:             "",
+		WeightedDeveloperRewardsReceivers:    []WeightedAddress{},
 		MintingRewardsDistributionStartEpoch: 0,
 	}
 }
@@ -84,7 +84,7 @@ func (p Params) Validate() error {
 	if err := validateDistributionProportions(p.DistributionProportions); err != nil {
 		return err
 	}
-	if err := validateDeveloperRewardsReceiver(p.DeveloperRewardsReceiver); err != nil {
+	if err := validateWeightedDeveloperRewardsReceivers(p.WeightedDeveloperRewardsReceivers); err != nil {
 		return err
 	}
 	if err := validateMintingRewardsDistributionStartEpoch(p.MintingRewardsDistributionStartEpoch); err != nil {
@@ -109,7 +109,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
 		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
 		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.DistributionProportions, validateDistributionProportions),
-		paramtypes.NewParamSetPair(KeyDeveloperRewardsReceiver, &p.DeveloperRewardsReceiver, validateDeveloperRewardsReceiver),
+		paramtypes.NewParamSetPair(KeyDeveloperRewardsReceiver, &p.WeightedDeveloperRewardsReceivers, validateWeightedDeveloperRewardsReceivers),
 		paramtypes.NewParamSetPair(KeyMintingRewardsDistributionStartEpoch, &p.MintingRewardsDistributionStartEpoch, validateMintingRewardsDistributionStartEpoch),
 	}
 }
@@ -219,19 +219,40 @@ func validateDistributionProportions(i interface{}) error {
 	return nil
 }
 
-func validateDeveloperRewardsReceiver(i interface{}) error {
-	v, ok := i.(string)
+func validateWeightedDeveloperRewardsReceivers(i interface{}) error {
+	v, ok := i.([]WeightedAddress)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	// fund community pool when rewards address is empty
-	if v == "" {
+	if len(v) == 0 {
 		return nil
 	}
 
-	_, err := sdk.AccAddressFromBech32(v)
-	return err
+	weightSum := sdk.NewDec(0)
+	for i, w := range v {
+		// we allow address to be "" to go to community pool
+		if w.Address != "" {
+			_, err := sdk.AccAddressFromBech32(w.Address)
+			if err != nil {
+				return fmt.Errorf("invalid address at %dth", i)
+			}
+		}
+		if !w.Weight.IsPositive() {
+			return fmt.Errorf("non-positive weight at %dth", i)
+		}
+		if w.Weight.GT(sdk.NewDec(1)) {
+			return fmt.Errorf("more than 1 weight at %dth", i)
+		}
+		weightSum = weightSum.Add(w.Weight)
+	}
+
+	if !weightSum.Equal(sdk.NewDec(1)) {
+		return fmt.Errorf("invalid weight sum: %s", weightSum.String())
+	}
+
+	return nil
 }
 
 func validateMintingRewardsDistributionStartEpoch(i interface{}) error {

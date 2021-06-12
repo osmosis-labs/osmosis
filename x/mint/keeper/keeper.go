@@ -157,18 +157,26 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 	}
 
 	devRewardCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.DeveloperRewards))
-	if params.DeveloperRewardsReceiver == "" {
+	if len(params.WeightedDeveloperRewardsReceivers) == 0 {
 		// fund community pool when rewards address is empty
 		k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
 	} else {
-		// allocate developer rewards to an address
-		devRewardsAddr, err := sdk.AccAddressFromBech32(params.DeveloperRewardsReceiver)
-		if err != nil {
-			return err
-		}
-		err = k.bankKeeper.SendCoinsFromModuleToAccountOriginalVesting(ctx, types.ModuleName, devRewardsAddr, devRewardCoins)
-		if err != nil {
-			return err
+		// allocate developer rewards to addresses by weight
+		for _, w := range params.WeightedDeveloperRewardsReceivers {
+			devRewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, devRewardCoins, w.Weight))
+			if w.Address == "" {
+				k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+			} else {
+				devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
+				if err != nil {
+					return err
+				}
+        // If recipient is vesting account, pay to account according to its vesting condition
+				err = k.bankKeeper.SendCoinsFromModuleToAccountOriginalVesting(ctx, types.ModuleName, devRewardsAddr, devRewardPortionCoins)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 

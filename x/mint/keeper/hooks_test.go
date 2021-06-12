@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -26,7 +27,12 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 
 	// set developer rewards address
 	mintParams := app.MintKeeper.GetParams(ctx)
-	mintParams.DeveloperRewardsReceiver = sdk.AccAddress([]byte("addr1---------------")).String()
+	mintParams.WeightedDeveloperRewardsReceivers = []types.WeightedAddress{
+		{
+			Address: sdk.AccAddress([]byte("addr1---------------")).String(),
+			Weight:  sdk.NewDec(1),
+		},
+	}
 	app.MintKeeper.SetParams(ctx, mintParams)
 
 	height := int64(1)

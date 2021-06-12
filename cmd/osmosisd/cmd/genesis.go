@@ -288,7 +288,7 @@ func MainnetGenesisParams() GenesisParams {
 		CommunityPool:    sdk.MustNewDecFromStr("0.05"), // 5%
 	}
 	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1 // TODO: Finalize
-	// genParams.MintParams.DeveloperRewardsReceiver
+	// genParams.MintParams.WeightedDeveloperRewardsReceivers
 
 	genParams.DistributionParams = distributiontypes.DefaultParams()
 	genParams.DistributionParams.BaseProposerReward = sdk.MustNewDecFromStr("0.01")
@@ -401,7 +401,7 @@ func TestnetGenesisParams() GenesisParams {
 		CommunityPool:    sdk.MustNewDecFromStr("0.05"), // 5%
 	}
 	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1 // TODO: Finalize
-	// genParams.MintParams.DeveloperRewardsReceiver
+	// genParams.MintParams.WeightedDeveloperRewardsReceivers
 
 	genParams.DistributionParams = distributiontypes.DefaultParams()
 	genParams.DistributionParams.BaseProposerReward = sdk.MustNewDecFromStr("0.01")

@@ -18,6 +18,15 @@ message Minter {
   ];
 }
 
+message WeightedAddress {
+  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+  string weight = 2 [
+    (gogoproto.moretags) = "yaml:\"weight\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
 message DistributionProportions {
   // staking defines the proportion of the minted minted_denom that is to be
   // allocated as staking rewards.
@@ -77,8 +86,10 @@ message Params {
   DistributionProportions distribution_proportions = 6
       [ (gogoproto.nullable) = false ];
   // address to receive developer rewards
-  string developer_rewards_receiver = 7
-      [ (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"" ];
+  repeated WeightedAddress weighted_developer_rewards_receivers = 7 [ 
+    (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"",
+    (gogoproto.nullable) = false
+  ];
   // start epoch to distribute minting rewards
   int64 minting_rewards_distribution_start_epoch = 8
       [ (gogoproto.moretags) =

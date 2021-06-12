@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -58,7 +59,14 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	params := suite.app.MintKeeper.GetParams(suite.ctx)
 	devRewardsReceiver := sdk.AccAddress([]byte("addr1---------------"))
 	gaugeCreator := sdk.AccAddress([]byte("addr2---------------"))
-	params.DeveloperRewardsReceiver = devRewardsReceiver.String()
+	devRewardsReceiver2 := sdk.AccAddress([]byte("addr3---------------"))
+	devRewardsReceiver3 := sdk.AccAddress([]byte("addr4---------------"))
+	params.WeightedDeveloperRewardsReceivers = []types.WeightedAddress{
+		{
+			Address: devRewardsReceiver.String(),
+			Weight:  sdk.NewDec(1),
+		},
+	}
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	// Create record
@@ -94,6 +102,30 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	suite.Equal(
 		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).TruncateInt(),
 		suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver, "stake").Amount)
+
+	// Test for multiple dev reward addresses
+	params.WeightedDeveloperRewardsReceivers = []types.WeightedAddress{
+		{
+			Address: devRewardsReceiver2.String(),
+			Weight:  sdk.NewDecWithPrec(6, 1),
+		},
+		{
+			Address: devRewardsReceiver3.String(),
+			Weight:  sdk.NewDecWithPrec(4, 1),
+		},
+	}
+	suite.app.MintKeeper.SetParams(suite.ctx, params)
+
+	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins)
+	suite.NoError(err)
+
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[0].Weight).TruncateInt(),
+		suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver2, "stake").Amount)
+	suite.Equal(
+		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[1].Weight).TruncateInt(),
+		suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver3, "stake").Amount)
 }
 
 func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperRewardsAddr() {
