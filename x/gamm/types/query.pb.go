@@ -392,7 +392,7 @@ func (m *QueryPoolParamsResponse) GetParams() PoolParams {
 	return PoolParams{}
 }
 
-//=============================== TotalShare
+//=============================== TotalShares
 type QueryTotalSharesRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
 }
@@ -438,7 +438,7 @@ func (m *QueryTotalSharesRequest) GetPoolId() uint64 {
 }
 
 type QueryTotalSharesResponse struct {
-	TotalShares types1.Coin `protobuf:"bytes,1,opt,name=totalShares,proto3" json:"totalShares" yaml:"total_share"`
+	TotalShares types1.Coin `protobuf:"bytes,1,opt,name=totalShares,proto3" json:"totalShares" yaml:"total_shares"`
 }
 
 func (m *QueryTotalSharesResponse) Reset()         { *m = QueryTotalSharesResponse{} }

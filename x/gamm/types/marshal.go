@@ -44,7 +44,7 @@ type poolPretty struct {
 	PoolParams         PoolParams     `json:"pool_params" yaml:"pool_params"`
 	FuturePoolGovernor string         `json:"future_pool_governor" yaml:"future_pool_governor"`
 	TotalWeight        sdk.Dec        `json:"total_weight" yaml:"total_weight"`
-	TotalShares        sdk.Coin       `json:"total_share" yaml:"total_share"`
+	TotalShares        sdk.Coin       `json:"total_shares" yaml:"total_shares"`
 	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
 
@@ -111,7 +111,7 @@ func (pa *Pool) UnmarshalJSON(bz []byte) error {
 	pa.PoolParams = alias.PoolParams
 	pa.FuturePoolGovernor = alias.FuturePoolGovernor
 	pa.TotalWeight = alias.TotalWeight.RoundInt()
-	pa.TotalShares = alias.TotalShare
+	pa.TotalShares = alias.TotalShares
 	pa.PoolAssets = alias.PoolAssets
 
 	return nil

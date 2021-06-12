@@ -247,7 +247,7 @@ type Pool struct {
 	// TODO: Further improve these docs
 	FuturePoolGovernor string `protobuf:"bytes,4,opt,name=future_pool_governor,json=futurePoolGovernor,proto3" json:"future_pool_governor,omitempty" yaml:"future_pool_governor"`
 	// sum of all LP tokens sent out
-	TotalShares types.Coin `protobuf:"bytes,5,opt,name=totalShares,proto3" json:"totalShares" yaml:"total_share"`
+	TotalShares types.Coin `protobuf:"bytes,5,opt,name=totalShares,proto3" json:"totalShares" yaml:"total_shares"`
 	// These are assumed to be sorted by denomiation.
 	// They contain the pool asset and the information about the weight
 	PoolAssets []PoolAsset `protobuf:"bytes,6,rep,name=poolAssets,proto3" json:"poolAssets" yaml:"pool_assets"`

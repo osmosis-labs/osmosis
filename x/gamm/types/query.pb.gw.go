@@ -996,7 +996,7 @@ var (
 
 	pattern_Query_PoolParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_TotalShares_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId", "total_share"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_TotalShares_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId", "total_shares"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_PoolAssets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId", "tokens"}, "", runtime.AssumeColonVerbOpt(true)))
 

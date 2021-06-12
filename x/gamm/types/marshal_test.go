@@ -46,7 +46,7 @@ func TestPoolMarshalYAML(t *testing.T) {
     start_time: 0001-01-01T00:00:00Z
   future_pool_governor: ""
   total_weight: "300.000000000000000000"
-  total_share:
+  total_shares:
     denom: gamm/pool/10
     amount: "0"
   pool_assets:
@@ -127,7 +127,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
     start_time: 0001-01-01T00:00:00Z
   future_pool_governor: ""
   total_weight: "300.000000000000000000"
-  total_share:
+  total_shares:
     denom: gamm/pool/10
     amount: "0"
   pool_assets:

@@ -169,7 +169,7 @@ func (pa Pool) GetTotalWeight() sdk.Int {
 }
 
 func (pa Pool) GetTotalShares() sdk.Coin {
-	return pa.TotalShare
+	return pa.TotalShares
 }
 
 func (pa *Pool) AddTotalShares(amt sdk.Int) {

@@ -139,7 +139,7 @@ message Pool {
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
   // sum of all LP tokens sent out
   cosmos.base.v1beta1.Coin totalShares = 5 [
-    (gogoproto.moretags) = "yaml:\"total_share\"",
+    (gogoproto.moretags) = "yaml:\"total_shares\"",
     (gogoproto.nullable) = false
   ];
   // These are assumed to be sorted by denomiation.
