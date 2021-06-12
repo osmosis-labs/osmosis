@@ -107,11 +107,11 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	params.WeightedDeveloperRewardsReceivers = []types.WeightedAddress{
 		{
 			Address: devRewardsReceiver2.String(),
-			Weight:  sdk.NewDecWithPrec(5, 1),
+			Weight:  sdk.NewDecWithPrec(6, 1),
 		},
 		{
 			Address: devRewardsReceiver3.String(),
-			Weight:  sdk.NewDecWithPrec(5, 1),
+			Weight:  sdk.NewDecWithPrec(4, 1),
 		},
 	}
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
