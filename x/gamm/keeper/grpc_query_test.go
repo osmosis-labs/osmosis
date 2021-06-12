@@ -132,19 +132,19 @@ func (suite *KeeperTestSuite) TestQueryPoolParams() {
 	suite.Require().Equal(sdk.NewDecWithPrec(15, 3).String(), params2.Params.ExitFee.String())
 }
 
-func (suite *KeeperTestSuite) TestQueryTotalShare() {
+func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
-	_, err := queryClient.TotalShare(gocontext.Background(), &types.QueryTotalShareRequest{PoolId: 1})
+	_, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: 1})
 	suite.Require().Error(err)
 
 	poolId := suite.preparePool()
 
 	// Share Token would be minted as 100.000000000000000000 share token initially.
-	res, err := queryClient.TotalShare(gocontext.Background(), &types.QueryTotalShareRequest{PoolId: poolId})
+	res, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
 	suite.Require().NoError(err)
-	suite.Require().Equal(types.InitPoolSharesSupply.String(), res.TotalShare.Amount.String())
+	suite.Require().Equal(types.InitPoolSharesSupply.String(), res.TotalShares.Amount.String())
 
 	// Mint more share token.
 	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
@@ -153,9 +153,9 @@ func (suite *KeeperTestSuite) TestQueryTotalShare() {
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.app.GAMMKeeper.SetPool(suite.ctx, pool))
 
-	res, err = queryClient.TotalShare(gocontext.Background(), &types.QueryTotalShareRequest{PoolId: poolId})
+	res, err = queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
 	suite.Require().NoError(err)
-	suite.Require().Equal(types.InitPoolSharesSupply.Add(types.OneShare.MulRaw(10)).String(), res.TotalShare.Amount.String())
+	suite.Require().Equal(types.InitPoolSharesSupply.Add(types.OneShare.MulRaw(10)).String(), res.TotalShares.Amount.String())
 }
 
 func (suite *KeeperTestSuite) TestQueryTotalLiquidity() {

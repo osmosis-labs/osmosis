@@ -32,7 +32,7 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/params";
   }
-  rpc TotalShare(QueryTotalShareRequest) returns (QueryTotalShareResponse) {
+  rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/total_share";
   }
@@ -94,11 +94,11 @@ message QueryPoolParamsResponse {
 }
 
 //=============================== TotalShare
-message QueryTotalShareRequest {
+message QueryTotalSharesRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryTotalShareResponse {
-  cosmos.base.v1beta1.Coin totalShare = 1 [
+message QueryTotalSharesResponse {
+  cosmos.base.v1beta1.Coin totalShares = 1 [
     (gogoproto.moretags) = "yaml:\"total_share\"",
     (gogoproto.nullable) = false
   ];

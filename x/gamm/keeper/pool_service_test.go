@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 
 			pool, err := keeper.GetPool(suite.ctx, poolId)
 			suite.Require().NoError(err)
-			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShare().Amount.String(),
+			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().Amount.String(),
 				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
 			)
 
@@ -420,8 +420,8 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 func (suite *KeeperTestSuite) TestActivePool() {
 	type testCase struct {
-		blockTime time.Time
-		startTime time.Time
+		blockTime  time.Time
+		startTime  time.Time
 		expectPass bool
 	}
 
@@ -451,12 +451,12 @@ func (suite *KeeperTestSuite) TestActivePool() {
 
 			// Create the pool at first
 			poolId := suite.preparePoolWithPoolParams(types.PoolParams{
-				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
+				SwapFee:   sdk.NewDec(0),
+				ExitFee:   sdk.NewDec(0),
 				StartTime: tc.startTime,
 			})
 			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
-		
+
 			// uneffected by start time
 			err = suite.app.GAMMKeeper.JoinPool(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
@@ -487,4 +487,3 @@ func (suite *KeeperTestSuite) TestActivePool() {
 		}
 	}
 }
-

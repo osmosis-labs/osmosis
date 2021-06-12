@@ -30,7 +30,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdPools(),
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
-		GetCmdTotalShare(),
+		GetCmdTotalShares(),
 		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
 		GetCmdQueryTotalLiquidity(),
@@ -248,8 +248,8 @@ func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	return nil
 }
 
-// GetCmdTotalShare return total share
-func GetCmdTotalShare() *cobra.Command {
+// GetCmdTotalShares return total share
+func GetCmdTotalShares() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-share <poolID>",
 		Short: "Query total-share",
@@ -274,7 +274,7 @@ $ %s query gamm total-share 1
 				return err
 			}
 
-			res, err := queryClient.TotalShare(cmd.Context(), &types.QueryTotalShareRequest{
+			res, err := queryClient.TotalShares(cmd.Context(), &types.QueryTotalSharesRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {

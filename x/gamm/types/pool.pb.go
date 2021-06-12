@@ -247,7 +247,7 @@ type Pool struct {
 	// TODO: Further improve these docs
 	FuturePoolGovernor string `protobuf:"bytes,4,opt,name=future_pool_governor,json=futurePoolGovernor,proto3" json:"future_pool_governor,omitempty" yaml:"future_pool_governor"`
 	// sum of all LP tokens sent out
-	TotalShare types.Coin `protobuf:"bytes,5,opt,name=totalShare,proto3" json:"totalShare" yaml:"total_share"`
+	TotalShares types.Coin `protobuf:"bytes,5,opt,name=totalShares,proto3" json:"totalShares" yaml:"total_share"`
 	// These are assumed to be sorted by denomiation.
 	// They contain the pool asset and the information about the weight
 	PoolAssets []PoolAsset `protobuf:"bytes,6,rep,name=poolAssets,proto3" json:"poolAssets" yaml:"pool_assets"`
@@ -569,7 +569,7 @@ func (m *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	{
-		size, err := m.TotalShare.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.TotalShares.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -697,7 +697,7 @@ func (m *Pool) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovPool(uint64(l))
 	}
-	l = m.TotalShare.Size()
+	l = m.TotalShares.Size()
 	n += 1 + l + sovPool(uint64(l))
 	if len(m.PoolAssets) > 0 {
 		for _, e := range m.PoolAssets {
@@ -1360,7 +1360,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TotalShare", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalShares", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1387,7 +1387,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TotalShare.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.TotalShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

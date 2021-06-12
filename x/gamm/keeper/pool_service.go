@@ -100,11 +100,11 @@ func (k Keeper) JoinPool(
 		return err
 	}
 
-	totalShareAmount := pool.GetTotalShare().Amount
+	totalSharesAmount := pool.GetTotalShares().Amount
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
 	// (tokens per share) * number of shares out = # tokens * (# shares out / cur total shares)
-	shareRatio := shareOutAmount.ToDec().QuoInt(totalShareAmount)
+	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
@@ -184,7 +184,7 @@ func (k Keeper) JoinSwapExternAmountIn(
 	shareOutAmount = calcPoolOutGivenSingleIn(
 		PoolAsset.Token.Amount.ToDec(),
 		PoolAsset.Weight.ToDec(),
-		pool.GetTotalShare().Amount.ToDec(),
+		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		tokenIn.Amount.ToDec(),
 		pool.GetPoolParams().SwapFee,
@@ -250,7 +250,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	tokenInAmount = calcSingleInGivenPoolOut(
 		PoolAsset.Token.Amount.ToDec(),
 		PoolAsset.Weight.ToDec(),
-		pool.GetTotalShare().Amount.ToDec(),
+		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		shareOutAmount.ToDec(),
 		pool.GetPoolParams().SwapFee,
@@ -303,10 +303,10 @@ func (k Keeper) ExitPool(
 		return err
 	}
 
-	totalShareAmount := pool.GetTotalShare().Amount
+	totalSharesAmount := pool.GetTotalShares().Amount
 	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
-	shareRatio := shareInAmountAfterExitFee.ToDec().QuoInt(totalShareAmount)
+	shareRatio := shareInAmountAfterExitFee.ToDec().QuoInt(totalSharesAmount)
 
 	if shareRatio.LTE(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
@@ -399,7 +399,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 	tokenOutAmount = calcSingleOutGivenPoolIn(
 		PoolAsset.Token.Amount.ToDec(),
 		PoolAsset.Weight.ToDec(),
-		pool.GetTotalShare().Amount.ToDec(),
+		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		shareInAmount.ToDec(),
 		pool.GetPoolParams().SwapFee,
@@ -481,7 +481,7 @@ func (k Keeper) ExitSwapExternAmountOut(
 	shareInAmount = calcPoolInGivenSingleOut(
 		PoolAsset.Token.Amount.ToDec(),
 		PoolAsset.Weight.ToDec(),
-		pool.GetTotalShare().Amount.ToDec(),
+		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		tokenOut.Amount.ToDec(),
 		pool.GetPoolParams().SwapFee,
