@@ -157,7 +157,7 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	timeKey := getTimeKey(gauge.StartTime)
 	k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id)
 	k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
-	k.hooks.AfterFinishDistribution(ctx, gauge.Id)
+	k.hooks.AfterStartDistribution(ctx, gauge.Id)
 	return nil
 }
 
