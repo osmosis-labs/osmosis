@@ -425,6 +425,30 @@ func TestnetGenesisParams() GenesisParams {
 			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
 		},
 		banktypes.Balance{
+			Address: "osmo1pkmvlnstq8q7djns3w882pcu92xh4c9xlnjw40",                                                // eugen
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+		},
+		banktypes.Balance{
+			Address: "osmo1zug5vl5gakj4mdjpvvgm6haycvk5639s3gp6zq",                                                // john
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+		},
+		banktypes.Balance{
+			Address: "osmo1fyuhvfxvm3rqere870tdm3a38qhg700udguqfq",                                                // joon
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+		},
+		banktypes.Balance{
+			Address: "osmo156gqf9837u7d4c4678yt3rl4ls9c5vuuwlyxcg",                                                // kevin
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+		},
+		banktypes.Balance{
+			Address: "osmo12wgu3zsyxr57gr78nynh7a2v45xvygxrr82y2j",                                                // sunny_f
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+		},
+		banktypes.Balance{
+			Address: "osmo1pz64ngupu40hzlz9gm0atqrnrj08up2tplx0j5",                                                // sunny_n
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+		},
+		banktypes.Balance{
 			Address: "osmo1gertlf2l0l779yn308fx37z5pvuk2xyejznzcc", // Nollet
 			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(0))),
 		},
