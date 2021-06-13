@@ -104,12 +104,14 @@ func (k Keeper) indexOfDistrRecordByGaugeId(ctx sdk.Context, gaugeId uint64) int
 	return -1
 }
 
-func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
+func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
+	lastGaugeID := uint64(0)
 	gaugeIdFlags := make(map[uint64]bool)
 
 	totalWeight := sdk.NewInt(0)
+
 	for _, record := range records {
 		if gaugeIdFlags[record.GaugeId] {
 			return sdkerrors.Wrapf(
@@ -117,6 +119,69 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 				"Gauge ID #%d has duplications.",
 				record.GaugeId,
 			)
+		}
+
+		if record.GaugeId <= lastGaugeID {
+			return sdkerrors.Wrapf(
+				types.ErrDistrRecordNotSorted,
+				"Gauge ID #%d came after Gauge ID #%d.",
+				record.GaugeId, lastGaugeID,
+			)
+		}
+		lastGaugeID = record.GaugeId
+
+		// unless GaugeID is 0 for the community pool, don't allow distribution records for gauges that don't exist
+		if record.GaugeId != 0 {
+			_, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
+			if err != nil {
+				return err
+			}
+		}
+
+		gaugeIdFlags[record.GaugeId] = true
+		totalWeight = totalWeight.Add(record.Weight)
+	}
+
+	distrInfo.Records = records
+	distrInfo.TotalWeight = totalWeight
+
+	k.SetDistrInfo(ctx, distrInfo)
+	return nil
+}
+
+func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
+	distrInfo := k.GetDistrInfo(ctx)
+
+	lastGaugeID := uint64(0)
+	gaugeIdFlags := make(map[uint64]bool)
+
+	totalWeight := distrInfo.TotalWeight
+
+	existingRecords := distrInfo.GetRecords()
+
+	for _, record := range records {
+
+		if gaugeIdFlags[record.GaugeId] {
+			return sdkerrors.Wrapf(
+				types.ErrDistrRecordRegisteredGauge,
+				"Gauge ID #%d has duplications.",
+				record.GaugeId,
+			)
+		}
+
+		if record.GaugeId <= lastGaugeID {
+			return sdkerrors.Wrapf(
+				types.ErrDistrRecordNotSorted,
+				"Gauge ID #%d came after Gauge ID #%d.",
+				record.GaugeId, lastGaugeID,
+			)
+		}
+		lastGaugeID = record.GaugeId
+
+		for _, existingRecord := range existingRecords {
+			if existingRecord.GetGaugeId() == record.GetGaugeId() {
+
+			}
 		}
 
 		// unless GaugeID is 0 for the community pool, don't allow distribution records for gauges that don't exist
