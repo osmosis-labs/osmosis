@@ -35,12 +35,16 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	}
 	app.MintKeeper.SetParams(ctx, mintParams)
 
+	// setup developer rewards account
+	app.MintKeeper.CreateDeveloperVestingModuleAccount(
+		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2)))
+
 	height := int64(1)
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
 	// correct rewards
 	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
-		app.MintKeeper.CreateDeveloperVestingModuleAccount(
-			ctx, sdk.NewCoin("stake", sdk.NewInt(500000)))
+		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
+		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
@@ -53,8 +57,11 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
 		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
-		// Require developer vesting has 0 coins
-		// require.Equal(t, app.)
+
+		// test that the balance decreased by the correct amount
+		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
+		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.DeveloperRewards)
+		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
@@ -64,6 +71,8 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	require.Equal(t, lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
 
 	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
+		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
 
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
@@ -77,6 +86,11 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
 		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
+
+		// test that the balance decreased by the correct amount
+		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
+		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.DeveloperRewards)
+		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 }
 
