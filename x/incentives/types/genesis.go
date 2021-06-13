@@ -1,6 +1,9 @@
 package types
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 // DefaultIndex is the default capability global index
 const DefaultIndex uint64 = 1
@@ -12,6 +15,12 @@ func DefaultGenesis() *GenesisState {
 			DistrEpochIdentifier: "week",
 		},
 		Gauges: []Gauge{},
+		LockableDurations: []time.Duration{
+			time.Second,
+			time.Hour,
+			time.Hour * 3,
+			time.Hour * 7,
+		},
 	}
 }
 

@@ -3,6 +3,7 @@ package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/incentives/gauge.proto";
@@ -49,6 +50,10 @@ service Query {
   rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/rewards_est/{owner}";
+  }
+  rpc LockableDurations(QueryLockableDurationsRequest) returns (QueryLockableDurationsResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/lockable_durations";
   }
 }
 
@@ -110,5 +115,14 @@ message RewardsEstResponse {
   repeated cosmos.base.v1beta1.Coin coins = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message QueryLockableDurationsRequest {}
+message QueryLockableDurationsResponse {
+  repeated google.protobuf.Duration lockable_durations = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
 }

@@ -75,6 +75,12 @@ func TestIncentivesInitGenesis(t *testing.T) {
 			DistrEpochIdentifier: "week",
 		},
 		Gauges: []types.Gauge{gauge},
+		LockableDurations: []time.Duration{
+			time.Second,
+			time.Hour,
+			time.Hour * 3,
+			time.Hour * 7,
+		},
 	})
 
 	gauges := app.IncentivesKeeper.GetGauges(ctx)
