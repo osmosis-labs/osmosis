@@ -39,6 +39,8 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
 	// correct rewards
 	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+		app.MintKeeper.CreateDeveloperVestingModuleAccount(
+			ctx, sdk.NewCoin("stake", sdk.NewInt(500000)))
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
@@ -51,6 +53,8 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
 		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
+		// Require developer vesting has 0 coins
+		// require.Equal(t, app.)
 	}
 
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
