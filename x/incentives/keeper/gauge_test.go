@@ -58,6 +58,25 @@ func (suite *KeeperTestSuite) SetupLockAndGauge(isPerpetual bool) (sdk.AccAddres
 	return lockOwner, gaugeID, gaugeCoins, startTime
 }
 
+func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
+	suite.SetupTest()
+
+	addr := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         "lptoken",
+		Duration:      time.Second / 2, // 0.5 second
+	}
+	_, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addr, coins, distrTo, time.Time{}, 1)
+	suite.Require().Error(err)
+
+	distrTo.Duration = time.Second
+	_, err = suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addr, coins, distrTo, time.Time{}, 1)
+	suite.Require().NoError(err)
+}
+
 func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	// test for module get gauges
 	suite.SetupTest()

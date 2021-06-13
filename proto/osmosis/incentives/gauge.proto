@@ -34,3 +34,11 @@ message Gauge {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ]; // already distributed coins
 }
+
+message LockableDurationsInfo {
+  repeated google.protobuf.Duration lockable_durations = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}

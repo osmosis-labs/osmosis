@@ -126,3 +126,9 @@ func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) 
 	}
 	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, owner, locks, req.EndEpoch)}, nil
 }
+
+func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDurationsRequest) (*types.QueryLockableDurationsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
+}

@@ -21,7 +21,7 @@ import (
 // Simulation operation weights constants
 const (
 	DefaultWeightMsgCreateGauge int = 10
-	DefaultWeightMsgAddToGauge int = 10
+	DefaultWeightMsgAddToGauge  int = 10
 	OpWeightMsgCreateGauge          = "op_weight_msg_create_gauge"
 	OpWeightMsgAddToGauge           = "op_weight_msg_add_to_gauge"
 )
@@ -33,7 +33,7 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGauge int
-		weightMsgAddToGauge int
+		weightMsgAddToGauge  int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
@@ -72,11 +72,16 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	return
 }
 
-func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins) lockuptypes.QueryCondition {
-	lockQueryType := r.Intn(2)
+func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins, durations []time.Duration) lockuptypes.QueryCondition {
+	// TODO: reset to 2 after postlaunch, only allow duration based query type on postlaunch
+	// lockQueryType := r.Intn(2)
+	lockQueryType := 0
 	denom := coins[r.Intn(len(coins))].Denom
-	durationSecs := r.Intn(1*60*60*24*7) + 1*60*60 // range of 1 week, min 1 hour
-	duration := time.Duration(durationSecs) * time.Second
+	// TODO: for postlaunch, only specific lock durations are allowed
+	// durationSecs := r.Intn(1*60*60*24*7) + 1*60*60 // range of 1 week, min 1 hour
+	// duration := time.Duration(durationSecs) * time.Second
+	durationIndex := r.Intn(len(durations))
+	duration := durations[durationIndex]
 	timestampSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 	timestamp := blocktime.Add(time.Duration(timestampSecs) * time.Second)
 
@@ -115,17 +120,16 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 		}
 
 		isPerpetual := r.Int()%2 == 0
-		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins)
+		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, types.DefaultGenesis().LockableDurations)
 		rewards := genRewardCoins(r, simCoins)
 		startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
 		durationSecs := r.Intn(1*60*60*24*7) + 1*60*60*24 // range of 1 week, min 1 day
-		numEpochsPaidOver := uint64(r.Int63n(int64(durationSecs) / (ek.GetEpochInfo(ctx, k.GetParams(ctx).DistrEpochIdentifier).Duration.Milliseconds() / 1000)))+1
+		numEpochsPaidOver := uint64(r.Int63n(int64(durationSecs)/(ek.GetEpochInfo(ctx, k.GetParams(ctx).DistrEpochIdentifier).Duration.Milliseconds()/1000))) + 1
 
 		if isPerpetual {
 			numEpochsPaidOver = 1
 		}
-
 
 		msg := types.MsgCreateGauge{
 			IsPerpetual:       isPerpetual,
@@ -162,8 +166,8 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 
 		rewards := genRewardCoins(r, simCoins)
 
-		msg := types.MsgAddToGauge {
-			Owner: simAccount.Address.String(),
+		msg := types.MsgAddToGauge{
+			Owner:   simAccount.Address.String(),
 			GaugeId: gaugeId,
 			Rewards: rewards,
 		}

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,4 +52,26 @@ func (k *Keeper) SetHooks(ih types.IncentiveHooks) *Keeper {
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {
+	store := ctx.KVStore(k.storeKey)
+
+	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
+
+	store.Set(types.LockableDurationsKey, k.cdc.MustMarshalBinaryBare(&info))
+}
+
+func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
+	store := ctx.KVStore(k.storeKey)
+	info := types.LockableDurationsInfo{}
+
+	bz := store.Get(types.LockableDurationsKey)
+	if len(bz) == 0 {
+		panic("lockable durations not set")
+	}
+
+	k.cdc.MustUnmarshalBinaryBare(bz, &info)
+
+	return info.LockableDurations
 }

@@ -147,18 +147,19 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
-		gammtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
-		incentivestypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		lockuptypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
-		poolincentivestypes.ModuleName: nil,
+		authtypes.FeeCollectorName:               nil,
+		distrtypes.ModuleName:                    nil,
+		minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+		minttypes.DeveloperVestingModuleAcctName: nil,
+		stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                      {authtypes.Burner},
+		ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
+		claimtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
+		gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
+		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		poolincentivestypes.ModuleName:           nil,
 	}
 
 	// module accounts that are allowed to receive tokens
