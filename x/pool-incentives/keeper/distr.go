@@ -190,11 +190,11 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 
 		// unless GaugeID is 0 for the community pool, don't allow distribution records for gauges that don't exist
 		if record.GaugeId != 0 {
-			_, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
+			gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
 			if err != nil {
 				return err
 			}
-      if !gauge.IsPerpetual {
+			if !gauge.IsPerpetual {
 				return sdkerrors.Wrapf(types.ErrDistrRecordRegisteredGauge,
 					"Gauge ID #%d is not perpetual.",
 					record.GaugeId)
