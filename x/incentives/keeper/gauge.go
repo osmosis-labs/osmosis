@@ -256,6 +256,17 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 
 // Distribute coins from gauge according to its conditions
 func (k Keeper) DistributeAllGauges(ctx sdk.Context) {
+	// Plan:
+	// We need to get a map for denom -> active gauges
+	// and a map for denom -> locks
+	// Both exist.
+	// Now we need to get list
+	// k.getAllGaugeIDsByDenom()
+	denoms := []string{}
+	for _, denom := range denoms {
+		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, denom)
+		locks := k.GetLocksToDistribution()
+	}
 	// distribute due to epoch event
 	gauges := k.GetActiveGauges(ctx)
 	for _, gauge := range gauges {
