@@ -12,7 +12,6 @@ At launch, Pools have the following parameters:
 SwapFee
 ExitFee
 FutureGovernor
-StartTime
 Weights
 SmoothWeightChangeParams
 ```

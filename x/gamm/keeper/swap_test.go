@@ -203,14 +203,12 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 func (suite *KeeperTestSuite) TestActivePoolSwap() {
 	type testCase struct {
 		blockTime  time.Time
-		startTime  time.Time
 		expectPass bool
 	}
 
 	testCases := []testCase{
-		{time.Unix(1000, 0), time.Unix(1000, 0), true},
-		{time.Unix(2000, 0), time.Unix(1000, 0), true},
-		{time.Unix(1000, 0), time.Unix(2000, 0), false},
+		{time.Unix(1000, 0), true},
+		{time.Unix(2000, 0), true},
 	}
 
 	for _, tc := range testCases {
