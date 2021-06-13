@@ -109,6 +109,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		for _, duration := range durations {
 			if duration == distrTo.Duration {
 				durationOk = true
+				break
 			}
 		}
 		if !durationOk {
