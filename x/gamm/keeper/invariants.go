@@ -13,6 +13,7 @@ const poolBalanceInvariantName = "pool-account-balance-equals-expected"
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKeeper) {
 	ir.RegisterRoute(types.ModuleName, poolBalanceInvariantName, PoolAccountInvariant(keeper, bk))
 	ir.RegisterRoute(types.ModuleName, "pool-total-weight", PoolTotalWeightInvariant(keeper, bk))
+	ir.RegisterRoute(types.ModuleName, "pool-product-constant", PoolProductConstantInvariant(keeper))
 	// ir.RegisterRoute(types.ModuleName, "spot-price", SpotPriceInvariant(keeper, bk))
 }
 
@@ -20,6 +21,10 @@ func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKe
 func AllInvariants(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broke := PoolAccountInvariant(keeper, bk)(ctx)
+		if broke {
+			return msg, broke
+		}
+		msg, broke = PoolProductConstantInvariant(keeper)(ctx)
 		if broke {
 			return msg, broke
 		}
@@ -76,5 +81,32 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 
 		return sdk.FormatInvariant(types.ModuleName, "pool-total-weight",
 			fmt.Sprintf("\tgamm all pool calculated and stored total weight match\n")), false
+	}
+}
+
+func PoolProductConstantInvariant(keeper Keeper) sdk.Invariant {
+	constants := make(map[uint64]sdk.Dec)
+
+	return func(ctx sdk.Context) (string, bool) {
+		pools, err := keeper.GetPools(ctx)
+		if err != nil {
+			return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
+				fmt.Sprintf("\tgamm pool retrieval failed")), true
+		}
+
+		for _, pool := range pools {
+			constant, ok := constants[pool.GetId()]
+			if !ok {
+				constants[pool.GetId()] = pool.PoolProductConstant()
+				continue
+			}
+			if !constant.Equal(pool.PoolProductConstant()) {
+				return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
+					fmt.Sprintf("\tgamm pool id %d\n\t product constant changed", pool.GetId())), true
+			}
+		}
+
+		return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
+			fmt.Sprintf("\tgamm all pool product constant preserved\n")), false
 	}
 }

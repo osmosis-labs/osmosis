@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -140,6 +141,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.Len() <= 1 {
+			fmt.Println("aaaa", simCoins)
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgCreatePool, "Account doesn't have 2 different coin types"), nil, nil
 		}
@@ -158,6 +160,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)
 
+		fmt.Println("bbbb", msg)
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)

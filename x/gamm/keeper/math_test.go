@@ -6,7 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
+
+
+// Don't EVER change after initializing
+// TODO: Analyze choice here
+var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 func TestAbsDifferenceWithSign(t *testing.T) {
 	decA, err := sdk.NewDecFromStr("3.2")
@@ -14,7 +21,7 @@ func TestAbsDifferenceWithSign(t *testing.T) {
 	decB, err := sdk.NewDecFromStr("4.3432389")
 	require.NoError(t, err)
 
-	s, b := absDifferenceWithSign(decA, decB)
+	s, b := types.AbsDifferenceWithSign(decA, decB)
 	require.True(t, b)
 
 	expectedDec, err := sdk.NewDecFromStr("1.1432389")
