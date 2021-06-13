@@ -435,17 +435,17 @@ func TestnetGenesisParams() GenesisParams {
 	}
 
 	genParams.StakingParams = stakingtypes.DefaultParams()
-	genParams.StakingParams.UnbondingTime = time.Hour * 24 // 1 day
+	genParams.StakingParams.UnbondingTime = time.Second * 1800 // 30 min
 	genParams.StakingParams.MaxValidators = 100
 	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadata.Base
 	genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	genParams.MintParams = minttypes.DefaultParams()
-	genParams.MintParams.EpochIdentifier = "hour"                                       // 1 hour
+	genParams.MintParams.EpochIdentifier = "day"                                        // 1 hour
 	genParams.MintParams.GenesisEpochProvisions = sdk.NewDec(300_000_000).QuoInt64(365) // 300M / 365 = ~821917.8082191781
 	genParams.MintParams.MintDenom = genParams.NativeCoinMetadata.Base
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3) // 2/3
-	genParams.MintParams.ReductionPeriodInEpochs = 6                 // 6 hours
+	genParams.MintParams.ReductionPeriodInEpochs = 48                // 6 hours
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          sdk.MustNewDecFromStr("0.25"), // 25%
 		DeveloperRewards: sdk.MustNewDecFromStr("0.25"), // 25%
@@ -476,8 +476,8 @@ func TestnetGenesisParams() GenesisParams {
 		genParams.NativeCoinMetadata.Base,
 		sdk.NewInt(1000000), // 1 OSMO
 	))
-	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.0000001") // 25%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 3               // 3 hours
+	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.0000000001") // 0.00000001%
+	genParams.GovParams.VotingParams.VotingPeriod = time.Second * 900              // 900 seconds
 
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadata.Base,
@@ -512,8 +512,8 @@ func TestnetGenesisParams() GenesisParams {
 
 	genParams.ClaimParams = claimtypes.Params{
 		AirdropStartTime:   genParams.GenesisTime,
-		DurationUntilDecay: time.Hour * 12,  // 12 hour
-		DurationOfDecay:    time.Hour * 120, // 5 days
+		DurationUntilDecay: time.Hour * 48, // 2 days
+		DurationOfDecay:    time.Hour * 48, // 2 days
 		ClaimDenom:         genParams.NativeCoinMetadata.Base,
 	}
 
@@ -525,9 +525,9 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.PoolIncentivesGenesis = *poolincentivestypes.DefaultGenesisState()
 	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadata.Base
 	genParams.PoolIncentivesGenesis.LockableDurations = []time.Duration{
-		time.Hour * 1, // 1 hour
-		time.Hour * 3, // 3 hours
-		time.Hour * 7, // 7 hours
+		time.Second * 1800, // 30 min
+		time.Second * 3600, // 1 hour
+		time.Second * 7200, // 2 hours
 	}
 	genParams.PoolIncentivesGenesis.DistrInfo = &poolincentivestypes.DistrInfo{
 		TotalWeight: sdk.NewInt(1),
