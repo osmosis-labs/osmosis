@@ -50,6 +50,10 @@ func (m MsgCreateGauge) ValidateBasic() error {
 		return errors.New("distribution period should be 1 epoch for perpetual gauge")
 	}
 
+	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] != "ByDuration" {
+		return errors.New("only duration query condition is allowed. Start time distr conditions is an obsolete codepath slated for deletion")
+	}
+
 	return nil
 }
 func (m MsgCreateGauge) GetSignBytes() []byte {

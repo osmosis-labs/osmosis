@@ -48,6 +48,8 @@ var (
 
 	// KeyEpochBeginBlock defines key for storing begin block of current epoch
 	KeyEpochBeginBlock = []byte{0x09}
+
+	LockableDurationsKey = []byte("lockable_durations")
 )
 
 func KeyPrefix(p string) []byte {
