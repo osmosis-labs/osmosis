@@ -104,6 +104,7 @@ func (k Keeper) indexOfDistrRecordByGaugeId(ctx sdk.Context, gaugeId uint64) int
 	return -1
 }
 
+// This is checked for no err when a proposal is made, and executed when a proposal passes
 func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
@@ -121,9 +122,14 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 
 		// unless GaugeID is 0 for the community pool, don't allow distribution records for gauges that don't exist
 		if record.GaugeId != 0 {
-			_, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
+			gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
 			if err != nil {
 				return err
+			}
+			if !gauge.IsPerpetual {
+				return sdkerrors.Wrapf(types.ErrDistrRecordRegisteredGauge,
+					"Gauge ID #%d is not perpetual.",
+					record.GaugeId)
 			}
 		}
 

@@ -44,7 +44,7 @@ func (p *UpdatePoolIncentivesProposal) ValidateBasic() error {
 	}
 
 	for _, record := range p.Records {
-		if err := record.Validate(); err != nil {
+		if err := record.ValidateBasic(); err != nil {
 			return err
 		}
 	}

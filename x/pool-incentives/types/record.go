@@ -1,6 +1,6 @@
 package types
 
-func (r DistrRecord) Validate() error {
+func (r DistrRecord) ValidateBasic() error {
 	if !r.Weight.IsPositive() {
 		return ErrDistrRecordNotPositiveWeight
 	}
