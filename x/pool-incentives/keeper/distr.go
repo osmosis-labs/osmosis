@@ -54,8 +54,17 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 			continue
 		}
 
+		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
+		if err != nil {
+			panic(err)
+		}
+
+		if !gauge.IsPerpetual {
+			panic(fmt.Errorf("pool-incentives can only distribute rewards to perpetual gauges: gauge = %s", gauge.String()))
+		}
+
 		coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
-		err := k.incentivesKeeper.AddToGaugeRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.GaugeId)
+		err = k.incentivesKeeper.AddToGaugeRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.GaugeId)
 		if err != nil {
 			return err
 		}
