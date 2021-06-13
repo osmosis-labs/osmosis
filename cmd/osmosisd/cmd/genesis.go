@@ -429,10 +429,6 @@ func TestnetGenesisParams() GenesisParams {
 			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
 		},
 		banktypes.Balance{
-			Address: "osmo1zug5vl5gakj4mdjpvvgm6haycvk5639s3gp6zq",                                                // john
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
-		},
-		banktypes.Balance{
 			Address: "osmo1fyuhvfxvm3rqere870tdm3a38qhg700udguqfq",                                                // joon
 			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
 		},
