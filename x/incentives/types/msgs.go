@@ -51,7 +51,7 @@ func (m MsgCreateGauge) ValidateBasic() error {
 	}
 
 	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] != "ByDuration" {
-		return errors.New("only duration condition query is allowed for postlaunch")
+		return errors.New("only duration query condition is allowed. Start time distr conditions is an obsolete codepath slated for deletion")
 	}
 
 	return nil
