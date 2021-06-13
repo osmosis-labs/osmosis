@@ -14,11 +14,17 @@ func NewPoolIncentivesProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.UpdatePoolIncentivesProposal:
 			return handleUpdatePoolIncentivesProposal(ctx, k, c)
+		case *types.ReplacePoolIncentivesProposal:
+			return handleReplacePoolIncentivesProposal(ctx, k, c)
 
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized pool incentives proposal content type: %T", c)
 		}
 	}
+}
+
+func handleReplacePoolIncentivesProposal(ctx sdk.Context, k keeper.Keeper, p *types.ReplacePoolIncentivesProposal) error {
+	return k.HandleReplacePoolIncentivesProposal(ctx, p)
 }
 
 func handleUpdatePoolIncentivesProposal(ctx sdk.Context, k keeper.Keeper, p *types.UpdatePoolIncentivesProposal) error {

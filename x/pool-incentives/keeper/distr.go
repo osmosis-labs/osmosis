@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -121,7 +122,7 @@ func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecor
 			)
 		}
 
-		if record.GaugeId <= lastGaugeID {
+		if record.GaugeId < lastGaugeID {
 			return sdkerrors.Wrapf(
 				types.ErrDistrRecordNotSorted,
 				"Gauge ID #%d came after Gauge ID #%d.",
@@ -150,17 +151,19 @@ func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecor
 }
 
 func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
-	distrInfo := k.GetDistrInfo(ctx)
+
+	recordsMap := make(map[uint64]types.DistrRecord)
+	totalWeight := sdk.NewInt(0)
+
+	for _, existingRecord := range k.GetDistrInfo(ctx).Records {
+		recordsMap[existingRecord.GaugeId] = existingRecord
+		totalWeight = totalWeight.Add(existingRecord.Weight)
+	}
 
 	lastGaugeID := uint64(0)
 	gaugeIdFlags := make(map[uint64]bool)
 
-	totalWeight := distrInfo.TotalWeight
-
-	existingRecords := distrInfo.GetRecords()
-
 	for _, record := range records {
-
 		if gaugeIdFlags[record.GaugeId] {
 			return sdkerrors.Wrapf(
 				types.ErrDistrRecordRegisteredGauge,
@@ -169,7 +172,7 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 			)
 		}
 
-		if record.GaugeId <= lastGaugeID {
+		if record.GaugeId < lastGaugeID {
 			return sdkerrors.Wrapf(
 				types.ErrDistrRecordNotSorted,
 				"Gauge ID #%d came after Gauge ID #%d.",
@@ -177,12 +180,6 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 			)
 		}
 		lastGaugeID = record.GaugeId
-
-		for _, existingRecord := range existingRecords {
-			if existingRecord.GetGaugeId() == record.GetGaugeId() {
-
-			}
-		}
 
 		// unless GaugeID is 0 for the community pool, don't allow distribution records for gauges that don't exist
 		if record.GaugeId != 0 {
@@ -193,12 +190,32 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 		}
 
 		gaugeIdFlags[record.GaugeId] = true
-		totalWeight = totalWeight.Add(record.Weight)
+
+		if val, ok := recordsMap[record.GaugeId]; ok {
+			totalWeight = totalWeight.Sub(val.Weight)
+			recordsMap[record.GaugeId] = record
+			totalWeight = totalWeight.Add(record.Weight)
+		} else {
+			recordsMap[record.GaugeId] = record
+			totalWeight = totalWeight.Add(record.Weight)
+		}
 	}
 
-	distrInfo.Records = records
-	distrInfo.TotalWeight = totalWeight
+	newRecords := []types.DistrRecord{}
 
-	k.SetDistrInfo(ctx, distrInfo)
+	for _, val := range recordsMap {
+		if !val.Weight.Equal(sdk.ZeroInt()) {
+			newRecords = append(newRecords, val)
+		}
+	}
+
+	sort.SliceStable(newRecords, func(i, j int) bool {
+		return newRecords[i].GaugeId < newRecords[j].GaugeId
+	})
+
+	k.SetDistrInfo(ctx, types.DistrInfo{
+		Records:     newRecords,
+		TotalWeight: totalWeight,
+	})
 	return nil
 }
