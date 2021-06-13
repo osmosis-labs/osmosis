@@ -12,7 +12,6 @@ At launch, Pools have the following parameters:
 SwapFee
 ExitFee
 FutureGovernor
-StartTime
 Weights
 SmoothWeightChangeParams
 ```
@@ -28,10 +27,8 @@ We go through these in sequence.
     - Noone will govern it, this is done by leaving the future governor string as blank.
     - Allow a given address to govern it, this is done by setting the future governor as a bech32 address.
     - Lockups to a token. This is the full DAO scenario. The future governor specifies a token denomination `Denom`, and a lockup duration `Duration`. This says that "all tokens of denomination `Denom` that are locked up for `Duration` or longer, have equal say in governance of this pool".
-4. StartTime
-    This defines a time at which trading will be allowed on the pool. Prior to this time having passed, users can only add liquidity to the pool at its existing spot price and weights via the `JoinPool` message, or exit liquidity via `ExitPool` message. This allows a pool to build some liquidity prior to trading being enabled.
-5. Weights
+4. Weights
     This defines the weights of the pool. https://balancer.fi/whitepaper.pdf
     TODO Add better description of how the weights affect things here.
-6. SmoothWeightChangeParams
+5. SmoothWeightChangeParams
     SmoothWeightChangeParams allows pool governance to smoothly change the weights of the assets it holds in the pool. So it can slowly move from a 2:1 ratio, to a 1:1 ratio. Currently, smooth weight changes are implemented as a linear change in weight ratios over a given duration of time. So weights changed from 4:1 to 2:2 over 2 days, then at day 1 of the change, the weights would be 3:1.5, and at day 2 its 2:2, and will remain at these weight ratios.
