@@ -61,8 +61,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 
 			liquidity := suite.app.GAMMKeeper.GetTotalLiquidity(suite.ctx)
 			suite.Require().Equal("10000bar,10000foo", liquidity.String())
-
-			suite.Require().Equal(suite.ctx.BlockTime(), pool.GetPoolParams().StartTime)
 		},
 	}, {
 		fn: func() {
@@ -451,9 +449,8 @@ func (suite *KeeperTestSuite) TestActivePool() {
 
 			// Create the pool at first
 			poolId := suite.preparePoolWithPoolParams(types.PoolParams{
-				SwapFee:   sdk.NewDec(0),
-				ExitFee:   sdk.NewDec(0),
-				StartTime: tc.startTime,
+				SwapFee: sdk.NewDec(0),
+				ExitFee: sdk.NewDec(0),
 			})
 			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
 
