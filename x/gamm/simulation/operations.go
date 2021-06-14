@@ -106,15 +106,10 @@ func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) 
 	exitFeeInt := int64(r.Intn(1e5))
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
-
-	timeSecs := r.Intn(1 * 60) // range of 1 min from the block time
-	startTime := blockTime.Add(time.Duration(timeSecs) * time.Second)
-
 	// TODO: Randomly generate LBP params
 	return types.PoolParams{
-		// XXX
 		// SwapFee:                  swapFee,
-		SwapFee: sdk.ZeroDec(), 
+		SwapFee: sdk.ZeroDec(),
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: nil,
 	}
