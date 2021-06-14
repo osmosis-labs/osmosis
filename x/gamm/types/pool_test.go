@@ -543,7 +543,6 @@ func TestPoolPokeTokenWeights(t *testing.T) {
 				Token:  sdk.NewInt64Coin(asset.Token.Denom, 10000),
 			}
 			initialPoolAssets[i] = assetCopy
-			fmt.Printf("%v\n", initialPoolAssets[i])
 		}
 		// Initialize the pool
 		pacc, err := NewPool(uint64(poolNum), PoolParams{

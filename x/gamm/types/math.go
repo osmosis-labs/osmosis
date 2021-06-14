@@ -47,6 +47,7 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 		panic(fmt.Errorf("base must be lesser than two"))
 	}
 
+
 	// We will use an approximation algorithm to compute the power.
 	// Since computing an integer power is easy, we split up the exponent into
 	// an integer component and a fractional component.
@@ -86,6 +87,7 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	term := sdk.OneDec()
 	sum := sdk.OneDec()
 	negative := false
+
 
 	// TODO: Document this computation via taylor expansion
 	for i := 1; term.GTE(precision); i++ {

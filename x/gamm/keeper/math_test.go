@@ -11,10 +11,6 @@ import (
 )
 
 
-// Don't EVER change after initializing
-// TODO: Analyze choice here
-var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
-
 func TestAbsDifferenceWithSign(t *testing.T) {
 	decA, err := sdk.NewDecFromStr("3.2")
 	require.NoError(t, err)
@@ -214,7 +210,6 @@ func TestCalcSingleInGivenPoolOut(t *testing.T) {
 
 	s := calcSingleInGivenPoolOut(tokenBalanceIn, tokenWeightIn, poolSupply, totalWeight, poolAmountOut, swapFee)
 
-	fmt.Println(s)
 	expectedDec, err := sdk.NewDecFromStr(".")
 	require.NoError(t, err)
 

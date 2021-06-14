@@ -8,6 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
+
+var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
+
 const poolBalanceInvariantName = "pool-account-balance-equals-expected"
 // RegisterInvariants registers all governance invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKeeper) {
@@ -43,7 +46,6 @@ func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 		}
 
 		for _, pool := range pools {
-			fmt.Println("1234 ", pool.GetAllPoolAssets())
 			assetCoins := types.PoolAssetsCoins(pool.GetAllPoolAssets())
 			accCoins := bk.GetAllBalances(ctx, pool.GetAddress())
 			if !assetCoins.IsEqual(accCoins) {
@@ -85,18 +87,25 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 	}
 }
 
+func genericPow(base, exp sdk.Dec) sdk.Dec {
+	if !base.GTE(sdk.OneDec().MulInt64(2)) {
+		return pow(base, exp)
+	}
+	return powApprox(sdk.OneDec().Quo(base), exp.Neg(), powPrecision)
+}
+
 func constantChange(p1, p2 types.PoolI) sdk.Dec {
 	product := sdk.OneDec()
 	totalWeight := p1.GetTotalWeight()
-	assets1, assets2 := p1.GetAllPoolAssets(), p2.GetAllPoolAssets()
-	for i, asset1 := range assets1 {
-		asset2 := assets2[i]
-		ratio := asset1.Token.Amount.ToDec().Quo(asset2.Token.Amount.ToDec())
-		roundup := ratio.RoundInt().BigInt()
+	assets1 := p1.GetAllPoolAssets()
+	for _, asset1 := range assets1 {
+		asset2, err := p2.GetPoolAsset(asset1.Token.Denom)
+		if err != nil {
+			panic(err)
+		}
 		w := asset1.Weight.ToDec().Quo(totalWeight.ToDec())
-		// XXX: use integer pow instead of pow for roundup^w
-		roundup.Exp(roundup, w)
-		power := pow(ratio.Quo(roundup.ToDec()), w).Mul(pow(roundup.ToDec(), w))
+		ratio := asset1.Token.Amount.ToDec().Quo(asset2.Token.Amount.ToDec())
+		power := genericPow(ratio, w)
 		product = product.Mul(power)
 	}
 
@@ -104,7 +113,7 @@ func constantChange(p1, p2 types.PoolI) sdk.Dec {
 }
 
 var (
-	errorMargin, _ = sdk.NewDecFromStr("0.01") // 1%
+	errorMargin, _ = sdk.NewDecFromStr("0.0001") // 0.01%
 )
 
 func PoolProductConstantInvariant(keeper Keeper) sdk.Invariant {

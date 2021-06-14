@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -88,14 +87,12 @@ func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types
 	// selecting random number between [2, Min(coins.Len, 6)]
 	numCoins := 2 + r.Intn(Min(coins.Len(), 6)-1)
 	denomIndices := r.Perm(coins.Len())
-	fmt.Println("genPoolAssets ", numCoins, denomIndices)
 	assets := []types.PoolAsset{}
 	for _, denomIndex := range denomIndices[:numCoins] {
 		denom := coins[denomIndex].Denom
 		amt, _ := simtypes.RandPositiveInt(r, coins[denomIndex].Amount.QuoRaw(100))
 		reserveAmt := sdk.NewCoin(denom, amt)
-		weight := sdk.OneInt()
-		fmt.Println("adding ", reserveAmt)
+		weight := sdk.NewInt(r.Int63n(9)+1)
 		assets = append(assets, types.PoolAsset{Token: reserveAmt, Weight: weight})
 	}
 
@@ -103,8 +100,8 @@ func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types
 }
 
 func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.PoolParams {
-	swapFeeInt := int64(r.Intn(1e5))
-	swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
+	// swapFeeInt := int64(r.Intn(1e5))
+	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
 	exitFeeInt := int64(r.Intn(1e5))
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
@@ -114,7 +111,9 @@ func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) 
 
 	// TODO: Randomly generate LBP params
 	return types.PoolParams{
-		SwapFee:                  swapFee,
+		// XXX
+		// SwapFee:                  swapFee,
+		SwapFee: sdk.ZeroDec(), 
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: nil,
 		StartTime:                startTime,
@@ -143,7 +142,6 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.Len() <= 1 {
-			fmt.Println("aaaa", simCoins)
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgCreatePool, "Account doesn't have 2 different coin types"), nil, nil
 		}
@@ -165,7 +163,6 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 			PoolParams: poolParams,
 		}
 
-		fmt.Printf("%+v\n", msg)
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)
 
@@ -195,6 +192,7 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 			Amount: amt,
 		}
 
+
 		routes, _ := RandomExactAmountInRoute(ctx, r, k, tokenIn)
 		if len(routes) == 0 {
 			return simtypes.NoOpMsg(
@@ -210,6 +208,7 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 			// TokenOutMinAmount: tokenOutMin.QuoRaw(2),
 		}
 
+		
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, sdk.Coins{tokenIn}, ctx, simAccount, ak, bk, types.ModuleName)
@@ -247,23 +246,25 @@ func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, to
 				continue
 			}
 			for _, asset := range pool.GetAllPoolAssets() {
-				if asset.Token.Denom != tokenIn.Denom {
-					res = append(res, types.SwapAmountInRoute{
-						PoolId:        pool.GetId(),
-						TokenOutDenom: asset.Token.Denom,
-					})
-					sp, err := k.CalculateSpotPriceWithSwapFee(ctx, pool.GetId(), tokenIn.Denom, asset.Token.Denom)
-					if err != nil {
-						panic(err)
-					}
-					amt := tokenIn.Amount.ToDec().Quo(sp).RoundInt()
-					tokenIn = sdk.Coin{
-						Denom:  asset.Token.Denom,
-						Amount: amt,
-					}
-					break
+				if asset.Token.Denom == tokenIn.Denom {
+					continue
 				}
+				res = append(res, types.SwapAmountInRoute{
+					PoolId:        pool.GetId(),
+					TokenOutDenom: asset.Token.Denom,
+				})
+				sp, err := k.CalculateSpotPriceWithSwapFee(ctx, pool.GetId(), tokenIn.Denom, asset.Token.Denom)
+				if err != nil {
+					panic(err)
+				}
+				amt := tokenIn.Amount.ToDec().Quo(sp).RoundInt()
+				tokenIn = sdk.Coin{
+					Denom:  asset.Token.Denom,
+					Amount: amt,
+				}
+				break
 			}
+			break
 		}
 	}
 
