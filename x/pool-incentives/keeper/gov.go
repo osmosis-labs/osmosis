@@ -6,6 +6,10 @@ import (
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
+func (k Keeper) HandleReplacePoolIncentivesProposal(ctx sdk.Context, p *types.ReplacePoolIncentivesProposal) error {
+	return k.ReplaceDistrRecords(ctx, p.Records...)
+}
+
 func (k Keeper) HandleUpdatePoolIncentivesProposal(ctx sdk.Context, p *types.UpdatePoolIncentivesProposal) error {
 	return k.UpdateDistrRecords(ctx, p.Records...)
 }
