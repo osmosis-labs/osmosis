@@ -123,6 +123,7 @@ func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecor
 			)
 		}
 
+              // Ensure records are sorted because ~AESTHETIC~
 		if record.GaugeId < lastGaugeID {
 			return sdkerrors.Wrapf(
 				types.ErrDistrRecordNotSorted,
@@ -168,6 +169,7 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 	}
 
 	lastGaugeID := uint64(0)
+      // TODO: Delete gaugeIdFlags
 	gaugeIdFlags := make(map[uint64]bool)
 
 	for _, record := range records {
@@ -179,6 +181,7 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 			)
 		}
 
+              // Ensure records are sorted because ~AESTHETIC~
 		if record.GaugeId < lastGaugeID {
 			return sdkerrors.Wrapf(
 				types.ErrDistrRecordNotSorted,
