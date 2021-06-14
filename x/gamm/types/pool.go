@@ -264,11 +264,6 @@ func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset
 		}
 	}
 
-	// Set pool start time if not present.
-	if params.StartTime.Unix() <= 0 {
-		params.StartTime = time.Unix(curBlockTime.Unix(), 0)
-	}
-
 	return nil
 }
 
@@ -475,9 +470,6 @@ func (pa Pool) NumAssets() int {
 }
 
 func (pa Pool) IsActive(curBlockTime time.Time) bool {
-	if pa.PoolParams.StartTime.After(curBlockTime) {
-		return false
-	}
 
 	// Add frozen pool checking, etc...
 

@@ -9,6 +9,8 @@ var LastHalvenEpochKey = []byte{0x03}
 const (
 	// module name
 	ModuleName = "mint"
+	// module acct name for developer vesting
+	DeveloperVestingModuleAcctName = "developer_vesting_unvested"
 
 	// StoreKey is the default store key for mint
 	StoreKey = ModuleName

@@ -23,6 +23,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccountOriginalVesting(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
+	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 }
 
 // DistrKeeper defines the contract needed to be fulfilled for distribution keeper

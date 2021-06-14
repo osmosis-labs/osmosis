@@ -10,6 +10,9 @@ import (
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
+var isPerpetual = true
+var notPerpetual = false
+
 func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.SetupTest()
 
@@ -213,13 +216,14 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	suite.Equal(gauge4Id, res.IncentivizedPools[3].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[3].LockableDuration)
 
-	// Actually, the pool incentives module can add incentives to any gauge, even if the gauge is not directly related to a pool.
+	// Actually, the pool incentives module can add incentives to any perpetual gauge, even if the gauge is not directly related to a pool.
 	// However, these records must be excluded in incentivizedPools.
-	gauge5Id, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         "stake",
-		Duration:      time.Hour,
-	}, time.Now(), 1)
+	gauge5Id, err := suite.app.IncentivesKeeper.CreateGauge(
+		suite.ctx, isPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "stake",
+			Duration:      time.Hour,
+		}, time.Now(), 1)
 	suite.NoError(err)
 
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
@@ -260,4 +264,20 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	suite.Equal(poolId2, res.IncentivizedPools[3].PoolId)
 	suite.Equal(gauge4Id, res.IncentivizedPools[3].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[3].LockableDuration)
+
+	// Ensure that non-perpetual pot can't get rewards.
+	// TODO: extract this to standalone test
+	gauge6Id, err := suite.app.IncentivesKeeper.CreateGauge(
+		suite.ctx, notPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "stake",
+			Duration:      time.Hour,
+		}, time.Now(), 1)
+
+	suite.NoError(err)
+	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
+		GaugeId: gauge6Id,
+		Weight:  sdk.NewInt(100),
+	})
+	suite.Error(err)
 }

@@ -106,6 +106,7 @@ func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) 
 	exitFeeInt := int64(r.Intn(1e5))
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
+
 	timeSecs := r.Intn(1 * 60) // range of 1 min from the block time
 	startTime := blockTime.Add(time.Duration(timeSecs) * time.Second)
 
@@ -116,7 +117,6 @@ func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) 
 		SwapFee: sdk.ZeroDec(), 
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: nil,
-		StartTime:                startTime,
 	}
 }
 
@@ -261,6 +261,7 @@ func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, to
 				tokenIn = sdk.Coin{
 					Denom:  asset.Token.Denom,
 					Amount: amt,
+
 				}
 				break
 			}

@@ -16,19 +16,19 @@ func TestDistrRecord(t *testing.T) {
 		Weight:  sdk.NewInt(0),
 	}
 
-	require.Error(t, zeroWeight.Validate())
+	require.Error(t, zeroWeight.ValidateBasic())
 
 	negativeWeight := types.DistrRecord{
 		GaugeId: 1,
 		Weight:  sdk.NewInt(-1),
 	}
 
-	require.Error(t, negativeWeight.Validate())
+	require.Error(t, negativeWeight.ValidateBasic())
 
 	positiveWeight := types.DistrRecord{
 		GaugeId: 1,
 		Weight:  sdk.NewInt(1),
 	}
 
-	require.NoError(t, positiveWeight.Validate())
+	require.NoError(t, positiveWeight.ValidateBasic())
 }

@@ -10,6 +10,7 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
+	k.SetLockableDurations(ctx, genState.LockableDurations)
 	for _, gauge := range genState.Gauges {
 		k.SetGaugeWithRefKey(ctx, &gauge)
 	}
@@ -18,7 +19,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
-		Params: k.GetParams(ctx),
-		Gauges: k.GetNotFinishedGauges(ctx),
+		Params:            k.GetParams(ctx),
+		LockableDurations: k.GetLockableDurations(ctx),
+		Gauges:            k.GetNotFinishedGauges(ctx),
 	}
 }

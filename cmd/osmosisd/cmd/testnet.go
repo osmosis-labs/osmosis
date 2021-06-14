@@ -79,10 +79,9 @@ Example:
 
 			// get testnet genesis params
 			genesisParams := TestnetGenesisParams()
-			genesisParams.ChainID = chainID
 
 			return InitTestnet(
-				clientCtx, cmd, config, mbm, genBalIterator, genesisParams, outputDir, minGasPrices,
+				clientCtx, cmd, config, mbm, genBalIterator, genesisParams, chainID, outputDir, minGasPrices,
 				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
 			)
 		},
@@ -111,6 +110,7 @@ func InitTestnet(
 	mbm module.BasicManager,
 	genBalIterator banktypes.GenesisBalancesIterator,
 	genesisParams GenesisParams,
+	chainID string,
 	outputDir,
 	minGasPrices,
 	nodeDirPrefix,
@@ -130,7 +130,7 @@ func InitTestnet(
 	simappConfig.Telemetry.Enabled = true
 	simappConfig.Telemetry.PrometheusRetentionTime = 60
 	simappConfig.Telemetry.EnableHostnameLabel = false
-	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", genesisParams.ChainID}}
+	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", chainID}}
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -231,7 +231,7 @@ func InitTestnet(
 
 		txFactory := tx.Factory{}
 		txFactory = txFactory.
-			WithChainID(genesisParams.ChainID).
+			WithChainID(chainID).
 			WithMemo(memo).
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
@@ -252,12 +252,12 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	if err := initGenFiles(clientCtx, mbm, genesisParams, genAccounts, genBalances, genFiles, numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, genesisParams, chainID, genAccounts, genBalances, genFiles, numValidators); err != nil {
 		return err
 	}
 
 	err := collectGenFiles(
-		clientCtx, nodeConfig, genesisParams.ChainID, nodeIDs, valPubKeys, numValidators,
+		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -269,7 +269,7 @@ func InitTestnet(
 }
 
 func initGenFiles(
-	clientCtx client.Context, mbm module.BasicManager, genesisParams GenesisParams,
+	clientCtx client.Context, mbm module.BasicManager, genesisParams GenesisParams, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
@@ -295,7 +295,7 @@ func initGenFiles(
 	bankGenState.Balances = genBalances
 	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&bankGenState)
 
-	appGenState, _, err = PrepareGenesis(clientCtx, appGenState, &types.GenesisDoc{}, genesisParams)
+	appGenState, _, err = PrepareGenesis(clientCtx, appGenState, &types.GenesisDoc{}, genesisParams, chainID)
 	if err != nil {
 		return err
 	}
@@ -306,7 +306,7 @@ func initGenFiles(
 	}
 
 	genDoc := types.GenesisDoc{
-		ChainID:    genesisParams.ChainID,
+		ChainID:    chainID,
 		AppState:   appGenStateJSON,
 		Validators: nil,
 	}

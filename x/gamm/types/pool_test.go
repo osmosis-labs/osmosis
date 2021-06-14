@@ -574,21 +574,17 @@ func TestPoolParamStartTime(t *testing.T) {
 
 	type testCase struct {
 		blockTime time.Time
-		startTime time.Time
 		valid     bool
 	}
 
 	testCases := []testCase{
-		{time.Unix(123456, 0), time.Unix(123456, 0), true},
-		{time.Unix(9999, 0), time.Unix(8888, 0), true},
-		{time.Unix(8888, 0), time.Unix(9999, 0), false},
-		{time.Unix(8888, 0), time.Unix(8888, 1), false},
-		{time.Unix(1, 0), time.Unix(0, 0), true},
+		{time.Unix(123456, 0), true},
+		{time.Unix(9999, 0), true},
+		{time.Unix(1, 0), true},
 	}
 
 	for tcn, tc := range testCases {
 		params := defaultPoolParams
-		params.StartTime = tc.startTime
 		pool, err := NewPool(poolId, params, dummyPoolAssets, defaultFutureGovernor, tc.blockTime)
 		require.NoError(t, err)
 

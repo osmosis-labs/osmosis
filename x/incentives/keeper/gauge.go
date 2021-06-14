@@ -103,6 +103,20 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 // CreateGauge create a gauge and send coins to the gauge
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
+	durations := k.GetLockableDurations(ctx)
+	if distrTo.LockQueryType == lockuptypes.ByDuration {
+		durationOk := false
+		for _, duration := range durations {
+			if duration == distrTo.Duration {
+				durationOk = true
+				break
+			}
+		}
+		if !durationOk {
+			return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
+		}
+	}
+
 	gauge := types.Gauge{
 		Id:                k.getLastGaugeID(ctx) + 1,
 		IsPerpetual:       isPerpetual,
@@ -157,7 +171,7 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	timeKey := getTimeKey(gauge.StartTime)
 	k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id)
 	k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
-	k.hooks.AfterFinishDistribution(ctx, gauge.Id)
+	k.hooks.AfterStartDistribution(ctx, gauge.Id)
 	return nil
 }
 
