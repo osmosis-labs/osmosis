@@ -43,6 +43,7 @@ func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 		}
 
 		for _, pool := range pools {
+			fmt.Println("1234 ", pool.GetAllPoolAssets())
 			assetCoins := types.PoolAssetsCoins(pool.GetAllPoolAssets())
 			accCoins := bk.GetAllBalances(ctx, pool.GetAddress())
 			if !assetCoins.IsEqual(accCoins) {
@@ -84,26 +85,52 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 	}
 }
 
+func constantChange(p1, p2 types.PoolI) sdk.Dec {
+	product := sdk.OneDec()
+	totalWeight := p1.GetTotalWeight()
+	assets1, assets2 := p1.GetAllPoolAssets(), p2.GetAllPoolAssets()
+	for i, asset1 := range assets1 {
+		asset2 := assets2[i]
+		ratio := asset1.Token.Amount.ToDec().Quo(asset2.Token.Amount.ToDec())
+		roundup := ratio.RoundInt().BigInt()
+		w := asset1.Weight.ToDec().Quo(totalWeight.ToDec())
+		// XXX: use integer pow instead of pow for roundup^w
+		roundup.Exp(roundup, w)
+		power := pow(ratio.Quo(roundup.ToDec()), w).Mul(pow(roundup.ToDec(), w))
+		product = product.Mul(power)
+	}
+
+	return product
+}
+
+var (
+	errorMargin, _ = sdk.NewDecFromStr("0.01") // 1%
+)
+
 func PoolProductConstantInvariant(keeper Keeper) sdk.Invariant {
-	constants := make(map[uint64]sdk.Dec)
+	pools := make(map[uint64]types.PoolI)
 
 	return func(ctx sdk.Context) (string, bool) {
-		pools, err := keeper.GetPools(ctx)
+		newpools, err := keeper.GetPools(ctx)
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
 				fmt.Sprintf("\tgamm pool retrieval failed")), true
 		}
 
-		for _, pool := range pools {
-			constant, ok := constants[pool.GetId()]
+		for _, pool := range newpools {
+			oldpool, ok := pools[pool.GetId()]
 			if !ok {
-				constants[pool.GetId()] = pool.PoolProductConstant()
+				pools[pool.GetId()] = pool
 				continue
 			}
-			if !constant.Equal(pool.PoolProductConstant()) {
+
+			change := constantChange(oldpool, pool)
+			if !(sdk.OneDec().Sub(errorMargin).LT(change) && change.LT(sdk.OneDec().Add(errorMargin))) {
 				return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
-					fmt.Sprintf("\tgamm pool id %d\n\t product constant changed", pool.GetId())), true
+				fmt.Sprintf("\tgamm pool id %d product constant changed\n\tdelta: %s\n", pool.GetId(), change.String())), true
 			}
+
+			pools[pool.GetId()] = pool
 		}
 
 		return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",

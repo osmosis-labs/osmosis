@@ -139,7 +139,7 @@ func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 func PoolAssetsCoins(assets []PoolAsset) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, asset := range assets {
-		coins.Add(asset.Token)
+		coins = coins.Add(asset.Token)
 	}
 	return coins
 }

@@ -40,7 +40,6 @@ type PoolI interface {
 	GetTokenBalance(denom string) (sdk.Int, error)
 	NumAssets() int
 	IsActive(curBlockTime time.Time) bool
-	PoolProductConstant() sdk.Dec
 }
 
 var (
@@ -483,18 +482,4 @@ func (pa Pool) IsActive(curBlockTime time.Time) bool {
 	// Add frozen pool checking, etc...
 
 	return true
-}
-
-// calculates invariant V for product (\n -> Bn^Wn)
-func (pa Pool) PoolProductConstant() (res sdk.Dec) {
-	assets := pa.GetAllPoolAssets()
-	totalWeight := pa.GetTotalWeight()
-	res = sdk.OneDec()
-
-	for _, asset := range assets {
-		x := Pow(asset.Token.Amount.ToDec(), asset.Weight.ToDec().Quo(totalWeight.ToDec()))
-		res = res.Mul(x)
-	}
-
-	return
 }
