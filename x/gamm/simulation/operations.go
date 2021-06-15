@@ -86,13 +86,13 @@ func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) s
 func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
 	// selecting random number between [2, Min(coins.Len, 6)]
 	numCoins := 2 + r.Intn(Min(coins.Len(), 6)-1)
-	denomIndices := r.Perm(numCoins)
+	denomIndices := r.Perm(coins.Len())
 	assets := []types.PoolAsset{}
-	for i := 0; i < numCoins; i++ {
-		denom := coins[denomIndices[i]].Denom
-		amt, _ := simtypes.RandPositiveInt(r, coins[i].Amount)
+	for _, denomIndex := range denomIndices[:numCoins] {
+		denom := coins[denomIndex].Denom
+		amt, _ := simtypes.RandPositiveInt(r, coins[denomIndex].Amount.QuoRaw(100))
 		reserveAmt := sdk.NewCoin(denom, amt)
-		weight := sdk.OneInt()
+		weight := sdk.NewInt(r.Int63n(9) + 1)
 		assets = append(assets, types.PoolAsset{Token: reserveAmt, Weight: weight})
 	}
 
@@ -100,15 +100,16 @@ func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types
 }
 
 func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.PoolParams {
-	swapFeeInt := int64(r.Intn(1e5))
-	swapFee := sdk.NewDecWithPrec(swapFeeInt, 5)
+	// swapFeeInt := int64(r.Intn(1e5))
+	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
 	exitFeeInt := int64(r.Intn(1e5))
-	exitFee := sdk.NewDecWithPrec(exitFeeInt, 5)
+	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
 	// TODO: Randomly generate LBP params
 	return types.PoolParams{
-		SwapFee:                  swapFee,
+		// SwapFee:                  swapFee,
+		SwapFee:                  sdk.ZeroDec(),
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: nil,
 	}
@@ -143,11 +144,20 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		poolAssets := genPoolAssets(r, simAccount, simCoins)
 		poolParams := genPoolParams(r, ctx.BlockTime(), poolAssets)
 
+		// Commented out as genFuturePoolGovernor() panics on empty denom slice.
+		// TODO: fix and provide proper denom types.
 		// TODO: Replace []string{} with all token types on chain.
-		futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, []string{})
+		// futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, []string{})
+
+		balances := bk.GetAllBalances(ctx, simAccount.Address)
+		denoms := make([]string, len(balances))
+		for i := range balances {
+			denoms[i] = balances[i].Denom
+		}
+		// futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, denoms)
 		msg := types.MsgCreatePool{
 			Sender:             simAccount.Address.String(),
-			FuturePoolGovernor: futurePoolGovernor,
+			FuturePoolGovernor: "",
 			PoolAssets:         poolAssets,
 			PoolParams:         poolParams,
 		}
@@ -173,26 +183,27 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 		}
 
 		coin := simCoins[r.Intn(len(simCoins))]
-		amt, _ := simtypes.RandPositiveInt(r, coin.Amount)
+		// Use under 0.5% of the account balance
+              // TODO: Make like a 33% probability of using a ton of balance 
+		amt, _ := simtypes.RandPositiveInt(r, coin.Amount.QuoRaw(200))
 
 		tokenIn := sdk.Coin{
 			Denom:  coin.Denom,
 			Amount: amt,
 		}
 
-		routes, tokenOut := RandomExactAmountInRoute(ctx, r, k, tokenIn)
-		if routes == nil {
+		routes, _ := RandomExactAmountInRoute(ctx, r, k, tokenIn)
+		if len(routes) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSwapExactAmountIn, "No pool exist"), nil, nil
 		}
-
-		tokenOutMin, _ := simtypes.RandPositiveInt(r, tokenOut.Amount)
 
 		msg := types.MsgSwapExactAmountIn{
 			Sender:            simAccount.Address.String(),
 			Routes:            routes,
 			TokenIn:           tokenIn,
-			TokenOutMinAmount: tokenOutMin,
+			TokenOutMinAmount: sdk.OneInt(),
+			// TokenOutMinAmount: tokenOutMin.QuoRaw(2),
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -204,17 +215,26 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, tokenIn sdk.Coin) (res []types.SwapAmountInRoute, tokenOut sdk.Coin) {
 	routeLen := r.Intn(1) + 1
 
-	pools, err := k.GetPools(ctx)
+	allpools, err := k.GetPools(ctx)
 	if err != nil {
 		panic(err)
 	}
+
+	pools := []types.PoolI{}
+	for _, pool := range allpools {
+		if pool.IsActive(ctx.BlockTime()) {
+			pools = append(pools, pool)
+		}
+	}
+
 	if len(pools) == 0 {
 		return
 	}
 
-	res = make([]types.SwapAmountInRoute, routeLen)
-	for i := range res {
-		for {
+	res = []types.SwapAmountInRoute{}
+	for i := 0; i < routeLen; i++ {
+		// randomly selected pool might not include the source token, retry
+		for retry := 0; retry < 10; retry++ {
 			pool := pools[r.Intn(len(pools))]
 			inAsset, err := pool.GetPoolAsset(tokenIn.Denom)
 			if err != nil {
@@ -224,22 +244,23 @@ func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, to
 				continue
 			}
 			for _, asset := range pool.GetAllPoolAssets() {
-				if asset.Token.Denom != tokenIn.Denom {
-					res[i] = types.SwapAmountInRoute{
-						PoolId:        pool.GetId(),
-						TokenOutDenom: asset.Token.Denom,
-					}
-					sp, err := k.CalculateSpotPriceWithSwapFee(ctx, pool.GetId(), tokenIn.Denom, asset.Token.Denom)
-					if err != nil {
-						panic(err)
-					}
-					amt := tokenIn.Amount.ToDec().Quo(sp).RoundInt()
-					tokenIn = sdk.Coin{
-						Denom:  asset.Token.Denom,
-						Amount: amt,
-					}
-					break
+				if asset.Token.Denom == tokenIn.Denom {
+					continue
 				}
+				res = append(res, types.SwapAmountInRoute{
+					PoolId:        pool.GetId(),
+					TokenOutDenom: asset.Token.Denom,
+				})
+				sp, err := k.CalculateSpotPriceWithSwapFee(ctx, pool.GetId(), tokenIn.Denom, asset.Token.Denom)
+				if err != nil {
+					panic(err)
+				}
+				amt := tokenIn.Amount.ToDec().Quo(sp).RoundInt()
+				tokenIn = sdk.Coin{
+					Denom:  asset.Token.Denom,
+					Amount: amt,
+				}
+				break
 			}
 			break
 		}

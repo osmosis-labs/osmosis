@@ -207,7 +207,6 @@ func TestCalcSingleInGivenPoolOut(t *testing.T) {
 
 	s := calcSingleInGivenPoolOut(tokenBalanceIn, tokenWeightIn, poolSupply, totalWeight, poolAmountOut, swapFee)
 
-	fmt.Println(s)
 	expectedDec, err := sdk.NewDecFromStr(".")
 	require.NoError(t, err)
 
