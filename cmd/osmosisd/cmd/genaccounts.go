@@ -185,17 +185,19 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file]",
-		Short: "Import genesis accounts from fairdrop snapshot.json",
+		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file] [input-ions-file]",
+		Short: "Import genesis accounts from fairdrop snapshot.json and an ions.json",
 		Long: `Import genesis accounts from fairdrop snapshot.json
 20% of airdrop amount is liquid in accounts.
 The remaining is placed in the claims module.
+
+Must also pass in an ions.json file to airdrop genesis ions
 Example:
-	osmosisd import-genesis-accounts-from-snapshot ../snapshot.json
+	osmosisd import-genesis-accounts-from-snapshot ../snapshot.json ../ions.json
 	- Check input genesis:
-		file is at ~/.gaiad/config/genesis.json
+		file is at ~/.osmosisd/config/genesis.json
 `,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
@@ -230,6 +232,20 @@ Example:
 			byteValue, _ := ioutil.ReadAll(snapshotJSON)
 			snapshot := Snapshot{}
 			json.Unmarshal(byteValue, &snapshot)
+			if err != nil {
+				return err
+			}
+
+			// Read ions file
+			ionInput := args[1]
+			ionJSON, err := os.Open(ionInput)
+			if err != nil {
+				return err
+			}
+			defer ionJSON.Close()
+			byteValue2, _ := ioutil.ReadAll(ionJSON)
+			var ionAmounts map[string]int64
+			json.Unmarshal(byteValue2, &ionAmounts)
 			if err != nil {
 				return err
 			}
@@ -272,9 +288,16 @@ Example:
 				// initial liquid amounts
 				// We consistently round down to the nearest uosmo
 				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
+				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, liquidAmount))
+
+				if ionAmt, ok := ionAmounts[acc.AtomAddress]; ok {
+					liquidCoins = liquidCoins.Add(sdk.NewCoin("uion", sdk.NewInt(ionAmt).MulRaw(1_000_000)))
+					delete(ionAmounts, acc.AtomAddress)
+				}
+
 				liquidBalances = append(liquidBalances, banktypes.Balance{
 					Address: address.String(),
-					Coins:   sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, liquidAmount)),
+					Coins:   liquidCoins,
 				})
 
 				// claimable balances
@@ -287,6 +310,33 @@ Example:
 				})
 
 				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
+
+				// Add the new account to the set of genesis accounts
+				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
+				if err := baseAccount.Validate(); err != nil {
+					return fmt.Errorf("failed to validate new genesis account: %w", err)
+				}
+				accs = append(accs, baseAccount)
+			}
+
+			// distribute remaining ions to accounts not in fairdrop
+			for addr, remainingIons := range ionAmounts {
+				// set atom bech32 prefixes
+				setCosmosBech32Prefixes()
+
+				// read address from snapshot
+				address, err := sdk.AccAddressFromBech32(addr)
+				if err != nil {
+					return err
+				}
+
+				// set osmo bech32 prefixes
+				appparams.SetAddressPrefixes()
+
+				liquidBalances = append(liquidBalances, banktypes.Balance{
+					Address: address.String(),
+					Coins:   sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(remainingIons).MulRaw(1_000_000))),
+				})
 
 				// Add the new account to the set of genesis accounts
 				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
