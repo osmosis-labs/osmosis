@@ -208,6 +208,10 @@ func absDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	}
 }
 
+// func largeBasePow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
+// 	// pow requires the base to be <= 2
+// }
+
 // pow computes base^(exp)
 // However since the exponent is not an integer, we must do an approximation algorithm.
 // TODO: In the future, lets add some optimized routines for common exponents, e.g. for common wIn / wOut ratios
@@ -243,7 +247,8 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 	return integerPow.Mul(fractionalPow)
 }
 
-// Contract: 0 < base < 2
+// Contract: 0 < base <= 2
+// 0 < exp < 1
 func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	if exp.IsZero() {
 		return sdk.ZeroDec()
@@ -260,6 +265,33 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	}
 	// TODO: Make an approx-equal function, and then check if exp * 3 = 1, and do a check accordingly
 
+	// We compute this via taking the maclaurin series of (1 + x)^a
+	// where x = base - 1.
+	// The maclaurin series of (1 + x)^a = sum_{k=0}^{infty} binom(a, k) x^k
+	// Binom(a, k) takes the natural continuation on the first parameter, namely that
+	// Binom(a, k) = N/D, where D = k!, and N = a(a-1)(a-2)...(a-k+1)
+	// Next we show that the absolute value of each term is less than the last term.
+	// Note that the change in term n's value vs term n + 1 is a multiplicative factor of
+	// v_n = x(a - n) / (n+1)
+	// So if |v_n| < 1, we know that each term has a lesser impact on the result than the last.
+	// For our bounds on |x| < 1, |a| < 1,
+	// it suffices to see for what n is |v_n| < 1,
+	// in the worst parameterization of x = 1, a = -1.
+	// v_n = |(-1 + epsilon - n) / (n+1)|
+	// So |v_n| is always less than 1, as n ranges over the integers.
+	//
+	// Note that term_n of the expansion is 1 * prod_{i=0}^{n-1} v_i
+	// The error if we stop the expansion at term_n is:
+	// error_n = sum_{k=n+1}^{infty} term_k
+	// At this point we further restrict a >= 0, so 0 <= a < 1.
+	// Now we take the _INCORRECT_ assumption that if term_n < p, then
+	// error_n < p.
+	// This assumption is obviously wrong.
+	// However our usages of this function don't use the full domain.
+	// With a > 0, |x| << 1, and p sufficiently low, perhaps this actually is true.
+
+	// TODO: Check with our parameterization
+	// TODO: If theres a bug, balancer is also wrong here :thonk:
 	a := exp
 	x, xneg := absDifferenceWithSign(base, one)
 	term := sdk.OneDec()
