@@ -212,7 +212,59 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 	}
 }
 
-func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, tokenIn sdk.Coin) (res []types.SwapAmountInRoute, tokenOut sdk.Coin) {
+func SimulateMsgSwapExactAmountOut(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
+		if simCoins.Len() <= 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgSwapExactAmountIn, "Account have no coin"), nil, nil
+		}
+
+		coin := simCoins[r.Intn(len(simCoins))]
+		amt, _ := simtypes.RandPositiveInt(r, coin.Amount)
+
+		tokenIn := sdk.Coin{
+			Denom:  coin.Denom,
+			Amount: amt,
+		}
+
+		routes, tokenOut := RandomExactAmountInRoute(ctx, r, k, tokenIn)
+		if routes == nil {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgSwapExactAmountIn, "No pool exist"), nil, nil
+		}
+
+		tokenOutMin, _ := simtypes.RandPositiveInt(r, tokenOut.Amount)
+
+		msg := types.MsgSwapExactAmountIn{
+			Sender:            simAccount.Address.String(),
+			Routes:            routes,
+			TokenIn:           tokenIn,
+			TokenOutMinAmount: tokenOutMin,
+		}
+
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		return osmo_simulation.GenAndDeliverTxWithRandFees(
+			r, app, txGen, &msg, sdk.Coins{tokenIn}, ctx, simAccount, ak, bk, types.ModuleName)
+	}
+}
+
+func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, tokenIn sdk.Coin) ([]types.SwapAmountInRoute, sdk.Coin) {
+	res, _, tokenOut := RandomExactAmountRoute(ctx, r, k, tokenIn, true)
+	return res, tokenOut
+}
+
+func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, tokenIn sdk.Coin) ([]types.SwapAmountInRoute, sdk.Coin) {
+	_, res, tokenIn := RandomExactAmountRoute(ctx, r, k, tokenIn, true)
+	return res, tokenIn
+}
+
+func RandomExactAmountRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, tokenSource sdk.Coin, directionIn bool) (
+	ins []types.SwapAmountInRoute, outs []types.SwapAmountOutRoute, tokenDest sdk.Coin,
+) {
 	routeLen := r.Intn(1) + 1
 
 	allpools, err := k.GetPools(ctx)
@@ -231,33 +283,49 @@ func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, to
 		return
 	}
 
-	res = []types.SwapAmountInRoute{}
+	if directionIn {
+		ins = make([]types.SwapAmountInRoute, routeLen)
+	} else {
+		outs = make([]types.SwapAmountOutRoute, routeLen)
+	}
+
 	for i := 0; i < routeLen; i++ {
-		// randomly selected pool might not include the source token, retry
 		for retry := 0; retry < 10; retry++ {
 			pool := pools[r.Intn(len(pools))]
-			inAsset, err := pool.GetPoolAsset(tokenIn.Denom)
+			asset, err := pool.GetPoolAsset(tokenSource.Denom)
 			if err != nil {
 				continue
 			}
-			if inAsset.Token.Amount.LT(tokenIn.Amount) {
+			if asset.Token.Amount.LT(tokenSource.Amount) {
+				// randomly selected pool might not include the source token, retry
 				continue
 			}
-			for _, asset := range pool.GetAllPoolAssets() {
-				if asset.Token.Denom == tokenIn.Denom {
+			for _, destAsset := range pool.GetAllPoolAssets() {
+				if destAsset.Token.Denom == tokenSource.Denom {
 					continue
 				}
-				res = append(res, types.SwapAmountInRoute{
-					PoolId:        pool.GetId(),
-					TokenOutDenom: asset.Token.Denom,
-				})
-				sp, err := k.CalculateSpotPriceWithSwapFee(ctx, pool.GetId(), tokenIn.Denom, asset.Token.Denom)
+				var sp sdk.Dec
+				var amt sdk.Int
+				if directionIn {
+					ins = append(ins, types.SwapAmountInRoute{
+						PoolId:        pool.GetId(),
+						TokenOutDenom: asset.Token.Denom,
+					})
+					sp, err = k.CalculateSpotPriceWithSwapFee(ctx, pool.GetId(), tokenSource.Denom, destAsset.Token.Denom)
+					amt = tokenSource.Amount.ToDec().Quo(sp).RoundInt()
+				} else {
+					outs = append(outs, types.SwapAmountOutRoute{
+						PoolId:       poolGetId(),
+						TokenInDenom: asset.Token.Denom,
+					})
+					sp, err = k.CalculateSpotPriceWithSwapFee(ctx, pool.GetId(), destAsset.Token.Denom, tokenSource.Denom)
+					amt = tokenSource.Amount.ToDec().Mul(sp).RoundInt()
+				}
 				if err != nil {
 					panic(err)
 				}
-				amt := tokenIn.Amount.ToDec().Quo(sp).RoundInt()
-				tokenIn = sdk.Coin{
-					Denom:  asset.Token.Denom,
+				tokenSource = sdk.Coin{
+					Denom:  destAsset.Token.Denom,
 					Amount: amt,
 				}
 				break
@@ -266,6 +334,6 @@ func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, to
 		}
 	}
 
-	tokenOut = tokenIn
+	tokenDest = tokenSource
 	return
 }
