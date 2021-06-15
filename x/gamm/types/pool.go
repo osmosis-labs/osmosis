@@ -373,7 +373,7 @@ func (pa Pool) GetAllPoolAssets() []PoolAsset {
 // TODO: (post-launch) If newWeights excludes an existing denomination,
 // remove the weight from the pool, and figure out something to do
 // with any remaining coin.
-func (pa Pool) updateAllWeights(newWeights []PoolAsset) {
+func (pa *Pool) updateAllWeights(newWeights []PoolAsset) {
 	if len(pa.PoolAssets) != len(newWeights) {
 		panic("updateAllWeights called with invalid input, len(newWeights) != len(existingWeights)")
 	}
