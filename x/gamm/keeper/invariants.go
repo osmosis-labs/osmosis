@@ -88,12 +88,14 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 }
 
 func genericPow(base, exp sdk.Dec) sdk.Dec {
-	if !base.GTE(sdk.OneDec().MulInt64(2)) {
+	if !base.GTE(sdk.NewDec(2)) {
 		return pow(base, exp)
 	}
 	return powApprox(sdk.OneDec().Quo(base), exp.Neg(), powPrecision)
 }
 
+// constantChange returns the multiplicative factor difference in the pool constant, between two different pools.
+// For a Balancer pool, the pool constant is prod_{t in tokens} t.bal^{t.weight}
 func constantChange(p1, p2 types.PoolI) sdk.Dec {
 	product := sdk.OneDec()
 	totalWeight := p1.GetTotalWeight()
