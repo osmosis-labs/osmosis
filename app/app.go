@@ -139,7 +139,6 @@ var (
 		gamm.AppModuleBasic{},
 		incentives.AppModuleBasic{},
 		lockup.AppModuleBasic{},
-		vesting.AppModuleBasic{},
 		poolincentives.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
