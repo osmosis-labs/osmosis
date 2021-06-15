@@ -9,9 +9,8 @@ import (
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
-var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
-
 const poolBalanceInvariantName = "pool-account-balance-equals-expected"
+
 // RegisterInvariants registers all governance invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKeeper) {
 	ir.RegisterRoute(types.ModuleName, poolBalanceInvariantName, PoolAccountInvariant(keeper, bk))
@@ -51,7 +50,7 @@ func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 			if !assetCoins.IsEqual(accCoins) {
 				return sdk.FormatInvariant(types.ModuleName, poolBalanceInvariantName,
 					fmt.Sprintf("\tgamm pool id %d\n\tasset coins: %s\n\taccount coins: %s\n",
-					pool.GetId(), assetCoins, accCoins)), true
+						pool.GetId(), assetCoins, accCoins)), true
 			}
 		}
 
@@ -78,7 +77,7 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 			if !totalWeight.Equal(pool.GetTotalWeight()) {
 				return sdk.FormatInvariant(types.ModuleName, "pool-total-weight",
 					fmt.Sprintf("\tgamm pool id %d\n\tcalculated weight sum %s\n\tpool total weight: %s\n",
-					pool.GetId(), totalWeight, pool.GetTotalWeight())), true
+						pool.GetId(), totalWeight, pool.GetTotalWeight())), true
 			}
 		}
 
@@ -89,9 +88,9 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 
 func genericPow(base, exp sdk.Dec) sdk.Dec {
 	if !base.GTE(sdk.NewDec(2)) {
-		return pow(base, exp)
+		return types.Pow(base, exp)
 	}
-	return powApprox(sdk.OneDec().Quo(base), exp.Neg(), powPrecision)
+	return types.PowApprox(sdk.OneDec().Quo(base), exp.Neg(), types.PowPrecision)
 }
 
 // constantChange returns the multiplicative factor difference in the pool constant, between two different pools.
@@ -118,6 +117,10 @@ var (
 	errorMargin, _ = sdk.NewDecFromStr("0.0001") // 0.01%
 )
 
+// PoolProductContantInvariant chekcs that the pool constant invariant V where
+// V = product([asset_balance_n^asset_weight_n]) holds.
+// The invariant increases with positive swap fee, and decresed upon liquidity
+// removal.
 func PoolProductConstantInvariant(keeper Keeper) sdk.Invariant {
 	pools := make(map[uint64]types.PoolI)
 
@@ -138,7 +141,7 @@ func PoolProductConstantInvariant(keeper Keeper) sdk.Invariant {
 			change := constantChange(oldpool, pool)
 			if !(sdk.OneDec().Sub(errorMargin).LT(change) && change.LT(sdk.OneDec().Add(errorMargin))) {
 				return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
-				fmt.Sprintf("\tgamm pool id %d product constant changed\n\tdelta: %s\n", pool.GetId(), change.String())), true
+					fmt.Sprintf("\tgamm pool id %d product constant changed\n\tdelta: %s\n", pool.GetId(), change.String())), true
 			}
 
 			pools[pool.GetId()] = pool

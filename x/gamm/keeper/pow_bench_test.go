@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func BenchmarkPow(b *testing.B) {
@@ -56,7 +57,7 @@ func BenchmarkPow(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		for _, test := range tests {
-			pow(test.base, test.exp)
+			types.Pow(test.base, test.exp)
 		}
 	}
 }
@@ -80,7 +81,7 @@ func BenchmarkSqrtPow(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		for _, test := range tests {
-			pow(test.base, one_half)
+			types.Pow(test.base, one_half)
 		}
 	}
 }

@@ -61,7 +61,7 @@ func calcOutGivenIn(
 	adjustedIn := sdk.OneDec().Sub(swapFee)
 	adjustedIn = tokenAmountIn.Mul(adjustedIn)
 	y := tokenBalanceIn.Quo(tokenBalanceIn.Add(adjustedIn))
-	foo := pow(y, weightRatio)
+	foo := types.Pow(y, weightRatio)
 	bar := sdk.OneDec().Sub(foo)
 	return tokenBalanceOut.Mul(bar)
 }
@@ -78,7 +78,7 @@ func calcInGivenOut(
 	weightRatio := tokenWeightOut.Quo(tokenWeightIn)
 	diff := tokenBalanceOut.Sub(tokenAmountOut)
 	y := tokenBalanceOut.Quo(diff)
-	foo := pow(y, weightRatio)
+	foo := types.Pow(y, weightRatio)
 	foo = foo.Sub(one)
 	tokenAmountIn := sdk.OneDec().Sub(swapFee)
 	return (tokenBalanceIn.Mul(foo)).Quo(tokenAmountIn)
@@ -102,7 +102,7 @@ func calcPoolOutGivenSingleIn(
 	tokenInRatio := newTokenBalanceIn.Quo(tokenBalanceIn)
 
 	// uint newPoolSupply = (ratioTi ^ weightTi) * poolSupply;
-	poolRatio := pow(tokenInRatio, normalizedWeight)
+	poolRatio := types.Pow(tokenInRatio, normalizedWeight)
 	newPoolSupply := poolRatio.Mul(poolSupply)
 	return newPoolSupply.Sub(poolSupply)
 }
@@ -122,7 +122,7 @@ func calcSingleInGivenPoolOut(
 
 	//uint newBalTi = poolRatio^(1/weightTi) * balTi;
 	boo := sdk.OneDec().Quo(normalizedWeight)
-	tokenInRatio := pow(poolRatio, boo)
+	tokenInRatio := types.Pow(poolRatio, boo)
 	newTokenBalanceIn := tokenInRatio.Mul(tokenBalanceIn)
 	tokenAmountInAfterFee := newTokenBalanceIn.Sub(tokenBalanceIn)
 	// Do reverse order of fees charged in joinswap_ExternAmountIn, this way
@@ -150,7 +150,7 @@ func calcSingleOutGivenPoolIn(
 
 	// newBalTo = poolRatio^(1/weightTo) * balTo;
 
-	tokenOutRatio := pow(poolRatio, sdk.OneDec().Quo(normalizedWeight))
+	tokenOutRatio := types.Pow(poolRatio, sdk.OneDec().Quo(normalizedWeight))
 	newTokenBalanceOut := tokenOutRatio.Mul(tokenBalanceOut)
 
 	tokenAmountOutBeforeSwapFee := tokenBalanceOut.Sub(newTokenBalanceOut)
@@ -182,23 +182,11 @@ func calcPoolInGivenSingleOut(
 	tokenOutRatio := newTokenBalanceOut.Quo(tokenBalanceOut)
 
 	//uint newPoolSupply = (ratioTo ^ weightTo) * poolSupply;
-	poolRatio := pow(tokenOutRatio, normalizedWeight)
+	poolRatio := types.Pow(tokenOutRatio, normalizedWeight)
 	newPoolSupply := poolRatio.Mul(poolSupply)
 	poolAmountInAfterExitFee := poolSupply.Sub(newPoolSupply)
 
 	// charge exit fee on the pool token side
 	// pAi = pAiAfterExitFee/(1-exitFee)
 	return poolAmountInAfterExitFee.Quo(sdk.OneDec())
-}
-
-/*********************************************************/
-
-
-
-func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
-	return types.Pow(base, exp)
-}
-
-func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
-	return types.PowApprox(base, exp, precision)
 }

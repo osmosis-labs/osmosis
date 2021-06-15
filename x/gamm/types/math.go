@@ -8,14 +8,13 @@ import (
 
 // Don't EVER change after initializing
 // TODO: Analyze choice here
-var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
+var PowPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 // Singletons
 var zero sdk.Dec = sdk.ZeroDec()
 var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 var one sdk.Dec = sdk.OneDec()
 var two sdk.Dec = sdk.MustNewDecFromStr("2")
-
 
 /*********************************************************/
 
@@ -27,7 +26,6 @@ func AbsDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 		return b.Sub(a), true
 	}
 }
-
 
 // pow computes base^(exp)
 // However since the exponent is not an integer, we must do an approximation algorithm.
@@ -47,7 +45,6 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 		panic(fmt.Errorf("base must be lesser than two"))
 	}
 
-
 	// We will use an approximation algorithm to compute the power.
 	// Since computing an integer power is easy, we split up the exponent into
 	// an integer component and a fractional component.
@@ -60,7 +57,7 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 		return integerPow
 	}
 
-	fractionalPow := PowApprox(base, fractional, powPrecision)
+	fractionalPow := PowApprox(base, fractional, PowPrecision)
 
 	return integerPow.Mul(fractionalPow)
 }
@@ -87,7 +84,6 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	term := sdk.OneDec()
 	sum := sdk.OneDec()
 	negative := false
-
 
 	// TODO: Document this computation via taylor expansion
 	for i := 1; term.GTE(precision); i++ {
