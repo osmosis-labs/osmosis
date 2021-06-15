@@ -88,9 +88,9 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 
 func genericPow(base, exp sdk.Dec) sdk.Dec {
 	if !base.GTE(sdk.NewDec(2)) {
-		return types.Pow(base, exp)
+		return pow(base, exp)
 	}
-	return types.PowApprox(sdk.OneDec().Quo(base), exp.Neg(), types.PowPrecision)
+	return powApprox(sdk.OneDec().Quo(base), exp.Neg(), powPrecision)
 }
 
 // constantChange returns the multiplicative factor difference in the pool constant, between two different pools.

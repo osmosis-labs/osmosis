@@ -6,8 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func TestAbsDifferenceWithSign(t *testing.T) {
@@ -16,7 +14,7 @@ func TestAbsDifferenceWithSign(t *testing.T) {
 	decB, err := sdk.NewDecFromStr("4.3432389")
 	require.NoError(t, err)
 
-	s, b := types.AbsDifferenceWithSign(decA, decB)
+	s, b := absDifferenceWithSign(decA, decB)
 	require.True(t, b)
 
 	expectedDec, err := sdk.NewDecFromStr("1.1432389")
@@ -30,13 +28,13 @@ func TestPowApprox(t *testing.T) {
 	exp, err := sdk.NewDecFromStr("0.32")
 	require.NoError(t, err)
 
-	s := types.PowApprox(base, exp, types.PowPrecision)
+	s := powApprox(base, exp, powPrecision)
 	expectedDec, err := sdk.NewDecFromStr("0.93108385")
 	require.NoError(t, err)
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision),
+		expectedDec.Sub(s).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
 }
@@ -47,13 +45,13 @@ func TestPow(t *testing.T) {
 	exp, err := sdk.NewDecFromStr("0.32")
 	require.NoError(t, err)
 
-	s := types.Pow(base, exp)
+	s := pow(base, exp)
 	expectedDec, err := sdk.NewDecFromStr("1.18058965")
 	require.NoError(t, err)
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision),
+		expectedDec.Sub(s).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
 }
@@ -77,7 +75,7 @@ func TestCalcSpotPrice(t *testing.T) {
 	// assert that the spot prices are within the error margin from one another.
 	require.True(
 		t,
-		expected_spot_price.Sub(actual_spot_price).Abs().LTE(types.PowPrecision),
+		expected_spot_price.Sub(actual_spot_price).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
 
@@ -103,7 +101,7 @@ func TestCalcSpotPriceWithSwapFee(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision),
+		expectedDec.Sub(s).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
 
@@ -131,7 +129,7 @@ func TestCalcOutGivenIn(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision.MulInt64(10000)),
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
 		"expected value & actual value's difference should less than precision*10000",
 	)
 
@@ -159,7 +157,7 @@ func TestCalcInGivenOut(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision.MulInt64(10)),
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10)),
 		"expected value & actual value's difference should less than precision*10",
 	)
 }
@@ -186,7 +184,7 @@ func TestCalcPoolOutGivenSingleIn(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision.MulInt64(10000)),
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
 		"expected value & actual value's difference should less than precision*10000",
 	)
 }
@@ -214,7 +212,7 @@ func TestCalcSingleInGivenPoolOut(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision.MulInt64(10000)),
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
 		"expected value & actual value's difference should less than precision*10000",
 	)
 }
@@ -242,7 +240,7 @@ func TestCalcSingleOutGivenPoolIn(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision.MulInt64(10000)),
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
 		"expected value & actual value's difference should less than precision*10000",
 	)
 }
@@ -269,7 +267,7 @@ func TestCalcPoolInGivenSingleOut(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(types.PowPrecision.MulInt64(10000)),
+		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
 		"expected value & actual value's difference should less than precision*10000",
 	)
 }
