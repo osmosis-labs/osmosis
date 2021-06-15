@@ -184,6 +184,7 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 
 		coin := simCoins[r.Intn(len(simCoins))]
 		// Use under 0.5% of the account balance
+              // TODO: Make like a 33% probability of using a ton of balance 
 		amt, _ := simtypes.RandPositiveInt(r, coin.Amount.QuoRaw(200))
 
 		tokenIn := sdk.Coin{
