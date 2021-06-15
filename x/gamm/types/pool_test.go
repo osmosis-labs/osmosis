@@ -558,11 +558,18 @@ func TestPoolPokeTokenWeights(t *testing.T) {
 		testCases := addDefaultCases(paramsCopy, tc.cases)
 		for caseNum, testCase := range testCases {
 			pacc.PokeTokenWeights(testCase.blockTime)
+
+			totalWeight := sdk.ZeroInt()
+
 			for assetNum, asset := range pacc.GetAllPoolAssets() {
 				require.Equal(t, testCase.expectedWeights[assetNum], asset.Weight,
 					"Didn't get the expected weights, poolNumber %v, caseNumber %v, assetNumber %v",
 					poolNum, caseNum, assetNum)
+
+				totalWeight = totalWeight.Add(asset.Weight)
 			}
+
+			require.Equal(t, totalWeight, pacc.GetTotalWeight())
 		}
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
 		require.Nil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
