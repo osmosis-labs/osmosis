@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -56,7 +57,7 @@ func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins) locku
 	}
 }
 
-func benchmarkDistributionLogic(numAccts int64, numGauges int64, numLockups int64, numDistrs int64, b *testing.B) {
+func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs int, b *testing.B) {
 	b.ReportAllocs()
 
 	app := app.Setup(false)
@@ -66,17 +67,21 @@ func benchmarkDistributionLogic(numAccts int64, numGauges int64, numLockups int6
 
 	// setup accounts with balances
 	addrs := []sdk.AccAddress{}
-	for i := int64(0); i < numAccts; i++ {
+	for i := 0; i < numAccts; i++ {
 		addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+		coins := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000)}
+		for j := 0; j < numDenoms; j++ {
+			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
+		}
+		app.BankKeeper.SetBalances(ctx, addr, coins)
 		app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
-		app.BankKeeper.SetBalance(ctx, addr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 		addrs = append(addrs, addr)
 	}
 
 	// setup gauges
 	gaugeIds := []uint64{}
-	for i := int64(0); i < numGauges; i++ {
-		addr := addrs[0]
+	for i := 0; i < numGauges; i++ {
+		addr := addrs[r.Int()%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
 
 		isPerpetual := r.Int()%2 == 0
@@ -92,49 +97,64 @@ func benchmarkDistributionLogic(numAccts int64, numGauges int64, numLockups int6
 
 		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver)
 		if err != nil {
+			b.Fail()
+		} else {
 			gaugeIds = append(gaugeIds, gaugeId)
 		}
 	}
 
+	// jump time to the future
+	futureSecs := r.Intn(1 * 60 * 60 * 24 * 7)
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(futureSecs) * time.Second))
+
 	// setup lockups
-	for i := int64(0); i < numLockups; i++ {
-		addr := addrs[0]
+	for i := 0; i < numLockups; i++ {
+		addr := addrs[r.Int()%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
 		duration := time.Second
-		app.LockupKeeper.LockTokens(ctx, addr, simCoins, duration)
+		_, err := app.LockupKeeper.LockTokens(ctx, addr, simCoins, duration)
+		if err != nil {
+			b.Fail()
+		}
 	}
 
 	// begin distribution for all gauges
 	for _, gaugeId := range gaugeIds {
 		gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-		app.IncentivesKeeper.BeginDistribution(ctx, *gauge)
+		err := app.IncentivesKeeper.BeginDistribution(ctx, *gauge)
+		if err != nil {
+			b.Fail()
+		}
 	}
 
 	// distribute coins from gauges to lockup owners
-	for i := int64(0); i < numDistrs; i++ {
+	for i := 0; i < numDistrs; i++ {
 		for _, gaugeId := range gaugeIds {
 			gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-			app.IncentivesKeeper.Distribute(ctx, *gauge)
+			_, err := app.IncentivesKeeper.Distribute(ctx, *gauge)
+			if err != nil {
+				b.Fail()
+			}
 		}
 	}
 }
 
 func BenchmarkDistributionLogicTiny(b *testing.B) {
-	benchmarkDistributionLogic(1, 1, 1, 1, b)
+	benchmarkDistributionLogic(1, 1, 1, 1, 1, b)
 }
 
 func BenchmarkDistributionLogicSmall(b *testing.B) {
-	benchmarkDistributionLogic(10, 10, 10, 100, b)
+	benchmarkDistributionLogic(10, 1, 10, 10, 100, b)
 }
 
 func BenchmarkDistributionLogicMedium(b *testing.B) {
-	benchmarkDistributionLogic(50, 50, 50, 1000, b)
+	benchmarkDistributionLogic(50, 5, 50, 50, 1000, b)
 }
 
 func BenchmarkDistributionLogicLarge(b *testing.B) {
-	benchmarkDistributionLogic(100, 100, 100, 5000, b)
+	benchmarkDistributionLogic(100, 10, 100, 100, 5000, b)
 }
 
 func BenchmarkDistributionLogicHuge(b *testing.B) {
-	benchmarkDistributionLogic(1000, 1000, 1000, 30000, b)
+	benchmarkDistributionLogic(1000, 100, 1000, 1000, 30000, b)
 }
