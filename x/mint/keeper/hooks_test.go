@@ -50,8 +50,8 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
 		mintParams = app.MintKeeper.GetParams(ctx)
-		mintedCoins := sdk.NewCoins(app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams))
-		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.Staking).Amount
+		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
+		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking).Amount
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
 
 		// check community pool balance increase
@@ -60,7 +60,7 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.DeveloperRewards)
+		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
 		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 
@@ -79,8 +79,8 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
 		mintParams = app.MintKeeper.GetParams(ctx)
-		mintedCoins := sdk.NewCoins(app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams))
-		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.Staking).Amount
+		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
+		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking).Amount
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
 
 		// check community pool balance increase
@@ -89,7 +89,7 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 
 		// test that the balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.DeveloperRewards)
+		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
 		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 }
@@ -121,8 +121,8 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
 		mintParams := app.MintKeeper.GetParams(ctx)
-		mintedCoins := sdk.NewCoins(app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams))
-		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards)).Amount
+		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
+		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards)).Amount
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
 
 		// check community pool balance increase
@@ -131,7 +131,7 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.DeveloperRewards)
+		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
 		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 
@@ -150,8 +150,8 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
 		mintParams := app.MintKeeper.GetParams(ctx)
-		mintedCoins := sdk.NewCoins(app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams))
-		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards)).Amount
+		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
+		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards)).Amount
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
 
 		// check community pool balance increase
@@ -160,7 +160,7 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoins, mintParams.DistributionProportions.DeveloperRewards)
+		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
 		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 }

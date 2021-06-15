@@ -140,33 +140,32 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// GetPoolAllocatableAsset gets the balance of the `MintedDenom` from fees and returns coins according to the `AllocationRatio`
-func (k Keeper) GetProportions(ctx sdk.Context, fees sdk.Coins, ratio sdk.Dec) sdk.Coin {
-	params := k.GetParams(ctx)
-	amount := fees.AmountOf(params.MintDenom)
-	return sdk.NewCoin(params.MintDenom, amount.ToDec().Mul(ratio).TruncateInt())
+// GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`
+func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
+	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt())
 }
 
 // DistributeMintedCoins implements distribution of minted coins from mint to external modules.
-func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) error {
+func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
 
 	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module
-	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.Staking))
+	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.Staking))
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, stakingIncentivesCoins)
 	if err != nil {
 		return err
 	}
 
 	// allocate pool allocation ratio to pool-incentives module account account
-	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.PoolIncentives))
+	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.PoolIncentives))
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, poolincentivestypes.ModuleName, poolIncentivesCoins)
 	if err != nil {
 		return err
 	}
 
-	devRewardCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.DeveloperRewards))
+	devRewardCoin := k.GetProportions(ctx, mintedCoin, proportions.DeveloperRewards)
+	devRewardCoins := sdk.NewCoins(devRewardCoin)
 	// This is supposed to come from the developer vesting module address, not the mint module address
 	// we over-allocated to the mint module address earlier though, so we burn it right here.
 	k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins)
@@ -176,7 +175,7 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range params.WeightedDeveloperRewardsReceivers {
-			devRewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, devRewardCoins, w.Weight))
+			devRewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, devRewardCoin, w.Weight))
 			if w.Address == "" {
 				k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
 					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
@@ -195,11 +194,11 @@ func (k Keeper) DistributeMintedCoins(ctx sdk.Context, mintedCoins sdk.Coins) er
 		}
 	}
 
-	communityPoolCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoins, proportions.CommunityPool))
+	communityPoolCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.CommunityPool))
 	k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
 
 	// call an hook after the minting and distribution of new coins
-	k.hooks.AfterDistributeMintedCoins(ctx, mintedCoins)
+	k.hooks.AfterDistributeMintedCoin(ctx, mintedCoin)
 
 	return err
 }

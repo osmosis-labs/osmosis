@@ -36,12 +36,14 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	mintKeeper := suite.app.MintKeeper
 
 	// When coin is minted to the fee collector
-	fees := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0)))
-	coin := mintKeeper.GetProportions(suite.ctx, fees, sdk.NewDecWithPrec(2, 1))
+	fee := sdk.NewCoin("stake", sdk.NewInt(0))
+	fees := sdk.NewCoins(fee)
+	coin := mintKeeper.GetProportions(suite.ctx, fee, sdk.NewDecWithPrec(2, 1))
 	suite.Equal("0stake", coin.String())
 
 	// When mint the 100K stake coin to the fee collector
-	fees = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
+	fee = sdk.NewCoin("stake", sdk.NewInt(100000))
+	fees = sdk.NewCoins(fee)
 	err := suite.app.BankKeeper.AddCoins(
 		suite.ctx,
 		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
@@ -50,7 +52,7 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	suite.NoError(err)
 
 	// check proportion for 20%
-	coin = mintKeeper.GetProportions(suite.ctx, fees, sdk.NewDecWithPrec(2, 1))
+	coin = mintKeeper.GetProportions(suite.ctx, fee, sdk.NewDecWithPrec(2, 1))
 	suite.Equal(fees[0].Amount.Quo(sdk.NewInt(5)), coin.Amount)
 }
 
@@ -86,21 +88,22 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	suite.NoError(err)
 
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
-	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
+	mintCoins := sdk.Coins{mintCoin}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins)
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin)
 	suite.NoError(err)
 
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
 	feeCollector := suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	suite.Equal(
-		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
+		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
 		suite.app.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf("stake"))
 	suite.Equal(
-		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
+		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
 		feePool.CommunityPool.AmountOf("stake"))
 	suite.Equal(
-		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).TruncateInt(),
+		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).TruncateInt(),
 		suite.app.BankKeeper.GetBalance(suite.ctx, devRewardsReceiver, "stake").Amount)
 
 	// Test for multiple dev reward addresses
@@ -117,7 +120,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins)
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin)
 	suite.NoError(err)
 
 	suite.Equal(
@@ -133,9 +136,10 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 
 	params := suite.app.MintKeeper.GetParams(suite.ctx)
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
-	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
+	mintCoins := sdk.Coins{mintCoin}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err := mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins)
+	err := mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin)
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
@@ -155,7 +159,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 
 	// Mint more and community pool should be increased
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins)
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin)
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)

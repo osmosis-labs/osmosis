@@ -47,7 +47,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		// send the minted coins to the fee collector account
-		err = k.DistributeMintedCoins(ctx, mintedCoins)
+		err = k.DistributeMintedCoin(ctx, mintedCoin)
 		if err != nil {
 			panic(err)
 		}

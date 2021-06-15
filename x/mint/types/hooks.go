@@ -5,7 +5,7 @@ import (
 )
 
 type MintHooks interface {
-	AfterDistributeMintedCoins(ctx sdk.Context, fees sdk.Coins)
+	AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin)
 }
 
 var _ MintHooks = MultiMintHooks{}
@@ -17,8 +17,8 @@ func NewMultiMintHooks(hooks ...MintHooks) MultiMintHooks {
 	return hooks
 }
 
-func (h MultiMintHooks) AfterDistributeMintedCoins(ctx sdk.Context, fees sdk.Coins) {
+func (h MultiMintHooks) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
 	for i := range h {
-		h[i].AfterDistributeMintedCoins(ctx, fees)
+		h[i].AfterDistributeMintedCoin(ctx, mintedCoin)
 	}
 }
