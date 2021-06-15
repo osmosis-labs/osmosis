@@ -248,7 +248,7 @@ func pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 }
 
 // Contract: 0 < base <= 2
-// -1 < exp < 1
+// 0 < exp < 1
 func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	if exp.IsZero() {
 		return sdk.ZeroDec()
@@ -283,11 +283,13 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	// Note that term_n of the expansion is 1 * prod_{i=0}^{n-1} v_i
 	// The error if we stop the expansion at term_n is:
 	// error_n = sum_{k=n+1}^{infty} term_k
+	// At this point we further restrict a >= 0, so 0 <= a < 1.
 	// Now we take the _INCORRECT_ assumption that if term_n < p, then
 	// error_n < p.
 	// This assumption is obviously wrong.
 	// However our usages of this function don't use the full domain.
-	// With a > 0, and p sufficiently low, perhaps this actually true.
+	// With a > 0, |x| << 1, and p sufficiently low, perhaps this actually is true.
+
 	// TODO: Check with our parameterization
 	// TODO: If theres a bug, balancer is also wrong here :thonk:
 	a := exp
