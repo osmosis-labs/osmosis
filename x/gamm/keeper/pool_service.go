@@ -403,6 +403,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 		pool.GetTotalWeight().ToDec(),
 		shareInAmount.ToDec(),
 		pool.GetPoolParams().SwapFee,
+		pool.GetPoolParams().ExitFee,
 	).TruncateInt()
 
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
@@ -485,6 +486,7 @@ func (k Keeper) ExitSwapExternAmountOut(
 		pool.GetTotalWeight().ToDec(),
 		tokenOut.Amount.ToDec(),
 		pool.GetPoolParams().SwapFee,
+		pool.GetPoolParams().ExitFee,
 	).TruncateInt()
 
 	if shareInAmount.LTE(sdk.ZeroInt()) {

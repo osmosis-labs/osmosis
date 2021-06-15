@@ -233,7 +233,7 @@ func TestCalcSingleOutGivenPoolIn(t *testing.T) {
 	swapFee, err := sdk.NewDecFromStr("0.15")
 	require.NoError(t, err)
 
-	s := calcSingleOutGivenPoolIn(tokenBalanceOut, tokenWeightOut, poolSupply, totalWeight, poolAmountIn, swapFee)
+	s := calcSingleOutGivenPoolIn(tokenBalanceOut, tokenWeightOut, poolSupply, totalWeight, poolAmountIn, swapFee, sdk.ZeroDec())
 
 	expectedDec, err := sdk.NewDecFromStr("31.77534976")
 	require.NoError(t, err)
@@ -260,7 +260,7 @@ func TestCalcPoolInGivenSingleOut(t *testing.T) {
 	swapFee, err := sdk.NewDecFromStr("0.15")
 	require.NoError(t, err)
 
-	s := calcPoolInGivenSingleOut(tokenBalanceOut, tokenWeightOut, poolSupply, totalWeight, tokenAmountOut, swapFee)
+	s := calcPoolInGivenSingleOut(tokenBalanceOut, tokenWeightOut, poolSupply, totalWeight, tokenAmountOut, swapFee, sdk.ZeroDec())
 
 	expectedDec, err := sdk.NewDecFromStr("90.29092777")
 	require.NoError(t, err)

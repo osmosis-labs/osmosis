@@ -146,11 +146,12 @@ func calcSingleOutGivenPoolIn(
 	totalWeight,
 	poolAmountIn,
 	swapFee sdk.Dec,
+	exitFee sdk.Dec,
 ) sdk.Dec {
 	normalizedWeight := tokenWeightOut.Quo(totalWeight)
 	// charge exit fee on the pool token side
 	// pAiAfterExitFee = pAi*(1-exitFee)
-	poolAmountInAfterExitFee := poolAmountIn.Mul(sdk.OneDec())
+	poolAmountInAfterExitFee := poolAmountIn.Mul(sdk.OneDec().Sub(exitFee))
 	newPoolSupply := poolSupply.Sub(poolAmountInAfterExitFee)
 	poolRatio := newPoolSupply.Quo(poolSupply)
 
@@ -176,6 +177,7 @@ func calcPoolInGivenSingleOut(
 	totalWeight,
 	tokenAmountOut,
 	swapFee sdk.Dec,
+	exitFee sdk.Dec,
 ) sdk.Dec {
 	// charge swap fee on the output token side
 	normalizedWeight := tokenWeightOut.Quo(totalWeight)
@@ -194,7 +196,7 @@ func calcPoolInGivenSingleOut(
 
 	// charge exit fee on the pool token side
 	// pAi = pAiAfterExitFee/(1-exitFee)
-	return poolAmountInAfterExitFee.Quo(sdk.OneDec())
+	return poolAmountInAfterExitFee.Quo(sdk.OneDec().Sub(exitFee))
 }
 
 /*********************************************************/
