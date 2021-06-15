@@ -22,9 +22,10 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
-	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
+	mintCoins := sdk.Coins{mintCoin}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err := mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err := mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
@@ -35,9 +36,10 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 	suite.Equal("40000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake").String())
 
 	// Community pool should be increased
-	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintCoin = sdk.NewCoin("stake", sdk.NewInt(100000))
+	mintCoins = sdk.Coins{mintCoin}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
@@ -93,9 +95,10 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	suite.NoError(err)
 
 	// In this time, there are 3 records, so the assets to be allocated to the gauges proportionally.
-	mintCoins := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
+	mintCoins := sdk.Coins{mintCoin}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
@@ -115,9 +118,10 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	suite.Equal("15000stake", gauge3.Coins.String())
 
 	// Allocate more.
-	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(50000))}
+	mintCoin = sdk.NewCoin("stake", sdk.NewInt(50000))
+	mintCoins = sdk.Coins{mintCoin}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
@@ -157,9 +161,10 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	suite.NoError(err)
 
 	// In this time, there are 3 records, so the assets to be allocated to the gauges proportionally.
-	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintCoin = sdk.NewCoin("stake", sdk.NewInt(100000))
+	mintCoins = sdk.Coins{mintCoin}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
@@ -178,9 +183,10 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	suite.NoError(err)
 
 	// In this time, all should be allocated to community pool
-	mintCoins = sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(100000))}
+	mintCoin = sdk.NewCoin("stake", sdk.NewInt(100000))
+	mintCoins = sdk.Coins{mintCoin}
 	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err = mintKeeper.DistributeMintedCoins(suite.ctx, mintCoins) // this calls AllocateAsset via hook
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
