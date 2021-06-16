@@ -295,18 +295,20 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	// TODO: Check with our parameterization
 	// TODO: If theres a bug, balancer is also wrong here :thonk:
 
-	base = base.Clone()
 	x, xneg := absDifferenceWithSign(base, one)
 	term := sdk.OneDec()
 	sum := sdk.OneDec()
 	negative := false
 
-	a := exp.Clone()
+	a := exp
 	bigK := sdk.NewDec(0)
 	// TODO: Document this computation via taylor expansion
 	for i := int64(1); term.GTE(precision); i++ {
-		a.Set(exp)
+		// At each iteration, we need two values, i and i-1.
+		// To avoid expensive big.Int allocation, we reuse bigK variable.
+		// On this line, bigK == i-1.
 		c, cneg := absDifferenceWithSign(a, bigK)
+		// On this line, bigK == i.
 		bigK.Set(sdk.NewDec(i)) // TODO: O(n) bigint allocation happens
 		term.MulMut(c).MulMut(x).QuoMut(bigK)
 
