@@ -8,8 +8,8 @@ func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) er
 	return k.addGaugeRefByKey(ctx, key, guageID)
 }
 
-func (k Keeper) DeleteGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) {
-	k.deleteGaugeRefByKey(ctx, key, guageID)
+func (k Keeper) DeleteGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) error {
+	return k.deleteGaugeRefByKey(ctx, key, guageID)
 }
 
 func (k Keeper) GetGaugeRefs(ctx sdk.Context, key []byte) []uint64 {

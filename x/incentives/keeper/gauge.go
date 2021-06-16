@@ -86,11 +86,17 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 	curTime := ctx.BlockTime()
 	timeKey := getTimeKey(gauge.StartTime)
 	if gauge.IsUpcomingGauge(curTime) {
-		k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id)
+		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id); err != nil {
+			return err
+		}
 	} else if gauge.IsActiveGauge(curTime) {
-		k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
+		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
+			return err
+		}
 	} else {
-		k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixFinishedGauges, timeKey), gauge.Id)
+		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixFinishedGauges, timeKey), gauge.Id); err != nil {
+			return err
+		}
 	}
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(gauge)
@@ -163,14 +169,17 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 // BeginDistribution is a utility to begin distribution for a specific gauge
 func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	// validation for current time and distribution start time
-	curTime := ctx.BlockTime()
-	if curTime.Before(gauge.StartTime) {
-		return fmt.Errorf("gauge is not able to start distribution yet: %s >= %s", curTime.String(), gauge.StartTime.String())
+	if ctx.BlockTime().Before(gauge.StartTime) {
+		return fmt.Errorf("gauge is not able to start distribution yet: %s >= %s", ctx.BlockTime().String(), gauge.StartTime.String())
 	}
 
 	timeKey := getTimeKey(gauge.StartTime)
-	k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id)
-	k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
+	if err := k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id); err != nil {
+		return err
+	}
+	if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
+		return err
+	}
 	k.hooks.AfterStartDistribution(ctx, gauge.Id)
 	return nil
 }
@@ -178,9 +187,15 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 // FinishDistribution is a utility to finish distribution for a specific gauge
 func (k Keeper) FinishDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	timeKey := getTimeKey(gauge.StartTime)
-	k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
-	k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixFinishedGauges, timeKey), gauge.Id)
-	k.deleteGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom)
+	if err := k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
+		return err
+	}
+	if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixFinishedGauges, timeKey), gauge.Id); err != nil {
+		return err
+	}
+	if err := k.deleteGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
+		return err
+	}
 	k.hooks.AfterFinishDistribution(ctx, gauge.Id)
 	return nil
 }
