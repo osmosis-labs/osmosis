@@ -286,7 +286,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.StrategicReserveAccounts = []banktypes.Balance{
 		{
 			Address: "osmo1el3aytvehpvxw2ymmya4kdyj9yndyy47fw5zh4",
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(47_875_000_000_000))), // 48.875 million OSMO
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(47_874_500_000_000))), // 48.875 million OSMO
 		},
 		{
 			Address: "osmo1g7rp8h6wzekjjy8n6my8za3vg3338eqz3v295v",
@@ -353,12 +353,24 @@ func MainnetGenesisParams() GenesisParams {
 			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(50_000_000_000))),
 		},
 		{
-			Address: "osmo1cvfwxztdurnnuey3lygesqr8g0q9qsvrgtggxr",
+			Address: "osmo17ncgp84x5vmphdlaaktzp7hljh3mhysqw9up3u",
 			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(50_000_000_000))),
 		},
 		{
 			Address: "osmo16n7070n4whce0wlu76j42dyrxh9f7nlapg6c4a",
 			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(50_000_000_000))),
+		},
+		{
+			Address: "osmo1vnyc6q49sr0hs9ddjepcmtlaq3l6wwj0rrw6hd",
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(1_000_000_000))),
+		},
+		{
+			Address: "osmo1ujx3rqerqdksnxnjka2n9tde874mzut75hzx92",
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(1_000_000_000))),
+		},
+		{
+			Address: "osmo1a2r7nqnc9e032wj37ptskh207e232462vcrrjf",
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(1_000_000_000))),
 		},
 	}
 
