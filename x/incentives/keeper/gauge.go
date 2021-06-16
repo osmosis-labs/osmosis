@@ -268,7 +268,7 @@ func (k Keeper) DistributeAllGauges(ctx sdk.Context) (sdk.Coins, error) {
 	// We use total supply to get every denom
 	// totalCoins := k.bk.GetSupply(ctx).GetTotal()
 	for _, denom := range k.getDenomList(ctx) {
-		fmt.Printf("test %v\n", denom)
+		// fmt.Printf("test %v\n", denom)
 		// denom := coin.Denom
 		partialCoins, err := k.distributeAllGaugesForDenom(ctx, denom)
 		if err != nil {
@@ -277,15 +277,6 @@ func (k Keeper) DistributeAllGauges(ctx sdk.Context) (sdk.Coins, error) {
 		totalDistributedCoins = totalDistributedCoins.Add(partialCoins...)
 	}
 	return totalDistributedCoins, nil
-	// // distribute due to epoch event
-	// gauges := k.GetActiveGauges(ctx)
-	// for _, gauge := range gauges {
-	// 	k.Distribute(ctx, gauge)
-	// 	// filled epoch is increased in this step and we compare with +1
-	// 	if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
-	// 		k.FinishDistribution(ctx, gauge)
-	// 	}
-	// }
 }
 
 type durationRewardPerUnitPair struct {
@@ -368,8 +359,8 @@ func (k Keeper) distributeAllGaugesForDenom(
 	if len(filteredGauges) == 0 {
 		return sdk.Coins{}, nil
 	}
-	fmt.Println("filteredGauges")
-	fmt.Println(filteredGauges)
+	// fmt.Println("filteredGauges")
+	// fmt.Println(filteredGauges)
 
 	// List of (duration, R_G / V_G) pairs, sorted by duration
 	rewardSumsPerUnitDenom := []durationRewardPerUnitPair{}
@@ -379,12 +370,12 @@ func (k Keeper) distributeAllGaugesForDenom(
 			duration: gauge.DistributeTo.GetDuration(),
 			dec:      rewardsPerUnit,
 		}
-		fmt.Println("Rewards per unit pre-insert ", len(rewardSumsPerUnitDenom))
+		// fmt.Println("Rewards per unit pre-insert ", len(rewardSumsPerUnitDenom))
 		// This combines the rewards per unit if the duration is the same
 		rewardSumsPerUnitDenom = sortedListInsert(rewardSumsPerUnitDenom, pair)
-		fmt.Println("Rewards per unit ", len(rewardSumsPerUnitDenom))
-		fmt.Println("Rewards sums per unit ", rewardSumsPerUnitDenom,
-			rewardSumsPerUnitDenom[0].dec)
+		// fmt.Println("Rewards per unit ", len(rewardSumsPerUnitDenom))
+		// fmt.Println("Rewards sums per unit ", rewardSumsPerUnitDenom,
+		// 	rewardSumsPerUnitDenom[0].dec)
 	}
 
 	// List of prefix-sums of (duration, R_G / V_G) pairs, sorted by duration
@@ -405,12 +396,12 @@ func (k Keeper) distributeAllGaugesForDenom(
 		cur.dec = cur.dec.Add(v.dec...)
 		accumRewardsPerUnit = append(accumRewardsPerUnit, cur)
 	}
-	fmt.Println("_sdf", accumRewardsPerUnit, accumRewardsPerUnit[0].dec)
+	// fmt.Println("_sdf", accumRewardsPerUnit, accumRewardsPerUnit[0].dec)
 
 	// Get all relevant locks to these gauges
 	minDuration := rewardSumsPerUnitDenom[0].duration - time.Second
 	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, denom, minDuration)
-	fmt.Println("asdf", minDuration, locks)
+	// fmt.Println("asdf", minDuration, locks)
 
 	for _, lock := range locks {
 		index := sort.Search(len(accumRewardsPerUnit), func(i int) bool {
@@ -422,7 +413,7 @@ func (k Keeper) distributeAllGaugesForDenom(
 			shiftedIndex -= 1
 		}
 		if shiftedIndex < 0 {
-			panic("Shouldn't happen")
+			continue
 		}
 		// Mark things as seen
 		if !durationSeenYet[accumRewardsPerUnit[shiftedIndex].duration] {
@@ -444,8 +435,7 @@ func (k Keeper) distributeAllGaugesForDenom(
 					rewardCoinPerUnit.Amount.MulInt(amt).RoundInt(),
 				),
 			)
-			fmt.Println("jsdf", rewardPerUnit, "amt", amt, "distr", distrCoins)
-
+			// fmt.Println("jsdf", rewardPerUnit, "amt", amt, "distr", distrCoins)
 		}
 		// Payout reward to lock
 		err = k.payRewardToLock(ctx, lock, distrCoins)
@@ -457,16 +447,20 @@ func (k Keeper) distributeAllGaugesForDenom(
 	}
 
 	// Handle "cleanup" for gauges
-	for i, gauge := range filteredGauges {
+	for _, gauge := range filteredGauges {
 		if durationSeenYet[gauge.DistributeTo.Duration] {
 			gaugeRewards := k.rewardsForGauge(ctx, gauge)
 			gauge.FilledEpochs += 1
 			gauge.DistributedCoins = gauge.DistributedCoins.Add(gaugeRewards...)
-			fmt.Println("distr coins update", i, gauge.DistributedCoins)
+			// fmt.Println("distr coins update", i, gauge.DistributedCoins)
 			k.setGauge(ctx, &gauge)
 		}
 
 		k.hooks.AfterDistribute(ctx, gauge.Id)
+
+		// if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs {
+		// 	k.FinishDistribution(ctx, gauge)
+		// }
 	}
 	return totalDistrCoins, nil
 }
@@ -478,10 +472,10 @@ func (k Keeper) activeGaugesFromIDs(ctx sdk.Context, ids []uint64) ([]types.Gaug
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(gauge)
+		// fmt.Println(gauge)
 		if gauge.IsActiveGauge(ctx.BlockTime()) {
 			activeGauges = append(activeGauges, *gauge)
-			fmt.Println(activeGauges)
+			// fmt.Println(activeGauges)
 		}
 	}
 	return activeGauges, nil
