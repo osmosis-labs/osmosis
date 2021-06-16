@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -286,6 +287,41 @@ func (k Keeper) DistributeAllGauges(ctx sdk.Context) (sdk.Coins, error) {
 	// }
 }
 
+type durationRewardPerUnitPair struct {
+	duration time.Duration
+	dec      sdk.Dec
+}
+
+func (dr durationRewardPerUnitPair) equal(s durationRewardPerUnitPair) bool {
+	return dr.duration.Truncate(time.Second) == s.duration.Truncate(time.Second)
+}
+
+// modified from
+// https://stackoverflow.com/questions/42746972/golang-insert-to-a-sorted-slice
+// but edited to use our struct, and search by duration
+func sortedListInsert(ss []durationRewardPerUnitPair, s durationRewardPerUnitPair) []durationRewardPerUnitPair {
+	if len(ss) == 0 {
+		return []durationRewardPerUnitPair{s}
+	}
+	i := sort.Search(len(ss), func(i int) bool {
+		return ss[i].duration.Truncate(time.Second) >= s.duration.Truncate(time.Second)
+	})
+	// If the duration is already in there, then we have a second gauge with the same duration.
+	// We add the reward contributions together.
+	if i != len(ss) && ss[i].equal(s) {
+		ss[i].dec = ss[i].dec.Add(s.dec)
+		return ss
+	}
+	ss = append(ss, s)
+	if i == len(ss) {
+		return ss
+	}
+	// shift over everything by 1, and insert new entry accordingly
+	copy(ss[i+1:], ss[i:])
+	ss[i] = s
+	return ss
+}
+
 // distributeAllGaugesForDenom distributes tokens for all gauges of denom `d`,
 // to all lockups of denom `d`.
 // It returns the total amount tokens distributed.
@@ -306,18 +342,30 @@ func (k Keeper) distributeAllGaugesForDenom(
 	// These imply an algorithm with the stated efficiency goals.
 	// In time O(#gauges_denom) we build the list of rewards per unit lockup of duration
 	// equal to a gauges duration.
-	//
+	// Then in time O(#lockups_d log_2(#gauges_d)) we get the closest gauge w/ duration
+	// less than that lockups time. Call this R_{L time}. (We do this via a standard
+	// binary search true)
+	// Then in time  O(#lockups_d) we compute the rewards for that lockup as
+	// lockup.Amt * R_{lockup.Time}
 
 	gaugeIDs := k.getAllGaugeIDsByDenom(ctx, denom)
 	// all gauges corresponding to the above gaugeIDs, for gauges that are active
-	// filteredGauges := k.activeGaugesFromIDs(ctx, gaugeIDs)
-	// rewardSumsPerUnitDenom := []sdk.Dec{}
+	filteredGauges, err := k.activeGaugesFromIDs(ctx, gaugeIDs)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	rewardSumsPerUnitDenom := []durationRewardPerUnitPair{}
+	for _, gauge := range filteredGauges {
+		rewardsPerUnit := k.rewardsPerUnitForGauge(ctx, gauge)
+	}
 
 	// Hack to get all relevant locks to a denom, set duration to 0
 	zeroDuration := 0 * time.Second
 	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, denom, zeroDuration)
 	fmt.Println(locks)
 	// locks := k.GetLocksToDistribution()
+	return sdk.Coins{}, err
 }
 
 func (k Keeper) activeGaugesFromIDs(ctx sdk.Context, ids []uint64) ([]types.Gauge, error) {
@@ -332,6 +380,20 @@ func (k Keeper) activeGaugesFromIDs(ctx sdk.Context, ids []uint64) ([]types.Gaug
 		}
 	}
 	return activeGauges, nil
+}
+
+func (k Keeper) rewardsPerUnitForGauge(ctx sdk.Context, gauge types.Gauge) sdk.Coins {
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainEpochs := uint64(1)
+	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
+		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
+	}
+	TotalAmtLocked := k.lk.GetPeriodLocksAccumulation(ctx, gauge.DistributeTo)
+	divisor := TotalAmtLocked.MulRaw(int64(remainEpochs))
+	for i := 0; i < len(remainCoins); i++ {
+		remainCoins[i].Amount = remainCoins[i].Amount.Quo(divisor)
+	}
+	return remainCoins
 }
 
 // Distribute coins from gauge according to its conditions
