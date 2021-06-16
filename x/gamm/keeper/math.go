@@ -202,11 +202,12 @@ func calcPoolInGivenSingleOut(
 /*********************************************************/
 
 // absDifferenceWithSign returns | a - b |, (a - b).sign()
+// a is mutated and returned
 func absDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	if a.GTE(b) {
-		return a.Sub(b), false
+		return a.SubMut(b), false
 	} else {
-		return b.Sub(a), true
+		return a.NegMut().AddMut(b), true
 	}
 }
 
@@ -295,12 +296,13 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	// TODO: Check with our parameterization
 	// TODO: If theres a bug, balancer is also wrong here :thonk:
 
+	base = base.Clone()
 	x, xneg := absDifferenceWithSign(base, one)
 	term := sdk.OneDec()
 	sum := sdk.OneDec()
 	negative := false
 
-	a := exp
+	a := exp.Clone()
 	bigK := sdk.NewDec(0)
 	// TODO: Document this computation via taylor expansion
 	for i := int64(1); term.GTE(precision); i++ {
@@ -311,6 +313,9 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 		// On this line, bigK == i.
 		bigK.Set(sdk.NewDec(i)) // TODO: O(n) bigint allocation happens
 		term.MulMut(c).MulMut(x).QuoMut(bigK)
+
+		// a is mutated on absDifferenceWithSign, reset
+		a.Set(exp)
 
 		if term.IsZero() {
 			break
