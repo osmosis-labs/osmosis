@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -481,4 +482,185 @@ func (suite *KeeperTestSuite) TestPerpetualActiveGaugesByDenom() {
 	// check gauge ids by denom
 	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
 	suite.Require().Len(gaugeIds, 1)
+}
+
+func (suite *KeeperTestSuite) TestComplexScenarioGauge() {
+	suite.SetupTest()
+
+	durations := []time.Duration{
+		time.Second * 5,  // 5 secs
+		time.Second * 10, // 10 secs
+		time.Second * 15, // 15 secs
+	}
+
+	createGauge := func(addr sdk.AccAddress, coins sdk.Coins, denom string, duration time.Duration, epochs uint64) (uint64, *types.Gauge) {
+		distrTo := lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         denom,
+			Duration:      duration,
+		}
+		return suite.CreateGauge(epochs == 1, addr, coins, distrTo, time.Time{}, epochs)
+	}
+
+	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, durations)
+
+	// epoch == 10 secs
+	epochDur := time.Second * 10
+	suite.app.IncentivesKeeper.SetParams(suite.ctx, types.NewParams("testepoch"))
+	epochInfo := epochtypes.EpochInfo{
+		Identifier:            "testepoch",
+		StartTime:             time.Time{},
+		Duration:              epochDur,
+		CurrentEpoch:          0,
+		CurrentEpochStartTime: time.Time{},
+		EpochCountingStarted:  false,
+		CurrentEpochEnded:     true,
+	}
+	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochInfo)
+
+	blockTime := time.Second * 5
+
+	isEpochEnd := func(blockN int) bool {
+		return (time.Duration(blockN)*blockTime)%epochDur == 0
+	}
+
+	nextBlock := func() {
+		suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(blockTime))
+	}
+
+	creator := sdk.AccAddress([]byte("addr1---------------"))
+	lockdenom1 := "denom1"
+	lockdenom2 := "denom2"
+	rewarddenom := "reward"
+	address1 := sdk.AccAddress([]byte("testaddr00----------"))
+	address2 := sdk.AccAddress([]byte("testaddr01----------"))
+
+	lock1 := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(lockdenom1, amt) }
+	lock2 := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(lockdenom2, amt) }
+	reward := func(amt int64) sdk.Coins { return sdk.NewCoins(sdk.NewInt64Coin(rewarddenom, amt)) }
+
+	// denom := func(i int) string { return []string{lockdenom1, lockdenom2}[i%2] }
+	// epoch := func(i int) uint64 { return []uint64{10, 1}[i%4/2] }
+	gauges := make([]uint64, len(durations)*4)
+	for i, duration := range durations {
+		gauges[i*4+0], _ = createGauge(creator, reward(100), lockdenom1, duration, 10) // non perpetual, denom 1
+		gauges[i*4+1], _ = createGauge(creator, reward(200), lockdenom2, duration, 10) // non perpetual, denom 2
+		gauges[i*4+2], _ = createGauge(creator, reward(100), lockdenom1, duration, 1)  // perpetual, denom 1
+		gauges[i*4+3], _ = createGauge(creator, reward(200), lockdenom2, duration, 1)  // perpetual, denom 2
+	}
+
+	blockN := 0
+
+	// no lockups on first 4 blocks == 2 epochs
+	for ; blockN < 4; blockN++ {
+		if isEpochEnd(blockN) {
+			for _, gaugeID := range gauges {
+				gauge, _ := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+				distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+				suite.Require().NoError(err)
+				suite.Require().True(distrCoins.Empty())
+			}
+		}
+		for _, gaugeID := range gauges {
+			gauge, _ := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+			suite.Require().True(gauge.DistributedCoins.Empty())
+		}
+
+		nextBlock()
+	}
+
+	// add locksups for account 1, denom 1, duraiton 10 secs
+	suite.LockTokens(address1, sdk.NewCoins(lock1(1)), time.Second*10)
+
+	// single lockup on next 4 blocks == 2 epochs
+	for ; blockN < 8; blockN++ {
+		if isEpochEnd(blockN) {
+			for _, gaugeID := range gauges {
+				gauge, _ := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+				_, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+				suite.Require().NoError(err)
+			}
+		}
+
+		nextBlock()
+	}
+
+	// address 1, each epoch:
+	// reward1(10) by gauge 1
+	// reward1(10) by gauge 5
+	// address 1, one time
+	// reward2(100) by gauge 3
+	// reward2(100) by gauge 7
+	suite.Require().True(reward(240).IsEqual(
+		suite.app.BankKeeper.GetAllBalances(suite.ctx, address1),
+	))
+
+	// another lockup for account 2, denom 1, duration 6 secs
+	suite.LockTokens(address2, sdk.NewCoins(lock1(2)), time.Second*6)
+
+	// two lockups on next 6 blocks == 3 epochs
+	for ; blockN < 14; blockN++ {
+		if isEpochEnd(blockN) {
+			for _, gaugeID := range gauges {
+				gauge, _ := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+				_, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+				suite.Require().NoError(err)
+			}
+		}
+
+		nextBlock()
+	}
+
+	// address 1, each epoch:
+	// reward(3) by gauge 1
+	// reward(10) by gauge 5
+	suite.Require().True(reward(240 + 39).IsEqual(
+		suite.app.BankKeeper.GetAllBalances(suite.ctx, address1),
+	))
+
+	// address 2, each epoch:
+	// reward(7) by gauge 1
+	suite.Require().True(reward(0 + 21).IsEqual(
+		suite.app.BankKeeper.GetAllBalances(suite.ctx, address2),
+	))
+
+	// lockups for address 1, denom 1/2, duration 16 secs
+	suite.LockTokens(address1, sdk.NewCoins(lock1(2), lock2(1)), time.Second*16)
+
+	// four lockups on next 4 blocks == 2 epochs
+	for ; blockN < 18; blockN++ {
+		if isEpochEnd(blockN) {
+			for _, gaugeID := range gauges {
+				gauge, _ := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+				_, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+				suite.Require().NoError(err)
+			}
+		}
+
+		nextBlock()
+	}
+
+	// address 1, each epoch:
+	// reward(6) by gauge 1
+	// reward(20) by gauge 2
+	// reward(10) by gauge 5
+	// reward(20) by gauge 6
+	// reward(10) by gauge 9
+	// reward(20) by gauge 10
+	// addres 1, one time:
+	// reward(200) by gauge 4
+	// reward(200) by gauge 8
+	// reward(100) by gauge 11
+	// reward(200) by gauge 12
+
+	suite.Require().True(reward(240 + 39 + 872).IsEqual(
+		suite.app.BankKeeper.GetAllBalances(suite.ctx, address1),
+	))
+
+	// address 2, each epoch:
+	// reward(4) by gauge 1
+	suite.Require().True(reward(0 + 21 + 8).IsEqual(
+		suite.app.BankKeeper.GetAllBalances(suite.ctx, address2),
+	))
+
 }
