@@ -88,7 +88,7 @@ func (k Keeper) SwapExactAmountOut(
 	poolOutBal, _ := pool.GetTokenBalance(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
 		// TODO: Correct error type
-		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrTooManyPoolAssets,
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
 
