@@ -1,8 +1,11 @@
 package types
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // DefaultIndex is the default capability global index
@@ -22,6 +25,18 @@ func DefaultGenesis() *GenesisState {
 			time.Hour * 7,
 		},
 	}
+}
+
+// GetGenesisStateFromAppState returns x/incentives GenesisState given raw application
+// genesis state.
+func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) *GenesisState {
+	var genesisState GenesisState
+
+	if appState[ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+	}
+
+	return &genesisState
 }
 
 // Validate performs basic genesis state validation returning an error upon any
