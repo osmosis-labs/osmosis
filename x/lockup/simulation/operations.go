@@ -19,16 +19,16 @@ import (
 
 // Simulation operation weights constants
 const (
-	DefaultWeightMsgLockTokens int = 10
+	DefaultWeightMsgLockTokens        int = 10
 	DefaultWeightMsgBeginUnlockingAll int = 10
-	DefaultWeightMsgUnlockTokens int = 10
-	DefaultWeightMsgBeginUnlocking int = 10
-	DefaultWeightMsgUnlockPeriodLock int = 10
-	OpWeightMsgLockTokens          = "op_weight_msg_create_lockup"
-	OpWeightMsgBeginUnlockingAll   = "op_weight_msg_begin_unlocking_all"
-	OpWeightMsgUnlockTokens   = "op_weight_msg_unlock_tokens"
-	OpWeightMsgBeginUnlocking = "op_weight_msg_begin_unlocking"
-	OpWeightMsgUnlockPeriodLock = "op_weight_msg_unlock_period_lock"
+	DefaultWeightMsgUnlockTokens      int = 10
+	DefaultWeightMsgBeginUnlocking    int = 10
+	DefaultWeightMsgUnlockPeriodLock  int = 10
+	OpWeightMsgLockTokens                 = "op_weight_msg_create_lockup"
+	OpWeightMsgBeginUnlockingAll          = "op_weight_msg_begin_unlocking_all"
+	OpWeightMsgUnlockTokens               = "op_weight_msg_unlock_tokens"
+	OpWeightMsgBeginUnlocking             = "op_weight_msg_begin_unlocking"
+	OpWeightMsgUnlockPeriodLock           = "op_weight_msg_unlock_period_lock"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -37,11 +37,11 @@ func WeightedOperations(
 	bk stakingTypes.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgLockTokens int
+		weightMsgLockTokens        int
 		weightMsgBeginUnlockingAll int
-		weightMsgUnlockTokens int
-		weightMsgBeginUnlocking int
-		weightMsgUnlockPeriodLock int
+		weightMsgUnlockTokens      int
+		weightMsgBeginUnlocking    int
+		weightMsgUnlockPeriodLock  int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgLockTokens, &weightMsgLockTokens, nil,
@@ -70,7 +70,7 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgBeginUnlocking,
 			SimulateMsgBeginUnlocking(ak, bk, k),
-		),	simulation.NewWeightedOperation(
+		), simulation.NewWeightedOperation(
 			weightMsgUnlockPeriodLock,
 			SimulateMsgUnlockPeriodLock(ak, bk, k),
 		),
@@ -117,13 +117,13 @@ func SimulateMsgLockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		}
 		lockTokens := genLockTokens(r, simAccount, simCoins)
 
-		durationSecs := r.Intn(1*60*60*24*7) // range of 1 week
+		durationSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		duration := time.Duration(durationSecs) * time.Second
 
 		msg := types.MsgLockTokens{
-			Owner: simAccount.Address.String(),
+			Owner:    simAccount.Address.String(),
 			Duration: duration,
-			Coins: lockTokens,
+			Coins:    lockTokens,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -134,7 +134,7 @@ func SimulateMsgLockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 
 func SimulateMsgBeginUnlockingAll(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
-			r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
@@ -156,7 +156,7 @@ func SimulateMsgBeginUnlockingAll(ak stakingTypes.AccountKeeper, bk stakingTypes
 
 func SimulateMsgUnlockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
-			r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
@@ -178,7 +178,7 @@ func SimulateMsgUnlockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.Bank
 
 func SimulateMsgBeginUnlocking(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
-			r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
@@ -195,7 +195,7 @@ func SimulateMsgBeginUnlocking(ak stakingTypes.AccountKeeper, bk stakingTypes.Ba
 
 		msg := types.MsgBeginUnlocking{
 			Owner: simAccount.Address.String(),
-			ID: lock.ID,
+			ID:    lock.ID,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -207,7 +207,7 @@ func SimulateMsgBeginUnlocking(ak stakingTypes.AccountKeeper, bk stakingTypes.Ba
 
 func SimulateMsgUnlockPeriodLock(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
-			r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
@@ -222,9 +222,14 @@ func SimulateMsgUnlockPeriodLock(ak stakingTypes.AccountKeeper, bk stakingTypes.
 				types.ModuleName, types.TypeMsgUnlockPeriodLock, "Account have no period lock"), nil, nil
 		}
 
+		// TODO: Switch this to instead be a future op on locking
+		if k.GetAccountUnlockableCoins(ctx, simAccount.Address).Empty() {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgUnlockPeriodLock, "Account hasn't started unlocking"), nil, nil
+		}
 		msg := types.MsgUnlockPeriodLock{
 			Owner: simAccount.Address.String(),
-			ID: lock.ID,
+			ID:    lock.ID,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -233,8 +238,6 @@ func SimulateMsgUnlockPeriodLock(ak stakingTypes.AccountKeeper, bk stakingTypes.
 
 	}
 }
-
-
 
 func RandomAccountLock(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, addr sdk.AccAddress) *types.PeriodLock {
 	locks := k.GetAccountPeriodLocks(ctx, addr)
