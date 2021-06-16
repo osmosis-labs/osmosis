@@ -19,7 +19,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			}
 		}
 
-		k.DistributeAllGauges(ctx)
+		_, err := k.DistributeAllGauges(ctx)
+		if err != nil {
+			panic(err)
+		}
 
 		// Finish distribution
 		gauges = k.GetActiveGauges(ctx)

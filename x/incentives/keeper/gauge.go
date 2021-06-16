@@ -319,6 +319,9 @@ func (k Keeper) payRewardToLock(ctx sdk.Context, lock lockuptypes.PeriodLock, re
 	if err != nil {
 		return err
 	}
+	if reward.Empty() {
+		return nil
+	}
 	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, reward)
 	return err
 }
@@ -466,12 +469,12 @@ func (k Keeper) distributeAllGaugesForDenom(
 		// 	k.FinishDistribution(ctx, gauge)
 		// }
 	}
-	if !sumGaugeRewards.IsEqual(totalDistrCoins) {
-		panic(fmt.Sprintf("basic %v, %v, %v, \n filtered gauges %v,\n locks %v\n", sumGaugeRewards, totalDistrCoins, totalDistrCoins.Sub(sumGaugeRewards),
-			filteredGauges, locks))
-	} else {
-		fmt.Println("Working correctly")
-	}
+	// if !sumGaugeRewards.IsEqual(totalDistrCoins) {
+	// 	panic(fmt.Sprintf("basic %v, %v, %v, \n filtered gauges %v,\n locks %v\n", sumGaugeRewards, totalDistrCoins, totalDistrCoins.Sub(sumGaugeRewards),
+	// 		filteredGauges, locks))
+	// } else {
+	// 	fmt.Println("Working correctly")
+	// }
 	return totalDistrCoins, nil
 }
 
