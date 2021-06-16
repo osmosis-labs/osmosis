@@ -55,7 +55,7 @@ func NewPoolAddress(poolId uint64) sdk.AccAddress {
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
 // Invariants that are assumed to be satisfied and not checked:
-// TODO: Why don't we check these in here?
+// (This is handled in ValidateBasic)
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
 // * poolID doesn't already exist
