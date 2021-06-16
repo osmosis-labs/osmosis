@@ -120,9 +120,7 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	}
 
 	bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
-	bankGenState.DenomMetadata = []banktypes.Metadata{
-		genesisParams.NativeCoinMetadata,
-	}
+	bankGenState.DenomMetadata = genesisParams.NativeCoinMetadatas
 
 	for _, additionalAcc := range genesisParams.AdditionalAccounts {
 		// Add the new account to the set of genesis accounts
@@ -259,8 +257,8 @@ type GenesisParams struct {
 
 	ConsensusParams *tmproto.ConsensusParams
 
-	GenesisTime        time.Time
-	NativeCoinMetadata banktypes.Metadata
+	GenesisTime         time.Time
+	NativeCoinMetadatas []banktypes.Metadata
 
 	StakingParams      stakingtypes.Params
 	MintParams         minttypes.Params
@@ -283,24 +281,26 @@ func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
 	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13)                // 5*10^13 uosmo, 5*10^7 (50 million) osmo
-	genParams.GenesisTime = time.Date(2021, 6, 16, 17, 0, 0, 0, time.UTC) // Jun 16, 2021 - 17:00 UTC
+	genParams.GenesisTime = time.Date(2021, 6, 18, 17, 0, 0, 0, time.UTC) // Jun 18, 2021 - 17:00 UTC
 
-	genParams.NativeCoinMetadata = banktypes.Metadata{
-		Description: fmt.Sprintf("The native token of Osmosis"),
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    appParams.BaseCoinUnit,
-				Exponent: 0,
-				Aliases:  nil,
+	genParams.NativeCoinMetadatas = []banktypes.Metadata{
+		banktypes.Metadata{
+			Description: fmt.Sprintf("The native token of Osmosis"),
+			DenomUnits: []*banktypes.DenomUnit{
+				{
+					Denom:    appParams.BaseCoinUnit,
+					Exponent: 0,
+					Aliases:  nil,
+				},
+				{
+					Denom:    appParams.HumanCoinUnit,
+					Exponent: appParams.OsmoExponent,
+					Aliases:  nil,
+				},
 			},
-			{
-				Denom:    appParams.HumanCoinUnit,
-				Exponent: appParams.OsmoExponent,
-				Aliases:  nil,
-			},
+			Base:    appParams.BaseCoinUnit,
+			Display: appParams.HumanCoinUnit,
 		},
-		Base:    appParams.BaseCoinUnit,
-		Display: appParams.HumanCoinUnit,
 	}
 
 	// genParams.AdditionalAccounts TODO
@@ -308,13 +308,13 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
 	genParams.StakingParams.MaxValidators = 100
-	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadata.Base
+	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	genParams.MintParams = minttypes.DefaultParams()
 	genParams.MintParams.EpochIdentifier = "day"                                        // 1 week
 	genParams.MintParams.GenesisEpochProvisions = sdk.NewDec(300_000_000).QuoInt64(365) // 300M / 365 = ~821917.8082191781
-	genParams.MintParams.MintDenom = genParams.NativeCoinMetadata.Base
+	genParams.MintParams.MintDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3) // 2/3
 	genParams.MintParams.ReductionPeriodInEpochs = 365               // 1 year (screw leap years)
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
@@ -337,14 +337,14 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.GovParams = govtypes.DefaultParams()
 	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
-		genParams.NativeCoinMetadata.Base,
+		genParams.NativeCoinMetadatas[0].Base,
 		genParams.AirdropSupply.QuoRaw(100_000), // 1000 OSMO
 	))
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.25") // 25%
 	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 72         // 3 days
 
 	genParams.CrisisConstantFee = sdk.NewCoin(
-		genParams.NativeCoinMetadata.Base,
+		genParams.NativeCoinMetadatas[0].Base,
 		genParams.AirdropSupply.QuoRaw(1_000), // 1/1,000 of airdrop supply  TODO: See how crisis invariant fee
 	)
 
@@ -367,7 +367,7 @@ func MainnetGenesisParams() GenesisParams {
 		AirdropStartTime:   genParams.GenesisTime,
 		DurationUntilDecay: time.Hour * 24 * 60,  // 60 days = ~2 months
 		DurationOfDecay:    time.Hour * 24 * 120, // 120 days = ~4 months
-		ClaimDenom:         genParams.NativeCoinMetadata.Base,
+		ClaimDenom:         genParams.NativeCoinMetadatas[0].Base,
 	}
 
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
@@ -376,7 +376,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Version.AppVersion = 1
 
 	genParams.PoolIncentivesGenesis = *poolincentivestypes.DefaultGenesisState()
-	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadata.Base
+	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.PoolIncentivesGenesis.LockableDurations = []time.Duration{
 		time.Hour * 24,      // 1 day
 		time.Hour * 24 * 7,  // 7 day
@@ -401,65 +401,67 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.AirdropSupply = sdk.NewIntWithDecimal(5, 13) // 5*10^13 uosmo, 5*10^7 (50 million) osmo
 	genParams.GenesisTime = time.Now()
 
-	genParams.NativeCoinMetadata = banktypes.Metadata{
-		Description: fmt.Sprintf("The native token of Osmosis"),
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    appParams.BaseCoinUnit,
-				Exponent: 0,
-				Aliases:  nil,
+	genParams.NativeCoinMetadatas = []banktypes.Metadata{
+		banktypes.Metadata{
+			Description: fmt.Sprintf("The native token of Osmosis"),
+			DenomUnits: []*banktypes.DenomUnit{
+				{
+					Denom:    appParams.BaseCoinUnit,
+					Exponent: 0,
+					Aliases:  nil,
+				},
+				{
+					Denom:    appParams.HumanCoinUnit,
+					Exponent: appParams.OsmoExponent,
+					Aliases:  nil,
+				},
 			},
-			{
-				Denom:    appParams.HumanCoinUnit,
-				Exponent: appParams.OsmoExponent,
-				Aliases:  nil,
-			},
+			Base:    appParams.BaseCoinUnit,
+			Display: appParams.HumanCoinUnit,
 		},
-		Base:    appParams.BaseCoinUnit,
-		Display: appParams.HumanCoinUnit,
 	}
 
 	genParams.AdditionalAccounts = []banktypes.Balance{
 		banktypes.Balance{
-			Address: "osmo1pdr92cfaqtrxyqq6sr08g5gtzv54hsrnqpp9tz",                                                // Osmosis Foundation
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+			Address: "osmo1pdr92cfaqtrxyqq6sr08g5gtzv54hsrnqpp9tz",                                                    // Osmosis Foundation
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
 		},
 		banktypes.Balance{
-			Address: "osmo1pkmvlnstq8q7djns3w882pcu92xh4c9xlnjw40",                                                // eugen
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+			Address: "osmo1pkmvlnstq8q7djns3w882pcu92xh4c9xlnjw40",                                                    // eugen
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
 		},
 		banktypes.Balance{
-			Address: "osmo1fyuhvfxvm3rqere870tdm3a38qhg700udguqfq",                                                // joon
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+			Address: "osmo1fyuhvfxvm3rqere870tdm3a38qhg700udguqfq",                                                    // joon
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
 		},
 		banktypes.Balance{
-			Address: "osmo12wgu3zsyxr57gr78nynh7a2v45xvygxrr82y2j",                                                // sunny_f
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+			Address: "osmo12wgu3zsyxr57gr78nynh7a2v45xvygxrr82y2j",                                                    // sunny_f
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
 		},
 		banktypes.Balance{
-			Address: "osmo1pz64ngupu40hzlz9gm0atqrnrj08up2tplx0j5",                                                // sunny_n
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
+			Address: "osmo1pz64ngupu40hzlz9gm0atqrnrj08up2tplx0j5",                                                    // sunny_n
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(50_000_000_000_000))), // 50 million OSMO
 		},
 		banktypes.Balance{
 			Address: "osmo1gertlf2l0l779yn308fx37z5pvuk2xyejznzcc", // Nollet
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(0))),
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(0))),
 		},
 		banktypes.Balance{
 			Address: "osmo1jcvzmy0yawl6t9yh7vkn5hued790ge4nfn3crh", // Eugen Vesting
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadata.Base, sdk.NewInt(0))),
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(0))),
 		},
 	}
 
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Second * 1800 // 30 min
 	genParams.StakingParams.MaxValidators = 100
-	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadata.Base
+	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	genParams.MintParams = minttypes.DefaultParams()
 	genParams.MintParams.EpochIdentifier = "day"                                        // 1 hour
 	genParams.MintParams.GenesisEpochProvisions = sdk.NewDec(300_000_000).QuoInt64(365) // 300M / 365 = ~821917.8082191781
-	genParams.MintParams.MintDenom = genParams.NativeCoinMetadata.Base
+	genParams.MintParams.MintDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3) // 2/3
 	genParams.MintParams.ReductionPeriodInEpochs = 48                // 6 hours
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
@@ -489,14 +491,14 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.GovParams = govtypes.DefaultParams()
 	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
-		genParams.NativeCoinMetadata.Base,
+		genParams.NativeCoinMetadatas[0].Base,
 		sdk.NewInt(1000000), // 1 OSMO
 	))
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.0000000001") // 0.00000001%
 	genParams.GovParams.VotingParams.VotingPeriod = time.Second * 900              // 900 seconds
 
 	genParams.CrisisConstantFee = sdk.NewCoin(
-		genParams.NativeCoinMetadata.Base,
+		genParams.NativeCoinMetadatas[0].Base,
 		genParams.AirdropSupply.QuoRaw(1_000), // 1/1,000 of airdrop supply  TODO: See how crisis invariant fee
 	)
 
@@ -530,7 +532,7 @@ func TestnetGenesisParams() GenesisParams {
 		AirdropStartTime:   genParams.GenesisTime,
 		DurationUntilDecay: time.Hour * 48, // 2 days
 		DurationOfDecay:    time.Hour * 48, // 2 days
-		ClaimDenom:         genParams.NativeCoinMetadata.Base,
+		ClaimDenom:         genParams.NativeCoinMetadatas[0].Base,
 	}
 
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
@@ -539,7 +541,7 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Version.AppVersion = 1
 
 	genParams.PoolIncentivesGenesis = *poolincentivestypes.DefaultGenesisState()
-	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadata.Base
+	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.PoolIncentivesGenesis.LockableDurations = []time.Duration{
 		time.Second * 1800, // 30 min
 		time.Second * 3600, // 1 hour

@@ -288,7 +288,7 @@ Example:
 				// initial liquid amounts
 				// We consistently round down to the nearest uosmo
 				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
-				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, liquidAmount))
+				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, liquidAmount))
 
 				if ionAmt, ok := ionAmounts[acc.AtomAddress]; ok {
 					liquidCoins = liquidCoins.Add(sdk.NewCoin("uion", sdk.NewInt(ionAmt).MulRaw(1_000_000)))
@@ -305,7 +305,7 @@ Example:
 
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 					Address:                address.String(),
-					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimableAmount)),
+					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimableAmount)),
 					ActionCompleted:        []bool{false, false, false, false},
 				})
 
@@ -369,7 +369,7 @@ Example:
 
 			// claim module genesis
 			claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
-			claimGenState.ModuleAccountBalance = sdk.NewCoin(genesisParams.NativeCoinMetadata.Base, claimModuleAccountBalance)
+			claimGenState.ModuleAccountBalance = sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimModuleAccountBalance)
 
 			claimGenState.ClaimRecords = claimRecords
 			claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
