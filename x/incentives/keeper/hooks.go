@@ -14,8 +14,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// begin distribution if it's start time
 		gauges := k.GetUpcomingGauges(ctx)
 		for _, gauge := range gauges {
-			if gauge.StartTime.Before(ctx.BlockTime()) {
-				k.BeginDistribution(ctx, gauge)
+			if !ctx.BlockTime().Before(gauge.StartTime) {
+				if err := k.BeginDistribution(ctx, gauge); err != nil {
+					panic(err)
+				}
 			}
 		}
 
@@ -28,7 +30,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			}
 			// filled epoch is increased in this step and we compare with +1
 			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
-				k.FinishDistribution(ctx, gauge)
+				if err := k.FinishDistribution(ctx, gauge); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
