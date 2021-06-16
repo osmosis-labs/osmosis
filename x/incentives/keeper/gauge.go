@@ -168,6 +168,7 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 		return fmt.Errorf("gauge is not able to start distribution yet: %s >= %s", curTime.String(), gauge.StartTime.String())
 	}
 
+	// addGaugeIDForDenom is already called in CreateGauge
 	timeKey := getTimeKey(gauge.StartTime)
 	k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id)
 	k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id)
@@ -255,27 +256,82 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 }
 
 // Distribute coins from gauge according to its conditions
-func (k Keeper) DistributeAllGauges(ctx sdk.Context) {
+func (k Keeper) DistributeAllGauges(ctx sdk.Context) (sdk.Coins, error) {
+	totalDistributedCoins := sdk.Coins{}
 	// Plan:
 	// We need to get a map for denom -> active gauges
 	// and a map for denom -> locks
 	// Both exist.
 	// Now we need to get list
 	// k.getAllGaugeIDsByDenom()
-	denoms := []string{}
-	for _, denom := range denoms {
-		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, denom)
-		locks := k.GetLocksToDistribution()
+	// We use total supply to get every denom
+	totalCoins := k.bk.GetSupply(ctx).GetTotal()
+	for _, coin := range totalCoins {
+		denom := coin.Denom
+		partialCoins, err := k.distributeAllGaugesForDenom(ctx, denom)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+		totalDistributedCoins = totalDistributedCoins.Add(partialCoins...)
 	}
-	// distribute due to epoch event
-	gauges := k.GetActiveGauges(ctx)
-	for _, gauge := range gauges {
-		k.Distribute(ctx, gauge)
-		// filled epoch is increased in this step and we compare with +1
-		if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
-			k.FinishDistribution(ctx, gauge)
+	return totalDistributedCoins, nil
+	// // distribute due to epoch event
+	// gauges := k.GetActiveGauges(ctx)
+	// for _, gauge := range gauges {
+	// 	k.Distribute(ctx, gauge)
+	// 	// filled epoch is increased in this step and we compare with +1
+	// 	if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
+	// 		k.FinishDistribution(ctx, gauge)
+	// 	}
+	// }
+}
+
+// distributeAllGaugesForDenom distributes tokens for all gauges of denom `d`,
+// to all lockups of denom `d`.
+// It returns the total amount tokens distributed.
+// The performance of this function is `O(#lockups_d log_2(#gauges_d) + #gauges_d)`
+func (k Keeper) distributeAllGaugesForDenom(
+	ctx sdk.Context, denom string) (coins sdk.Coins, err error) {
+	// We will use the following two properties to compute the number of rewards
+	// with the desired efficiency.
+	// 1) Linearity of rewards w.r.t. amount locked at duration D.
+	//	  Namely, if 1 token locked w/ duration D gets `R` rewards,
+	//	  Then k tokens locked w/ duration D would get `kR` rewards.
+	// 2) Efficiency of getting rewards per unit locked for duration > {lockup_time}
+	//    Let `R_G` be the rewards for gauge G, let `V_G` be the total locked for
+	//    a duration greater than G.Duration.
+	//	  Then the amount of rewards per unit locked for duration = {lockup time} is:
+	//	  `sum_{gauges with duration <= lockup time} R_G / V_G`
+	//
+	// These imply an algorithm with the stated efficiency goals.
+	// In time O(#gauges_denom) we build the list of rewards per unit lockup of duration
+	// equal to a gauges duration.
+	//
+
+	gaugeIDs := k.getAllGaugeIDsByDenom(ctx, denom)
+	// all gauges corresponding to the above gaugeIDs, for gauges that are active
+	// filteredGauges := k.activeGaugesFromIDs(ctx, gaugeIDs)
+	// rewardSumsPerUnitDenom := []sdk.Dec{}
+
+	// Hack to get all relevant locks to a denom, set duration to 0
+	zeroDuration := 0 * time.Second
+	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, denom, zeroDuration)
+	fmt.Println(locks)
+	// locks := k.GetLocksToDistribution()
+}
+
+func (k Keeper) activeGaugesFromIDs(ctx sdk.Context, ids []uint64) ([]types.Gauge, error) {
+	activeGauges := []types.Gauge{}
+	for _, id := range ids {
+		gauge, err := k.GetGaugeByID(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		if gauge.IsActiveGauge(ctx.BlockTime()) {
+			activeGauges = append(activeGauges, *gauge)
 		}
 	}
+	return activeGauges, nil
 }
 
 // Distribute coins from gauge according to its conditions
