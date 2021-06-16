@@ -329,7 +329,7 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	suite.Require().NoError(err)
 	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
 	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins{})
+	suite.Require().True(distrCoins.Empty())
 
 	// add to gauge
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}

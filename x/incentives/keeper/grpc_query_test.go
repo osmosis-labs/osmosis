@@ -252,7 +252,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	// distribute coins to stakers
 	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
 	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
+	suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 4)}, distrCoins)
 
 	// check gauge changes after distribution
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
