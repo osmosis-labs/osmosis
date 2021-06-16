@@ -77,7 +77,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 		coins := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000)}
 		for j := 0; j < numDenoms; j++ {
-			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
+			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), 100000000))
 		}
 		app.BankKeeper.SetBalances(ctx, addr, coins)
 		app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
@@ -120,7 +120,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 
 	// setup lockups
 	for i := 0; i < numLockups; i++ {
-		addr := addrs[r.Int()%numAccts]
+		addr := addrs[i%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
 		duration := time.Second
 		_, err := app.LockupKeeper.LockTokens(ctx, addr, simCoins, duration)
@@ -151,7 +151,12 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 				b.FailNow()
 			}
 		}
+		// _, err := app.IncentivesKeeper.DistributeAllGauges(ctx)
+		// if err != nil {
+		// 	b.FailNow()
+		// }
 	}
+	b.ReportAllocs()
 }
 
 func BenchmarkDistributionLogicTiny(b *testing.B) {
@@ -159,7 +164,13 @@ func BenchmarkDistributionLogicTiny(b *testing.B) {
 }
 
 func BenchmarkDistributionLogicSmall(b *testing.B) {
-	benchmarkDistributionLogic(10, 1, 10, 1000, 100, b)
+	numAccts := 100
+	numDenoms := 8
+	numGauges := 30
+	numLockups := 2000
+	numDistrs := 1
+
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
 
 func BenchmarkDistributionLogicMedium(b *testing.B) {

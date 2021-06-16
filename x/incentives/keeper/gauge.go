@@ -254,42 +254,68 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	return gauge, filteredDistrCoins, nil
 }
 
-// Distribute coins from gauge according to its conditions
-func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error) {
-	totalDistrCoins := sdk.NewCoins()
-	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
-	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
-
-	if lockSum.IsZero() {
-		return nil, nil
+func (k Keeper) payRewardToLock(ctx sdk.Context, lock lockuptypes.PeriodLock, reward sdk.Coins) error {
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
 	}
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, reward)
+	return err
+}
 
+func (k Keeper) rewardsPerUnitForGauge(ctx sdk.Context, gauge types.Gauge) sdk.DecCoins {
+	// If a rounding error puts us in an erroneous setting, just return {}
+	if gauge.DistributedCoins.IsAnyGTE(gauge.Coins) {
+		return sdk.DecCoins{}
+	}
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
+	TotalAmtLocked := k.lk.GetPeriodLocksAccumulation(ctx, gauge.DistributeTo)
+	if TotalAmtLocked.IsZero() {
+		return sdk.DecCoins{}
+	}
+	coinsPerUnit := make(sdk.DecCoins, len(remainCoins))
+	divisor := TotalAmtLocked.MulRaw(int64(remainEpochs))
+	for i := 0; i < len(remainCoins); i++ {
+		coinsPerUnit[i].Amount = remainCoins[i].Amount.ToDec().QuoInt(divisor)
+		coinsPerUnit[i].Denom = remainCoins[i].Denom
+	}
+	return coinsPerUnit
+}
+
+// Distribute coins from gauge according to its conditions
+func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error) {
+	totalDistrCoins := sdk.NewCoins()
+	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
+	rewardsPerUnit := k.rewardsPerUnitForGauge(ctx, gauge)
+	if rewardsPerUnit.Empty() {
+		return nil, nil
+	}
+
 	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
-		for _, coin := range remainCoins {
+		for _, rewardPerUnit := range rewardsPerUnit {
 			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 			denomLockAmt := lock.Coins.AmountOf(gauge.DistributeTo.Denom)
-			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+			amt := rewardPerUnit.Amount.MulInt(denomLockAmt)
 			if amt.IsPositive() {
-				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+				distrCoins = distrCoins.Add(sdk.NewCoin(rewardPerUnit.Denom, amt.RoundInt()))
 			}
 		}
 		distrCoins = distrCoins.Sort()
 		if distrCoins.Empty() {
 			continue
 		}
-		owner, err := sdk.AccAddressFromBech32(lock.Owner)
+
+		// Payout reward to lock
+		err := k.payRewardToLock(ctx, lock, distrCoins)
 		if err != nil {
-			return nil, err
+			return totalDistrCoins, err
 		}
-		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, distrCoins); err != nil {
-			return nil, err
-		}
+
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
