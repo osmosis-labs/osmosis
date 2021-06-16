@@ -244,14 +244,42 @@ Example:
 			}
 			defer ionJSON.Close()
 			byteValue2, _ := ioutil.ReadAll(ionJSON)
-			var ionAmounts map[string]int64
-			json.Unmarshal(byteValue2, &ionAmounts)
+			var ionAmts map[string]int64
+			json.Unmarshal(byteValue2, &ionAmts)
 			if err != nil {
 				return err
 			}
 
 			// get genesis params
 			genesisParams := MainnetGenesisParams()
+
+			nonAirdropAccs := make(map[string]sdk.Coins)
+
+			for _, acc := range genesisParams.StrategicReserveAccounts {
+				nonAirdropAccs[acc.Address] = acc.GetCoins()
+			}
+
+			for _, acc := range genesisParams.MintParams.WeightedDeveloperRewardsReceivers {
+				if _, ok := nonAirdropAccs[acc.Address]; !ok {
+					nonAirdropAccs[acc.Address] = sdk.NewCoins()
+				}
+
+			}
+
+			for addr, amt := range ionAmts {
+				setCosmosBech32Prefixes()
+				address, err := sdk.AccAddressFromBech32(addr)
+				if err != nil {
+					return err
+				}
+				appparams.SetAddressPrefixes()
+
+				if val, ok := nonAirdropAccs[address.String()]; ok {
+					nonAirdropAccs[address.String()] = val.Add(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
+				} else {
+					nonAirdropAccs[address.String()] = sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
+				}
+			}
 
 			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
 			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalOsmosAirdropAmount)
@@ -290,9 +318,9 @@ Example:
 				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
 				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, liquidAmount))
 
-				if ionAmt, ok := ionAmounts[acc.AtomAddress]; ok {
-					liquidCoins = liquidCoins.Add(sdk.NewCoin("uion", sdk.NewInt(ionAmt).MulRaw(1_000_000)))
-					delete(ionAmounts, acc.AtomAddress)
+				if coins, ok := nonAirdropAccs[address.String()]; ok {
+					liquidCoins = liquidCoins.Add(coins...)
+					delete(nonAirdropAccs, address.String())
 				}
 
 				liquidBalances = append(liquidBalances, banktypes.Balance{
@@ -320,22 +348,16 @@ Example:
 			}
 
 			// distribute remaining ions to accounts not in fairdrop
-			for addr, remainingIons := range ionAmounts {
-				// set atom bech32 prefixes
-				setCosmosBech32Prefixes()
-
+			for addr, remainingNonAirdrop := range nonAirdropAccs {
 				// read address from snapshot
 				address, err := sdk.AccAddressFromBech32(addr)
 				if err != nil {
 					return err
 				}
 
-				// set osmo bech32 prefixes
-				appparams.SetAddressPrefixes()
-
 				liquidBalances = append(liquidBalances, banktypes.Balance{
 					Address: address.String(),
-					Coins:   sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(remainingIons).MulRaw(1_000_000))),
+					Coins:   remainingNonAirdrop,
 				})
 
 				// Add the new account to the set of genesis accounts
