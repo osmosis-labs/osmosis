@@ -495,6 +495,9 @@ func (k Keeper) activeGaugesFromIDs(ctx sdk.Context, ids []uint64) ([]types.Gaug
 }
 
 func (k Keeper) rewardsForGauge(ctx sdk.Context, gauge types.Gauge) sdk.Coins {
+	if gauge.DistributedCoins.IsAnyGTE(gauge.Coins) {
+		return sdk.Coins{}
+	}
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
@@ -510,6 +513,9 @@ func (k Keeper) rewardsForGauge(ctx sdk.Context, gauge types.Gauge) sdk.Coins {
 }
 
 func (k Keeper) rewardsPerUnitForGauge(ctx sdk.Context, gauge types.Gauge) sdk.DecCoins {
+	if gauge.DistributedCoins.IsAnyGTE(gauge.Coins) {
+		return sdk.DecCoins{}
+	}
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
