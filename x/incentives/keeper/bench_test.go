@@ -143,13 +143,17 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	b.StartTimer()
 	// distribute coins from gauges to lockup owners
 	for i := 0; i < numDistrs; i++ {
-		for _, gaugeId := range gaugeIds {
-			gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-			_, err := app.IncentivesKeeper.Distribute(ctx, *gauge)
-			if err != nil {
-				fmt.Printf("Distribute, %v\n", err)
-				b.FailNow()
-			}
+		// for _, gaugeId := range gaugeIds {
+		// 	gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
+		// 	_, err := app.IncentivesKeeper.Distribute(ctx, *gauge)
+		// 	if err != nil {
+		// 		fmt.Printf("Distribute, %v\n", err)
+		// 		b.FailNow()
+		// 	}
+		// }
+		_, err := app.IncentivesKeeper.DistributeAllGauges(ctx)
+		if err != nil {
+			b.FailNow()
 		}
 	}
 	b.ReportAllocs()

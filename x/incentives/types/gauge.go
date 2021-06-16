@@ -21,17 +21,17 @@ func NewGauge(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, c
 }
 
 func (gauge Gauge) IsUpcomingGauge(curTime time.Time) bool {
-	if curTime.After(gauge.StartTime) {
+	if gauge.StartTime.After(curTime) {
 		return true
 	}
 	return false
 }
 
 func (gauge Gauge) IsActiveGauge(curTime time.Time) bool {
-	if curTime.Before(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
-		return true
+	if gauge.StartTime.Before(curTime) {
+		return false
 	}
-	return false
+	return gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver
 }
 
 func (gauge Gauge) IsFinishedGauge(curTime time.Time) bool {

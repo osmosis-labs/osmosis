@@ -97,5 +97,47 @@ func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) 
 
 // addGaugeIDForDenom adds ID to the list of gauge ID's associated with denomination `denom`
 func (k Keeper) addGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
+	err := k.addDenomToList(ctx, denom)
+	if err != nil {
+		return err
+	}
 	return k.addGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
+}
+
+func (k Keeper) getDenomList(ctx sdk.Context) []string {
+	store := ctx.KVStore(k.storeKey)
+	denomList := []string{}
+	if store.Has(types.KeyPrefixDenomList) {
+		bz := store.Get(types.KeyPrefixDenomList)
+		err := json.Unmarshal(bz, &denomList)
+		if err != nil {
+			fmt.Printf("Something sus happened %v\n", err)
+			return []string{}
+		}
+	}
+	return denomList
+}
+
+// addGaugeIDForDenom adds ID to the list of gauge ID's associated with denomination `denom`
+func (k Keeper) addDenomToList(ctx sdk.Context, denom string) error {
+	store := ctx.KVStore(k.storeKey)
+	denomList := k.getDenomList(ctx)
+
+	hasDenom := false
+	for _, d := range denomList {
+		if d == denom {
+			hasDenom = true
+			break
+		}
+	}
+
+	if !hasDenom {
+		denomList = append(denomList, denom)
+		bz, err := json.Marshal(denomList)
+		if err != nil {
+			return err
+		}
+		store.Set(types.KeyPrefixDenomList, bz)
+	}
+	return nil
 }

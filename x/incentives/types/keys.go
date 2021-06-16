@@ -49,6 +49,9 @@ var (
 	// KeyEpochBeginBlock defines key for storing begin block of current epoch
 	KeyEpochBeginBlock = []byte{0x09}
 
+	// KeyPrefixDenomList defines prefix key for storing all denoms
+	KeyPrefixDenomList = []byte{0x0A}
+
 	LockableDurationsKey = []byte("lockable_durations")
 )
 
