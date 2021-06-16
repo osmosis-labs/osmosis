@@ -37,7 +37,7 @@ func TestFullAppSimulation(t *testing.T) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 20
+	sdkSimapp.FlagNumBlocksValue = 100
 	sdkSimapp.FlagBlockSizeValue = 25
 	sdkSimapp.FlagCommitValue = true
 	sdkSimapp.FlagVerboseValue = true
@@ -117,9 +117,9 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	// if !sdkSimapp.FlagEnabledValue {
-	// 	t.Skip("skipping application simulation")
-	// }
+	if !sdkSimapp.FlagEnabledValue {
+		t.Skip("skipping application simulation")
+	}
 
 	config := sdkSimapp.NewConfigFromFlags()
 	config.InitialBlockHeight = 1

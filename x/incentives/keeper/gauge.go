@@ -407,6 +407,8 @@ func (k Keeper) distributeAllGaugesForDenom(
 		index := sort.Search(len(accumRewardsPerUnit), func(i int) bool {
 			return lock.Duration <= accumRewardsPerUnit[i].duration
 		})
+		// index is the first entry where lock.duration <= accumDuration.
+		// We want to shift it to be first entry where  its >=
 		shiftedIndex := index
 		if index == len(accumRewardsPerUnit) ||
 			lock.Duration < accumRewardsPerUnit[index].duration {
@@ -446,6 +448,7 @@ func (k Keeper) distributeAllGaugesForDenom(
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
+	sumGaugeRewards := sdk.Coins{}
 	// Handle "cleanup" for gauges
 	for _, gauge := range filteredGauges {
 		if durationSeenYet[gauge.DistributeTo.Duration] {
@@ -454,6 +457,7 @@ func (k Keeper) distributeAllGaugesForDenom(
 			gauge.DistributedCoins = gauge.DistributedCoins.Add(gaugeRewards...)
 			// fmt.Println("distr coins update", i, gauge.DistributedCoins)
 			k.setGauge(ctx, &gauge)
+			sumGaugeRewards = sumGaugeRewards.Add(gaugeRewards...)
 		}
 
 		k.hooks.AfterDistribute(ctx, gauge.Id)
@@ -461,6 +465,12 @@ func (k Keeper) distributeAllGaugesForDenom(
 		// if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs {
 		// 	k.FinishDistribution(ctx, gauge)
 		// }
+	}
+	if !sumGaugeRewards.IsEqual(totalDistrCoins) {
+		panic(fmt.Sprintf("basic %v, %v, %v, \n filtered gauges %v,\n locks %v\n", sumGaugeRewards, totalDistrCoins, totalDistrCoins.Sub(sumGaugeRewards),
+			filteredGauges, locks))
+	} else {
+		fmt.Println("Working correctly")
 	}
 	return totalDistrCoins, nil
 }
@@ -489,6 +499,9 @@ func (k Keeper) rewardsForGauge(ctx sdk.Context, gauge types.Gauge) sdk.Coins {
 	}
 	for i := 0; i < len(remainCoins); i++ {
 		remainCoins[i].Amount = remainCoins[i].Amount.QuoRaw(int64(remainEpochs))
+		if remainCoins[i].Amount.IsNegative() {
+			fmt.Println("wat")
+		}
 	}
 	return remainCoins
 }
