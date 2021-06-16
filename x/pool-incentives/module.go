@@ -72,8 +72,7 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// TODO
-	return nil
+	return cli.GetQueryCmd(types.QuerierRoute)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the pool-incentives module.
