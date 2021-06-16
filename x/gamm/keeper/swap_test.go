@@ -142,7 +142,6 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 			},
 			expectPass: false,
 		},
-		/* TODO: This test will panic. Handle the panic case later.
 		{
 			name: "pool doesn't have enough token to out",
 			param: param{
@@ -152,7 +151,6 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 			},
 			expectPass: false,
 		},
-		*/
 		{
 			name: "unknown in denom",
 			param: param{

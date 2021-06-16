@@ -85,6 +85,13 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
 	}
 
+	poolOutBal, _ := pool.GetTokenBalance(tokenOut.Denom)
+	if tokenOut.Amount.GTE(poolOutBal) {
+		// TODO: Correct error type
+		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
+			"can't get more tokens out than there are tokens in the pool")
+	}
+
 	tokenInAmount = calcInGivenOut(
 		inPoolAsset.Token.Amount.ToDec(),
 		inPoolAsset.Weight.ToDec(),
