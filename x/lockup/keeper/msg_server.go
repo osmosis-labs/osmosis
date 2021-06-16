@@ -90,7 +90,7 @@ func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgB
 
 	events := sdk.Events{
 		sdk.NewEvent(
-			types.TypeEvtBeginUnlocking,
+			types.TypeEvtBeginUnlockAll,
 			sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
 			sdk.NewAttribute(types.AttributeUnlockedCoins, coins.String()),
 		),

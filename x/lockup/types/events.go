@@ -3,7 +3,7 @@ package types
 // event types
 const (
 	TypeEvtLockTokens     = "lock_tokens"
-	TypeEvtBeginUnlocking = "begin_unlock_tokens"
+	TypeEvtBeginUnlockAll = "begin_unlock_all"
 	TypeEvtUnlockTokens   = "unlock_tokens"
 	TypeEvtBeginUnlock    = "begin_unlock"
 	TypeEvtUnlock         = "unlock"
