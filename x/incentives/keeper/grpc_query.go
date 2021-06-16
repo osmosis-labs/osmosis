@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	"google.golang.org/grpc/codes"
@@ -112,6 +113,10 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 // RewardsEst returns rewards estimation at a future specific time
 func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	diff := req.EndEpoch - k.GetEpochInfo(ctx).CurrentEpoch
+	if diff > 100 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "end epoch out of ranges")
+	}
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if err != nil {
 		return nil, err

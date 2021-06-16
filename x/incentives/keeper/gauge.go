@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
@@ -419,8 +420,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 
 	// estimate rewards
 	estimatedRewards := sdk.Coins{}
-	params := k.GetParams(ctx)
-	epochInfo := k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
+	epochInfo := k.GetEpochInfo(ctx)
 
 	// no need to change storage while doing estimation and we use cached context
 	cacheCtx, _ := ctx.CacheContext()
@@ -443,4 +443,9 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	}
 
 	return estimatedRewards
+}
+
+func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
+	params := k.GetParams(ctx)
+	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
 }
