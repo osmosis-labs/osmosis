@@ -532,20 +532,6 @@ func TestnetGenesisParams() GenesisParams {
 
 	genParams.GenesisTime = time.Now()
 
-	genParams.StakingParams.UnbondingTime = time.Second * 1800 // 30 min
-
-	genParams.MintParams.EpochIdentifier = "day"       // 1 day
-	genParams.MintParams.ReductionPeriodInEpochs = 365 // 365 days
-
-	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1
-
-	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
-		genParams.NativeCoinMetadatas[0].Base,
-		sdk.NewInt(1000000), // 1 OSMO
-	))
-	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.0000000001") // 0.00000001%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Second * 900              // 900 seconds
-
 	genParams.Epochs = append(genParams.Epochs, epochstypes.EpochInfo{
 		Identifier:            "hour",
 		StartTime:             time.Time{},
@@ -556,12 +542,36 @@ func TestnetGenesisParams() GenesisParams {
 		CurrentEpochEnded:     true,
 	})
 
+	genParams.Epochs = append(genParams.Epochs, epochstypes.EpochInfo{
+		Identifier:            "15min",
+		StartTime:             time.Time{},
+		Duration:              15 * time.Minute,
+		CurrentEpoch:          0,
+		CurrentEpochStartTime: time.Time{},
+		EpochCountingStarted:  false,
+		CurrentEpochEnded:     true,
+	})
+
 	for _, epoch := range genParams.Epochs {
 		epoch.StartTime = genParams.GenesisTime
 	}
 
+	genParams.StakingParams.UnbondingTime = time.Second * 180 // 30 min
+
+	genParams.MintParams.EpochIdentifier = "15min"     // 15min
+	genParams.MintParams.ReductionPeriodInEpochs = 192 // 2 days
+
+	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1
+
+	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
+		genParams.NativeCoinMetadatas[0].Base,
+		sdk.NewInt(1000000), // 1 OSMO
+	))
+	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.0000000001") // 0.00000001%
+	genParams.GovParams.VotingParams.VotingPeriod = time.Second * 600              // 900 seconds
+
 	genParams.IncentivesGenesis = *incentivestypes.DefaultGenesis()
-	genParams.IncentivesGenesis.Params.DistrEpochIdentifier = "day"
+	genParams.IncentivesGenesis.Params.DistrEpochIdentifier = "15min"
 	genParams.IncentivesGenesis.LockableDurations = []time.Duration{
 		time.Second * 1800, // 30 min
 		time.Second * 3600, // 1 hour
