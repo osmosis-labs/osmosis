@@ -41,13 +41,17 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	return
 }
 
-func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins) lockuptypes.QueryCondition {
+func genQueryCondition(
+	r *rand.Rand,
+	blocktime time.Time,
+	coins sdk.Coins,
+	durationOptions []time.Duration) lockuptypes.QueryCondition {
 	lockQueryType := r.Intn(2)
 	denom := coins[r.Intn(len(coins))].Denom
-	durationSecs := r.Intn(1*60*60*24*7) + 1*60*60 // range of 1 week, min 1 hour
-	duration := time.Duration(durationSecs) * time.Second
-	timestampSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
-	timestamp := blocktime.Add(time.Duration(timestampSecs) * time.Second)
+	durationOption := r.Intn(len(durationOptions))
+	duration := durationOptions[durationOption]
+	// timestampSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
+	timestamp := time.Time{}
 
 	return lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.LockQueryType(lockQueryType),
@@ -58,10 +62,12 @@ func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins) locku
 }
 
 func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs int, b *testing.B) {
-	b.ReportAllocs()
+	// b.ReportAllocs()
+	b.StopTimer()
 
+	blockStartTime := time.Now().UTC()
 	app := app.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: blockStartTime})
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -78,26 +84,31 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		addrs = append(addrs, addr)
 	}
 
+	distrEpoch := app.EpochsKeeper.GetEpochInfo(ctx, app.IncentivesKeeper.GetParams(ctx).DistrEpochIdentifier)
+	durationOptions := app.IncentivesKeeper.GetLockableDurations(ctx)
 	// setup gauges
 	gaugeIds := []uint64{}
 	for i := 0; i < numGauges; i++ {
 		addr := addrs[r.Int()%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
 
-		isPerpetual := r.Int()%2 == 0
-		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins)
+		// isPerpetual := r.Int()%2 == 0
+		isPerpetual := true
+		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, durationOptions)
 		rewards := genRewardCoins(r, simCoins)
-		startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
-		startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
-		durationSecs := r.Intn(1*60*60*24*7) + 1*60*60*24 // range of 1 week, min 1 day
-		numEpochsPaidOver := uint64(r.Int63n(int64(durationSecs)/(app.EpochsKeeper.GetEpochInfo(ctx, app.IncentivesKeeper.GetParams(ctx).DistrEpochIdentifier).Duration.Milliseconds()/1000))) + 1
-		if isPerpetual {
-			numEpochsPaidOver = 1
+		// startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
+		startTime := ctx.BlockTime().Add(time.Duration(-1) * time.Second)
+		durationMillisecs := distributeTo.Duration.Milliseconds()
+		numEpochsPaidOver := uint64(1)
+		if !isPerpetual {
+			millisecsPerEpoch := distrEpoch.Duration.Milliseconds()
+			numEpochsPaidOver = uint64(r.Int63n(durationMillisecs/millisecsPerEpoch)) + 1
 		}
 
 		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver)
 		if err != nil {
-			b.Fail()
+			fmt.Printf("Create Gauge, %v\n", err)
+			b.FailNow()
 		} else {
 			gaugeIds = append(gaugeIds, gaugeId)
 		}
@@ -114,7 +125,8 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		duration := time.Second
 		_, err := app.LockupKeeper.LockTokens(ctx, addr, simCoins, duration)
 		if err != nil {
-			b.Fail()
+			fmt.Printf("Lock tokens, %v\n", err)
+			b.FailNow()
 		}
 	}
 
@@ -123,17 +135,20 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
 		err := app.IncentivesKeeper.BeginDistribution(ctx, *gauge)
 		if err != nil {
-			b.Fail()
+			fmt.Printf("Begin distribution, %v\n", err)
+			b.FailNow()
 		}
 	}
 
+	b.StartTimer()
 	// distribute coins from gauges to lockup owners
 	for i := 0; i < numDistrs; i++ {
 		for _, gaugeId := range gaugeIds {
 			gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
 			_, err := app.IncentivesKeeper.Distribute(ctx, *gauge)
 			if err != nil {
-				b.Fail()
+				fmt.Printf("Distribute, %v\n", err)
+				b.FailNow()
 			}
 		}
 	}
@@ -144,11 +159,17 @@ func BenchmarkDistributionLogicTiny(b *testing.B) {
 }
 
 func BenchmarkDistributionLogicSmall(b *testing.B) {
-	benchmarkDistributionLogic(10, 1, 10, 10, 100, b)
+	benchmarkDistributionLogic(10, 1, 10, 1000, 100, b)
 }
 
 func BenchmarkDistributionLogicMedium(b *testing.B) {
-	benchmarkDistributionLogic(50, 5, 50, 50, 1000, b)
+	numAccts := 1000
+	numDenoms := 8
+	numGauges := 30
+	numLockups := 20000
+	numDistrs := 1
+
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
 
 func BenchmarkDistributionLogicLarge(b *testing.B) {
