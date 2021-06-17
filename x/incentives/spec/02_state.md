@@ -45,3 +45,29 @@ To start release `Gauges` at a specific time, we schedule distribution start tim
 #### Active queue
 
 Active queue has all the `Gauges` that are distributing and after distribution period finish, it's removed from the queue.
+
+#### Active by Denom queue
+
+To speed up the distribution process, module introduces the active `Gauges` by denom.
+
+#### Finished queue
+
+Finished queue saves the `Gauges` that has finished distribution to keep in track.
+
+## Module state
+
+The state of the module is expressed by `params`, `lockable_durations` and `gauges`.
+
+```protobuf
+// GenesisState defines the incentives module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge gauges = 2 [ (gogoproto.nullable) = false ];
+  repeated google.protobuf.Duration lockable_durations = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}
+```
