@@ -114,7 +114,7 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	diff := req.EndEpoch - k.GetEpochInfo(ctx).CurrentEpoch
-	if diff > 100 {
+	if diff > 365 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "end epoch out of ranges")
 	}
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
