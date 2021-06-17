@@ -546,7 +546,7 @@ func TestnetGenesisParams() GenesisParams {
 		epoch.StartTime = genParams.GenesisTime
 	}
 
-	genParams.StakingParams.UnbondingTime = time.Minute * 3 // 3 min
+	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
 
 	genParams.MintParams.EpochIdentifier = "15min"     // 15min
 	genParams.MintParams.ReductionPeriodInEpochs = 192 // 2 days
