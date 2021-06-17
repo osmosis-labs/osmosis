@@ -408,8 +408,6 @@ github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5/go.mod h1:/wsWhb9smxS
 github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJc5AZX7/PBEpw=
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
-github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210613202848-b45039095bc3 h1:UpwrTsXpHKaFyLiDEiJoLTWjsB57bkd35KcpVjkrrL0=
-github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210613202848-b45039095bc3/go.mod h1:3JyT+Ud7QRTO1/ikncNqVhaF526ZKNqh2HGMqXn+QHE=
 github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210616143906-49caecfe0a60 h1:giqRZBXkTehX1oOjtC8gKfQ0E4XVyjkecZVpYdNEhk8=
 github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210616143906-49caecfe0a60/go.mod h1:3JyT+Ud7QRTO1/ikncNqVhaF526ZKNqh2HGMqXn+QHE=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
