@@ -286,7 +286,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.StrategicReserveAccounts = []banktypes.Balance{
 		{
 			Address: "osmo1el3aytvehpvxw2ymmya4kdyj9yndyy47fw5zh4",
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(47_874_500_000_000))), // 48.875 million OSMO
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(47_874_500_000_000))), // 47.8745 million OSMO
 		},
 		{
 			Address: "osmo1g7rp8h6wzekjjy8n6my8za3vg3338eqz3v295v",
@@ -338,7 +338,7 @@ func MainnetGenesisParams() GenesisParams {
 		},
 		{
 			Address: "osmo1m3lvlydlu3mqv7z9xgtqjplcx20yc3lmx3p73e",
-			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(5_000_000_000))),
+			Coins:   sdk.NewCoins(sdk.NewCoin(genParams.NativeCoinMetadatas[0].Base, sdk.NewInt(10_000_000_000))),
 		},
 		{
 			Address: "osmo14u94qvqqdyjruufc08m6rwq8yz3ukurkzkvczx",
@@ -381,8 +381,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 
 	genParams.MintParams = minttypes.DefaultParams()
-	genParams.MintParams.EpochIdentifier = "day"                                                // 1 week
-	genParams.MintParams.GenesisEpochProvisions = sdk.NewDec(300_000_000_000_000).QuoInt64(365) // 300M / 365 = ~821917.8082191781
+	genParams.MintParams.EpochIdentifier = "day"                                                // 1 day
+	genParams.MintParams.GenesisEpochProvisions = sdk.NewDec(300_000_000_000_000).QuoInt64(365) // 300M * 10^6 / 365 = ~821917.8082191781 * 10^6
 	genParams.MintParams.MintDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3) // 2/3
 	genParams.MintParams.ReductionPeriodInEpochs = 365               // 1 year (screw leap years)
@@ -392,7 +392,7 @@ func MainnetGenesisParams() GenesisParams {
 		PoolIncentives:   sdk.MustNewDecFromStr("0.45"), // 45%
 		CommunityPool:    sdk.MustNewDecFromStr("0.05"), // 5%
 	}
-	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1 // TODO: Finalize
+	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1
 	genParams.MintParams.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{
 		minttypes.WeightedAddress{
 			Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
@@ -466,18 +466,18 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
-		genParams.AirdropSupply.QuoRaw(100_000), // 1000 OSMO
+		sdk.NewInt(2_500_000_000),
 	))
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.2") // 20%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 72        // 3 days
+	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 24 * 3    // 3 days
 
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
-		genParams.AirdropSupply.QuoRaw(1_000), // 1/1,000 of airdrop supply  TODO: See how crisis invariant fee
+		sdk.NewInt(500_000_000_000),
 	)
 
 	genParams.SlashingParams = slashingtypes.DefaultParams()
-	genParams.SlashingParams.SignedBlocksWindow = int64(30000)                       // 30000 blocks (~25 hr at 3 second blocks)
+	genParams.SlashingParams.SignedBlocksWindow = int64(30000)                       // 30000 blocks (~41 hr at 5 second blocks)
 	genParams.SlashingParams.MinSignedPerWindow = sdk.MustNewDecFromStr("0.05")      // 5% minimum liveness
 	genParams.SlashingParams.DowntimeJailDuration = time.Minute                      // 1 minute jail period
 	genParams.SlashingParams.SlashFractionDoubleSign = sdk.MustNewDecFromStr("0.05") // 5% double sign slashing
@@ -514,11 +514,11 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.PoolIncentivesGenesis.LockableDurations = genParams.IncentivesGenesis.LockableDurations
 	genParams.PoolIncentivesGenesis.DistrInfo = &poolincentivestypes.DistrInfo{
-		TotalWeight: sdk.NewInt(100),
+		TotalWeight: sdk.NewInt(1000),
 		Records: []poolincentivestypes.DistrRecord{
 			{
 				GaugeId: 0,
-				Weight:  sdk.NewInt(100),
+				Weight:  sdk.NewInt(1000),
 			},
 		},
 	}
@@ -531,16 +531,6 @@ func TestnetGenesisParams() GenesisParams {
 	genParams := MainnetGenesisParams()
 
 	genParams.GenesisTime = time.Now()
-
-	genParams.Epochs = append(genParams.Epochs, epochstypes.EpochInfo{
-		Identifier:            "hour",
-		StartTime:             time.Time{},
-		Duration:              time.Hour,
-		CurrentEpoch:          0,
-		CurrentEpochStartTime: time.Time{},
-		EpochCountingStarted:  false,
-		CurrentEpochEnded:     true,
-	})
 
 	genParams.Epochs = append(genParams.Epochs, epochstypes.EpochInfo{
 		Identifier:            "15min",
@@ -556,26 +546,24 @@ func TestnetGenesisParams() GenesisParams {
 		epoch.StartTime = genParams.GenesisTime
 	}
 
-	genParams.StakingParams.UnbondingTime = time.Second * 180 // 30 min
+	genParams.StakingParams.UnbondingTime = time.Minute * 3 // 3 min
 
 	genParams.MintParams.EpochIdentifier = "15min"     // 15min
 	genParams.MintParams.ReductionPeriodInEpochs = 192 // 2 days
-
-	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1
 
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
 		sdk.NewInt(1000000), // 1 OSMO
 	))
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.0000000001") // 0.00000001%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Second * 600              // 900 seconds
+	genParams.GovParams.VotingParams.VotingPeriod = time.Second * 300              // 300 seconds
 
 	genParams.IncentivesGenesis = *incentivestypes.DefaultGenesis()
 	genParams.IncentivesGenesis.Params.DistrEpochIdentifier = "15min"
 	genParams.IncentivesGenesis.LockableDurations = []time.Duration{
-		time.Second * 1800, // 30 min
-		time.Second * 3600, // 1 hour
-		time.Second * 7200, // 2 hours
+		time.Minute * 30, // 30 min
+		time.Hour * 1,    // 1 hour
+		time.Hour * 2,    // 2 hours
 	}
 
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime
