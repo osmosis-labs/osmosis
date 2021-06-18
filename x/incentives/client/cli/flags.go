@@ -1,27 +1,34 @@
 package cli
 
 import (
+	"time"
+
 	flag "github.com/spf13/pflag"
 )
 
 // flags for lockup module tx commands
 const (
-	FlagLockQueryType = "lock_query_type"
-	FlagDenom         = "denom"
-	FlagDuration      = "duration"
-	FlagTimestamp     = "timestamp"
-	FlagOwner         = "owner"
-	FlagLockIds       = "lock-ids"
-	FlagEndEpoch      = "end-epoch"
+	FlagDuration       = "duration"
+	FlagStartTime      = "start-time"
+	FlagEpochs         = "epochs"
+	FlagEpochsDuration = "epochs-duration"
+	FlagPerpetual      = "perpetual"
+
+	FlagTimestamp = "timestamp"
+	FlagOwner     = "owner"
+	FlagLockIds   = "lock-ids"
+	FlagEndEpoch  = "end-epoch"
 )
 
 // FlagSetCreateGauge returns flags for creating gauge
 func FlagSetCreateGauge() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagLockQueryType, "ByDuration", "ByDuration | ByTime")
-	fs.String(FlagDenom, "stake", "locked denom to be queried")
-	fs.String(FlagDuration, "168h", "The duration token to be locked, default 1w(168h). Other examples are 1h, 1m, 1s, 0.1s. Maximum unit is hour.")
-	fs.Int64(FlagTimestamp, 1615917475, "Timestamp to that started tokens lock")
+	dur, _ := time.ParseDuration("168h")
+	fs.Duration(FlagDuration, dur, "The duration token to be locked, default 1w(168h). Other examples are 1h, 1m, 1s, 0.1s. Maximum unit is hour.")
+	fs.String(FlagStartTime, "", "Timestamp to begin distribution")
+	fs.Uint64(FlagEpochs, 0, "Total epochs to distribute tokens")
+	fs.Duration(FlagEpochsDuration, time.Duration(0), "Total duration to distribute tokens")
+	fs.Bool(FlagPerpetual, false, "Perpetual distribution")
 	return fs
 }

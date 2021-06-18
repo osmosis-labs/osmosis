@@ -16,14 +16,12 @@ To initialize a gauge, the creator should decide the following parameters:
 Making transaction is done in the following format:
 
 ```bash
-osmosisd tx incentives create-gauge \
-  --reward (amount of reward) \
-  --start-time (start time in RFC3339 format, omit if immedietly) \
-  --denom (denom to distribute onto)
-  --duration (minimum duration for lockups, omit if zero)
-  # only one of --perpetual, --epochs or --epochs-duration
-  --epochs (total distribution epoch)
-  --epochs-duration (total distribution duration)
+osmosisd tx incentives create-gauge [denom] [reward] 
+  --duration [minimum duration for lockups, nullable]
+  --start-time [start time in RFC3339 or unix format, nullable]
+  # one of --perpetual, --epochs or --epochs-duration
+  --epochs [total distribution epoch]
+  --epochs-duration [total distribution duration]
   --perpetual
 ```
 
@@ -43,12 +41,9 @@ MsgCreateGauge:
 - Total epochs: 52 (weeks)
 
 ```bash
-osmosisd tx incentives create-gauge 
-  --reward 1000MyToken 
-  --start-time 2022-01-01T00:00:00Z 
+osmosisd tx incentives create-gauge atom 1000MyToken \
+  --start-time 2022-01-01T00:00:00Z \
   --epochs 52 # or --epochs-duration 8736h
-  --denom atom 
-  --duration 0s # could be ommitted
 ```
 
 #### Case 2
@@ -65,10 +60,8 @@ MsgCreateGauge:
 - Total epochs: 1 (perpetual)
 
 ```bash
-osmosisd tx incentives create-gauge
-  --reward 200MyToken
-  --perpetual # or --epochs 1
-  --denom atom
+osmosisd tx incentives create-gauge atom 200MyToken
+  --perpetual \  
   --duration 720h 
 ```
 
@@ -80,7 +73,5 @@ MsgAddToGauge:
 - Rewards: 500 MyTokens
 
 ```bash
-osmosisd tx incentives add-to-gauge
-  --gauge-id $GAUGE_ID
-  --reward 500MyToken
+osmosisd tx incentives add-to-gauge $GAUGE_ID 500MyToken
 ```
