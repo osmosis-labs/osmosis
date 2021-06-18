@@ -36,7 +36,7 @@ func GetTxCmd() *cobra.Command {
 // NewCreateGaugeCmd broadcast MsgCreateGauge
 func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-gauge [denom] [reward] [flags]",
+		Use:   "create-gauge [lockup_denom] [reward] [flags]",
 		Short: "create a gauge to distribute rewards to users",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
