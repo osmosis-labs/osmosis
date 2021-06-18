@@ -19,9 +19,8 @@ Making transaction is done in the following format:
 osmosisd tx incentives create-gauge [denom] [reward] 
   --duration [minimum duration for lockups, nullable]
   --start-time [start time in RFC3339 or unix format, nullable]
-  # one of --perpetual, --epochs or --epochs-duration
+  # one of --perpetual or --epochs
   --epochs [total distribution epoch]
-  --epochs-duration [total distribution duration]
   --perpetual
 ```
 
@@ -43,7 +42,7 @@ MsgCreateGauge:
 osmosisd tx incentives create-gauge LPToken 1000MyToken \
   --duration 24h \
   --start-time 2022-01-01T00:00:00Z \
-  --epochs 2 # or --epochs-duration 336h
+  --epochs 2
 ```
 
 #### Case 2
