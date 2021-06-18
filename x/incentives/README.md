@@ -8,10 +8,10 @@ the token release after they request to unlock the tokens.
 ## Creating Gauges
 
 To initialize a gauge, the creator should decide the following parameters:
-- Distribution condition: qualified denom and minimum lockup duration.
+- Distribution condition: denom to incentivize and minimum lockup duration.
 - Rewards: tokens to be distributed to the lockup owners.
 - Start time: time when the distribution will begin.
-- Total epochs: period of distributions in epochs.
+- Total epochs: number of epochs to distribute over. (Osmosis epochs are 1 day each, ending at 5PM UTC everyday)
 
 Making transaction is done in the following format:
 
