@@ -1,9 +1,7 @@
 name: docker
 
-on:
-  push:
-    branches:
-      - 'master'
+# todo: fix later
+on: [push,pull_request]
 
 jobs:
   docker:
