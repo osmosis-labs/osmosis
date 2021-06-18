@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -11,8 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/spf13/cobra"
@@ -63,9 +60,9 @@ func NewCreateGaugeCmd() *cobra.Command {
 			}
 			if timeStr == "" { // empty start time
 				// do nothing
-			} else if timeUnix, err := strconv.ParseInt(timeStr, 10, 64); err != nil { // unix time
+			} else if timeUnix, err := strconv.ParseInt(timeStr, 10, 64); err == nil { // unix time
 				startTime = time.Unix(timeUnix, 0)
-			} else if timeRFC, err := time.Parse(time.RFC3339, timeStr); err != nil { // RFC time
+			} else if timeRFC, err := time.Parse(time.RFC3339, timeStr); err == nil { // RFC time
 				startTime = timeRFC
 			} else { // invalid input
 				return errors.New("Invalid start time format")
@@ -76,55 +73,13 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return err
 			}
 
-			epochsDuration, err := cmd.Flags().GetDuration(FlagEpochsDuration)
-			if err != nil {
-				return err
-			}
-
 			perpetual, err := cmd.Flags().GetBool(FlagPerpetual)
 			if err != nil {
 				return err
 			}
 
-			if epochs != 0 && epochsDuration != time.Duration(0) {
-				return errors.New("Cannot provide both --epochs and --epochs-duration flags")
-			}
-
-			// BEGIN epoch info query logic
-			var epochInfoDuration time.Duration
-			paramsQueryClient := proposal.NewQueryClient(clientCtx)
-			params := proposal.QueryParamsRequest{
-				Subspace: types.ModuleName,
-				Key:      string(types.KeyDistrEpochIdentifier),
-			}
-			epochIdentifierRes, err := paramsQueryClient.Params(context.Background(), &params)
-			if err != nil {
-				return err
-			}
-			epochIdentifier := epochIdentifierRes.Param.Value
-
-			epochsQueryClient := epochtypes.NewQueryClient(clientCtx)
-			epochInfoRes, err := epochsQueryClient.EpochInfos(cmd.Context(), &epochtypes.QueryEpochsInfoRequest{})
-			if err != nil {
-				return err
-			}
-
-			for _, epochInfo := range epochInfoRes.Epochs {
-				if epochInfo.Identifier == epochIdentifier {
-					epochInfoDuration = epochInfo.Duration
-					break
-				}
-			}
-			// END
-
-			if epochs == 0 {
-				if epochsDuration != time.Duration(0) {
-					epochs = uint64(epochsDuration / epochInfoDuration)
-				} else if perpetual {
-					epochs = 1
-				} else {
-					return errors.New("None of --epochs, --epochs-duration, --perpetual are set")
-				}
+			if perpetual {
+				epochs = 1
 			}
 
 			duration, err := cmd.Flags().GetDuration(FlagDuration)
@@ -139,26 +94,8 @@ func NewCreateGaugeCmd() *cobra.Command {
 				Timestamp:     time.Unix(0, 0), // XXX check
 			}
 
-			isPerpetual := false
-			if epochs == 1 {
-				isPerpetual = true
-			}
-
-			perpetualStr := ""
-			if isPerpetual {
-				perpetualStr = "perpetual "
-			}
-			durationStr := ""
-			if duration > time.Duration(0) {
-				durationStr = fmt.Sprintf(" over %v", duration)
-			}
-			fmt.Printf("Creating %sgauge for locked %s%s\n", perpetualStr, denom, durationStr)
-			if !isPerpetual {
-				fmt.Printf("Distributed over %d %s(%v)\n", epochs, epochIdentifier, time.Duration(epochs)*epochInfoDuration)
-			}
-
 			msg := types.NewMsgCreateGauge(
-				isPerpetual,
+				epochs == 1,
 				clientCtx.GetFromAddress(),
 				distributeTo,
 				coins,
