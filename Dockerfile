@@ -1,7 +1,3 @@
-# Simple usage with a mounted data directory:
-# > docker build -t osmosis .
-# > docker run -it -p 46657:46657 -p 46656:46656 -v ~/.osmosisd:/osmosis/.osmosisd -v ~/.osmosiscli:/osmosis/.osmosiscli osmosis osmosisd init
-# > docker run -it -p 46657:46657 -p 46656:46656 -v ~/.osmosisd:/osmosis/.osmosisd -v ~/.osmosiscli:/osmosis/.osmosiscli osmosis osmosisd start
 FROM faddat/archlinux
 
 ENV GOPATH=/go
