@@ -28,46 +28,43 @@ osmosisd tx incentives create-gauge [denom] [reward]
 ### Examples
 
 #### Case 1
-
-You want to incentivise liquidity providers of a pool. The gauge will distribute
-1000 MyTokens to the lockups on LPTokens(no duration requirements in this case). 
-The distribution will start from 2022 Jan 01, and happens for 2 weeks, which
-means at each epoch(which is a week by default), the gauge will distribute 500 
-MyTokens to the qualified lockups.
+```
+I want to make incentives for LP tokens of pool X, namely LPToken, that have been locked up for at least 1 day.
+I want to reward 1000 Mytoken to this pool over 2 weeks (2 epochs). (500 rewarded on each day)
+I want the rewards to start disbursing at 2022 Jan 01.
 
 MsgCreateGauge:
-- Distribution condition: denom "LPToken", 0 duration.
-- Rewards: 1000 MyTokens
+- Distribution condition: denom "LPToken", 1 day.
+- Rewards: 1000 MyToken
 - Start time: 2022-01-01T00:00:00Z (in RFC3339 format)
 - Total epochs: 2 (weeks)
 
 ```bash
 osmosisd tx incentives create-gauge LPToken 1000MyToken \
+  --duration 24h \
   --start-time 2022-01-01T00:00:00Z \
   --epochs 2 # or --epochs-duration 336h
 ```
 
 #### Case 2
 
-You want to distribute tokens generated from an external source. The tokens are
-continuously provided, so you want the gauge to be perpetual. In this case, the
-tokens has to be distribued to the lockups only with a lockup duration more than 
-a month. Distribution will start immedietly.
+I want to make incentives for atoms that have been locked up for at least 1 month.
+I want to reward 1000 MyToken to atom holders perpetually. 
+I want the reward to start disbursing immedietly.
 
 MsgCreateGauge:
 - Distribution condition: denom "atom", 720 hours.
-- Rewards: 200 MyTokens
+- Rewards: 1000 MyTokens
 - Start time: empty(immedietly)
 - Total epochs: 1 (perpetual)
 
 ```bash
-osmosisd tx incentives create-gauge atom 200MyToken
+osmosisd tx incentives create-gauge atom 1000MyToken
   --perpetual \  
   --duration 720h 
 ```
 
-Perpetual gauges distribute all of the remaning rewards at the end of each
-epochs. Add rewards to the gauge to keep distribute tokens.
+I want to refill the gauge with 500 MyToken after the distribution.
 
 MsgAddToGauge:
 - Gauge ID: (id of the created gauge)
