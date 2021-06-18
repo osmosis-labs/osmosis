@@ -35,7 +35,7 @@ I want the rewards to start disbursing at 2022 Jan 01.
 MsgCreateGauge:
 - Distribution condition: denom "LPToken", 1 day.
 - Rewards: 1000 MyToken
-- Start time: 2022-01-01T00:00:00Z (in RFC3339 format)
+- Start time: 1624000706 (in unix time format)
 - Total epochs: 2 (weeks)
 
 ```bash
