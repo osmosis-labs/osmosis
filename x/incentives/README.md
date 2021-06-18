@@ -29,14 +29,14 @@ osmosisd tx incentives create-gauge [denom] [reward]
 #### Case 1
 ```
 I want to make incentives for LP tokens of pool X, namely LPToken, that have been locked up for at least 1 day.
-I want to reward 1000 Mytoken to this pool over 2 weeks (2 epochs). (500 rewarded on each day)
+I want to reward 1000 Mytoken to this pool over 2 days (2 epochs). (500 rewarded on each day)
 I want the rewards to start disbursing at 2022 Jan 01.
 
 MsgCreateGauge:
 - Distribution condition: denom "LPToken", 1 day.
 - Rewards: 1000 MyToken
 - Start time: 2022-01-01T00:00:00Z (in RFC3339 format)
-- Total epochs: 2 (weeks)
+- Total epochs: 2 (days)
 
 ```bash
 osmosisd tx incentives create-gauge LPToken 1000MyToken \
@@ -48,7 +48,7 @@ osmosisd tx incentives create-gauge LPToken 1000MyToken \
 #### Case 2
 
 I want to make incentives for atoms that have been locked up for at least 1 month.
-I want to reward 1000 MyToken to atom holders perpetually. 
+I want to reward 1000 MyToken to atom holders perpetually. (Meaning I add more tokens to this gauge myself every epoch)
 I want the reward to start disbursing immedietly.
 
 MsgCreateGauge:
@@ -60,7 +60,7 @@ MsgCreateGauge:
 ```bash
 osmosisd tx incentives create-gauge atom 1000MyToken
   --perpetual \  
-  --duration 720h 
+  --duration 168h 
 ```
 
 I want to refill the gauge with 500 MyToken after the distribution.
