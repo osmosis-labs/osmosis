@@ -90,34 +90,36 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return errors.New("Cannot provide both --epochs and --epochs-duration flags")
 			}
 
-			var epochIdentifier string
+			// BEGIN epoch info query logic
+			var epochInfoDuration time.Duration
+			paramsQueryClient := proposal.NewQueryClient(clientCtx)
+			params := proposal.QueryParamsRequest{
+				Subspace: types.ModuleName,
+				Key:      string(types.KeyDistrEpochIdentifier),
+			}
+			epochIdentifierRes, err := paramsQueryClient.Params(context.Background(), &params)
+			if err != nil {
+				return err
+			}
+			epochIdentifier := epochIdentifierRes.Param.Value
+
+			epochsQueryClient := epochtypes.NewQueryClient(clientCtx)
+			epochInfoRes, err := epochsQueryClient.EpochInfos(cmd.Context(), &epochtypes.QueryEpochsInfoRequest{})
+			if err != nil {
+				return err
+			}
+
+			for _, epochInfo := range epochInfoRes.Epochs {
+				if epochInfo.Identifier == epochIdentifier {
+					epochInfoDuration = epochInfo.Duration
+					break
+				}
+			}
+			// END
+
 			if epochs == 0 {
 				if epochsDuration != time.Duration(0) {
-					// BEGIN epoch info query logic
-					paramsQueryClient := proposal.NewQueryClient(clientCtx)
-					params := proposal.QueryParamsRequest{
-						Subspace: types.ModuleName,
-						Key:      string(types.KeyDistrEpochIdentifier),
-					}
-					epochIdentifierRes, err := paramsQueryClient.Params(context.Background(), &params)
-					if err != nil {
-						return err
-					}
-					epochIdentifier = epochIdentifierRes.Param.Value
-
-					epochsQueryClient := epochtypes.NewQueryClient(clientCtx)
-					epochInfoRes, err := epochsQueryClient.EpochInfos(cmd.Context(), &epochtypes.QueryEpochsInfoRequest{})
-					if err != nil {
-						return err
-					}
-					// END
-
-					for _, epochInfo := range epochInfoRes.Epochs {
-						if epochInfo.Identifier == epochIdentifier {
-							epochs = uint64(epochsDuration / epochInfo.Duration)
-							break
-						}
-					}
+					epochs = uint64(epochsDuration / epochInfoDuration)
 				} else if perpetual {
 					epochs = 1
 				} else {
@@ -152,7 +154,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 			}
 			fmt.Printf("Creating %sgauge for locked %s%s\n", perpetualStr, denom, durationStr)
 			if !isPerpetual {
-				fmt.Printf("Distributed over %d %s(%v)", epochs, epochIdentifier, duration)
+				fmt.Printf("Distributed over %d %s(%v)\n", epochs, epochIdentifier, time.Duration(epochs)*epochInfoDuration)
 			}
 
 			msg := types.NewMsgCreateGauge(

@@ -29,21 +29,22 @@ osmosisd tx incentives create-gauge [denom] [reward]
 
 #### Case 1
 
-You want to airdrop 1000 MyTokens to the atom holders. It doesn't matter for you
-how long are they are committed to lockup the tokens, so you will distribute
-MyTokens to anyone who locked the atoms regardless of their duration. The
-distribution will start from 2022 Jan 01, and happens during the whole year.
+You want to incentivise liquidity providers of a pool. The gauge will distribute
+1000 MyTokens to the lockups on LPTokens(no duration requirements in this case). 
+The distribution will start from 2022 Jan 01, and happens for 2 weeks, which
+means at each epoch(which is a week by default), the gauge will distribute 500 
+MyTokens to the qualified lockups.
 
 MsgCreateGauge:
-- Distribution condition: denom "atom", 0 duration.
+- Distribution condition: denom "LPToken", 0 duration.
 - Rewards: 1000 MyTokens
 - Start time: 2022-01-01T00:00:00Z (in RFC3339 format)
-- Total epochs: 52 (weeks)
+- Total epochs: 2 (weeks)
 
 ```bash
-osmosisd tx incentives create-gauge atom 1000MyToken \
+osmosisd tx incentives create-gauge LPToken 1000MyToken \
   --start-time 2022-01-01T00:00:00Z \
-  --epochs 52 # or --epochs-duration 8736h
+  --epochs 2 # or --epochs-duration 336h
 ```
 
 #### Case 2
