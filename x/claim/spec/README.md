@@ -10,6 +10,16 @@ After two months, the reward amount available will decline over 4 months (`Durat
 
 After 6 months from launch, all unclaimed tokens get sent to the community pool.
 
+## Contents
+
+1. **[Concept](01_concepts.md)**
+2. **[State](02_state.md)**
+3. **[Events](03_events.md)**
+4. **[Keeper](04_keeper.md)**  
+5. **[React Hooks](05_react_hooks.md)**  
+6. **[Queries](06_queries.md)**  
+7. **[Params](07_params.md)**
+
 ## Genesis State
 
 ## Actions
@@ -59,29 +69,6 @@ type ClaimRecord struct {
 
 ```
 
-## Queries
-
-For the following commands, you can change `$(osmosisd keys show -a {your key name})` with the address directly.
-
-Query the claim record for a given address
-
-```sh
-osmosisd query claim claim-record $(osmosisd keys show -a {your key name})
-```
-
-Query the claimable amount that would be earned if a specific action is completed right now.
-
-```sh
-
-osmosisd query claim claimable-for-action $(osmosisd keys show -a {your key name}) ActionAddLiquidity
-```
-
-Query the total claimable amount that would be earned if all remaining actions were completed right now.
-Note that even if the decay process hasn't begun yet, this is not always *exactly* the same as `InitialClaimableAmount`, due to rounding errors.
-
-```sh
-osmosisd query claim total-claimable $(osmosisd keys show -a {your key name}) ActionAddLiquidity
-```
 
 ## Params
 

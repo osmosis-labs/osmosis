@@ -8,7 +8,6 @@ The lockup module contains the following parameters:
 
 | Key                    | Type            | Example |
 | ---------------------- | --------------- | ------- |
-| MinPeriod              | string (uint64) | "86400" |
 
 Note:
-We need to discuss what parameters would be required for this module.
+Currently no parameters are set for `lockup` module, we will need to move lockable durations from incentives module to lockup module.

@@ -20,7 +20,7 @@ RUN apk add --no-cache $PACKAGES && \
 # Final image
 FROM alpine:edge
 
-ENV osmosis /osmosis
+ENV OSMOSIS /osmosis
 
 # Install ca-certificates
 RUN apk add --update ca-certificates

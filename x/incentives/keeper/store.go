@@ -66,23 +66,24 @@ func (k Keeper) addGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) er
 }
 
 // deleteGaugeRefByKey removes gauge ID from an array associated to provided key
-func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) {
+func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
 	var index = -1
 	store := ctx.KVStore(k.storeKey)
 	gaugeIDs := k.getGaugeRefs(ctx, key)
 	gaugeIDs, index = removeValue(gaugeIDs, gaugeID)
 	if index < 0 {
-		panic(fmt.Sprintf("specific gauge with ID %d not found", gaugeID))
+		return fmt.Errorf("specific gauge with ID %d not found", gaugeID)
 	}
 	if len(gaugeIDs) == 0 {
 		store.Delete(key)
 	} else {
 		bz, err := json.Marshal(gaugeIDs)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		store.Set(key, bz)
 	}
+	return nil
 }
 
 // getAllGaugeIDsByDenom returns all active gauge-IDs associated with lockups of denomination `denom`
@@ -91,8 +92,8 @@ func (k Keeper) getAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
 }
 
 // deleteGaugeIDForDenom deletes ID from the list of gauge ID's associated with denomination `denom`
-func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) {
-	k.deleteGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
+func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
+	return k.deleteGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
 }
 
 // addGaugeIDForDenom adds ID to the list of gauge ID's associated with denomination `denom`

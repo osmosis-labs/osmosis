@@ -8,7 +8,7 @@ In this section we describe the "hooks" that `lockup` module provide for other m
 
 ## Tokens Locked
 
-Upon successful coin lock/unlock, other modules might need to do few actions automatically instead of endblocker basis synchronization.
+On lock/unlock events, lockup module execute hooks for other modules to make following actions.
 
 ```go
   OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)

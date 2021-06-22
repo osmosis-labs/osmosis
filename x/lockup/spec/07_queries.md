@@ -16,11 +16,15 @@ service Query {
 
 	// Returns unlockable coins which are not withdrawn yet
 	rpc AccountUnlockableCoins(AccountUnlockableCoinsRequest) returns (AccountUnlockableCoinsResponse);
+	// Returns unlocking coins
+  	rpc AccountUnlockingCoins(AccountUnlockingCoinsRequest) returns (AccountUnlockingCoinsResponse) {}
 	// Return a locked coins that can't be withdrawn
 	rpc AccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
 
 	// Returns locked records of an account with unlock time beyond timestamp
 	rpc AccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
+	// Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
+	rpc AccountLockedPastTimeNotUnlockingOnly(AccountLockedPastTimeNotUnlockingOnlyRequest) returns (AccountLockedPastTimeNotUnlockingOnlyResponse) {}
 	// Returns unlocked records with unlock time before timestamp
 	rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
 
@@ -31,6 +35,8 @@ service Query {
 
 	// Returns account locked records with longer duration
 	rpc AccountLockedLongerDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
+	// Returns account locked records with longer duration excluding tokens started unlocking
+  	rpc AccountLockedLongerDurationNotUnlockingOnly(AccountLockedLongerDurationNotUnlockingOnlyRequest) returns (AccountLockedLongerDurationNotUnlockingOnlyResponse) {}
 	// Returns account's locked records for a denom with longer duration
 	rpc AccountLockedLongerDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
 }

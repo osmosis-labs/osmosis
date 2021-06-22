@@ -546,12 +546,8 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2 h1:nY8Hti+WKaP0cRsSeQ026wU03QsM762XBeCXBb9NAWI=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
-github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210613202848-b45039095bc3 h1:UpwrTsXpHKaFyLiDEiJoLTWjsB57bkd35KcpVjkrrL0=
-github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210613202848-b45039095bc3/go.mod h1:3JyT+Ud7QRTO1/ikncNqVhaF526ZKNqh2HGMqXn+QHE=
-github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210616182750-c3da7635dcda h1:8pvw03jaTik5FlevXzVw+pBaYBk9HG/pqgJ5dP14m1c=
-github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210616182750-c3da7635dcda/go.mod h1:3JyT+Ud7QRTO1/ikncNqVhaF526ZKNqh2HGMqXn+QHE=
-github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210616185013-8124e2e2f6a8 h1:z0JTBjHzMp7Q7LO+WiB7PDwfe8ClrbwRCOtpF7DosQQ=
-github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210616185013-8124e2e2f6a8/go.mod h1:3JyT+Ud7QRTO1/ikncNqVhaF526ZKNqh2HGMqXn+QHE=
+github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210622202917-f4f6a08ac64b h1:dWlPU8X890OVLKSqfmEanCrJ7NYUSpoEVXaRVqLwpuo=
+github.com/osmosis-labs/cosmos-sdk v0.42.5-0.20210622202917-f4f6a08ac64b/go.mod h1:kh37gwYQoWdgR7N/9zeqW2rJ7cnP2W4A7nqIaf6m3zg=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
 github.com/otiai10/copy v1.6.0/go.mod h1:XWfuS3CrI0R6IE0FbgHsEazaXO8G0LpMp9o8tos0x4E=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
@@ -734,8 +730,9 @@ github.com/tendermint/go-amino v0.16.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoM
 github.com/tendermint/tendermint v0.34.0-rc4/go.mod h1:yotsojf2C1QBOw4dZrTcxbyxmPUrT4hNuOQWX9XUwB4=
 github.com/tendermint/tendermint v0.34.0-rc6/go.mod h1:ugzyZO5foutZImv0Iyx/gOFCX6mjJTgbLHTwi17VDVg=
 github.com/tendermint/tendermint v0.34.0/go.mod h1:Aj3PIipBFSNO21r+Lq3TtzQ+uKESxkbA3yo/INM4QwQ=
-github.com/tendermint/tendermint v0.34.10 h1:wBOc/It8sh/pVH9np2V5fBvRmIyFN/bUrGPx+eAHexs=
 github.com/tendermint/tendermint v0.34.10/go.mod h1:aeHL7alPh4uTBIJQ8mgFEE8VwJLXI1VD3rVOmH2Mcy0=
+github.com/tendermint/tendermint v0.34.11 h1:q1Yh76oG4QbS07xhmIJh5iAE0fYpJ8P8YKYtjnWfJRY=
+github.com/tendermint/tendermint v0.34.11/go.mod h1:aeHL7alPh4uTBIJQ8mgFEE8VwJLXI1VD3rVOmH2Mcy0=
 github.com/tendermint/tm-db v0.6.2/go.mod h1:GYtQ67SUvATOcoY8/+x6ylk8Qo02BQyLrAs+yAcLvGI=
 github.com/tendermint/tm-db v0.6.3/go.mod h1:lfA1dL9/Y/Y8wwyPp2NMLyn5P5Ptr/gvDFNWtrCWSf8=
 github.com/tendermint/tm-db v0.6.4 h1:3N2jlnYQkXNQclQwd/eKV/NzlqPlfK21cpRRIx80XXQ=

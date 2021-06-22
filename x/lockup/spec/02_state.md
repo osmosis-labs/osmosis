@@ -19,7 +19,7 @@ It stores owner, duration, unlock time and the amount of coins locked.
 
 ```go
 type PeriodLock struct {
-  ID         uint64         // unique ID of a lock
+  ID         uint64
   Owner      sdk.AccAddress
   Duration   time.Duration
   UnlockTime time.Time
@@ -27,29 +27,12 @@ type PeriodLock struct {
 }
 ```
 
-```protobuf
-message PeriodLock {
-  uint64 ID = 1;
-  string owner = 2;
-  google.protobuf.Duration duration = 3;
-  google.protobuf.Timestamp unlock_time = 4;
-  repeated cosmos.base.v1beta1.Coin coins = 5;
-}
-```
-
 ### Period lock queues
 
-For the purpose of tracking lock end time, period lock queue is kept.
+To provide time efficient queries, several queues are managed by denom, unlock time, and duration.
 
-All queues objects are sorted by timestamp. The time used within any queue is
-first rounded to the nearest nanosecond then sorted. The sortable time format
-used is a slight modification of the RFC3339Nano and uses the the format string
-`"2006-01-02T15:04:05.000000000"`. Notably this format:
+All queues objects are sorted by timestamp. The time used within any queue is first rounded to the nearest nanosecond then sorted. The sortable time format used is a slight modification of the RFC3339Nano and uses the the format string
+`"2006-01-02T15:04:05.000000000"`.
 
-- right pads all zeros
-- drops the time zone info (uses UTC)
+In all cases, the stored timestamp represents the maturation time of the queue element.
 
-In all cases, the stored timestamp represents the maturation time of the queue
-element.
-
-Key will look like `{OwnerBytes}{UnlockTime}` and Value will store `PeriodLock` object.
