@@ -51,6 +51,7 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/rewards_est/{owner}";
   }
+  // returns lockable durations that are valid to give incentives
   rpc LockableDurations(QueryLockableDurationsRequest)
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
