@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -291,4 +292,23 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	// final check
 	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", duration)
 	suite.Require().Len(locks, 1)
+}
+
+func (suite *KeeperTestSuite) TestLockTokensAlot() {
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	skipLogsFor := 1000
+	for i := 0; i < skipLogsFor; i++ {
+		// addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+		suite.LockTokens(addr1, coins, time.Second)
+	}
+	for i := 0; i < 1000; i++ {
+		alreadySpent := suite.ctx.GasMeter().GasConsumed()
+		// addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+		suite.LockTokens(addr1, coins, time.Second)
+		newSpent := suite.ctx.GasMeter().GasConsumed()
+		spentNow := newSpent - alreadySpent
+		fmt.Println("sum up - consumed gas", i+skipLogsFor, spentNow)
+	}
+	// panic(1)
 }

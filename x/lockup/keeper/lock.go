@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -17,18 +16,12 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	locks := []types.PeriodLock{}
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		lockIDs := []uint64{}
-		err := json.Unmarshal(iterator.Value(), &lockIDs)
+		lockID := sdk.BigEndianToUint64(iterator.Value())
+		lock, err := k.GetLockByID(ctx, lockID)
 		if err != nil {
 			panic(err)
 		}
-		for _, lockID := range lockIDs {
-			lock, err := k.GetLockByID(ctx, lockID)
-			if err != nil {
-				panic(err)
-			}
-			locks = append(locks, *lock)
-		}
+		locks = append(locks, *lock)
 	}
 	return locks
 }

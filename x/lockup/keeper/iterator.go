@@ -21,7 +21,7 @@ func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time
 	key := combineKeys(prefix, timeKey)
 	// If it’s unlockTime, then it should count as unlocked
 	// inclusive end bytes = key + 1, next iterator
-	return store.Iterator(storetypes.InclusiveEndBytes(key), storetypes.PrefixEndBytes(prefix))
+	return store.Iterator(storetypes.PrefixEndBytes(key), storetypes.PrefixEndBytes(prefix))
 }
 
 func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
@@ -30,7 +30,7 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Tim
 	key := combineKeys(prefix, timeKey)
 	// If it’s unlockTime, then it should count as unlocked
 	// inclusive end bytes = key + 1, next iterator
-	return store.Iterator(prefix, storetypes.InclusiveEndBytes(key))
+	return store.Iterator(prefix, storetypes.PrefixEndBytes(key))
 }
 
 func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
