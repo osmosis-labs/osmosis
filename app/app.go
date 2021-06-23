@@ -297,6 +297,21 @@ func NewOsmosisApp(
 	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
 
+	// this configures a no-op upgrade handler for the "upgrade-lockup-module-store-management" upgrade
+	app.UpgradeKeeper.SetUpgradeHandler("upgrade-lockup-module-store-management", func(ctx sdk.Context, plan upgradetypes.Plan) {
+		locks, err := app.LockupKeeper.GetPeriodLocks(ctx)
+		if err != nil {
+			panic(err)
+		}
+		// clear all lockup module locking / unlocking queue items
+		app.LockupKeeper.ClearAllLockRefKeys(ctx)
+
+		// reset all lock and references
+		for _, lock := range locks {
+			app.LockupKeeper.ResetLock(ctx, lock)
+		}
+	})
+
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), &stakingKeeper, scopedIBCKeeper,

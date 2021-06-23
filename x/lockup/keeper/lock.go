@@ -289,6 +289,21 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 	return lock, k.Lock(ctx, lock)
 }
 
+func (k Keeper) clearLockRefKeysByPrefix(ctx sdk.Context, prefix []byte) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		store.Delete(iterator.Key())
+	}
+}
+
+func (k Keeper) ClearAllLockRefKeys(ctx sdk.Context) {
+	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixNotUnlocking)
+	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixUnlocking)
+}
+
 // ResetLock reset lock to lock's previous state on InitGenesis
 func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 	lockID := lock.ID
