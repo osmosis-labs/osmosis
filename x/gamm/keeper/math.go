@@ -202,11 +202,12 @@ func calcPoolInGivenSingleOut(
 /*********************************************************/
 
 // absDifferenceWithSign returns | a - b |, (a - b).sign()
+// a is mutated and returned
 func absDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	if a.GTE(b) {
-		return a.Sub(b), false
+		return a.SubMut(b), false
 	} else {
-		return b.Sub(a), true
+		return a.NegMut().AddMut(b), true
 	}
 }
 
@@ -294,18 +295,27 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 
 	// TODO: Check with our parameterization
 	// TODO: If theres a bug, balancer is also wrong here :thonk:
-	a := exp
+
+	base = base.Clone()
 	x, xneg := absDifferenceWithSign(base, one)
 	term := sdk.OneDec()
 	sum := sdk.OneDec()
 	negative := false
 
+	a := exp.Clone()
+	bigK := sdk.NewDec(0)
 	// TODO: Document this computation via taylor expansion
-	for i := 1; term.GTE(precision); i++ {
-		bigK := sdk.OneDec().MulInt64(int64(i))
-		c, cneg := absDifferenceWithSign(a, bigK.Sub(one))
-		term = term.Mul(c.Mul(x))
-		term = term.Quo(bigK)
+	for i := int64(1); term.GTE(precision); i++ {
+		// At each iteration, we need two values, i and i-1.
+		// To avoid expensive big.Int allocation, we reuse bigK variable.
+		// On this line, bigK == i-1.
+		c, cneg := absDifferenceWithSign(a, bigK)
+		// On this line, bigK == i.
+		bigK.Set(sdk.NewDec(i)) // TODO: O(n) bigint allocation happens
+		term.MulMut(c).MulMut(x).QuoMut(bigK)
+
+		// a is mutated on absDifferenceWithSign, reset
+		a.Set(exp)
 
 		if term.IsZero() {
 			break
@@ -319,9 +329,9 @@ func powApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 		}
 
 		if negative {
-			sum = sum.Sub(term)
+			sum.SubMut(term)
 		} else {
-			sum = sum.Add(term)
+			sum.AddMut(term)
 		}
 	}
 	return sum
