@@ -46,7 +46,7 @@ func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	return lockIDs
 }
 
-// addLockRefByKey append lock ID into an array associated to provided key
+// addLockRefByKey make a lockID iterable with the prefix `key`
 func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	lockIDBz := sdk.Uint64ToBigEndian(lockID)
