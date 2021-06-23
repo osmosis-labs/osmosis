@@ -291,19 +291,23 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 
 // ResetLock reset lock to lock's previous state on InitGenesis
 func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
-	lockID := lock.ID
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(&lock)
 	if err != nil {
 		return err
 	}
-	store.Set(lockStoreKey(lockID), bz)
-	k.setLastLockID(ctx, lockID)
+	store.Set(lockStoreKey(lock.ID), bz)
 
 	// store refs by the status of unlock
 	if lock.IsUnlocking() {
 		return k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
 	}
+
+	// add to accumulation store when unlocking is not started
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+	}
+
 	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 }
 
