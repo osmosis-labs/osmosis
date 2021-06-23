@@ -283,10 +283,15 @@ func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.Per
 
 // LockTokens lock tokens from an account for specified duration
 func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
-	ID := k.getLastLockID(ctx) + 1
+	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is set at the beginning of unlocking time
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
-	return lock, k.Lock(ctx, lock)
+	err := k.Lock(ctx, lock)
+	if err != nil {
+		return lock, err
+	}
+	k.SetLastLockID(ctx, lock.ID)
+	return lock, nil
 }
 
 // ResetLock reset lock to lock's previous state on InitGenesis
@@ -328,7 +333,6 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 	store.Set(lockStoreKey(lock.ID), bz)
-	k.setLastLockID(ctx, lock.ID)
 
 	// add lock refs into not unlocking queue
 	err = k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
