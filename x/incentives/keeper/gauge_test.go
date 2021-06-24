@@ -309,6 +309,35 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	suite.Require().Equal(sdk.Coins(nil), rewardsEst)
 }
 
+func (suite *KeeperTestSuite) TestNoDistributionToUnlockingStarted() {
+	// test for module get gauges
+	suite.SetupTest()
+
+	// initial check
+	coins := suite.app.IncentivesKeeper.GetModuleToDistributeCoins(suite.ctx)
+	suite.Require().Equal(coins, sdk.Coins(nil))
+
+	// setup lock and gauge
+	lockOwner, gaugeID, _, startTime := suite.SetupLockAndGauge(false)
+	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
+	suite.Require().NoError(err)
+
+	// start distribution
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	suite.Require().NoError(err)
+	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 5)})
+
+	// begin unlock
+	suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, lockOwner)
+
+	// try distribution and check not distributed
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	suite.Require().NoError(err)
+	suite.Require().Equal(distrCoins, sdk.Coins(nil))
+}
+
 func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	// test for module get gauges
 	suite.SetupTest()

@@ -205,7 +205,7 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, gauge types.Gauge) error {
 func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.QueryCondition) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
 	case lockuptypes.ByDuration:
-		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
+		return k.lk.GetLocksLongerThanDurationDenomNotUnlockingOnly(ctx, distrTo.Denom, distrTo.Duration)
 	case lockuptypes.ByTime:
 		return k.lk.GetLocksPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
 	default:

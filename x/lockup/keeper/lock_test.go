@@ -289,9 +289,41 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.LockTokens(addr1, coins, time.Second)
 
-	// final check
+	// check if being queried
 	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", duration)
 	suite.Require().Len(locks, 1)
+
+	// begin unlock
+	suite.BeginUnlocking(addr1)
+
+	// check if being queried yet
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", duration)
+	suite.Require().Len(locks, 1)
+}
+
+func (suite *KeeperTestSuite) TestGetLocksLongerThanDurationDenomNotUnlockingOnly() {
+	suite.SetupTest()
+
+	// initial check
+	duration := time.Second
+	locks := suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", duration)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check if being queried
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenomNotUnlockingOnly(suite.ctx, "stake", duration)
+	suite.Require().Len(locks, 1)
+
+	// begin unlock
+	suite.BeginUnlocking(addr1)
+
+	// check if not queried now
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenomNotUnlockingOnly(suite.ctx, "stake", duration)
+	suite.Require().Len(locks, 0)
 }
 
 func (suite *KeeperTestSuite) TestLockTokensAlot() {

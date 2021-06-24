@@ -189,6 +189,11 @@ func (k Keeper) GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, d
 	return combineLocks(notUnlockings, unlockings)
 }
 
+// GetLocksLongerThanDurationDenomNotUnlockingOnly Returns the locks whoe unlock duration is longer than duration for only unlocking not started yet
+func (k Keeper) GetLocksLongerThanDurationDenomNotUnlockingOnly(ctx sdk.Context, denom string, duration time.Duration) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, false, denom, duration))
+}
+
 // GetLockByID Returns lock from lockID
 func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, error) {
 	lock := types.PeriodLock{}
