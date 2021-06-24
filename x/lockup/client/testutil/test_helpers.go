@@ -42,27 +42,3 @@ func MsgBeginUnlocking(clientCtx client.Context, owner fmt.Stringer, extraArgs .
 	args = append(args, commonArgs...)
 	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewBeginUnlockingCmd(), args)
 }
-
-// MsgUnlockTokens unlock all unlockable tokens from an account
-func MsgUnlockTokens(clientCtx client.Context, owner fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-
-	args := []string{
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 500000),
-	}
-
-	args = append(args, commonArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewUnlockTokensCmd(), args)
-}
-
-// MsgUnlockByID unlock unlockable tokens
-func MsgUnlockByID(clientCtx client.Context, owner fmt.Stringer, ID string, extraArgs ...string) (testutil.BufferWriter, error) {
-
-	args := []string{
-		ID,
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
-	}
-
-	args = append(args, commonArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, lockupcli.NewUnlockByIDCmd(), args)
-}

@@ -40,6 +40,10 @@ func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) (
 	return locks, coins, nil
 }
 
+func (k Keeper) WithdrawAllMaturedLocks(ctx sdk.Context) {
+	k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, true, ctx.BlockTime()))
+}
+
 func (k Keeper) addLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
 	refKeys, err := lockRefKeys(lock)
 	if err != nil {

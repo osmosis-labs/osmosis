@@ -23,38 +23,39 @@ type MsgLockTokens struct {
 - Save the record inside the keeper's time basis unlock queue
 - Transfer the tokens from the `Owner` to lockup `ModuleAccount`.
 
-## Unlock Tokens
+## Begin Unlock of all locks
 
 Once time is over, users can withdraw unlocked coins from lockup `ModuleAccount`.
 
 ```go
-type MsgUnlockTokens struct {
-  Owner sdk.AccAddress
+type MsgBeginUnlockingAll struct {
+	Owner string
 }
 ```
 
 **State modifications:**
 
-- Fetch all unlockable `PeriodLock`s that `Owner` has not withdrawn yet
-- Remove `PeriodLock` records from the state
-- Transfer the tokens from lockup `ModuleAccount` to the `MsgUnlockTokens.Owner`.
+- Fetch all unlockable `PeriodLock`s that has not started unlocking yet
+- Set `PeriodLock`'s unlock time
+- Remove lock references from `NotUnlocking` queue
+- Add lock references to `Unlocking` queue
 
-## Unlock PeriodLock
+## Begin unlock for a lock
 
 Once time is over, users can withdraw unlocked coins from lockup `ModuleAccount`.
 
 ```go
-type MsgUnlockPeriodLock struct {
-  Owner  sdk.AccAddress
-  LockID uint64
+type MsgBeginUnlocking struct {
+	Owner string
+	ID    uint64
 }
 ```
 
 **State modifications:**
 
-- Check `PeriodLock` with `LockID` specified by `MsgUnlockPeriodLock` is available and not withdrawn already
-- Check `PeriodLock` owner is same as `MsgUnlockPeriodLock.Owner`
-- Remove `PeriodLock` record from the state
-- Transfer the tokens from lockup `ModuleAccount` to the `Owner`.
+- Check `PeriodLock` with `ID` specified by `MsgBeginUnlocking` is not started unlocking yet
+- Set `PeriodLock`'s unlock time
+- Remove lock references from `NotUnlocking` queue
+- Add lock references to `Unlocking` queue
 
 Note: If another module needs past `PeriodLock` item, it can log the details themselves using the hooks.

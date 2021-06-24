@@ -33,15 +33,3 @@ type LockTokensReq struct {
 	Duration string         `json:"duration,omitempty" yaml:"duration"`
 	Coins    sdk.Coins      `json:"coins" yaml:"coins"`
 }
-
-// UnlockTokensReq defines the properties of a MsgUnlockTokens request.
-type UnlockTokensReq struct {
-	BaseReq rest.BaseReq   `json:"base_req" yaml:"base_req"`
-	Owner   sdk.AccAddress `json:"owner,omitempty" yaml:"owner"`
-}
-
-// UnlockTokensByIDReq defines the properties of a MsgUnlockTokens request.
-type UnlockTokensByIDReq struct {
-	BaseReq rest.BaseReq   `json:"base_req" yaml:"base_req"`
-	Owner   sdk.AccAddress `json:"owner,omitempty" yaml:"owner"`
-}
