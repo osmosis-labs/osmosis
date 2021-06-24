@@ -40,7 +40,7 @@ func TestTreeTestSuite(t *testing.T) {
 
 type pair struct {
 	key   []byte
-	value uint64
+	value sdk.Coins
 }
 
 type pairs []pair
@@ -61,9 +61,9 @@ func (p pairs) Swap(i, j int) {
 	p[j] = temp
 }
 
-func (p pairs) sum() (res uint64) {
+func (p pairs) sum() (res sdk.Coins) {
 	for _, pair := range p {
-		res += pair.value
+		res = res.Add(pair.value...)
 	}
 	return
 }
@@ -71,14 +71,16 @@ func (p pairs) sum() (res uint64) {
 func (suite *TreeTestSuite) TestTreeInvariants() {
 	suite.SetupTest()
 
-	pairs := pairs{pair{[]byte("hello"), 100}}
-	suite.tree.Set([]byte("hello"), sdk.NewIntFromUint64(100))
+	denom := "denom"
+
+	pairs := pairs{pair{[]byte("hello"), sdk.NewCoins(sdk.NewInt64Coin(denom, 100))}}
+	suite.tree.Set([]byte("hello"), sdk.NewCoins(sdk.NewInt64Coin(denom, 100)))
 
 	// tested up to 2000
 	for i := 0; i < 500; i++ {
 		// add a single element
 		key := make([]byte, rand.Int()%20)
-		value := rand.Uint64() % 100
+		value := sdk.NewCoins(sdk.NewInt64Coin(denom, rand.Int63() % 100))
 		rand.Read(key)
 		idx := sort.Search(len(pairs), func(n int) bool { return bytes.Compare(pairs[n].key, key) >= 0 })
 		if idx < len(pairs) {
@@ -92,21 +94,21 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			pairs = append(pairs, pair{key, value})
 		}
 
-		suite.tree.Set(key, sdk.NewIntFromUint64(value))
+		suite.tree.Set(key, sdk.NewCoins(sdk.NewInt64Coin(denom, 100)))
 
 		// check all is right
 		for _, pair := range pairs {
-			suite.Require().Equal(suite.tree.Get(pair.key).Uint64(), pair.value)
+			suite.Require().True(suite.tree.Get(pair.key).Leaf.Accumulation.IsEqual(pair.value))
 			// XXX: check all branch nodes
 		}
 
 		// check accumulation calc is alright
-		left, exact, right := uint64(0), pairs[0].value, pairs[1:].sum()
+		left, exact, right := sdk.Coins{}, pairs[0].value, pairs[1:].sum()
 		for idx, pair := range pairs {
 			tleft, texact, tright := suite.tree.SplitAcc(pair.key)
-			suite.Require().Equal(left, tleft.Uint64())
-			suite.Require().Equal(exact, texact.Uint64())
-			suite.Require().Equal(right, tright.Uint64())
+			suite.Require().True(left.IsEqual(tleft))
+			suite.Require().True(exact.IsEqual(texact))
+			suite.Require().True(right.IsEqual(tright))
 
 			key := append(pair.key, 0x00)
 			if idx == len(pairs)-1 {
@@ -117,13 +119,13 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			}
 
 			tleft, texact, tright = suite.tree.SplitAcc(key)
-			suite.Require().Equal(left+exact, tleft.Uint64())
-			suite.Require().Equal(uint64(0), texact.Uint64())
-			suite.Require().Equal(right, tright.Uint64())
+			suite.Require().True(left.Add(exact...).IsEqual(tleft))
+			suite.Require().True(sdk.Coins{}.IsEqual(texact))
+			suite.Require().True(right.IsEqual(tright))
 
-			left += exact
+			left = left.Add(exact...)
 			exact = pairs[idx+1].value
-			right -= exact
+			right = right.Sub(exact)
 		}
 
 		if rand.Int()%2 == 0 {
