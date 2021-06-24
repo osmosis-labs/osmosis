@@ -12,8 +12,8 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/store"
 )
@@ -80,7 +80,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	for i := 0; i < 500; i++ {
 		// add a single element
 		key := make([]byte, rand.Int()%20)
-		value := sdk.NewCoins(sdk.NewInt64Coin(denom, rand.Int63() % 100))
+		value := sdk.NewCoins(sdk.NewInt64Coin(denom, rand.Int63()%100))
 		rand.Read(key)
 		idx := sort.Search(len(pairs), func(n int) bool { return bytes.Compare(pairs[n].key, key) >= 0 })
 		if idx < len(pairs) {
@@ -94,11 +94,13 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			pairs = append(pairs, pair{key, value})
 		}
 
-		suite.tree.Set(key, sdk.NewCoins(sdk.NewInt64Coin(denom, 100)))
+		suite.tree.Set(key, value)
 
 		// check all is right
 		for _, pair := range pairs {
-			suite.Require().True(suite.tree.Get(pair.key).Leaf.Accumulation.IsEqual(pair.value))
+			acc := suite.tree.Get(pair.key).Leaf.Accumulation
+			suite.Require().True(acc.IsEqual(pair.value),
+				"stored accumulation %v differ from %v", acc, pair.value)
 			// XXX: check all branch nodes
 		}
 

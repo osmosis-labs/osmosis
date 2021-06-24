@@ -176,9 +176,9 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Coins, exact sdk.Coins, right sdk.Coins) {
 	left, exact, right = sdk.Coins{}, sdk.Coins{}, sdk.Coins{}
 	if ptr.isLeaf() {
-		accumulatedValue := sdk.Coins{}
+		var leaf Leaf
 		bz := ptr.tree.store.Get(ptr.tree.leafKey(ptr.key))
-		err := json.Unmarshal(bz, &accumulatedValue)
+		err := json.Unmarshal(bz, &leaf)
 		if err != nil {
 			panic(err)
 		}
@@ -187,11 +187,11 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Coins, exact sdk.Coins, 
 		// Recall that all of the output arguments default to 0, if unset internally.
 		switch bytes.Compare(ptr.key, key) {
 		case -1:
-			left = accumulatedValue
+			left = leaf.Leaf.Accumulation
 		case 0:
-			exact = accumulatedValue
+			exact = leaf.Leaf.Accumulation
 		case 1:
-			right = accumulatedValue
+			right = leaf.Leaf.Accumulation
 		}
 		return
 	}
