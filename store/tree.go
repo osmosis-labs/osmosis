@@ -5,8 +5,9 @@ package store
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
+
+	"github.com/gogo/protobuf/proto"
 
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -26,11 +27,11 @@ type Tree struct {
 
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
-	tree.Set(nil, sdk.Coins{})
+	tree.Set(nil, sdk.Int{})
 	return tree
 }
 
-func (t Tree) Set(key []byte, acc sdk.Coins) {
+func (t Tree) Set(key []byte, acc sdk.Int) {
 	ptr := t.ptrGet(0, key)
 	leaf := NewLeaf(key, acc)
 	ptr.setLeaf(leaf)
@@ -103,24 +104,28 @@ func (t Tree) root() *ptr {
 }
 
 // Get returns the (sdk.Int) accumulation value at a given leaf.
-func (t Tree) Get(key []byte) (res *Leaf) {
+func (t Tree) Get(key []byte) sdk.Int {
+	res := new(Leaf)
 	keybz := t.leafKey(key)
 	if !t.store.Has(keybz) {
-		return
+		return sdk.ZeroInt()
 	}
-	err := json.Unmarshal(t.store.Get(keybz), &res)
+	bz := t.store.Get(keybz)
+	err := proto.Unmarshal(bz, res)
 	if err != nil {
 		panic(err)
 	}
-	return
+	//	fmt.Println("getLeaf", len(bz))
+	return res.Leaf.Accumulation
 }
 
 func (ptr *ptr) create(node *Node) {
 	keybz := ptr.tree.nodeKey(ptr.level, ptr.key)
-	bz, err := json.Marshal(node)
+	bz, err := proto.Marshal(node)
 	if err != nil {
 		panic(err)
 	}
+	//fmt.Println("creLeaf", len(bz))
 	ptr.tree.store.Set(keybz, bz)
 }
 
@@ -173,12 +178,13 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 // exact: leaf with key = provided key
 // right: all leaves under nodePointer with key > provided key
 // Note that the equalities here are _exclusive_.
-func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Coins, exact sdk.Coins, right sdk.Coins) {
-	left, exact, right = sdk.Coins{}, sdk.Coins{}, sdk.Coins{}
+func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, right sdk.Int) {
+	left, exact, right = sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt()
 	if ptr.isLeaf() {
 		var leaf Leaf
 		bz := ptr.tree.store.Get(ptr.tree.leafKey(ptr.key))
-		err := json.Unmarshal(bz, &leaf)
+		err := proto.Unmarshal(bz, &leaf)
+		//fmt.Println("accLeaf", len(bz))
 		if err != nil {
 			panic(err)
 		}
@@ -202,18 +208,18 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Coins, exact sdk.Coins, 
 		idx--
 	}
 	left, exact, right = ptr.tree.ptrGet(ptr.level-1, node.Children[idx].Index).accumulationSplit(key)
-	left = left.Add(NewNode(node.Children[:idx]...).accumulate()...)
-	right = right.Add(NewNode(node.Children[idx+1:]...).accumulate()...)
+	left = left.Add(NewNode(node.Children[:idx]...).accumulate())
+	right = right.Add(NewNode(node.Children[idx+1:]...).accumulate())
 	return
 }
 
 // TotalAccumulatedValue returns the sum of the weights for all leaves
-func (t Tree) TotalAccumulatedValue() sdk.Coins {
+func (t Tree) TotalAccumulatedValue() sdk.Int {
 	return t.SubsetAccumulation(nil, nil)
 }
 
 // Prefix sum returns the total weight of all leaves with keys <= to the provided key.
-func (t Tree) PrefixSum(key []byte) sdk.Coins {
+func (t Tree) PrefixSum(key []byte) sdk.Int {
 	return t.SubsetAccumulation(nil, key)
 }
 
@@ -221,25 +227,25 @@ func (t Tree) PrefixSum(key []byte) sdk.Coins {
 // between start and end (inclusive of both ends)
 // if start is nil, it is the beginning of the tree.
 // if end is nil, it is the end of the tree.
-func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Coins {
+func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Int {
 	if start == nil {
 		left, exact, _ := t.root().accumulationSplit(end)
-		return left.Add(exact...)
+		return left.Add(exact)
 	}
 	if end == nil {
 		_, exact, right := t.root().accumulationSplit(start)
-		return exact.Add(right...)
+		return exact.Add(right)
 	}
 	_, leftexact, leftrest := t.root().accumulationSplit(start)
 	_, _, rightest := t.root().accumulationSplit(end)
-	return leftexact.Add(leftrest...).Sub(rightest)
+	return leftexact.Add(leftrest).Sub(rightest)
 }
 
-func (t Tree) SplitAcc(key []byte) (sdk.Coins, sdk.Coins, sdk.Coins) {
+func (t Tree) SplitAcc(key []byte) (sdk.Int, sdk.Int, sdk.Int) {
 	return t.root().accumulationSplit(key)
 }
 
-func (ptr *ptr) visualize(depth int, acc sdk.Coins) {
+func (ptr *ptr) visualize(depth int, acc sdk.Int) {
 	if !ptr.exists() {
 		return
 	}
@@ -256,5 +262,5 @@ func (ptr *ptr) visualize(depth int, acc sdk.Coins) {
 
 // DebugVisualize prints the entire tree to stdout
 func (t Tree) DebugVisualize() {
-	t.root().visualize(0, sdk.Coins{})
+	t.root().visualize(0, sdk.Int{})
 }

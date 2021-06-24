@@ -12,10 +12,9 @@ message Node {
 
 message Child {
   bytes index = 1;
-  repeated cosmos.base.v1beta1.Coin accumulation = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags) = "yaml:\"accumulation\""
+  string accumulation = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
   ];
 }
 

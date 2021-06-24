@@ -2,14 +2,15 @@ package store
 
 import (
 	"bytes"
-	"encoding/json"
+
+	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewLeaf(key []byte, acc sdk.Coins) *Leaf {
+func NewLeaf(key []byte, acc sdk.Int) *Leaf {
 	return &Leaf{Leaf: &Child{
-		Index: key,
+		Index:        key,
 		Accumulation: acc,
 	}}
 }
@@ -19,18 +20,21 @@ func (ptr *ptr) isLeaf() bool {
 }
 
 func (ptr *ptr) node() (res *Node) {
+	res = new(Node)
 	bz := ptr.tree.store.Get(ptr.tree.nodeKey(ptr.level, ptr.key))
 	if bz != nil {
-		json.Unmarshal(bz, &res)
+		proto.Unmarshal(bz, res)
 	}
+	//fmt.Println("getNode", len(bz))
 	return
 }
 
 func (ptr *ptr) set(node *Node) {
-	bz, err := json.Marshal(node)
+	bz, err := proto.Marshal(node)
 	if err != nil {
 		panic(err)
 	}
+	//fmt.Println("setNode", len(bz))
 	ptr.tree.store.Set(ptr.tree.nodeKey(ptr.level, ptr.key), bz)
 }
 
@@ -38,10 +42,11 @@ func (ptr *ptr) setLeaf(leaf *Leaf) {
 	if !ptr.isLeaf() {
 		panic("setLeaf should not be called on branch ptr")
 	}
-	bz, err := json.Marshal(leaf)
+	bz, err := proto.Marshal(leaf)
 	if err != nil {
 		panic(err)
 	}
+	//fmt.Println("setLeaf", len(bz))
 	ptr.tree.store.Set(ptr.tree.leafKey(ptr.key), bz)
 }
 
@@ -84,7 +89,7 @@ func (ptr *ptr) parent() *ptr {
 	if parent.exists() {
 		return parent
 	}
-	// If there is no such ptr (this ptr is not in the tree), return nil
+	// If there is no such ptr (the parent is not in the tree), return nil
 	return ptr.tree.ptrGet(ptr.level+1, nil)
 }
 
@@ -199,10 +204,10 @@ func (ptr *ptr) pull(key []byte) {
 	}
 }
 
-func (node Node) accumulate() (res sdk.Coins) {
-	res = sdk.Coins{}
+func (node Node) accumulate() (res sdk.Int) {
+	res = sdk.ZeroInt()
 	for _, child := range node.Children {
-		res = res.Add(child.Accumulation...)
+		res = res.Add(child.Accumulation)
 	}
 	return
 }
@@ -233,7 +238,7 @@ func (node *Node) set(idx int, child *Child) *Node {
 	return node
 }
 
-func (node *Node) setAcc(idx int, acc sdk.Coins) *Node {
+func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
 	node.Children[idx] = &Child{node.Children[idx].Index, acc}
 	return node
 }
