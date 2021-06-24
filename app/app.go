@@ -299,7 +299,7 @@ func NewOsmosisApp(
 
 	// this configures a no-op upgrade handler for the "upgrade-lockup-module-store-management" upgrade
 	app.UpgradeKeeper.SetUpgradeHandler("upgrade-lockup-module-store-management", func(ctx sdk.Context, plan upgradetypes.Plan) {
-		locks, err := app.LockupKeeper.GetPeriodLocks(ctx)
+		locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
 		if err != nil {
 			panic(err)
 		}
