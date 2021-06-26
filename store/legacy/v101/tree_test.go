@@ -4,61 +4,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"bytes"
+	"io/ioutil"
 	"testing"
-	"math/rand"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/iavl"
+
+	dbm "github.com/tendermint/tm-db"
+
+	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/store/legacy/v101"
 	"github.com/osmosis-labs/osmosis/store"
 )
 
-func compareBranch(oldValue v101.Children, value store.Node) (ok bool, err error) {
-	for i, c := range oldValue {
-		c2 := value.Children[i]
-		if !bytes.Equal(c.Index, c2.Index) || !c.Acc.Equal(c2.Accumulation) {
-			return
-		}
-	}
-	ok = true
-	return
+func setupStore() sdk.KVStore {
+	db := dbm.NewMemDB()
+	tree, _ := iavl.NewMutableTree(db, 100)
+	tree.SaveVersion()
+	kvstore := iavlstore.UnsafeNewStore(tree)
+	return kvstore
 }
 
-func compareLeaf(oldValue sdk.Int, value store.Leaf) (ok bool, err error) {
-	if !oldValue.Equal(value.Leaf.Accumulation) {
-		return
-	}
-	ok = true
-	return
-}
-
-func comparePair(isLeaf bool, oldKeyBz, oldValueBz, keyBz, valueBz []byte) (err error) {
-	if !bytes.Equal(oldKeyBz, keyBz) {
-		return fmt.Errorf("key bytes mismatch: %x / %x", oldKeyBz, keyBz)
-	}
-	if isLeaf {
-		oldValue := sdk.ZeroInt()
-		value := store.Leaf{}
-		err = json.Unmarshal(oldValueBz, &oldValue)
-		if err != nil {
-			return
-		}
-		err = proto.Unmarshal(valueBz, &value)
-		if err != nil {
-			return
-		}
-		ok, err := compareLeaf(oldValue, value)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return fmt.Errorf("leaf value mismatch: %+v / %+v", oldValue, value)
-		}
-	} else {
+func compareBranch(oldValueBz []byte, valueBz []byte) (err error) {
 		oldValue := v101.Children{}
 		value := store.Node{}
 		err = json.Unmarshal(oldValueBz, &oldValue)
@@ -70,16 +41,47 @@ func comparePair(isLeaf bool, oldKeyBz, oldValueBz, keyBz, valueBz []byte) (err 
 			return
 		}
 
-		ok, err := compareBranch(oldValue, value)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return fmt.Errorf("branch value mismatch: %+v / %+v", oldValue, value)
+
+	for i, c := range oldValue {
+		c2 := value.Children[i]
+		if !bytes.Equal(c.Index, c2.Index) || !c.Acc.Equal(c2.Accumulation) {
+			err = fmt.Errorf("branch value mismatch: %+v / %+v", oldValue, value)
+			return
 		}
 	}
+	return
+}
 
-	return nil
+func compareLeaf(oldValueBz []byte, valueBz []byte) (err error) {
+		oldValue := sdk.ZeroInt()
+		value := store.Leaf{}
+		err = json.Unmarshal(oldValueBz, &oldValue)
+		if err != nil {
+			return
+		}
+		err = proto.Unmarshal(valueBz, &value)
+		if err != nil {
+			return 
+		}
+
+	if !oldValue.Equal(value.Leaf.Accumulation) {
+		return fmt.Errorf("leaf value mismatch: %+v / %+v", oldValue, value)
+	}
+	return 
+}
+
+func comparePair(oldKeyBz, oldValueBz, keyBz, valueBz []byte) (err error) {
+	if !bytes.Equal(oldKeyBz, keyBz) {
+		err = fmt.Errorf("key bytes mismatch: %x / %x", oldKeyBz, keyBz)
+	}
+
+	// TODO: properly select error
+	err = compareBranch(oldValueBz, valueBz)
+	if err == nil {
+		return nil
+	}
+	err = compareLeaf(oldValueBz, valueBz)
+	return err
 }
 
 type kvPair struct {
@@ -103,10 +105,39 @@ func extract(store sdk.KVStore) (res []kvPair) {
 	return
 }
 
-func testTree() {
-	
+func readold() []kvPair {
+	bz, err := ioutil.ReadFile("./old_tree.json")
+	if err != nil {
+		panic(err)
+	}
+	data := [][][]byte{}
+	err = json.Unmarshal(bz, &data)
+	if err != nil {
+		panic(err)
+	}
+	res := make([]kvPair, len(data))
+	for i, pair := range data {
+		res[i] = kvPair {pair[0], pair[1]}
+	}
+	return res
 }
 
 func TestMigrate(t *testing.T) {
-	
+	store := setupStore()
+
+	oldpairs := readold()
+	for _, pair := range oldpairs {
+		store.Set(pair.key, pair.value)
+	}
+
+	v101.MigrateTree(store)
+
+	newpairs := extract(store)
+
+	for i, oldpair := range oldpairs {
+		fmt.Println(i)
+		newpair := newpairs[i]
+		err := comparePair(oldpair.key, oldpair.value, newpair.key, newpair.value)
+		require.NoError(t, err)
+	}
 }
