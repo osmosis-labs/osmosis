@@ -1,0 +1,97 @@
+package v101
+
+import (
+	"encoding/binary"
+	"encoding/json"
+
+	"github.com/gogo/protobuf/proto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
+
+	"github.com/osmosis-labs/osmosis/store"
+)
+
+type Child struct {
+	Index []byte
+	Acc   sdk.Int
+}
+
+type Children []Child // branch nodes
+
+func migrateBranchValue(oldValueBz []byte) *store.Node {
+	oldValue := Children{}
+	err := json.Unmarshal(oldValueBz, &oldValue)
+	if err != nil {
+		panic(err)
+	}
+	cs := make([]*store.Child, len(oldValue))
+	for i, oldChild := range oldValue {
+		cs[i] = &store.Child{oldChild.Index, oldChild.Acc}
+	}
+	return &store.Node{cs}
+}
+
+func migrateLeafValue(index []byte, oldValueBz []byte) *store.Leaf {
+	oldValue := sdk.ZeroInt()
+	err := json.Unmarshal(oldValueBz, &oldValue)
+	if err != nil {
+		panic(err)
+	}
+	return store.NewLeaf(index, oldValue)
+}
+
+func nodeKey(level uint16, key []byte) []byte {
+	bz := make([]byte, 2)
+	binary.BigEndian.PutUint16(bz, level)
+	return append(append([]byte("node/"), bz...), key...)
+}
+
+func leafKey(key []byte) []byte {
+	return nodeKey(0, key)
+}
+
+func migrateTreeNode(store sdk.KVStore, level uint16, key []byte) {
+	if level == 0 {
+		migrateTreeLeaf(store, key)
+	} else  {
+		migrateTreeBranch(store, level, key)
+	}
+}
+
+func migrateTreeBranch(store sdk.KVStore, level uint16, key []byte) {
+	keyBz := nodeKey(level, key)
+	oldValueBz := store.Get(keyBz)
+	newValue := migrateBranchValue(oldValueBz)
+	newValueBz, err := proto.Marshal(newValue)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(keyBz, newValueBz)
+
+	for _, child := range newValue.Children {
+		migrateTreeNode(store, level-1, child.Index)
+	}
+}
+
+func migrateTreeLeaf(store sdk.KVStore, key []byte) {
+	keyBz := leafKey(key)
+	oldValueBz := store.Get(keyBz)
+	newValue := migrateLeafValue(key[7:], oldValueBz)
+	newValueBz, err := proto.Marshal(newValue)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(keyBz, newValueBz)
+}
+
+func MigrateTree(store sdk.KVStore) {
+	iter := stypes.KVStoreReversePrefixIterator(store, []byte("node/"))
+	defer iter.Close()
+	if !iter.Valid() {
+		return
+	}
+	key := iter.Key()[5:]
+	level := binary.BigEndian.Uint16(key[:2])
+	migrateTreeNode(store, level, key)
+}

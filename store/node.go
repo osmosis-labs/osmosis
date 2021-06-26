@@ -25,7 +25,6 @@ func (ptr *ptr) node() (res *Node) {
 	if bz != nil {
 		proto.Unmarshal(bz, res)
 	}
-	//fmt.Println("getNode", len(bz))
 	return
 }
 
@@ -34,7 +33,6 @@ func (ptr *ptr) set(node *Node) {
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println("setNode", len(bz))
 	ptr.tree.store.Set(ptr.tree.nodeKey(ptr.level, ptr.key), bz)
 }
 
@@ -46,7 +44,6 @@ func (ptr *ptr) setLeaf(leaf *Leaf) {
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println("setLeaf", len(bz))
 	ptr.tree.store.Set(ptr.tree.leafKey(ptr.key), bz)
 }
 
@@ -60,6 +57,7 @@ func (ptr *ptr) leftSibling() *ptr {
 
 func (ptr *ptr) rightSibling() *ptr {
 	iter := ptr.tree.ptrIterator(ptr.level, ptr.key, nil)
+	defer iter.Close()
 	if !iter.Valid() {
 		return nil
 	}

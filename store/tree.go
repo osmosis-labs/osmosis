@@ -27,8 +27,14 @@ type Tree struct {
 
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
-	tree.Set(nil, sdk.Int{})
+	if tree.IsEmpty() {
+		tree.Set(nil, sdk.Int{})
+	}
 	return tree
+}
+
+func (t Tree) IsEmpty() bool {
+	return t.store.Has(t.leafKey(nil))
 }
 
 func (t Tree) Set(key []byte, acc sdk.Int) {
@@ -74,6 +80,8 @@ func (iter ptrIterator) ptr() *ptr {
 		level: iter.level,
 		key:   iter.Key()[7:],
 	}
+	// ptrIterator becomes invalid once retrieve ptr
+	iter.Close()
 	return &res
 }
 
@@ -92,6 +100,7 @@ func (t Tree) leafKey(key []byte) []byte {
 
 func (t Tree) root() *ptr {
 	iter := stypes.KVStoreReversePrefixIterator(t.store, []byte("node/"))
+	defer iter.Close()
 	if !iter.Valid() {
 		return nil
 	}
@@ -115,7 +124,6 @@ func (t Tree) Get(key []byte) sdk.Int {
 	if err != nil {
 		panic(err)
 	}
-	//	fmt.Println("getLeaf", len(bz))
 	return res.Leaf.Accumulation
 }
 
@@ -125,7 +133,6 @@ func (ptr *ptr) create(node *Node) {
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println("creLeaf", len(bz))
 	ptr.tree.store.Set(keybz, bz)
 }
 
@@ -184,7 +191,6 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, righ
 		var leaf Leaf
 		bz := ptr.tree.store.Get(ptr.tree.leafKey(ptr.key))
 		err := proto.Unmarshal(bz, &leaf)
-		//fmt.Println("accLeaf", len(bz))
 		if err != nil {
 			panic(err)
 		}
