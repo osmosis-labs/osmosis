@@ -110,7 +110,7 @@ func readold() []kvPair {
 	if err != nil {
 		panic(err)
 	}
-	data := [][][]byte{}
+	var data [][][]byte
 	err = json.Unmarshal(bz, &data)
 	if err != nil {
 		panic(err)
@@ -127,6 +127,7 @@ func TestMigrate(t *testing.T) {
 
 	oldpairs := readold()
 	for _, pair := range oldpairs {
+		fmt.Println("set", pair.key, pair.value)
 		store.Set(pair.key, pair.value)
 	}
 
