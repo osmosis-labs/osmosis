@@ -3,7 +3,6 @@ package v101
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -22,7 +21,6 @@ type Children []Child // branch nodes
 
 func migrateBranchValue(oldValueBz []byte) *store.Node {
 	var oldValue Children
-	fmt.Println(string(oldValueBz))
 	err := json.Unmarshal(oldValueBz, &oldValue)
 
 	if err != nil {
@@ -65,7 +63,6 @@ func migrateTreeNode(store sdk.KVStore, level uint16, key []byte) {
 func migrateTreeBranch(store sdk.KVStore, level uint16, key []byte) {
 	keyBz := nodeKey(level, key)
 	oldValueBz := store.Get(keyBz)
-	fmt.Println("migrate", keyBz, string(oldValueBz), level)
 	newValue := migrateBranchValue(oldValueBz)
 	newValueBz, err := proto.Marshal(newValue)
 	if err != nil {

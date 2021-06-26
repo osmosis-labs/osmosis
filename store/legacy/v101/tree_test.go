@@ -127,7 +127,6 @@ func TestMigrate(t *testing.T) {
 
 	oldpairs := readold()
 	for _, pair := range oldpairs {
-		fmt.Println("set", pair.key, pair.value)
 		store.Set(pair.key, pair.value)
 	}
 
@@ -135,8 +134,9 @@ func TestMigrate(t *testing.T) {
 
 	newpairs := extract(store)
 
+	require.Equal(t, len(oldpairs), len(newpairs))
+
 	for i, oldpair := range oldpairs {
-		fmt.Println(i)
 		newpair := newpairs[i]
 		err := comparePair(oldpair.key, oldpair.value, newpair.key, newpair.value)
 		require.NoError(t, err)
