@@ -27,14 +27,8 @@ type Tree struct {
 
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
-	if tree.IsEmpty() {
-		tree.Set(nil, sdk.Int{})
-	}
+	tree.Set(nil, sdk.Int{})
 	return tree
-}
-
-func (t Tree) IsEmpty() bool {
-	return t.store.Has(t.leafKey(nil))
 }
 
 func (t Tree) Set(key []byte, acc sdk.Int) {
