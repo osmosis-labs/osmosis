@@ -99,7 +99,7 @@ func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.
 }
 
 func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
-	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
+	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 8)
 }
 
 // GetModuleBalance Returns full balance of the module
