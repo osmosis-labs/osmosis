@@ -3,6 +3,7 @@ package v101
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -20,8 +21,10 @@ type Child struct {
 type Children []Child // branch nodes
 
 func migrateBranchValue(oldValueBz []byte) *store.Node {
-	oldValue := Children{}
+	var oldValue Children
+	fmt.Println(string(oldValueBz))
 	err := json.Unmarshal(oldValueBz, &oldValue)
+
 	if err != nil {
 		panic(err)
 	}
@@ -62,6 +65,7 @@ func migrateTreeNode(store sdk.KVStore, level uint16, key []byte) {
 func migrateTreeBranch(store sdk.KVStore, level uint16, key []byte) {
 	keyBz := nodeKey(level, key)
 	oldValueBz := store.Get(keyBz)
+	fmt.Println("migrate", keyBz, string(oldValueBz), level)
 	newValue := migrateBranchValue(oldValueBz)
 	newValueBz, err := proto.Marshal(newValue)
 	if err != nil {
@@ -77,7 +81,7 @@ func migrateTreeBranch(store sdk.KVStore, level uint16, key []byte) {
 func migrateTreeLeaf(store sdk.KVStore, key []byte) {
 	keyBz := leafKey(key)
 	oldValueBz := store.Get(keyBz)
-	newValue := migrateLeafValue(key[7:], oldValueBz)
+	newValue := migrateLeafValue(key, oldValueBz)
 	newValueBz, err := proto.Marshal(newValue)
 	if err != nil {
 		panic(err)
@@ -91,7 +95,8 @@ func MigrateTree(store sdk.KVStore) {
 	if !iter.Valid() {
 		return
 	}
-	key := iter.Key()[5:]
-	level := binary.BigEndian.Uint16(key[:2])
+	keybz := iter.Key()[5:]
+	level := binary.BigEndian.Uint16(keybz[:2])
+	key := keybz[2:]
 	migrateTreeNode(store, level, key)
 }
