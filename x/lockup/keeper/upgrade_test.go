@@ -44,7 +44,7 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				suite.Require().NoError(err)
 
 				// run upgrades
-				plan := upgradetypes.Plan{Name: "upgrade-lockup-module-store-management", Height: 5}
+				plan := upgradetypes.Plan{Name: "v2", Height: 5}
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 				plan, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
 				suite.Require().True(exists)

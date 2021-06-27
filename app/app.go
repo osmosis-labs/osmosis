@@ -297,20 +297,42 @@ func NewOsmosisApp(
 	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
 
-	// this configures a no-op upgrade handler for the "upgrade-lockup-module-store-management" upgrade
-	app.UpgradeKeeper.SetUpgradeHandler("upgrade-lockup-module-store-management", func(ctx sdk.Context, plan upgradetypes.Plan) {
-		locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
-		if err != nil {
-			panic(err)
-		}
-		// clear all lockup module locking / unlocking queue items
-		app.LockupKeeper.ClearAllLockRefKeys(ctx)
+	// this configures a no-op upgrade handler for the v2 upgrade,
+	// which improves the lockup module's store management.
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"v2", func(ctx sdk.Context, plan upgradetypes.Plan) {
+			// Upgrade all of the lock storages
+			locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
+			if err != nil {
+				panic(err)
+			}
+			// clear all lockup module locking / unlocking queue items
+			app.LockupKeeper.ClearAllLockRefKeys(ctx)
 
-		// reset all lock and references
-		for _, lock := range locks {
-			app.LockupKeeper.ResetLock(ctx, lock)
-		}
-	})
+			// reset all lock and references
+			for _, lock := range locks {
+				app.LockupKeeper.ResetLock(ctx, lock)
+			}
+
+			// Upgrade every validators min-commission rate
+			validators := app.StakingKeeper.GetAllValidators(ctx)
+			minCommissionRate := app.StakingKeeper.GetParams(ctx).MinCommissionRate
+			for _, v := range validators {
+				if v.Commission.Rate.LT(minCommissionRate) {
+					comm, err := app.StakingKeeper.UpdateValidatorCommission(
+						ctx, v, minCommissionRate)
+					if err != nil {
+						panic(err)
+					}
+					v.Commission = comm
+
+					// call the before-modification hook since we're about to update the commission
+					app.StakingKeeper.BeforeValidatorModified(ctx, v.GetOperator())
+
+					app.StakingKeeper.SetValidator(ctx, v)
+				}
+			}
+		})
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
