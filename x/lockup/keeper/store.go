@@ -9,8 +9,8 @@ import (
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-// getLastLockID returns ID used last time
-func (k Keeper) getLastLockID(ctx sdk.Context) uint64 {
+// GetLastLockID returns ID used last time
+func (k Keeper) GetLastLockID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.KeyLastLockID)
@@ -21,8 +21,8 @@ func (k Keeper) getLastLockID(ctx sdk.Context) uint64 {
 	return sdk.BigEndianToUint64(bz)
 }
 
-// setLastLockID save ID used by last lock
-func (k Keeper) setLastLockID(ctx sdk.Context, ID uint64) {
+// SetLastLockID save ID used by last lock
+func (k Keeper) SetLastLockID(ctx sdk.Context, ID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.KeyLastLockID, sdk.Uint64ToBigEndian(ID))
 }
@@ -46,7 +46,7 @@ func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	return lockIDs
 }
 
-// addLockRefByKey append lock ID into an array associated to provided key
+// addLockRefByKey make a lockID iterable with the prefix `key`
 func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	lockIDBz := sdk.Uint64ToBigEndian(lockID)
