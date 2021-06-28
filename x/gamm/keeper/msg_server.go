@@ -169,7 +169,7 @@ func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	// Swap event is handled elsewhere, TODO: Make LP event
+	// Swap and LP events are handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -194,7 +194,7 @@ func (server msgServer) JoinSwapShareAmountOut(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	// Swap event is handled elsewhere, TODO: Make LP event
+	// Swap and LP events are handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -219,7 +219,7 @@ func (server msgServer) ExitSwapExternAmountOut(goCtx context.Context, msg *type
 		return nil, err
 	}
 
-	// Swap event is handled elsewhere, TODO: Make LP event
+	// Swap and LP events are handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -244,7 +244,7 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
-	// Swap event is handled elsewhere, TODO: Make LP event
+	// Swap and LP events are handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
