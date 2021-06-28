@@ -40,6 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix a bug in the min commission rate code that allows validators to be created with commission rates less than the minimum.
 * Automatically upgrade any validator with less than the minimum comission rate to the minimum at upgrade time.
 * Fix bug in the lockup module code that caused it to take a linear amount of gas.
+* Make unbonding tokens from the lockup module get automatically claimed when unbonding is done.
+* Add events for all tx types in the gamm module
 
 ## [v1.0.2](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.2) - 2021-06-18
 
