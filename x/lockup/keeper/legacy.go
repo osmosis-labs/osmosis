@@ -11,6 +11,8 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
+// TODO: legacy should be removed or put somewhere else after upgrade is finished
+
 func findIndex(IDs []uint64, ID uint64) int {
 	for index, id := range IDs {
 		if id == ID {
@@ -147,7 +149,7 @@ func (k Keeper) LegacyLock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+		k.accumulationStore(ctx, false, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
 	}
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
@@ -186,7 +188,7 @@ func (k Keeper) LegacyBeginUnlock(ctx sdk.Context, lock types.PeriodLock) error 
 	}
 
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+		k.accumulationStore(ctx, false, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
 	}
 
 	return nil

@@ -9,6 +9,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/store"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
 )
 
@@ -41,7 +42,7 @@ func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) (
 }
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
-// the current block time. 
+// the current block time.
 func (k Keeper) WithdrawAllMaturedLocks(ctx sdk.Context) {
 	k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, true, ctx.BlockTime()))
 }
@@ -98,8 +99,8 @@ func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.
 	return k.getCoinsFromLocks(k.getLocksFromIterator(ctx, iterator))
 }
 
-func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
-	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
+func (k Keeper) accumulationStore(ctx sdk.Context, unlocking bool, denom string) store.Tree {
+	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(unlocking, denom)), 10)
 }
 
 // GetModuleBalance Returns full balance of the module
@@ -251,8 +252,24 @@ func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []ty
 // GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
 // query.Duration
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
-	beginKey := accumulationKey(query.Duration, 0)
-	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
+	if query.LockQueryType == lockuptypes.ByDuration {
+		beginKey := accumulationKey(query.Duration, 0)
+		return k.accumulationStore(ctx, false, query.Denom).SubsetAccumulation(beginKey, nil)
+	}
+
+	// when query by minimum end time
+	duration := time.Duration(0)
+	if query.Timestamp.After(ctx.BlockTime()) {
+		duration = query.Timestamp.Sub(ctx.BlockTime())
+	}
+	beginKey := accumulationKey(duration, 0)
+	notUnlockingAccumulation := k.accumulationStore(ctx, false, query.Denom).SubsetAccumulation(beginKey, nil)
+
+	// returns both unlocking started and not started assuming it started unlocking current time
+	endKey := sdk.InclusiveEndBytes(getTimeKey(query.Timestamp))
+	unlockingAccumulation := k.accumulationStore(ctx, true, query.Denom).SubsetAccumulation(nil, endKey)
+
+	return notUnlockingAccumulation.Add(unlockingAccumulation)
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
@@ -331,7 +348,7 @@ func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// add to accumulation store when unlocking is not started
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+		k.accumulationStore(ctx, false, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
 	}
 
 	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
@@ -363,7 +380,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// add to accumulation store
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+		k.accumulationStore(ctx, false, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
 	}
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
@@ -393,9 +410,14 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
-	// remove from accumulation store
+	// remove from not unlocking accumulation store
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+		k.accumulationStore(ctx, false, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+	}
+
+	// add to unlocking accumulation store
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, true, coin.Denom).Set(combineKeys(getTimeKey(lock.EndTime), sdk.Uint64ToBigEndian(lock.ID)), coin.Amount)
 	}
 
 	return nil
@@ -420,6 +442,11 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// send coins back to owner
 	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
 		return err
+	}
+
+	// remove from unlocking accumulation store
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, true, coin.Denom).Remove(combineKeys(getTimeKey(lock.EndTime), sdk.Uint64ToBigEndian(lock.ID)))
 	}
 
 	// remove lock from store object

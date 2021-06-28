@@ -66,9 +66,13 @@ func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) e
 	return nil
 }
 
-func accumulationStorePrefix(denom string) (res []byte) {
-	res = make([]byte, len(types.KeyPrefixLockAccumulation))
-	copy(res, types.KeyPrefixLockAccumulation)
+func accumulationStorePrefix(unlocking bool, denom string) (res []byte) {
+	prefix := types.KeyPrefixLockAccumulation
+	if unlocking {
+		prefix = types.KeyPrefixLockAccumulationUnlocking
+	}
+	res = make([]byte, len(prefix))
+	copy(res, prefix)
 	res = append(res, []byte(denom+"/")...)
 	return
 }

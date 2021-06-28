@@ -385,3 +385,5 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx.WithBlockTime(unbondBlockTimes[len(times)-1]))
 	suite.Require().Len(locks, 0)
 }
+
+// TODO: add test for unlocking accumulation store
