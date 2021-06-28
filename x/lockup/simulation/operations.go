@@ -21,14 +21,10 @@ import (
 const (
 	DefaultWeightMsgLockTokens        int = 10
 	DefaultWeightMsgBeginUnlockingAll int = 10
-	DefaultWeightMsgUnlockTokens      int = 10
 	DefaultWeightMsgBeginUnlocking    int = 10
-	DefaultWeightMsgUnlockPeriodLock  int = 10
 	OpWeightMsgLockTokens                 = "op_weight_msg_create_lockup"
 	OpWeightMsgBeginUnlockingAll          = "op_weight_msg_begin_unlocking_all"
-	OpWeightMsgUnlockTokens               = "op_weight_msg_unlock_tokens"
 	OpWeightMsgBeginUnlocking             = "op_weight_msg_begin_unlocking"
-	OpWeightMsgUnlockPeriodLock           = "op_weight_msg_unlock_period_lock"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -39,18 +35,14 @@ func WeightedOperations(
 	var (
 		weightMsgLockTokens        int
 		weightMsgBeginUnlockingAll int
-		weightMsgUnlockTokens      int
 		weightMsgBeginUnlocking    int
-		weightMsgUnlockPeriodLock  int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgLockTokens, &weightMsgLockTokens, nil,
 		func(_ *rand.Rand) {
 			weightMsgLockTokens = DefaultWeightMsgLockTokens
 			weightMsgBeginUnlockingAll = DefaultWeightMsgBeginUnlockingAll
-			weightMsgUnlockTokens = DefaultWeightMsgUnlockTokens
 			weightMsgBeginUnlocking = DefaultWeightMsgBeginUnlocking
-			weightMsgUnlockPeriodLock = DefaultWeightMsgUnlockPeriodLock
 		},
 	)
 
@@ -64,15 +56,8 @@ func WeightedOperations(
 			SimulateMsgBeginUnlockingAll(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
-			weightMsgUnlockTokens,
-			SimulateMsgUnlockTokens(ak, bk, k),
-		),
-		simulation.NewWeightedOperation(
 			weightMsgBeginUnlocking,
 			SimulateMsgBeginUnlocking(ak, bk, k),
-		), simulation.NewWeightedOperation(
-			weightMsgUnlockPeriodLock,
-			SimulateMsgUnlockPeriodLock(ak, bk, k),
 		),
 	}
 }
@@ -154,28 +139,6 @@ func SimulateMsgBeginUnlockingAll(ak stakingTypes.AccountKeeper, bk stakingTypes
 	}
 }
 
-func SimulateMsgUnlockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 {
-			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgUnlockTokens, "Account have no coin"), nil, nil
-		}
-
-		msg := types.MsgUnlockTokens{
-			Owner: simAccount.Address.String(),
-		}
-
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
-
-	}
-}
-
 func SimulateMsgBeginUnlocking(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -194,40 +157,6 @@ func SimulateMsgBeginUnlocking(ak stakingTypes.AccountKeeper, bk stakingTypes.Ba
 		}
 
 		msg := types.MsgBeginUnlocking{
-			Owner: simAccount.Address.String(),
-			ID:    lock.ID,
-		}
-
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
-
-	}
-}
-
-func SimulateMsgUnlockPeriodLock(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 {
-			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgUnlockPeriodLock, "Account have no coin"), nil, nil
-		}
-
-		lock := RandomAccountLock(ctx, r, k, simAccount.Address)
-		if lock == nil {
-			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgUnlockPeriodLock, "Account have no period lock"), nil, nil
-		}
-
-		// TODO: Switch this to instead be a future op on locking
-		if k.GetAccountUnlockableCoins(ctx, simAccount.Address).Empty() {
-			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgUnlockPeriodLock, "Account hasn't started unlocking"), nil, nil
-		}
-		msg := types.MsgUnlockPeriodLock{
 			Owner: simAccount.Address.String(),
 			ID:    lock.ID,
 		}

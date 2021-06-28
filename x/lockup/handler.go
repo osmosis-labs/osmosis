@@ -22,14 +22,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgBeginUnlocking:
 			res, err := msgServer.BeginUnlocking(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgUnlockPeriodLock:
-			res, err := msgServer.UnlockPeriodLock(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgBeginUnlockingAll:
 			res, err := msgServer.BeginUnlockingAll(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgUnlockTokens:
-			res, err := msgServer.UnlockTokens(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
