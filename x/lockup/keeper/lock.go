@@ -41,7 +41,7 @@ func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) (
 }
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
-// the current block time. 
+// the current block time.
 func (k Keeper) WithdrawAllMaturedLocks(ctx sdk.Context) {
 	k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, true, ctx.BlockTime()))
 }
@@ -259,12 +259,6 @@ func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCon
 func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
 	locks, coins, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
 	return locks, coins, err
-}
-
-// UnlockAllUnlockableCoins Unlock all unlockable coins
-func (k Keeper) UnlockAllUnlockableCoins(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
-	locks, coins := k.unlockFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, true, account, ctx.BlockTime()))
-	return locks, coins, nil
 }
 
 // BeginUnlockPeriodLockByID begin unlock by period lock ID
