@@ -94,59 +94,6 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.Require().Len(locks, 1)
 }
 
-func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
-	suite.SetupTest()
-	now := suite.ctx.BlockTime()
-
-	// initial check
-	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 0)
-
-	// lock coins
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	suite.LockTokens(addr2, coins, time.Second)
-
-	// unlock locks just now
-	unlocks1, ucoins1, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx, addr1)
-	suite.Require().Equal(ucoins1, sdk.Coins{})
-	suite.Require().Len(unlocks1, 0)
-
-	// unlock locks after 1s before starting unlock
-	unlocks2, ucoins2, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx.WithBlockTime(now.Add(time.Second)), addr1)
-	suite.Require().NoError(err)
-	suite.Require().Equal(ucoins2, sdk.Coins{})
-	suite.Require().Len(unlocks2, 0)
-
-	// begin unlock after 1s
-	unlocks3, ucoins3, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx.WithBlockTime(now.Add(time.Second)), addr1)
-	suite.Require().NoError(err)
-	suite.Require().Equal(ucoins3, coins)
-	suite.Require().Len(unlocks3, 1)
-
-	// unlock after 1s begin unlock
-	unlocks4, ucoins4, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx.WithBlockTime(now.Add(time.Second*2)), addr1)
-	suite.Require().NoError(err)
-	suite.Require().Equal(ucoins4, coins)
-	suite.Require().Len(unlocks4, 1)
-
-	// check addr1 locks, no lock now
-	locks = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)
-	suite.Require().Len(locks, 0)
-
-	// check addr2 locks, still 1 as noone unlocked it yet
-	locks = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr2)
-	suite.Require().Len(locks, 1)
-
-	// totally 1 lock
-	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-}
-
 func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	suite.SetupTest()
 	now := suite.ctx.BlockTime()
