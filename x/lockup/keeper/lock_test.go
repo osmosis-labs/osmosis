@@ -299,12 +299,10 @@ func (suite *KeeperTestSuite) TestLockTokensAlot() {
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	skipLogsFor := 1000
 	for i := 0; i < skipLogsFor; i++ {
-		// addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 		suite.LockTokens(addr1, coins, time.Second)
 	}
 	for i := 0; i < 1000; i++ {
 		alreadySpent := suite.ctx.GasMeter().GasConsumed()
-		// addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 		suite.LockTokens(addr1, coins, time.Second)
 		newSpent := suite.ctx.GasMeter().GasConsumed()
 		spentNow := newSpent - alreadySpent
@@ -316,46 +314,74 @@ func (suite *KeeperTestSuite) TestLockTokensAlot() {
 func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.SetupTest()
 
-	// initial check
-	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 0)
-
-	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	totalCoins := coins.Add(coins...).Add(coins...)
 
-	// check locks
-	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].EndTime, time.Time{})
-	suite.Require().Equal(locks[0].IsUnlocking(), false)
+	// lock coins for 5 second, 1 seconds, and 3 seconds in that order
+	times := []time.Duration{time.Second * 5, time.Second, time.Second * 3}
+	sortedTimes := []time.Duration{time.Second, time.Second * 3, time.Second * 5}
+	unbondBlockTimes := make([]time.Time, len(times))
 
-	// begin unlock
-	locks, unlockCoins, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr1)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(unlockCoins, coins)
-	suite.Require().Equal(locks[0].ID, uint64(1))
+	// setup locks for 5 second, 1 second, and 3 seconds, and begin unbonding them.
+	setupInitLocks := func() {
+		for i := 0; i < len(times); i++ {
+			unbondBlockTimes[i] = suite.ctx.BlockTime().Add(sortedTimes[i])
+		}
 
-	// check locks
-	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().NotEqual(locks[0].EndTime, time.Time{})
-	suite.Require().Equal(locks[0].IsUnlocking(), true)
+		for i := 0; i < len(times); i++ {
+			suite.LockTokens(addr1, coins, times[i])
+		}
+
+		// consistency check locks
+		locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(locks, 3)
+		for i := 0; i < len(times); i++ {
+			suite.Require().Equal(locks[i].EndTime, time.Time{})
+			suite.Require().Equal(locks[i].IsUnlocking(), false)
+		}
+
+		// begin unlock
+		locks, unlockCoins, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr1)
+		suite.Require().NoError(err)
+		suite.Require().Len(locks, len(times))
+		suite.Require().Equal(unlockCoins, totalCoins)
+		for i := 0; i < len(times); i++ {
+			suite.Require().Equal(locks[i].ID, uint64(i+1))
+		}
+
+		// check locks, these should now be sorted by unbonding completion time
+		locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(locks, 3)
+		for i := 0; i < 3; i++ {
+			suite.Require().NotEqual(locks[i].EndTime, time.Time{})
+			suite.Require().Equal(locks[i].EndTime, unbondBlockTimes[i])
+			suite.Require().Equal(locks[i].IsUnlocking(), true)
+		}
+	}
+	setupInitLocks()
 
 	// try withdrawing before mature
 	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
-	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
+	suite.Require().Len(locks, 3)
 
-	// withdraw and check automatically withdrawn
-	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Second)))
-	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
+	// withdraw at 1 sec, 3 sec, and 5 sec intervals, check automatically withdrawn
+	for i := 0; i < len(times); i++ {
+		suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx.WithBlockTime(unbondBlockTimes[i]))
+		locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(locks, len(times)-i-1)
+	}
+	suite.Require().Equal(suite.app.BankKeeper.GetAccountsBalances(suite.ctx)[1].Address, addr1.String())
+	suite.Require().Equal(suite.app.BankKeeper.GetAccountsBalances(suite.ctx)[1].Coins, totalCoins)
+
+	suite.SetupTest()
+	setupInitLocks()
+	// now withdraw all locks and ensure all got withdrawn
+	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx.WithBlockTime(unbondBlockTimes[len(times)-1]))
 	suite.Require().Len(locks, 0)
 }
