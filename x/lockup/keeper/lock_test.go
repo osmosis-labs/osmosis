@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 
@@ -244,16 +245,18 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 func (suite *KeeperTestSuite) TestLockTokensAlot() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	skipLogsFor := 8000
+	skipLogsFor := 1000
 	for i := 0; i < skipLogsFor; i++ {
 		suite.LockTokens(addr1, coins, time.Second)
 	}
+
+	// alreadySpent := suite.ctx.GasMeter
 	for i := 0; i < 1000; i++ {
-		alreadySpent := suite.ctx.GasMeter().GasConsumed()
+		// alreadySpent := suite.ctx.GasMeter().GasConsumed()
 		suite.LockTokens(addr1, coins, time.Second)
 	}
 
-	fmt.Println("average gas comsumption: ", (suite.ctx.GasMeter().GasConsumed()-alreadySpent)/100)
+	// fmt.Println("average gas comsumption: ", (suite.ctx.GasMeter().GasConsumed()-alreadySpent)/100)
 	// panic(1)
 }
 
