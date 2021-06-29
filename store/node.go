@@ -217,7 +217,7 @@ func NewNode(cs ...*Child) *Node {
 // find returns the appropriate position that key should be inserted
 // if match is true, idx is the exact position for the key
 // if match is false, idx is the position where the key should be inserted
-func (node Node) find(key []byte) (idx int, match bool) {
+func (node *Node) find(key []byte) (idx int, match bool) {
 	for idx, child := range node.Children {
 		if bytes.Equal(child.Index, key) {
 			return idx, true

@@ -28,13 +28,13 @@ type Tree struct {
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
 	if tree.IsEmpty() {
-		tree.Set(nil, sdk.Int{})
+		tree.Set(nil, sdk.ZeroInt())
 	}
 	return tree
 }
 
 func (t Tree) IsEmpty() bool {
-	return t.store.Has(t.leafKey(nil))
+	return !t.store.Has(t.leafKey(nil))
 }
 
 func (t Tree) Set(key []byte, acc sdk.Int) {
@@ -61,6 +61,10 @@ type ptr struct {
 	level uint16
 	key   []byte
 	// XXX: cache stored value?
+}
+
+func (ptr *ptr) String() string {
+	return fmt.Sprintf("&ptr{%d, %+v}", ptr.level, ptr.key)
 }
 
 // ptrIterator iterates over ptrs in a given level. It only iterates directly over the pointers
@@ -268,5 +272,5 @@ func (ptr *ptr) visualize(depth int, acc sdk.Int) {
 
 // DebugVisualize prints the entire tree to stdout
 func (t Tree) DebugVisualize() {
-	t.root().visualize(0, sdk.Int{})
+	t.root().visualize(0, sdk.ZeroInt())
 }

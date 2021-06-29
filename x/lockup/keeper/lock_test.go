@@ -5,9 +5,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
+/*
 func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
 	suite.SetupTest()
 
@@ -293,22 +293,23 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", duration)
 	suite.Require().Len(locks, 1)
 }
-
+*/
 func (suite *KeeperTestSuite) TestLockTokensAlot() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	skipLogsFor := 1000
+	skipLogsFor := 32000
 	for i := 0; i < skipLogsFor; i++ {
 		// addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 		suite.LockTokens(addr1, coins, time.Second)
 	}
-	for i := 0; i < 1000; i++ {
-		alreadySpent := suite.ctx.GasMeter().GasConsumed()
+
+	alreadySpent := suite.ctx.GasMeter().GasConsumed()
+
+	for i := 0; i < 100; i++ {
 		// addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 		suite.LockTokens(addr1, coins, time.Second)
-		newSpent := suite.ctx.GasMeter().GasConsumed()
-		spentNow := newSpent - alreadySpent
-		fmt.Println("sum up - consumed gas", i+skipLogsFor, spentNow)
 	}
+
+	fmt.Println("average gas comsumption: ", (suite.ctx.GasMeter().GasConsumed()-alreadySpent)/100)
 	// panic(1)
 }
