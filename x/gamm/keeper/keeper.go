@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,6 +50,43 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, accountKeeper t
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 	}
+}
+
+func (k *Keeper) createSwapEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtTokenSwapped,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensIn, input.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, output.String()),
+		),
+	})
+}
+
+func (k *Keeper) createAddLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, liquidity sdk.Coins) {
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolJoined,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensIn, liquidity.String()),
+		),
+	})
+}
+
+func (k *Keeper) createRemoveLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, liquidity sdk.Coins) {
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtPoolExited,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, liquidity.String()),
+		),
+	})
 }
 
 // Set the gamm hooks

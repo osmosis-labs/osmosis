@@ -24,5 +24,6 @@ This module provides interfaces for other modules to iterate the locks efficient
 5. **[Keeper](05_keeper.md)**  
 6. **[Hooks](06_hooks.md)**  
 7. **[Queries](07_queries.md)**  
-8. **[Params](08_params.md)**  
+8. **[Params](08_params.md)**
+9. **[Endblocker](09_endblocker.md)**
 

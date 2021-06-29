@@ -15,13 +15,8 @@ service Msg {
   // BeginUnlockingAll begin unlocking all tokens
   rpc BeginUnlockingAll(MsgBeginUnlockingAll)
       returns (MsgBeginUnlockingAllResponse);
-  // UnlockTokens unlock all unlockable tokens
-  rpc UnlockTokens(MsgUnlockTokens) returns (MsgUnlockTokensResponse);
   // MsgBeginUnlocking begins unlocking tokens by lock ID
   rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
-  // UnlockPeriodLock unlock individual period lock by ID
-  rpc UnlockPeriodLock(MsgUnlockPeriodLock)
-      returns (MsgUnlockPeriodLockResponse);
 }
 
 message MsgLockTokens {
@@ -44,19 +39,8 @@ message MsgBeginUnlockingAll {
 }
 message MsgBeginUnlockingAllResponse { repeated PeriodLock unlocks = 1; }
 
-message MsgUnlockTokens {
-  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-}
-message MsgUnlockTokensResponse { repeated PeriodLock unlocks = 1; }
-
 message MsgBeginUnlocking {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
 }
 message MsgBeginUnlockingResponse { bool success = 1; }
-
-message MsgUnlockPeriodLock {
-  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  uint64 ID = 2;
-}
-message MsgUnlockPeriodLockResponse { bool success = 1; }
