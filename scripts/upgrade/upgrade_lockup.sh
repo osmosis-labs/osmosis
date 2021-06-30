@@ -33,9 +33,9 @@ sh startnode.sh
 
 # operations on terminal2
 osmosisd tx gamm create-pool --pool-file="./pool.json"  --gas=3000000 --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
-osmosisd tx lockup lock-tokens 100stake --duration="100s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
-osmosisd tx lockup lock-tokens 100stake --duration="200s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
-osmosisd tx lockup lock-tokens 100stake --duration="1s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+osmosisd tx lockup lock-tokens 1000stake --duration="100s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+osmosisd tx lockup lock-tokens 2000stake --duration="200s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+osmosisd tx lockup lock-tokens 3000stake --duration="1s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
 osmosisd tx lockup begin-unlock-by-id 2 --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
 osmosisd tx lockup begin-unlock-by-id 3 --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
 osmosisd tx gov submit-proposal software-upgrade "v2" --title="lockup module upgrade" --description="lockup module upgrade for gas efficiency"  --from=validator --upgrade-height=20 --deposit=10000000stake --chain-id=testing --keyring-backend=test --yes  --broadcast-mode=block
@@ -67,6 +67,7 @@ osmosisd query staking validators
 osmosisd query staking params
 osmosisd query bank balances $(osmosisd keys show -a --keyring-backend=test validator)
 osmosisd tx staking edit-validator --commission-rate="0.1"  --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+osmosisd tx staking edit-validator --commission-rate="0.08"  --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
 
 Result:
 - pool exists
