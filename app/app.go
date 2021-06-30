@@ -319,7 +319,7 @@ func NewOsmosisApp(
 			minCommissionRate := app.StakingKeeper.GetParams(ctx).MinCommissionRate
 			for _, v := range validators {
 				if v.Commission.Rate.LT(minCommissionRate) {
-					comm, err := app.StakingKeeper.UpdateValidatorCommission(
+					comm, err := app.StakingKeeper.MustUpdateValidatorCommission(
 						ctx, v, minCommissionRate)
 					if err != nil {
 						panic(err)
