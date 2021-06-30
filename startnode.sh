@@ -11,5 +11,6 @@ osmosisd gentx validator 500000000stake --keyring-backend=test --home=$HOME/.osm
 osmosisd collect-gentxs --home=$HOME/.osmosisd
 
 cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="10s"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
+cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["staking"]["params"]["min_commission_rate"]="0.050000000000000000"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
 
 osmosisd start --home=$HOME/.osmosisd
