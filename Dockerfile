@@ -13,6 +13,7 @@ COPY . /osmosis
 
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN cd /osmosis && \
+    git checkout a20dab6d638da0883f9fbb9f5bd222affb8700ad && \
     go mod download && \
     make install
 
