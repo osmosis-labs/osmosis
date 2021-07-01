@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/tendermint/tendermint/abci/types"
 )
 
@@ -68,48 +69,61 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				})
 			},
 			func() {
-				// check all queries
+				// check all queries just after upgrade
 				locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+				suite.Require().NoError(err)
+				suite.Require().Len(locks, 3)
+
+				// run a next block
+				suite.ctx = suite.ctx.WithBlockHeight(6).WithBlockTime(suite.ctx.BlockTime().Add(5 * time.Second))
+				suite.app.BeginBlocker(suite.ctx, types.RequestBeginBlock{})
+				suite.app.EndBlocker(suite.ctx, types.RequestEndBlock{suite.ctx.BlockHeight()})
+
+				// check all remainings
+				locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 				suite.Require().NoError(err)
 				suite.Require().Len(locks, 2)
 
 				// TODO: Update the rest of these queries
-				// locks = suite.app.LockupKeeper.GetAccountLockedPastTimeNotUnlockingOnly(suite.ctx, addr1, suite.ctx.BlockTime())
-				// suite.Require().Len(locks, 0)
+				locks = suite.app.LockupKeeper.GetAccountLockedPastTimeNotUnlockingOnly(suite.ctx, addr1, suite.ctx.BlockTime())
+				suite.Require().Len(locks, 0)
 
-				// locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
-				// suite.Require().Len(locks, 0)
+				locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
+				suite.Require().Len(locks, 0)
 
-				// locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
-				// suite.Require().Len(locks, 1)
+				locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
+				suite.Require().Len(locks, 0)
 
-				// locks = suite.app.LockupKeeper.GetAccountLockedLongerDuration(suite.ctx, addr1, time.Second)
-				// suite.Require().Len(locks, 1)
+				locks = suite.app.LockupKeeper.GetAccountLockedLongerDuration(suite.ctx, addr2, time.Second)
+				suite.Require().Len(locks, 1)
 
-				// locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationNotUnlockingOnly(suite.ctx, addr1, time.Second)
-				// suite.Require().Len(locks, 0)
+				locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationNotUnlockingOnly(suite.ctx, addr1, time.Second)
+				suite.Require().Len(locks, 0)
 
-				// locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stake", time.Second)
-				// suite.Require().Len(locks, 1)
+				locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr2, "stake", time.Second)
+				suite.Require().Len(locks, 1)
 
-				// locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", suite.ctx.BlockTime())
-				// suite.Require().Len(locks, 3)
+				locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", suite.ctx.BlockTime())
+				suite.Require().Len(locks, 2)
 
-				// locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second)
-				// suite.Require().Len(locks, 3)
+				locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second)
+				suite.Require().Len(locks, 2)
 
-				// _, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
-				// suite.Require().NoError(err)
+				_, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+				suite.Require().Error(err)
 
-				// locks = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)
-				// suite.Require().Len(locks, 1)
+				_, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, 2)
+				suite.Require().NoError(err)
 
-				// accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
-				// 	LockQueryType: lockuptypes.ByDuration,
-				// 	Denom:         "stake",
-				// 	Duration:      time.Second,
-				// })
-				// suite.Require().Equal(accum.String(), "20")
+				locks = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)
+				suite.Require().Len(locks, 0)
+
+				accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         "stake",
+					Duration:      time.Second,
+				})
+				suite.Require().Equal(accum.String(), "10")
 			},
 			true,
 		},
