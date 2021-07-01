@@ -1,4 +1,4 @@
-FROM faddat/archlinux AS build-env
+FROM faddat/archlinux AS build
 
 ENV GOPATH=/go
 ENV PATH=$PATH:/go/bin
@@ -23,8 +23,8 @@ FROM faddat/archlinux
 RUN pacman -Syyu --noconfirm
 
 # Copy over binaries from the build-env
-COPY --from=build-env /go/bin/osmosisd /usr/bin/osmosisd
-COPY --from=build-env /genesis.json /genesis.json
+COPY --from=build /go/bin/osmosisd /usr/bin/osmosisd
+COPY --from=build /genesis.json /genesis.json
 
 # Run osmosisd by default, omit entrypoint to ease using container with osmosiscli
 EXPOSE 26656
