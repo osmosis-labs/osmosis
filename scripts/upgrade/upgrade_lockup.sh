@@ -1,9 +1,10 @@
 # run old binary on terminal1
 go clean --modcache
 git stash
-git checkout 6574912d71c41d591859239964162a2d3ee3a57e
+git checkout v1.0.1
 go install ./cmd/osmosisd/
-Modify startnode.sh script to below`
+Run the below commands
+```
     #!/bin/bash
     rm -rf $HOME/.osmosisd/
     cd $HOME
@@ -14,11 +15,13 @@ Modify startnode.sh script to below`
     osmosisd gentx validator 500000000stake --commission-rate="0.0" --keyring-backend=test --home=$HOME/.osmosisd --chain-id=testing
     osmosisd collect-gentxs --home=$HOME/.osmosisd
     
-    cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="10s"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
+    cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="120s"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
     cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["staking"]["params"]["min_commission_rate"]="0.050000000000000000"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
-    osmosisd start --home=$HOME/.osmosisd
-`
-Create pool.json `
+
+```
+
+Create pool.json 
+```
 {
   "weights": "1stake,1valtoken",
   "initial-deposit": "100stake,20valtoken",
@@ -26,21 +29,32 @@ Create pool.json `
   "exit-fee": "0.01",
   "future-governor": "168h"
 }
-`
+```
 
-sh startnode.sh
+rm $HOME/.osmosisd/cosmovisor/current -rf
+cosmovisor start
 
 # operations on terminal2
 osmosisd tx lockup lock-tokens 100stake --duration="5s" --from=validator --chain-id=testing --keyring-backend=test --yes
+sleep 7
 osmosisd tx gov submit-proposal software-upgrade upgrade-lockup-module-store-management --title="lockup module upgrade" --description="lockup module upgrade for gas efficiency"  --from=validator --upgrade-height=10 --deposit=10000000stake --chain-id=testing --keyring-backend=test -y
+sleep 7
 osmosisd tx gov vote 1 yes --from=validator --keyring-backend=test --chain-id=testing --yes
+sleep 7
 osmosisd tx gamm create-pool --pool-file="./pool.json"  --gas=3000000 --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+sleep 7
 osmosisd tx lockup lock-tokens 1000stake --duration="100s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+sleep 7
 osmosisd tx lockup lock-tokens 2000stake --duration="200s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+sleep 7
 osmosisd tx lockup lock-tokens 3000stake --duration="1s" --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
-osmosisd tx lockup begin-unlock-by-id 2 --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+sleep 7
+osmosisd tx lockup begin-unlock-by-id 1 --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+sleep 7
 osmosisd tx lockup begin-unlock-by-id 3 --from=validator --chain-id=testing --keyring-backend=test --yes --broadcast-mode=block
+sleep 7
 osmosisd tx gov submit-proposal software-upgrade "v2" --title="lockup module upgrade" --description="lockup module upgrade for gas efficiency"  --from=validator --upgrade-height=20 --deposit=10000000stake --chain-id=testing --keyring-backend=test --yes  --broadcast-mode=block
+sleep 7
 osmosisd tx gov vote 1 yes --from=validator --keyring-backend=test --chain-id=testing --yes --broadcast-mode=block
 osmosisd query gov proposal 1
 osmosisd query upgrade plan
