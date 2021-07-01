@@ -421,7 +421,10 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	store.Delete(lockStoreKey(lock.ID))
 
 	// delete lock refs from the unlocking queue
-	k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	if err != nil {
+		return err
+	}
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
