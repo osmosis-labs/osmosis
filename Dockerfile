@@ -1,4 +1,4 @@
-FROM faddat/archlinux
+FROM faddat/archlinux AS build-env
 
 ENV GOPATH=/go
 ENV PATH=$PATH:/go/bin
