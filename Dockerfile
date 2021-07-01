@@ -4,7 +4,7 @@ ENV GOPATH=/go
 ENV PATH=$PATH:/go/bin
 
 # Set up dependencies
-RUN pacman -Syyu --noconfirm curl make git go gcc linux-headers python base-devel protobufs wget && \
+RUN pacman -Syyu --noconfirm curl make git go gcc linux-headers python base-devel protobuf wget && \
     wget -O /genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 
 
