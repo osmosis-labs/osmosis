@@ -154,6 +154,7 @@ func (k Keeper) JoinPool(
 		return err
 	}
 
+	k.createAddLiquidityEvent(ctx, sender, pool.GetId(), coins)
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), coins, shareOutAmount)
 	k.RecordTotalLiquidityIncrease(ctx, coins)
 
@@ -219,8 +220,10 @@ func (k Keeper) JoinSwapExternAmountIn(
 		return sdk.Int{}, err
 	}
 
-	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, shareOutAmount)
-	k.RecordTotalLiquidityIncrease(ctx, sdk.Coins{tokenIn})
+	addedCoins := sdk.Coins{tokenIn}
+	k.createAddLiquidityEvent(ctx, sender, pool.GetId(), addedCoins)
+	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), addedCoins, shareOutAmount)
+	k.RecordTotalLiquidityIncrease(ctx, addedCoins)
 
 	return shareOutAmount, nil
 }
@@ -285,8 +288,10 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
-	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}, shareOutAmount)
-	k.RecordTotalLiquidityIncrease(ctx, sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)})
+	coinsAdded := sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}
+	k.createAddLiquidityEvent(ctx, sender, pool.GetId(), coinsAdded)
+	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), coinsAdded, shareOutAmount)
+	k.RecordTotalLiquidityIncrease(ctx, coinsAdded)
 
 	return shareOutAmount, nil
 }
@@ -368,6 +373,7 @@ func (k Keeper) ExitPool(
 		return err
 	}
 
+	k.createRemoveLiquidityEvent(ctx, sender, pool.GetId(), coins)
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, coins)
 	k.RecordTotalLiquidityDecrease(ctx, coins)
 
@@ -452,8 +458,10 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
-	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
-	k.RecordTotalLiquidityDecrease(ctx, sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)})
+	removedCoins := sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)}
+	k.createRemoveLiquidityEvent(ctx, sender, pool.GetId(), removedCoins)
+	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, removedCoins)
+	k.RecordTotalLiquidityDecrease(ctx, removedCoins)
 
 	return tokenOutAmount, nil
 }
@@ -535,8 +543,10 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, err
 	}
 
-	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, sdk.Coins{tokenOut})
-	k.RecordTotalLiquidityDecrease(ctx, sdk.Coins{tokenOut})
+	removedCoins := sdk.Coins{tokenOut}
+	k.createRemoveLiquidityEvent(ctx, sender, pool.GetId(), removedCoins)
+	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, removedCoins)
+	k.RecordTotalLiquidityDecrease(ctx, removedCoins)
 
 	return shareInAmount, nil
 }

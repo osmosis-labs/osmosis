@@ -12,29 +12,6 @@ All the incentives that are going to be provided are locked into `IncentivePool`
 
 Rewards to be distributed are organized by `Gauge`. The `Gauge` describes how users can get reward, stores the amount of coins in the gauge, the cadence at which rewards are to be distributed, and the number of epochs to distribute the reward over.
 
-```go
-type LockQueryType int
-const (
-  ByLockDuration LockQueryType = iota // locks which has more than specific duration
-  ByLockTime // locks which are started before specific time
-)
-
-type QueryCondition struct {
-  LockQueryType LockQueryType // type of lock condition
-  Denom  string // lock denom
-  Duration time.Duration // condition for lock duration, only valid if positive
-  Timestamp time.Time // condition for lock start time, not valid if unset value
-}
-
-type Gauge struct {
-  ID                   uint64 // unique ID of a Gauge
-  DistributeTo         QueryCondition // distribute condition of a lock
-  TotalRewards         sdk.Coins // can distribute multiple coins
-  StartTime            time.Time // start time to start distribution
-  NumEpochsPaidOver    uint64 // number of epochs distribution will be done 
-}
-```
-
 ```protobuf
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
@@ -63,8 +40,34 @@ message Gauge {
 
 #### Upcoming queue
 
-To release from `Gauges` every epoch, we schedule distribution start time with time key queue.
+To start release `Gauges` at a specific time, we schedule distribution start time with time key queue.
 
 #### Active queue
 
 Active queue has all the `Gauges` that are distributing and after distribution period finish, it's removed from the queue.
+
+#### Active by Denom queue
+
+To speed up the distribution process, module introduces the active `Gauges` by denom.
+
+#### Finished queue
+
+Finished queue saves the `Gauges` that has finished distribution to keep in track.
+
+## Module state
+
+The state of the module is expressed by `params`, `lockable_durations` and `gauges`.
+
+```protobuf
+// GenesisState defines the incentives module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge gauges = 2 [ (gogoproto.nullable) = false ];
+  repeated google.protobuf.Duration lockable_durations = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}
+```

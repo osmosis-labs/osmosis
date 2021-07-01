@@ -6,10 +6,10 @@ order: 5
 
 The minting module emits the following events:
 
-## BeginBlocker
+## End of Epoch
 
-| Type | Attribute Key     | Attribute Value    |
-|------|-------------------|--------------------|
-| mint | epoch_number      | {epochNumber}      |
+| Type | Attribute Key    | Attribute Value   |
+| ---- | ---------------- | ----------------- |
+| mint | epoch_number     | {epochNumber}     |
 | mint | epoch_provisions | {epochProvisions} |
-| mint | amount            | {amount}           |
+| mint | amount           | {amount}          |

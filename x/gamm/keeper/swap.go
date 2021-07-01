@@ -157,9 +157,12 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	k.hooks.AfterSwap(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
-	k.RecordTotalLiquidityIncrease(ctx, sdk.Coins{tokenIn})
-	k.RecordTotalLiquidityDecrease(ctx, sdk.Coins{tokenOut})
+	tokensIn := sdk.Coins{tokenIn}
+	tokensOut := sdk.Coins{tokenOut}
+	k.createSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
+	k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
+	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
+	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
 
 	return err
 }

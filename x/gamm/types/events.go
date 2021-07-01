@@ -9,4 +9,6 @@ const (
 	AttributeValueCategory = ModuleName
 	AttributeKeyPoolId     = "pool_id"
 	AttributeKeySwapFee    = "swap_fee"
+	AttributeKeyTokensIn   = "tokens_in"
+	AttributeKeyTokensOut  = "tokens_out"
 )

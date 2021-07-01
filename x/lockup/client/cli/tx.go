@@ -27,9 +27,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewLockTokensCmd(),
 		NewBeginUnlockingCmd(),
-		NewUnlockTokensCmd(),
 		NewBeginUnlockByIDCmd(),
-		NewUnlockByIDCmd(),
 	)
 
 	return cmd
@@ -105,32 +103,6 @@ func NewBeginUnlockingCmd() *cobra.Command {
 	return cmd
 }
 
-// NewUnlockTokensCmd unlock all unlockable tokens from user's account
-func NewUnlockTokensCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "unlock-tokens",
-		Short: "unlock tokens from lockup pool for an account",
-		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			msg := types.NewMsgUnlockTokens(
-				clientCtx.GetFromAddress(),
-			)
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
 // NewBeginUnlockByIDCmd unlock individual period lock by ID
 func NewBeginUnlockByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -151,38 +123,6 @@ func NewBeginUnlockByIDCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgBeginUnlocking(
-				clientCtx.GetFromAddress(),
-				uint64(id),
-			)
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-// NewUnlockByIDCmd unlock individual period lock by ID
-func NewUnlockByIDCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "unlock-by-id",
-		Short: "unlock individual period lock by ID",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
-			id, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgUnlockPeriodLock(
 				clientCtx.GetFromAddress(),
 				uint64(id),
 			)

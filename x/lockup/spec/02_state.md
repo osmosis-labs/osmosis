@@ -19,7 +19,7 @@ It stores owner, duration, unlock time and the amount of coins locked.
 
 ```go
 type PeriodLock struct {
-  ID         uint64         // unique ID of a lock
+  ID         uint64
   Owner      sdk.AccAddress
   Duration   time.Duration
   UnlockTime time.Time
@@ -27,29 +27,44 @@ type PeriodLock struct {
 }
 ```
 
-```protobuf
-message PeriodLock {
-  uint64 ID = 1;
-  string owner = 2;
-  google.protobuf.Duration duration = 3;
-  google.protobuf.Timestamp unlock_time = 4;
-  repeated cosmos.base.v1beta1.Coin coins = 5;
+All locks are stored on the KVStore as value at `{KeyPrefixPeriodLock}{ID}` key.
+
+### Period lock reference queues
+
+To provide time efficient queries, several reference queues are managed by denom, unlock time, and duration.
+There are two big queues to store the lock references. (`a_prefix_key`)
+1. Lock references that hasn't started with unlocking yet has prefix of `KeyPrefixNotUnlocking`.
+2. Lock references that has started unlocking already has prefix of `KeyPrefixUnlocking`.
+3. Lock references that has withdrawn, it's removed from the store.
+
+Regardless the lock has started unlocking or not, it stores below references. (`b_prefix_key`)
+1. `{KeyPrefixLockTimestamp}{LockEndTime}`
+2. `{KeyPrefixLockDuration}{Duration}`
+3. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
+4. `{KeyPrefixAccountLockDuration}{Owner}{Duration}`
+5. `{KeyPrefixDenomLockTimestamp}{Denom}{LockEndTime}`
+6. `{KeyPrefixDenomLockDuration}{Denom}{Duration}`
+7. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{Denom}{LockEndTime}`
+8. `{KeyPrefixAccountDenomLockDuration}{Owner}{Denom}{Duration}`
+
+For end time keys, they are converted to sortable string by using `sdk.FormatTimeBytes` function.
+
+**Note:**
+Additionally, for locks that hasn't started unlocking yet, it stores accumulation store for efficient rewards distribution mechanism.
+
+For reference management, `addLockRefByKey` function is used a lot.
+Here key is the prefix key to be used for iteration. It is combination of two prefix keys.(`{a_prefix_key}{b_prefix_key}`)
+
+```go
+// addLockRefByKey make a lockID iterable with the prefix `key`
+func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
+	store := ctx.KVStore(k.storeKey)
+	lockIDBz := sdk.Uint64ToBigEndian(lockID)
+	endKey := combineKeys(key, lockIDBz)
+	if store.Has(endKey) {
+		return fmt.Errorf("lock with same ID exist: %d", lockID)
+	}
+	store.Set(endKey, lockIDBz)
+	return nil
 }
 ```
-
-### Period lock queues
-
-For the purpose of tracking lock end time, period lock queue is kept.
-
-All queues objects are sorted by timestamp. The time used within any queue is
-first rounded to the nearest nanosecond then sorted. The sortable time format
-used is a slight modification of the RFC3339Nano and uses the the format string
-`"2006-01-02T15:04:05.000000000"`. Notably this format:
-
-- right pads all zeros
-- drops the time zone info (uses UTC)
-
-In all cases, the stored timestamp represents the maturation time of the queue
-element.
-
-Key will look like `{OwnerBytes}{UnlockTime}` and Value will store `PeriodLock` object.
