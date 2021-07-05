@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -332,6 +333,24 @@ func NewOsmosisApp(
 					app.StakingKeeper.SetValidator(ctx, v)
 				}
 			}
+
+			// Update distribution keeper parameters to remove proposer bonus
+			// as it doesn't make sense in the epoch'd staking setting
+			distrParams := app.DistrKeeper.GetParams(ctx)
+			distrParams.BaseProposerReward = sdk.ZeroDec()
+			distrParams.BonusProposerReward = sdk.ZeroDec()
+			app.DistrKeeper.SetParams(ctx, distrParams)
+
+			// Update governance parameters to elongate voting period
+			// and reduce the deposit period
+			govVotingParams := app.GovKeeper.GetVotingParams(ctx)
+			govVotingParams.VotingPeriod = (24 * 5) * time.Hour
+			app.GovKeeper.SetVotingParams(ctx, govVotingParams)
+
+			govDepositParams := app.GovKeeper.GetDepositParams(ctx)
+			// 3 days
+			govDepositParams.MaxDepositPeriod = (24 * 3) * time.Hour
+			app.GovKeeper.SetDepositParams(ctx, govDepositParams)
 		})
 
 	// Create IBC Keeper
