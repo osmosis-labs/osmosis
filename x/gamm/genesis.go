@@ -16,21 +16,17 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 
 	liquidity := sdk.Coins{}
 	for _, any := range genState.Pools {
-		cachedPool, ok := any.GetCachedValue().(types.PoolI)
-		if !ok {
-			pool := new(types.PoolI)
-			err := unpacker.UnpackAny(any, pool)
-			if err != nil {
-				panic(err)
-			}
-			cachedPool = *pool
+		var pool types.PoolI
+		err := unpacker.UnpackAny(any, &pool)
+		if err != nil {
+			panic(err)
 		}
-		err := k.SetPool(ctx, cachedPool)
+		err = k.SetPool(ctx, pool)
 		if err != nil {
 			panic(err)
 		}
 
-		poolAssets := cachedPool.GetAllPoolAssets()
+		poolAssets := pool.GetAllPoolAssets()
 		for _, asset := range poolAssets {
 			liquidity = liquidity.Add(asset.Token)
 		}
