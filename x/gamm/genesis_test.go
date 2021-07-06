@@ -57,6 +57,9 @@ func TestGammInitGenesis(t *testing.T) {
 
 	_, err = app.GAMMKeeper.GetPool(ctx, 2)
 	require.Error(t, err)
+
+	liquidity := app.GAMMKeeper.GetTotalLiquidity(ctx)
+	require.Equal(t, liquidity, sdk.Coins{sdk.NewInt64Coin("nodetoken", 10), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
 }
 
 func TestGammExportGenesis(t *testing.T) {
