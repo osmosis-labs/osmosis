@@ -123,13 +123,18 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
-	return nil
+	var genState types.GenesisState
+	// Initialize global index to index in genesis state
+	cdc.MustUnmarshalJSON(gs, &genState)
+	InitGenesis(ctx, am.keeper, genState, am.cdc)
+	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the bank
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	return nil
+	genState := ExportGenesis(ctx, am.keeper)
+	return cdc.MustMarshalJSON(genState)
 }
 
 // BeginBlock performs a no-op.

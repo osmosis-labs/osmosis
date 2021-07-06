@@ -82,7 +82,7 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 // newPool is an internal function that creates a new Pool object with the provided
 // parameters, initial assets, and future governor.
 func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
-	poolId := k.getNextPoolNumber(ctx)
+	poolId := k.GetNextPoolNumber(ctx)
 
 	pool, err := types.NewPool(poolId, poolParams, assets, futureGovernor, ctx.BlockTime())
 	if err != nil {
@@ -111,8 +111,15 @@ func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []t
 	return pool, nil
 }
 
-// getNextPoolNumber returns the next pool number
-func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
+// SetNextPoolNumber sets next pool number
+func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: poolNumber})
+	store.Set(types.KeyNextGlobalPoolNumber, bz)
+}
+
+// GetNextPoolNumber returns the next pool number
+func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)
 
@@ -131,8 +138,7 @@ func (k Keeper) getNextPoolNumber(ctx sdk.Context) uint64 {
 		poolNumber = val.GetValue()
 	}
 
-	bz = k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: poolNumber + 1})
-	store.Set(types.KeyNextGlobalPoolNumber, bz)
+	k.SetNextPoolNumber(ctx, poolNumber+1)
 
 	return poolNumber
 }
