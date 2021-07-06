@@ -1,6 +1,8 @@
 package gamm
 
 import (
+	"fmt"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
@@ -9,18 +11,26 @@ import (
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, unpacker codectypes.AnyUnpacker) {
 	k.SetNextPoolNumber(ctx, genState.NextPoolNumber)
 
 	liquidity := sdk.Coins{}
-	for _, pool := range genState.Pools {
-		pool := pool.GetCachedValue().(types.PoolI)
-		err := k.SetPool(ctx, pool)
+	for _, any := range genState.Pools {
+		cachedPool, ok := any.GetCachedValue().(types.PoolI)
+		if !ok {
+			pool := new(types.PoolI)
+			err := unpacker.UnpackAny(any, pool)
+			if err != nil {
+				panic(err)
+			}
+			cachedPool = *pool
+		}
+		err := k.SetPool(ctx, cachedPool)
 		if err != nil {
 			panic(err)
 		}
 
-		poolAssets := pool.GetAllPoolAssets()
+		poolAssets := cachedPool.GetAllPoolAssets()
 		for _, asset := range poolAssets {
 			liquidity = liquidity.Add(asset.Token)
 		}
@@ -35,16 +45,20 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
-	poolsAny := []*codectypes.Any{}
-	for _, pool := range pools {
+	poolAnys := []*codectypes.Any{}
+	for _, poolI := range pools {
+		pool, ok := poolI.(*types.Pool)
+		if !ok {
+			panic(fmt.Errorf("pool (%d) is not basic pool", poolI.GetId()))
+		}
 		any, err := codectypes.NewAnyWithValue(pool)
 		if err != nil {
 			panic(err)
 		}
-		poolsAny = append(poolsAny, any)
+		poolAnys = append(poolAnys, any)
 	}
 	return &types.GenesisState{
 		NextPoolNumber: k.GetNextPoolNumber(ctx),
-		Pools:          poolsAny,
+		Pools:          poolAnys,
 	}
 }
