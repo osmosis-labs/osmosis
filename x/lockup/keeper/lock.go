@@ -47,6 +47,32 @@ func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) (
 	return locks, coins, nil
 }
 
+func (k Keeper) addLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
+	for _, refKey := range refKeys {
+		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) deleteLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
+	refKeys, err := lockRefKeys(lock)
+	if err != nil {
+		return err
+	}
+	for _, refKey := range refKeys {
+		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
@@ -264,10 +290,32 @@ func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.Per
 
 // LockTokens lock tokens from an account for specified duration
 func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
-	ID := k.getLastLockID(ctx) + 1
+	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is set at the beginning of unlocking time
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
 	return lock, k.Lock(ctx, lock)
+}
+
+// ResetLock reset lock to lock's previous state on InitGenesis
+func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := proto.Marshal(&lock)
+	if err != nil {
+		return err
+	}
+	store.Set(lockStoreKey(lock.ID), bz)
+
+	// store refs by the status of unlock
+	if lock.IsUnlocking() {
+		return k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	}
+
+	// add to accumulation store when unlocking is not started
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+	}
+
+	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 }
 
 // Lock is a utility to lock coins into module account
@@ -287,7 +335,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 	store.Set(lockStoreKey(lockID), bz)
-	k.setLastLockID(ctx, lockID)
+	k.SetLastLockID(ctx, lockID)
 
 	refKeys, err := lockRefKeys(lock)
 	if err != nil {
