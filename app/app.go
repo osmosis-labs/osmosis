@@ -505,10 +505,7 @@ func NewOsmosisApp(
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
-<<<<<<< HEAD
-=======
 		lockuptypes.ModuleName,
->>>>>>> cfc2d34... Make importing genesis work
 		gammtypes.ModuleName,
 	)
 
