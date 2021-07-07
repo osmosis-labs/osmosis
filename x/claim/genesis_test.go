@@ -108,6 +108,10 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
+		app := simapp.Setup(false)
+		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		ctx = ctx.WithBlockTime(now.Add(time.Second))
+		am := claim.NewAppModule(appCodec, *app.ClaimKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }
