@@ -85,6 +85,10 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
+		app := simapp.Setup(false)
+		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		ctx = ctx.WithBlockTime(now.Add(time.Second))
+		am := mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }
