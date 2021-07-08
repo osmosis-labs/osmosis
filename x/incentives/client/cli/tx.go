@@ -126,7 +126,7 @@ func NewAddToGaugeCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			gaugeId, err := strconv.ParseUint(args[1], 10, 64)
+			gaugeId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
