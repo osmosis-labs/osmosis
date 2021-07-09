@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
