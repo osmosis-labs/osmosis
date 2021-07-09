@@ -340,17 +340,6 @@ func NewOsmosisApp(
 			distrParams.BaseProposerReward = sdk.ZeroDec()
 			distrParams.BonusProposerReward = sdk.ZeroDec()
 			app.DistrKeeper.SetParams(ctx, distrParams)
-
-			// Update governance parameters to elongate voting period
-			// and reduce the deposit period
-			govVotingParams := app.GovKeeper.GetVotingParams(ctx)
-			govVotingParams.VotingPeriod = (24 * 5) * time.Hour
-			app.GovKeeper.SetVotingParams(ctx, govVotingParams)
-
-			govDepositParams := app.GovKeeper.GetDepositParams(ctx)
-			// 3 days
-			govDepositParams.MaxDepositPeriod = (24 * 3) * time.Hour
-			app.GovKeeper.SetDepositParams(ctx, govDepositParams)
 		})
 
 	// Create IBC Keeper
