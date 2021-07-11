@@ -472,6 +472,8 @@ func NewOsmosisApp(
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
+		lockuptypes.ModuleName,
+		gammtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
