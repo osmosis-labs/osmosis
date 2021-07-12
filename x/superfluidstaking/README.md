@@ -58,3 +58,23 @@ Should we actually provide inflation allocated for stakers to LPs? Won't it let 
 
 Or when we implement superfluid staking, should we just remove allocation percentage for pool-incentives?
 
+### Security of LP token
+
+LP token's security should be counted based on two tokens put on the pool.
+For instance, for ATOM/OSMO pair, both ATOM and OSMO participate in increasing the security of Osmosis chain.
+I think not only OSMO amount, making both of them to participate in the security would be better.
+
+Let's say ATOM's security level is 3 and OSMO's security level is 1.
+And pair has 1million ATOM and 5million OSMO.
+Here, let's say 1 LP token is representative of 1ATOM and 5 OSMO.
+In this case, security level of an LP token could be 10 not 5.
+
+We will need to track average rating between ATOM/OSMO pair and also volatility between these pairs.
+We can calculate like `LP(OSMO)*(1-Volatility)+LP(ATOM)*(1-Volatility)`.
+
+### What Osmosis integrate auto pool rebalancer on endblocker and giving the auto-rebalance rewards to stakers?
+
+Like if price changes are made within the Osmosis pool, just remove it on endblocker, to remove bots that get incentives?
+It will ensure that the price is maintained in a block for Osmosis zone and stakers will get higher income.
+And also hackers should hack all the relevant pools rather than only a single pool.
+And also it will eliminate the competition between bots to earn incentives.
