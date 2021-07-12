@@ -11,3 +11,21 @@ Oracles take really important role in superfluid staking as it determines the po
 Price array: p1, p2, p3, p4, p5 ...
 Average price: p
 Volatility: sum((p1-p)/p)
+
+## How many epochs or how long will be ideal for TWAP calculation of LP token prices?
+
+Should this be modifiable by param?
+
+## Should we consider current price on TWAP calculation?
+
+What if we just provide incentives just for previous values?
+Previous values are verified contributions to Osmosis and we can surely provide incentives for verified contributions but for current prices, it could be used for hack and price manipulation.
+
+How to detect current price is being manipulated for next round of epoch to hack the chain?
+How to handle the sudden price dump of a coin, let's say AKT dumped for its fault?
+- We don't care about current AKT price as OSMO was there last time for Osmosis chain security. This will be considered on later epochs.
+
+## Reference projects that calculate LP token price on-chain for lending or other purposes
+
+https://gist.github.com/l3wi/0871d6f3b2f9a60845a5bcdaf179ba88
+https://github.com/alpaca-finance/bsc-alpaca-contract/blob/main/contracts/6/protocol/OracleMedianizer.sol
