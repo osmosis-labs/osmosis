@@ -1,6 +1,7 @@
 # Oracle
 
 Oracles take really important role in superfluid staking as it determines the power of LP tokens in staking.
+**Note:** We can leave the exact conversion rate between GAMM share to osmo equivalent to later.
 
 ## LP token price
 

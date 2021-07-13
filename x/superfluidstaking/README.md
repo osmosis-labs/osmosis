@@ -12,31 +12,22 @@ In that case, the amount of OSMO in the pool does not participate in increasing 
 
 ### How to determine the amount of OSMO delegation from the pool to validators?
 
-The amount of OSMO in the pool is being changed in real-time based on swap events.
-In staking, the incentives amount record is managed per withdrawal and slash events.
-If we invent OSMO tokens in the pool as well, how often should we update the balance of OSMO into the "delegation"?
+Time Average Osmo Amount per LP token * Risk Rating of LP token
 
-### Should we actually decide which validator to delegate from the pool?
+### On slash event, OSMO will be burnt from the pool directly or LP tokens will be burnt?
 
-On slash event, OSMO will be burnt from the pool directly? It won't cause a problem in the gamm for coin amount inconsistency?
-Like the k = x * y would be changed
+I think burning LP token would be nicer and pretty easier.
+LP token's value could be calculated based on how much OSMO is in it and also calculate burn amount from that.
+
+If burn OSMO, it will cause a problem of price change.
 
 ### The reward from staking, it should be withdrawn to the user's wallet on each epoch with yield farming incentives or withdraw it by doing claim?
 
-### Do we really need to select validator for this staking?
+### Do we really need to select validator for superfluid staking?
 
 What if we think that they are constantly supporting the security of chain and provide specific percentage of fee pool to that rather than dividing by OSMO put the liquidity and the OSMO delegated?
 
-### When the validator is slashed should we burn LP token or burn OSMO inside the pool?
-
-I think burning LP token would be nicer and pretty easier.
-LP token's value could be calculated based on how much OSMO is in it.
-
-- How do we prevent a hacker buy/sell just before epoch end and do opposite operation just after epoch?
-
-### To start superfluid staking, users should lock LP tokens for staking withdrawal time? 
-
-### How to prevent a validator to slash itself to hack pools?
+### To start superfluid staking, users should lock LP tokens for 3 weeks
 
 ### Superfluid staking will be applied for only secure pairs like ATOM/OSMO or AKT/OSMO
 
@@ -72,9 +63,15 @@ In this case, security level of an LP token could be 10 not 5.
 We will need to track average rating between ATOM/OSMO pair and also volatility between these pairs.
 We can calculate like `LP(OSMO)*(1-Volatility)+LP(ATOM)*(1-Volatility)`.
 
-### What Osmosis integrate auto pool rebalancer on endblocker and giving the auto-rebalance rewards to stakers?
+### For superfluid staking, price stability is quite important 
+
+To make the LP token price stable, what Osmosis integrate auto pool rebalancer on endblocker and giving the auto-rebalance rewards to stakers?
 
 Like if price changes are made within the Osmosis pool, just remove it on endblocker, to remove bots that get incentives?
 It will ensure that the price is maintained in a block for Osmosis zone and stakers will get higher income.
 And also hackers should hack all the relevant pools rather than only a single pool.
 And also it will eliminate the competition between bots to earn incentives.
+
+### Feedback from Dev
+
+Better to focus on the code side of imagining how we can re-structure staking reward distribution to look at GAMM shares as well.
