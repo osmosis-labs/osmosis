@@ -31,6 +31,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdActiveGauges(),
 		GetCmdUpcomingGauges(),
 		GetCmdRewardsEst(),
+		// TODO: add query commands for autostaking
 	)
 
 	return cmd

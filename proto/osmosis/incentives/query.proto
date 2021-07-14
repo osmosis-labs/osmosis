@@ -8,6 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
+import "osmosis/incentives/autostaking.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 
@@ -56,6 +57,16 @@ service Query {
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/lockable_durations";
+  }
+  // returns an autostaking configuration for an address
+  rpc AutoStakingInfoByAddress(QueryAutoStakingInfoByAddressRequest) returns (QueryAutoStakingInfoByAddressResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/autostaking_info_by_address/{address}";
+  }
+  // returns autostaking configurations
+  rpc AutoStakingInfos(QueryAutoStakingInfosRequest) returns (QueryAutoStakingInfosResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/autostaking_infos";
   }
 }
 
@@ -127,4 +138,21 @@ message QueryLockableDurationsResponse {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
+}
+
+message QueryAutoStakingInfoByAddressRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+message QueryAutoStakingInfoByAddressResponse {
+  AutoStaking data = 1;
+}
+
+message QueryAutoStakingInfosRequest {
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message QueryAutoStakingInfosResponse {
+  repeated AutoStaking data = 1 [ (gogoproto.nullable) = false ];
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

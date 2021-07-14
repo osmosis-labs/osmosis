@@ -137,3 +137,5 @@ func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDur
 
 	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
 }
+
+// TODO: add grpc info for querying autostaking info
