@@ -64,3 +64,13 @@ func (server msgServer) AddToGauge(goCtx context.Context, msg *types.MsgAddToGau
 
 	return &types.MsgAddToGaugeResponse{}, nil
 }
+
+func (server msgServer) SetAutoStaking(goCtx context.Context, msg *types.MsgSetAutoStaking) (*types.MsgSetAutoStakingResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err := server.keeper.SetAutostaking(ctx, &types.AutoStaking{
+		Address:              msg.Address,
+		AutostakingValidator: msg.AutostakingValidator,
+		AutostakingRate:      msg.AutostakingRate,
+	})
+	return &types.MsgSetAutoStakingResponse{}, err
+}

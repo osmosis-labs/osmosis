@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"github.com/gogo/protobuf/proto"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -138,4 +139,34 @@ func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDur
 	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
 }
 
-// TODO: add grpc info for querying autostaking info
+// AutoStakingInfoByAddress returns an autostaking configuration for an address
+func (k Keeper) AutoStakingInfoByAddress(ctx context.Context, req *types.QueryAutoStakingInfoByAddressRequest) (*types.QueryAutoStakingInfoByAddressResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryAutoStakingInfoByAddressResponse{
+		Data: k.GetAutostakingByAddress(sdkCtx, req.Address),
+	}, nil
+}
+
+// AutoStakingInfos returns autostaking configurations
+func (k Keeper) AutoStakingInfos(ctx context.Context, req *types.QueryAutoStakingInfosRequest) (*types.QueryAutoStakingInfosResponse, error) {
+	var autostakings []types.AutoStaking
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	store := sdkCtx.KVStore(k.storeKey)
+	autostakingStore := prefix.NewStore(store, types.KeyPrefixAutostaking)
+	pageRes, err := query.Paginate(autostakingStore, req.Pagination, func(_, value []byte) error {
+		autostaking := types.AutoStaking{}
+		err := proto.Unmarshal(value, &autostaking)
+		if err != nil {
+			return err
+		}
+
+		autostakings = append(autostakings, autostaking)
+		return nil
+	})
+
+	return &types.QueryAutoStakingInfosResponse{
+		Data:       autostakings,
+		Pagination: pageRes,
+	}, err
+}
