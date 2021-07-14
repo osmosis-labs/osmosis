@@ -9,8 +9,9 @@ message AutoStaking {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = true;
 
-  repeated string autostaking_validator = 1;
-  string autostaking_rate = 2 [
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  string autostaking_validator = 2;
+  string autostaking_rate = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"autostake_rate\"",
     (gogoproto.nullable) = false
