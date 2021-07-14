@@ -204,4 +204,83 @@ func TestMsgAddToGauge(t *testing.T) {
 	}
 }
 
-// TODO: add test for autostaking
+// test for autostaking
+func TestMsgSetAutoStaking(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address())
+	valAddr1 := sdk.ValAddress(addr1)
+
+	createMsg := func(after func(msg MsgSetAutoStaking) MsgSetAutoStaking) MsgSetAutoStaking {
+		properMsg := *NewMsgSetAutoStaking(
+			addr1.String(),
+			valAddr1.String(),
+			sdk.NewDecWithPrec(5, 1),
+		)
+
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg MsgSetAutoStaking) MsgSetAutoStaking {
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Type(), "set_autostaking")
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1.String())
+
+	tests := []struct {
+		name       string
+		msg        MsgSetAutoStaking
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: createMsg(func(msg MsgSetAutoStaking) MsgSetAutoStaking {
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "empty address",
+			msg: createMsg(func(msg MsgSetAutoStaking) MsgSetAutoStaking {
+				msg.Address = ""
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid address",
+			msg: createMsg(func(msg MsgSetAutoStaking) MsgSetAutoStaking {
+				msg.Address = "AAA"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "empty validator address",
+			msg: createMsg(func(msg MsgSetAutoStaking) MsgSetAutoStaking {
+				msg.AutostakingValidator = ""
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid validator address",
+			msg: createMsg(func(msg MsgSetAutoStaking) MsgSetAutoStaking {
+				msg.AutostakingValidator = "AAA"
+				return msg
+			}),
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}

@@ -10,8 +10,9 @@ import (
 
 // constants
 const (
-	TypeMsgCreateGauge = "create_gauge"
-	TypeMsgAddToGauge  = "add_to_gauge"
+	TypeMsgCreateGauge    = "create_gauge"
+	TypeMsgAddToGauge     = "add_to_gauge"
+	TypeMsgSetAutoStaking = "set_autostaking"
 )
 
 var _ sdk.Msg = &MsgCreateGauge{}
@@ -107,7 +108,7 @@ func NewMsgSetAutoStaking(address, autostakingValidator string, rate sdk.Dec) *M
 }
 
 func (m MsgSetAutoStaking) Route() string { return RouterKey }
-func (m MsgSetAutoStaking) Type() string  { return TypeMsgAddToGauge }
+func (m MsgSetAutoStaking) Type() string  { return TypeMsgSetAutoStaking }
 func (m MsgSetAutoStaking) ValidateBasic() error {
 	if m.Address == "" {
 		return errors.New("address should be set")
