@@ -22,6 +22,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgAddToGauge:
 			res, err := msgServer.AddToGauge(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		// TODO: handle autostaking msg
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)

@@ -9,6 +9,7 @@ import (
 // Parameter store keys
 var (
 	KeyDistrEpochIdentifier = []byte("DistrEpochIdentifier")
+	// TODO: add autostaking params
 )
 
 // ParamTable for minting module.

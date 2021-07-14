@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "osmosis/incentives/params.proto";
 import "osmosis/incentives/gauge.proto";
+import "osmosis/incentives/autostaking.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 
@@ -18,4 +19,5 @@ message GenesisState {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
+  repeated AutoStaking autostakings = 4 [ (gogoproto.nullable) = false ];
 }

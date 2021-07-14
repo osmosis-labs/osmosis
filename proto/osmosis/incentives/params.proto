@@ -10,4 +10,10 @@ message Params {
   // distribution epoch identifier
   string distr_epoch_identifier = 1
       [ (gogoproto.moretags) = "yaml:\"distr_epoch_identifier\"" ];
+  // minimum autostaking rate
+  string min_autostaking_rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"min_autostaking_rate\"",
+    (gogoproto.nullable) = false
+  ];
 }

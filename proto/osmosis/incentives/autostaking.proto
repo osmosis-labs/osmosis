@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.incentives;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
+
+message AutoStaking {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
+
+  repeated string autostaking_validator = 1;
+  string autostaking_rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"autostake_rate\"",
+    (gogoproto.nullable) = false
+  ];
+}

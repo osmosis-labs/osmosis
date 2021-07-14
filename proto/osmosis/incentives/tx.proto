@@ -12,6 +12,7 @@ option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 service Msg {
   rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);
   rpc AddToGauge(MsgAddToGauge) returns (MsgAddToGaugeResponse);
+  rpc SetAutoStaking(MsgSetAutoStaking) returns (MsgSetAutoStakingResponse);
 }
 
 message MsgCreateGauge {
@@ -44,3 +45,15 @@ message MsgAddToGauge {
   ];
 }
 message MsgAddToGaugeResponse {}
+
+message MsgSetAutoStaking {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  repeated string autostaking_validator = 2;
+  string autostaking_rate = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"autostake_rate\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgSetAutoStakingResponse {}
