@@ -47,7 +47,7 @@ message MsgAddToGauge {
 message MsgAddToGaugeResponse {}
 
 message MsgSetAutoStaking {
-  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   repeated string autostaking_validator = 2;
   string autostaking_rate = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

@@ -94,3 +94,5 @@ func (m MsgAddToGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }
+
+// TODO: add for MsgSetAutoStaking

@@ -203,3 +203,5 @@ func TestMsgAddToGauge(t *testing.T) {
 		}
 	}
 }
+
+// TODO: add test for autostaking
