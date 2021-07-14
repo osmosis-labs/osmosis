@@ -318,3 +318,5 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
 }
+
+// TODO: add grpc_query test for autostaking
