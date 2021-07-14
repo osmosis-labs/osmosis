@@ -52,7 +52,8 @@ var (
 	// LockableDurationsKey defines key for storing valid durations for giving incentives
 	LockableDurationsKey = []byte("lockable_durations")
 
-	// TODO: add key for storing autostaking info
+	// KeyAutostakingRate defines key for storing auto-staking rate configurations
+	KeyAutostakingRate = []byte("auto_staking_rate")
 )
 
 func KeyPrefix(p string) []byte {
