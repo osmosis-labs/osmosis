@@ -297,3 +297,5 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 		})
 	}
 }
+
+// TODO: add happy path test for autostaking cli command
