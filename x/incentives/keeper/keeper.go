@@ -21,6 +21,7 @@ type Keeper struct {
 	bk         types.BankKeeper
 	lk         types.LockupKeeper
 	ek         types.EpochKeeper
+	sk         types.StakingKeeper
 }
 
 func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper) *Keeper {

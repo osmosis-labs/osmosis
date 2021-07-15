@@ -482,3 +482,6 @@ func (suite *KeeperTestSuite) TestPerpetualActiveGaugesByDenom() {
 	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
 	suite.Require().Len(gaugeIds, 1)
 }
+
+// TODO: add test for auto-stake on epoch end on distribute function
+// TODO: resolve tests that appear after autostaking distribution

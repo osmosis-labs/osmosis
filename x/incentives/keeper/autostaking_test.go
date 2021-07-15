@@ -71,3 +71,5 @@ func (suite *KeeperTestSuite) TestAutostakingManagement() {
 	})
 	suite.Require().Len(autostakingIters, 2)
 }
+
+// TODO: add test for AutostakeRewards function

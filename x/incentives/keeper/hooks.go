@@ -28,9 +28,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			if err != nil {
 				panic(err)
 			}
-			// TODO: call a function to auto-stake specific percentage
-			// TODO: add test for auto-stake on epoch end after distribution
-
 			// filled epoch is increased in this step and we compare with +1
 			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
 				if err := k.FinishDistribution(ctx, gauge); err != nil {

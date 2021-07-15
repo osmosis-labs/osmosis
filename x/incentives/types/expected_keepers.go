@@ -4,6 +4,7 @@ import (
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -23,8 +24,22 @@ type LockupKeeper interface {
 	GetPeriodLocksAccumulation(ctx sdk.Context, query lockuptypes.QueryCondition) sdk.Int
 	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
+	LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 }
 
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+}
+
+// StakingKeeper expected staking keeper (noalias)
+type StakingKeeper interface {
+	// BondDenom - Bondable coin denomination
+	BondDenom(sdk.Context) string
+	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
+	// Delegate performs a delegation, set/update everything necessary within the store.
+	// tokenSrc indicates the bond status of the incoming funds.
+	Delegate(
+		ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc stakingtypes.BondStatus,
+		validator stakingtypes.Validator, subtractAccount bool,
+	) (newShares sdk.Dec, err error)
 }

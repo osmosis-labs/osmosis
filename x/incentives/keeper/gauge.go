@@ -306,6 +306,15 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, distrCoins); err != nil {
 			return nil, err
 		}
+		lockOwner, err := sdk.AccAddressFromBech32(lock.Owner)
+		if err != nil {
+			return nil, err
+		}
+		err = k.AutostakeRewards(ctx, lockOwner, distrCoins)
+		if err != nil {
+			return nil, err
+		}
+
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
@@ -405,7 +414,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	}
 	gauges := []types.Gauge{}
 	// initialize gauges to active and upcomings if not set
-	for s, _ := range denomSet {
+	for s := range denomSet {
 		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, s)
 		// Each gauge only rewards locks to one denom, so no duplicates
 		for _, id := range gaugeIDs {

@@ -1,7 +1,10 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 )
@@ -66,4 +69,42 @@ func (k Keeper) GetAutostakingByAddress(ctx sdk.Context, address string) *types.
 	bz := store.Get(autostakingKey)
 	proto.Unmarshal(bz, &autostaking)
 	return &autostaking
+}
+
+func (k Keeper) AutostakeRewards(ctx sdk.Context, owner sdk.AccAddress, distrCoins sdk.Coins) error {
+	params := k.GetParams(ctx)
+	bondDenom := k.sk.BondDenom(ctx)
+	bondDenomAmt := distrCoins.AmountOf(bondDenom)
+	// TODO: later should use user's manually configured delegation rate, for now, uses simple rate defined as param by governance
+	autoDelegationAmt := bondDenomAmt.ToDec().Mul(params.MinAutostakingRate).RoundInt()
+	if !autoDelegationAmt.IsPositive() {
+		return nil
+	}
+	// auto delegate when can
+	autostaking := k.GetAutostakingByAddress(ctx, owner.String())
+
+	autostaked := false
+	if autostaking != nil { // lock tokens forcefully - TODO: if lock tokens on every epoch, lots of locks will appear
+		valAddr, err := sdk.ValAddressFromBech32(autostaking.AutostakingValidator)
+		if err != nil {
+			return err
+		}
+
+		validator, found := k.sk.GetValidator(ctx, valAddr)
+		if found {
+			// NOTE: source funds are always unbonded
+			_, err = k.sk.Delegate(ctx, owner, autoDelegationAmt, stakingtypes.Unbonded, validator, true)
+			if err != nil {
+				return err
+			}
+			autostaked = true
+		}
+	}
+	if !autostaked {
+		_, err := k.lk.LockTokens(ctx, owner, sdk.Coins{sdk.NewCoin(bondDenom, autoDelegationAmt)}, time.Hour*24*7*2)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
