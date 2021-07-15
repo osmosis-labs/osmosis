@@ -28,7 +28,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewCreateGaugeCmd(),
 		NewAddToGaugeCmd(),
-		// TODO: add autostaking cli command
+		NewSetAutostakingCmd(),
 	)
 
 	return cmd
@@ -148,6 +148,38 @@ func NewAddToGaugeCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(FlagSetCreateGauge())
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewSetAutostakingCmd broadcast MsgSetAutostaking
+func NewSetAutostakingCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-autostaking [val_address] [flags]",
+		Short: "configure autostaking from LP rewards",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			msg := types.NewMsgSetAutoStaking(
+				clientCtx.GetFromAddress().String(),
+				args[0],
+			)
+
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

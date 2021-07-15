@@ -6,8 +6,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/x/incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
@@ -298,4 +300,118 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 	}
 }
 
-// TODO: add happy path test for autostaking cli command
+func (s *IntegrationTestSuite) TestNewSetAutostakingCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"configure autostaking of validator",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewSetAutostakingCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+func (s *IntegrationTestSuite) TestGetCmdAutostakingByAddress() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		owner     string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query autostaking info by owner",
+			val.Address.String(),
+			false, &types.QueryAutoStakingInfoByAddressResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdAutostakingByAddress()
+			clientCtx := val.ClientCtx
+
+			args := []string{
+				tc.owner,
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdAutoStakingInfos() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query autostaking infos",
+			false, &types.QueryAutoStakingInfosResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdAutoStakingInfos()
+			clientCtx := val.ClientCtx
+
+			args := []string{}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}

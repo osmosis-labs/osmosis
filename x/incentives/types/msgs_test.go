@@ -214,7 +214,7 @@ func TestMsgSetAutoStaking(t *testing.T) {
 		properMsg := *NewMsgSetAutoStaking(
 			addr1.String(),
 			valAddr1.String(),
-			sdk.NewDecWithPrec(5, 1),
+			// sdk.NewDecWithPrec(5, 1),
 		)
 
 		return after(properMsg)

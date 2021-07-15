@@ -31,7 +31,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdActiveGauges(),
 		GetCmdUpcomingGauges(),
 		GetCmdRewardsEst(),
-		// TODO: add query commands for autostaking
+		GetCmdAutostakingByAddress(),
+		GetCmdAutoStakingInfos(),
 	)
 
 	return cmd
@@ -340,6 +341,88 @@ $ %s query incentives rewards-estimation
 	cmd.Flags().String(FlagOwner, "", "Owner to receive rewards, optionally used when lock-ids flag is NOT set")
 	cmd.Flags().String(FlagLockIds, "", "the lock ids to receive rewards, when it is empty, all lock ids of the owner are used")
 	cmd.Flags().Int64(FlagEndEpoch, 0, "the end epoch number to participate in rewards calculation")
+
+	return cmd
+}
+
+// GetCmdAutostakingByAddress returns autostaking configuration by address
+func GetCmdAutostakingByAddress() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "autostaking-info-by-address [address]",
+		Short: "Query autostaking info by address",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query autostaking info by address.
+
+Example:
+$ %s query incentives autostaking-info-by-address [address]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.AutoStakingInfoByAddress(cmd.Context(), &types.QueryAutoStakingInfoByAddressRequest{
+				Address: args[0],
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdAutoStakingInfos returns autostaking configurations via pagination
+func GetCmdAutoStakingInfos() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "autostaking-infos [address]",
+		Short: "Query autostaking infos by pagination",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query autostaking infos by pagination.
+
+Example:
+$ %s query incentives autostaking-infos
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.AutoStakingInfos(cmd.Context(), &types.QueryAutoStakingInfosRequest{
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, "incentives")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

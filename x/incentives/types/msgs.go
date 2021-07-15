@@ -99,11 +99,11 @@ func (m MsgAddToGauge) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgSetAutoStaking{}
 
 // NewMsgCreateGauge creates a message to create a gauge
-func NewMsgSetAutoStaking(address, autostakingValidator string, rate sdk.Dec) *MsgSetAutoStaking {
+func NewMsgSetAutoStaking(address, autostakingValidator string) *MsgSetAutoStaking {
 	return &MsgSetAutoStaking{
 		Address:              address,
 		AutostakingValidator: autostakingValidator,
-		AutostakingRate:      rate,
+		// AutostakingRate:      rate,
 	}
 }
 
@@ -126,12 +126,12 @@ func (m MsgSetAutoStaking) ValidateBasic() error {
 		return err
 	}
 
-	if m.AutostakingRate.IsNegative() {
-		return errors.New("auto-staking rate can not be negative")
-	}
-	if m.AutostakingRate.GT(sdk.OneDec()) {
-		return errors.New("auto-staking rate can not exceed 100%")
-	}
+	// if m.AutostakingRate.IsNegative() {
+	// 	return errors.New("auto-staking rate can not be negative")
+	// }
+	// if m.AutostakingRate.GT(sdk.OneDec()) {
+	// 	return errors.New("auto-staking rate can not exceed 100%")
+	// }
 
 	return nil
 }

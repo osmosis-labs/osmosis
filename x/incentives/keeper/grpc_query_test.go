@@ -319,4 +319,59 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().Equal(res.Coins, coins)
 }
 
-// TODO: add grpc_query test for autostaking
+func (suite *KeeperTestSuite) TestGRPCAutoStaking() {
+	suite.SetupTest()
+
+	// initial check
+	res, err := suite.app.IncentivesKeeper.AutoStakingInfos(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfosRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Data, 0)
+
+	// create autostaking
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	addr2 := sdk.AccAddress([]byte("addr2---------------"))
+	addr3 := sdk.AccAddress([]byte("addr3---------------"))
+	valAddr1 := sdk.ValAddress(addr1)
+	valAddr2 := sdk.ValAddress(addr2)
+	err = suite.app.IncentivesKeeper.SetAutostaking(suite.ctx, &types.AutoStaking{
+		Address:              addr1.String(),
+		AutostakingValidator: valAddr1.String(),
+		AutostakingRate:      sdk.NewDecWithPrec(5, 1),
+	})
+	suite.Require().NoError(err)
+	err = suite.app.IncentivesKeeper.SetAutostaking(suite.ctx, &types.AutoStaking{
+		Address:              addr2.String(),
+		AutostakingValidator: valAddr2.String(),
+		AutostakingRate:      sdk.NewDecWithPrec(5, 1),
+	})
+	suite.Require().NoError(err)
+
+	// check after create 2 autostaking configurations
+	res, err = suite.app.IncentivesKeeper.AutoStakingInfos(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfosRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Data, 2)
+
+	// check empty address
+	qres, err := suite.app.IncentivesKeeper.AutoStakingInfoByAddress(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfoByAddressRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Nil(qres.Data)
+
+	// check empty address
+	qres, err = suite.app.IncentivesKeeper.AutoStakingInfoByAddress(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfoByAddressRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Nil(qres.Data)
+
+	// check unregistered address
+	qres, err = suite.app.IncentivesKeeper.AutoStakingInfoByAddress(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfoByAddressRequest{
+		Address: addr3.String(),
+	})
+	suite.Require().NoError(err)
+	suite.Require().Nil(qres.Data)
+
+	// check registered address
+	qres, err = suite.app.IncentivesKeeper.AutoStakingInfoByAddress(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfoByAddressRequest{
+		Address: addr3.String(),
+	})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(qres.Data)
+}
