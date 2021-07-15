@@ -14,7 +14,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, gauge := range genState.Gauges {
 		k.SetGaugeWithRefKey(ctx, &gauge)
 	}
-	// TODO: initialize autostakings
+	for _, autostaking := range genState.Autostakings {
+		k.SetAutostaking(ctx, &autostaking)
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -23,6 +25,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		Params:            k.GetParams(ctx),
 		LockableDurations: k.GetLockableDurations(ctx),
 		Gauges:            k.GetNotFinishedGauges(ctx),
-		// TODO: export autostakings
+		Autostakings:      k.AllAutoStakings(ctx),
 	}
 }
