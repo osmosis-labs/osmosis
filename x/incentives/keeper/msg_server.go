@@ -70,7 +70,7 @@ func (server msgServer) SetAutoStaking(goCtx context.Context, msg *types.MsgSetA
 	err := server.keeper.SetAutostaking(ctx, &types.AutoStaking{
 		Address:              msg.Address,
 		AutostakingValidator: msg.AutostakingValidator,
-		AutostakingRate:      msg.AutostakingRate,
+		// AutostakingRate:      msg.AutostakingRate,
 	})
 	return &types.MsgSetAutoStakingResponse{}, err
 }

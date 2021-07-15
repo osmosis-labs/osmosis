@@ -17,13 +17,13 @@ func (suite *KeeperTestSuite) TestAutostakingManagement() {
 	err := suite.app.IncentivesKeeper.SetAutostaking(suite.ctx, &types.AutoStaking{
 		Address:              addr1.String(),
 		AutostakingValidator: valAddr1.String(),
-		AutostakingRate:      sdk.NewDecWithPrec(5, 1),
+		// AutostakingRate:      sdk.NewDecWithPrec(5, 1),
 	})
 	suite.Require().NoError(err)
 	err = suite.app.IncentivesKeeper.SetAutostaking(suite.ctx, &types.AutoStaking{
 		Address:              addr2.String(),
 		AutostakingValidator: valAddr2.String(),
-		AutostakingRate:      sdk.NewDecWithPrec(5, 1),
+		// AutostakingRate:      sdk.NewDecWithPrec(5, 1),
 	})
 	suite.Require().NoError(err)
 
@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestAutostakingManagement() {
 	suite.Require().Equal(*autostaking1, types.AutoStaking{
 		Address:              addr1.String(),
 		AutostakingValidator: valAddr1.String(),
-		AutostakingRate:      sdk.NewDecWithPrec(5, 1),
+		// AutostakingRate:      sdk.NewDecWithPrec(5, 1),
 	})
 
 	autostaking2 := suite.app.IncentivesKeeper.GetAutostakingByAddress(suite.ctx, addr2.String())
@@ -40,7 +40,7 @@ func (suite *KeeperTestSuite) TestAutostakingManagement() {
 	suite.Require().Equal(*autostaking2, types.AutoStaking{
 		Address:              addr2.String(),
 		AutostakingValidator: valAddr2.String(),
-		AutostakingRate:      sdk.NewDecWithPrec(5, 1),
+		// AutostakingRate:      sdk.NewDecWithPrec(5, 1),
 	})
 
 	autostaking3 := suite.app.IncentivesKeeper.GetAutostakingByAddress(suite.ctx, addr3.String())
@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestAutostakingManagement() {
 	err = suite.app.IncentivesKeeper.SetAutostaking(suite.ctx, &types.AutoStaking{
 		Address:              addr1.String(),
 		AutostakingValidator: valAddr2.String(),
-		AutostakingRate:      sdk.NewDecWithPrec(1, 1),
+		// AutostakingRate:      sdk.NewDecWithPrec(1, 1),
 	})
 	suite.Require().NoError(err)
 
@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestAutostakingManagement() {
 	suite.Require().Equal(*autostaking1, types.AutoStaking{
 		Address:              addr1.String(),
 		AutostakingValidator: valAddr2.String(),
-		AutostakingRate:      sdk.NewDecWithPrec(1, 1),
+		// AutostakingRate:      sdk.NewDecWithPrec(1, 1),
 	})
 
 	autostakings := suite.app.IncentivesKeeper.AllAutoStakings(suite.ctx)

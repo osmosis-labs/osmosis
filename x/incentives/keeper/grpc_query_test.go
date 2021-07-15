@@ -336,13 +336,13 @@ func (suite *KeeperTestSuite) TestGRPCAutoStaking() {
 	err = suite.app.IncentivesKeeper.SetAutostaking(suite.ctx, &types.AutoStaking{
 		Address:              addr1.String(),
 		AutostakingValidator: valAddr1.String(),
-		AutostakingRate:      sdk.NewDecWithPrec(5, 1),
+		// AutostakingRate:      sdk.NewDecWithPrec(5, 1),
 	})
 	suite.Require().NoError(err)
 	err = suite.app.IncentivesKeeper.SetAutostaking(suite.ctx, &types.AutoStaking{
 		Address:              addr2.String(),
 		AutostakingValidator: valAddr2.String(),
-		AutostakingRate:      sdk.NewDecWithPrec(5, 1),
+		// AutostakingRate:      sdk.NewDecWithPrec(5, 1),
 	})
 	suite.Require().NoError(err)
 
