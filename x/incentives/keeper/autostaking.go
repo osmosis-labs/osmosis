@@ -92,7 +92,8 @@ func (k Keeper) AutostakeRewards(ctx sdk.Context, owner sdk.AccAddress, distrCoi
 
 		validator, found := k.sk.GetValidator(ctx, valAddr)
 		if found {
-			// NOTE: source funds are always unbonded
+			// NOTE: source funds are always unbonded and the param for `tokenSrc` is `stakingtypes.Unbonded`
+			// Param for `subtractAccount` is `true` to substract delegating coins from owner's account.
 			_, err = k.sk.Delegate(ctx, owner, autoDelegationAmt, stakingtypes.Unbonded, validator, true)
 			if err != nil {
 				return err
