@@ -356,11 +356,6 @@ func (suite *KeeperTestSuite) TestGRPCAutoStaking() {
 	suite.Require().NoError(err)
 	suite.Require().Nil(qres.Data)
 
-	// check empty address
-	qres, err = suite.app.IncentivesKeeper.AutoStakingInfoByAddress(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfoByAddressRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Nil(qres.Data)
-
 	// check unregistered address
 	qres, err = suite.app.IncentivesKeeper.AutoStakingInfoByAddress(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfoByAddressRequest{
 		Address: addr3.String(),
@@ -370,7 +365,7 @@ func (suite *KeeperTestSuite) TestGRPCAutoStaking() {
 
 	// check registered address
 	qres, err = suite.app.IncentivesKeeper.AutoStakingInfoByAddress(sdk.WrapSDKContext(suite.ctx), &types.QueryAutoStakingInfoByAddressRequest{
-		Address: addr3.String(),
+		Address: addr1.String(),
 	})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(qres.Data)

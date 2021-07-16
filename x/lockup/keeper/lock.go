@@ -360,6 +360,10 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
 	}
 
+	if k.hooks == nil {
+		return nil
+	}
+
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }

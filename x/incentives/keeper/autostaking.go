@@ -84,7 +84,7 @@ func (k Keeper) AutostakeRewards(ctx sdk.Context, owner sdk.AccAddress, distrCoi
 	autostaking := k.GetAutostakingByAddress(ctx, owner.String())
 
 	autostaked := false
-	if autostaking != nil { // lock tokens forcefully - TODO: if lock tokens on every epoch, lots of locks will appear
+	if autostaking != nil {
 		valAddr, err := sdk.ValAddressFromBech32(autostaking.AutostakingValidator)
 		if err != nil {
 			return err
@@ -101,7 +101,7 @@ func (k Keeper) AutostakeRewards(ctx sdk.Context, owner sdk.AccAddress, distrCoi
 			autostaked = true
 		}
 	}
-	if !autostaked {
+	if !autostaked { // lock tokens forcefully - TODO: if lock tokens on every epoch, lots of locks will appear
 		_, err := k.lk.LockTokens(ctx, owner, sdk.Coins{sdk.NewCoin(bondDenom, autoDelegationAmt)}, time.Hour*24*7*2)
 		if err != nil {
 			return err

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DefaultIndex is the default capability global index
@@ -16,6 +17,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params: Params{
 			DistrEpochIdentifier: "week",
+			MinAutostakingRate:   sdk.NewDecWithPrec(5, 1),
 		},
 		Gauges: []Gauge{},
 		LockableDurations: []time.Duration{
@@ -44,6 +46,12 @@ func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]js
 func (gs GenesisState) Validate() error {
 	if gs.Params.DistrEpochIdentifier == "" {
 		return errors.New("epoch identifier should NOT be empty")
+	}
+	if gs.Params.MinAutostakingRate.LT(sdk.ZeroDec()) {
+		return errors.New("MinAutostakingRate should NOT be negative")
+	}
+	if gs.Params.MinAutostakingRate.GT(sdk.OneDec()) {
+		return errors.New("MinAutostakingRate should NOT be bigger than 1")
 	}
 	return nil
 }
