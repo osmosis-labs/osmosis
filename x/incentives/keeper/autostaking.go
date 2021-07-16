@@ -109,3 +109,5 @@ func (k Keeper) AutostakeRewards(ctx sdk.Context, owner sdk.AccAddress, distrCoi
 	}
 	return nil
 }
+
+// TODO: add few spec docs for auto-staking
