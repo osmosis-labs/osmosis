@@ -483,5 +483,31 @@ func (suite *KeeperTestSuite) TestPerpetualActiveGaugesByDenom() {
 	suite.Require().Len(gaugeIds, 1)
 }
 
-// TODO: add test for auto-stake on epoch end on distribute function
-// TODO: resolve tests that appear after autostaking distribution
+func (suite *KeeperTestSuite) TestDistributionAutostake() {
+	// test for module get gauges
+	suite.SetupTest()
+
+	// setup lock and gauge
+	lockOwner, gaugeID, lockCoins, startTime := suite.SetupLockAndGauge(true)
+
+	// calculate initial lockOwner balance
+	initCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, lockOwner)
+	initLockedCoins := suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, lockOwner)
+
+	// start distribution
+	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+	suite.Require().NoError(err)
+	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
+	suite.Require().NoError(err)
+
+	// distribute coins to stakers
+	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	suite.Require().NoError(err)
+
+	// check 5coins are added and 5coins are in lock
+	finalCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, lockOwner)
+	suite.Require().Equal(finalCoins, initCoins.Add(sdk.NewCoin("stake", lockCoins.AmountOf("stake").Quo(sdk.NewInt(2)))))
+	finalLockedCoins := suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, lockOwner)
+	suite.Require().Equal(finalLockedCoins, initLockedCoins.Add(sdk.NewCoin("stake", lockCoins.AmountOf("stake").Quo(sdk.NewInt(2)))))
+}
