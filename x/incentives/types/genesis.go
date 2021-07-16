@@ -47,6 +47,9 @@ func (gs GenesisState) Validate() error {
 	if gs.Params.DistrEpochIdentifier == "" {
 		return errors.New("epoch identifier should NOT be empty")
 	}
+	if gs.Params.MinAutostakingRate.IsNil() {
+		return errors.New("MinAutostakingRate is nil")
+	}
 	if gs.Params.MinAutostakingRate.LT(sdk.ZeroDec()) {
 		return errors.New("MinAutostakingRate should NOT be negative")
 	}

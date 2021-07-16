@@ -73,6 +73,10 @@ func validateMinAutostakingRate(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("empty auto-staking: %+v", i)
+	}
+
 	if v.IsNegative() {
 		return fmt.Errorf("negative auto-staking rate: %+v", i)
 	}

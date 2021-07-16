@@ -73,6 +73,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	incentives.InitGenesis(ctx, app.IncentivesKeeper, types.GenesisState{
 		Params: types.Params{
 			DistrEpochIdentifier: "week",
+			MinAutostakingRate:   sdk.NewDecWithPrec(5, 1),
 		},
 		Gauges: []types.Gauge{gauge},
 		LockableDurations: []time.Duration{
