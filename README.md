@@ -27,6 +27,7 @@ make install
 **Launch Osmosis**
 ```bash
 osmosisd init yourmonikerhere
+wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 osmosisd start --p2p.persistent_peers "3fea02d121cb24503d5fbc53216a527257a9ab55@143.198.145.208:26656,e7916387e05acd53d1b8c0f842c13def365c7bb6@176.9.64.212:26656,785bc83577e3980545bac051de8f57a9fd82695f@194.233.164.146:26656,421e7ffd6c239cc51620e2ec2330d392a7baeeb3@207.246.109.0:26656,778fdedf6effe996f039f22901a3360bc838b52e@161.97.187.189:36656,2115945f074ddb038de5d835e287fa03e32f0628@95.217.43.85:26656,23142ab5d94ad7fa3433a889dcd3c6bb6d5f247d@95.217.193.163:26656,e437756a853061cc6f1639c2ac997d9f7e84be67@144.76.183.180:26656"
 ```
 
