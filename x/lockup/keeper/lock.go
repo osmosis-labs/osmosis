@@ -193,6 +193,11 @@ func (k Keeper) GetAccountLockedLongerDurationNotUnlockingOnly(ctx sdk.Context, 
 	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerDuration(ctx, false, addr, duration))
 }
 
+// GetAccountLockedDurationDenom Returns account locked with specified duration and denom
+func (k Keeper) GetAccountLockedDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.AccountLockIteratorDurationDenom(ctx, false, addr, denom, duration))
+}
+
 // GetAccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom
 func (k Keeper) GetAccountLockedLongerDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock {
 	// it does not matter started unlocking or not for duration query
@@ -279,6 +284,43 @@ func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.Per
 	}
 	err = k.Unlock(ctx, *lock)
 	return lock, err
+}
+
+// AddTokensToLock locks more tokens into a lockup
+func (k Keeper) AddTokensToLock(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, err
+	}
+	if lock.Owner != owner.String() {
+		return nil, types.ErrNotLockOwner
+	}
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
+		return nil, err
+	}
+	lock.Coins = lock.Coins.Add(coins...)
+
+	// store lock object into the store
+	store := ctx.KVStore(k.storeKey)
+	bz, err := proto.Marshal(lock)
+	if err != nil {
+		return nil, err
+	}
+	store.Set(lockStoreKey(lock.ID), bz)
+
+	// modifications to accumulation store
+	for _, coin := range lock.Coins {
+		// remove previous store for the lock ID and add again with updated value
+		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+	}
+
+	if k.hooks == nil {
+		return lock, nil
+	}
+
+	k.hooks.OnTokenLocked(ctx, owner, lock.ID, coins, lock.Duration, lock.EndTime)
+	return lock, nil
 }
 
 // LockTokens lock tokens from an account for specified duration

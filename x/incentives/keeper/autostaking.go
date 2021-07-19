@@ -102,9 +102,19 @@ func (k Keeper) AutostakeRewards(ctx sdk.Context, owner sdk.AccAddress, distrCoi
 		}
 	}
 	if !autostaked { // lock tokens forcefully - TODO: if lock tokens on every epoch, lots of locks will appear
-		_, err := k.lk.LockTokens(ctx, owner, sdk.Coins{sdk.NewCoin(bondDenom, autoDelegationAmt)}, time.Hour*24*7*2)
-		if err != nil {
-			return err
+		// if there's a bond denom lock of 2 weeks already just add more tokens there
+		defaultLockDuration := time.Hour * 24 * 7 * 2
+		locks := k.lk.GetAccountLockedDurationDenom(ctx, owner, bondDenom, defaultLockDuration)
+		if len(locks) > 0 { // if same duration + denom lock already for the account, just add it there
+			_, err := k.lk.AddTokensToLock(ctx, owner, locks[0].ID, sdk.Coins{sdk.NewCoin(bondDenom, autoDelegationAmt)})
+			if err != nil {
+				return err
+			}
+		} else { // create a new lock if this lock is not available
+			_, err := k.lk.LockTokens(ctx, owner, sdk.Coins{sdk.NewCoin(bondDenom, autoDelegationAmt)}, time.Hour*24*7*2)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

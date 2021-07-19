@@ -50,6 +50,13 @@ func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration
 	return store.Iterator(prefix, key)
 }
 
+func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	durationKey := getDurationKey(duration)
+	key := combineKeys(prefix, durationKey)
+	return store.Iterator(key, storetypes.PrefixEndBytes(key))
+}
+
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, prefix)
@@ -149,4 +156,10 @@ func (k Keeper) AccountLockIteratorShorterThanDuration(ctx sdk.Context, isUnlock
 func (k Keeper) AccountLockIteratorLongerDurationDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, duration time.Duration) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorLongerDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
+}
+
+// AccountLockIteratorDurationDenom returns iterator used for getting all locks by account and denom and duration
+func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, duration time.Duration) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
 }

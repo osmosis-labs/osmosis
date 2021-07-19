@@ -183,9 +183,21 @@ func (suite *KeeperTestSuite) TestAutostakeRewards() {
 			suite.Require().Equal(finalDelegation, initDelegation.Add(tc.expDelegation.Amount))
 		}
 		if tc.expLock.Amount.IsPositive() {
-			suite.Require().Equal(len(finalLocks), len(initLocks)+1)
-			suite.Require().Equal(finalLocks[len(finalLocks)-1].Coins, sdk.Coins{tc.expLock})
-			suite.Require().Equal(finalLocks[len(finalLocks)-1].Duration, time.Hour*24*7*2)
+			suite.Require().True(len(finalLocks) <= len(initLocks)+1)
+
+			// check bond denom locks are combined
+			twoWeekLocks := suite.app.LockupKeeper.GetAccountLockedDurationDenom(suite.ctx, tc.addr, bondDenom, time.Hour*24*7*2)
+			suite.Require().Len(twoWeekLocks, 1)
+
+			err = suite.app.BankKeeper.SetBalances(suite.ctx, tc.addr, tc.coins)
+			suite.Require().NoError(err)
+			err = suite.app.IncentivesKeeper.AutostakeRewards(suite.ctx, tc.addr, tc.coins)
+			suite.Require().NoError(err)
+
+			finalTwoWeekLocks := suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, tc.addr)
+			suite.Require().Equal(len(finalTwoWeekLocks), 1)
+
+			suite.Require().Equal(finalTwoWeekLocks[0].Coins, twoWeekLocks[0].Coins.Add(tc.expLock))
 		}
 	}
 }
