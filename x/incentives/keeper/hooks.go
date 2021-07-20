@@ -22,9 +22,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		// distribute due to epoch event
+		rewardsByAddr := make(map[string]sdk.Coins)
 		gauges = k.GetActiveGauges(ctx)
 		for _, gauge := range gauges {
-			_, err := k.Distribute(ctx, gauge)
+			_, err := k.Distribute(ctx, rewardsByAddr, gauge)
 			if err != nil {
 				panic(err)
 			}
@@ -33,6 +34,17 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				if err := k.FinishDistribution(ctx, gauge); err != nil {
 					panic(err)
 				}
+			}
+		}
+
+		for address, rewards := range rewardsByAddr {
+			addr, err := sdk.AccAddressFromBech32(address)
+			if err != nil {
+				panic(err)
+			}
+			err = k.AutostakeRewards(ctx, addr, rewards)
+			if err != nil {
+				panic(err)
 			}
 		}
 	}

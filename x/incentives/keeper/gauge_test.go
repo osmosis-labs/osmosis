@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 105)})
 
@@ -93,7 +93,7 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 5)})
 
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Len(gauges, 0)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 105)})
 
@@ -270,14 +270,14 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	suite.Require().Len(gauges, 0)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// distributing twice without adding more for perpetual gauge
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{})
 
@@ -288,7 +288,7 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	// distributing twice with adding more for perpetual gauge
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 200)})
 
@@ -344,7 +344,7 @@ func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins(nil))
 
@@ -389,7 +389,7 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins(nil))
 
@@ -427,7 +427,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualActiveGaugesByDenom() {
 	suite.Require().Len(gaugeIds, 1)
 
 	// distribute coins to stakers
-	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 
 	// finish distribution
@@ -475,7 +475,7 @@ func (suite *KeeperTestSuite) TestPerpetualActiveGaugesByDenom() {
 	suite.Require().Len(gaugeIds, 0)
 
 	// distribute coins to stakers
-	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 
 	// check gauge ids by denom
@@ -483,7 +483,7 @@ func (suite *KeeperTestSuite) TestPerpetualActiveGaugesByDenom() {
 	suite.Require().Len(gaugeIds, 1)
 }
 
-func (suite *KeeperTestSuite) TestDistributionAutostake() {
+func (suite *KeeperTestSuite) TestDistributionRewardsByAddr() {
 	// test for module get gauges
 	suite.SetupTest()
 
@@ -492,7 +492,6 @@ func (suite *KeeperTestSuite) TestDistributionAutostake() {
 
 	// calculate initial lockOwner balance
 	initCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, lockOwner)
-	initLockedCoins := suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, lockOwner)
 
 	// start distribution
 	suite.ctx = suite.ctx.WithBlockTime(startTime)
@@ -502,8 +501,34 @@ func (suite *KeeperTestSuite) TestDistributionAutostake() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
-	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	rewardsByAddr := make(map[string]sdk.Coins)
+	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, rewardsByAddr, *gauge)
 	suite.Require().NoError(err)
+
+	// check 10 coins are distributed
+	finalCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, lockOwner)
+	suite.Require().Equal(finalCoins, initCoins.Add(lockCoins...))
+
+	// check rewards by addr is correctly incremented
+	suite.Require().Equal(len(rewardsByAddr), 1)
+	suite.Require().Equal(rewardsByAddr[lockOwner.String()], lockCoins)
+}
+
+func (suite *KeeperTestSuite) TestAutostakeAfterEpochEnd() {
+	// test for module get gauges
+	suite.SetupTest()
+
+	// setup lock and gauge
+	lockOwner, _, lockCoins, startTime := suite.SetupLockAndGauge(true)
+
+	// calculate initial lockOwner balance
+	initCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, lockOwner)
+	initLockedCoins := suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, lockOwner)
+
+	// start distribution
+	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	params := suite.app.IncentivesKeeper.GetParams(suite.ctx)
+	suite.app.IncentivesKeeper.AfterEpochEnd(suite.ctx, params.DistrEpochIdentifier, 1)
 
 	// check 5coins are added and 5coins are in lock
 	finalCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, lockOwner)

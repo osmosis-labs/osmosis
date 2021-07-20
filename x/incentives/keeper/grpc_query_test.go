@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.Require().Equal(res.Coins, coins)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
 
@@ -251,7 +251,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.Require().Equal(res.Coins, coins.Sub(distrCoins))
 
 	// distribute second round to stakers
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 6)})
 
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
 
@@ -309,7 +309,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().Equal(res.Coins, distrCoins)
 
 	// distribute second round to stakers
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, make(map[string]sdk.Coins), *gauge)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 6)})
 

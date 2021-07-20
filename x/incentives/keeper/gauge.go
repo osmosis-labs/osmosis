@@ -271,7 +271,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 }
 
 // Distribute coins from gauge according to its conditions
-func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error) {
+func (k Keeper) Distribute(ctx sdk.Context, rewardsByAddr map[string]sdk.Coins, gauge types.Gauge) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
 	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
@@ -306,14 +306,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, distrCoins); err != nil {
 			return nil, err
 		}
-		lockOwner, err := sdk.AccAddressFromBech32(lock.Owner)
-		if err != nil {
-			return nil, err
-		}
-		err = k.AutostakeRewards(ctx, lockOwner, distrCoins)
-		if err != nil {
-			return nil, err
-		}
+		rewardsByAddr[lock.Owner] = rewardsByAddr[lock.Owner].Add(distrCoins...)
 
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
