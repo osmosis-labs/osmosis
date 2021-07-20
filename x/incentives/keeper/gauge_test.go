@@ -535,4 +535,16 @@ func (suite *KeeperTestSuite) TestAutostakeAfterEpochEnd() {
 	suite.Require().Equal(finalCoins, initCoins.Add(sdk.NewCoin("stake", lockCoins.AmountOf("stake").Quo(sdk.NewInt(2)))))
 	finalLockedCoins := suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, lockOwner)
 	suite.Require().Equal(finalLockedCoins, initLockedCoins.Add(sdk.NewCoin("stake", lockCoins.AmountOf("stake").Quo(sdk.NewInt(2)))))
+
+	// lock more lp token and check distribution is same
+	lpTokens := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
+	suite.LockTokens(lockOwner, lpTokens, time.Second)
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.app.BankKeeper.SetBalances(suite.ctx, lockOwner, coins)
+	suite.app.IncentivesKeeper.AddToGaugeRewards(suite.ctx, lockOwner, coins, 1)
+	suite.app.IncentivesKeeper.AfterEpochEnd(suite.ctx, params.DistrEpochIdentifier, 1)
+	finalCoins = suite.app.BankKeeper.GetAllBalances(suite.ctx, lockOwner)
+	suite.Require().Equal(finalCoins, initCoins.Add(sdk.NewCoin("stake", lockCoins.AmountOf("stake").Quo(sdk.NewInt(2)))))
+	finalLockedCoins = suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, lockOwner)
+	suite.Require().Equal(finalLockedCoins, initLockedCoins.Add(lpTokens...).Add(lockCoins...))
 }
