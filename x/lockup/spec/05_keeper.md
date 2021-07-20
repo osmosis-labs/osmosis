@@ -27,7 +27,8 @@ type Keeper interface {
     GetAccountUnlockedBeforeTime(sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock
     // GetAccountLockedPastTimeDenom is equal to GetAccountLockedPastTime but denom specific
     GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock
-    
+    // GetAccountLockedDurationDenom Returns account locked with specified duration and denom
+    GetAccountLockedDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock 
     // GetAccountLockedLongerDuration Returns account locked with duration longer than specified
     GetAccountLockedLongerDuration(sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock
     // GetAccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom
@@ -40,12 +41,15 @@ type Keeper interface {
     GetLockByID(sdk.Context, lockID uint64) (*types.PeriodLock, error)
     // GetPeriodLocks Returns the period locks on pool
     GetPeriodLocks(sdk.Context) ([]types.PeriodLock, error)
+
     // UnlockAllUnlockableCoins Unlock all unlockable coins
     UnlockAllUnlockableCoins(sdk.Context, account sdk.AccAddress) (sdk.Coins, error)
     // UnlockPeriodLockByID unlock by period lock ID
     UnlockPeriodLockByID(sdk.Context, LockID uint64) (*types.PeriodLock, error)
     // LockTokens lock tokens from an account for specified duration
     LockTokens(sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error)
+    // AddTokensToLock locks more tokens into a lockup
+    AddTokensToLock(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error)
     // Lock is a utility to lock coins into module account
     Lock(sdk.Context, lock types.PeriodLock) error
     // Unlock is a utility to unlock coins from module account

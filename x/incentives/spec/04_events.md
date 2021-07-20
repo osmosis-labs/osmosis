@@ -35,7 +35,7 @@ The incentives module emits the following events:
 | transfer     | sender        | {owner}         |
 | transfer     | amount        | {amount}        |
 
-## EndBlockers
+## Receiving Hooks
 
 ### Incentives distribution
 
@@ -44,3 +44,10 @@ The incentives module emits the following events:
 | transfer[] | recipient     | {receiver}      |
 | transfer[] | sender        | {moduleAccount} |
 | transfer[] | amount        | {distrAmount}   |
+
+### Auto-stake
+
+| Type     | Attribute Key | Attribute Value    |
+| -------- | ------------- | ------------------ |
+| delegate | validator     | {validatorAddress} |
+| delegate | amount        | {delegationAmount} |
