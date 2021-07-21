@@ -152,6 +152,18 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 				b.FailNow()
 			}
 		}
+		for address, rewards := range rewardsByAddr {
+			addr, err := sdk.AccAddressFromBech32(address)
+			if err != nil {
+				fmt.Printf("AccAddressFromBech32, %v\n", err)
+				b.FailNow()
+			}
+			err = app.IncentivesKeeper.AutostakeRewards(ctx, addr, rewards)
+			if err != nil {
+				fmt.Printf("AutostakeRewards, %v\n", err)
+				b.FailNow()
+			}
+		}
 	}
 }
 
