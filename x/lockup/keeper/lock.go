@@ -300,13 +300,10 @@ func (k Keeper) AddTokensToLock(ctx sdk.Context, owner sdk.AccAddress, lockID ui
 	}
 	lock.Coins = lock.Coins.Add(coins...)
 
-	// store lock object into the store
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(lock)
+	err = k.setLock(ctx, *lock)
 	if err != nil {
 		return nil, err
 	}
-	store.Set(lockStoreKey(lock.ID), bz)
 
 	// modifications to accumulation store
 	for _, coin := range lock.Coins {
@@ -353,12 +350,10 @@ func (k Keeper) ClearAllLockRefKeys(ctx sdk.Context) {
 
 // ResetLock reset lock to lock's previous state on InitGenesis
 func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(&lock)
+	err := k.setLock(ctx, lock)
 	if err != nil {
 		return err
 	}
-	store.Set(lockStoreKey(lock.ID), bz)
 
 	// store refs by the status of unlock
 	if lock.IsUnlocking() {
@@ -373,6 +368,17 @@ func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 }
 
+// setLock is a utility to store lock object into the store
+func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := proto.Marshal(&lock)
+	if err != nil {
+		return err
+	}
+	store.Set(lockStoreKey(lock.ID), bz)
+	return nil
+}
+
 // Lock is a utility to lock coins into module account
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
@@ -383,13 +389,10 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
-	// store lock object into the store
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(&lock)
+	err = k.setLock(ctx, lock)
 	if err != nil {
 		return err
 	}
-	store.Set(lockStoreKey(lock.ID), bz)
 
 	// add lock refs into not unlocking queue
 	err = k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
@@ -420,12 +423,10 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// store lock with end time set
 	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(&lock)
+	err = k.setLock(ctx, lock)
 	if err != nil {
 		return err
 	}
-	store.Set(lockStoreKey(lock.ID), bz)
 
 	// add lock refs into unlocking queue
 	err = k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
