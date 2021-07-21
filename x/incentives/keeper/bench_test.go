@@ -87,7 +87,6 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	distrEpoch := app.EpochsKeeper.GetEpochInfo(ctx, app.IncentivesKeeper.GetParams(ctx).DistrEpochIdentifier)
 	durationOptions := app.IncentivesKeeper.GetLockableDurations(ctx)
 	// setup gauges
-	gaugeIds := []uint64{}
 	for i := 0; i < numGauges; i++ {
 		addr := addrs[r.Int()%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
@@ -105,12 +104,10 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 			numEpochsPaidOver = uint64(r.Int63n(durationMillisecs/millisecsPerEpoch)) + 1
 		}
 
-		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver)
+		_, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver)
 		if err != nil {
 			fmt.Printf("Create Gauge, %v\n", err)
 			b.FailNow()
-		} else {
-			gaugeIds = append(gaugeIds, gaugeId)
 		}
 	}
 
@@ -130,40 +127,11 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		}
 	}
 
-	// begin distribution for all gauges
-	for _, gaugeId := range gaugeIds {
-		gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-		err := app.IncentivesKeeper.BeginDistribution(ctx, *gauge)
-		if err != nil {
-			fmt.Printf("Begin distribution, %v\n", err)
-			b.FailNow()
-		}
-	}
-
+	params := app.IncentivesKeeper.GetParams(ctx)
 	b.StartTimer()
 	// distribute coins from gauges to lockup owners
 	for i := 0; i < numDistrs; i++ {
-		rewardsByAddr := make(map[string]sdk.Coins)
-		for _, gaugeId := range gaugeIds {
-			gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-			_, err := app.IncentivesKeeper.Distribute(ctx, rewardsByAddr, *gauge)
-			if err != nil {
-				fmt.Printf("Distribute, %v\n", err)
-				b.FailNow()
-			}
-		}
-		for address, rewards := range rewardsByAddr {
-			addr, err := sdk.AccAddressFromBech32(address)
-			if err != nil {
-				fmt.Printf("AccAddressFromBech32, %v\n", err)
-				b.FailNow()
-			}
-			err = app.IncentivesKeeper.AutostakeRewards(ctx, addr, rewards)
-			if err != nil {
-				fmt.Printf("AutostakeRewards, %v\n", err)
-				b.FailNow()
-			}
-		}
+		app.IncentivesKeeper.AfterEpochEnd(ctx, params.DistrEpochIdentifier, int64(i+1))
 	}
 }
 
