@@ -194,6 +194,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				suite.ctx,
 				acc,
 				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 					sdk.NewCoin("foo", sdk.NewInt(10000000)),
 					sdk.NewCoin("bar", sdk.NewInt(10000000)),
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
@@ -281,6 +282,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 				suite.ctx,
 				acc,
 				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 					sdk.NewCoin("foo", sdk.NewInt(10000000)),
 					sdk.NewCoin("bar", sdk.NewInt(10000000)),
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
@@ -389,6 +391,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				suite.ctx,
 				acc,
 				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 					sdk.NewCoin("foo", sdk.NewInt(10000000)),
 					sdk.NewCoin("bar", sdk.NewInt(10000000)),
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
@@ -436,6 +439,7 @@ func (suite *KeeperTestSuite) TestActivePool() {
 				suite.ctx,
 				acc,
 				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 					sdk.NewCoin("foo", sdk.NewInt(10000000)),
 					sdk.NewCoin("bar", sdk.NewInt(10000000)),
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
@@ -482,3 +486,7 @@ func (suite *KeeperTestSuite) TestActivePool() {
 		}
 	}
 }
+
+// TODO: resolve existing tests for fee params
+// TODO: add test for fee params
+// TODO: add docs about fee params

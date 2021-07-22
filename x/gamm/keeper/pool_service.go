@@ -28,6 +28,13 @@ func (k Keeper) CreatePool(
 		)
 	}
 
+	// send pool creation fee to community pool
+	params := k.GetParams(ctx)
+	err := k.distrKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender)
+	if err != nil {
+		return 0, err
+	}
+
 	pool, err := k.newPool(ctx, poolParams, poolAssets, futurePoolGovernor)
 	if err != nil {
 		return 0, err

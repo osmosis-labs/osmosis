@@ -6,6 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/osmosis-labs/osmosis/app"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/x/gamm"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 	"github.com/stretchr/testify/assert"
@@ -42,6 +43,9 @@ func TestGammInitGenesis(t *testing.T) {
 	gamm.InitGenesis(ctx, app.GAMMKeeper, types.GenesisState{
 		Pools:          []*codectypes.Any{any},
 		NextPoolNumber: 2,
+		Params: types.Params{
+			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)},
+		},
 	}, app.AppCodec())
 
 	require.Equal(t, app.GAMMKeeper.GetNextPoolNumber(ctx), uint64(2))
