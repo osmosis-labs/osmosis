@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
@@ -11,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -40,6 +44,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdAccountLockedLongerDuration(),
 		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
+		GetCmdOutputLocksJson(),
 	)
 
 	return cmd
@@ -564,6 +569,90 @@ $ %s query lockup account-locked-pasttime <address> <duration> <denom>
 			}
 
 			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdAccountLockedLongerDurationDenom returns account's locked records for a denom with longer duration
+func GetCmdOutputLocksJson() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "output-all-locks <max lock ID>",
+		Short: "output all locks into a json file",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Output all locks into a json file.
+
+Example:
+$ %s query lockup output-all-locks <max lock ID>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			maxLockID, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				return err
+			}
+
+			// status
+			const (
+				doesnt_exist_status = iota
+				unbonding_status
+				bonded_status
+			)
+
+			type LockResult struct {
+				id            int
+				status        int // one of {doesnt_exist, }
+				denom         string
+				amount        sdk.Int
+				address       string
+				unbondEndTime time.Time
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			results := []LockResult{}
+			for i := 0; i <= int(maxLockID); i++ {
+				curLockResult := LockResult{id: i}
+				res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: uint64(i)})
+				if err != nil {
+					curLockResult.status = doesnt_exist_status
+					results = append(results, curLockResult)
+					continue
+				}
+				// 1527019420 is hardcoded time well before launch, but well after year 1
+				if res.Lock.EndTime.Before(time.Unix(1527019420, 0)) {
+					curLockResult.status = bonded_status
+				} else {
+					curLockResult.status = unbonding_status
+					curLockResult.unbondEndTime = res.Lock.EndTime
+					curLockResult.denom = res.Lock.Coins[0].Denom
+					curLockResult.amount = res.Lock.Coins[0].Amount
+					curLockResult.address = res.Lock.Owner
+				}
+				results = append(results, curLockResult)
+			}
+
+			bz, err := json.Marshal(results)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile("lock_export.json", []byte(bz), 0777)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Writing to lock_export.json")
+			return nil
 		},
 	}
 
