@@ -72,6 +72,7 @@ func TestGammExportGenesis(t *testing.T) {
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 	app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
+		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	})
@@ -114,6 +115,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	am := gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 	app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
+		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	})
