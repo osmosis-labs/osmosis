@@ -339,6 +339,8 @@ func NewOsmosisApp(
 			distrParams.BaseProposerReward = sdk.ZeroDec()
 			distrParams.BonusProposerReward = sdk.ZeroDec()
 			app.DistrKeeper.SetParams(ctx, distrParams)
+
+			// TODO: configure upgrade for gamm module's pool creation fee param add
 		})
 
 	// Create IBC Keeper

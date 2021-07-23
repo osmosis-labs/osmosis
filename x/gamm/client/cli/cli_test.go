@@ -35,8 +35,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = app.DefaultConfig()
 
-	// TODO: modification for paying fee with "stake"
-
 	encCfg := app.MakeEncodingConfig()
 
 	// modification to pay fee with test bond denom "stake"
