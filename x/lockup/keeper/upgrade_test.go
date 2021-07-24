@@ -2,18 +2,71 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func (suite *KeeperTestSuite) LegacyLockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
 	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
 	_, err := suite.app.LockupKeeper.LegacyLockTokens(suite.ctx, addr, coins, duration)
 	suite.Require().NoError(err)
+}
+
+func scheduleUpgrade(app *app.OsmosisApp, ctx sdk.Context) sdk.Context {
+	app.BeginBlocker(ctx, types.RequestBeginBlock{})
+	app.EndBlocker(ctx, types.RequestEndBlock{ctx.BlockHeight()})
+	ctx = ctx.WithBlockTime(
+		ctx.BlockTime().Add(20 * time.Second))
+	app.BeginBlocker(ctx, types.RequestBeginBlock{})
+	app.EndBlocker(ctx, types.RequestEndBlock{ctx.BlockHeight()})
+
+	// run upgrades
+	plan := upgradetypes.Plan{Name: "v2", Height: 5}
+	app.UpgradeKeeper.ScheduleUpgrade(ctx, plan)
+	plan, _ = app.UpgradeKeeper.GetUpgradePlan(ctx)
+	// Require().True(exists)
+	// Assert().NotPanics(func() {
+	// 	app.UpgradeKeeper.ApplyUpgrade(ctx.WithBlockHeight(5), plan)
+	// })
+	return ctx
+}
+
+func BenchmarkUpgradeStoreManagement(b *testing.B) {
+	numLocksTotal := 20000
+	numLocksPerDuration := 500
+	numUnlocksPerDuration := 10
+	numDistinctDurations := numLocksTotal / numLocksPerDuration
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coinsPerLock := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	coinsTotal := sdk.Coins{sdk.NewInt64Coin("stake", int64(10*numLocksTotal))}
+
+	app := app.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+
+	app.BankKeeper.SetBalances(ctx, addr1, coinsTotal)
+	for i := 0; i <= numDistinctDurations; i++ {
+		lockupLength := time.Duration(i) * time.Second
+		for j := 0; j < numLocksPerDuration; j++ {
+			lock, _ := app.LockupKeeper.LegacyLockTokens(ctx, addr1, coinsPerLock, lockupLength)
+			if j < numUnlocksPerDuration {
+				app.LockupKeeper.LegacyBeginUnlock(ctx, lock)
+			}
+		}
+	}
+	b.StartTimer()
+	ctx = scheduleUpgrade(app, ctx)
+
+	// run a next block
+	ctx = ctx.WithBlockHeight(6).WithBlockTime(ctx.BlockTime().Add(5 * time.Second))
+	app.BeginBlocker(ctx, types.RequestBeginBlock{})
+	app.EndBlocker(ctx, types.RequestEndBlock{ctx.BlockHeight()})
 }
 
 func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
@@ -42,6 +95,13 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				locks, err := suite.app.LockupKeeper.GetLegacyPeriodLocks(suite.ctx)
 				suite.Require().NoError(err)
 				suite.Require().Len(locks, 3)
+
+				accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         "stake",
+					Duration:      time.Second,
+				})
+				suite.Require().Equal(accum.String(), "30")
 
 				// begin unlock
 				err = suite.app.LockupKeeper.LegacyBeginUnlock(suite.ctx, locks[0])
