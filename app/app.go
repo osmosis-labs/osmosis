@@ -319,7 +319,7 @@ func NewOsmosisApp(
 			minCommissionRate := app.StakingKeeper.GetParams(ctx).MinCommissionRate
 			for _, v := range validators {
 				if v.Commission.Rate.LT(minCommissionRate) {
-					comm, err := app.StakingKeeper.UpdateValidatorCommission(
+					comm, err := app.StakingKeeper.MustUpdateValidatorCommission(
 						ctx, v, minCommissionRate)
 					if err != nil {
 						panic(err)
@@ -332,6 +332,13 @@ func NewOsmosisApp(
 					app.StakingKeeper.SetValidator(ctx, v)
 				}
 			}
+
+			// Update distribution keeper parameters to remove proposer bonus
+			// as it doesn't make sense in the epoch'd staking setting
+			distrParams := app.DistrKeeper.GetParams(ctx)
+			distrParams.BaseProposerReward = sdk.ZeroDec()
+			distrParams.BonusProposerReward = sdk.ZeroDec()
+			app.DistrKeeper.SetParams(ctx, distrParams)
 		})
 
 	// Create IBC Keeper
