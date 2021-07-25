@@ -308,6 +308,7 @@ func NewOsmosisApp(
 			}
 			// clear all lockup module locking / unlocking queue items
 			app.LockupKeeper.ClearAllLockRefKeys(ctx)
+      app.LockupKeeper.ClearAccumulationStores(ctx)
 
 			// reset all lock and references
 			for _, lock := range locks {

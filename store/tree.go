@@ -9,6 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+  "github.com/cosmos/cosmos-sdk/store/prefix"
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,19 +83,23 @@ func (iter ptrIterator) ptr() *ptr {
 	res := ptr{
 		tree:  iter.tree,
 		level: iter.level,
-		key:   iter.Key()[7:],
+		key:   iter.Key(),
 	}
 	// ptrIterator becomes invalid once retrieve ptr
 	iter.Close()
 	return &res
 }
 
+func nodeKeyPrefix(level uint16) []byte {
+  bz := make([]byte, 2)
+  binary.BigEndian.PutUint16(bz, level)
+  return append([]byte("node/"), bz...)
+}
+
 // nodeKey takes in a nodes layer, and its key, and constructs the
 // its key in the underlying datastore.
 func (t Tree) nodeKey(level uint16, key []byte) []byte {
-	bz := make([]byte, 2)
-	binary.BigEndian.PutUint16(bz, level)
-	return append(append([]byte("node/"), bz...), key...)
+	return append(nodeKeyPrefix(level), key...)
 }
 
 // leafKey constructs a key for a node pointer representing a leaf node.
@@ -149,30 +154,18 @@ func (t Tree) ptrGet(level uint16, key []byte) *ptr {
 }
 
 func (t Tree) ptrIterator(level uint16, begin, end []byte) ptrIterator {
-	var endBytes []byte
-	if end != nil {
-		endBytes = t.nodeKey(level, end)
-	} else {
-		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
-	}
 	return ptrIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.Iterator(t.nodeKey(level, begin), endBytes),
+		Iterator: prefix.NewStore(t.store, nodeKeyPrefix(level)).Iterator(begin, end),
 	}
 }
 
 func (t Tree) ptrReverseIterator(level uint16, begin, end []byte) ptrIterator {
-	var endBytes []byte
-	if end != nil {
-		endBytes = t.nodeKey(level, end)
-	} else {
-		endBytes = stypes.PrefixEndBytes(t.nodeKey(level, nil))
-	}
 	return ptrIterator{
 		tree:     t,
 		level:    level,
-		Iterator: t.store.ReverseIterator(t.nodeKey(level, begin), endBytes),
+		Iterator: prefix.NewStore(t.store, nodeKeyPrefix(level)).ReverseIterator(begin, end),
 	}
 }
 

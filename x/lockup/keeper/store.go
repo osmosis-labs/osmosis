@@ -4,7 +4,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
+  "strings"
 
+  stypes "github.com/cosmos/cosmos-sdk/store/types"
+  "github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -66,6 +69,25 @@ func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) e
 	return nil
 }
 
+func (k Keeper) getAccumulationStoreDenoms(ctx sdk.Context) (res []string) {
+  store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLockAccumulation)
+
+  denomEndBytes := []byte(nil)
+
+  for {
+    iter := store.Iterator(denomEndBytes, nil)
+    defer iter.Close()
+
+    if !iter.Valid() {
+      return
+    }
+
+    denom := strings.Split(string(iter.Key()), "/")[0]
+    res = append(res, denom)
+    denomEndBytes = stypes.PrefixEndBytes([]byte(denom))
+  }
+}
+
 func accumulationStorePrefix(denom string) (res []byte) {
 	res = make([]byte, len(types.KeyPrefixLockAccumulation))
 	copy(res, types.KeyPrefixLockAccumulation)
@@ -75,9 +97,8 @@ func accumulationStorePrefix(denom string) (res []byte) {
 
 // accumulationKey should return sort key upon duration.
 // lockID is for preventing key duplication.
-func accumulationKey(duration time.Duration, lockID uint64) (res []byte) {
-	res = make([]byte, 16)
-	binary.BigEndian.PutUint64(res[:8], uint64(duration))
-	binary.BigEndian.PutUint64(res[8:], lockID)
+func accumulationKey(duration time.Duration) (res []byte) {
+	res = make([]byte, 8)
+	binary.BigEndian.PutUint64(res, uint64(duration))
 	return
 }

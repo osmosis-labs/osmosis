@@ -98,8 +98,14 @@ func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.
 	return k.getCoinsFromLocks(k.getLocksFromIterator(ctx, iterator))
 }
 
-func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
-	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
+func (k Keeper) accumulate(ctx sdk.Context, denom string, duration time.Duration, acc sdk.Int) {
+  tree := store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
+  amt := tree.Get(accumulationKey(duration))
+  tree.Set(accumulationKey(duration), amt.Add(acc))
+}
+
+func (k Keeper) disaccumulate(ctx sdk.Context, denom string, duration time.Duration, acc sdk.Int) {
+  k.accumulate(ctx, denom, duration, acc.Neg())
 }
 
 // GetModuleBalance Returns full balance of the module
@@ -251,8 +257,8 @@ func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []ty
 // GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
 // query.Duration
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
-	beginKey := accumulationKey(query.Duration, 0)
-	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
+  tree := store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(query.Denom)), 10)
+  return tree.SubsetAccumulation(accumulationKey(query.Duration), nil)
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
@@ -309,6 +315,19 @@ func (k Keeper) ClearAllLockRefKeys(ctx sdk.Context) {
 	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixUnlocking)
 }
 
+func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
+  denoms := k.getAccumulationStoreDenoms(ctx)
+  for _, denom := range denoms {
+    // XXX: move this to tree method
+    store := prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom))
+    iter := store.Iterator(nil, nil)
+    defer iter.Close()
+    for ; iter.Valid(); iter.Next() {
+      store.Delete(iter.Key())
+    }
+  }
+}
+
 // ResetLock reset lock to lock's previous state on InitGenesis
 func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
@@ -325,7 +344,7 @@ func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// add to accumulation store when unlocking is not started
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+    k.accumulate(ctx, coin.Denom, lock.Duration, coin.Amount)
 	}
 
 	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
@@ -357,7 +376,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// add to accumulation store
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+    k.accumulate(ctx, coin.Denom, lock.Duration, coin.Amount)
 	}
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
@@ -389,7 +408,7 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// remove from accumulation store
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+    k.disaccumulate(ctx, coin.Denom, lock.Duration, coin.Amount)
 	}
 
 	return nil

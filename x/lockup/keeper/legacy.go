@@ -147,7 +147,7 @@ func (k Keeper) LegacyLock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+    k.accumulate(ctx, coin.Denom, lock.Duration, coin.Amount)
 	}
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
@@ -186,7 +186,7 @@ func (k Keeper) LegacyBeginUnlock(ctx sdk.Context, lock types.PeriodLock) error 
 	}
 
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+    k.disaccumulate(ctx, coin.Denom, lock.Duration, coin.Amount)
 	}
 
 	return nil
