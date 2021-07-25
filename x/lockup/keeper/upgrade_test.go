@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) LegacyLockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
@@ -16,10 +17,16 @@ func (suite *KeeperTestSuite) LegacyLockTokens(addr sdk.AccAddress, coins sdk.Co
 }
 
 func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	addr2 := sdk.AccAddress([]byte("addr2---------------"))
+	addr3 := sdk.AccAddress([]byte("addr3---------------"))
+
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg         string
+		pre_update  func()
+		update      func()
+		post_update func()
+		expPass     bool
 	}{
 		{
 			"with current upgrade plan",
@@ -27,12 +34,9 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 
 				// lock coins
-				addr1 := sdk.AccAddress([]byte("addr1---------------"))
-				suite.LegacyLockTokens(addr1, coins, time.Second)
-				addr2 := sdk.AccAddress([]byte("addr2---------------"))
-				suite.LegacyLockTokens(addr2, coins, time.Second)
-				addr3 := sdk.AccAddress([]byte("addr3---------------"))
-				suite.LegacyLockTokens(addr3, coins, time.Second)
+				suite.LegacyLockTokens(addr1, coins, 10*time.Second)
+				suite.LegacyLockTokens(addr2, coins, 200*time.Second)
+				suite.LegacyLockTokens(addr3, coins, 50*time.Second)
 
 				// check locks
 				locks, err := suite.app.LockupKeeper.GetLegacyPeriodLocks(suite.ctx)
@@ -43,6 +47,18 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				err = suite.app.LockupKeeper.LegacyBeginUnlock(suite.ctx, locks[0])
 				suite.Require().NoError(err)
 
+				err = suite.app.LockupKeeper.LegacyBeginUnlock(suite.ctx, locks[2])
+				suite.Require().NoError(err)
+			},
+			func() {
+				// run block 20 seconds into future
+				suite.app.BeginBlocker(suite.ctx, types.RequestBeginBlock{})
+				suite.app.EndBlocker(suite.ctx, types.RequestEndBlock{suite.ctx.BlockHeight()})
+				suite.ctx = suite.ctx.WithBlockTime(
+					suite.ctx.BlockTime().Add(20 * time.Second))
+				suite.app.BeginBlocker(suite.ctx, types.RequestBeginBlock{})
+				suite.app.EndBlocker(suite.ctx, types.RequestEndBlock{suite.ctx.BlockHeight()})
+
 				// run upgrades
 				plan := upgradetypes.Plan{Name: "v2", Height: 5}
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
@@ -51,12 +67,24 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				suite.Assert().NotPanics(func() {
 					suite.app.UpgradeKeeper.ApplyUpgrade(suite.ctx.WithBlockHeight(5), plan)
 				})
-
-				// check all queries
-				locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+			},
+			func() {
+				// check all queries just after upgrade
+				locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 				suite.Require().NoError(err)
 				suite.Require().Len(locks, 3)
 
+				// run a next block
+				suite.ctx = suite.ctx.WithBlockHeight(6).WithBlockTime(suite.ctx.BlockTime().Add(5 * time.Second))
+				suite.app.BeginBlocker(suite.ctx, types.RequestBeginBlock{})
+				suite.app.EndBlocker(suite.ctx, types.RequestEndBlock{suite.ctx.BlockHeight()})
+
+				// check all remainings
+				locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+				suite.Require().NoError(err)
+				suite.Require().Len(locks, 2)
+
+				// TODO: Update the rest of these queries
 				locks = suite.app.LockupKeeper.GetAccountLockedPastTimeNotUnlockingOnly(suite.ctx, addr1, suite.ctx.BlockTime())
 				suite.Require().Len(locks, 0)
 
@@ -64,35 +92,38 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				suite.Require().Len(locks, 0)
 
 				locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
-				suite.Require().Len(locks, 1)
+				suite.Require().Len(locks, 0)
 
-				locks = suite.app.LockupKeeper.GetAccountLockedLongerDuration(suite.ctx, addr1, time.Second)
+				locks = suite.app.LockupKeeper.GetAccountLockedLongerDuration(suite.ctx, addr2, time.Second)
 				suite.Require().Len(locks, 1)
 
 				locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationNotUnlockingOnly(suite.ctx, addr1, time.Second)
 				suite.Require().Len(locks, 0)
 
-				locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stake", time.Second)
+				locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr2, "stake", time.Second)
 				suite.Require().Len(locks, 1)
 
 				locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", suite.ctx.BlockTime())
-				suite.Require().Len(locks, 3)
+				suite.Require().Len(locks, 2)
 
 				locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second)
-				suite.Require().Len(locks, 3)
+				suite.Require().Len(locks, 2)
 
 				_, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+				suite.Require().Error(err)
+
+				_, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, 2)
 				suite.Require().NoError(err)
 
 				locks = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)
-				suite.Require().Len(locks, 1)
+				suite.Require().Len(locks, 0)
 
 				accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
 					Denom:         "stake",
 					Duration:      time.Second,
 				})
-				suite.Require().Equal(accum.String(), "20")
+				suite.Require().Equal(accum.String(), "10")
 			},
 			true,
 		},
@@ -102,7 +133,9 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			tc.malleate()
+			tc.pre_update()
+			tc.update()
+			tc.post_update()
 
 		})
 	}

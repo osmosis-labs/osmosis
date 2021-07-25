@@ -59,7 +59,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return err
 			}
 			if timeStr == "" { // empty start time
-				// do nothing
+				startTime = time.Unix(0, 0)
 			} else if timeUnix, err := strconv.ParseInt(timeStr, 10, 64); err == nil { // unix time
 				startTime = time.Unix(timeUnix, 0)
 			} else if timeRFC, err := time.Parse(time.RFC3339, timeStr); err == nil { // RFC time
@@ -126,7 +126,7 @@ func NewAddToGaugeCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			gaugeId, err := strconv.ParseUint(args[1], 10, 64)
+			gaugeId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
