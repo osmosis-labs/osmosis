@@ -56,6 +56,25 @@ func (t Tree) Remove(key []byte) {
 }
 
 // ptr is pointer to a specific node inside the tree
+
+func (t Tree) Increase(key []byte, amt sdk.Int) {
+	value := t.Get(key)
+	t.Set(key, value.Add(amt))
+}
+
+func (t Tree) Decrease(key []byte, amt sdk.Int) {
+	t.Increase(key, amt.Neg())
+}
+
+func (t Tree) Clear() {
+	iter := t.store.Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		t.store.Delete(iter.Key())
+	}
+}
+
+// ptr is pointer to a specific node inside the tree
 type ptr struct {
 	tree  Tree
 	level uint16
