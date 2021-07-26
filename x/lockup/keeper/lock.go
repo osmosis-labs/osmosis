@@ -261,7 +261,7 @@ func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []ty
 // GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
 // query.Duration
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
-	beginKey := accumulationKey(query.Duration, 0)
+	beginKey := accumulationKey(query.Duration)
 	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
 }
 
@@ -368,6 +368,13 @@ func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
 	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
 
+func (k Keeper) ClearAllAccumulationStores(ctx sdk.Context) {
+  denoms := k.getAccumulationDenoms(ctx)
+  for _, denom := range denoms {
+    k.accumulationStore(ctx, denom).Clear()
+  }
+}
+
 // ResetLock reset lock to lock's previous state on InitGenesis
 func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 	err := k.setLock(ctx, lock)
@@ -382,7 +389,7 @@ func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// add to accumulation store when unlocking is not started
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	}
 
 	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
@@ -425,7 +432,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// add to accumulation store
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	}
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
@@ -457,7 +464,7 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// remove from accumulation store
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
 	}
 
 	return nil
