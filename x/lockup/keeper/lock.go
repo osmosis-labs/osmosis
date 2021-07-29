@@ -309,8 +309,8 @@ func (k Keeper) ClearAllLockRefKeys(ctx sdk.Context) {
 	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixUnlocking)
 }
 
-// ResetLock reset lock to lock's previous state on InitGenesis
-func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
+// ResetLockForUpgrade upgrades lock storage
+func (k Keeper) ResetLockForUpgrade(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(&lock)
 	if err != nil {
@@ -323,12 +323,22 @@ func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 		return k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
 	}
 
+	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+}
+
+// ResetLock reset lock to lock's previous state on InitGenesis
+func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
+	err := k.ResetLockForUpgrade(ctx, lock)
+	if err != nil {
+		return err
+	}
+
 	// add to accumulation store when unlocking is not started
 	for _, coin := range lock.Coins {
 		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
 	}
 
-	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	return nil
 }
 
 // Lock is a utility to lock coins into module account

@@ -311,7 +311,7 @@ func NewOsmosisApp(
 
 			// reset all lock and references
 			for _, lock := range locks {
-				app.LockupKeeper.ResetLock(ctx, lock)
+				app.LockupKeeper.ResetLockForUpgrade(ctx, lock)
 			}
 
 			// Upgrade every validators min-commission rate
