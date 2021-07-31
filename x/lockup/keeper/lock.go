@@ -368,13 +368,6 @@ func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
 	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
 
-func (k Keeper) ClearAllAccumulationStores(ctx sdk.Context) {
-  denoms := k.getAccumulationDenoms(ctx)
-  for _, denom := range denoms {
-    k.accumulationStore(ctx, denom).Clear()
-  }
-}
-
 // ResetLock reset lock to lock's previous state on InitGenesis
 func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 	err := k.setLock(ctx, lock)
