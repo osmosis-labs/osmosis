@@ -3,13 +3,11 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
-  "strings"
 	"time"
 
   "github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
-  stypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // GetLastLockID returns ID used last time
@@ -83,22 +81,11 @@ func accumulationKey(duration time.Duration) (res []byte) {
 	return
 }
 
-func (k Keeper) getAccumulationDenoms(ctx sdk.Context) (res []string) {
-  store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLockAccumulation)
-
-  denomEndBytes := []byte(nil)
-
-  for {
-    iter := store.Iterator(denomEndBytes, nil)
-    defer iter.Close()
-
-    if !iter.Valid() {
-      return
-    }
-
-    denom := strings.Split(string(iter.Key()), "/")[0]
-    res = append(res, denom)
-    denomEndBytes = stypes.PrefixEndBytes([]byte(denom))
-  }
+func (k Keeper) ClearAllAccumulationStores(ctx sdk.Context) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLockAccumulation)
+	iter := store.Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
 }
-
