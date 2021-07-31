@@ -20,7 +20,7 @@ wget -q -O - https://git.io/vQhTU | bash
 ```bash
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
-git checkout v1.0.3
+git checkout v1.0.2
 make install
 ```
 
