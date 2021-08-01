@@ -1,0 +1,11 @@
+syntax = "proto3";
+package osmosislabs.osmosis.txfees;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/txfees/types";
+
+message FeeToken {
+  string denom = 1;
+  uint64 poolID = 2;
+}
