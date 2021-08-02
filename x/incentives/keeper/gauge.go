@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -86,16 +87,20 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 	curTime := ctx.BlockTime()
 	timeKey := getTimeKey(gauge.StartTime)
+	prefixKey := types.KeyPrefixFinishedGauges
 	if gauge.IsUpcomingGauge(curTime) {
-		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id); err != nil {
-			return err
-		}
+		prefixKey = types.KeyPrefixUpcomingGauges
 	} else if gauge.IsActiveGauge(curTime) {
-		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
-			return err
-		}
-	} else {
-		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixFinishedGauges, timeKey), gauge.Id); err != nil {
+		prefixKey = types.KeyPrefixActiveGauges
+	}
+
+	if err := k.addGaugeRefByKey(ctx, combineKeys(prefixKey, timeKey), gauge.Id); err != nil {
+		return err
+	}
+
+	// set gauge ID for denom if not finished
+	if !bytes.Equal(prefixKey, types.KeyPrefixFinishedGauges) {
+		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 			return err
 		}
 	}

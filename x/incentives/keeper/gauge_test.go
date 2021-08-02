@@ -482,3 +482,31 @@ func (suite *KeeperTestSuite) TestPerpetualActiveGaugesByDenom() {
 	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
 	suite.Require().Len(gaugeIds, 1)
 }
+
+func (suite *KeeperTestSuite) TestSetGaugeWithRefKey() {
+	// test for module get gauges
+	suite.SetupTest()
+
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
+	startTime := time.Now()
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         "lptoken",
+		Duration:      time.Second,
+	}
+	gauge := types.Gauge{
+		Id:                1,
+		IsPerpetual:       false,
+		DistributeTo:      distrTo,
+		Coins:             coins,
+		NumEpochsPaidOver: 2,
+		FilledEpochs:      0,
+		DistributedCoins:  sdk.Coins(nil),
+		StartTime:         startTime.UTC(),
+	}
+
+	suite.app.IncentivesKeeper.SetGaugeWithRefKey(suite.ctx, &gauge)
+
+	gauges := suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
+	suite.Require().Len(gauges, 1)
+}
