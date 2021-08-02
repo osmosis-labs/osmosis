@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosislabs.osmosis.txfees;
+package osmosis.txfees.v1beta1;
 
 import "gogoproto/gogo.proto";
 

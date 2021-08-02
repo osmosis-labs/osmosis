@@ -1,10 +1,10 @@
 syntax = "proto3";
-package osmosis.poolincentives.v1beta1;
+package osmosis.txfees.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/pool-incentives/v1beta1/incentives.proto";
+import "osmosis/txfees/v1beta1/feetoken.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/pool-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/x/txfees/types";
 
 // UpdateFeeTokenProposal is a gov Content type for adding a new whitelisted fee
 // token It must specify a denom along with gamm pool ID to use as a spot price

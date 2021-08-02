@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosislabs.osmosis.txfees;
+package osmosis.txfees.v1beta1;
 
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
