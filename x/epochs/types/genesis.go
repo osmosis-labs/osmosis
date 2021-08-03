@@ -41,13 +41,18 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	// TODO: Epochs identifiers should be unique
+	epochIdentifiers := map[string]bool{}
 	for _, epoch := range gs.Epochs {
 		if epoch.Identifier == "" {
 			return errors.New("epoch identifier should NOT be empty")
 		}
+		if epochIdentifiers[epoch.Identifier] {
+			return errors.New("epoch identifier should be unique")
+		}
 		if epoch.Duration == 0 {
 			return errors.New("epoch duration should NOT be 0")
 		}
+		epochIdentifiers[epoch.Identifier] = true
 	}
 	return nil
 }
