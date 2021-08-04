@@ -206,6 +206,48 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			}}, defaultFutureGovernor)
 			suite.Require().Error(err, "can't create the pool with duplicated PoolAssets")
 		},
+	}, {
+		fn: func() {
+			keeper := suite.app.GAMMKeeper
+			keeper.SetParams(suite.ctx, types.Params{
+				PoolCreationFee: sdk.Coins{},
+			})
+			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, []types.PoolAsset{{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+			}, {
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+			}}, defaultFutureGovernor)
+			suite.Require().NoError(err)
+			pools, err := keeper.GetPools(suite.ctx)
+			suite.Require().Len(pools, 1)
+			suite.Require().NoError(err)
+		},
+	}, {
+		fn: func() {
+			keeper := suite.app.GAMMKeeper
+			keeper.SetParams(suite.ctx, types.Params{
+				PoolCreationFee: nil,
+			})
+			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, []types.PoolAsset{{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+			}, {
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+			}}, defaultFutureGovernor)
+			suite.Require().NoError(err)
+			pools, err := keeper.GetPools(suite.ctx)
+			suite.Require().Len(pools, 1)
+			suite.Require().NoError(err)
+		},
 	}}
 
 	for _, test := range tests {

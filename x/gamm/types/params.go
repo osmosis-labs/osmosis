@@ -58,13 +58,5 @@ func validatePoolCreationFee(i interface{}) error {
 		return fmt.Errorf("invalid pool creation fee: %+v", i)
 	}
 
-	if v.IsZero() {
-		return fmt.Errorf("zero pool creation fee is not allowed: %+v", i)
-	}
-
-	if v.Empty() {
-		return fmt.Errorf("empty pool creation fee is not allowed: %+v", i)
-	}
-
 	return nil
 }
