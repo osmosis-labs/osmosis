@@ -18,11 +18,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			epoch.StartTime = ctx.BlockTime()
 		}
 
-		// when epoch counting started and current_epoch_start_time is not set, set it
-		if epoch.EpochCountingStarted && epoch.CurrentEpochStartTime.Equal(time.Time{}) {
-			epoch.CurrentEpochStartTime = ctx.BlockTime()
-		}
-
 		k.SetEpochInfo(ctx, epoch)
 	}
 }
