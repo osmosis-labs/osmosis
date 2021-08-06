@@ -13,6 +13,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/spf13/cobra"
@@ -27,11 +28,23 @@ type DeriveSnapshot struct {
 
 // DerivedAccount provide fields of snapshot per account
 type DerivedAccount struct {
-	Address  string    `json:"address"`
-	Balances sdk.Coins `json:"balance"`
-	Staked   sdk.Int   `json:"staked"`
-	Unstaked sdk.Int   `json:"unstaked"`
-	Bonded   sdk.Coins `json:"bonded"`
+	Address   string    `json:"address"`
+	Balances  sdk.Coins `json:"balance"`
+	Staked    sdk.Int   `json:"staked"`
+	Unstaked  sdk.Int   `json:"unstaked"`
+	Bonded    sdk.Coins `json:"bonded"`
+	Unclaimed sdk.Coins `json:"unclaimed"`
+}
+
+func newDerivedAccount(address string) DerivedAccount {
+	return DerivedAccount{
+		Address:   address,
+		Balances:  sdk.Coins{},
+		Staked:    sdk.ZeroInt(),
+		Unstaked:  sdk.ZeroInt(),
+		Bonded:    sdk.Coins{},
+		Unclaimed: sdk.Coins{},
+	}
 }
 
 func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sdk.Coins {
@@ -47,6 +60,8 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 					convertAgain = true
 				}
 			}
+		} else {
+			balances = balances.Add(coin)
 		}
 	}
 
@@ -108,16 +123,6 @@ Example:
 
 			// Produce the map of address to total atom balance, both staked and unstaked
 			snapshotAccs := make(map[string]DerivedAccount)
-			for _, account := range accounts {
-
-				snapshotAccs[account.GetAddress().String()] = DerivedAccount{
-					Address:  account.GetAddress().String(),
-					Balances: sdk.Coins{},
-					Staked:   sdk.ZeroInt(),
-					Unstaked: sdk.ZeroInt(),
-					Bonded:   sdk.Coins{},
-				}
-			}
 
 			bankGenesis := banktypes.GenesisState{}
 			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["bank"], &bankGenesis)
@@ -125,8 +130,7 @@ Example:
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
 				if !ok {
-					fmt.Println("no account found for bank balance", address)
-					continue
+					acc = newDerivedAccount(address)
 				}
 
 				acc.Balances = balance.Coins
@@ -139,8 +143,7 @@ Example:
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
 				if !ok {
-					fmt.Sprintln("no account found for unbonding", address)
-					continue
+					acc = newDerivedAccount(address)
 				}
 
 				unbondingOsmos := sdk.NewInt(0)
@@ -164,8 +167,7 @@ Example:
 
 				acc, ok := snapshotAccs[address]
 				if !ok {
-					fmt.Sprintln("no account found for delegation", address)
-					continue
+					acc = newDerivedAccount(address)
 				}
 
 				val := validators[delegation.ValidatorAddress]
@@ -183,10 +185,38 @@ Example:
 
 				acc, ok := snapshotAccs[address]
 				if !ok {
-					panic("no account found for lock")
+					acc = newDerivedAccount(address)
 				}
 
 				acc.Bonded = acc.Bonded.Add(lock.Coins...)
+				snapshotAccs[address] = acc
+			}
+
+			claimGenesis := claimtypes.GenesisState{}
+			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["claim"], &claimGenesis)
+			for _, record := range claimGenesis.ClaimRecords {
+				address := record.Address
+
+				acc, ok := snapshotAccs[address]
+				if !ok {
+					acc = newDerivedAccount(address)
+				}
+
+				claimablePerAction := sdk.Coins{}
+				for _, coin := range record.InitialClaimableAmount {
+					claimablePerAction = claimablePerAction.Add(
+						sdk.NewCoin(coin.Denom,
+							coin.Amount.QuoRaw(int64(len(claimtypes.Action_name))),
+						),
+					)
+				}
+
+				for action := range claimtypes.Action_name {
+					if record.ActionCompleted[action] == false {
+						acc.Unclaimed = acc.Unclaimed.Add(claimablePerAction...)
+					}
+				}
+
 				snapshotAccs[address] = acc
 			}
 
