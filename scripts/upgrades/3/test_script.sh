@@ -6,7 +6,7 @@ sed -i -e "s/stake/uosmo/g" $HOME/.osmosisd/config/genesis.json
 osmosisd gentx validator 500000000uosmo --commission-rate="0.0" --keyring-backend=test --home=$HOME/.osmosisd --chain-id=testing
 osmosisd collect-gentxs --home=$HOME/.osmosisd
 
-cat $HOME/.osmosisd/config/genesis.json | jq '.initial_height="657800"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
+cat $HOME/.osmosisd/config/genesis.json | jq '.initial_height="711800"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
 cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"]["denom"]="valtoken"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
 cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"]["amount"]="100"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
 cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="120s"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
@@ -18,7 +18,7 @@ osmosisd start
 
 osmosisd tx gov submit-proposal --title="existing passing prop" --description="passing prop"  --from=validator --deposit=1000valtoken --chain-id=testing --keyring-backend=test --broadcast-mode=block  --type="Text"
 osmosisd tx gov vote 1 yes --from=validator --keyring-backend=test --chain-id=testing --yes
-osmosisd tx gov submit-proposal --title="prop with enough osmo deposit" --description="prop w/ enough deposit"  --from=validator --deposit=501000000uosmo --chain-id=testing --keyring-backend=test --broadcast-mode=block  --type="Text"
+osmosisd tx gov submit-proposal --title="prop with enough osmo deposit" --description="prop w/ enough deposit"  --from=validator --deposit=500000000uosmo --chain-id=testing --keyring-backend=test --broadcast-mode=block  --type="Text"
 osmosisd q gov proposals
 osmosisd q staking validators
 # Upgrade happened
