@@ -34,6 +34,28 @@ type DerivedAccount struct {
 	Bonded   sdk.Coins `json:"bonded"`
 }
 
+func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sdk.Coins {
+	balances := sdk.Coins{}
+	convertAgain := false
+	for _, coin := range originCoins {
+		if pools[coin.Denom] != nil {
+			pool := pools[coin.Denom]
+			assets := pool.GetAllPoolAssets()
+			for _, asset := range assets {
+				balances = balances.Add(sdk.NewCoin(asset.Token.Denom, asset.Token.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares().Amount)))
+				if pools[asset.Token.Denom] != nil { // this happens when there's a pool for LP token swap
+					convertAgain = true
+				}
+			}
+		}
+	}
+
+	if convertAgain {
+		return underlyingCoins(balances, pools)
+	}
+	return balances
+}
+
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -92,6 +114,7 @@ Example:
 					Address:  account.GetAddress().String(),
 					Balances: sdk.Coins{},
 					Staked:   sdk.ZeroInt(),
+					Unstaked: sdk.ZeroInt(),
 					Bonded:   sdk.Coins{},
 				}
 			}
@@ -102,7 +125,8 @@ Example:
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
 				if !ok {
-					panic("no account found for bank balance")
+					fmt.Println("no account found for bank balance", address)
+					continue
 				}
 
 				acc.Balances = balance.Coins
@@ -115,7 +139,8 @@ Example:
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
 				if !ok {
-					panic("no account found for unbonding")
+					fmt.Sprintln("no account found for unbonding", address)
+					continue
 				}
 
 				unbondingOsmos := sdk.NewInt(0)
@@ -139,7 +164,8 @@ Example:
 
 				acc, ok := snapshotAccs[address]
 				if !ok {
-					panic("no account found for delegation")
+					fmt.Sprintln("no account found for delegation", address)
+					continue
 				}
 
 				val := validators[delegation.ValidatorAddress]
@@ -164,13 +190,31 @@ Example:
 				snapshotAccs[address] = acc
 			}
 
+			gammGenesis := gammtypes.GenesisState{}
+			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+
+			// collect gamm pools
+			pools := make(map[string]gammtypes.PoolI)
+			for _, any := range gammGenesis.Pools {
+				var pool gammtypes.PoolI
+				err := clientCtx.InterfaceRegistry.UnpackAny(any, &pool)
+				if err != nil {
+					panic(err)
+				}
+				pools[pool.GetTotalShares().Denom] = pool
+			}
+
+			// convert balances to underlying coins
+			for addr, account := range snapshotAccs {
+				account.Balances = underlyingCoins(account.Balances, pools)
+				account.Bonded = underlyingCoins(account.Bonded, pools)
+				snapshotAccs[addr] = account
+			}
+
 			snapshot := DeriveSnapshot{
 				NumberAccounts: uint64(len(snapshotAccs)),
 				Accounts:       snapshotAccs,
 			}
-
-			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
 
 			fmt.Printf("# accounts: %d\n", len(snapshotAccs))
 
