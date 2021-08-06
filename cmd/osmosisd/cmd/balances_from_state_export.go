@@ -10,10 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	stakingtypes "github.com/osmosis-labs/osmosis/x/staking/types"
 	"github.com/spf13/cobra"
 )
 
@@ -31,13 +32,13 @@ type AppState struct {
 	Staking stakingtypes.GenesisState `json:"staking"`
 }
 
-type Snapshot struct {
-	NumberAccounts          uint64  `json:"num_accounts"`
-	Accounts map[string]SnapshotAccount `json:"accounts"`
+type DeriveSnapshot struct {
+	NumberAccounts uint64                    `json:"num_accounts"`
+	Accounts       map[string]DerivedAccount `json:"accounts"`
 }
 
-// SnapshotAccount provide fields of snapshot per account
-type SnapshotAccount struct {
+// DerivedAccount provide fields of snapshot per account
+type DerivedAccount struct {
 	Address  string    `json:"address"`
 	Balances sdk.Coins `json:"balance"`
 	Staked   sdk.Int   `json:"staked"`
@@ -57,7 +58,6 @@ Example:
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			aminoCodec := clientCtx.LegacyAmino.Amino
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -82,22 +82,26 @@ Example:
 				return err
 			}
 
-			// Produce the map of address to total atom balance, both staked and unstaked
-			snapshotAccs := make(map[string]SnapshotAccount)
-			for _, account := range genState.AppState.Auth.Accounts {
-				genState.AppState.Bank.
-				balance := gen.Coins.AmountOf(denom)
+			accounts, err := authtypes.UnpackAccounts(genState.AppState.Auth.Accounts)
+			if err != nil {
+				panic(err)
+			}
+			accounts = authtypes.SanitizeGenesisAccounts(accounts)
 
-				snapshotAccs[account.Address.String()] = SnapshotAccount{
-					Address: account.Address.String(),
+			// Produce the map of address to total atom balance, both staked and unstaked
+			snapshotAccs := make(map[string]DerivedAccount)
+			for _, account := range accounts {
+
+				snapshotAccs[account.GetAddress().String()] = DerivedAccount{
+					Address:  account.GetAddress().String(),
 					Balances: sdk.Coins{},
-					Staked: sdk.ZeroInt(),
-					Bonded: sdk.Coins{},
+					Staked:   sdk.ZeroInt(),
+					Bonded:   sdk.Coins{},
 				}
 			}
 
 			for _, balance := range genState.AppState.Bank.Balances {
-				address := balance.Address.String()
+				address := balance.Address
 				acc, ok := snapshotAccs[address]
 				if !ok {
 					panic("no account found for bank balance")
@@ -108,7 +112,7 @@ Example:
 			}
 
 			for _, unbonding := range genState.AppState.Staking.UnbondingDelegations {
-				address := unbonding.DelegatorAddress.String()
+				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
 				if !ok {
 					panic("no account found for unbonding")
@@ -119,7 +123,6 @@ Example:
 					unbondingOsmos = unbondingOsmos.Add(entry.Balance)
 				}
 
-				acc.Balances = acc.Balances.Add(unbondingOsmos)
 				acc.Unstaked = acc.Unstaked.Add(unbondingOsmos)
 
 				snapshotAccs[address] = acc
@@ -128,26 +131,24 @@ Example:
 			// Make a map from validator operator address to the v036 validator type
 			validators := make(map[string]stakingtypes.Validator)
 			for _, validator := range genState.AppState.Staking.Validators {
-				validators[validator.OperatorAddress.String()] = validator
+				validators[validator.OperatorAddress] = validator
 			}
 
 			for _, delegation := range genState.AppState.Staking.Delegations {
-				address := delegation.DelegatorAddress.String()
+				address := delegation.DelegatorAddress
 
 				acc, ok := snapshotAccs[address]
 				if !ok {
 					panic("no account found for delegation")
 				}
 
-				val := validators[delegation.ValidatorAddress.String()]
+				val := validators[delegation.ValidatorAddress]
 				stakedOsmos := delegation.Shares.MulInt(val.Tokens).Quo(val.DelegatorShares).RoundInt()
 
-				acc.Balances = acc.Balances.Add(stakedOsmos)
 				acc.Staked = acc.Staked.Add(stakedOsmos)
 
 				snapshotAccs[address] = acc
 			}
-
 
 			for _, lock := range genState.AppState.Lockup.Locks {
 				address := lock.Owner
@@ -157,13 +158,13 @@ Example:
 					panic("no account found for lock")
 				}
 
-				acc.Bonded = acc.Bonded.Add(lock.Coins)
+				acc.Bonded = acc.Bonded.Add(lock.Coins...)
 				snapshotAccs[address] = acc
 			}
 
-			snapshot := Snapshot{
-				NumberAccounts:          uint64(len(snapshotAccs)),
-				Accounts:                snapshotAccs,
+			snapshot := DeriveSnapshot{
+				NumberAccounts: uint64(len(snapshotAccs)),
+				Accounts:       snapshotAccs,
 			}
 
 			fmt.Printf("# accounts: %d\n", len(snapshotAccs))
