@@ -26,7 +26,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		fn                       func()
 	}{
 		{
-			expCurrentEpochStartTime: now,
+			expCurrentEpochStartTime: time.Time{},
 			expCurrentEpoch:          0,
 			expCurrentEpochEnded:     true,
 			fn: func() {
@@ -34,7 +34,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartTime: now.Add(time.Second),
+			expCurrentEpochStartTime: now,
 			expCurrentEpoch:          1,
 			expCurrentEpochEnded:     false,
 			fn: func() {
@@ -44,7 +44,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartTime: now.Add(time.Second),
+			expCurrentEpochStartTime: now,
 			expCurrentEpoch:          1,
 			expCurrentEpochEnded:     false,
 			fn: func() {
@@ -55,7 +55,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartTime: now.Add(time.Second),
+			expCurrentEpochStartTime: now,
 			expCurrentEpoch:          1,
 			expCurrentEpochEnded:     false,
 			fn: func() {
@@ -68,7 +68,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartTime: now.Add(time.Second),
+			expCurrentEpochStartTime: now,
 			expCurrentEpoch:          1,
 			expCurrentEpochEnded:     true,
 			fn: func() {
@@ -135,7 +135,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 				{
 					Identifier:            "monthly",
 					StartTime:             time.Time{},
-					Duration:              time.Hour * 24,
+					Duration:              time.Hour * 24 * 31,
 					CurrentEpoch:          0,
 					CurrentEpochStartTime: time.Time{},
 					EpochCountingStarted:  true,
@@ -148,7 +148,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 
 		require.Equal(t, epochInfo.Identifier, "monthly")
 		require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
-		require.Equal(t, epochInfo.Duration, time.Hour*24)
+		require.Equal(t, epochInfo.Duration, time.Hour*24*31)
 		require.Equal(t, epochInfo.CurrentEpoch, test.expCurrentEpoch)
 		require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), test.expCurrentEpochStartTime.UTC().String())
 		require.Equal(t, epochInfo.EpochCountingStarted, true)
