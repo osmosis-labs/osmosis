@@ -6,7 +6,7 @@ import (
 
 func forks(ctx sdk.Context, app *OsmosisApp) {
 	switch ctx.BlockHeight() {
-	case 658000:
+	case 712000:
 		fix_min_deposit_denom(ctx, app)
 		fix_min_commision_rate(ctx, app)
 	default:
