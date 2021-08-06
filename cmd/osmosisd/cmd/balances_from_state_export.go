@@ -16,21 +16,9 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/spf13/cobra"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
-
-// GenesisState is minimum structure to parse account status
-type GenesisState struct {
-	AppState AppState `json:"app_state"`
-}
-
-// AppState is app state structure for app state
-type AppState struct {
-	Auth    authtypes.GenesisState    `json:"auth"`
-	Bank    banktypes.GenesisState    `json:"bank"`
-	GAMM    gammtypes.GenesisState    `json:"gamm"`
-	Lockup  lockuptypes.GenesisState  `json:"lockup"`
-	Staking stakingtypes.GenesisState `json:"staking"`
-}
 
 type DeriveSnapshot struct {
 	NumberAccounts uint64                    `json:"num_accounts"`
@@ -76,13 +64,21 @@ Example:
 
 			byteValue, _ := ioutil.ReadAll(genesisJson)
 
-			var genState GenesisState
-			err = json.Unmarshal(byteValue, &genState)
+			var doc tmtypes.GenesisDoc
+			err = tmjson.Unmarshal(byteValue, &doc)
 			if err != nil {
 				return err
 			}
 
-			accounts, err := authtypes.UnpackAccounts(genState.AppState.Auth.Accounts)
+			genState := make(map[string]json.RawMessage)
+			err = json.Unmarshal(doc.AppState, &genState)
+			if err != nil {
+				panic(err)
+			}
+
+			authGenesis := authtypes.GenesisState{}
+			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["auth"], &authGenesis)
+			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
 			if err != nil {
 				panic(err)
 			}
@@ -100,7 +96,9 @@ Example:
 				}
 			}
 
-			for _, balance := range genState.AppState.Bank.Balances {
+			bankGenesis := banktypes.GenesisState{}
+			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
 				if !ok {
@@ -111,7 +109,9 @@ Example:
 				snapshotAccs[address] = acc
 			}
 
-			for _, unbonding := range genState.AppState.Staking.UnbondingDelegations {
+			stakingGenesis := stakingtypes.GenesisState{}
+			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
 				if !ok {
@@ -130,11 +130,11 @@ Example:
 
 			// Make a map from validator operator address to the v036 validator type
 			validators := make(map[string]stakingtypes.Validator)
-			for _, validator := range genState.AppState.Staking.Validators {
+			for _, validator := range stakingGenesis.Validators {
 				validators[validator.OperatorAddress] = validator
 			}
 
-			for _, delegation := range genState.AppState.Staking.Delegations {
+			for _, delegation := range stakingGenesis.Delegations {
 				address := delegation.DelegatorAddress
 
 				acc, ok := snapshotAccs[address]
@@ -150,7 +150,9 @@ Example:
 				snapshotAccs[address] = acc
 			}
 
-			for _, lock := range genState.AppState.Lockup.Locks {
+			lockupGenesis := lockuptypes.GenesisState{}
+			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
 				acc, ok := snapshotAccs[address]
@@ -166,6 +168,9 @@ Example:
 				NumberAccounts: uint64(len(snapshotAccs)),
 				Accounts:       snapshotAccs,
 			}
+
+			gammGenesis := gammtypes.GenesisState{}
+			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
 
 			fmt.Printf("# accounts: %d\n", len(snapshotAccs))
 
