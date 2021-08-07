@@ -3,7 +3,11 @@ module github.com/osmosis-labs/osmosis
 go 1.15
 
 require (
+<<<<<<< HEAD
 	github.com/cosmos/cosmos-sdk v0.42.6
+=======
+	github.com/cosmos/cosmos-sdk v0.42.9
+>>>>>>> 13916d1... Add required beginblocker for SDK v0.42.9
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.16.0
 	github.com/gogo/protobuf v1.3.3
