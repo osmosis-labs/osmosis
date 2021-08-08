@@ -6,6 +6,8 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/txfees/types";
 
 message FeeToken {
-  string denom = 1;
-  uint64 poolID = 2;
+  option (gogoproto.equal) = true;
+
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  uint64 poolID = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }

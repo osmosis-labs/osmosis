@@ -108,14 +108,31 @@ func (k Keeper) setFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 	return nil
 }
 
-// func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {
-// 	store := ctx.KVStore(k.storeKey)
-// 	bz := k.cdc.MustMarshalBinaryBare(&feetokens)
-// 	store.Set(types.FeeTokensKey, bz)
-// }
+func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
 
-// func (k Keeper) SetFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) {
-// 	store := ctx.KVStore(k.storeKey)
-// 	bz := k.cdc.MustMarshalBinaryBare(&feetokens)
-// 	store.Set(types.FeeTokensKey, bz)
-// }
+	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	feeTokens := []types.FeeToken{}
+
+	for ; iterator.Valid(); iterator.Next() {
+
+		feeToken := types.FeeToken{}
+
+		err := proto.Unmarshal(iterator.Value(), &feeToken)
+		if err != nil {
+			panic(err)
+		}
+
+		feeTokens = append(feeTokens, feeToken)
+	}
+	return feeTokens
+}
+
+func (k Keeper) setFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) {
+	for _, feeToken := range feetokens {
+		k.setFeeToken(ctx, feeToken)
+	}
+}

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-    MethodGet = "GET"
+	MethodGet = "GET"
 )
 
 // RegisterRoutes registers txfees-related REST handlers to a router
@@ -23,4 +23,3 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 	// this line is used by starport scaffolding # 4
 }
-
