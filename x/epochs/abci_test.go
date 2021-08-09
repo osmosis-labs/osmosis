@@ -23,20 +23,23 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		expCurrentEpochStartTime time.Time
 		expCurrentEpoch          int64
 		expCurrentEpochEnded     bool
+		expEpochStartTime        time.Time
 		fn                       func()
 	}{
 		{
 			expCurrentEpochStartTime: time.Time{},
 			expCurrentEpoch:          0,
 			expCurrentEpochEnded:     true,
+			expEpochStartTime:        now,
 			fn: func() {
 				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 			},
 		},
 		{
-			expCurrentEpochStartTime: now,
+			expCurrentEpochStartTime: now.Add(time.Second),
 			expCurrentEpoch:          1,
 			expCurrentEpochEnded:     false,
+			expEpochStartTime:        now.Add(time.Second),
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -44,9 +47,10 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartTime: now,
+			expCurrentEpochStartTime: now.Add(time.Second),
 			expCurrentEpoch:          1,
 			expCurrentEpochEnded:     false,
+			expEpochStartTime:        now.Add(time.Second),
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -55,9 +59,10 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartTime: now,
+			expCurrentEpochStartTime: now.Add(time.Second),
 			expCurrentEpoch:          1,
 			expCurrentEpochEnded:     false,
+			expEpochStartTime:        now.Add(time.Second),
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -68,47 +73,50 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartTime: now,
+			expCurrentEpochStartTime: now.Add(time.Second),
 			expCurrentEpoch:          1,
 			expCurrentEpochEnded:     true,
+			expEpochStartTime:        now.Add(time.Second),
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
 				epochs.EndBlocker(ctx, app.EpochsKeeper)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 31))
+				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
 				epochs.EndBlocker(ctx, app.EpochsKeeper)
 				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 			},
 		},
 		{
-			expCurrentEpochStartTime: now.Add(time.Hour * 24 * 31),
+			expCurrentEpochStartTime: now.Add(time.Hour * 24 * 31).Add(time.Second),
 			expCurrentEpoch:          2,
 			expCurrentEpochEnded:     false,
+			expEpochStartTime:        now.Add(time.Second),
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
 				epochs.EndBlocker(ctx, app.EpochsKeeper)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 31))
+				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
 				epochs.EndBlocker(ctx, app.EpochsKeeper)
-				ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 32))
+				ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 33))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
 				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 			},
 		},
 		{
-			expCurrentEpochStartTime: now.Add(time.Hour * 24 * 31),
+			expCurrentEpochStartTime: now.Add(time.Hour * 24 * 31).Add(time.Second),
 			expCurrentEpoch:          2,
 			expCurrentEpochEnded:     false,
+			expEpochStartTime:        now.Add(time.Second),
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
 				epochs.EndBlocker(ctx, app.EpochsKeeper)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 31))
+				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
 				epochs.EndBlocker(ctx, app.EpochsKeeper)
-				ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 32))
+				ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 33))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
 				epochs.EndBlocker(ctx, app.EpochsKeeper)
 				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
@@ -147,7 +155,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		test.fn()
 
 		require.Equal(t, epochInfo.Identifier, "monthly")
-		require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
+		require.Equal(t, epochInfo.StartTime.UTC().String(), test.expEpochStartTime.UTC().String())
 		require.Equal(t, epochInfo.Duration, time.Hour*24*31)
 		require.Equal(t, epochInfo.CurrentEpoch, test.expCurrentEpoch)
 		require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), test.expCurrentEpochStartTime.UTC().String())
