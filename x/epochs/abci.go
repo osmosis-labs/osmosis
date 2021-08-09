@@ -13,7 +13,6 @@ import (
 // BeginBlocker of epochs module
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-
 	// Note: epoch length must be more than 2 blocks, as the implementation requires epoch_endblock and epoch_startblock are separate
 	// epoch_startblock(n+1) = epoch_endblock(n) + 1
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
@@ -32,7 +31,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		if epochStart {
 			epochInfo.CurrentEpochEnded = false
 			if epochInfo.CurrentEpochStartTime.Equal(time.Time{}) { //genesis state, initialize
-				epochInfo.CurrentEpochStartTime = epochInfo.StartTime
+				epochInfo.StartTime = ctx.BlockTime()
+				epochInfo.CurrentEpochStartTime = ctx.BlockTime()
 			} else {
 				epochInfo.CurrentEpochStartTime = epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
 			}
