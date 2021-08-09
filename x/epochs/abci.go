@@ -17,6 +17,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// epoch_startblock(n+1) = epoch_endblock(n) + 1
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
 		epochStart := false
+		logger := k.Logger(ctx)
+
 		if !epochInfo.EpochCountingStarted { // epoch counting not started
 			// Should start this epoch timer? (Is StartTime <= ctx.BlockTime)
 			if !epochInfo.StartTime.After(ctx.BlockTime()) {
@@ -33,6 +35,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 			if epochInfo.CurrentEpochStartTime.Equal(time.Time{}) { // uninitialized genesis state, initialize
 				epochInfo.StartTime = ctx.BlockTime()
 				epochInfo.CurrentEpochStartTime = ctx.BlockTime()
+				logger.Info(fmt.Sprintf("Starting new epoch with identifier %s", epochInfo.Identifier))
 			} else {
 				epochInfo.CurrentEpochStartTime = epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
 			}
