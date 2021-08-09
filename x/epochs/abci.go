@@ -30,7 +30,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		}
 		if epochStart {
 			epochInfo.CurrentEpochEnded = false
-			if epochInfo.CurrentEpochStartTime.Equal(time.Time{}) { //genesis state, initialize
+			if epochInfo.CurrentEpochStartTime.Equal(time.Time{}) { // uninitialized genesis state, initialize
 				epochInfo.StartTime = ctx.BlockTime()
 				epochInfo.CurrentEpochStartTime = ctx.BlockTime()
 			} else {
