@@ -14,7 +14,7 @@ At an initial creation of the pool, a fixed amount of 100 share token is minted 
 
 ### Joining Pool
 
-When joining a pool, users provide maximum amount of tokens willing to deposit, while the FE takes care of the calculation of how many share tokens the user is eligible at the specific moment of sending the transaction. Calculation of exactly how many tokens are needed to get the designated share is done at the moment of procssing the transaction, validating that it does not exceed the maximum amount of token the user is willing to deposit. After the validation, the share of the pool is minted and sent to the user account. Joining the pool using a single asset is also possible.
+When joining a pool, users provide maximum amount of tokens willing to deposit, while the front end takes care of the calculation of how many share tokens the user is eligible at the specific moment of sending the transaction. Calculation of exactly how many tokens are needed to get the designated share is done at the moment of procssing the transaction, validating that it does not exceed the maximum amount of token the user is willing to deposit. After the validation, the share of the pool is minted and sent to the user account. Joining the pool using a single asset is also possible.
 
 ### Exiting Pool
 
