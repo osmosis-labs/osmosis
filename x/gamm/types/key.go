@@ -23,6 +23,8 @@ var (
 	KeyPrefixPools = []byte{0x02}
 	// KeyTotalLiquidity defines key to store total liquidity
 	KeyTotalLiquidity = []byte{0x03}
+	// KeyPrefixPoolTwaps defines prefix to store pool twaps
+	KeyPrefixPoolTwaps = []byte{0x04}
 )
 
 func GetPoolShareDenom(poolId uint64) string {
@@ -31,4 +33,8 @@ func GetPoolShareDenom(poolId uint64) string {
 
 func GetKeyPrefixPools(poolId uint64) []byte {
 	return append(KeyPrefixPools, sdk.Uint64ToBigEndian(poolId)...)
+}
+
+func GetKeyPrefixPoolTwaps(poolId uint64) []byte {
+	return append(KeyPrefixPoolTwaps, sdk.Uint64ToBigEndian(poolId)...)
 }

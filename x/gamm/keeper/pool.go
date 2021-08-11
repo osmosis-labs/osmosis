@@ -164,3 +164,29 @@ func (k Keeper) getPoolAndInOutAssets(
 	outAsset, err = pool.GetPoolAsset(tokenOutDenom)
 	return
 }
+
+func (k Keeper) GetPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwap, error) {
+
+	store := ctx.KVStore(k.storeKey)
+	poolTwapKey := types.GetKeyPrefixPoolTwaps(poolId)
+	if !store.Has(poolTwapKey) {
+		return types.PoolTwap{}, fmt.Errorf("pool twap with ID %d does not exist", poolId)
+	}
+
+	bz := store.Get(poolTwapKey)
+	poolTwap := types.PoolTwap{}
+	k.cdc.MustUnmarshalBinaryBare(bz, &poolTwap)
+
+	return poolTwap, nil
+}
+
+func (k Keeper) SetPoolTwap(ctx sdk.Context, poolTwap types.PoolTwap) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryBare(&poolTwap)
+	poolTwapKey := types.GetKeyPrefixPoolTwaps(poolTwap.PoolId)
+	store.Set(poolTwapKey, bz)
+}
+
+// func (k Keeper) newPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwap, error) {
+
+// }
