@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // Parameter store keys
@@ -35,7 +36,7 @@ func DefaultParams() Params {
 
 // validate params
 func (p Params) Validate() error {
-	if err := validateDistrEpochIdentifier(p.DistrEpochIdentifier); err != nil {
+	if err := epochtypes.ValidateEpochIdentifierInterface(p.DistrEpochIdentifier); err != nil {
 		return err
 	}
 	if err := validateMinAutostakingRate(p.MinAutostakingRate); err != nil {
@@ -43,7 +44,6 @@ func (p Params) Validate() error {
 	}
 
 	return nil
-
 }
 
 // Implements params.ParamSet
@@ -63,7 +63,6 @@ func validateDistrEpochIdentifier(i interface{}) error {
 	if v == "" {
 		return fmt.Errorf("empty distribution epoch identifier: %+v", i)
 	}
-
 	return nil
 }
 
