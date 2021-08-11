@@ -187,6 +187,38 @@ func (k Keeper) SetPoolTwap(ctx sdk.Context, poolTwap types.PoolTwap) {
 	store.Set(poolTwapKey, bz)
 }
 
-// func (k Keeper) newPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwap, error) {
+func (k Keeper) newPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwap, error) {
+	pool, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return types.PoolTwap{}, err
+	}
 
-// }
+	var twapPairs []*types.TwapPair
+	// iterate through all assets, creating all possible pairs
+	for i, tokenIn := range pool.GetAllPoolAssets() {
+		for j, tokenOut := range pool.GetAllPoolAssets() {
+			// if it is not the same token, create a twap pair
+			if i != j {
+				spotPrice, err := k.CalculateSpotPrice(ctx, poolId, tokenIn.Token.Denom, tokenOut.Token.Denom)
+				if err != nil {
+					return types.PoolTwap{}, err
+				}
+				twapPair := types.TwapPair{
+					TokenIn:   tokenIn.Token.Denom,
+					TokenOut:  tokenOut.Token.Denom,
+					SpotPrice: spotPrice,
+				}
+
+				twapPairs = append(twapPairs, &twapPair)
+			}
+		}
+	}
+
+	poolTwap := types.PoolTwap{
+		StartTime: ctx.BlockTime(),
+		PoolId:    poolId,
+		TwapPairs: twapPairs,
+	}
+
+	return poolTwap, nil
+}

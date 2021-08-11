@@ -167,5 +167,5 @@ message PoolTwap {
     (gogoproto.moretags) = "yaml:\"start_time\""
   ];
   uint64 poolId = 2;
-  repeated TwapPair spotPrices = 3;
+  repeated TwapPair twapPairs = 3;
 }
