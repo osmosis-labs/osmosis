@@ -13,6 +13,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -28,22 +29,23 @@ type DeriveSnapshot struct {
 
 // DerivedAccount provide fields of snapshot per account
 type DerivedAccount struct {
-	Address   string    `json:"address"`
-	Balances  sdk.Coins `json:"balance"`
-	Staked    sdk.Int   `json:"staked"`
-	Unstaked  sdk.Int   `json:"unstaked"`
-	Bonded    sdk.Coins `json:"bonded"`
-	Unclaimed sdk.Coins `json:"unclaimed"`
+	Address          string    `json:"address"`
+	Balances         sdk.Coins `json:"balance"`
+	Staked           sdk.Int   `json:"staked"`
+	Unstaked         sdk.Int   `json:"unstaked"`
+	Bonded           sdk.Coins `json:"bonded"`
+	UnclaimedAirdrop sdk.Coins `json:"unclaimed_airdrop"`
+	TotalBalances    sdk.Coins `json:"total_balances"`
 }
 
 func newDerivedAccount(address string) DerivedAccount {
 	return DerivedAccount{
-		Address:   address,
-		Balances:  sdk.Coins{},
-		Staked:    sdk.ZeroInt(),
-		Unstaked:  sdk.ZeroInt(),
-		Bonded:    sdk.Coins{},
-		Unclaimed: sdk.Coins{},
+		Address:          address,
+		Balances:         sdk.Coins{},
+		Staked:           sdk.ZeroInt(),
+		Unstaked:         sdk.ZeroInt(),
+		Bonded:           sdk.Coins{},
+		UnclaimedAirdrop: sdk.Coins{},
 	}
 }
 
@@ -213,7 +215,7 @@ Example:
 
 				for action := range claimtypes.Action_name {
 					if record.ActionCompleted[action] == false {
-						acc.Unclaimed = acc.Unclaimed.Add(claimablePerAction...)
+						acc.UnclaimedAirdrop = acc.UnclaimedAirdrop.Add(claimablePerAction...)
 					}
 				}
 
@@ -234,10 +236,16 @@ Example:
 				pools[pool.GetTotalShares().Denom] = pool
 			}
 
-			// convert balances to underlying coins
+			// convert balances to underlying coins and sum up balances to total balance
 			for addr, account := range snapshotAccs {
 				account.Balances = underlyingCoins(account.Balances, pools)
 				account.Bonded = underlyingCoins(account.Bonded, pools)
+				account.TotalBalances = account.TotalBalances.
+					Add(account.Balances...).
+					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
+					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Unstaked)).
+					Add(account.Bonded...).
+					Add(account.UnclaimedAirdrop...)
 				snapshotAccs[addr] = account
 			}
 
