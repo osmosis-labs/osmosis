@@ -281,8 +281,26 @@ func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.Per
 	return lock, err
 }
 
+func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
+	lock.Coins = lock.Coins.Add(coins...)
+
+	err := k.setLock(ctx, *lock)
+	if err != nil {
+		return err
+	}
+
+	// modifications to accumulation store
+	for _, coin := range lock.Coins {
+		// remove previous store for the lock ID and add again with updated value
+		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+	}
+
+	return nil
+}
+
 // AddTokensToLock locks more tokens into a lockup
-func (k Keeper) AddTokensToLock(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
+func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return nil, err
@@ -293,18 +311,10 @@ func (k Keeper) AddTokensToLock(ctx sdk.Context, owner sdk.AccAddress, lockID ui
 	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
 		return nil, err
 	}
-	lock.Coins = lock.Coins.Add(coins...)
 
-	err = k.setLock(ctx, *lock)
+	err = k.addTokensToLock(ctx, lock, coins)
 	if err != nil {
 		return nil, err
-	}
-
-	// modifications to accumulation store
-	for _, coin := range lock.Coins {
-		// remove previous store for the lock ID and add again with updated value
-		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
 	}
 
 	if k.hooks == nil {
