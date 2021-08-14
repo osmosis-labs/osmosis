@@ -592,35 +592,3 @@ func (k Keeper) RecordTotalLiquidityDecrease(ctx sdk.Context, coins sdk.Coins) {
 	liquidity := k.GetTotalLiquidity(ctx)
 	k.SetTotalLiquidity(ctx, liquidity.Sub(coins))
 }
-
-func (k Keeper) CreatePoolTwap(ctx sdk.Context, poolId uint64) (err error) {
-	poolTwap, err := k.newPoolTwap(ctx, poolId)
-	if err != nil {
-		return err
-	}
-	k.SetPoolTwap(ctx, poolTwap)
-	return nil
-}
-
-// update pool twap with single token that has changed
-func (k Keeper) RecordPoolTwap(ctx sdk.Context, poolId uint64, changedToken string) (err error) {
-	poolTwap, err := k.GetPoolTwap(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	// iterate through the array of spot prices,
-	// updating all spot prices that are related to the changed token
-	for i, spotPrice := range poolTwap.TwapPairs {
-		if changedToken == spotPrice.TokenIn || changedToken == spotPrice.TokenOut {
-			changedSpotPrice, err := k.CalculateSpotPrice(ctx, poolId, spotPrice.TokenIn, spotPrice.TokenOut)
-			if err != nil {
-				return err
-			}
-			poolTwap.TwapPairs[i].SpotPrice = changedSpotPrice
-		}
-	}
-
-	k.SetPoolTwap(ctx, poolTwap)
-	return nil
-}
