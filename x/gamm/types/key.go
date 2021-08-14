@@ -35,6 +35,10 @@ func GetKeyPrefixPools(poolId uint64) []byte {
 	return append(KeyPrefixPools, sdk.Uint64ToBigEndian(poolId)...)
 }
 
-func GetKeyPrefixPoolTwaps(poolId uint64) []byte {
-	return append(KeyPrefixPoolTwaps, sdk.Uint64ToBigEndian(poolId)...)
+func GetKeyPoolTwaps(poolId uint64, timestamp int64) []byte {
+	if timestamp < 0 {
+		panic("Timestamp has negative value")
+	}
+	keyPrefix := append(KeyPrefixPoolTwaps, sdk.Uint64ToBigEndian(poolId)...)
+	return append(keyPrefix, sdk.Uint64ToBigEndian(uint64(timestamp))...)
 }
