@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	gocontext "context"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -256,4 +257,89 @@ func (suite *KeeperTestSuite) TestQuerySpotPrice() {
 	})
 	suite.NoError(err)
 	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), res.SpotPrice)
+}
+
+func (suite *KeeperTestSuite) TestQueryPoolsCaching() {
+	queryClient := suite.queryClient
+
+	// Ceate 1 pool
+	suite.preparePool()
+
+	res, err := queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Limit:      2,
+			CountTotal: false,
+		},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(1, len(res.Pools))
+	for i, r := range res.Pools {
+		var pool types.PoolI
+		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
+		suite.Require().NoError(err)
+		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(uint64(i+1), pool.GetId())
+	}
+
+	// Ceate 1 more pool
+	suite.preparePool()
+
+	// In this time, actually the two pools exists.
+	// But, due to the caching logic, this should return the same response with above.
+	res, err = queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Limit:      2,
+			CountTotal: false,
+		},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(1, len(res.Pools))
+	for i, r := range res.Pools {
+		var pool types.PoolI
+		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
+		suite.Require().NoError(err)
+		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(uint64(i+1), pool.GetId())
+	}
+
+	// The response is cached per the pagination options,
+	// so querying with the pagination with different limit should return new response.
+	res, err = queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Limit:      3,
+			CountTotal: false,
+		},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(2, len(res.Pools))
+	for i, r := range res.Pools {
+		var pool types.PoolI
+		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
+		suite.Require().NoError(err)
+		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(uint64(i+1), pool.GetId())
+	}
+
+	// And, because the caching lifetime is only 1 second,
+	// it should return new response after 1 second.
+	time.Sleep(time.Second)
+	res, err = queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Limit:      2,
+			CountTotal: false,
+		},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(2, len(res.Pools))
+	for i, r := range res.Pools {
+		var pool types.PoolI
+		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
+		suite.Require().NoError(err)
+		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(uint64(i+1), pool.GetId())
+	}
 }

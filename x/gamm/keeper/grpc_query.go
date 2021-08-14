@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
@@ -20,6 +23,8 @@ import (
 
 var (
 	sdkIntMaxValue = sdk.NewInt(0)
+
+	queryPoolsCache = cache.New(1*time.Second, 5*time.Second)
 )
 
 func init() {
@@ -72,6 +77,16 @@ func (k Keeper) Pools(
 	store := sdkCtx.KVStore(k.storeKey)
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
 
+	cacheKey := "PoolsPagination/" + req.Pagination.String()
+
+	cached, cacheFound := queryPoolsCache.Get(cacheKey)
+	if cached != nil && cacheFound {
+		cachedRes, ok := cached.(*types.QueryPoolsResponse)
+		if ok {
+			return cachedRes, nil
+		}
+	}
+
 	var anys []*codectypes.Any
 	pageRes, err := query.Paginate(poolStore, req.Pagination, func(_, value []byte) error {
 		poolI, err := k.UnmarshalPool(value)
@@ -102,10 +117,14 @@ func (k Keeper) Pools(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryPoolsResponse{
+	response := &types.QueryPoolsResponse{
 		Pools:      anys,
 		Pagination: pageRes,
-	}, nil
+	}
+
+	queryPoolsCache.Set(cacheKey, response, cache.DefaultExpiration)
+
+	return response, nil
 }
 
 func (k Keeper) NumPools(
