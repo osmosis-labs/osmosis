@@ -8,40 +8,37 @@ import (
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
-func (k Keeper) GetPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwap, error) {
-	fmt.Printf("\n Get Pool Twap context time: %d", ctx.BlockTime().Unix())
+func (k Keeper) GetPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwapHistory, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolTwapKey := k.GetRecentPoolTwapKey(ctx, poolId)
 
 	if len(poolTwapKey) == 0 {
-		return types.PoolTwap{}, fmt.Errorf("pool twap does not exist")
+		return types.PoolTwapHistory{}, fmt.Errorf("pool twap does not exist")
 	}
 	if !store.Has(poolTwapKey) {
-		return types.PoolTwap{}, fmt.Errorf("pool twap with ID %d does not exist", poolId)
+		return types.PoolTwapHistory{}, fmt.Errorf("pool twap with ID %d does not exist", poolId)
 	}
 
 	bz := store.Get(poolTwapKey)
-	poolTwap := types.PoolTwap{}
+	poolTwap := types.PoolTwapHistory{}
 	k.cdc.MustUnmarshalBinaryBare(bz, &poolTwap)
 
 	return poolTwap, nil
 }
 
-func (k Keeper) SetPoolTwap(ctx sdk.Context, poolTwap types.PoolTwap) {
+func (k Keeper) SetPoolTwap(ctx sdk.Context, poolTwap types.PoolTwapHistory) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(&poolTwap)
 	timestamp := ctx.BlockTime().Unix()
-	// fmt.Printf("\n time stamp: %d", timestamp)
-	// fmt.Printf("\n current time: %d", time.Now().Unix())
-	// fmt.Printf("\n block time string: %s", ctx.BlockTime().String())
+
 	poolTwapKey := types.GetKeyPoolTwaps(poolTwap.PoolId, timestamp)
 	store.Set(poolTwapKey, bz)
 }
 
-func (k Keeper) newPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwap, error) {
+func (k Keeper) newPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwapHistory, error) {
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
-		return types.PoolTwap{}, err
+		return types.PoolTwapHistory{}, err
 	}
 
 	var twapPairs []*types.TwapPair
@@ -52,12 +49,12 @@ func (k Keeper) newPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwap, err
 			if i != j {
 				spotPrice, err := k.CalculateSpotPrice(ctx, poolId, tokenIn.Token.Denom, tokenOut.Token.Denom)
 				if err != nil {
-					return types.PoolTwap{}, err
+					return types.PoolTwapHistory{}, err
 				}
 				twapPair := types.TwapPair{
-					TokenIn:   tokenIn.Token.Denom,
-					TokenOut:  tokenOut.Token.Denom,
-					SpotPrice: spotPrice,
+					TokenIn:         tokenIn.Token.Denom,
+					TokenOut:        tokenOut.Token.Denom,
+					PriceCumulative: spotPrice,
 				}
 
 				twapPairs = append(twapPairs, &twapPair)
@@ -65,18 +62,17 @@ func (k Keeper) newPoolTwap(ctx sdk.Context, poolId uint64) (types.PoolTwap, err
 		}
 	}
 
-	fmt.Printf("\n newPoolTwap called with block time %d", ctx.BlockTime().Unix())
-	poolTwap := types.PoolTwap{
-		StartTime: ctx.BlockTime(),
+	poolTwap := types.PoolTwapHistory{
+		TimeStamp: ctx.BlockTime(),
 		PoolId:    poolId,
 		TwapPairs: twapPairs,
 	}
-	fmt.Printf("\n Result of newPoolTwap: %s", poolTwap.String())
+	// fmt.Printf("\n Result of newPoolTwap: %s", poolTwap.String())
 	return poolTwap, nil
 }
 
 func (k Keeper) CreatePoolTwap(ctx sdk.Context, poolId uint64) (err error) {
-	fmt.Printf("\n CreatePoolTwap Called\n")
+	// fmt.Printf("\n CreatePoolTwap Called\n")
 	poolTwap, err := k.newPoolTwap(ctx, poolId)
 	if err != nil {
 		return err
@@ -87,27 +83,28 @@ func (k Keeper) CreatePoolTwap(ctx sdk.Context, poolId uint64) (err error) {
 
 // update pool twap with single token that has changed
 func (k Keeper) RecordPoolTwap(ctx sdk.Context, poolId uint64, changedToken string) (err error) {
-	fmt.Printf("\n Record Pool Twap is called with block time %d", ctx.BlockTime().Unix())
 	recentPoolTwap, err := k.GetPoolTwap(ctx, poolId)
-	// poolTwap, err := k.newPoolTwap(ctx, poolId)
-	// if err != nil {
-	// 	return err
-	// }
-
+	if err != nil {
+		return err
+	}
 	// iterate through the array of spot prices,
 	// updating all spot prices that are related to the changed token
+	fmt.Printf("\n Recording spot price for pool: %d", poolId)
 	for i, spotPrice := range recentPoolTwap.TwapPairs {
 		if changedToken == spotPrice.TokenIn || changedToken == spotPrice.TokenOut {
+			fmt.Printf("\n token in: %s", spotPrice.TokenIn)
+			fmt.Printf("\n token out: %s", spotPrice.TokenOut)
 			changedSpotPrice, err := k.CalculateSpotPrice(ctx, poolId, spotPrice.TokenIn, spotPrice.TokenOut)
 			if err != nil {
 				return err
 			}
-			recentPoolTwap.TwapPairs[i].SpotPrice = changedSpotPrice
+			fmt.Printf("\n Calculated spot price: %d", changedSpotPrice)
+			recentPoolTwap.TwapPairs[i].PriceCumulative = changedSpotPrice
 		}
 	}
 
-	poolTwap := types.PoolTwap{
-		StartTime: ctx.BlockTime(),
+	poolTwap := types.PoolTwapHistory{
+		TimeStamp: ctx.BlockTime(),
 		PoolId:    poolId,
 		TwapPairs: recentPoolTwap.TwapPairs,
 	}

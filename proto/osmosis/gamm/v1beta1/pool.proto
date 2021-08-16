@@ -154,14 +154,14 @@ message Pool {
 message TwapPair {
   string tokenIn = 1;
   string tokenOut = 2;
-  string spotPrice = 3 [
+  string priceCumulative = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
 }
 
-message PoolTwap {
-  google.protobuf.Timestamp start_time = 1 [
+message PoolTwapHistory {
+  google.protobuf.Timestamp timeStamp = 1 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"start_time\""
