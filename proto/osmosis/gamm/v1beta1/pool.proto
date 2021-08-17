@@ -164,7 +164,7 @@ message PoolTwapHistory {
   google.protobuf.Timestamp timeStamp = 1 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"start_time\""
+    (gogoproto.moretags) = "yaml:\"time_stamp\""
   ];
   uint64 poolId = 2;
   repeated TwapPair twapPairs = 3;

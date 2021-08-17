@@ -91,7 +91,10 @@ func (k Keeper) CreatePool(
 
 	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
 	k.RecordTotalLiquidityIncrease(ctx, coins)
-	k.CreatePoolTwap(ctx, pool.GetId())
+	err = k.CreatePoolTwap(ctx, pool.GetId())
+	if err != nil {
+		return 0, err
+	}
 
 	return pool.GetId(), nil
 }
@@ -232,7 +235,11 @@ func (k Keeper) JoinSwapExternAmountIn(
 	k.createAddLiquidityEvent(ctx, sender, pool.GetId(), addedCoins)
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), addedCoins, shareOutAmount)
 	k.RecordTotalLiquidityIncrease(ctx, addedCoins)
-	k.RecordPoolTwap(ctx, poolId, tokenIn.Denom)
+
+	err = k.RecordPoolServiceTwap(ctx, poolId, tokenIn.Denom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	return shareOutAmount, nil
 }
@@ -301,7 +308,11 @@ func (k Keeper) JoinSwapShareAmountOut(
 	k.createAddLiquidityEvent(ctx, sender, pool.GetId(), coinsAdded)
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), coinsAdded, shareOutAmount)
 	k.RecordTotalLiquidityIncrease(ctx, coinsAdded)
-	k.RecordPoolTwap(ctx, poolId, tokenInDenom)
+
+	err = k.RecordPoolServiceTwap(ctx, poolId, tokenInDenom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	return shareOutAmount, nil
 }
@@ -472,7 +483,11 @@ func (k Keeper) ExitSwapShareAmountIn(
 	k.createRemoveLiquidityEvent(ctx, sender, pool.GetId(), removedCoins)
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, removedCoins)
 	k.RecordTotalLiquidityDecrease(ctx, removedCoins)
-	k.RecordPoolTwap(ctx, poolId, tokenOutDenom)
+
+	err = k.RecordPoolServiceTwap(ctx, poolId, tokenOutDenom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	return tokenOutAmount, nil
 }
@@ -558,7 +573,11 @@ func (k Keeper) ExitSwapExternAmountOut(
 	k.createRemoveLiquidityEvent(ctx, sender, pool.GetId(), removedCoins)
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, removedCoins)
 	k.RecordTotalLiquidityDecrease(ctx, removedCoins)
-	k.RecordPoolTwap(ctx, poolId, tokenOut.Denom)
+
+	err = k.RecordPoolServiceTwap(ctx, poolId, tokenOut.Denom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	return shareInAmount, nil
 }
