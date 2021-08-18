@@ -1,0 +1,47 @@
+# This is a basic workflow that is manually triggered
+
+name: compile dig
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on: [push, pull_request, workflow_dispatch]
+
+# This workflow makes x86_64 binaries for mac, windows, and linux.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        targetos: [darwin, linux]
+        include:
+          - targetos: windows
+            arch: amd64
+            
+    name: osmosis ${{ matrix.arch }} for ${{ matrix.targetos }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.3
+        with: 
+          go-version: '^1.17'
+        env:
+          GOOS: ${{ matrix.targetos }}
+          GOARCH: ${{ matrix.arch }}
+
+      - name: Compile osmosis
+        run: go install ./...
+        
+      - name: Start Osmosis
+        run: |
+          osmosisd init testnode
+          wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+          nohup osmosisd start &
+          sleep 7200
+          osmosisd status
+          # more stuff to be added later.
+          
+
+        
+          
+          
