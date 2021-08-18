@@ -154,6 +154,12 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		for i := range balances {
 			denoms[i] = balances[i].Denom
 		}
+
+		// set the pool params to set the pool creation fee to dust amount of denom
+		k.SetParams(ctx, types.Params{
+			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(denoms[0], 1)},
+		})
+
 		// futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, denoms)
 		msg := types.MsgCreatePool{
 			Sender:             simAccount.Address.String(),
@@ -184,7 +190,7 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 
 		coin := simCoins[r.Intn(len(simCoins))]
 		// Use under 0.5% of the account balance
-              // TODO: Make like a 33% probability of using a ton of balance 
+		// TODO: Make like a 33% probability of using a ton of balance
 		amt, _ := simtypes.RandPositiveInt(r, coin.Amount.QuoRaw(200))
 
 		tokenIn := sdk.Coin{

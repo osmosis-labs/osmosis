@@ -51,7 +51,32 @@ func TestEpochsInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	ctx = ctx.WithBlockTime(now)
 
-	epochs.InitGenesis(ctx, app.EpochsKeeper, types.GenesisState{
+	//test genesisState validation
+	genesisState := types.GenesisState{
+		Epochs: []types.EpochInfo{
+			{
+				Identifier:            "monthly",
+				StartTime:             time.Time{},
+				Duration:              time.Hour * 24,
+				CurrentEpoch:          0,
+				CurrentEpochStartTime: time.Time{},
+				EpochCountingStarted:  true,
+				CurrentEpochEnded:     true,
+			},
+			{
+				Identifier:            "monthly",
+				StartTime:             time.Time{},
+				Duration:              time.Hour * 24,
+				CurrentEpoch:          0,
+				CurrentEpochStartTime: time.Time{},
+				EpochCountingStarted:  true,
+				CurrentEpochEnded:     true,
+			},
+		},
+	}
+	require.EqualError(t, genesisState.Validate(), "epoch identifier should be unique")
+
+	genesisState = types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:            "monthly",
@@ -63,8 +88,9 @@ func TestEpochsInitGenesis(t *testing.T) {
 				CurrentEpochEnded:     true,
 			},
 		},
-	})
+	}
 
+	epochs.InitGenesis(ctx, app.EpochsKeeper, genesisState)
 	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.Identifier, "monthly")
 	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())

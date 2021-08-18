@@ -4,6 +4,17 @@ package osmosis.gamm;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+// Params holds parameters for the incentives module
+message Params {
+    repeated cosmos.base.v1beta1.Coin pool_creation_fee = 1 [
+        (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+        (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
+        (gogoproto.nullable) = false
+    ];
+}
+
 
 option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";
 
@@ -12,4 +23,5 @@ message GenesisState {
     repeated google.protobuf.Any pools = 1
         [ (cosmos_proto.accepts_interface) = "PoolI" ];
     uint64 next_pool_number = 2;
+    Params params = 3 [ (gogoproto.nullable) = false ];
 }

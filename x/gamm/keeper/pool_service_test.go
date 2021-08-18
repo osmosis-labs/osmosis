@@ -19,6 +19,13 @@ var (
 )
 
 func (suite *KeeperTestSuite) TestCreatePool() {
+	params := suite.app.GAMMKeeper.GetParams(suite.ctx)
+
+	poolCreationFeeDecCoins := sdk.DecCoins{}
+	for _, coin := range params.PoolCreationFee {
+		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
+	}
+
 	func() {
 		keeper := suite.app.GAMMKeeper
 
@@ -41,6 +48,8 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 	}{{
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
+			prevFeePool := suite.app.DistrKeeper.GetFeePoolCommunityCoins(suite.ctx)
+			prevAcc1Bal := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc1)
 			poolId, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
@@ -57,6 +66,20 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			suite.Require().NoError(err)
 			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().Amount.String(),
 				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
+			)
+
+			// check fee is correctly sent to community pool
+			feePool := suite.app.DistrKeeper.GetFeePoolCommunityCoins(suite.ctx)
+			suite.Require().Equal(feePool, prevFeePool.Add(poolCreationFeeDecCoins...))
+
+			// check account's balance is correctly reduced
+			acc1Bal := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc1)
+			suite.Require().Equal(acc1Bal.String(),
+				prevAcc1Bal.Sub(params.PoolCreationFee).
+					Sub(sdk.Coins{
+						sdk.NewCoin("bar", sdk.NewInt(10000)),
+						sdk.NewCoin("foo", sdk.NewInt(10000)),
+					}).Add(sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)).String(),
 			)
 
 			liquidity := suite.app.GAMMKeeper.GetTotalLiquidity(suite.ctx)
@@ -183,6 +206,48 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			}}, defaultFutureGovernor)
 			suite.Require().Error(err, "can't create the pool with duplicated PoolAssets")
 		},
+	}, {
+		fn: func() {
+			keeper := suite.app.GAMMKeeper
+			keeper.SetParams(suite.ctx, types.Params{
+				PoolCreationFee: sdk.Coins{},
+			})
+			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, []types.PoolAsset{{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+			}, {
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+			}}, defaultFutureGovernor)
+			suite.Require().NoError(err)
+			pools, err := keeper.GetPools(suite.ctx)
+			suite.Require().Len(pools, 1)
+			suite.Require().NoError(err)
+		},
+	}, {
+		fn: func() {
+			keeper := suite.app.GAMMKeeper
+			keeper.SetParams(suite.ctx, types.Params{
+				PoolCreationFee: nil,
+			})
+			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, []types.PoolAsset{{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+			}, {
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+			}}, defaultFutureGovernor)
+			suite.Require().NoError(err)
+			pools, err := keeper.GetPools(suite.ctx)
+			suite.Require().Len(pools, 1)
+			suite.Require().NoError(err)
+		},
 	}}
 
 	for _, test := range tests {
@@ -194,6 +259,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				suite.ctx,
 				acc,
 				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 					sdk.NewCoin("foo", sdk.NewInt(10000000)),
 					sdk.NewCoin("bar", sdk.NewInt(10000000)),
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
@@ -281,6 +347,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 				suite.ctx,
 				acc,
 				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 					sdk.NewCoin("foo", sdk.NewInt(10000000)),
 					sdk.NewCoin("bar", sdk.NewInt(10000000)),
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
@@ -389,6 +456,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				suite.ctx,
 				acc,
 				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 					sdk.NewCoin("foo", sdk.NewInt(10000000)),
 					sdk.NewCoin("bar", sdk.NewInt(10000000)),
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
@@ -436,6 +504,7 @@ func (suite *KeeperTestSuite) TestActivePool() {
 				suite.ctx,
 				acc,
 				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 					sdk.NewCoin("foo", sdk.NewInt(10000000)),
 					sdk.NewCoin("bar", sdk.NewInt(10000000)),
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),

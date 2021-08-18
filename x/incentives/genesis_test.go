@@ -53,6 +53,9 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	validateGenesis := types.DefaultGenesis().Params.Validate()
+	require.NoError(t, validateGenesis)
+
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
 	startTime := time.Now()
 	distrTo := lockuptypes.QueryCondition{
@@ -86,4 +89,5 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	gauges := app.IncentivesKeeper.GetGauges(ctx)
 	require.Len(t, gauges, 1)
 	require.Equal(t, gauges[0], gauge)
+
 }

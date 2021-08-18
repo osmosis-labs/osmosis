@@ -1,4 +1,4 @@
-package keeper
+package osmomath
 
 import (
 	"testing"
@@ -56,7 +56,7 @@ func BenchmarkPow(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		for _, test := range tests {
-			pow(test.base, test.exp)
+			Pow(test.base, test.exp)
 		}
 	}
 }
@@ -80,7 +80,7 @@ func BenchmarkSqrtPow(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		for _, test := range tests {
-			pow(test.base, one_half)
+			Pow(test.base, one_half)
 		}
 	}
 }
