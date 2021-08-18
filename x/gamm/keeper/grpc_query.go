@@ -24,7 +24,7 @@ import (
 var (
 	sdkIntMaxValue = sdk.NewInt(0)
 
-	queryPoolsCache = cache.New(1*time.Second, 5*time.Second)
+	queryPoolsCache = cache.New(3*time.Second, 10*time.Second)
 )
 
 func init() {
