@@ -80,7 +80,10 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
+			config.P2P.Seeds = "085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656"
+			config.P2P.PersistentPeers = "2e3e3b7703a598024a2fb287587095bc4d14fe52@95.217.196.54:2000,f5be19f84deb843c18e9b612b7987138ba13ac02@5.9.106.185:2000,f9c49739f0641a0a673e7a1e8edc38054fefc840@144.76.183.180:2000,40aafcd9b6959d58dd1c567d9daf2a82a23311cf@162.55.132.230:2000,3fea02d121cb24503d5fbc53216a527257a9ab55@143.198.145.208:26656,e7916387e05acd53d1b8c0f842c13def365c7bb6@176.9.64.212:26656,785bc83577e3980545bac051de8f57a9fd82695f@194.233.164.146:26656,421e7ffd6c239cc51620e2ec2330d392a7baeeb3@207.246.109.0:26656,778fdedf6effe996f039f22901a3360bc838b52e@161.97.187.189:36656,2115945f074ddb038de5d835e287fa03e32f0628@95.217.43.85:26656,a79b9904461a98cdb98a5c15d7d75b02a55b6ab9@162.216.4.214:36656,1639d885f47c96c5cc4be6e4443ba53cdc74fc71@23.111.129.54:36656"
 			config.P2P.MaxNumOutboundPeers = 40
+			config.P2P.MaxNumInboundPeers = 150
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
 			config.FastSync.Version = "v0"
