@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
+	v038genaccounts "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +22,7 @@ type GenesisStateV036 struct {
 
 // AppStateV036 is app state structure for app state
 type AppStateV036 struct {
-	Accounts []v036genaccounts.GenesisAccount `json:"accounts"`
+	Accounts []v038genaccounts.GenesisAccount `json:"accounts"`
 	Staking  v036staking.GenesisState         `json:"staking"`
 }
 

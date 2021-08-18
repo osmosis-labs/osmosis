@@ -174,7 +174,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimRecord() {
 			s.Require().NoError(err)
 
 			var result types.QueryClaimRecordResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 		})
 	}
 }
@@ -209,7 +209,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 			s.Require().NoError(err)
 
 			var result types.QueryClaimableForActionResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(result.Coins.String(), tc.coins.String())
 		})
 	}

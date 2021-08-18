@@ -83,7 +83,7 @@ $ %s query gamm pool 1
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
-				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
+				out, err := clientCtx.JSONCodec.MarshalJSON(res)
 
 				if err != nil {
 					return err
@@ -217,7 +217,7 @@ $ %s query gamm pool-params 1
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
-				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
+				out, err := clientCtx.JSONCodec.MarshalJSON(res)
 
 				if err != nil {
 					return err

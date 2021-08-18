@@ -127,7 +127,7 @@ func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.D
 
 	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
 
-	store.Set(types.LockableDurationsKey, k.cdc.MustMarshalBinaryBare(&info))
+	store.Set(types.LockableDurationsKey, k.cdc.MustMarshal(&info))
 }
 
 func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
@@ -139,7 +139,7 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 		panic("lockable durations not set")
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(bz, &info)
+	k.cdc.MustUnmarshal(bz, &info)
 
 	return info.LockableDurations
 }
