@@ -21,7 +21,6 @@ func (k Keeper) GetPoolTwapHistory(ctx sdk.Context, poolId uint64, queryTime tim
 		}
 		k.SetPoolTwap(ctx, poolTwap)
 		return poolTwap, nil
-
 	}
 
 	if !store.Has(poolTwapKey) {
@@ -51,6 +50,7 @@ func (k Keeper) CreatePoolTwap(ctx sdk.Context, poolId uint64) (err error) {
 	}
 
 	k.SetPoolTwap(ctx, poolTwap)
+
 	return nil
 }
 
@@ -76,7 +76,6 @@ func (k Keeper) newPoolTwapHistory(ctx sdk.Context, poolId uint64) (types.PoolTw
 					PriceCumulative: sdk.ZeroDec(),
 					SpotPrice:       spotPrice,
 				}
-
 				twapPairs = append(twapPairs, &twapPair)
 			}
 		}
@@ -106,7 +105,9 @@ func (k Keeper) UpdatePoolTwap(ctx sdk.Context, poolId uint64, tokens ...string)
 	// updating all spot prices that are related to the changed token
 	for i, spotPrice := range recentPoolTwap.TwapPairs {
 		currentTimeElapsedDuration := currentTime.Sub(recentPoolTwap.TimeStamp)
-		currentTimeElapsed := sdk.NewDec(currentTimeElapsedDuration.Nanoseconds()).QuoInt(sdk.NewInt(100000000))
+
+		// division between integer, since minimum unit for duration is seconds
+		currentTimeElapsed := currentTimeElapsedDuration.Nanoseconds() / 1_000_000_000
 
 		// if any of the spot price pairs in twap history are realted to the swapped tokens,
 		// update the spot price cumulative
@@ -115,10 +116,11 @@ func (k Keeper) UpdatePoolTwap(ctx sdk.Context, poolId uint64, tokens ...string)
 			if err != nil {
 				return err
 			}
-			recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(changedSpotPrice.Mul(currentTimeElapsed))
+			// recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(changedSpotPrice.Mul(currentTimeElapsed))
+			recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(changedSpotPrice.Mul(sdk.NewDec(currentTimeElapsed)))
 			recentPoolTwap.TwapPairs[i].SpotPrice = changedSpotPrice
 		} else {
-			recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(recentPoolTwap.TwapPairs[i].SpotPrice.Mul(currentTimeElapsed))
+			recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(recentPoolTwap.TwapPairs[i].SpotPrice.Mul(sdk.NewDec(currentTimeElapsed)))
 		}
 	}
 
@@ -144,8 +146,7 @@ func (k Keeper) GetPoolTwapKey(ctx sdk.Context, poolId uint64, queryTime time.Ti
 	defer iterator.Close()
 	poolTwapKey := []byte{}
 
-	// the most recent value in iterator points to the most
-	// recently added pool twap key
+	// the most recent value in iterator points to the most recently added pool twap key
 	if iterator.Valid() {
 		poolTwapKey = iterator.Key()
 	}
@@ -161,6 +162,10 @@ func (k Keeper) GetRecentPoolTwapSpotPrice(
 	tokenOutDenom string,
 	duration time.Duration,
 ) (sdk.Dec, error) {
+	if duration < 1 {
+		return sdk.Dec{}, fmt.Errorf("duration should be more than 1 second")
+	}
+
 	currentTime := ctx.BlockTime()
 	currentTimeAdjacentPoolTwap, err := k.GetPoolTwapHistory(ctx, poolId, currentTime)
 	if err != nil {
@@ -192,18 +197,25 @@ func (k Keeper) GetRecentPoolTwapSpotPrice(
 		}
 	}
 
+	// if two poolTwaps are pointing to the same twap history,
+	// or in the case of user trying to query a new pool twap that has not existed before,
+	// use current spot price
+	if currentTimeAdjacentPoolTwap.TimeStamp == desiredTimeAdjacentPoolTwap.TimeStamp {
+		return currentTimeAdjacentSpotPrice, nil
+	}
+
 	currentTimeElapsedDuration := currentTime.Sub(currentTimeAdjacentTime)
 	desiredTimeElapsedDuration := currentTime.Sub(desiredTimeAdjacentTime)
 
-	currentTimeElapsed := sdk.NewDec(currentTimeElapsedDuration.Nanoseconds()).QuoInt(sdk.NewInt(100000000))
-	desiredTimeElapsed := sdk.NewDec(desiredTimeElapsedDuration.Nanoseconds()).QuoInt(sdk.NewInt(100000000))
+	currentTimeElapsed := currentTimeElapsedDuration.Nanoseconds() / 1_000_000_000
+	desiredTimeElapsed := desiredTimeElapsedDuration.Nanoseconds() / 1_000_000_000
 
-	curentTimePriceCumulative := currentTimeAdjacentPriceCumulative.Add(currentTimeAdjacentSpotPrice.Mul(currentTimeElapsed))
-	desiredTimePriceCumulative := desiredTimeAdjacentPriceCumulative.Add(desiredTimeAdjacentSpotPrice.Mul(desiredTimeElapsed))
+	curentTimePriceCumulative := currentTimeAdjacentPriceCumulative.Add(currentTimeAdjacentSpotPrice.Mul(sdk.NewDec(currentTimeElapsed)))
+	desiredTimePriceCumulative := desiredTimeAdjacentPriceCumulative.Add(desiredTimeAdjacentSpotPrice.Mul(sdk.NewDec(desiredTimeElapsed)))
 
-	// twap calculated using (priceCumulative2 - priceCumulative1) / (timeStamp1 - timeStamp2)
+	// twap = (priceCumulative2 - priceCumulative1) / (timeStamp1 - timeStamp2)
 	priceCumulativeDifference := curentTimePriceCumulative.Sub(desiredTimePriceCumulative)
-	timeDifference := sdk.NewDec(currentTime.Sub(desiredTime).Nanoseconds()).QuoInt(sdk.NewInt(1000000000))
+	timeDifference := sdk.NewDec(currentTime.Sub(desiredTime).Nanoseconds()).QuoInt(sdk.NewInt(1_000_000_000))
 	twap := priceCumulativeDifference.Quo(timeDifference)
 
 	return twap, nil

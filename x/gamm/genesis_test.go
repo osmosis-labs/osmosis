@@ -2,6 +2,7 @@ package gamm_test
 
 import (
 	"testing"
+	"time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -68,7 +69,7 @@ func TestGammInitGenesis(t *testing.T) {
 
 func TestGammExportGenesis(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime(time.Now())
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 	app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
@@ -108,7 +109,7 @@ func TestGammExportGenesis(t *testing.T) {
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime(time.Now())
 
 	encodingConfig := simapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler

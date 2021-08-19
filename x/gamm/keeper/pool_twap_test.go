@@ -42,11 +42,11 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 
 				for _, twapPair := range poolTwap.TwapPairs {
 					if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
-						foobarSpotPrice = twapPair.PriceCumulative
+						foobarSpotPrice = twapPair.SpotPrice
 					} else if twapPair.TokenIn == "bar" && twapPair.TokenOut == "baz" {
-						barbazSpotPrice = twapPair.PriceCumulative
+						barbazSpotPrice = twapPair.SpotPrice
 					} else if twapPair.TokenIn == "baz" && twapPair.TokenOut == "foo" {
-						bazfooSpotPrice = twapPair.PriceCumulative
+						bazfooSpotPrice = twapPair.SpotPrice
 					}
 				}
 
@@ -57,11 +57,11 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 			},
 		},
 		{
+			// test JoinSwapExternAmountIn twap
 			fn: func() {
 				poolId := suite.preparePool()
 
 				ctx := suite.ctx.WithBlockTime(time.Now().Add(time.Second))
-
 				foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 				_, err := suite.app.GAMMKeeper.JoinSwapExternAmountIn(ctx, acc1, poolId, foocoin, sdk.ZeroInt())
 				suite.Require().NoError(err)
@@ -70,34 +70,64 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 				poolTwap, err := suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, poolId, time.Now().Add(time.Second*2))
 				suite.Require().NoError(err)
 
-				var barfooSpotPrice sdk.Dec
-				var bazfooSpotPrice sdk.Dec
-				var foobarSpotPrice sdk.Dec
-				var foobazSpotPrice sdk.Dec
-				var barbazSpotPrice sdk.Dec
+				var barfooPriceCumulative sdk.Dec
+				var bazfooPriceCumulative sdk.Dec
+				var foobarPriceCumulative sdk.Dec
+				var foobazPriceCumulative sdk.Dec
+				var barbazPriceCumulative sdk.Dec
 
 				for _, twapPair := range poolTwap.TwapPairs {
 					if twapPair.TokenIn == "bar" && twapPair.TokenOut == "foo" {
-						barfooSpotPrice = twapPair.PriceCumulative
+						barfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "baz" && twapPair.TokenOut == "foo" {
-						bazfooSpotPrice = twapPair.PriceCumulative
+						bazfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
-						foobarSpotPrice = twapPair.PriceCumulative
+						foobarPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "baz" {
-						foobazSpotPrice = twapPair.PriceCumulative
+						foobazPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "bar" && twapPair.TokenOut == "baz" {
-						barbazSpotPrice = twapPair.PriceCumulative
+						barbazPriceCumulative = twapPair.PriceCumulative
 					}
 				}
 
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.999999000002004952"), barfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.666666000001336634"), bazfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("4.000003999999980177"), foobarSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("6.000005999999970265"), foobazSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("3.000000000000000000"), barbazSpotPrice)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.499999000002004952"), barfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.333332666668003301"), bazfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("2.000003999999980177"), foobarPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("3.000005999999970265"), foobazPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.500000000000000000"), barbazPriceCumulative)
+
+				// testing the logics for price cumulation
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 3))
+				_, err = suite.app.GAMMKeeper.JoinSwapExternAmountIn(ctx, acc1, poolId, foocoin, sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 4))
+				poolTwap, err = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, poolId, time.Now().Add(time.Second*4))
+				suite.Require().NoError(err)
+
+				for _, twapPair := range poolTwap.TwapPairs {
+					if twapPair.TokenIn == "bar" && twapPair.TokenOut == "foo" {
+						barfooPriceCumulative = twapPair.PriceCumulative
+					} else if twapPair.TokenIn == "baz" && twapPair.TokenOut == "foo" {
+						bazfooPriceCumulative = twapPair.PriceCumulative
+					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
+						foobarPriceCumulative = twapPair.PriceCumulative
+					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "baz" {
+						foobazPriceCumulative = twapPair.PriceCumulative
+					} else if twapPair.TokenIn == "bar" && twapPair.TokenOut == "baz" {
+						barbazPriceCumulative = twapPair.PriceCumulative
+					}
+				}
+
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.499995000018003236"), barfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.999996666678668825"), bazfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("6.000019999999986783"), foobarPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("9.000029999999980175"), foobazPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("4.500000000000000000"), barbazPriceCumulative)
 			},
 		},
 		{
+			// test JoinSwapShareAmountOut twap
 			fn: func() {
 				poolId := suite.preparePool()
 
@@ -110,31 +140,31 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 				poolTwap, err := suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, poolId, time.Now().Add(time.Second*2))
 				suite.Require().NoError(err)
 
-				var barfooSpotPrice sdk.Dec
-				var bazfooSpotPrice sdk.Dec
-				var foobarSpotPrice sdk.Dec
-				var foobazSpotPrice sdk.Dec
-				var barbazSpotPrice sdk.Dec
+				var barfooPriceCumulative sdk.Dec
+				var bazfooPriceCumulative sdk.Dec
+				var foobarPriceCumulative sdk.Dec
+				var foobazPriceCumulative sdk.Dec
+				var barbazPriceCumulative sdk.Dec
 
 				for _, twapPair := range poolTwap.TwapPairs {
 					if twapPair.TokenIn == "bar" && twapPair.TokenOut == "foo" {
-						barfooSpotPrice = twapPair.PriceCumulative
+						barfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "baz" && twapPair.TokenOut == "foo" {
-						bazfooSpotPrice = twapPair.PriceCumulative
+						bazfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
-						foobarSpotPrice = twapPair.PriceCumulative
+						foobarPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "baz" {
-						foobazSpotPrice = twapPair.PriceCumulative
+						foobazPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "bar" && twapPair.TokenOut == "baz" {
-						barbazSpotPrice = twapPair.PriceCumulative
+						barbazPriceCumulative = twapPair.PriceCumulative
 					}
 				}
 
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.782236996889973988"), barfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.521491331259982659"), bazfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("5.543121600000001200"), foobarSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("8.314682400000001800"), foobazSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("3.000000000000000000"), barbazSpotPrice)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.282236996889973988"), barfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.188157997926649326"), bazfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("3.543121600000001200"), foobarPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("5.314682400000001800"), foobazPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.500000000000000000"), barbazPriceCumulative)
 			},
 		},
 	}
@@ -151,6 +181,7 @@ func (suite *KeeperTestSuite) TestExitPoolTwap() {
 		fn func()
 	}{
 		{
+			// test ExitSwapShareAmountIn twap
 			fn: func() {
 				poolId := suite.preparePool()
 
@@ -163,34 +194,35 @@ func (suite *KeeperTestSuite) TestExitPoolTwap() {
 				poolTwap, err := suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, poolId, time.Now().Add(time.Second*2))
 				suite.Require().NoError(err)
 
-				var barfooSpotPrice sdk.Dec
-				var bazfooSpotPrice sdk.Dec
-				var foobarSpotPrice sdk.Dec
-				var foobazSpotPrice sdk.Dec
-				var barbazSpotPrice sdk.Dec
+				var barfooPriceCumulative sdk.Dec
+				var bazfooPriceCumulative sdk.Dec
+				var foobarPriceCumulative sdk.Dec
+				var foobazPriceCumulative sdk.Dec
+				var barbazPriceCumulative sdk.Dec
 
 				for _, twapPair := range poolTwap.TwapPairs {
 					if twapPair.TokenIn == "bar" && twapPair.TokenOut == "foo" {
-						barfooSpotPrice = twapPair.PriceCumulative
+						barfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "baz" && twapPair.TokenOut == "foo" {
-						bazfooSpotPrice = twapPair.PriceCumulative
+						bazfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
-						foobarSpotPrice = twapPair.PriceCumulative
+						foobarPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "baz" {
-						foobazSpotPrice = twapPair.PriceCumulative
+						foobazPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "bar" && twapPair.TokenOut == "baz" {
-						barbazSpotPrice = twapPair.PriceCumulative
+						barbazPriceCumulative = twapPair.PriceCumulative
 					}
 				}
 
-				suite.Require().Equal(sdk.MustNewDecFromStr("1.440837857508977912"), barfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.960558571672651941"), bazfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("3.062882399999999507"), foobarSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("4.594323599999999260"), foobazSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("3.000000000000000000"), barbazSpotPrice)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.940837857508977912"), barfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.627225238339318608"), bazfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.062882399999999507"), foobarPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.594323599999999260"), foobazPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.500000000000000000"), barbazPriceCumulative)
 			},
 		},
 		{
+			// test ExitSwapExternAmountOut twap
 			fn: func() {
 				poolId := suite.preparePool()
 
@@ -204,31 +236,31 @@ func (suite *KeeperTestSuite) TestExitPoolTwap() {
 				poolTwap, err := suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, poolId, time.Now().Add(time.Second*2))
 				suite.Require().NoError(err)
 
-				var barfooSpotPrice sdk.Dec
-				var bazfooSpotPrice sdk.Dec
-				var foobarSpotPrice sdk.Dec
-				var foobazSpotPrice sdk.Dec
-				var barbazSpotPrice sdk.Dec
+				var barfooPriceCumulative sdk.Dec
+				var bazfooPriceCumulative sdk.Dec
+				var foobarPriceCumulative sdk.Dec
+				var foobazPriceCumulative sdk.Dec
+				var barbazPriceCumulative sdk.Dec
 
 				for _, twapPair := range poolTwap.TwapPairs {
 					if twapPair.TokenIn == "bar" && twapPair.TokenOut == "foo" {
-						barfooSpotPrice = twapPair.PriceCumulative
+						barfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "baz" && twapPair.TokenOut == "foo" {
-						bazfooSpotPrice = twapPair.PriceCumulative
+						bazfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
-						foobarSpotPrice = twapPair.PriceCumulative
+						foobarPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "baz" {
-						foobazSpotPrice = twapPair.PriceCumulative
+						foobazPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "bar" && twapPair.TokenOut == "baz" {
-						barbazSpotPrice = twapPair.PriceCumulative
+						barbazPriceCumulative = twapPair.PriceCumulative
 					}
 				}
 
-				suite.Require().Equal(sdk.MustNewDecFromStr("1.000001000002005786"), barfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.666667333334670523"), bazfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("3.999995999999976874"), foobarSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("5.999993999999965310"), foobazSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("3.000000000000000000"), barbazSpotPrice)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.500001000002005786"), barfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.333334000001337190"), bazfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.999995999999976874"), foobarPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("2.999993999999965310"), foobazPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.500000000000000000"), barbazPriceCumulative)
 			},
 		},
 	}
@@ -258,31 +290,31 @@ func (suite *KeeperTestSuite) TestSwapPoolTwap() {
 				poolTwap, err := suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, poolId, time.Now().Add(time.Second*2))
 				suite.Require().NoError(err)
 
-				var barfooSpotPrice sdk.Dec
-				var bazfooSpotPrice sdk.Dec
-				var foobarSpotPrice sdk.Dec
-				var foobazSpotPrice sdk.Dec
-				var barbazSpotPrice sdk.Dec
+				var barfooPriceCumulative sdk.Dec
+				var bazfooPriceCumulative sdk.Dec
+				var foobarPriceCumulative sdk.Dec
+				var foobazPriceCumulative sdk.Dec
+				var barbazPriceCumulative sdk.Dec
 
 				for _, twapPair := range poolTwap.TwapPairs {
 					if twapPair.TokenIn == "bar" && twapPair.TokenOut == "foo" {
-						barfooSpotPrice = twapPair.PriceCumulative
+						barfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "baz" && twapPair.TokenOut == "foo" {
-						bazfooSpotPrice = twapPair.PriceCumulative
+						bazfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
-						foobarSpotPrice = twapPair.PriceCumulative
+						foobarPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "baz" {
-						foobazSpotPrice = twapPair.PriceCumulative
+						foobazPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "bar" && twapPair.TokenOut == "baz" {
-						barbazSpotPrice = twapPair.PriceCumulative
+						barbazPriceCumulative = twapPair.PriceCumulative
 					}
 				}
 
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.999998600002794048"), barfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.666666000001336634"), bazfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("4.000005600004503791"), foobarSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("6.000005999999970265"), foobazSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("2.999998799999967292"), barbazSpotPrice)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.499998600002794048"), barfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.333332666668003301"), bazfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("2.000005600004503791"), foobarPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("3.000005999999970265"), foobazPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.499998799999967292"), barbazPriceCumulative)
 			},
 		},
 		{
@@ -299,35 +331,67 @@ func (suite *KeeperTestSuite) TestSwapPoolTwap() {
 				poolTwap, err := suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, poolId, time.Now().Add(time.Second*2))
 				suite.Require().NoError(err)
 
-				var barfooSpotPrice sdk.Dec
-				var bazfooSpotPrice sdk.Dec
-				var foobarSpotPrice sdk.Dec
-				var foobazSpotPrice sdk.Dec
-				var barbazSpotPrice sdk.Dec
+				var barfooPriceCumulative sdk.Dec
+				var bazfooPriceCumulative sdk.Dec
+				var foobarPriceCumulative sdk.Dec
+				var foobazPriceCumulative sdk.Dec
+				var barbazPriceCumulative sdk.Dec
 
 				for _, twapPair := range poolTwap.TwapPairs {
 					if twapPair.TokenIn == "bar" && twapPair.TokenOut == "foo" {
-						barfooSpotPrice = twapPair.PriceCumulative
+						barfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "baz" && twapPair.TokenOut == "foo" {
-						bazfooSpotPrice = twapPair.PriceCumulative
+						bazfooPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
-						foobarSpotPrice = twapPair.PriceCumulative
+						foobarPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "foo" && twapPair.TokenOut == "baz" {
-						foobazSpotPrice = twapPair.PriceCumulative
+						foobazPriceCumulative = twapPair.PriceCumulative
 					} else if twapPair.TokenIn == "bar" && twapPair.TokenOut == "baz" {
-						barbazSpotPrice = twapPair.PriceCumulative
+						barbazPriceCumulative = twapPair.PriceCumulative
 					}
 				}
 
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.970596008884849791"), barfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("0.653466672710785818"), bazfooSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("4.124964897959196572"), foobarSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("6.123698399999983366"), foobazSpotPrice)
-				suite.Require().Equal(sdk.MustNewDecFromStr("2.969999999999983250"), barbazSpotPrice)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.470596008884849791"), barfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("0.320133339377452485"), bazfooPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("2.124964897959196572"), foobarPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("3.123698399999983366"), foobazPriceCumulative)
+				suite.Require().Equal(sdk.MustNewDecFromStr("1.469999999999983250"), barbazPriceCumulative)
 			},
 		},
 	}
 
+	for _, test := range tests {
+		test.fn()
+	}
+}
+
+func (suite *KeeperTestSuite) TestPoolTwapSpotPrice() {
+	suite.SetupTest()
+
+	tests := []struct {
+		fn func()
+	}{
+		{
+			fn: func() {
+				poolId := suite.preparePool()
+
+				ctx := suite.ctx.WithBlockTime(time.Now().Add(time.Second))
+				spotPrice, err := suite.app.GAMMKeeper.GetRecentPoolTwapSpotPrice(ctx, poolId, "foo", "bar", 10)
+				suite.Require().NoError(err)
+				suite.Require().Equal(sdk.MustNewDecFromStr("2.0"), spotPrice)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 2))
+				foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
+				_, err = suite.app.GAMMKeeper.JoinSwapExternAmountIn(ctx, acc1, poolId, foocoin, sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 3))
+				spotPrice, err = suite.app.GAMMKeeper.GetRecentPoolTwapSpotPrice(ctx, poolId, "foo", "bar", 10)
+				suite.Require().NoError(err)
+				suite.Require().Equal(sdk.MustNewDecFromStr("2.000003999999980177"), spotPrice)
+			},
+		},
+	}
 	for _, test := range tests {
 		test.fn()
 	}
