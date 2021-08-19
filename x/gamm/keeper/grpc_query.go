@@ -295,3 +295,27 @@ func (k Keeper) EstimateSwapExactAmountOut(ctx context.Context, req *types.Query
 		TokenInAmount: tokenInAmount,
 	}, nil
 }
+
+func (k Keeper) PoolTwap(
+	ctx context.Context,
+	req *types.QueryPoolTwapRequest,
+) (*types.QueryPoolTwapResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.TokenInDenom == "" || req.TokenOutDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	poolTwapSpotPrice, err := k.GetRecentPoolTwapSpotPrice(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom, req.Duration)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryPoolTwapResponse{
+		SpotPrice: poolTwapSpotPrice,
+	}, nil
+}
