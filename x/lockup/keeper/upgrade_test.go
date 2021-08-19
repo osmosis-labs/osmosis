@@ -11,7 +11,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) LegacyLockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	suite.SetBalances(addr, coins)
 	_, err := suite.app.LockupKeeper.LegacyLockTokens(suite.ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }

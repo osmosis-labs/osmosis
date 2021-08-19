@@ -255,8 +255,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
+			suite.SetBalances(
 				acc,
 				sdk.NewCoins(
 					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -265,9 +264,6 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
 				),
 			)
-			if err != nil {
-				panic(err)
-			}
 		}
 
 		test.fn()
@@ -343,8 +339,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
+			suite.SetBalances(
 				acc,
 				sdk.NewCoins(
 					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -353,9 +348,6 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
 				),
 			)
-			if err != nil {
-				panic(err)
-			}
 		}
 
 		// Create the pool at first
@@ -452,8 +444,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
+			suite.SetBalances(
 				acc,
 				sdk.NewCoins(
 					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -462,9 +453,6 @@ func (suite *KeeperTestSuite) TestExitPool() {
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
 				),
 			)
-			if err != nil {
-				panic(err)
-			}
 
 			// Create the pool at first
 			poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, types.PoolParams{
@@ -500,8 +488,7 @@ func (suite *KeeperTestSuite) TestActivePool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
+			suite.SetBalances(
 				acc,
 				sdk.NewCoins(
 					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -510,9 +497,6 @@ func (suite *KeeperTestSuite) TestActivePool() {
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
 				),
 			)
-			if err != nil {
-				panic(err)
-			}
 
 			// Create the pool at first
 			poolId := suite.preparePoolWithPoolParams(types.PoolParams{
@@ -522,7 +506,7 @@ func (suite *KeeperTestSuite) TestActivePool() {
 			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
 
 			// uneffected by start time
-			err = suite.app.GAMMKeeper.JoinPool(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
+			err := suite.app.GAMMKeeper.JoinPool(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
 			err = suite.app.GAMMKeeper.ExitPool(suite.ctx, acc1, poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
 			suite.Require().NoError(err)

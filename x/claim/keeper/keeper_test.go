@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/x/claim/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -34,6 +35,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	})
 
 	suite.ctx = suite.ctx.WithBlockTime(airdropStartTime)
+}
+
+func (suite *KeeperTestSuite) SetBalances(addr sdk.AccAddress, coins sdk.Coins) {
+	suite.app.MintKeeper.MintCoins(suite.ctx, coins)
+	suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, coins)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

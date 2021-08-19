@@ -8,7 +8,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	suite.SetBalances(addr, coins)
 	_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }

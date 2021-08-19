@@ -16,13 +16,13 @@ func (suite *KeeperTestSuite) TestRelock() {
 	lock := types.NewPeriodLock(1, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.SetBalances(addr1, coins)
 	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
 	// lock with balance with same id
 	coins2 := sdk.Coins{sdk.NewInt64Coin("stake2", 10)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins2)
+	suite.SetBalances(addr1, coins2)
 	err = keeper.AdminKeeper{suite.app.LockupKeeper}.Relock(suite.ctx, lock.ID, coins2)
 	suite.Require().NoError(err)
 
@@ -40,7 +40,7 @@ func (suite *KeeperTestSuite) BreakLock() {
 	lock := types.NewPeriodLock(1, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.SetBalances(addr1, coins)
 	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 

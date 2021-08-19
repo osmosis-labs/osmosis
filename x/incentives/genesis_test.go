@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/incentives"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -29,7 +30,8 @@ func TestIncentivesExportGenesis(t *testing.T) {
 		Duration:      time.Second,
 	}
 	startTime := time.Now()
-	app.BankKeeper.SetBalances(ctx, addr, coins)
+	app.MintKeeper.MintCoins(ctx, coins)
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
 	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1)
 	require.NoError(t, err)
 

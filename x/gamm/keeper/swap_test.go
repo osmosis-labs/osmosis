@@ -214,8 +214,7 @@ func (suite *KeeperTestSuite) TestActivePoolSwap() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
+			suite.SetBalances(
 				acc,
 				sdk.NewCoins(
 					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -224,9 +223,6 @@ func (suite *KeeperTestSuite) TestActivePoolSwap() {
 					sdk.NewCoin("baz", sdk.NewInt(10000000)),
 				),
 			)
-			if err != nil {
-				panic(err)
-			}
 
 			poolId := suite.preparePoolWithPoolParams(types.PoolParams{
 				SwapFee: sdk.NewDec(0),
@@ -238,12 +234,12 @@ func (suite *KeeperTestSuite) TestActivePoolSwap() {
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 
 			if tc.expectPass {
-				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				_, _, err := suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
 				suite.Require().NoError(err)
 				_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
 				suite.Require().NoError(err)
 			} else {
-				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				_, _, err := suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
 				suite.Require().Error(err)
 				_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
 				suite.Require().Error(err)

@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/mint/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -32,6 +33,11 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
+func (suite *KeeperTestSuite) SetBalances(addr sdk.AccAddress, coins sdk.Coins) {
+	suite.app.MintKeeper.MintCoins(suite.ctx, coins)
+	suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, coins)
+}
+
 func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	mintKeeper := suite.app.MintKeeper
 
@@ -44,12 +50,10 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	// When mint the 100K stake coin to the fee collector
 	fee = sdk.NewCoin("stake", sdk.NewInt(100000))
 	fees = sdk.NewCoins(fee)
-	err := suite.app.BankKeeper.AddCoins(
-		suite.ctx,
+	suite.SetBalances(
 		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
 		fees,
 	)
-	suite.NoError(err)
 
 	// check proportion for 20%
 	coin = mintKeeper.GetProportions(suite.ctx, fee, sdk.NewDecWithPrec(2, 1))
@@ -73,7 +77,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 
 	// Create record
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, gaugeCreator, coins)
+	suite.SetBalances(gaugeCreator, coins)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",

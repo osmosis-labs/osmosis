@@ -147,18 +147,18 @@ func (suite *KeeperTestSuite) TestLock() {
 	suite.Require().Error(err)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.SetBalances(addr1, coins)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
 	// lock with balance with same id
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.SetBalances(addr1, coins)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().Error(err)
 
 	// lock with balance with different id
 	lock = types.NewPeriodLock(2, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.SetBalances(addr1, coins)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 }
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	lock := types.NewPeriodLock(1, addr1, time.Second, now.Add(time.Second), coins)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.SetBalances(addr1, coins)
 	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
@@ -281,7 +281,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// add more tokens to lock
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, addCoins)
+	suite.SetBalances(addr1, addCoins)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, addr1, locks[0].ID, addCoins)
 	suite.Require().NoError(err)
 
@@ -300,8 +300,8 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	suite.Require().Equal(accum.String(), "20")
 
 	// try to add tokens to unavailable lock
+	suite.SetBalances(addr1, addCoins)
 	cacheCtx, _ := suite.ctx.CacheContext()
-	suite.app.BankKeeper.SetBalances(cacheCtx, addr1, addCoins)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, 1111, addCoins)
 	suite.Require().Error(err)
 
@@ -312,7 +312,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// try to add tokens to lock that is owned by others
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	suite.app.BankKeeper.SetBalances(cacheCtx, addr2, addCoins)
+	suite.SetBalances(addr2, addCoins)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr2, locks[0].ID, addCoins)
 	suite.Require().Error(err)
 }

@@ -3,17 +3,14 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/app"
-
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
+	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {
@@ -43,11 +40,15 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
+func (suite *KeeperTestSuite) SetBalances(addr sdk.AccAddress, coins sdk.Coins) {
+	suite.app.MintKeeper.MintCoins(suite.ctx, coins)
+	suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, coins)
+}
+
 func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolParams) uint64 {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-		err := suite.app.BankKeeper.AddCoins(
-			suite.ctx,
+		suite.SetBalances(
 			acc,
 			sdk.NewCoins(
 				sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -56,9 +57,6 @@ func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolPar
 				sdk.NewCoin("baz", sdk.NewInt(10000000)),
 			),
 		)
-		if err != nil {
-			panic(err)
-		}
 	}
 
 	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, poolParams, []types.PoolAsset{

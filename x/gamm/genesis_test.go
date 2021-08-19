@@ -9,6 +9,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/x/gamm"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -66,12 +67,17 @@ func TestGammInitGenesis(t *testing.T) {
 	require.Equal(t, liquidity, sdk.Coins{sdk.NewInt64Coin("nodetoken", 10), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
 }
 
+func SetBalances(app *simapp.OsmosisApp, ctx sdk.Context, acc sdk.AccAddress, coins sdk.Coins) {
+	app.MintKeeper.MintCoins(ctx, coins)
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, acc, coins)
+}
+
 func TestGammExportGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
+	SetBalances(app, ctx, acc1, sdk.Coins{
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
@@ -114,7 +120,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	appCodec := encodingConfig.Marshaler
 	am := gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
+	SetBalances(app, ctx, acc1, sdk.Coins{
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),

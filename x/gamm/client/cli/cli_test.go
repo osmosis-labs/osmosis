@@ -68,7 +68,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewCreatePoolAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewCreatePoolAddr", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -346,7 +346,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinPoolAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinPoolAddr", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -483,7 +483,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountOut", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountOut", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -546,7 +546,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapExternAmountIn", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapExternAmountIn", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -653,7 +653,7 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -1140,7 +1140,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountIn", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountIn", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())

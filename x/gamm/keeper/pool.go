@@ -130,7 +130,7 @@ func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
 	} else {
 		val := gogotypes.UInt64Value{}
 
-		err := k.cdc.UnmarshalBinaryBare(bz, &val)
+		err := k.cdc.Unmarshal(bz, &val)
 		if err != nil {
 			panic(err)
 		}

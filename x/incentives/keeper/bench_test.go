@@ -11,6 +11,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -79,7 +80,8 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		for j := 0; j < numDenoms; j++ {
 			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
 		}
-		app.BankKeeper.SetBalances(ctx, addr, coins)
+		app.MintKeeper.MintCoins(ctx, coins)
+		app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
 		app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
 		addrs = append(addrs, addr)
 	}

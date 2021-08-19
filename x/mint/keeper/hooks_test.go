@@ -8,6 +8,7 @@ import (
 	simapp "github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/mint/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -208,7 +209,8 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 func setupGaugeForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Context) {
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	app.BankKeeper.SetBalances(ctx, addr, coins)
+	app.MintKeeper.MintCoins(ctx, coins)
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",

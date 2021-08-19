@@ -9,7 +9,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	suite.SetBalances(addr, coins)
 	gaugeID, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch)
 	suite.Require().NoError(err)
 	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
@@ -19,14 +19,14 @@ func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress,
 
 func (suite *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64 {
 	addr := sdk.AccAddress([]byte("addrx---------------"))
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	suite.SetBalances(addr, coins)
 	err := suite.app.IncentivesKeeper.AddToGaugeRewards(suite.ctx, addr, coins, gaugeID)
 	suite.Require().NoError(err)
 	return gaugeID
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	suite.SetBalances(addr, coins)
 	_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }
