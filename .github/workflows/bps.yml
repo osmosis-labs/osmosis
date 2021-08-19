@@ -32,14 +32,33 @@ jobs:
       - name: Compile osmosis
         run: go install ./...
         
+      - name: Init
+        run: osmosisd init testnode
+        
+      - name: Genesis 
+        run: wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+          
       - name: Start Osmosis
-        run: |
-          osmosisd init testnode
-          wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
-          nohup osmosisd start &
-          sleep 7200
-          osmosisd status
-          # more stuff to be added later.
+        run: nohup osmosisd start &
+        
+      - name: 1 min
+        run: sleep 60
+        
+      - name: status at 60 seconds
+        run: osmosisd status
+        
+      - name: 10 min
+        run: sleep 600
+        
+      - name: status at 660 seconds
+        run: osmosisd status
+        
+
+          
+          
+          
+          
+
           
 
         
