@@ -12,10 +12,10 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/golang/protobuf/ptypes/duration"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -226,94 +226,6 @@ func (m *MsgBeginUnlockingAllResponse) GetUnlocks() []*PeriodLock {
 	return nil
 }
 
-type MsgUnlockTokens struct {
-	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
-}
-
-func (m *MsgUnlockTokens) Reset()         { *m = MsgUnlockTokens{} }
-func (m *MsgUnlockTokens) String() string { return proto.CompactTextString(m) }
-func (*MsgUnlockTokens) ProtoMessage()    {}
-func (*MsgUnlockTokens) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcdad5af0d24735f, []int{4}
-}
-func (m *MsgUnlockTokens) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUnlockTokens) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUnlockTokens.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUnlockTokens) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUnlockTokens.Merge(m, src)
-}
-func (m *MsgUnlockTokens) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUnlockTokens) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUnlockTokens.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUnlockTokens proto.InternalMessageInfo
-
-func (m *MsgUnlockTokens) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
-}
-
-type MsgUnlockTokensResponse struct {
-	Unlocks []*PeriodLock `protobuf:"bytes,1,rep,name=unlocks,proto3" json:"unlocks,omitempty"`
-}
-
-func (m *MsgUnlockTokensResponse) Reset()         { *m = MsgUnlockTokensResponse{} }
-func (m *MsgUnlockTokensResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgUnlockTokensResponse) ProtoMessage()    {}
-func (*MsgUnlockTokensResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcdad5af0d24735f, []int{5}
-}
-func (m *MsgUnlockTokensResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUnlockTokensResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUnlockTokensResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUnlockTokensResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUnlockTokensResponse.Merge(m, src)
-}
-func (m *MsgUnlockTokensResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUnlockTokensResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUnlockTokensResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUnlockTokensResponse proto.InternalMessageInfo
-
-func (m *MsgUnlockTokensResponse) GetUnlocks() []*PeriodLock {
-	if m != nil {
-		return m.Unlocks
-	}
-	return nil
-}
-
 type MsgBeginUnlocking struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
 	ID    uint64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
@@ -323,7 +235,7 @@ func (m *MsgBeginUnlocking) Reset()         { *m = MsgBeginUnlocking{} }
 func (m *MsgBeginUnlocking) String() string { return proto.CompactTextString(m) }
 func (*MsgBeginUnlocking) ProtoMessage()    {}
 func (*MsgBeginUnlocking) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcdad5af0d24735f, []int{6}
+	return fileDescriptor_bcdad5af0d24735f, []int{4}
 }
 func (m *MsgBeginUnlocking) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -374,7 +286,7 @@ func (m *MsgBeginUnlockingResponse) Reset()         { *m = MsgBeginUnlockingResp
 func (m *MsgBeginUnlockingResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgBeginUnlockingResponse) ProtoMessage()    {}
 func (*MsgBeginUnlockingResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcdad5af0d24735f, []int{7}
+	return fileDescriptor_bcdad5af0d24735f, []int{5}
 }
 func (m *MsgBeginUnlockingResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -410,157 +322,52 @@ func (m *MsgBeginUnlockingResponse) GetSuccess() bool {
 	return false
 }
 
-type MsgUnlockPeriodLock struct {
-	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
-	ID    uint64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
-}
-
-func (m *MsgUnlockPeriodLock) Reset()         { *m = MsgUnlockPeriodLock{} }
-func (m *MsgUnlockPeriodLock) String() string { return proto.CompactTextString(m) }
-func (*MsgUnlockPeriodLock) ProtoMessage()    {}
-func (*MsgUnlockPeriodLock) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcdad5af0d24735f, []int{8}
-}
-func (m *MsgUnlockPeriodLock) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUnlockPeriodLock) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUnlockPeriodLock.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUnlockPeriodLock) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUnlockPeriodLock.Merge(m, src)
-}
-func (m *MsgUnlockPeriodLock) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUnlockPeriodLock) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUnlockPeriodLock.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUnlockPeriodLock proto.InternalMessageInfo
-
-func (m *MsgUnlockPeriodLock) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
-}
-
-func (m *MsgUnlockPeriodLock) GetID() uint64 {
-	if m != nil {
-		return m.ID
-	}
-	return 0
-}
-
-type MsgUnlockPeriodLockResponse struct {
-	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-}
-
-func (m *MsgUnlockPeriodLockResponse) Reset()         { *m = MsgUnlockPeriodLockResponse{} }
-func (m *MsgUnlockPeriodLockResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgUnlockPeriodLockResponse) ProtoMessage()    {}
-func (*MsgUnlockPeriodLockResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcdad5af0d24735f, []int{9}
-}
-func (m *MsgUnlockPeriodLockResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUnlockPeriodLockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUnlockPeriodLockResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUnlockPeriodLockResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUnlockPeriodLockResponse.Merge(m, src)
-}
-func (m *MsgUnlockPeriodLockResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUnlockPeriodLockResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUnlockPeriodLockResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUnlockPeriodLockResponse proto.InternalMessageInfo
-
-func (m *MsgUnlockPeriodLockResponse) GetSuccess() bool {
-	if m != nil {
-		return m.Success
-	}
-	return false
-}
-
 func init() {
 	proto.RegisterType((*MsgLockTokens)(nil), "osmosis.lockup.MsgLockTokens")
 	proto.RegisterType((*MsgLockTokensResponse)(nil), "osmosis.lockup.MsgLockTokensResponse")
 	proto.RegisterType((*MsgBeginUnlockingAll)(nil), "osmosis.lockup.MsgBeginUnlockingAll")
 	proto.RegisterType((*MsgBeginUnlockingAllResponse)(nil), "osmosis.lockup.MsgBeginUnlockingAllResponse")
-	proto.RegisterType((*MsgUnlockTokens)(nil), "osmosis.lockup.MsgUnlockTokens")
-	proto.RegisterType((*MsgUnlockTokensResponse)(nil), "osmosis.lockup.MsgUnlockTokensResponse")
 	proto.RegisterType((*MsgBeginUnlocking)(nil), "osmosis.lockup.MsgBeginUnlocking")
 	proto.RegisterType((*MsgBeginUnlockingResponse)(nil), "osmosis.lockup.MsgBeginUnlockingResponse")
-	proto.RegisterType((*MsgUnlockPeriodLock)(nil), "osmosis.lockup.MsgUnlockPeriodLock")
-	proto.RegisterType((*MsgUnlockPeriodLockResponse)(nil), "osmosis.lockup.MsgUnlockPeriodLockResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/lockup/tx.proto", fileDescriptor_bcdad5af0d24735f) }
 
 var fileDescriptor_bcdad5af0d24735f = []byte{
-	// 600 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xcb, 0x6e, 0xd3, 0x40,
-	0x14, 0x8d, 0x13, 0x4a, 0xcb, 0xa5, 0xf4, 0x61, 0x8a, 0x9a, 0x1a, 0xb0, 0x83, 0x79, 0x34, 0x88,
-	0x76, 0x86, 0x14, 0x10, 0x82, 0x05, 0x12, 0x21, 0x0b, 0x2a, 0x88, 0x40, 0x56, 0x91, 0x10, 0x0b,
-	0x24, 0xdb, 0x19, 0xa6, 0x56, 0x1c, 0x4f, 0x94, 0xb1, 0xa1, 0xd9, 0xf3, 0x01, 0x2c, 0xf9, 0x06,
-	0xbe, 0xa4, 0xcb, 0x2e, 0x59, 0xa5, 0x28, 0xd9, 0xb1, 0xec, 0x17, 0x20, 0xcf, 0xc4, 0x6e, 0x5e,
-	0x90, 0x00, 0x2b, 0x67, 0x7c, 0xce, 0x3d, 0xf7, 0xdc, 0x93, 0x9b, 0x09, 0xac, 0x33, 0xde, 0x60,
-	0xdc, 0xe3, 0xd8, 0x67, 0x6e, 0x3d, 0x6a, 0xe2, 0xf0, 0x00, 0x35, 0x5b, 0x2c, 0x64, 0xea, 0x52,
-	0x1f, 0x40, 0x12, 0xd0, 0xd6, 0x28, 0xa3, 0x4c, 0x40, 0x38, 0xfe, 0x24, 0x59, 0x9a, 0x4e, 0x19,
-	0xa3, 0x3e, 0xc1, 0xe2, 0xe4, 0x44, 0x1f, 0x70, 0x2d, 0x6a, 0xd9, 0xa1, 0xc7, 0x82, 0x04, 0x77,
-	0x85, 0x0c, 0x76, 0x6c, 0x4e, 0xf0, 0xc7, 0x92, 0x43, 0x42, 0xbb, 0x84, 0x5d, 0xe6, 0x25, 0xf8,
-	0xc6, 0x48, 0xfb, 0xf8, 0x21, 0x21, 0xf3, 0x73, 0x16, 0x2e, 0x54, 0x39, 0x7d, 0xc9, 0xdc, 0xfa,
-	0x1e, 0xab, 0x93, 0x80, 0xab, 0xb7, 0x60, 0x8e, 0x7d, 0x0a, 0x48, 0x2b, 0xaf, 0x14, 0x94, 0xe2,
-	0xb9, 0xf2, 0xca, 0x49, 0xc7, 0x58, 0x6c, 0xdb, 0x0d, 0xff, 0xb1, 0x29, 0x5e, 0x9b, 0x96, 0x84,
-	0xd5, 0x7d, 0x58, 0x48, 0x6c, 0xe4, 0xb3, 0x05, 0xa5, 0x78, 0x7e, 0x67, 0x03, 0x49, 0x9f, 0x28,
-	0xf1, 0x89, 0x2a, 0x7d, 0x42, 0xb9, 0x74, 0xd8, 0x31, 0x32, 0x3f, 0x3b, 0x86, 0x9a, 0x94, 0x6c,
-	0xb1, 0x86, 0x17, 0x92, 0x46, 0x33, 0x6c, 0x9f, 0x74, 0x8c, 0x65, 0xa9, 0x9f, 0x60, 0xe6, 0xd7,
-	0x63, 0x43, 0xb1, 0x52, 0x75, 0xd5, 0x86, 0xb9, 0x78, 0x18, 0x9e, 0xcf, 0x15, 0x72, 0xa2, 0x8d,
-	0x1c, 0x17, 0xc5, 0xe3, 0xa2, 0xfe, 0xb8, 0xe8, 0x19, 0xf3, 0x82, 0xf2, 0xdd, 0xb8, 0xcd, 0xb7,
-	0x63, 0xa3, 0x48, 0xbd, 0x70, 0x3f, 0x72, 0x90, 0xcb, 0x1a, 0xb8, 0x9f, 0x8d, 0x7c, 0x6c, 0xf3,
-	0x5a, 0x1d, 0x87, 0xed, 0x26, 0xe1, 0xa2, 0x80, 0x5b, 0x52, 0xd9, 0xdc, 0x84, 0x4b, 0x43, 0x29,
-	0x58, 0x84, 0x37, 0x59, 0xc0, 0x89, 0xba, 0x04, 0xd9, 0xdd, 0x8a, 0x88, 0xe2, 0x8c, 0x95, 0xdd,
-	0xad, 0x98, 0x4f, 0x60, 0xad, 0xca, 0x69, 0x99, 0x50, 0x2f, 0x78, 0x13, 0xc4, 0x39, 0x7a, 0x01,
-	0x7d, 0xea, 0xfb, 0xb3, 0xa6, 0x66, 0xee, 0xc1, 0x95, 0x49, 0xf5, 0x69, 0xbf, 0xfb, 0x30, 0x1f,
-	0x89, 0xf7, 0x3c, 0xaf, 0x88, 0x69, 0x35, 0x34, 0xbc, 0x22, 0xe8, 0x35, 0x69, 0x79, 0xac, 0x16,
-	0x5b, 0xb5, 0x12, 0xaa, 0xf9, 0x08, 0x96, 0xab, 0x9c, 0x4a, 0xc1, 0xbf, 0xfb, 0x1a, 0xcd, 0x57,
-	0xb0, 0x3e, 0x52, 0xfa, 0x9f, 0x5e, 0x5e, 0xc0, 0xea, 0xd8, 0x84, 0x33, 0x2f, 0x95, 0x8c, 0x3b,
-	0x9b, 0xc6, 0xfd, 0x00, 0x36, 0xc6, 0xc4, 0x52, 0x7f, 0x79, 0x98, 0xe7, 0x91, 0xeb, 0x12, 0xce,
-	0x85, 0xec, 0x82, 0x95, 0x1c, 0xcd, 0x2a, 0x5c, 0x4c, 0x87, 0x3a, 0xf5, 0xf8, 0xcf, 0x2e, 0x1e,
-	0xc2, 0xe5, 0x09, 0x72, 0xd3, 0x7d, 0xec, 0x74, 0x73, 0x90, 0xab, 0x72, 0xaa, 0x5a, 0x00, 0x03,
-	0xbf, 0xb0, 0xab, 0xa3, 0x31, 0x0e, 0xad, 0x9e, 0x76, 0xf3, 0x8f, 0x70, 0xda, 0x95, 0xc2, 0xea,
-	0xf8, 0x1a, 0xde, 0x98, 0x50, 0x3b, 0xc6, 0xd2, 0xb6, 0x66, 0x61, 0xa5, 0x8d, 0xde, 0xc2, 0xe2,
-	0xd0, 0x66, 0x19, 0x13, 0xaa, 0x07, 0x09, 0xda, 0xe6, 0x14, 0x42, 0xaa, 0xfc, 0x1e, 0x96, 0x46,
-	0xf6, 0xe4, 0xda, 0x54, 0x67, 0xda, 0xed, 0xa9, 0x94, 0x54, 0xbf, 0x06, 0x2b, 0x63, 0x3b, 0x70,
-	0xfd, 0xb7, 0xe6, 0x4e, 0x49, 0xda, 0x9d, 0x19, 0x48, 0x49, 0x97, 0xf2, 0xf3, 0xc3, 0xae, 0xae,
-	0x1c, 0x75, 0x75, 0xe5, 0x47, 0x57, 0x57, 0xbe, 0xf4, 0xf4, 0xcc, 0x51, 0x4f, 0xcf, 0x7c, 0xef,
-	0xe9, 0x99, 0x77, 0x68, 0xe0, 0x1a, 0xea, 0x0b, 0x6e, 0xfb, 0xb6, 0xc3, 0x93, 0x03, 0x3e, 0x48,
-	0xff, 0x10, 0xe2, 0x2b, 0xc9, 0x39, 0x2b, 0x2e, 0xce, 0x7b, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff,
-	0x9c, 0x71, 0x61, 0xe3, 0x2f, 0x06, 0x00, 0x00,
+	// 528 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0xbf, 0x6f, 0xd3, 0x40,
+	0x14, 0x8e, 0x1d, 0x4a, 0xcb, 0x01, 0x81, 0x5a, 0x45, 0x24, 0x16, 0xd8, 0xc1, 0xe2, 0x47, 0x90,
+	0xda, 0x3b, 0x52, 0x60, 0x61, 0x40, 0x22, 0x64, 0xa0, 0x82, 0x48, 0xc8, 0x2a, 0x0b, 0x03, 0x92,
+	0xed, 0x1c, 0x57, 0x2b, 0x8e, 0xcf, 0xca, 0xb3, 0xa1, 0xd9, 0xf9, 0x03, 0x18, 0x99, 0x19, 0xf9,
+	0x4b, 0x3a, 0x76, 0x64, 0x4a, 0x51, 0xb2, 0x31, 0xf6, 0x2f, 0x40, 0xbe, 0xf3, 0x59, 0x4d, 0x52,
+	0xd1, 0x4c, 0xe7, 0x77, 0xdf, 0x7b, 0xdf, 0x7b, 0xdf, 0xe7, 0x67, 0xa3, 0xdb, 0x1c, 0x86, 0x1c,
+	0x42, 0x20, 0x11, 0x0f, 0x06, 0x59, 0x42, 0xd2, 0x43, 0x9c, 0x8c, 0x78, 0xca, 0x8d, 0x5a, 0x01,
+	0x60, 0x09, 0x98, 0x5b, 0x8c, 0x33, 0x2e, 0x20, 0x92, 0x3f, 0xc9, 0x2c, 0xd3, 0x62, 0x9c, 0xb3,
+	0x88, 0x12, 0x11, 0xf9, 0xd9, 0x67, 0xd2, 0xcf, 0x46, 0x5e, 0x1a, 0xf2, 0x58, 0xe1, 0x81, 0xa0,
+	0x21, 0xbe, 0x07, 0x94, 0x7c, 0x69, 0xfb, 0x34, 0xf5, 0xda, 0x24, 0xe0, 0xa1, 0xc2, 0x1b, 0x0b,
+	0xed, 0xf3, 0x43, 0x42, 0xce, 0x37, 0x1d, 0x5d, 0xef, 0x01, 0x7b, 0xc7, 0x83, 0xc1, 0x3e, 0x1f,
+	0xd0, 0x18, 0x8c, 0x87, 0x68, 0x8d, 0x7f, 0x8d, 0xe9, 0xa8, 0xae, 0x35, 0xb5, 0xd6, 0x95, 0xce,
+	0xcd, 0xd3, 0x89, 0x7d, 0x6d, 0xec, 0x0d, 0xa3, 0x17, 0x8e, 0xb8, 0x76, 0x5c, 0x09, 0x1b, 0x07,
+	0x68, 0x43, 0x8d, 0x51, 0xd7, 0x9b, 0x5a, 0xeb, 0xea, 0x6e, 0x03, 0xcb, 0x39, 0xb1, 0x9a, 0x13,
+	0x77, 0x8b, 0x84, 0x4e, 0xfb, 0x68, 0x62, 0x57, 0xfe, 0x4e, 0x6c, 0x43, 0x95, 0x6c, 0xf3, 0x61,
+	0x98, 0xd2, 0x61, 0x92, 0x8e, 0x4f, 0x27, 0xf6, 0x0d, 0xc9, 0xaf, 0x30, 0xe7, 0xc7, 0x89, 0xad,
+	0xb9, 0x25, 0xbb, 0xe1, 0xa1, 0xb5, 0x5c, 0x0c, 0xd4, 0xab, 0xcd, 0xaa, 0x68, 0x23, 0xe5, 0xe2,
+	0x5c, 0x2e, 0x2e, 0xe4, 0xe2, 0xd7, 0x3c, 0x8c, 0x3b, 0x4f, 0xf2, 0x36, 0xbf, 0x4e, 0xec, 0x16,
+	0x0b, 0xd3, 0x83, 0xcc, 0xc7, 0x01, 0x1f, 0x92, 0xc2, 0x1b, 0x79, 0xec, 0x40, 0x7f, 0x40, 0xd2,
+	0x71, 0x42, 0x41, 0x14, 0x80, 0x2b, 0x99, 0x9d, 0x47, 0xe8, 0xd6, 0x9c, 0x0b, 0x2e, 0x85, 0x84,
+	0xc7, 0x40, 0x8d, 0x1a, 0xd2, 0xf7, 0xba, 0xc2, 0x8a, 0x4b, 0xae, 0xbe, 0xd7, 0x75, 0x5e, 0xa2,
+	0xad, 0x1e, 0xb0, 0x0e, 0x65, 0x61, 0xfc, 0x21, 0xce, 0x7d, 0x0c, 0x63, 0xf6, 0x2a, 0x8a, 0x56,
+	0x75, 0xcd, 0xd9, 0x47, 0x77, 0xce, 0xab, 0x2f, 0xfb, 0x3d, 0x43, 0xeb, 0x99, 0xb8, 0x87, 0xba,
+	0x26, 0xd4, 0x9a, 0x78, 0x7e, 0x45, 0xf0, 0x7b, 0x3a, 0x0a, 0x79, 0x3f, 0x1f, 0xd5, 0x55, 0xa9,
+	0xce, 0x5b, 0xb4, 0xb9, 0xc4, 0xba, 0xf2, 0x8b, 0x94, 0x12, 0xf5, 0x52, 0xe2, 0x73, 0xd4, 0x58,
+	0x22, 0x2b, 0xe7, 0xab, 0xa3, 0x75, 0xc8, 0x82, 0x80, 0x02, 0x08, 0xda, 0x0d, 0x57, 0x85, 0xbb,
+	0x3f, 0x75, 0x54, 0xed, 0x01, 0x33, 0x5c, 0x84, 0xce, 0x6c, 0xd3, 0xdd, 0xc5, 0xf1, 0xe7, 0x6c,
+	0x36, 0x1f, 0xfc, 0x17, 0x2e, 0xbb, 0x32, 0xb4, 0xb9, 0x6c, 0xf9, 0xfd, 0x73, 0x6a, 0x97, 0xb2,
+	0xcc, 0xed, 0x55, 0xb2, 0xca, 0x46, 0x9f, 0x50, 0x6d, 0xc1, 0xc5, 0x7b, 0x17, 0xd6, 0x9b, 0x8f,
+	0x2f, 0x4c, 0x51, 0xfc, 0x9d, 0x37, 0x47, 0x53, 0x4b, 0x3b, 0x9e, 0x5a, 0xda, 0x9f, 0xa9, 0xa5,
+	0x7d, 0x9f, 0x59, 0x95, 0xe3, 0x99, 0x55, 0xf9, 0x3d, 0xb3, 0x2a, 0x1f, 0xf1, 0x99, 0x95, 0x2d,
+	0xe8, 0x76, 0x22, 0xcf, 0x07, 0x15, 0x90, 0xc3, 0xf2, 0xe7, 0x91, 0xaf, 0xaf, 0x7f, 0x59, 0x7c,
+	0x64, 0x4f, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0xd6, 0x38, 0xe4, 0xad, 0x5b, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -579,12 +386,8 @@ type MsgClient interface {
 	LockTokens(ctx context.Context, in *MsgLockTokens, opts ...grpc.CallOption) (*MsgLockTokensResponse, error)
 	// BeginUnlockingAll begin unlocking all tokens
 	BeginUnlockingAll(ctx context.Context, in *MsgBeginUnlockingAll, opts ...grpc.CallOption) (*MsgBeginUnlockingAllResponse, error)
-	// UnlockTokens unlock all unlockable tokens
-	UnlockTokens(ctx context.Context, in *MsgUnlockTokens, opts ...grpc.CallOption) (*MsgUnlockTokensResponse, error)
 	// MsgBeginUnlocking begins unlocking tokens by lock ID
 	BeginUnlocking(ctx context.Context, in *MsgBeginUnlocking, opts ...grpc.CallOption) (*MsgBeginUnlockingResponse, error)
-	// UnlockPeriodLock unlock individual period lock by ID
-	UnlockPeriodLock(ctx context.Context, in *MsgUnlockPeriodLock, opts ...grpc.CallOption) (*MsgUnlockPeriodLockResponse, error)
 }
 
 type msgClient struct {
@@ -613,27 +416,9 @@ func (c *msgClient) BeginUnlockingAll(ctx context.Context, in *MsgBeginUnlocking
 	return out, nil
 }
 
-func (c *msgClient) UnlockTokens(ctx context.Context, in *MsgUnlockTokens, opts ...grpc.CallOption) (*MsgUnlockTokensResponse, error) {
-	out := new(MsgUnlockTokensResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.lockup.Msg/UnlockTokens", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) BeginUnlocking(ctx context.Context, in *MsgBeginUnlocking, opts ...grpc.CallOption) (*MsgBeginUnlockingResponse, error) {
 	out := new(MsgBeginUnlockingResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.lockup.Msg/BeginUnlocking", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) UnlockPeriodLock(ctx context.Context, in *MsgUnlockPeriodLock, opts ...grpc.CallOption) (*MsgUnlockPeriodLockResponse, error) {
-	out := new(MsgUnlockPeriodLockResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.lockup.Msg/UnlockPeriodLock", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -646,12 +431,8 @@ type MsgServer interface {
 	LockTokens(context.Context, *MsgLockTokens) (*MsgLockTokensResponse, error)
 	// BeginUnlockingAll begin unlocking all tokens
 	BeginUnlockingAll(context.Context, *MsgBeginUnlockingAll) (*MsgBeginUnlockingAllResponse, error)
-	// UnlockTokens unlock all unlockable tokens
-	UnlockTokens(context.Context, *MsgUnlockTokens) (*MsgUnlockTokensResponse, error)
 	// MsgBeginUnlocking begins unlocking tokens by lock ID
 	BeginUnlocking(context.Context, *MsgBeginUnlocking) (*MsgBeginUnlockingResponse, error)
-	// UnlockPeriodLock unlock individual period lock by ID
-	UnlockPeriodLock(context.Context, *MsgUnlockPeriodLock) (*MsgUnlockPeriodLockResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -664,14 +445,8 @@ func (*UnimplementedMsgServer) LockTokens(ctx context.Context, req *MsgLockToken
 func (*UnimplementedMsgServer) BeginUnlockingAll(ctx context.Context, req *MsgBeginUnlockingAll) (*MsgBeginUnlockingAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BeginUnlockingAll not implemented")
 }
-func (*UnimplementedMsgServer) UnlockTokens(ctx context.Context, req *MsgUnlockTokens) (*MsgUnlockTokensResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnlockTokens not implemented")
-}
 func (*UnimplementedMsgServer) BeginUnlocking(ctx context.Context, req *MsgBeginUnlocking) (*MsgBeginUnlockingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BeginUnlocking not implemented")
-}
-func (*UnimplementedMsgServer) UnlockPeriodLock(ctx context.Context, req *MsgUnlockPeriodLock) (*MsgUnlockPeriodLockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnlockPeriodLock not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -714,24 +489,6 @@ func _Msg_BeginUnlockingAll_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UnlockTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUnlockTokens)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).UnlockTokens(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/osmosis.lockup.Msg/UnlockTokens",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UnlockTokens(ctx, req.(*MsgUnlockTokens))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_BeginUnlocking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgBeginUnlocking)
 	if err := dec(in); err != nil {
@@ -750,24 +507,6 @@ func _Msg_BeginUnlocking_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UnlockPeriodLock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUnlockPeriodLock)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).UnlockPeriodLock(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/osmosis.lockup.Msg/UnlockPeriodLock",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UnlockPeriodLock(ctx, req.(*MsgUnlockPeriodLock))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.lockup.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -781,16 +520,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_BeginUnlockingAll_Handler,
 		},
 		{
-			MethodName: "UnlockTokens",
-			Handler:    _Msg_UnlockTokens_Handler,
-		},
-		{
 			MethodName: "BeginUnlocking",
 			Handler:    _Msg_BeginUnlocking_Handler,
-		},
-		{
-			MethodName: "UnlockPeriodLock",
-			Handler:    _Msg_UnlockPeriodLock_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -944,73 +675,6 @@ func (m *MsgBeginUnlockingAllResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUnlockTokens) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUnlockTokens) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUnlockTokens) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Owner) > 0 {
-		i -= len(m.Owner)
-		copy(dAtA[i:], m.Owner)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUnlockTokensResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUnlockTokensResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUnlockTokensResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Unlocks) > 0 {
-		for iNdEx := len(m.Unlocks) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Unlocks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgBeginUnlocking) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1062,74 +726,6 @@ func (m *MsgBeginUnlockingResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgBeginUnlockingResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Success {
-		i--
-		if m.Success {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUnlockPeriodLock) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUnlockPeriodLock) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUnlockPeriodLock) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.ID != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.ID))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Owner) > 0 {
-		i -= len(m.Owner)
-		copy(dAtA[i:], m.Owner)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUnlockPeriodLockResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUnlockPeriodLockResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUnlockPeriodLockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1219,34 +815,6 @@ func (m *MsgBeginUnlockingAllResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgUnlockTokens) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Owner)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgUnlockTokensResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Unlocks) > 0 {
-		for _, e := range m.Unlocks {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *MsgBeginUnlocking) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1264,34 +832,6 @@ func (m *MsgBeginUnlocking) Size() (n int) {
 }
 
 func (m *MsgBeginUnlockingResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Success {
-		n += 2
-	}
-	return n
-}
-
-func (m *MsgUnlockPeriodLock) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Owner)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.ID != 0 {
-		n += 1 + sovTx(uint64(m.ID))
-	}
-	return n
-}
-
-func (m *MsgUnlockPeriodLockResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1705,178 +1245,6 @@ func (m *MsgBeginUnlockingAllResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgUnlockTokens) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUnlockTokens: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUnlockTokens: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Owner = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUnlockTokensResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUnlockTokensResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUnlockTokensResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Unlocks", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Unlocks = append(m.Unlocks, &PeriodLock{})
-			if err := m.Unlocks[len(m.Unlocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *MsgBeginUnlocking) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2008,183 +1376,6 @@ func (m *MsgBeginUnlockingResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgBeginUnlockingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Success = bool(v != 0)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUnlockPeriodLock) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUnlockPeriodLock: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUnlockPeriodLock: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Owner = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
-			}
-			m.ID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ID |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUnlockPeriodLockResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUnlockPeriodLockResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUnlockPeriodLockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

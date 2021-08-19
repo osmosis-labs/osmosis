@@ -49,6 +49,7 @@ var (
 	// KeyEpochBeginBlock defines key for storing begin block of current epoch
 	KeyEpochBeginBlock = []byte{0x09}
 
+	// LockableDurationsKey defines key for storing valid durations for giving incentives
 	LockableDurationsKey = []byte("lockable_durations")
 )
 

@@ -297,6 +297,53 @@ func NewOsmosisApp(
 	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
 
+	// this configures a no-op upgrade handler for the v2 upgrade,
+	// which improves the lockup module's store management.
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"v2", func(ctx sdk.Context, plan upgradetypes.Plan) {
+			// Upgrade all of the lock storages
+			locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
+			if err != nil {
+				panic(err)
+			}
+			// clear all lockup module locking / unlocking queue items
+			app.LockupKeeper.ClearAllLockRefKeys(ctx)
+
+			// reset all lock and references
+			for _, lock := range locks {
+				app.LockupKeeper.ResetLock(ctx, lock)
+			}
+
+			// Upgrade every validators min-commission rate
+			validators := app.StakingKeeper.GetAllValidators(ctx)
+			minCommissionRate := app.StakingKeeper.GetParams(ctx).MinCommissionRate
+			for _, v := range validators {
+				if v.Commission.Rate.LT(minCommissionRate) {
+					comm, err := app.StakingKeeper.MustUpdateValidatorCommission(
+						ctx, v, minCommissionRate)
+					if err != nil {
+						panic(err)
+					}
+					v.Commission = comm
+
+					// call the before-modification hook since we're about to update the commission
+					app.StakingKeeper.BeforeValidatorModified(ctx, v.GetOperator())
+
+					app.StakingKeeper.SetValidator(ctx, v)
+				}
+			}
+
+			// Update distribution keeper parameters to remove proposer bonus
+			// as it doesn't make sense in the epoch'd staking setting
+			distrParams := app.DistrKeeper.GetParams(ctx)
+			distrParams.BaseProposerReward = sdk.ZeroDec()
+			distrParams.BonusProposerReward = sdk.ZeroDec()
+			app.DistrKeeper.SetParams(ctx, distrParams)
+
+			// configure upgrade for gamm module's pool creation fee param add
+			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1000000000)})) // 1000 OSMO
+		})
+
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), &stakingKeeper, scopedIBCKeeper,
@@ -329,7 +376,7 @@ func NewOsmosisApp(
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ClaimKeeper.Hooks()),
 	)
-	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.GetSubspace(gammtypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.DistrKeeper)
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper, epochsKeeper)
@@ -454,6 +501,7 @@ func NewOsmosisApp(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, capabilitytypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
+		lockuptypes.ModuleName,
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, claimtypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 		epochstypes.ModuleName,
@@ -472,6 +520,7 @@ func NewOsmosisApp(
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
+		gammtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -726,6 +775,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(gammtypes.ModuleName)
 
 	return paramsKeeper
 }

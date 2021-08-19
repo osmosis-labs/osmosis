@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/utils"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
@@ -306,6 +307,16 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, distrCoins); err != nil {
 			return nil, err
 		}
+
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtDistribution,
+				sdk.NewAttribute(types.AttributeGaugeID, utils.Uint64ToString(gauge.Id)),
+				sdk.NewAttribute(types.AttributeLockID, utils.Uint64ToString(lock.ID)),
+				sdk.NewAttribute(types.AttributeReceiver, lock.Owner),
+				sdk.NewAttribute(types.AttributeAmount, distrCoins.String()),
+			),
+		})
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
