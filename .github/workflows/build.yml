@@ -18,7 +18,7 @@ jobs:
         include:
           - targetos: windows
             arch: amd64
-    name: dig ${{ matrix.arch }} for ${{ matrix.targetos }}
+    name: osmosis ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.3
