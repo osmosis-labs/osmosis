@@ -131,7 +131,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 			numEpochsPaidOver = 1
 		}
 
-		msg := types.MsgCreateGauge{
+		msg := &types.MsgCreateGauge{
 			IsPerpetual:       isPerpetual,
 			Owner:             simAccount.Address.String(),
 			DistributeTo:      distributeTo,
@@ -140,9 +140,21 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 			NumEpochsPaidOver: numEpochsPaidOver,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: rewards,
+		}
+		return osmo_simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -166,16 +178,27 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 
 		rewards := genRewardCoins(r, simCoins)
 
-		msg := types.MsgAddToGauge{
+		msg := &types.MsgAddToGauge{
 			Owner:   simAccount.Address.String(),
 			GaugeId: gaugeId,
 			Rewards: rewards,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName,
-		)
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: rewards,
+		}
+		return osmo_simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 

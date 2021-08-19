@@ -16,7 +16,7 @@ import (
 
 type Keeper struct {
 	storeKey sdk.StoreKey
-	cdc      codec.BinaryMarshaler
+	cdc      codec.BinaryCodec
 
 	paramSpace paramtypes.Subspace
 
@@ -29,7 +29,7 @@ type Keeper struct {
 	feeCollectorName  string // name of the FeeCollector ModuleAccount
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, communityPoolName string, feeCollectorName string) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, communityPoolName string, feeCollectorName string) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))

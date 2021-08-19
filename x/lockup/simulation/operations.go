@@ -105,15 +105,27 @@ func SimulateMsgLockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		durationSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		duration := time.Duration(durationSecs) * time.Second
 
-		msg := types.MsgLockTokens{
+		msg := &types.MsgLockTokens{
 			Owner:    simAccount.Address.String(),
 			Duration: duration,
 			Coins:    lockTokens,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, lockTokens, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: lockTokens,
+		}
+		return osmo_simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -128,14 +140,25 @@ func SimulateMsgBeginUnlockingAll(ak stakingTypes.AccountKeeper, bk stakingTypes
 				types.ModuleName, types.TypeMsgBeginUnlockingAll, "Account have no coin"), nil, nil
 		}
 
-		msg := types.MsgBeginUnlockingAll{
+		msg := &types.MsgBeginUnlockingAll{
 			Owner: simAccount.Address.String(),
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
-
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: nil,
+		}
+		return osmo_simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -156,14 +179,26 @@ func SimulateMsgBeginUnlocking(ak stakingTypes.AccountKeeper, bk stakingTypes.Ba
 				types.ModuleName, types.TypeMsgBeginUnlocking, "Account have no period lock"), nil, nil
 		}
 
-		msg := types.MsgBeginUnlocking{
+		msg := &types.MsgBeginUnlocking{
 			Owner: simAccount.Address.String(),
 			ID:    lock.ID,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: nil,
+		}
+		return osmo_simulation.GenAndDeliverTxWithRandFees(txCtx)
 
 	}
 }

@@ -161,7 +161,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		})
 
 		// futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, denoms)
-		msg := types.MsgCreatePool{
+		msg := &types.MsgCreatePool{
 			Sender:             simAccount.Address.String(),
 			FuturePoolGovernor: "",
 			PoolAssets:         poolAssets,
@@ -170,9 +170,21 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spentCoins,
+		}
+		return osmo_simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -204,7 +216,7 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 				types.ModuleName, types.TypeMsgSwapExactAmountIn, "No pool exist"), nil, nil
 		}
 
-		msg := types.MsgSwapExactAmountIn{
+		msg := &types.MsgSwapExactAmountIn{
 			Sender:            simAccount.Address.String(),
 			Routes:            routes,
 			TokenIn:           tokenIn,
@@ -212,9 +224,21 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 			// TokenOutMinAmount: tokenOutMin.QuoRaw(2),
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, sdk.Coins{tokenIn}, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: sdk.Coins{tokenIn},
+		}
+		return osmo_simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 

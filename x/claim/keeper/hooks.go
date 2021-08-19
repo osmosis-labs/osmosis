@@ -69,6 +69,8 @@ func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, 
 func (h Hooks) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {}
 func (h Hooks) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) {
 }
+func (h Hooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64)  {}
+func (h Hooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {}
 
 func (h Hooks) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
 	h.k.AfterProposalVote(ctx, proposalID, voterAddr)
