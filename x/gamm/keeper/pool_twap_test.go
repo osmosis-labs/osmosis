@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 				suite.Require().NoError(err)
 
 				// try calling pool twap that does not exist
-				_, err = suite.app.GAMMKeeper.GetRecentPoolTwap(suite.ctx, 100)
+				_, err = suite.app.GAMMKeeper.RecentPoolTwap(suite.ctx, 100)
 				suite.Require().Error(err)
 			},
 		},
@@ -31,9 +31,9 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 				poolId := suite.preparePool()
 
 				// change in time is neccessary in that using same time
-				// would omit an error since GetRecentPoolTwap is current time exclusive
+				// would omit an error since RecentPoolTwap is current time exclusive
 				ctx := suite.ctx.WithBlockTime(time.Now().Add(time.Second))
-				poolTwap, err := suite.app.GAMMKeeper.GetRecentPoolTwap(ctx, poolId)
+				poolTwap, err := suite.app.GAMMKeeper.RecentPoolTwap(ctx, poolId)
 				suite.Require().NoError(err)
 
 				var foobarSpotPrice sdk.Dec
@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 				suite.Require().NoError(err)
 
 				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 2))
-				poolTwap, err := suite.app.GAMMKeeper.GetRecentPoolTwap(ctx, poolId)
+				poolTwap, err := suite.app.GAMMKeeper.RecentPoolTwap(ctx, poolId)
 				suite.Require().NoError(err)
 
 				var barfooSpotPrice sdk.Dec
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 				suite.Require().NoError(err)
 
 				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 2))
-				poolTwap, err := suite.app.GAMMKeeper.GetRecentPoolTwap(ctx, poolId)
+				poolTwap, err := suite.app.GAMMKeeper.RecentPoolTwap(ctx, poolId)
 				suite.Require().NoError(err)
 
 				var barfooSpotPrice sdk.Dec
@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) TestExitPoolTwap() {
 				suite.Require().NoError(err)
 
 				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 2))
-				poolTwap, err := suite.app.GAMMKeeper.GetRecentPoolTwap(ctx, poolId)
+				poolTwap, err := suite.app.GAMMKeeper.RecentPoolTwap(ctx, poolId)
 				suite.Require().NoError(err)
 
 				var barfooSpotPrice sdk.Dec
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestExitPoolTwap() {
 				suite.Require().NoError(err)
 
 				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 2))
-				poolTwap, err := suite.app.GAMMKeeper.GetRecentPoolTwap(ctx, poolId)
+				poolTwap, err := suite.app.GAMMKeeper.RecentPoolTwap(ctx, poolId)
 				suite.Require().NoError(err)
 
 				var barfooSpotPrice sdk.Dec
@@ -255,7 +255,7 @@ func (suite *KeeperTestSuite) TestSwapPoolTwap() {
 				suite.Require().NoError(err)
 
 				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 2))
-				poolTwap, err := suite.app.GAMMKeeper.GetRecentPoolTwap(ctx, poolId)
+				poolTwap, err := suite.app.GAMMKeeper.RecentPoolTwap(ctx, poolId)
 				suite.Require().NoError(err)
 
 				var barfooSpotPrice sdk.Dec
@@ -296,7 +296,7 @@ func (suite *KeeperTestSuite) TestSwapPoolTwap() {
 				suite.Require().NoError(err)
 
 				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 2))
-				poolTwap, err := suite.app.GAMMKeeper.GetRecentPoolTwap(ctx, poolId)
+				poolTwap, err := suite.app.GAMMKeeper.RecentPoolTwap(ctx, poolId)
 				suite.Require().NoError(err)
 
 				var barfooSpotPrice sdk.Dec
