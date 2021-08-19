@@ -80,13 +80,17 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
+			//Override settings in config.toml
+			config.P2P.Seeds = "085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656"
 			config.P2P.MaxNumOutboundPeers = 40
+			config.P2P.MaxNumInboundPeers = 150
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
 			config.FastSync.Version = "v0"
 
 			config.SetRoot(clientCtx.HomeDir)
-
+			
+			//Override settings in app.toml
 			appConfig := appcfg.DefaultConfig()
 			appConfig.API.Enable = true
 			appConfig.StateSync.SnapshotInterval = 1500

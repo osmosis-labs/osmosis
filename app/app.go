@@ -498,7 +498,7 @@ func NewOsmosisApp(
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
 		epochstypes.ModuleName,
 		upgradetypes.ModuleName, minttypes.ModuleName, poolincentivestypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
+		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, capabilitytypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		lockuptypes.ModuleName,
@@ -607,6 +607,7 @@ func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	forks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
