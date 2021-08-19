@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -88,9 +90,9 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 
 func genericPow(base, exp sdk.Dec) sdk.Dec {
 	if !base.GTE(sdk.NewDec(2)) {
-		return pow(base, exp)
+		return osmomath.Pow(base, exp)
 	}
-	return powApprox(sdk.OneDec().Quo(base), exp.Neg(), powPrecision)
+	return osmomath.PowApprox(sdk.OneDec().Quo(base), exp.Neg(), powPrecision)
 }
 
 // constantChange returns the multiplicative factor difference in the pool constant, between two different pools.

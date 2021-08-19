@@ -319,7 +319,7 @@ func NewOsmosisApp(
 			minCommissionRate := app.StakingKeeper.GetParams(ctx).MinCommissionRate
 			for _, v := range validators {
 				if v.Commission.Rate.LT(minCommissionRate) {
-					comm, err := app.StakingKeeper.UpdateValidatorCommission(
+					comm, err := app.StakingKeeper.MustUpdateValidatorCommission(
 						ctx, v, minCommissionRate)
 					if err != nil {
 						panic(err)
@@ -332,6 +332,16 @@ func NewOsmosisApp(
 					app.StakingKeeper.SetValidator(ctx, v)
 				}
 			}
+
+			// Update distribution keeper parameters to remove proposer bonus
+			// as it doesn't make sense in the epoch'd staking setting
+			distrParams := app.DistrKeeper.GetParams(ctx)
+			distrParams.BaseProposerReward = sdk.ZeroDec()
+			distrParams.BonusProposerReward = sdk.ZeroDec()
+			app.DistrKeeper.SetParams(ctx, distrParams)
+
+			// configure upgrade for gamm module's pool creation fee param add
+			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1000000000)})) // 1000 OSMO
 		})
 
 	// Create IBC Keeper
@@ -366,7 +376,7 @@ func NewOsmosisApp(
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ClaimKeeper.Hooks()),
 	)
-	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.AccountKeeper, app.BankKeeper)
+	gammKeeper := gammkeeper.NewKeeper(appCodec, keys[gammtypes.StoreKey], app.GetSubspace(gammtypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.DistrKeeper)
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper, epochsKeeper)
@@ -510,6 +520,7 @@ func NewOsmosisApp(
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
+		gammtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -763,6 +774,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(gammtypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -19,7 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/gamm/client/cli"
 	gammtestutil "github.com/osmosis-labs/osmosis/x/gamm/client/testutil"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
-
+	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
@@ -34,6 +34,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	s.cfg = app.DefaultConfig()
+
+	encCfg := app.MakeEncodingConfig()
+
+	// modification to pay fee with test bond denom "stake"
+	genesisState := app.ModuleBasics.DefaultGenesis(encCfg.Marshaler)
+	gammGen := gammtypes.DefaultGenesis()
+	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
+	gammGenJson := encCfg.Marshaler.MustMarshalJSON(gammGen)
+	genesisState[gammtypes.ModuleName] = gammGenJson
+	s.cfg.GenesisState = genesisState
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -67,7 +77,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)

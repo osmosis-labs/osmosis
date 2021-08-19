@@ -119,7 +119,7 @@ func (k Keeper) NumPools(
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: k.getNextPoolNumber(sdkCtx) - 1,
+		NumPools: k.GetNextPoolNumber(sdkCtx) - 1,
 	}, nil
 }
 
