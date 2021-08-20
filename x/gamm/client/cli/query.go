@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -36,6 +37,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryTotalLiquidity(),
 		GetCmdEstimateSwapExactAmountIn(),
 		GetCmdEstimateSwapExactAmountOut(),
+		GetCmdPoolTwapSpotPrice(),
 	)
 
 	return cmd
@@ -520,5 +522,52 @@ $ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz8
 	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
 	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
 
+	return cmd
+}
+
+// GetCmdPoolTwapSpotPrice returns twap spot price of specific duration
+func GetCmdPoolTwapSpotPrice() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "twap-spot-price [poolId] [tokenInDenom] [tokenOutDenom] [duration]",
+		Short: "Query the twap spot price of a specific pool.",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the twap spot price of a specific pool.
+			Example:
+			$ %s query gamm twap-spot-price 0 uatom uosmo 10
+			`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			poolID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			duration, err := strconv.Atoi(args[3])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.PoolTwap(cmd.Context(), &types.QueryPoolTwapRequest{
+				PoolId:        uint64(poolID),
+				TokenInDenom:  args[1],
+				TokenOutDenom: args[2],
+				Duration:      time.Duration(duration),
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintObjectLegacy(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
