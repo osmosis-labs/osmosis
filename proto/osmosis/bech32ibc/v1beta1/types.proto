@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.bech32ibc.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/bech32ibc/types";
+
+// An HrpIbcRecord maps a bech32 human-readable prefix to an IBC source
+// channel
+message HrpIbcRecord {
+  option (gogoproto.equal) = true;
+
+  // The bech32 human readable prefix that serves as the key
+  string HRP = 1 [ (gogoproto.moretags) = "yaml:\"hrp\"" ];
+  // the channel by which the packet will be sent
+  string source_channel = 2
+      [ (gogoproto.moretags) = "yaml:\"source_channel\"" ];
+}

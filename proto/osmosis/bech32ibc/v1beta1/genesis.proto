@@ -1,0 +1,16 @@
+syntax = "proto3";
+package osmosis.bech32ibc.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/bech32ibc/v1beta1/types.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/bech32ibc/types";
+
+message GenesisState {
+  string nativeHRP = 1 [ (gogoproto.moretags) = "yaml:\"native_hrp\"" ];
+
+  repeated HrpIbcRecord hrpIBCRecords = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"hrp_ibc_records\""
+  ];
+}

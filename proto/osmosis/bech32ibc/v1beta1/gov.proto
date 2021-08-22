@@ -1,0 +1,25 @@
+syntax = "proto3";
+package osmosis.bech32ibc.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/bech32ibc/v1beta1/types.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/bech32ibc/types";
+
+// UpdateHrpIBCRecordProposal is a gov Content type for adding a new record
+// between a bech32 prefix and an IBC (port, channel).
+// It can be used to add a new record to the set. It can also be
+// used to update the IBC channel to associate with a specific denom. If channel
+// is set to "", it will remove the record from the set.
+message UpdateHrpIBCRecordProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
+  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
+  HrpIbcRecord hrpIBCRecord = 3 [
+    (gogoproto.moretags) = "yaml:\"hrp_ibc_record\"",
+    (gogoproto.nullable) = false
+  ];
+}
