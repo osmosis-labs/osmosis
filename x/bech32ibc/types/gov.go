@@ -8,18 +8,18 @@ import (
 )
 
 const (
-	ProposalTypeUpdateHrpIBCRecord = "UpdateHrpIBCRecord"
+	ProposalTypeUpdateHrpIbcChannel = "UpdateHrpIbcChannel"
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeUpdateHrpIBCRecord)
-	govtypes.RegisterProposalTypeCodec(&UpdateHrpIBCRecordProposal{}, "osmosis/UpdateHrpIBCRecord")
+	govtypes.RegisterProposalType(ProposalTypeUpdateHrpIbcChannel)
+	govtypes.RegisterProposalTypeCodec(&UpdateHrpIbcChannelProposal{}, "osmosis/UpdateHrpIbcChannel")
 }
 
-var _ govtypes.Content = &UpdateHrpIBCRecordProposal{}
+var _ govtypes.Content = &UpdateHrpIbcChannelProposal{}
 
 func NewUpdateHrpIBCRecordProposal(title, description, hrp, sourceChannel string) govtypes.Content {
-	return &UpdateHrpIBCRecordProposal{
+	return &UpdateHrpIbcChannelProposal{
 		Title:         title,
 		Description:   description,
 		Hrp:           hrp,
@@ -27,17 +27,17 @@ func NewUpdateHrpIBCRecordProposal(title, description, hrp, sourceChannel string
 	}
 }
 
-func (p *UpdateHrpIBCRecordProposal) GetTitle() string { return p.Title }
+func (p *UpdateHrpIbcChannelProposal) GetTitle() string { return p.Title }
 
-func (p *UpdateHrpIBCRecordProposal) GetDescription() string { return p.Description }
+func (p *UpdateHrpIbcChannelProposal) GetDescription() string { return p.Description }
 
-func (p *UpdateHrpIBCRecordProposal) ProposalRoute() string { return RouterKey }
+func (p *UpdateHrpIbcChannelProposal) ProposalRoute() string { return RouterKey }
 
-func (p *UpdateHrpIBCRecordProposal) ProposalType() string {
-	return ProposalTypeUpdateHrpIBCRecord
+func (p *UpdateHrpIbcChannelProposal) ProposalType() string {
+	return ProposalTypeUpdateHrpIbcChannel
 }
 
-func (p *UpdateHrpIBCRecordProposal) ValidateBasic() error {
+func (p *UpdateHrpIbcChannelProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
 		return err
@@ -45,9 +45,9 @@ func (p *UpdateHrpIBCRecordProposal) ValidateBasic() error {
 	return ValidateHRP(p.Hrp)
 }
 
-func (p UpdateHrpIBCRecordProposal) String() string {
+func (p UpdateHrpIbcChannelProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update HrpIBCRecord Proposal:
+	b.WriteString(fmt.Sprintf(`Update HRP IBC Channel Proposal:
   Title:          %s
   Description:    %s
   HRP:            %s

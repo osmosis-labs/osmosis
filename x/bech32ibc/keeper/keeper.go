@@ -12,13 +12,14 @@ import (
 )
 
 type (
-	Keeper struct {
-		cdc      codec.Marshaler
-		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
-		// this line is used by starport scaffolding # ibc/keeper/attribute
-	}
-)
+	
+// ChannelKeeper defines the expected IBC channel keeper
+type ChannelKeeper interface {
+	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channeltypes.Channel, found bool)
+	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
+	SendPacket(ctx sdk.Context, channelCap *capabilitytypes.Capability, packet ibcexported.PacketI) error
+}
+
 
 func NewKeeper(
 	cdc codec.Marshaler,

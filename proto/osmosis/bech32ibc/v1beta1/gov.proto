@@ -11,7 +11,7 @@ option go_package = "github.com/osmosis-labs/osmosis/x/bech32ibc/types";
 // It can be used to add a new record to the set. It can also be
 // used to update the IBC channel to associate with a specific denom. If channel
 // is set to "", it will remove the record from the set.
-message UpdateHrpIBCRecordProposal {
+message UpdateHrpIbcChannelProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
