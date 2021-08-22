@@ -13,7 +13,7 @@ COPY . /osmosis
 
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN cd /osmosis && \
-    make install ./...
+    make install
 
 # Final image
 FROM faddat/archlinux
