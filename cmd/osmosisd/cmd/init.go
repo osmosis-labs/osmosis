@@ -86,9 +86,9 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode. 
 			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
 			
-			seeds := []string {
-			"085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656"} // Notional
-		 
+			seeds := []string {}
+			seeds = append(seeds, "085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656") // Notional
+			seeds = append(seeds, "35704ce530963d08585469c32113c0843ecd9703@2a00:5fa0:1000:1007:569f:35ff:fe04:c992:16656") // Dual Systems
 			
 			
 
