@@ -169,7 +169,7 @@ var (
 
 var _ App = (*OsmosisApp)(nil)
 
-// Gaia extends an ABCI application, but with most of its parameters exported.
+// Osmosis extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
 type OsmosisApp struct {
@@ -227,7 +227,7 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".osmosisd")
 }
 
-// NewOsmosis returns a reference to an initialized Gaia.
+// NewOsmosis returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
