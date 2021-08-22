@@ -866,7 +866,6 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 
 				resp := types.QueryPoolResponse{}
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.Require().Equal(resp.Pool, "a")
 			}
 		})
 	}
