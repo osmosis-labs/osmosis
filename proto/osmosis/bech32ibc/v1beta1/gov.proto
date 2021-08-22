@@ -18,8 +18,7 @@ message UpdateHrpIBCRecordProposal {
 
   string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
   string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
-  HrpIbcRecord hrpIBCRecord = 3 [
-    (gogoproto.moretags) = "yaml:\"hrp_ibc_record\"",
-    (gogoproto.nullable) = false
-  ];
+  string hrp = 3 [ (gogoproto.moretags) = "yaml:\"hrp\"" ];
+  string source_channel = 4
+      [ (gogoproto.moretags) = "yaml:\"source_channel\"" ];
 }

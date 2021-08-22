@@ -38,6 +38,7 @@ func (k Keeper) setNativeHrp(ctx sdk.Context, hrp string) error {
 // ValidateFeeToken validates that a fee token record is valid
 // It checks:
 // - The HRP is valid
+// - The HRP is not for the chain's native prefix
 // - Check that IBC channels and ports are real
 func (k Keeper) ValidateHrpIbcRecord(ctx sdk.Context, record types.HrpIbcRecord) error {
 	err := types.ValidateHRP(record.HRP)

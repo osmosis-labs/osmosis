@@ -18,11 +18,12 @@ func init() {
 
 var _ govtypes.Content = &UpdateHrpIBCRecordProposal{}
 
-func NewUpdateHrpIBCRecordProposal(title, description string, hrpIbcRecord HrpIbcRecord) govtypes.Content {
+func NewUpdateHrpIBCRecordProposal(title, description, hrp, sourceChannel string) govtypes.Content {
 	return &UpdateHrpIBCRecordProposal{
-		Title:        title,
-		Description:  description,
-		HrpIBCRecord: hrpIbcRecord,
+		Title:         title,
+		Description:   description,
+		Hrp:           hrp,
+		SourceChannel: sourceChannel,
 	}
 }
 
@@ -41,15 +42,16 @@ func (p *UpdateHrpIBCRecordProposal) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	return ValidateHRP(p.HrpIBCRecord.HRP)
+	return ValidateHRP(p.Hrp)
 }
 
 func (p UpdateHrpIBCRecordProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Update HrpIBCRecord Proposal:
-  Title:       %s
-  Description: %s
-  HrpIBCRecord:     %s
-`, p.Title, p.Description, p.HrpIBCRecord.String))
+  Title:          %s
+  Description:    %s
+  HRP:            %s
+  Source Channel: %s
+`, p.Title, p.Description, p.Hrp, p.SourceChannel))
 	return b.String()
 }

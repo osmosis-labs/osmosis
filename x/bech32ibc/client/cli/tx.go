@@ -43,11 +43,6 @@ func NewCmdSubmitUpdateHrpIbcRecordProposal() *cobra.Command {
 			hrp := args[0]
 			channelId := args[1]
 
-			record := types.HrpIbcRecord{
-				HRP:           hrp,
-				SourceChannel: channelId,
-			}
-
 			title, err := cmd.Flags().GetString(cli.FlagTitle)
 			if err != nil {
 				return err
@@ -69,7 +64,7 @@ func NewCmdSubmitUpdateHrpIbcRecordProposal() *cobra.Command {
 				return err
 			}
 
-			content := types.NewUpdateHrpIBCRecordProposal(title, description, record)
+			content := types.NewUpdateHrpIBCRecordProposal(title, description, hrp, channelId)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
