@@ -94,17 +94,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
 			config.FastSync.Version = "v0"
-			config.P2P.ListenAddress = "tcp://0.0.0.0:2000"
-			config.RPC.ListenAddress = "tcp://0.0.0.0:2001"
 
 			config.SetRoot(clientCtx.HomeDir)
 
 			//Override default settings in app.toml
 			appConfig := appcfg.DefaultConfig()
 			appConfig.API.Enable = true
-			appConfig.GRPC.Enable = true
-			appConfig.GRPC.Address = "tcp://0.0.0.0:2002"
-			appConfig.API.Address = "tcp://0.0.0.0:2003"
 			appConfig.StateSync.SnapshotInterval = 1500
 			appConfig.StateSync.SnapshotKeepRecent = 2
 
