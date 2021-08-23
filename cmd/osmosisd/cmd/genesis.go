@@ -46,7 +46,7 @@ Examples include:
 Example:
 	osmosisd prepare-genesis mainnet osmosis-1
 	- Check input genesis:
-		file is at ~/.gaiad/config/genesis.json
+		file is at ~/.osmosisd/config/genesis.json
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
