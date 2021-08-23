@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
+	"strings"
+
 
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
@@ -81,11 +82,17 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode.
-			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
 
-			seeds := []string{
-				"085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656"} // Notional
+			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode. 
+			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
+			
+			seeds := []string {
+			"085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656"} // Notional
+		 
+			
+			
+
+			
 
 			//Override default settings in config.toml
 			config.P2P.Seeds = strings.Join(seeds[:],",")
@@ -96,6 +103,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.FastSync.Version = "v0"
 
 			config.SetRoot(clientCtx.HomeDir)
+
 
 			//Override default settings in app.toml
 			appConfig := appcfg.DefaultConfig()
