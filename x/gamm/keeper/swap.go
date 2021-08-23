@@ -122,10 +122,6 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, err
 	}
 
-	err = k.UpdatePoolTwap(ctx, poolId, tokenIn.Denom, tokenOut.Denom)
-	if err != nil {
-		return sdk.Int{}, sdk.Dec{}, err
-	}
 	return tokenInAmount, spotPriceAfter, nil
 }
 
@@ -174,6 +170,10 @@ func (k Keeper) updatePoolForSwap(
 	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
 	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
 
+	err = k.UpdatePoolTwap(ctx, pool.GetId(), tokenIn.Denom, tokenOut.Denom)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
