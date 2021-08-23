@@ -26,7 +26,7 @@ jobs:
         run: |
           osmosisd init test
           wget -O ~/.osmosisd/config/genesis.json https://ipfs.io/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
-          osmosisd start &
+          nohup osmosisd start &
           sleep 60
           osmosisd status
           
