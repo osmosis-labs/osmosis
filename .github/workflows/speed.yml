@@ -20,9 +20,7 @@ jobs:
 
       - name: Install Osmosis
         run: go install ./...
-        
-      - name: Install ipget
-        run: go install github.com/ipfs/ipget
+      
         
       - name: Sync
         run: |
