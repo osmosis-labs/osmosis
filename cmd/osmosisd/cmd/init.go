@@ -88,7 +88,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				"085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656"} // Notional
 
 			//Override default settings in config.toml
-			config.P2P.Seeds = strings.Join(seeds[:], ",")
+			config.P2P.Seeds = strings.Join(seeds[:],",")
 			config.P2P.MaxNumInboundPeers = 150
 			config.P2P.MaxNumOutboundPeers = 40
 			config.Mempool.Size = 10000
