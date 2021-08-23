@@ -25,8 +25,8 @@ COPY --from=build /go/bin/osmosisd /usr/bin/osmosisd
 COPY --from=build /genesis.json /genesis.json
 
 # Run osmosisd by default, omit entrypoint to ease using container with osmosiscli
-EXPOSE 2000
-EXPOSE 2001
-EXPOSE 2002
-EXPOSE 2003
+EXPOSE 26656
+EXPOSE 26657
+EXPOSE 1317
+EXPOSE 9090
 
