@@ -20,13 +20,16 @@ jobs:
 
       - name: Install Osmosis
         run: go install ./...
+        
+      - name: Install pm2
+        run: npm install pm2 -g
       
         
       - name: Sync
         run: |
           osmosisd init test
           wget -O ~/.osmosisd/config/genesis.json https://ipfs.io/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
-          nohup osmosisd start &
+          pm2 start "osmosisd start" 
           
       - name: 60 seconds
         run: |
