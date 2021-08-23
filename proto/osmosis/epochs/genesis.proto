@@ -27,7 +27,6 @@ message EpochInfo {
     (gogoproto.moretags) = "yaml:\"current_epoch_start_time\""
   ];
   bool epoch_counting_started = 6;
-  bool current_epoch_ended = 7;
 }
 
 // GenesisState defines the epochs module's genesis state.
