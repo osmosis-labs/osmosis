@@ -1,0 +1,39 @@
+# This is a basic workflow that is manually triggered
+
+name: Sync for an hour
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on: [push, pull_request, workflow_dispatch]
+
+# This workflow makes x86_64 binaries for mac, windows, and linux.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: osmosis sync performance
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.3
+        with: 
+          go-version: '^1.17'
+
+      - name: Install Osmosis
+        run: go install ./...
+        
+      - name: Install ipget
+        run: go get github.com/ipfs/ipget
+        
+      - name: Sync
+        run: |
+          osmosisd init test
+          ipget -o ~/.osmosisd/config/genesis.json QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
+          nohup osmosisd start &
+          sleep 60
+          osmosisd status
+          
+        
+      - uses: actions/upload-artifact@v2
+        with:
+          name: osmosisd ${{ matrix.targetos }} ${{ matrix.arch }}
+          path: cmd/osmosisd/osmosisd
