@@ -1,0 +1,15 @@
+syntax = "proto3";
+package osmosis.superfluid;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/superfluid/superfluid.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
+
+// Msg defines the Msg service.
+service Msg {
+}
+
+// TODO: what msgs should we have in this module?

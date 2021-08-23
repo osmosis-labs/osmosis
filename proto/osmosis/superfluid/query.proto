@@ -1,0 +1,35 @@
+syntax = "proto3";
+package osmosis.superfluid;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "osmosis/superfluid/superfluid.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Returns superfluid asset info
+  rpc AssetInfo(AssetInfoRequest) returns (AssetInfoResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_info/{denom}";
+  }
+  // Returns all superfluid assets info
+  rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_assets";
+  }
+}
+
+message AssetInfoRequest {
+    string denom = 1;
+};
+message AssetInfoResponse {
+   SuperfluidAsset asset = 1;
+};
+
+message AllAssetsRequest {};
+message AllAssetsResponse {
+   repeated SuperfluidAsset assets = 1;
+};
