@@ -270,13 +270,4 @@ func (suite *KeeperTestSuite) TestPoolTwap() {
 		Duration:      10,
 	})
 	suite.Require().Error(err)
-
-	res, err := queryClient.PoolTwap(gocontext.Background(), &types.QueryPoolTwapRequest{
-		PoolId:        poolId,
-		TokenInDenom:  "foo",
-		TokenOutDenom: "bar",
-		Duration:      10,
-	})
-	suite.Require().NoError(err)
-	suite.Equal(sdk.NewDec(2), res.SpotPrice)
 }

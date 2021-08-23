@@ -1221,7 +1221,7 @@ func (s *IntegrationTestSuite) TestGetCmdPoolTwapSpotPrice() {
 				"10",
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
 			},
-			false,
+			true,
 		},
 	}
 
