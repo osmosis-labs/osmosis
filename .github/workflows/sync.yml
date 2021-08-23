@@ -31,9 +31,14 @@ jobs:
           wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs 
           pm2 start "osmosisd start" 
           
-      - name: 60 seconds
+      - name: 1 minute
         run: |
           sleep 60
+          osmosisd status
+          
+      - name: 10 minutes
+        run: |
+          sleep 540
           osmosisd status
           
       
