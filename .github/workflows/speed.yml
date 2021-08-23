@@ -22,18 +22,14 @@ jobs:
         run: go install ./...
         
       - name: Install ipget
-        run: go get github.com/ipfs/ipget
+        run: go install github.com/ipfs/ipget
         
       - name: Sync
         run: |
           osmosisd init test
-          ipget -o ~/.osmosisd/config/genesis.json QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
+          ipget -o genesis.json QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
           nohup osmosisd start &
           sleep 60
           osmosisd status
           
-        
-      - uses: actions/upload-artifact@v2
-        with:
-          name: osmosisd ${{ matrix.targetos }} ${{ matrix.arch }}
-          path: cmd/osmosisd/osmosisd
+      
