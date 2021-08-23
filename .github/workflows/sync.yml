@@ -28,7 +28,7 @@ jobs:
       - name: Sync
         run: |
           osmosisd init test
-          wget -O ~/.osmosisd/config/genesis.json https://ipfs.io/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
+          wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs 
           pm2 start "osmosisd start" 
           
       - name: 60 seconds
