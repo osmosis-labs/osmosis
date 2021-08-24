@@ -26,8 +26,14 @@ type Tree struct {
 
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
-	tree.Set(nil, sdk.ZeroInt())
+	if tree.IsEmpty() {
+		tree.Set(nil, sdk.ZeroInt())
+	}
 	return tree
+}
+
+func (t Tree) IsEmpty() bool {
+	return !t.store.Has(t.leafKey(nil))
 }
 
 func (t Tree) Set(key []byte, acc sdk.Int) {
@@ -51,7 +57,7 @@ func (t Tree) Remove(key []byte) {
 type node struct {
 	tree  Tree
 	level uint16
-	key []byte
+	key   []byte
 	// XXX: cache stored value?
 }
 
