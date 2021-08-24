@@ -323,7 +323,7 @@ func NewOsmosisApp(
 			app.DistrKeeper.SetParams(ctx, distrParams)
 
 			// configure upgrade for gamm module's pool creation fee param add
-			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 0)})) // 0 OSMO
+			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 		})
 
 	// Create IBC Keeper
