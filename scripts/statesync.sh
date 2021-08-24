@@ -15,9 +15,7 @@ BINARY="https://github.com/osmosis-labs/osmosis/releases/download/v3.1.0/osmosis
 GENESIS="https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs"
 APP="OSMOSISD: ~/.osmosisd"
 
-read -p "$APP folder, your keys and config will be erased, proced (y/n)? " -n 1 -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
+
   # BitCanna State Sync client config.
   rm -f osmosisd #deletes a previous downloaded binary
   rm -rf $HOME/.osmosisd/ #deletes previous installation   
@@ -80,5 +78,3 @@ then
 
   ./osmosisd unsafe-reset-all
   ./osmosisd start
-   echo If your node is synced considerate to create a service file. 
-fi
