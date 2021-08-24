@@ -19,7 +19,7 @@ jobs:
           go-version: '^1.17'
 
       - name: Compile osmosis
-        run: ./...
+        run: go install ./...
               
       - name: init
         run: |
