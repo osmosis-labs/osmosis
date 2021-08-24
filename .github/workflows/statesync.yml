@@ -26,6 +26,5 @@ jobs:
           osmosisd init test
           wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs 
 
-
       - name: state sync
         run: bash scripts/statesync.sh
