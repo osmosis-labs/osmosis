@@ -108,8 +108,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			//Override default settings in app.toml
 			appConfig := appcfg.DefaultConfig()
 			appConfig.API.Enable = true
-			appConfig.StateSync.SnapshotInterval = 1500
-			appConfig.StateSync.SnapshotKeepRecent = 2
+			appConfig.StateSync.SnapshotInterval = 1000
+			appConfig.StateSync.SnapshotKeepRecent = 10
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if chainID == "" {
