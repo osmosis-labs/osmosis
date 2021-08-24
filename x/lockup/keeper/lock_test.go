@@ -261,8 +261,8 @@ func (suite *KeeperTestSuite) TestLockTokensAlot() {
 			maxGas = spentNow
 		}
 	}
-	fmt.Println("test deets", "begin average at", startAveragingAt, "total locks created", totalNumLocks)
-	fmt.Println("average:", runningTotal/(uint64(totalNumLocks-startAveragingAt)))
+	fmt.Println("test deets: total locks created %i, begin average at %i", totalNumLocks, startAveragingAt)
+	fmt.Println("average gas / lock:", runningTotal/(uint64(totalNumLocks-startAveragingAt)))
 	fmt.Println("max gas / lock:", maxGas)
 
 	// panic(1)
