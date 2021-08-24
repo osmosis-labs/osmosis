@@ -57,6 +57,7 @@ func (ptr *ptr) leftSibling() *ptr {
 
 func (ptr *ptr) rightSibling() *ptr {
 	iter := ptr.tree.ptrIterator(ptr.level, ptr.key, nil)
+	defer iter.Close()
 	if !iter.Valid() {
 		return nil
 	}

@@ -74,6 +74,8 @@ func (iter ptrIterator) ptr() *ptr {
 		level: iter.level,
 		key:   iter.Key()[7:],
 	}
+	// ptrIterator becomes invalid once retrieve ptr
+	iter.Close()
 	return &res
 }
 
@@ -92,6 +94,7 @@ func (t Tree) leafKey(key []byte) []byte {
 
 func (t Tree) root() *ptr {
 	iter := stypes.KVStoreReversePrefixIterator(t.store, []byte("node/"))
+	defer iter.Close()
 	if !iter.Valid() {
 		return nil
 	}
