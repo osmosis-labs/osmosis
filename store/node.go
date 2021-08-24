@@ -25,7 +25,6 @@ func (ptr *ptr) node() (res *Node) {
 	if bz != nil {
 		proto.Unmarshal(bz, res)
 	}
-	//fmt.Println("getNode", len(bz))
 	return
 }
 
@@ -34,19 +33,17 @@ func (ptr *ptr) set(node *Node) {
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println("setNode", len(bz))
 	ptr.tree.store.Set(ptr.tree.nodeKey(ptr.level, ptr.key), bz)
 }
 
 func (ptr *ptr) setLeaf(leaf *Leaf) {
 	if !ptr.isLeaf() {
-		panic("setLeaf should not be called on branch ptr")
+		panic("setLeaf should only be called on pointers to leaf nodes. This ptr is a branch")
 	}
 	bz, err := proto.Marshal(leaf)
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println("setLeaf", len(bz))
 	ptr.tree.store.Set(ptr.tree.leafKey(ptr.key), bz)
 }
 
@@ -75,15 +72,15 @@ func (ptr *ptr) child(n uint16) *ptr {
 	return ptr.tree.ptrIterator(ptr.level-1, ptr.node().Children[n].Index, nil).ptr()
 }
 
-// parent returns the parent of the provided ptr pointer.
-// Behavior is not well defined if the calling ptr pointer does not exist in the tree.
+// parent returns the parent of the provided pointer.
+// Behavior is not well defined if the calling pointer does not exist in the tree.
 func (ptr *ptr) parent() *ptr {
 	// See if there is a parent with the same 'key' as this ptr.
 	parent := ptr.tree.ptrGet(ptr.level+1, ptr.key)
 	if parent.exists() {
 		return parent
 	}
-	// If not, take the ptr in the above layer that is lexicographically the closest
+	// If not, take the node in the above layer that is lexicographically the closest
 	// from the left of the key.
 	parent = parent.leftSibling()
 	if parent.exists() {
@@ -93,7 +90,7 @@ func (ptr *ptr) parent() *ptr {
 	return ptr.tree.ptrGet(ptr.level+1, nil)
 }
 
-// exists returns if the calling ptr is in the tree.
+// exists returns true if the calling pointer has a node in the tree.
 func (ptr *ptr) exists() bool {
 	if ptr == nil {
 		return false

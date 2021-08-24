@@ -115,7 +115,6 @@ func (t Tree) Get(key []byte) sdk.Int {
 	if err != nil {
 		panic(err)
 	}
-	//	fmt.Println("getLeaf", len(bz))
 	return res.Leaf.Accumulation
 }
 
@@ -125,7 +124,6 @@ func (ptr *ptr) create(node *Node) {
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println("creLeaf", len(bz))
 	ptr.tree.store.Set(keybz, bz)
 }
 
@@ -184,7 +182,6 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, righ
 		var leaf Leaf
 		bz := ptr.tree.store.Get(ptr.tree.leafKey(ptr.key))
 		err := proto.Unmarshal(bz, &leaf)
-		//fmt.Println("accLeaf", len(bz))
 		if err != nil {
 			panic(err)
 		}
