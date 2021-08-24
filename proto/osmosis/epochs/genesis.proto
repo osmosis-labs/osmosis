@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/epochs/types";
 
 message EpochInfo {
+  reserved 7;
   string identifier = 1;
   google.protobuf.Timestamp start_time = 2 [
     (gogoproto.stdtime) = true,
