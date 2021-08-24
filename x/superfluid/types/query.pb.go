@@ -32,15 +32,103 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type AssetInfoRequest struct {
+type AssetTypeRequest struct {
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *AssetTypeRequest) Reset()         { *m = AssetTypeRequest{} }
+func (m *AssetTypeRequest) String() string { return proto.CompactTextString(m) }
+func (*AssetTypeRequest) ProtoMessage()    {}
+func (*AssetTypeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e3d9448e4ed3943f, []int{0}
+}
+func (m *AssetTypeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AssetTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AssetTypeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AssetTypeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AssetTypeRequest.Merge(m, src)
+}
+func (m *AssetTypeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AssetTypeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AssetTypeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AssetTypeRequest proto.InternalMessageInfo
+
+func (m *AssetTypeRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type AssetTypeResponse struct {
+	Asset *SuperfluidAsset `protobuf:"bytes,1,opt,name=asset,proto3" json:"asset,omitempty"`
+}
+
+func (m *AssetTypeResponse) Reset()         { *m = AssetTypeResponse{} }
+func (m *AssetTypeResponse) String() string { return proto.CompactTextString(m) }
+func (*AssetTypeResponse) ProtoMessage()    {}
+func (*AssetTypeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e3d9448e4ed3943f, []int{1}
+}
+func (m *AssetTypeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AssetTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AssetTypeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AssetTypeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AssetTypeResponse.Merge(m, src)
+}
+func (m *AssetTypeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AssetTypeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AssetTypeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AssetTypeResponse proto.InternalMessageInfo
+
+func (m *AssetTypeResponse) GetAsset() *SuperfluidAsset {
+	if m != nil {
+		return m.Asset
+	}
+	return nil
+}
+
+type AssetInfoRequest struct {
+	AssetId string `protobuf:"bytes,1,opt,name=asset_id,json=assetId,proto3" json:"asset_id,omitempty"`
 }
 
 func (m *AssetInfoRequest) Reset()         { *m = AssetInfoRequest{} }
 func (m *AssetInfoRequest) String() string { return proto.CompactTextString(m) }
 func (*AssetInfoRequest) ProtoMessage()    {}
 func (*AssetInfoRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e3d9448e4ed3943f, []int{0}
+	return fileDescriptor_e3d9448e4ed3943f, []int{2}
 }
 func (m *AssetInfoRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -69,22 +157,22 @@ func (m *AssetInfoRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AssetInfoRequest proto.InternalMessageInfo
 
-func (m *AssetInfoRequest) GetDenom() string {
+func (m *AssetInfoRequest) GetAssetId() string {
 	if m != nil {
-		return m.Denom
+		return m.AssetId
 	}
 	return ""
 }
 
 type AssetInfoResponse struct {
-	Asset *SuperfluidAsset `protobuf:"bytes,1,opt,name=asset,proto3" json:"asset,omitempty"`
+	Info *SuperfluidAssetInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 }
 
 func (m *AssetInfoResponse) Reset()         { *m = AssetInfoResponse{} }
 func (m *AssetInfoResponse) String() string { return proto.CompactTextString(m) }
 func (*AssetInfoResponse) ProtoMessage()    {}
 func (*AssetInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e3d9448e4ed3943f, []int{1}
+	return fileDescriptor_e3d9448e4ed3943f, []int{3}
 }
 func (m *AssetInfoResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -113,9 +201,9 @@ func (m *AssetInfoResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AssetInfoResponse proto.InternalMessageInfo
 
-func (m *AssetInfoResponse) GetAsset() *SuperfluidAsset {
+func (m *AssetInfoResponse) GetInfo() *SuperfluidAssetInfo {
 	if m != nil {
-		return m.Asset
+		return m.Info
 	}
 	return nil
 }
@@ -127,7 +215,7 @@ func (m *AllAssetsRequest) Reset()         { *m = AllAssetsRequest{} }
 func (m *AllAssetsRequest) String() string { return proto.CompactTextString(m) }
 func (*AllAssetsRequest) ProtoMessage()    {}
 func (*AllAssetsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e3d9448e4ed3943f, []int{2}
+	return fileDescriptor_e3d9448e4ed3943f, []int{4}
 }
 func (m *AllAssetsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -164,7 +252,7 @@ func (m *AllAssetsResponse) Reset()         { *m = AllAssetsResponse{} }
 func (m *AllAssetsResponse) String() string { return proto.CompactTextString(m) }
 func (*AllAssetsResponse) ProtoMessage()    {}
 func (*AllAssetsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e3d9448e4ed3943f, []int{3}
+	return fileDescriptor_e3d9448e4ed3943f, []int{5}
 }
 func (m *AllAssetsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -200,43 +288,135 @@ func (m *AllAssetsResponse) GetAssets() []*SuperfluidAsset {
 	return nil
 }
 
+type EnabledAssetsRequest struct {
+}
+
+func (m *EnabledAssetsRequest) Reset()         { *m = EnabledAssetsRequest{} }
+func (m *EnabledAssetsRequest) String() string { return proto.CompactTextString(m) }
+func (*EnabledAssetsRequest) ProtoMessage()    {}
+func (*EnabledAssetsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e3d9448e4ed3943f, []int{6}
+}
+func (m *EnabledAssetsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EnabledAssetsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EnabledAssetsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EnabledAssetsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EnabledAssetsRequest.Merge(m, src)
+}
+func (m *EnabledAssetsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *EnabledAssetsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_EnabledAssetsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EnabledAssetsRequest proto.InternalMessageInfo
+
+type EnabledAssetsResponse struct {
+	Assets []*SuperfluidAsset `protobuf:"bytes,1,rep,name=assets,proto3" json:"assets,omitempty"`
+}
+
+func (m *EnabledAssetsResponse) Reset()         { *m = EnabledAssetsResponse{} }
+func (m *EnabledAssetsResponse) String() string { return proto.CompactTextString(m) }
+func (*EnabledAssetsResponse) ProtoMessage()    {}
+func (*EnabledAssetsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e3d9448e4ed3943f, []int{7}
+}
+func (m *EnabledAssetsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EnabledAssetsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EnabledAssetsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EnabledAssetsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EnabledAssetsResponse.Merge(m, src)
+}
+func (m *EnabledAssetsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *EnabledAssetsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_EnabledAssetsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EnabledAssetsResponse proto.InternalMessageInfo
+
+func (m *EnabledAssetsResponse) GetAssets() []*SuperfluidAsset {
+	if m != nil {
+		return m.Assets
+	}
+	return nil
+}
+
 func init() {
+	proto.RegisterType((*AssetTypeRequest)(nil), "osmosis.superfluid.AssetTypeRequest")
+	proto.RegisterType((*AssetTypeResponse)(nil), "osmosis.superfluid.AssetTypeResponse")
 	proto.RegisterType((*AssetInfoRequest)(nil), "osmosis.superfluid.AssetInfoRequest")
 	proto.RegisterType((*AssetInfoResponse)(nil), "osmosis.superfluid.AssetInfoResponse")
 	proto.RegisterType((*AllAssetsRequest)(nil), "osmosis.superfluid.AllAssetsRequest")
 	proto.RegisterType((*AllAssetsResponse)(nil), "osmosis.superfluid.AllAssetsResponse")
+	proto.RegisterType((*EnabledAssetsRequest)(nil), "osmosis.superfluid.EnabledAssetsRequest")
+	proto.RegisterType((*EnabledAssetsResponse)(nil), "osmosis.superfluid.EnabledAssetsResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/superfluid/query.proto", fileDescriptor_e3d9448e4ed3943f) }
 
 var fileDescriptor_e3d9448e4ed3943f = []byte{
-	// 413 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xc1, 0xaa, 0xd3, 0x40,
-	0x14, 0x6d, 0x9e, 0xf4, 0xc1, 0x1b, 0x37, 0xef, 0x0d, 0x6f, 0x51, 0x8a, 0x8c, 0x25, 0x55, 0xe9,
-	0xc6, 0x8c, 0xad, 0x20, 0x88, 0xab, 0xba, 0x13, 0x44, 0xb4, 0xee, 0xdc, 0x94, 0x49, 0x3b, 0x89,
-	0x03, 0xc9, 0xdc, 0x34, 0x77, 0x22, 0x16, 0x71, 0xe3, 0xca, 0x65, 0xc1, 0x6f, 0xf0, 0x5f, 0x5c,
-	0x16, 0xdc, 0xb8, 0x94, 0xd6, 0x0f, 0x91, 0x4c, 0x26, 0x6d, 0x89, 0xad, 0xba, 0xbb, 0xb9, 0xe7,
-	0xdc, 0x73, 0xcf, 0x3d, 0x13, 0xc2, 0x00, 0x53, 0x40, 0x85, 0x1c, 0x8b, 0x4c, 0xe6, 0x51, 0x52,
-	0xa8, 0x39, 0x5f, 0x14, 0x32, 0x5f, 0x06, 0x59, 0x0e, 0x06, 0x28, 0x75, 0x78, 0xb0, 0xc7, 0xbb,
-	0xd7, 0x31, 0xc4, 0x60, 0x61, 0x5e, 0x56, 0x15, 0xb3, 0xcb, 0x66, 0x96, 0xca, 0x43, 0x81, 0x92,
-	0xbf, 0x1b, 0x86, 0xd2, 0x88, 0x21, 0x9f, 0x81, 0xd2, 0x0e, 0xbf, 0x15, 0x03, 0xc4, 0x89, 0xe4,
-	0x22, 0x53, 0x5c, 0x68, 0x0d, 0x46, 0x18, 0x05, 0x1a, 0x1d, 0x7a, 0xdb, 0xa1, 0xf6, 0x2b, 0x2c,
-	0x22, 0x6e, 0x54, 0x2a, 0xd1, 0x88, 0x34, 0xab, 0xe5, 0x9b, 0x84, 0x79, 0x91, 0x5b, 0x05, 0x87,
-	0xf7, 0x8f, 0x1c, 0xb2, 0x2f, 0x2b, 0x92, 0x3f, 0x20, 0x97, 0x63, 0x44, 0x69, 0x9e, 0xe9, 0x08,
-	0x26, 0x72, 0x51, 0x48, 0x34, 0xf4, 0x9a, 0xb4, 0xe7, 0x52, 0x43, 0xda, 0xf1, 0x7a, 0xde, 0xe0,
-	0x62, 0x52, 0x7d, 0xf8, 0x2f, 0xc8, 0xd5, 0x01, 0x13, 0x33, 0xd0, 0x28, 0xe9, 0x63, 0xd2, 0x16,
-	0x65, 0xd3, 0x52, 0x6f, 0x8e, 0xfa, 0xc1, 0x9f, 0xe1, 0x04, 0xaf, 0x77, 0xa5, 0x9d, 0x9f, 0x54,
-	0x13, 0x3e, 0x25, 0x97, 0xe3, 0x24, 0xb1, 0x2d, 0x74, 0x9b, 0xfd, 0x97, 0xe4, 0xea, 0xa0, 0xe7,
-	0x76, 0x3c, 0x21, 0xe7, 0x76, 0x02, 0x3b, 0x5e, 0xef, 0xc6, 0xff, 0x2e, 0x71, 0x23, 0xa3, 0xaf,
-	0x67, 0xa4, 0xfd, 0xaa, 0x7c, 0x3d, 0xba, 0xf2, 0xc8, 0xc5, 0xee, 0x00, 0x7a, 0xe7, 0x98, 0x48,
-	0x33, 0x89, 0xee, 0xdd, 0x7f, 0xb0, 0x2a, 0x87, 0xfe, 0xa3, 0x4f, 0xdf, 0x7f, 0x7d, 0x39, 0x7b,
-	0x40, 0x03, 0x7e, 0x24, 0xf2, 0xfa, 0xe1, 0xad, 0xa1, 0xa9, 0xd2, 0x11, 0xf0, 0x0f, 0x36, 0xd1,
-	0x8f, 0xf4, 0x73, 0x69, 0xa9, 0xbe, 0xf7, 0x84, 0xa5, 0x46, 0x44, 0x27, 0x2c, 0x35, 0x43, 0xf3,
-	0x03, 0x6b, 0x69, 0x40, 0xef, 0xfd, 0xd5, 0x52, 0x92, 0x4c, 0xab, 0x9c, 0x9e, 0x3e, 0xff, 0xb6,
-	0x61, 0xde, 0x7a, 0xc3, 0xbc, 0x9f, 0x1b, 0xe6, 0xad, 0xb6, 0xac, 0xb5, 0xde, 0xb2, 0xd6, 0x8f,
-	0x2d, 0x6b, 0xbd, 0x19, 0xc5, 0xca, 0xbc, 0x2d, 0xc2, 0x60, 0x06, 0x69, 0xad, 0x75, 0x3f, 0x11,
-	0x21, 0xee, 0x84, 0xdf, 0x1f, 0x4a, 0x9b, 0x65, 0x26, 0x31, 0x3c, 0xb7, 0x3f, 0xd7, 0xc3, 0xdf,
-	0x01, 0x00, 0x00, 0xff, 0xff, 0x6f, 0xbe, 0x1a, 0x0e, 0x4c, 0x03, 0x00, 0x00,
+	// 541 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcf, 0x6b, 0x13, 0x41,
+	0x18, 0xcd, 0x6a, 0x53, 0xed, 0x88, 0x50, 0x87, 0x28, 0x35, 0xc8, 0x5a, 0xb6, 0xfe, 0x88, 0x62,
+	0x77, 0x4c, 0x0a, 0x42, 0xf1, 0x54, 0xc1, 0x43, 0x41, 0x44, 0x63, 0x4f, 0x5e, 0xca, 0x6c, 0x76,
+	0xb2, 0x0e, 0xec, 0xce, 0x6c, 0x33, 0xb3, 0x62, 0x28, 0xbd, 0x78, 0xf2, 0x58, 0xe8, 0xc5, 0x3f,
+	0xc9, 0x63, 0x41, 0x10, 0x8f, 0x92, 0xf8, 0x87, 0xc8, 0x7e, 0x33, 0x9b, 0xa4, 0xeb, 0x36, 0xcd,
+	0xa1, 0xb7, 0x99, 0x79, 0xef, 0x9b, 0xf7, 0x76, 0xde, 0xf7, 0x2d, 0x72, 0xa5, 0x4a, 0xa4, 0xe2,
+	0x8a, 0xa8, 0x2c, 0x65, 0x83, 0x7e, 0x9c, 0xf1, 0x90, 0x1c, 0x64, 0x6c, 0x30, 0xf4, 0xd3, 0x81,
+	0xd4, 0x12, 0x63, 0x8b, 0xfb, 0x53, 0xbc, 0xd9, 0x88, 0x64, 0x24, 0x01, 0x26, 0xf9, 0xca, 0x30,
+	0x9b, 0x6e, 0x0f, 0xa8, 0x24, 0xa0, 0x8a, 0x91, 0xcf, 0xed, 0x80, 0x69, 0xda, 0x26, 0x3d, 0xc9,
+	0x85, 0xc5, 0xef, 0x45, 0x52, 0x46, 0x31, 0x23, 0x34, 0xe5, 0x84, 0x0a, 0x21, 0x35, 0xd5, 0x5c,
+	0x0a, 0x65, 0xd1, 0xfb, 0x16, 0x85, 0x5d, 0x90, 0xf5, 0x89, 0xe6, 0x09, 0x53, 0x9a, 0x26, 0x69,
+	0x71, 0x7d, 0x99, 0x10, 0x66, 0x03, 0xb8, 0xc1, 0xe2, 0x1b, 0x15, 0x1f, 0x32, 0x5d, 0x1a, 0x92,
+	0xd7, 0x42, 0xab, 0x3b, 0x4a, 0x31, 0xbd, 0x37, 0x4c, 0x59, 0x97, 0x1d, 0x64, 0x4c, 0x69, 0xdc,
+	0x40, 0xf5, 0x90, 0x09, 0x99, 0xac, 0x39, 0xeb, 0x4e, 0x6b, 0xa5, 0x6b, 0x36, 0xde, 0x5b, 0x74,
+	0x6b, 0x86, 0xa9, 0x52, 0x29, 0x14, 0xc3, 0xdb, 0xa8, 0x4e, 0xf3, 0x43, 0xa0, 0xde, 0xe8, 0x6c,
+	0xf8, 0xff, 0x3f, 0x8e, 0xff, 0x61, 0xb2, 0x84, 0xfa, 0xae, 0xa9, 0xf0, 0x36, 0xad, 0xf2, 0xae,
+	0xe8, 0xcb, 0x42, 0xf9, 0x2e, 0xba, 0x0e, 0xe0, 0x3e, 0x0f, 0xad, 0xf8, 0x35, 0xd8, 0xef, 0x86,
+	0xde, 0x3b, 0x2b, 0x6f, 0xe8, 0x56, 0xfe, 0x25, 0x5a, 0xe2, 0xa2, 0x2f, 0xad, 0xfa, 0xe3, 0x05,
+	0xd4, 0xa1, 0x1c, 0x8a, 0x3c, 0x8c, 0x56, 0x77, 0xe2, 0x18, 0x4e, 0x95, 0x35, 0x00, 0x2a, 0xd3,
+	0xb3, 0x89, 0xca, 0x32, 0xb8, 0x50, 0x6b, 0xce, 0xfa, 0xd5, 0x45, 0xbf, 0xd2, 0x96, 0x78, 0x77,
+	0x50, 0xe3, 0xb5, 0xa0, 0x41, 0xcc, 0xc2, 0xb3, 0x4a, 0x7b, 0xe8, 0x76, 0xe9, 0xfc, 0x12, 0xd4,
+	0x3a, 0xbf, 0x96, 0x50, 0xfd, 0x7d, 0xde, 0xac, 0xf8, 0xd8, 0x41, 0x2b, 0x93, 0xbc, 0xf0, 0x83,
+	0xaa, 0x4b, 0xca, 0xc1, 0x37, 0x1f, 0x5e, 0xc0, 0x32, 0x0e, 0xbd, 0x17, 0x5f, 0x7f, 0xfe, 0x3d,
+	0xb9, 0xf2, 0x1c, 0xfb, 0xa4, 0xa2, 0xc3, 0x8a, 0x3e, 0x37, 0x39, 0xea, 0x61, 0xca, 0xc8, 0x21,
+	0x34, 0xd0, 0x11, 0xfe, 0x96, 0x5b, 0x2a, 0x5e, 0xf7, 0x1c, 0x4b, 0xa5, 0x40, 0xce, 0xb1, 0x54,
+	0x8e, 0xc8, 0xf3, 0xc1, 0x52, 0x0b, 0x3f, 0x9a, 0x6b, 0x29, 0x8e, 0xf7, 0xcd, 0x3b, 0xe1, 0xef,
+	0x0e, 0xba, 0x79, 0xe6, 0xf9, 0x71, 0xab, 0x4a, 0xa8, 0x2a, 0xb9, 0xe6, 0x93, 0x05, 0x98, 0xd6,
+	0x56, 0x07, 0x6c, 0x3d, 0xc3, 0x4f, 0xe7, 0xd9, 0x62, 0xa6, 0xb4, 0xb0, 0x76, 0x52, 0x04, 0x97,
+	0xb7, 0xea, 0x9c, 0xe0, 0x66, 0xe6, 0x66, 0x4e, 0x70, 0xb3, 0xe3, 0xe2, 0x6d, 0x83, 0x9d, 0x2d,
+	0xdc, 0xbe, 0x38, 0xb8, 0x7c, 0x42, 0xc8, 0x61, 0x31, 0x8c, 0x47, 0xaf, 0xde, 0xfc, 0x18, 0xb9,
+	0xce, 0xe9, 0xc8, 0x75, 0xfe, 0x8c, 0x5c, 0xe7, 0x78, 0xec, 0xd6, 0x4e, 0xc7, 0x6e, 0xed, 0xf7,
+	0xd8, 0xad, 0x7d, 0xec, 0x44, 0x5c, 0x7f, 0xca, 0x02, 0xbf, 0x27, 0x93, 0xe2, 0xda, 0xcd, 0x98,
+	0x06, 0x6a, 0xa2, 0xf1, 0x65, 0x56, 0x25, 0x6f, 0x08, 0x15, 0x2c, 0xc3, 0xcf, 0x67, 0xeb, 0x5f,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0x17, 0xaf, 0x4e, 0x83, 0x6c, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -251,10 +431,14 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Returns superfluid asset info
-	AssetInfo(ctx context.Context, in *AssetInfoRequest, opts ...grpc.CallOption) (*AssetInfoResponse, error)
+	// Returns superfluid asset type
+	AssetType(ctx context.Context, in *AssetTypeRequest, opts ...grpc.CallOption) (*AssetTypeResponse, error)
 	// Returns all superfluid assets info
 	AllAssets(ctx context.Context, in *AllAssetsRequest, opts ...grpc.CallOption) (*AllAssetsResponse, error)
+	// Returns enabled superfluid assets
+	EnabledAssets(ctx context.Context, in *EnabledAssetsRequest, opts ...grpc.CallOption) (*EnabledAssetsResponse, error)
+	// Returns superfluid asset info
+	AssetInfo(ctx context.Context, in *AssetInfoRequest, opts ...grpc.CallOption) (*AssetInfoResponse, error)
 }
 
 type queryClient struct {
@@ -265,9 +449,9 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) AssetInfo(ctx context.Context, in *AssetInfoRequest, opts ...grpc.CallOption) (*AssetInfoResponse, error) {
-	out := new(AssetInfoResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Query/AssetInfo", in, out, opts...)
+func (c *queryClient) AssetType(ctx context.Context, in *AssetTypeRequest, opts ...grpc.CallOption) (*AssetTypeResponse, error) {
+	out := new(AssetTypeResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Query/AssetType", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -283,43 +467,71 @@ func (c *queryClient) AllAssets(ctx context.Context, in *AllAssetsRequest, opts 
 	return out, nil
 }
 
+func (c *queryClient) EnabledAssets(ctx context.Context, in *EnabledAssetsRequest, opts ...grpc.CallOption) (*EnabledAssetsResponse, error) {
+	out := new(EnabledAssetsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Query/EnabledAssets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AssetInfo(ctx context.Context, in *AssetInfoRequest, opts ...grpc.CallOption) (*AssetInfoResponse, error) {
+	out := new(AssetInfoResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Query/AssetInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Returns superfluid asset info
-	AssetInfo(context.Context, *AssetInfoRequest) (*AssetInfoResponse, error)
+	// Returns superfluid asset type
+	AssetType(context.Context, *AssetTypeRequest) (*AssetTypeResponse, error)
 	// Returns all superfluid assets info
 	AllAssets(context.Context, *AllAssetsRequest) (*AllAssetsResponse, error)
+	// Returns enabled superfluid assets
+	EnabledAssets(context.Context, *EnabledAssetsRequest) (*EnabledAssetsResponse, error)
+	// Returns superfluid asset info
+	AssetInfo(context.Context, *AssetInfoRequest) (*AssetInfoResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) AssetInfo(ctx context.Context, req *AssetInfoRequest) (*AssetInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AssetInfo not implemented")
+func (*UnimplementedQueryServer) AssetType(ctx context.Context, req *AssetTypeRequest) (*AssetTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AssetType not implemented")
 }
 func (*UnimplementedQueryServer) AllAssets(ctx context.Context, req *AllAssetsRequest) (*AllAssetsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllAssets not implemented")
+}
+func (*UnimplementedQueryServer) EnabledAssets(ctx context.Context, req *EnabledAssetsRequest) (*EnabledAssetsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnabledAssets not implemented")
+}
+func (*UnimplementedQueryServer) AssetInfo(ctx context.Context, req *AssetInfoRequest) (*AssetInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AssetInfo not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_AssetInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AssetInfoRequest)
+func _Query_AssetType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AssetTypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).AssetInfo(ctx, in)
+		return srv.(QueryServer).AssetType(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.superfluid.Query/AssetInfo",
+		FullMethod: "/osmosis.superfluid.Query/AssetType",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).AssetInfo(ctx, req.(*AssetInfoRequest))
+		return srv.(QueryServer).AssetType(ctx, req.(*AssetTypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -342,21 +554,130 @@ func _Query_AllAssets_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_EnabledAssets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnabledAssetsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).EnabledAssets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.superfluid.Query/EnabledAssets",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).EnabledAssets(ctx, req.(*EnabledAssetsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AssetInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AssetInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AssetInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.superfluid.Query/AssetInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AssetInfo(ctx, req.(*AssetInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.superfluid.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AssetInfo",
-			Handler:    _Query_AssetInfo_Handler,
+			MethodName: "AssetType",
+			Handler:    _Query_AssetType_Handler,
 		},
 		{
 			MethodName: "AllAssets",
 			Handler:    _Query_AllAssets_Handler,
 		},
+		{
+			MethodName: "EnabledAssets",
+			Handler:    _Query_EnabledAssets_Handler,
+		},
+		{
+			MethodName: "AssetInfo",
+			Handler:    _Query_AssetInfo_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "osmosis/superfluid/query.proto",
+}
+
+func (m *AssetTypeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AssetTypeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AssetTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AssetTypeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AssetTypeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AssetTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Asset != nil {
+		{
+			size, err := m.Asset.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *AssetInfoRequest) Marshal() (dAtA []byte, err error) {
@@ -379,10 +700,10 @@ func (m *AssetInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+	if len(m.AssetId) > 0 {
+		i -= len(m.AssetId)
+		copy(dAtA[i:], m.AssetId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.AssetId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -409,9 +730,9 @@ func (m *AssetInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Asset != nil {
+	if m.Info != nil {
 		{
-			size, err := m.Asset.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.Info.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -484,6 +805,66 @@ func (m *AllAssetsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *EnabledAssetsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EnabledAssetsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EnabledAssetsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *EnabledAssetsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EnabledAssetsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EnabledAssetsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Assets) > 0 {
+		for iNdEx := len(m.Assets) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Assets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -495,7 +876,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *AssetInfoRequest) Size() (n int) {
+func (m *AssetTypeRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -508,7 +889,7 @@ func (m *AssetInfoRequest) Size() (n int) {
 	return n
 }
 
-func (m *AssetInfoResponse) Size() (n int) {
+func (m *AssetTypeResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -516,6 +897,32 @@ func (m *AssetInfoResponse) Size() (n int) {
 	_ = l
 	if m.Asset != nil {
 		l = m.Asset.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *AssetInfoRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AssetId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *AssetInfoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Info != nil {
+		l = m.Info.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -545,13 +952,37 @@ func (m *AllAssetsResponse) Size() (n int) {
 	return n
 }
 
+func (m *EnabledAssetsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *EnabledAssetsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Assets) > 0 {
+		for _, e := range m.Assets {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
 func sovQuery(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *AssetInfoRequest) Unmarshal(dAtA []byte) error {
+func (m *AssetTypeRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -574,10 +1005,10 @@ func (m *AssetInfoRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AssetInfoRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: AssetTypeRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AssetInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AssetTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -636,7 +1067,7 @@ func (m *AssetInfoRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AssetInfoResponse) Unmarshal(dAtA []byte) error {
+func (m *AssetTypeResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -659,10 +1090,10 @@ func (m *AssetInfoResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AssetInfoResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: AssetTypeResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AssetInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AssetTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -698,6 +1129,180 @@ func (m *AssetInfoResponse) Unmarshal(dAtA []byte) error {
 				m.Asset = &SuperfluidAsset{}
 			}
 			if err := m.Asset.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AssetInfoRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AssetInfoRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AssetInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AssetId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AssetInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AssetInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AssetInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Info", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Info == nil {
+				m.Info = &SuperfluidAssetInfo{}
+			}
+			if err := m.Info.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -805,6 +1410,146 @@ func (m *AllAssetsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: AllAssetsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Assets", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Assets = append(m.Assets, &SuperfluidAsset{})
+			if err := m.Assets[len(m.Assets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EnabledAssetsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EnabledAssetsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EnabledAssetsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EnabledAssetsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EnabledAssetsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EnabledAssetsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

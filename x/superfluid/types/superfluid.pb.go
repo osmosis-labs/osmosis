@@ -27,13 +27,33 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// SuperfluidAsset is a unit to manage superfluid assets.
+type SuperfluidAssetType int32
+
+const (
+	// TODO: what superfluid asset types will be here?
+	SuperfluidAssetTypeDefault SuperfluidAssetType = 0
+)
+
+var SuperfluidAssetType_name = map[int32]string{
+	0: "SuperfluidAssetTypeDefault",
+}
+
+var SuperfluidAssetType_value = map[string]int32{
+	"SuperfluidAssetTypeDefault": 0,
+}
+
+func (x SuperfluidAssetType) String() string {
+	return proto.EnumName(SuperfluidAssetType_name, int32(x))
+}
+
+func (SuperfluidAssetType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_79d3c29d82dbb734, []int{0}
+}
+
+// SuperfluidAsset stores the pair of superfluid asset type and denom pair
 type SuperfluidAsset struct {
-	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	// TODO: do we need to keep superfluid_staked_amount in this object?
-	SuperfluidStakedAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=superfluid_staked_amount,json=superfluidStakedAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"superfluid_staked_amount" yaml:"superfluid_staked_amount"`
-	Enabled                bool                                   `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
-	RiskAdjustRatio        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=risk_adjust_ratio,json=riskAdjustRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"risk_adjust_ratio" yaml:"risk_adjust_ratio"`
+	AssetType SuperfluidAssetType `protobuf:"varint,1,opt,name=asset_type,json=assetType,proto3,enum=osmosis.superfluid.SuperfluidAssetType" json:"asset_type,omitempty"`
+	Denom     string              `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 }
 
 func (m *SuperfluidAsset) Reset()         { *m = SuperfluidAsset{} }
@@ -69,6 +89,13 @@ func (m *SuperfluidAsset) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SuperfluidAsset proto.InternalMessageInfo
 
+func (m *SuperfluidAsset) GetAssetType() SuperfluidAssetType {
+	if m != nil {
+		return m.AssetType
+	}
+	return SuperfluidAssetTypeDefault
+}
+
 func (m *SuperfluidAsset) GetDenom() string {
 	if m != nil {
 		return m.Denom
@@ -76,15 +103,57 @@ func (m *SuperfluidAsset) GetDenom() string {
 	return ""
 }
 
-func (m *SuperfluidAsset) GetEnabled() bool {
-	if m != nil {
-		return m.Enabled
+// SuperfluidAssetInfo stores the information of superfluid asset - real time changes
+type SuperfluidAssetInfo struct {
+	SuperfluidAssetId          uint64                                 `protobuf:"varint,1,opt,name=superfluid_asset_id,json=superfluidAssetId,proto3" json:"superfluid_asset_id,omitempty"`
+	SuperfluidStakedAmount     github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=superfluid_staked_amount,json=superfluidStakedAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"superfluid_staked_amount" yaml:"superfluid_staked_amount"`
+	RiskAdjustedOsmoEquivalent github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=risk_adjusted_osmo_equivalent,json=riskAdjustedOsmoEquivalent,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"risk_adjusted_osmo_equivalent" yaml:"risk_adjusted_osmo_equivalent"`
+}
+
+func (m *SuperfluidAssetInfo) Reset()         { *m = SuperfluidAssetInfo{} }
+func (m *SuperfluidAssetInfo) String() string { return proto.CompactTextString(m) }
+func (*SuperfluidAssetInfo) ProtoMessage()    {}
+func (*SuperfluidAssetInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_79d3c29d82dbb734, []int{1}
+}
+func (m *SuperfluidAssetInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SuperfluidAssetInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SuperfluidAssetInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
 	}
-	return false
+}
+func (m *SuperfluidAssetInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SuperfluidAssetInfo.Merge(m, src)
+}
+func (m *SuperfluidAssetInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *SuperfluidAssetInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_SuperfluidAssetInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SuperfluidAssetInfo proto.InternalMessageInfo
+
+func (m *SuperfluidAssetInfo) GetSuperfluidAssetId() uint64 {
+	if m != nil {
+		return m.SuperfluidAssetId
+	}
+	return 0
 }
 
 func init() {
+	proto.RegisterEnum("osmosis.superfluid.SuperfluidAssetType", SuperfluidAssetType_name, SuperfluidAssetType_value)
 	proto.RegisterType((*SuperfluidAsset)(nil), "osmosis.superfluid.SuperfluidAsset")
+	proto.RegisterType((*SuperfluidAssetInfo)(nil), "osmosis.superfluid.SuperfluidAssetInfo")
 }
 
 func init() {
@@ -92,30 +161,35 @@ func init() {
 }
 
 var fileDescriptor_79d3c29d82dbb734 = []byte{
-	// 364 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0xcf, 0x4e, 0xb3, 0x40,
-	0x14, 0xc5, 0xa1, 0xdf, 0xe7, 0x3f, 0x36, 0x8d, 0xa4, 0x31, 0xa4, 0x0b, 0x68, 0x30, 0x31, 0xdd,
-	0x94, 0x49, 0x75, 0xe7, 0xae, 0x8d, 0x1b, 0x8d, 0x1b, 0xe9, 0xce, 0x0d, 0x19, 0x60, 0x8a, 0x58,
-	0x86, 0x21, 0xdc, 0x99, 0xc6, 0x3e, 0x83, 0x1b, 0xdf, 0xca, 0x2e, 0xbb, 0x34, 0x2e, 0x88, 0x69,
-	0xdf, 0xa0, 0x4f, 0x60, 0x18, 0xa8, 0x6d, 0x34, 0x2e, 0x5c, 0x31, 0xe7, 0xfe, 0x6e, 0xce, 0x39,
-	0x61, 0x46, 0x3b, 0x65, 0x40, 0x19, 0xc4, 0x80, 0x40, 0x64, 0x24, 0x1f, 0x27, 0x22, 0x0e, 0x77,
-	0x8e, 0x4e, 0x96, 0x33, 0xce, 0x74, 0xbd, 0x5e, 0x72, 0xb6, 0xa4, 0xdd, 0x8a, 0x58, 0xc4, 0x24,
-	0x46, 0xe5, 0xa9, 0xda, 0x6c, 0x9b, 0x11, 0x63, 0x51, 0x42, 0x90, 0x54, 0xbe, 0x18, 0xa3, 0x50,
-	0xe4, 0x98, 0xc7, 0x2c, 0xad, 0xb9, 0xf5, 0x9d, 0xf3, 0x98, 0x12, 0xe0, 0x98, 0x66, 0x1b, 0x83,
-	0x40, 0x66, 0x21, 0x1f, 0x03, 0x41, 0xd3, 0xbe, 0x4f, 0x38, 0xee, 0xa3, 0x80, 0xc5, 0xb5, 0x81,
-	0xfd, 0xda, 0xd0, 0x9a, 0xa3, 0xaf, 0x16, 0x03, 0x00, 0xc2, 0xf5, 0x96, 0xb6, 0x17, 0x92, 0x94,
-	0x51, 0x43, 0xed, 0xa8, 0xdd, 0x23, 0xb7, 0x12, 0xfa, 0xb3, 0xaa, 0x19, 0xdb, 0xbe, 0x1e, 0x70,
-	0x3c, 0x21, 0xa1, 0x87, 0x29, 0x13, 0x29, 0x37, 0x1a, 0xe5, 0xe6, 0xf0, 0x6e, 0x5e, 0x58, 0xca,
-	0x7b, 0x61, 0x9d, 0x45, 0x31, 0x7f, 0x10, 0xbe, 0x13, 0x30, 0x8a, 0xea, 0xfc, 0xea, 0xd3, 0x83,
-	0x70, 0x82, 0xf8, 0x2c, 0x23, 0xe0, 0x5c, 0xa7, 0x7c, 0x5d, 0x58, 0xd6, 0x0c, 0xd3, 0xe4, 0xd2,
-	0xfe, 0xcd, 0xd7, 0x76, 0x4f, 0xb6, 0x68, 0x24, 0xc9, 0x40, 0x02, 0xdd, 0xd0, 0x0e, 0x48, 0x8a,
-	0xfd, 0x84, 0x84, 0xc6, 0xbf, 0x8e, 0xda, 0x3d, 0x74, 0x37, 0x52, 0x9f, 0x6a, 0xc7, 0x79, 0x0c,
-	0x13, 0x0f, 0x87, 0x8f, 0x02, 0xb8, 0x27, 0x7f, 0x97, 0xf1, 0x5f, 0xf6, 0xbb, 0xf9, 0x43, 0xbf,
-	0x2b, 0x12, 0xac, 0x0b, 0xcb, 0xa8, 0xfa, 0xfd, 0x30, 0xb4, 0xdd, 0x66, 0x39, 0x1b, 0xc8, 0x91,
-	0x5b, 0x4e, 0x86, 0xb7, 0xf3, 0xa5, 0xa9, 0x2e, 0x96, 0xa6, 0xfa, 0xb1, 0x34, 0xd5, 0x97, 0x95,
-	0xa9, 0x2c, 0x56, 0xa6, 0xf2, 0xb6, 0x32, 0x95, 0xfb, 0xf3, 0x9d, 0xb8, 0xfa, 0xe6, 0x7b, 0x09,
-	0xf6, 0x61, 0x23, 0xd0, 0xd3, 0xee, 0x6b, 0x91, 0xf1, 0xfe, 0xbe, 0xbc, 0x9e, 0x8b, 0xcf, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0xcd, 0x1d, 0x2a, 0xc2, 0x50, 0x02, 0x00, 0x00,
+	// 446 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0xcf, 0x6b, 0xd4, 0x40,
+	0x14, 0xc7, 0x93, 0x5a, 0x85, 0xce, 0xc1, 0x1f, 0x69, 0x91, 0x25, 0xe0, 0xa4, 0x44, 0xd1, 0x22,
+	0x34, 0x43, 0xeb, 0x4d, 0x4f, 0x5b, 0x54, 0x28, 0x08, 0x62, 0x2a, 0x1e, 0xbc, 0x84, 0xc9, 0xce,
+	0x6c, 0x1c, 0x37, 0xc9, 0x8b, 0xfb, 0x66, 0x8a, 0xfb, 0x1f, 0x08, 0x5e, 0xbc, 0x7a, 0xf6, 0x9f,
+	0xe9, 0xb1, 0x47, 0xf1, 0xb0, 0xc8, 0xee, 0x1f, 0x20, 0xf8, 0x17, 0x48, 0x26, 0xd9, 0xee, 0x92,
+	0x55, 0xa1, 0xa7, 0xbc, 0x97, 0xcf, 0xbc, 0xef, 0xfb, 0xbe, 0xc9, 0x0b, 0xb9, 0x0b, 0x58, 0x00,
+	0x2a, 0x64, 0x68, 0x2a, 0x39, 0x1e, 0xe6, 0x46, 0x89, 0x95, 0x30, 0xaa, 0xc6, 0xa0, 0xc1, 0xf3,
+	0xda, 0x43, 0xd1, 0x92, 0xf8, 0x3b, 0x19, 0x64, 0x60, 0x31, 0xab, 0xa3, 0xe6, 0xa4, 0x4f, 0x33,
+	0x80, 0x2c, 0x97, 0xcc, 0x66, 0xa9, 0x19, 0x32, 0x61, 0xc6, 0x5c, 0x2b, 0x28, 0x5b, 0x1e, 0x74,
+	0xb9, 0x56, 0x85, 0x44, 0xcd, 0x8b, 0x6a, 0x21, 0x30, 0xb0, 0xbd, 0x58, 0xca, 0x51, 0xb2, 0xd3,
+	0x83, 0x54, 0x6a, 0x7e, 0xc0, 0x06, 0xa0, 0x5a, 0x81, 0x10, 0xc8, 0x8d, 0x93, 0x0b, 0x13, 0x7d,
+	0x44, 0xa9, 0xbd, 0xe7, 0x84, 0xf0, 0x3a, 0x48, 0xf4, 0xa4, 0x92, 0x3d, 0x77, 0xd7, 0xdd, 0xbb,
+	0x7e, 0xf8, 0x20, 0x5a, 0xb7, 0x1c, 0x75, 0x0a, 0x5f, 0x4f, 0x2a, 0x19, 0x6f, 0xf1, 0x45, 0xe8,
+	0xed, 0x90, 0xab, 0x42, 0x96, 0x50, 0xf4, 0x36, 0x76, 0xdd, 0xbd, 0xad, 0xb8, 0x49, 0xc2, 0x5f,
+	0x1b, 0x64, 0xbb, 0x53, 0x78, 0x5c, 0x0e, 0xc1, 0x8b, 0xc8, 0xf6, 0x52, 0x3a, 0x69, 0x0c, 0x28,
+	0x61, 0xdb, 0x6f, 0xc6, 0xb7, 0xb0, 0x53, 0x21, 0xbc, 0xcf, 0x2e, 0xe9, 0xad, 0x14, 0xa0, 0xe6,
+	0x23, 0x29, 0x12, 0x5e, 0x80, 0x29, 0x75, 0xd3, 0xf1, 0xe8, 0xd5, 0xd9, 0x34, 0x70, 0x7e, 0x4c,
+	0x83, 0xfb, 0x99, 0xd2, 0xef, 0x4c, 0x1a, 0x0d, 0xa0, 0x60, 0xed, 0x75, 0x34, 0x8f, 0x7d, 0x14,
+	0x23, 0x56, 0x4f, 0x89, 0xd1, 0x71, 0xa9, 0x7f, 0x4f, 0x83, 0x60, 0xc2, 0x8b, 0xfc, 0x71, 0xf8,
+	0x2f, 0xdd, 0x30, 0xbe, 0xbd, 0x44, 0x27, 0x96, 0xf4, 0x2d, 0xf0, 0xbe, 0xba, 0xe4, 0xce, 0x58,
+	0xe1, 0x28, 0xe1, 0xe2, 0xbd, 0x41, 0x2d, 0x45, 0x52, 0x37, 0x48, 0xe4, 0x07, 0xa3, 0x4e, 0x79,
+	0x2e, 0x4b, 0xdd, 0xbb, 0x62, 0x2d, 0xbd, 0xb9, 0xb4, 0xa5, 0x7b, 0x8d, 0xa5, 0xff, 0x8a, 0x87,
+	0xb1, 0x5f, 0xf3, 0x7e, 0x8b, 0x5f, 0x62, 0x01, 0xcf, 0x2e, 0xe0, 0xc3, 0x27, 0x6b, 0x17, 0x6e,
+	0x3f, 0x0f, 0x25, 0xfe, 0x5f, 0x5e, 0x3f, 0x95, 0x43, 0x6e, 0x72, 0x7d, 0xd3, 0xf1, 0x37, 0x3f,
+	0x7d, 0xa3, 0xce, 0xd1, 0x8b, 0xb3, 0x19, 0x75, 0xcf, 0x67, 0xd4, 0xfd, 0x39, 0xa3, 0xee, 0x97,
+	0x39, 0x75, 0xce, 0xe7, 0xd4, 0xf9, 0x3e, 0xa7, 0xce, 0xdb, 0xc3, 0x95, 0x11, 0xda, 0xe5, 0xd8,
+	0xcf, 0x79, 0x8a, 0x8b, 0x84, 0x7d, 0x5c, 0xfd, 0x07, 0xec, 0x48, 0xe9, 0x35, 0xbb, 0x74, 0x8f,
+	0xfe, 0x04, 0x00, 0x00, 0xff, 0xff, 0xb1, 0x7a, 0xa4, 0xc6, 0x26, 0x03, 0x00, 0x00,
 }
 
 func (m *SuperfluidAsset) Marshal() (dAtA []byte, err error) {
@@ -138,26 +212,51 @@ func (m *SuperfluidAsset) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintSuperfluid(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.AssetType != 0 {
+		i = encodeVarintSuperfluid(dAtA, i, uint64(m.AssetType))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SuperfluidAssetInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SuperfluidAssetInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SuperfluidAssetInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	{
-		size := m.RiskAdjustRatio.Size()
+		size := m.RiskAdjustedOsmoEquivalent.Size()
 		i -= size
-		if _, err := m.RiskAdjustRatio.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.RiskAdjustedOsmoEquivalent.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintSuperfluid(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x22
-	if m.Enabled {
-		i--
-		if m.Enabled {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x18
-	}
+	dAtA[i] = 0x1a
 	{
 		size := m.SuperfluidStakedAmount.Size()
 		i -= size
@@ -168,12 +267,10 @@ func (m *SuperfluidAsset) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x12
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintSuperfluid(dAtA, i, uint64(len(m.Denom)))
+	if m.SuperfluidAssetId != 0 {
+		i = encodeVarintSuperfluid(dAtA, i, uint64(m.SuperfluidAssetId))
 		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -195,16 +292,28 @@ func (m *SuperfluidAsset) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.AssetType != 0 {
+		n += 1 + sovSuperfluid(uint64(m.AssetType))
+	}
 	l = len(m.Denom)
 	if l > 0 {
 		n += 1 + l + sovSuperfluid(uint64(l))
 	}
+	return n
+}
+
+func (m *SuperfluidAssetInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.SuperfluidAssetId != 0 {
+		n += 1 + sovSuperfluid(uint64(m.SuperfluidAssetId))
+	}
 	l = m.SuperfluidStakedAmount.Size()
 	n += 1 + l + sovSuperfluid(uint64(l))
-	if m.Enabled {
-		n += 2
-	}
-	l = m.RiskAdjustRatio.Size()
+	l = m.RiskAdjustedOsmoEquivalent.Size()
 	n += 1 + l + sovSuperfluid(uint64(l))
 	return n
 }
@@ -245,6 +354,25 @@ func (m *SuperfluidAsset) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetType", wireType)
+			}
+			m.AssetType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSuperfluid
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AssetType |= SuperfluidAssetType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
 			}
@@ -276,6 +404,78 @@ func (m *SuperfluidAsset) Unmarshal(dAtA []byte) error {
 			}
 			m.Denom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSuperfluid(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSuperfluid
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthSuperfluid
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SuperfluidAssetInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSuperfluid
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SuperfluidAssetInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SuperfluidAssetInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SuperfluidAssetId", wireType)
+			}
+			m.SuperfluidAssetId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSuperfluid
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SuperfluidAssetId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SuperfluidStakedAmount", wireType)
@@ -311,28 +511,8 @@ func (m *SuperfluidAsset) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSuperfluid
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Enabled = bool(v != 0)
-		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RiskAdjustRatio", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RiskAdjustedOsmoEquivalent", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -360,7 +540,7 @@ func (m *SuperfluidAsset) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.RiskAdjustRatio.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.RiskAdjustedOsmoEquivalent.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

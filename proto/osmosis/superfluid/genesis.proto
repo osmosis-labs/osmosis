@@ -9,5 +9,7 @@ option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 // GenesisState defines the module's genesis state.
 message GenesisState {
     repeated SuperfluidAsset superfluid_assets = 1 [ (gogoproto.nullable) = false ];
+    repeated uint64 enabled_superfluid_asset_ids = 2;
+    repeated SuperfluidAssetInfo superfluid_asset_infos = 3 [ (gogoproto.nullable) = false ];
 }
 

@@ -16,3 +16,25 @@ message SetSuperfluidAssetsProposal {
   string description = 2;
   repeated SuperfluidAsset assets = 3 [ (gogoproto.nullable) = false ];
 }
+
+// EnableSuperfluidAssetsProposal is a gov Content type to enable the superfluid assets by id
+message EnableSuperfluidAssetsProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated uint64 superfluid_asset_ids = 3;
+}
+
+// DisableSuperfluidAssetsProposal is a gov Content type to disable the superfluid assets by id
+message DisableSuperfluidAssetsProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated uint64 superfluid_asset_ids = 3;
+}

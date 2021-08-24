@@ -25,7 +25,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the module's genesis state.
 type GenesisState struct {
-	SuperfluidAssets []SuperfluidAsset `protobuf:"bytes,1,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
+	SuperfluidAssets          []SuperfluidAsset     `protobuf:"bytes,1,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
+	EnabledSuperfluidAssetIds []uint64              `protobuf:"varint,2,rep,packed,name=enabled_superfluid_asset_ids,json=enabledSuperfluidAssetIds,proto3" json:"enabled_superfluid_asset_ids,omitempty"`
+	SuperfluidAssetInfos      []SuperfluidAssetInfo `protobuf:"bytes,3,rep,name=superfluid_asset_infos,json=superfluidAssetInfos,proto3" json:"superfluid_asset_infos"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -68,6 +70,20 @@ func (m *GenesisState) GetSuperfluidAssets() []SuperfluidAsset {
 	return nil
 }
 
+func (m *GenesisState) GetEnabledSuperfluidAssetIds() []uint64 {
+	if m != nil {
+		return m.EnabledSuperfluidAssetIds
+	}
+	return nil
+}
+
+func (m *GenesisState) GetSuperfluidAssetInfos() []SuperfluidAssetInfo {
+	if m != nil {
+		return m.SuperfluidAssetInfos
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "osmosis.superfluid.GenesisState")
 }
@@ -75,20 +91,24 @@ func init() {
 func init() { proto.RegisterFile("osmosis/superfluid/genesis.proto", fileDescriptor_d5256ebb7c83fff3) }
 
 var fileDescriptor_d5256ebb7c83fff3 = []byte{
-	// 205 bytes of a gzipped FileDescriptorProto
+	// 269 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xc8, 0x2f, 0xce, 0xcd,
 	0x2f, 0xce, 0x2c, 0xd6, 0x2f, 0x2e, 0x2d, 0x48, 0x2d, 0x4a, 0xcb, 0x29, 0xcd, 0x4c, 0xd1, 0x4f,
 	0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x82, 0xaa,
 	0xd0, 0x43, 0xa8, 0x90, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0x4b, 0xeb, 0x83, 0x58, 0x10, 0x95,
-	0x52, 0xca, 0x58, 0xcc, 0x42, 0x30, 0x21, 0x8a, 0x94, 0xd2, 0xb8, 0x78, 0xdc, 0x21, 0xe6, 0x07,
-	0x97, 0x24, 0x96, 0xa4, 0x0a, 0x85, 0x71, 0x09, 0x22, 0xd4, 0xc4, 0x27, 0x16, 0x17, 0xa7, 0x96,
-	0x14, 0x4b, 0x30, 0x2a, 0x30, 0x6b, 0x70, 0x1b, 0x29, 0xeb, 0x61, 0x5a, 0xad, 0x17, 0x0c, 0x67,
-	0x3a, 0x82, 0xd4, 0x3a, 0xb1, 0x9c, 0xb8, 0x27, 0xcf, 0x10, 0x24, 0x50, 0x8c, 0x2a, 0x5c, 0xec,
-	0xe4, 0x73, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78,
-	0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x46, 0xe9, 0x99, 0x25,
-	0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x50, 0x0b, 0x74, 0x73, 0x12, 0x93, 0x8a, 0x61,
-	0x1c, 0xfd, 0x0a, 0x64, 0x0f, 0x94, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0x1d, 0x6f, 0x0c,
-	0x08, 0x00, 0x00, 0xff, 0xff, 0x71, 0xc1, 0xcc, 0x80, 0x2f, 0x01, 0x00, 0x00,
+	0x52, 0xca, 0x58, 0xcc, 0x42, 0x30, 0x21, 0x8a, 0x94, 0x7a, 0x98, 0xb8, 0x78, 0xdc, 0x21, 0x16,
+	0x04, 0x97, 0x24, 0x96, 0xa4, 0x0a, 0x85, 0x71, 0x09, 0x22, 0x14, 0xc5, 0x27, 0x16, 0x17, 0xa7,
+	0x96, 0x14, 0x4b, 0x30, 0x2a, 0x30, 0x6b, 0x70, 0x1b, 0x29, 0xeb, 0x61, 0xda, 0xad, 0x17, 0x0c,
+	0x67, 0x3a, 0x82, 0xd4, 0x3a, 0xb1, 0x9c, 0xb8, 0x27, 0xcf, 0x10, 0x24, 0x50, 0x8c, 0x2a, 0x5c,
+	0x2c, 0x64, 0xcf, 0x25, 0x93, 0x9a, 0x97, 0x98, 0x94, 0x93, 0x9a, 0x12, 0x8f, 0x6e, 0x7e, 0x7c,
+	0x66, 0x4a, 0xb1, 0x04, 0x93, 0x02, 0xb3, 0x06, 0x4b, 0x90, 0x24, 0x54, 0x0d, 0x9a, 0xa9, 0x9e,
+	0x29, 0xc5, 0x42, 0xc9, 0x5c, 0x62, 0x98, 0x1a, 0xf3, 0xd2, 0xf2, 0x8b, 0x25, 0x98, 0xc1, 0xae,
+	0x53, 0x27, 0xc2, 0x75, 0x9e, 0x79, 0x69, 0xf9, 0x50, 0x17, 0x8a, 0x14, 0x63, 0x4a, 0x15, 0x3b,
+	0xf9, 0x9c, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e,
+	0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x51, 0x7a, 0x66, 0x49,
+	0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x3e, 0xd4, 0x22, 0xdd, 0x9c, 0xc4, 0xa4, 0x62, 0x18,
+	0x47, 0xbf, 0x02, 0x39, 0x9c, 0x4b, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x61, 0x6c, 0x0c,
+	0x08, 0x00, 0x00, 0xff, 0xff, 0xbc, 0x1f, 0x81, 0xa0, 0xd6, 0x01, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -111,6 +131,38 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.SuperfluidAssetInfos) > 0 {
+		for iNdEx := len(m.SuperfluidAssetInfos) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SuperfluidAssetInfos[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.EnabledSuperfluidAssetIds) > 0 {
+		dAtA2 := make([]byte, len(m.EnabledSuperfluidAssetIds)*10)
+		var j1 int
+		for _, num := range m.EnabledSuperfluidAssetIds {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
+		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintGenesis(dAtA, i, uint64(j1))
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.SuperfluidAssets) > 0 {
 		for iNdEx := len(m.SuperfluidAssets) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -147,6 +199,19 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	if len(m.SuperfluidAssets) > 0 {
 		for _, e := range m.SuperfluidAssets {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.EnabledSuperfluidAssetIds) > 0 {
+		l = 0
+		for _, e := range m.EnabledSuperfluidAssetIds {
+			l += sovGenesis(uint64(e))
+		}
+		n += 1 + sovGenesis(uint64(l)) + l
+	}
+	if len(m.SuperfluidAssetInfos) > 0 {
+		for _, e := range m.SuperfluidAssetInfos {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
@@ -220,6 +285,116 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			m.SuperfluidAssets = append(m.SuperfluidAssets, SuperfluidAsset{})
 			if err := m.SuperfluidAssets[len(m.SuperfluidAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGenesis
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.EnabledSuperfluidAssetIds = append(m.EnabledSuperfluidAssetIds, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGenesis
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthGenesis
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthGenesis
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.EnabledSuperfluidAssetIds) == 0 {
+					m.EnabledSuperfluidAssetIds = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowGenesis
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.EnabledSuperfluidAssetIds = append(m.EnabledSuperfluidAssetIds, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field EnabledSuperfluidAssetIds", wireType)
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SuperfluidAssetInfos", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SuperfluidAssetInfos = append(m.SuperfluidAssetInfos, SuperfluidAssetInfo{})
+			if err := m.SuperfluidAssetInfos[len(m.SuperfluidAssetInfos)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

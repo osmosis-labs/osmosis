@@ -12,24 +12,44 @@ option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Returns superfluid asset info
-  rpc AssetInfo(AssetInfoRequest) returns (AssetInfoResponse) {
-    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_info/{denom}";
+  // Returns superfluid asset type
+  rpc AssetType(AssetTypeRequest) returns (AssetTypeResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_type/{denom}";
   }
   // Returns all superfluid assets info
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_assets";
   }
+  // Returns enabled superfluid assets
+  rpc EnabledAssets(EnabledAssetsRequest) returns (EnabledAssetsResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/enabled_assets";
+  }
+  // Returns superfluid asset info
+  rpc AssetInfo(AssetInfoRequest) returns (AssetInfoResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_info/{asset_id}";
+  }
 }
 
-message AssetInfoRequest {
+message AssetTypeRequest {
     string denom = 1;
 };
-message AssetInfoResponse {
+message AssetTypeResponse {
    SuperfluidAsset asset = 1;
+};
+
+message AssetInfoRequest {
+  string asset_id = 1;
+};
+message AssetInfoResponse {
+  SuperfluidAssetInfo info = 1;
 };
 
 message AllAssetsRequest {};
 message AllAssetsResponse {
+   repeated SuperfluidAsset assets = 1;
+};
+
+message EnabledAssetsRequest {};
+message EnabledAssetsResponse {
    repeated SuperfluidAsset assets = 1;
 };
