@@ -13,14 +13,14 @@ import (
 
 // Keeper provides a way to manage module storage
 type Keeper struct {
-	cdc      codec.Codec
+	cdc      codec.Marshaler
 	storeKey sdk.StoreKey
 
 	ak authkeeper.AccountKeeper
 }
 
 // NewKeeper returns an instance of Keeper
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak authkeeper.AccountKeeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, ak authkeeper.AccountKeeper) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,

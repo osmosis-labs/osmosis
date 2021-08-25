@@ -97,6 +97,9 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	superfluid "github.com/osmosis-labs/osmosis/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -206,6 +209,7 @@ type OsmosisApp struct {
 	LockupKeeper         lockupkeeper.Keeper
 	EpochsKeeper         epochskeeper.Keeper
 	PoolIncentivesKeeper poolincentiveskeeper.Keeper
+	SuperfluidKeeper     superfluidkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -399,6 +403,8 @@ func NewOsmosisApp(
 	)
 	poolIncentivesHooks := app.PoolIncentivesKeeper.Hooks()
 
+	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(appCodec, keys[superfluidtypes.StoreKey], app.AccountKeeper)
+
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
@@ -406,7 +412,8 @@ func NewOsmosisApp(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(app.PoolIncentivesKeeper))
+		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(app.PoolIncentivesKeeper)).
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(app.SuperfluidKeeper))
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
