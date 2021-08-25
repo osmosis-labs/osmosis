@@ -12,7 +12,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
+func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 	var app *simapp.OsmosisApp
 	var ctx sdk.Context
 	var epochInfo types.EpochInfo
@@ -22,13 +22,14 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 	tests := []struct {
 		expCurrentEpochStartTime time.Time
 		expCurrentEpoch          int64
-		expEpochStartTime        time.Time
+		expInitialEpochStartTime time.Time
 		fn                       func()
 	}{
 		{
+			// Only advance 2 seconds, do not increment epoch
 			expCurrentEpochStartTime: now,
 			expCurrentEpoch:          1,
-			expEpochStartTime:        now,
+			expInitialEpochStartTime: now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -38,7 +39,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		{
 			expCurrentEpochStartTime: now,
 			expCurrentEpoch:          1,
-			expEpochStartTime:        now,
+			expInitialEpochStartTime: now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -48,7 +49,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		{
 			expCurrentEpochStartTime: now,
 			expCurrentEpoch:          1,
-			expEpochStartTime:        now,
+			expInitialEpochStartTime: now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -57,10 +58,11 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 			},
 		},
+		// Test that incrementing _exactly_ 1 month increments the epoch count.
 		{
 			expCurrentEpochStartTime: now.Add(time.Hour * 24 * 31),
 			expCurrentEpoch:          2,
-			expEpochStartTime:        now,
+			expInitialEpochStartTime: now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -72,7 +74,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		{
 			expCurrentEpochStartTime: now.Add(time.Hour * 24 * 31),
 			expCurrentEpoch:          2,
-			expEpochStartTime:        now,
+			expInitialEpochStartTime: now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -86,7 +88,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		{
 			expCurrentEpochStartTime: now.Add(time.Hour * 24 * 31),
 			expCurrentEpoch:          2,
-			expEpochStartTime:        now,
+			expInitialEpochStartTime: now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
 				epochs.BeginBlocker(ctx, app.EpochsKeeper)
@@ -129,7 +131,7 @@ func TestEpochInfoChangesBeginEndBlockersAndInitGenesis(t *testing.T) {
 		test.fn()
 
 		require.Equal(t, epochInfo.Identifier, "monthly")
-		require.Equal(t, epochInfo.StartTime.UTC().String(), test.expEpochStartTime.UTC().String())
+		require.Equal(t, epochInfo.StartTime.UTC().String(), test.expInitialEpochStartTime.UTC().String())
 		require.Equal(t, epochInfo.Duration, time.Hour*24*31)
 		require.Equal(t, epochInfo.CurrentEpoch, test.expCurrentEpoch)
 		require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), test.expCurrentEpochStartTime.UTC().String())
