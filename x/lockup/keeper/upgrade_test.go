@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				suite.app.EndBlocker(suite.ctx, types.RequestEndBlock{suite.ctx.BlockHeight()})
 
 				// run upgrades
-				plan := upgradetypes.Plan{Name: "v2", Height: 5}
+				plan := upgradetypes.Plan{Name: "v4", Height: 5}
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 				plan, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
 				suite.Require().True(exists)
