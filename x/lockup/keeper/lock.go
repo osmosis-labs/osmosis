@@ -213,6 +213,16 @@ func (k Keeper) GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp t
 	return combineLocks(notUnlockings, unlockings)
 }
 
+// GetLockedDenom Returns the total amount of denom that are locked
+func (k Keeper) GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int {
+	totalAmtLocked := k.GetPeriodLocksAccumulation(ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         denom,
+		Duration:      duration,
+	})
+	return totalAmtLocked
+}
+
 // GetLocksLongerThanDurationDenom Returns the locks whose unlock duration is longer than duration
 func (k Keeper) GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []types.PeriodLock {
 	// returns both unlocking started and not started
