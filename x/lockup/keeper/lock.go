@@ -339,7 +339,7 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 	return lock, nil
 }
 
-func (k Keeper) clearLockRefKeysByPrefix(ctx sdk.Context, prefix []byte) {
+func (k Keeper) clearKeysByPrefix(ctx sdk.Context, prefix []byte) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
@@ -350,8 +350,12 @@ func (k Keeper) clearLockRefKeysByPrefix(ctx sdk.Context, prefix []byte) {
 }
 
 func (k Keeper) ClearAllLockRefKeys(ctx sdk.Context) {
-	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixNotUnlocking)
-	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixUnlocking)
+	k.clearKeysByPrefix(ctx, types.KeyPrefixNotUnlocking)
+	k.clearKeysByPrefix(ctx, types.KeyPrefixUnlocking)
+}
+
+func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
+	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
 
 // ResetLock reset lock to lock's previous state on InitGenesis
