@@ -84,7 +84,7 @@ def compute_sanity_check_and_export(data):
   assert(imbalance == 0)
 
   f = open("prop_12_payments.csv","w")
-  f.write("\n".join([addr+", "+str(int(rewards[addr])) for addr in rewards]))
+  f.write("\n".join([addr+", "+str(int(rewards[addr])) for addr in sorted(rewards)]))
   f.close()
 
 
