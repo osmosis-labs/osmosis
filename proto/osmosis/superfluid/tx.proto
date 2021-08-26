@@ -12,4 +12,5 @@ option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 service Msg {
 }
 
-// TODO: what msgs should we have in this module?
+// For now, module just supports gov messages
+

@@ -12,7 +12,9 @@ enum SuperfluidAssetType {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // TODO: what superfluid asset types will be here?
-  SuperfluidAssetTypeDefault = 0;
+  SuperfluidAssetTypeNative = 0;
+  SuperfluidAssetTypeLPShare = 1;
+  // SuperfluidAssetTypeLendingShare = 2; // for now not exist
 }
 
 // SuperfluidAsset stores the pair of superfluid asset type and denom pair
