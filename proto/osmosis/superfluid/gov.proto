@@ -18,7 +18,7 @@ message SetSuperfluidAssetsProposal {
 }
 
 // EnableSuperfluidAssetsProposal is a gov Content type to enable the superfluid assets by id
-message EnableSuperfluidAssetsProposal {
+message AddSuperfluidAssetsProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
