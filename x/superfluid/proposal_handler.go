@@ -14,10 +14,10 @@ func NewSuperfluidProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.SetSuperfluidAssetsProposal:
 			return handleSetSuperfluidAssetsProposal(ctx, k, c)
-		case *types.EnableSuperfluidAssetsProposal:
-			return handleEnableSuperfluidAssetsProposal(ctx, k, c)
-		case *types.DisableSuperfluidAssetsProposal:
-			return handleDisableSuperfluidAssetsProposal(ctx, k, c)
+		case *types.AddSuperfluidAssetsProposal:
+			return handleAddSuperfluidAssetsProposal(ctx, k, c)
+		case *types.RemoveSuperfluidAssetsProposal:
+			return handleRemoveSuperfluidAssetsProposal(ctx, k, c)
 
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized pool incentives proposal content type: %T", c)
@@ -29,10 +29,10 @@ func handleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *type
 	return k.HandleSetSuperfluidAssetsProposal(ctx, p)
 }
 
-func handleEnableSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.EnableSuperfluidAssetsProposal) error {
-	return k.HandleEnableSuperfluidAssetsProposal(ctx, p)
+func handleAddSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.AddSuperfluidAssetsProposal) error {
+	return k.HandleAddSuperfluidAssetsProposal(ctx, p)
 }
 
-func handleDisableSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.DisableSuperfluidAssetsProposal) error {
-	return k.HandleDisableSuperfluidAssetsProposal(ctx, p)
+func handleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveSuperfluidAssetsProposal) error {
+	return k.HandleRemoveSuperfluidAssetsProposal(ctx, p)
 }

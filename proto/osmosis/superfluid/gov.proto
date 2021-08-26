@@ -17,7 +17,7 @@ message SetSuperfluidAssetsProposal {
   repeated SuperfluidAsset assets = 3 [ (gogoproto.nullable) = false ];
 }
 
-// EnableSuperfluidAssetsProposal is a gov Content type to enable the superfluid assets by id
+// AddSuperfluidAssetsProposal is a gov Content type to add the superfluid assets 
 message AddSuperfluidAssetsProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
@@ -25,10 +25,10 @@ message AddSuperfluidAssetsProposal {
 
   string title = 1;
   string description = 2;
-  repeated SuperfluidAsset superfluid_assets = 3;
+  repeated SuperfluidAsset superfluid_assets = 3 [ (gogoproto.nullable) = false ];
 }
 
-// DisableSuperfluidAssetsProposal is a gov Content type to disable the superfluid assets by id
+// RemoveSuperfluidAssetsProposal is a gov Content type to remove the superfluid assets by denom
 message RemoveSuperfluidAssetsProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;

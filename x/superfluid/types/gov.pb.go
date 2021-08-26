@@ -62,24 +62,24 @@ func (m *SetSuperfluidAssetsProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SetSuperfluidAssetsProposal proto.InternalMessageInfo
 
-// EnableSuperfluidAssetsProposal is a gov Content type to enable the superfluid assets by id
-type EnableSuperfluidAssetsProposal struct {
-	Title              string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description        string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	SuperfluidAssetIds []uint64 `protobuf:"varint,3,rep,packed,name=superfluid_asset_ids,json=superfluidAssetIds,proto3" json:"superfluid_asset_ids,omitempty"`
+// AddSuperfluidAssetsProposal is a gov Content type to enable the superfluid assets by id
+type AddSuperfluidAssetsProposal struct {
+	Title            string            `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description      string            `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	SuperfluidAssets []SuperfluidAsset `protobuf:"bytes,3,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
 }
 
-func (m *EnableSuperfluidAssetsProposal) Reset()      { *m = EnableSuperfluidAssetsProposal{} }
-func (*EnableSuperfluidAssetsProposal) ProtoMessage() {}
-func (*EnableSuperfluidAssetsProposal) Descriptor() ([]byte, []int) {
+func (m *AddSuperfluidAssetsProposal) Reset()      { *m = AddSuperfluidAssetsProposal{} }
+func (*AddSuperfluidAssetsProposal) ProtoMessage() {}
+func (*AddSuperfluidAssetsProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7c729e4c39568a58, []int{1}
 }
-func (m *EnableSuperfluidAssetsProposal) XXX_Unmarshal(b []byte) error {
+func (m *AddSuperfluidAssetsProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EnableSuperfluidAssetsProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AddSuperfluidAssetsProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EnableSuperfluidAssetsProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AddSuperfluidAssetsProposal.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -89,36 +89,36 @@ func (m *EnableSuperfluidAssetsProposal) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (m *EnableSuperfluidAssetsProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EnableSuperfluidAssetsProposal.Merge(m, src)
+func (m *AddSuperfluidAssetsProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddSuperfluidAssetsProposal.Merge(m, src)
 }
-func (m *EnableSuperfluidAssetsProposal) XXX_Size() int {
+func (m *AddSuperfluidAssetsProposal) XXX_Size() int {
 	return m.Size()
 }
-func (m *EnableSuperfluidAssetsProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_EnableSuperfluidAssetsProposal.DiscardUnknown(m)
+func (m *AddSuperfluidAssetsProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddSuperfluidAssetsProposal.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EnableSuperfluidAssetsProposal proto.InternalMessageInfo
+var xxx_messageInfo_AddSuperfluidAssetsProposal proto.InternalMessageInfo
 
-// DisableSuperfluidAssetsProposal is a gov Content type to disable the superfluid assets by id
-type DisableSuperfluidAssetsProposal struct {
-	Title              string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description        string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	SuperfluidAssetIds []uint64 `protobuf:"varint,3,rep,packed,name=superfluid_asset_ids,json=superfluidAssetIds,proto3" json:"superfluid_asset_ids,omitempty"`
+// RemoveSuperfluidAssetsProposal is a gov Content type to disable the superfluid assets by id
+type RemoveSuperfluidAssetsProposal struct {
+	Title                 string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description           string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	SuperfluidAssetDenoms []string `protobuf:"bytes,3,rep,name=superfluid_asset_denoms,json=superfluidAssetDenoms,proto3" json:"superfluid_asset_denoms,omitempty"`
 }
 
-func (m *DisableSuperfluidAssetsProposal) Reset()      { *m = DisableSuperfluidAssetsProposal{} }
-func (*DisableSuperfluidAssetsProposal) ProtoMessage() {}
-func (*DisableSuperfluidAssetsProposal) Descriptor() ([]byte, []int) {
+func (m *RemoveSuperfluidAssetsProposal) Reset()      { *m = RemoveSuperfluidAssetsProposal{} }
+func (*RemoveSuperfluidAssetsProposal) ProtoMessage() {}
+func (*RemoveSuperfluidAssetsProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7c729e4c39568a58, []int{2}
 }
-func (m *DisableSuperfluidAssetsProposal) XXX_Unmarshal(b []byte) error {
+func (m *RemoveSuperfluidAssetsProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *DisableSuperfluidAssetsProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *RemoveSuperfluidAssetsProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_DisableSuperfluidAssetsProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_RemoveSuperfluidAssetsProposal.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -128,28 +128,28 @@ func (m *DisableSuperfluidAssetsProposal) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-func (m *DisableSuperfluidAssetsProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DisableSuperfluidAssetsProposal.Merge(m, src)
+func (m *RemoveSuperfluidAssetsProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RemoveSuperfluidAssetsProposal.Merge(m, src)
 }
-func (m *DisableSuperfluidAssetsProposal) XXX_Size() int {
+func (m *RemoveSuperfluidAssetsProposal) XXX_Size() int {
 	return m.Size()
 }
-func (m *DisableSuperfluidAssetsProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_DisableSuperfluidAssetsProposal.DiscardUnknown(m)
+func (m *RemoveSuperfluidAssetsProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_RemoveSuperfluidAssetsProposal.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DisableSuperfluidAssetsProposal proto.InternalMessageInfo
+var xxx_messageInfo_RemoveSuperfluidAssetsProposal proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*SetSuperfluidAssetsProposal)(nil), "osmosis.superfluid.v1beta1.SetSuperfluidAssetsProposal")
-	proto.RegisterType((*EnableSuperfluidAssetsProposal)(nil), "osmosis.superfluid.v1beta1.EnableSuperfluidAssetsProposal")
-	proto.RegisterType((*DisableSuperfluidAssetsProposal)(nil), "osmosis.superfluid.v1beta1.DisableSuperfluidAssetsProposal")
+	proto.RegisterType((*AddSuperfluidAssetsProposal)(nil), "osmosis.superfluid.v1beta1.AddSuperfluidAssetsProposal")
+	proto.RegisterType((*RemoveSuperfluidAssetsProposal)(nil), "osmosis.superfluid.v1beta1.RemoveSuperfluidAssetsProposal")
 }
 
 func init() { proto.RegisterFile("osmosis/superfluid/gov.proto", fileDescriptor_7c729e4c39568a58) }
 
 var fileDescriptor_7c729e4c39568a58 = []byte{
-	// 311 bytes of a gzipped FileDescriptorProto
+	// 328 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xc9, 0x2f, 0xce, 0xcd,
 	0x2f, 0xce, 0x2c, 0xd6, 0x2f, 0x2e, 0x2d, 0x48, 0x2d, 0x4a, 0xcb, 0x29, 0xcd, 0x4c, 0xd1, 0x4f,
 	0xcf, 0x2f, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0x82, 0xca, 0xea, 0x21, 0x64, 0xf5,
@@ -161,15 +161,16 @@ var fileDescriptor_7c729e4c39568a58 = []byte{
 	0x32, 0x0b, 0x4a, 0x32, 0xf3, 0xf3, 0x24, 0x98, 0xc0, 0x72, 0xc8, 0x42, 0x42, 0x8e, 0x5c, 0x6c,
 	0x89, 0x60, 0x93, 0x24, 0x98, 0x15, 0x98, 0x35, 0xb8, 0x8d, 0x94, 0xf5, 0xb0, 0xb8, 0x1f, 0xcd,
 	0x56, 0x27, 0x96, 0x13, 0xf7, 0xe4, 0x19, 0x82, 0xa0, 0x1a, 0xad, 0x78, 0x3a, 0x16, 0xc8, 0x33,
-	0xcc, 0x58, 0x20, 0xcf, 0xf0, 0x62, 0x81, 0x3c, 0xa3, 0xd2, 0x0c, 0x46, 0x2e, 0x39, 0xd7, 0xbc,
-	0xc4, 0xa4, 0x9c, 0x54, 0xaa, 0xbb, 0xd5, 0x80, 0x4b, 0x04, 0xe1, 0xa8, 0x78, 0xb0, 0xed, 0xf1,
-	0x99, 0x29, 0x10, 0x97, 0xb3, 0x04, 0x09, 0x15, 0xa3, 0xda, 0xe7, 0x99, 0x82, 0xee, 0xb4, 0x99,
-	0x8c, 0x5c, 0xf2, 0x2e, 0x99, 0xc5, 0x83, 0xd1, 0x6d, 0x4e, 0x3e, 0x27, 0x1e, 0xc9, 0x31, 0x5e,
-	0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31,
-	0xdc, 0x78, 0x2c, 0xc7, 0x10, 0x65, 0x94, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f,
-	0xab, 0x0f, 0x8d, 0x1b, 0xdd, 0x9c, 0xc4, 0xa4, 0x62, 0x18, 0x47, 0xbf, 0x02, 0x39, 0xe1, 0x94,
-	0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0x13, 0x8d, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x81,
-	0xbc, 0x8b, 0xec, 0xab, 0x02, 0x00, 0x00,
+	0xcc, 0x58, 0x20, 0xcf, 0xf0, 0x62, 0x81, 0x3c, 0xa3, 0xd2, 0x6e, 0x46, 0x2e, 0x69, 0xc7, 0x94,
+	0x14, 0xaa, 0x3b, 0x34, 0x8c, 0x4b, 0x10, 0xe1, 0xa2, 0x78, 0x72, 0xdd, 0x2c, 0x50, 0x8c, 0xe6,
+	0x2e, 0x34, 0xd7, 0x2f, 0x61, 0xe4, 0x92, 0x0b, 0x4a, 0xcd, 0xcd, 0x2f, 0x4b, 0xa5, 0xba, 0x07,
+	0x6c, 0xb8, 0xc4, 0xd1, 0x3d, 0x10, 0x9f, 0x92, 0x9a, 0x97, 0x9f, 0x0b, 0xf1, 0x06, 0x27, 0xd4,
+	0x85, 0xa2, 0x68, 0x2e, 0x74, 0x01, 0x2b, 0x41, 0x75, 0xa6, 0x93, 0xcf, 0x89, 0x47, 0x72, 0x8c,
+	0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72,
+	0x0c, 0x37, 0x1e, 0xcb, 0x31, 0x44, 0x19, 0xa5, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7,
+	0xe7, 0xea, 0x43, 0x43, 0x45, 0x37, 0x27, 0x31, 0xa9, 0x18, 0xc6, 0xd1, 0xaf, 0x40, 0x4e, 0x66,
+	0x25, 0x95, 0x05, 0xa9, 0xc5, 0x49, 0x6c, 0xe0, 0x24, 0x66, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff,
+	0xe9, 0x02, 0x89, 0xe0, 0xd9, 0x02, 0x00, 0x00,
 }
 
 func (this *SetSuperfluidAssetsProposal) Equal(that interface{}) bool {
@@ -207,14 +208,14 @@ func (this *SetSuperfluidAssetsProposal) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *EnableSuperfluidAssetsProposal) Equal(that interface{}) bool {
+func (this *AddSuperfluidAssetsProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*EnableSuperfluidAssetsProposal)
+	that1, ok := that.(*AddSuperfluidAssetsProposal)
 	if !ok {
-		that2, ok := that.(EnableSuperfluidAssetsProposal)
+		that2, ok := that.(AddSuperfluidAssetsProposal)
 		if ok {
 			that1 = &that2
 		} else {
@@ -232,24 +233,24 @@ func (this *EnableSuperfluidAssetsProposal) Equal(that interface{}) bool {
 	if this.Description != that1.Description {
 		return false
 	}
-	if len(this.SuperfluidAssetIds) != len(that1.SuperfluidAssetIds) {
+	if len(this.SuperfluidAssets) != len(that1.SuperfluidAssets) {
 		return false
 	}
-	for i := range this.SuperfluidAssetIds {
-		if this.SuperfluidAssetIds[i] != that1.SuperfluidAssetIds[i] {
+	for i := range this.SuperfluidAssets {
+		if !this.SuperfluidAssets[i].Equal(&that1.SuperfluidAssets[i]) {
 			return false
 		}
 	}
 	return true
 }
-func (this *DisableSuperfluidAssetsProposal) Equal(that interface{}) bool {
+func (this *RemoveSuperfluidAssetsProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*DisableSuperfluidAssetsProposal)
+	that1, ok := that.(*RemoveSuperfluidAssetsProposal)
 	if !ok {
-		that2, ok := that.(DisableSuperfluidAssetsProposal)
+		that2, ok := that.(RemoveSuperfluidAssetsProposal)
 		if ok {
 			that1 = &that2
 		} else {
@@ -267,11 +268,11 @@ func (this *DisableSuperfluidAssetsProposal) Equal(that interface{}) bool {
 	if this.Description != that1.Description {
 		return false
 	}
-	if len(this.SuperfluidAssetIds) != len(that1.SuperfluidAssetIds) {
+	if len(this.SuperfluidAssetDenoms) != len(that1.SuperfluidAssetDenoms) {
 		return false
 	}
-	for i := range this.SuperfluidAssetIds {
-		if this.SuperfluidAssetIds[i] != that1.SuperfluidAssetIds[i] {
+	for i := range this.SuperfluidAssetDenoms {
+		if this.SuperfluidAssetDenoms[i] != that1.SuperfluidAssetDenoms[i] {
 			return false
 		}
 	}
@@ -328,7 +329,7 @@ func (m *SetSuperfluidAssetsProposal) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *EnableSuperfluidAssetsProposal) Marshal() (dAtA []byte, err error) {
+func (m *AddSuperfluidAssetsProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -338,33 +339,29 @@ func (m *EnableSuperfluidAssetsProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EnableSuperfluidAssetsProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *AddSuperfluidAssetsProposal) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EnableSuperfluidAssetsProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AddSuperfluidAssetsProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.SuperfluidAssetIds) > 0 {
-		dAtA2 := make([]byte, len(m.SuperfluidAssetIds)*10)
-		var j1 int
-		for _, num := range m.SuperfluidAssetIds {
-			for num >= 1<<7 {
-				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j1++
+	if len(m.SuperfluidAssets) > 0 {
+		for iNdEx := len(m.SuperfluidAssets) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SuperfluidAssets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGov(dAtA, i, uint64(size))
 			}
-			dAtA2[j1] = uint8(num)
-			j1++
+			i--
+			dAtA[i] = 0x1a
 		}
-		i -= j1
-		copy(dAtA[i:], dAtA2[:j1])
-		i = encodeVarintGov(dAtA, i, uint64(j1))
-		i--
-		dAtA[i] = 0x1a
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -383,7 +380,7 @@ func (m *EnableSuperfluidAssetsProposal) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *DisableSuperfluidAssetsProposal) Marshal() (dAtA []byte, err error) {
+func (m *RemoveSuperfluidAssetsProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -393,33 +390,24 @@ func (m *DisableSuperfluidAssetsProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DisableSuperfluidAssetsProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *RemoveSuperfluidAssetsProposal) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *DisableSuperfluidAssetsProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *RemoveSuperfluidAssetsProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.SuperfluidAssetIds) > 0 {
-		dAtA4 := make([]byte, len(m.SuperfluidAssetIds)*10)
-		var j3 int
-		for _, num := range m.SuperfluidAssetIds {
-			for num >= 1<<7 {
-				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j3++
-			}
-			dAtA4[j3] = uint8(num)
-			j3++
+	if len(m.SuperfluidAssetDenoms) > 0 {
+		for iNdEx := len(m.SuperfluidAssetDenoms) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.SuperfluidAssetDenoms[iNdEx])
+			copy(dAtA[i:], m.SuperfluidAssetDenoms[iNdEx])
+			i = encodeVarintGov(dAtA, i, uint64(len(m.SuperfluidAssetDenoms[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
 		}
-		i -= j3
-		copy(dAtA[i:], dAtA4[:j3])
-		i = encodeVarintGov(dAtA, i, uint64(j3))
-		i--
-		dAtA[i] = 0x1a
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -472,7 +460,7 @@ func (m *SetSuperfluidAssetsProposal) Size() (n int) {
 	return n
 }
 
-func (m *EnableSuperfluidAssetsProposal) Size() (n int) {
+func (m *AddSuperfluidAssetsProposal) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -486,17 +474,16 @@ func (m *EnableSuperfluidAssetsProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGov(uint64(l))
 	}
-	if len(m.SuperfluidAssetIds) > 0 {
-		l = 0
-		for _, e := range m.SuperfluidAssetIds {
-			l += sovGov(uint64(e))
+	if len(m.SuperfluidAssets) > 0 {
+		for _, e := range m.SuperfluidAssets {
+			l = e.Size()
+			n += 1 + l + sovGov(uint64(l))
 		}
-		n += 1 + sovGov(uint64(l)) + l
 	}
 	return n
 }
 
-func (m *DisableSuperfluidAssetsProposal) Size() (n int) {
+func (m *RemoveSuperfluidAssetsProposal) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -510,12 +497,11 @@ func (m *DisableSuperfluidAssetsProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGov(uint64(l))
 	}
-	if len(m.SuperfluidAssetIds) > 0 {
-		l = 0
-		for _, e := range m.SuperfluidAssetIds {
-			l += sovGov(uint64(e))
+	if len(m.SuperfluidAssetDenoms) > 0 {
+		for _, s := range m.SuperfluidAssetDenoms {
+			l = len(s)
+			n += 1 + l + sovGov(uint64(l))
 		}
-		n += 1 + sovGov(uint64(l)) + l
 	}
 	return n
 }
@@ -677,7 +663,7 @@ func (m *SetSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EnableSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
+func (m *AddSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -700,10 +686,10 @@ func (m *EnableSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EnableSuperfluidAssetsProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: AddSuperfluidAssetsProposal: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EnableSuperfluidAssetsProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AddSuperfluidAssetsProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -771,81 +757,39 @@ func (m *EnableSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType == 0 {
-				var v uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowGov
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SuperfluidAssets", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
 				}
-				m.SuperfluidAssetIds = append(m.SuperfluidAssetIds, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowGov
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthGov
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthGov
-				}
-				if postIndex > l {
+				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				var elementCount int
-				var count int
-				for _, integer := range dAtA[iNdEx:postIndex] {
-					if integer < 128 {
-						count++
-					}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
 				}
-				elementCount = count
-				if elementCount != 0 && len(m.SuperfluidAssetIds) == 0 {
-					m.SuperfluidAssetIds = make([]uint64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGov
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.SuperfluidAssetIds = append(m.SuperfluidAssetIds, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field SuperfluidAssetIds", wireType)
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SuperfluidAssets = append(m.SuperfluidAssets, SuperfluidAsset{})
+			if err := m.SuperfluidAssets[len(m.SuperfluidAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGov(dAtA[iNdEx:])
@@ -870,7 +814,7 @@ func (m *EnableSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DisableSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
+func (m *RemoveSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -893,10 +837,10 @@ func (m *DisableSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DisableSuperfluidAssetsProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: RemoveSuperfluidAssetsProposal: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DisableSuperfluidAssetsProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: RemoveSuperfluidAssetsProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -964,81 +908,37 @@ func (m *DisableSuperfluidAssetsProposal) Unmarshal(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType == 0 {
-				var v uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowGov
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SuperfluidAssetDenoms", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
 				}
-				m.SuperfluidAssetIds = append(m.SuperfluidAssetIds, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowGov
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthGov
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthGov
-				}
-				if postIndex > l {
+				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				var elementCount int
-				var count int
-				for _, integer := range dAtA[iNdEx:postIndex] {
-					if integer < 128 {
-						count++
-					}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
 				}
-				elementCount = count
-				if elementCount != 0 && len(m.SuperfluidAssetIds) == 0 {
-					m.SuperfluidAssetIds = make([]uint64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGov
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.SuperfluidAssetIds = append(m.SuperfluidAssetIds, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field SuperfluidAssetIds", wireType)
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SuperfluidAssetDenoms = append(m.SuperfluidAssetDenoms, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGov(dAtA[iNdEx:])

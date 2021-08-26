@@ -19,6 +19,10 @@ enum SuperfluidAssetType {
 
 // SuperfluidAsset stores the pair of superfluid asset type and denom pair
 message SuperfluidAsset {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
   SuperfluidAssetType asset_type = 1;
   string denom = 2;
 }

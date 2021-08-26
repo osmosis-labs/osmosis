@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	ProposalTypeSetSuperfluidAssets     = "SetSuperfluidAssets"
-	ProposalTypeEnableSuperfluidAssets  = "EnableSuperfluidAssets"
-	ProposalTypeDisableSuperfluidAssets = "DisableSuperfluidAssets"
+	ProposalTypeSetSuperfluidAssets    = "SetSuperfluidAssets"
+	ProposalTypeAddSuperfluidAssets    = "AddSuperfluidAssets"
+	ProposalTypeRemoveSuperfluidAssets = "RemoveSuperfluidAssets"
 )
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeSetSuperfluidAssets)
 	govtypes.RegisterProposalTypeCodec(&SetSuperfluidAssetsProposal{}, "osmosis/SetSuperfluidAssetsProposal")
-	govtypes.RegisterProposalType(ProposalTypeEnableSuperfluidAssets)
-	govtypes.RegisterProposalTypeCodec(&EnableSuperfluidAssetsProposal{}, "osmosis/EnableSuperfluidAssetsProposal")
-	govtypes.RegisterProposalType(ProposalTypeEnableSuperfluidAssets)
-	govtypes.RegisterProposalTypeCodec(&DisableSuperfluidAssetsProposal{}, "osmosis/DisableSuperfluidAssetsProposal")
+	govtypes.RegisterProposalType(ProposalTypeAddSuperfluidAssets)
+	govtypes.RegisterProposalTypeCodec(&AddSuperfluidAssetsProposal{}, "osmosis/AddSuperfluidAssetsProposal")
+	govtypes.RegisterProposalType(ProposalTypeAddSuperfluidAssets)
+	govtypes.RegisterProposalTypeCodec(&RemoveSuperfluidAssetsProposal{}, "osmosis/RemoveSuperfluidAssetsProposal")
 }
 
 var _ govtypes.Content = &SetSuperfluidAssetsProposal{}
-var _ govtypes.Content = &EnableSuperfluidAssetsProposal{}
-var _ govtypes.Content = &DisableSuperfluidAssetsProposal{}
+var _ govtypes.Content = &AddSuperfluidAssetsProposal{}
+var _ govtypes.Content = &RemoveSuperfluidAssetsProposal{}
 
 func NewSetSuperfluidAssetsProposal(title, description string, assets []SuperfluidAsset) govtypes.Content {
 	return &SetSuperfluidAssetsProposal{
@@ -61,25 +61,25 @@ func (p SetSuperfluidAssetsProposal) String() string {
   `, p.Title, p.Description, p.Assets)
 }
 
-func NewEnableSuperfluidAssetsProposal(title, description string, assetIds []uint64) govtypes.Content {
-	return &EnableSuperfluidAssetsProposal{
-		Title:              title,
-		Description:        description,
-		SuperfluidAssetIds: assetIds,
+func NewAddSuperfluidAssetsProposal(title, description string, assets []SuperfluidAsset) govtypes.Content {
+	return &AddSuperfluidAssetsProposal{
+		Title:            title,
+		Description:      description,
+		SuperfluidAssets: assets,
 	}
 }
 
-func (p *EnableSuperfluidAssetsProposal) GetTitle() string { return p.Title }
+func (p *AddSuperfluidAssetsProposal) GetTitle() string { return p.Title }
 
-func (p *EnableSuperfluidAssetsProposal) GetDescription() string { return p.Description }
+func (p *AddSuperfluidAssetsProposal) GetDescription() string { return p.Description }
 
-func (p *EnableSuperfluidAssetsProposal) ProposalRoute() string { return RouterKey }
+func (p *AddSuperfluidAssetsProposal) ProposalRoute() string { return RouterKey }
 
-func (p *EnableSuperfluidAssetsProposal) ProposalType() string {
-	return ProposalTypeEnableSuperfluidAssets
+func (p *AddSuperfluidAssetsProposal) ProposalType() string {
+	return ProposalTypeAddSuperfluidAssets
 }
 
-func (p *EnableSuperfluidAssetsProposal) ValidateBasic() error {
+func (p *AddSuperfluidAssetsProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
 		return err
@@ -88,35 +88,35 @@ func (p *EnableSuperfluidAssetsProposal) ValidateBasic() error {
 	return nil
 }
 
-func (p EnableSuperfluidAssetsProposal) String() string {
+func (p AddSuperfluidAssetsProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Enable Superfluid Assets Proposal:
+	b.WriteString(fmt.Sprintf(`Add Superfluid Assets Proposal:
   Title:       %s
   Description: %s
-  SuperfluidAssetIds:     %+v
-`, p.Title, p.Description, p.SuperfluidAssetIds))
+  SuperfluidAssets:     %+v
+`, p.Title, p.Description, p.SuperfluidAssets))
 	return b.String()
 }
 
-func NewDisableSuperfluidAssetsProposal(title, description string, assetIds []uint64) govtypes.Content {
-	return &DisableSuperfluidAssetsProposal{
-		Title:              title,
-		Description:        description,
-		SuperfluidAssetIds: assetIds,
+func NewRemoveSuperfluidAssetsProposal(title, description string, denoms []string) govtypes.Content {
+	return &RemoveSuperfluidAssetsProposal{
+		Title:                 title,
+		Description:           description,
+		SuperfluidAssetDenoms: denoms,
 	}
 }
 
-func (p *DisableSuperfluidAssetsProposal) GetTitle() string { return p.Title }
+func (p *RemoveSuperfluidAssetsProposal) GetTitle() string { return p.Title }
 
-func (p *DisableSuperfluidAssetsProposal) GetDescription() string { return p.Description }
+func (p *RemoveSuperfluidAssetsProposal) GetDescription() string { return p.Description }
 
-func (p *DisableSuperfluidAssetsProposal) ProposalRoute() string { return RouterKey }
+func (p *RemoveSuperfluidAssetsProposal) ProposalRoute() string { return RouterKey }
 
-func (p *DisableSuperfluidAssetsProposal) ProposalType() string {
-	return ProposalTypeDisableSuperfluidAssets
+func (p *RemoveSuperfluidAssetsProposal) ProposalType() string {
+	return ProposalTypeRemoveSuperfluidAssets
 }
 
-func (p *DisableSuperfluidAssetsProposal) ValidateBasic() error {
+func (p *RemoveSuperfluidAssetsProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
 		return err
@@ -125,12 +125,12 @@ func (p *DisableSuperfluidAssetsProposal) ValidateBasic() error {
 	return nil
 }
 
-func (p DisableSuperfluidAssetsProposal) String() string {
+func (p RemoveSuperfluidAssetsProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Disable Superfluid Assets Proposal:
+	b.WriteString(fmt.Sprintf(`Remove Superfluid Assets Proposal:
   Title:       %s
   Description: %s
-  SuperfluidAssetIds:     %+v
-`, p.Title, p.Description, p.SuperfluidAssetIds))
+  SuperfluidAssetDenoms:     %+v
+`, p.Title, p.Description, p.SuperfluidAssetDenoms))
 	return b.String()
 }

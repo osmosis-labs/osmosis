@@ -9,10 +9,10 @@ func (k Keeper) HandleSetSuperfluidAssetsProposal(ctx sdk.Context, p *types.SetS
 	return nil
 }
 
-func (k Keeper) HandleEnableSuperfluidAssetsProposal(ctx sdk.Context, p *types.EnableSuperfluidAssetsProposal) error {
+func (k Keeper) HandleAddSuperfluidAssetsProposal(ctx sdk.Context, p *types.AddSuperfluidAssetsProposal) error {
 	return nil
 }
 
-func (k Keeper) HandleDisableSuperfluidAssetsProposal(ctx sdk.Context, p *types.DisableSuperfluidAssetsProposal) error {
+func (k Keeper) HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, p *types.RemoveSuperfluidAssetsProposal) error {
 	return nil
 }
