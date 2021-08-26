@@ -36,5 +36,5 @@ message RemoveSuperfluidAssetsProposal {
 
   string title = 1;
   string description = 2;
-  repeated uint64 superfluid_asset_ids = 3;
+  repeated string superfluid_asset_denoms = 3;
 }
