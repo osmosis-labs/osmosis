@@ -12,4 +12,10 @@ var (
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
+
+	// KeyPrefixSuperfluidAsset defines prefix key for superfluid asset
+	KeyPrefixSuperfluidAsset = []byte{0x01}
+
+	// KeyPrefixSuperfluidAssetInfo defines prefix key for superfluid asset info
+	KeyPrefixSuperfluidAssetInfo = []byte{0x02}
 )

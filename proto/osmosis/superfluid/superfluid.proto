@@ -22,19 +22,20 @@ message SuperfluidAsset {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
 
-  SuperfluidAssetType asset_type = 1;
-  string denom = 2;
+  string denom = 1;
+  SuperfluidAssetType asset_type = 2;
 }
 
 // SuperfluidAssetInfo stores the information of superfluid asset - real time changes
 message SuperfluidAssetInfo {
-  uint64 superfluid_asset_id = 1;
-  string total_staked_amount = 2 [ 
-    (gogoproto.moretags) = "yaml:\"superfluid_staked_amount\"",
+  string denom = 1;
+  uint64 superfluid_asset_id = 2;
+  string total_staked_amount = 3 [ 
+    (gogoproto.moretags) = "yaml:\"total_staked_amount\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  string risk_adjusted_osmo_equivalent = 3 [
+  string risk_adjusted_osmo_equivalent = 4 [
     (gogoproto.moretags) = "yaml:\"risk_adjusted_osmo_equivalent\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
