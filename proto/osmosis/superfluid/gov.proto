@@ -25,7 +25,7 @@ message AddSuperfluidAssetsProposal {
 
   string title = 1;
   string description = 2;
-  repeated uint64 superfluid_asset_ids = 3;
+  repeated SuperfluidAsset superfluid_assets = 3;
 }
 
 // DisableSuperfluidAssetsProposal is a gov Content type to disable the superfluid assets by id
