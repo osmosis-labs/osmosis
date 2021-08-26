@@ -1,9 +1,9 @@
 package types
 
 // NewSuperfluidAsset returns a new instance of SuperfluidAsset
-func NewSuperfluidAsset(denom string) SuperfluidAsset {
+func NewSuperfluidAsset(assetType SuperfluidAssetType, denom string) SuperfluidAsset {
 	return SuperfluidAsset{
-		AssetType: SuperfluidAssetTypeDefault,
+		AssetType: assetType,
 		Denom:     denom,
 	}
 }

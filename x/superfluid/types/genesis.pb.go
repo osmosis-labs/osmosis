@@ -25,7 +25,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the module's genesis state.
 type GenesisState struct {
-	SuperfluidAssets          []SuperfluidAsset     `protobuf:"bytes,1,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
+	SuperfluidAssets []SuperfluidAsset `protobuf:"bytes,1,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
+	// TODO: do we need enabled_superfluid_asset_ids?
 	EnabledSuperfluidAssetIds []uint64              `protobuf:"varint,2,rep,packed,name=enabled_superfluid_asset_ids,json=enabledSuperfluidAssetIds,proto3" json:"enabled_superfluid_asset_ids,omitempty"`
 	SuperfluidAssetInfos      []SuperfluidAssetInfo `protobuf:"bytes,3,rep,name=superfluid_asset_infos,json=superfluidAssetInfos,proto3" json:"superfluid_asset_infos"`
 }
