@@ -465,3 +465,60 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 }
+
+func (suite *KeeperTestSuite) TestLockedDenom() {
+	suite.SetupTest()
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	// lock coins
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Hour)
+
+	// test with single lockup
+	res, err := suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: 0})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(10))
+
+	duration, _ := time.ParseDuration("30m")
+	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(10))
+
+	duration, _ = time.ParseDuration("1h")
+	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(10))
+
+	duration, _ = time.ParseDuration("2h")
+	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(0))
+
+	// adds different account and lockup for testing
+	addr2 := sdk.AccAddress([]byte("addr2---------------"))
+
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+	suite.LockTokens(addr2, coins, time.Hour*2)
+
+	duration, _ = time.ParseDuration("30m")
+	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(30))
+
+	duration, _ = time.ParseDuration("1h")
+	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(30))
+
+	duration, _ = time.ParseDuration("2h")
+	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(20))
+
+	// test unlocking
+	suite.BeginUnlocking(addr2)
+	duration, _ = time.ParseDuration("2h")
+	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(0))
+}
