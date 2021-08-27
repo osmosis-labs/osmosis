@@ -1485,7 +1485,7 @@ func prop12(ctx sdk.Context, app *OsmosisApp) {
 		if err != nil {
 			panic(err)
 		}
-		amount, err := strconv.ParseInt(payment[1], 10, 64)
+		amount, err := strconv.ParseInt(strings.TrimSpace(payment[1]), 10, 64)
 		if err != nil {
 			panic(err)
 		}
