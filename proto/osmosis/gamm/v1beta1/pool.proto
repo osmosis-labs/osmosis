@@ -150,3 +150,26 @@ message Pool {
     (gogoproto.nullable) = false
   ];
 }
+
+message TwapPair {
+  string tokenIn = 1;
+  string tokenOut = 2;
+  string priceCumulative = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string spotPrice = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message PoolTwapHistory {
+  google.protobuf.Timestamp timeStamp = 1 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"time_stamp\""
+  ];
+  uint64 poolId = 2;
+  repeated TwapPair twapPairs = 3;
+}

@@ -1203,3 +1203,43 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
+
+func (s *IntegrationTestSuite) TestGetCmdPoolTwapSpotPrice() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query spot price of twap", // osmosisd query gamm twap-spot-price 1 uatom uosmo 10
+			[]string{
+				"1",
+				"node",
+				"stake",
+				"10",
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdPoolTwapSpotPrice()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryPoolTwapResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}

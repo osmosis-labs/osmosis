@@ -8,6 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";
@@ -55,6 +56,11 @@ service Query {
       returns (QuerySwapExactAmountOutResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out";
+  }
+
+  // Calculate the twap of token pair
+  rpc PoolTwap(QueryPoolTwapRequest) returns (QueryPoolTwapResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/{poolId}/pool_twap";
   }
 }
 
@@ -169,6 +175,26 @@ message QueryTotalLiquidityResponse {
   repeated cosmos.base.v1beta1.Coin liquidity = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== PoolTwap
+message QueryPoolTwapRequest {
+  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string tokenInDenom = 2 [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
+  string tokenOutDenom = 3
+      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
+  google.protobuf.Duration duration = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+}
+
+message QueryPoolTwapResponse {
+  string spotPrice = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
 }

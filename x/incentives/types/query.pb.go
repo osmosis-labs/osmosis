@@ -877,6 +877,7 @@ type QueryClient interface {
 	// The querier either provides an address or a set of locks
 	// for which they want to find the associated rewards.
 	RewardsEst(ctx context.Context, in *RewardsEstRequest, opts ...grpc.CallOption) (*RewardsEstResponse, error)
+	// returns lockable durations that are valid to give incentives
 	LockableDurations(ctx context.Context, in *QueryLockableDurationsRequest, opts ...grpc.CallOption) (*QueryLockableDurationsResponse, error)
 }
 
@@ -978,6 +979,7 @@ type QueryServer interface {
 	// The querier either provides an address or a set of locks
 	// for which they want to find the associated rewards.
 	RewardsEst(context.Context, *RewardsEstRequest) (*RewardsEstResponse, error)
+	// returns lockable durations that are valid to give incentives
 	LockableDurations(context.Context, *QueryLockableDurationsRequest) (*QueryLockableDurationsResponse, error)
 }
 

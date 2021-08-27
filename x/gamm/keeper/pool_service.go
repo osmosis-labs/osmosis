@@ -91,6 +91,10 @@ func (k Keeper) CreatePool(
 
 	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
 	k.RecordTotalLiquidityIncrease(ctx, coins)
+	err = k.CreatePoolTwap(ctx, pool.GetId())
+	if err != nil {
+		return 0, err
+	}
 
 	return pool.GetId(), nil
 }
@@ -232,6 +236,11 @@ func (k Keeper) JoinSwapExternAmountIn(
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), addedCoins, shareOutAmount)
 	k.RecordTotalLiquidityIncrease(ctx, addedCoins)
 
+	err = k.UpdatePoolTwap(ctx, poolId, tokenIn.Denom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
 	return shareOutAmount, nil
 }
 
@@ -299,6 +308,11 @@ func (k Keeper) JoinSwapShareAmountOut(
 	k.createAddLiquidityEvent(ctx, sender, pool.GetId(), coinsAdded)
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), coinsAdded, shareOutAmount)
 	k.RecordTotalLiquidityIncrease(ctx, coinsAdded)
+
+	err = k.UpdatePoolTwap(ctx, poolId, tokenInDenom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	return shareOutAmount, nil
 }
@@ -470,6 +484,11 @@ func (k Keeper) ExitSwapShareAmountIn(
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, removedCoins)
 	k.RecordTotalLiquidityDecrease(ctx, removedCoins)
 
+	err = k.UpdatePoolTwap(ctx, poolId, tokenOutDenom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
 	return tokenOutAmount, nil
 }
 
@@ -554,6 +573,11 @@ func (k Keeper) ExitSwapExternAmountOut(
 	k.createRemoveLiquidityEvent(ctx, sender, pool.GetId(), removedCoins)
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, removedCoins)
 	k.RecordTotalLiquidityDecrease(ctx, removedCoins)
+
+	err = k.UpdatePoolTwap(ctx, poolId, tokenOut.Denom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	return shareInAmount, nil
 }

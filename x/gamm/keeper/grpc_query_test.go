@@ -257,3 +257,17 @@ func (suite *KeeperTestSuite) TestQuerySpotPrice() {
 	suite.NoError(err)
 	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), res.SpotPrice)
 }
+
+func (suite *KeeperTestSuite) TestPoolTwap() {
+	queryClient := suite.queryClient
+
+	poolId := suite.preparePool()
+
+	_, err := queryClient.PoolTwap(gocontext.Background(), &types.QueryPoolTwapRequest{
+		PoolId:        poolId,
+		TokenInDenom:  "",
+		TokenOutDenom: "bar",
+		Duration:      10,
+	})
+	suite.Require().Error(err)
+}
