@@ -21,6 +21,6 @@ func FlagSetLockTokens() *flag.FlagSet {
 func FlagSetMinDuration() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagMinDuration, "86400s", "The minimum duration of token bonded. e.g. 1d, 7d, 14d")
+	fs.String(FlagMinDuration, "1d", "The minimum duration of token bonded. e.g. 1d, 7d, 14d")
 	return fs
 }

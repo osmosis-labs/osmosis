@@ -209,7 +209,7 @@ message LockedDenomRequest {
   ];
 }
 message LockedDenomResponse {
-  string amount = 7 [
+  string amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
