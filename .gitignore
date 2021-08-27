@@ -194,3 +194,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/intellij,vscode,macos,windows
 /osmosisd
 /.idea/
+/artifacts/
+/.vscode/
+/scripts/local/
