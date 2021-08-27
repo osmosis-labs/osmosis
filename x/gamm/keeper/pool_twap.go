@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
@@ -182,6 +183,7 @@ func (k Keeper) GetRecentPoolTwapSpotPrice(
 		return sdk.Dec{}, fmt.Errorf("pool twap history prior to current time does not exist")
 	}
 
+	// TODO: use duration.Seconds?
 	desiredTime := ctx.BlockTime().Add(-duration * time.Second)
 	desiredTimeAdjacentPoolTwap, exists := k.GetPoolTwapHistory(ctx, poolId, desiredTime.Add(time.Second))
 	if !exists {
@@ -244,7 +246,36 @@ func (k Keeper) GetRecentPoolTwapSpotPrice(
 	return twap, nil
 }
 
-// function for validating whether specic string(s) are contained in a slice
+// SetNextTwapHistoryDeleteIndex sets the next twa history for deletion
+func (k Keeper) SetNextTwapHistoryDeleteIndex(ctx sdk.Context, index uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: index})
+	store.Set(types.KeyNextTwapHistoryDeleteIndex, bz)
+}
+
+// GetNextTwapHistoryDeleteIndex returns the next pool number to be deleted
+func (k Keeper) GetNextTwapHistoryDeleteIndex(ctx sdk.Context) uint64 {
+	var nextTwapHistoryIndex uint64
+	store := ctx.KVStore(k.storeKey)
+
+	bz := store.Get(types.KeyNextTwapHistoryDeleteIndex)
+	if bz == nil {
+		// initialize the next pool twap to be deleted
+		nextTwapHistoryIndex = 1
+	} else {
+		val := gogotypes.UInt64Value{}
+
+		err := k.cdc.UnmarshalBinaryBare(bz, &val)
+		if err != nil {
+			panic(err)
+		}
+		nextTwapHistoryIndex = val.GetValue()
+	}
+
+	return nextTwapHistoryIndex
+}
+
+// contains function validates whether specic string(s) are contained in a slice
 func contains(s []string, e ...string) bool {
 	for _, a := range s {
 		for _, b := range e {

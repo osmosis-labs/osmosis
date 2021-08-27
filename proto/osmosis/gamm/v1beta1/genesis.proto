@@ -3,6 +3,7 @@ package osmosis.gamm;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
@@ -12,6 +13,15 @@ message Params {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
     (gogoproto.nullable) = false
+  ];
+  uint64 num_twap_history_per_deletion = 2;
+  // interval is in the unit of block height
+  uint64 twap_history_deletion_interval = 3;
+  google.protobuf.Duration twap_history_keep_duration = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"twap_history_keep_duration\""
   ];
 }
 
@@ -23,4 +33,5 @@ message GenesisState {
       [ (cosmos_proto.accepts_interface) = "PoolI" ];
   uint64 next_pool_number = 2;
   Params params = 3 [ (gogoproto.nullable) = false ];
+  uint64 next_twap_history_delete_pool_id = 4;
 }
