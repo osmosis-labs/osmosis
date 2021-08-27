@@ -196,3 +196,5 @@ $RECYCLE.BIN/
 /osmosisd
 /.idea/
 /artifacts/
+/.vscode/
+/scripts/local/
