@@ -59,6 +59,12 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				suite.app.BeginBlocker(suite.ctx, types.RequestBeginBlock{})
 				suite.app.EndBlocker(suite.ctx, types.RequestEndBlock{suite.ctx.BlockHeight()})
 
+				feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+				var bal = int64(1000000000000)
+
+				feePool.CommunityPool = sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", bal))
+				suite.app.DistrKeeper.SetFeePool(suite.ctx, feePool)
+
 				// run upgrades
 				plan := upgradetypes.Plan{Name: "v4", Height: 5}
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
