@@ -2,72 +2,82 @@ package store
 
 import (
 	"bytes"
-	"encoding/json"
+
+	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (node *node) isLeaf() bool {
-	return node.level == 0
+func NewLeaf(key []byte, acc sdk.Int) *Leaf {
+	return &Leaf{Leaf: &Child{
+		Index:        key,
+		Accumulation: acc,
+	}}
 }
 
-func (node *node) children() (res children) {
-	bz := node.tree.store.Get(node.tree.nodeKey(node.level, node.key))
+func (ptr *ptr) isLeaf() bool {
+	return ptr.level == 0
+}
+
+func (ptr *ptr) node() (res *Node) {
+	res = new(Node)
+	bz := ptr.tree.store.Get(ptr.tree.nodeKey(ptr.level, ptr.key))
 	if bz != nil {
-		json.Unmarshal(bz, &res)
+		proto.Unmarshal(bz, res)
 	}
 	return
 }
 
-func (node *node) set(children children) {
-	bz, err := json.Marshal(children)
+func (ptr *ptr) set(node *Node) {
+	bz, err := proto.Marshal(node)
 	if err != nil {
 		panic(err)
 	}
-	node.tree.store.Set(node.tree.nodeKey(node.level, node.key), bz)
+	ptr.tree.store.Set(ptr.tree.nodeKey(ptr.level, ptr.key), bz)
 }
 
-func (node *node) setLeaf(acc sdk.Int) {
-	if !node.isLeaf() {
-		panic("setLeaf should not be called on branch node")
+func (ptr *ptr) setLeaf(leaf *Leaf) {
+	if !ptr.isLeaf() {
+		panic("setLeaf should only be called on pointers to leaf nodes. This ptr is a branch")
 	}
-	bz, err := json.Marshal(acc)
+	bz, err := proto.Marshal(leaf)
 	if err != nil {
 		panic(err)
 	}
-	node.tree.store.Set(node.tree.leafKey(node.key), bz)
+	ptr.tree.store.Set(ptr.tree.leafKey(ptr.key), bz)
 }
 
-func (node *node) delete() {
-	node.tree.store.Delete(node.tree.nodeKey(node.level, node.key))
+func (ptr *ptr) delete() {
+	ptr.tree.store.Delete(ptr.tree.nodeKey(ptr.level, ptr.key))
 }
 
-func (node *node) leftSibling() *node {
-	return node.tree.nodeReverseIterator(node.level, nil, node.key).node()
+func (ptr *ptr) leftSibling() *ptr {
+	return ptr.tree.ptrReverseIterator(ptr.level, nil, ptr.key).ptr()
 }
 
-func (node *node) rightSibling() *node {
-	iter := node.tree.nodeIterator(node.level, node.key, nil)
+func (ptr *ptr) rightSibling() *ptr {
+	iter := ptr.tree.ptrIterator(ptr.level, ptr.key, nil)
+	defer iter.Close()
 	if !iter.Valid() {
 		return nil
 	}
-	if node.exists() {
-		// exclude node itself
+	if ptr.exists() {
+		// exclude ptr itself
 		iter.Next()
 	}
-	return iter.node()
+	return iter.ptr()
 }
 
-func (node *node) child(n uint16) *node {
+func (ptr *ptr) child(n uint16) *ptr {
 	// TODO: set end to prefix iterator end
-	return node.tree.nodeIterator(node.level-1, node.children()[n].Index, nil).node()
+	return ptr.tree.ptrIterator(ptr.level-1, ptr.node().Children[n].Index, nil).ptr()
 }
 
-// parent returns the parent of the provided node pointer.
-// Behavior is not well defined if the calling node pointer does not exist in the tree.
-func (node *node) parent() *node {
-	// See if there is a parent with the same 'key' as this node.
-	parent := node.tree.nodeGet(node.level+1, node.key)
+// parent returns the parent of the provided pointer.
+// Behavior is not well defined if the calling pointer does not exist in the tree.
+func (ptr *ptr) parent() *ptr {
+	// See if there is a parent with the same 'key' as this ptr.
+	parent := ptr.tree.ptrGet(ptr.level+1, ptr.key)
 	if parent.exists() {
 		return parent
 	}
@@ -77,134 +87,138 @@ func (node *node) parent() *node {
 	if parent.exists() {
 		return parent
 	}
-	// If there is no such node (this node is not in the tree), return nil
-	return node.tree.nodeGet(node.level+1, nil)
+	// If there is no such ptr (the parent is not in the tree), return nil
+	return ptr.tree.ptrGet(ptr.level+1, nil)
 }
 
-// exists returns if the calling node is in the tree.
-func (node *node) exists() bool {
-	if node == nil {
+// exists returns true if the calling pointer has a node in the tree.
+func (ptr *ptr) exists() bool {
+	if ptr == nil {
 		return false
 	}
-	return node.tree.store.Has(node.tree.nodeKey(node.level, node.key))
+	return ptr.tree.store.Has(ptr.tree.nodeKey(ptr.level, ptr.key))
 }
 
-// updateAccumulation changes the accumulation value of a node in the tree,
+// updateAccumulation changes the accumulation value of a ptr in the tree,
 // and handles updating the accumulation for all of its parent's augmented data.
-func (node *node) updateAccumulation(c child) {
-	if !node.exists() {
+func (ptr *ptr) updateAccumulation(c *Child) {
+	if !ptr.exists() {
 		return // reached at the root
 	}
 
-	children := node.children()
-	idx, match := children.find(c.Index)
+	node := ptr.node()
+	idx, match := node.find(c.Index)
 	if !match {
 		panic("non existing key pushed from the child")
 	}
-	children = children.setAcc(idx, c.Acc)
-	node.set(children)
-	node.parent().updateAccumulation(child{node.key, children.accumulate()})
+	node = node.setAcc(idx, c.Accumulation)
+	ptr.set(node)
+	ptr.parent().updateAccumulation(&Child{ptr.key, node.accumulate()})
 }
 
-func (node *node) push(c child) {
-	if !node.exists() {
-		node.create(children{c})
+func (ptr *ptr) push(c *Child) {
+	if !ptr.exists() {
+		ptr.create(NewNode(c))
 		return
 	}
 
-	cs := node.children()
+	cs := ptr.node()
 	idx, match := cs.find(c.Index)
 
 	// setting already existing child, move to updateAccumulation
 	if match {
-		node.updateAccumulation(c)
+		ptr.updateAccumulation(c)
 		return
 	}
 
-	// inserting new child node
+	// inserting new child ptr
 	cs = cs.insert(idx, c)
-	parent := node.parent()
+	parent := ptr.parent()
 
 	// split and push-up if overflow
-	if len(cs) > int(node.tree.m) {
-		split := node.tree.m/2 + 1
-		leftchildren, rightchildren := cs.split(int(split))
-		node.tree.nodeGet(node.level, cs[split].Index).create(rightchildren)
+	if len(cs.Children) > int(ptr.tree.m) {
+		split := ptr.tree.m/2 + 1
+		leftnode, rightnode := cs.split(int(split))
+		ptr.tree.ptrGet(ptr.level, cs.Children[split].Index).create(rightnode)
 		if !parent.exists() {
-			parent.create(children{
-				child{node.key, leftchildren.accumulate()},
-				child{cs[split].Index, rightchildren.accumulate()},
-			})
-			node.set(leftchildren)
+			parent.create(NewNode(
+				&Child{ptr.key, leftnode.accumulate()},
+				&Child{cs.Children[split].Index, rightnode.accumulate()},
+			))
+			ptr.set(leftnode)
 			return
 		}
-		// constructing right childdd
-		parent.push(child{cs[split].Index, rightchildren.accumulate()})
-		cs = leftchildren
-		parent = node.parent() // parent might be changed during the pushing process
+		// constructing right child
+		parent.push(&Child{cs.Children[split].Index, rightnode.accumulate()})
+		cs = leftnode
+		parent = ptr.parent() // parent might be changed during the pushing process
 	}
 
-	parent.updateAccumulation(child{node.key, cs.accumulate()})
-	node.set(cs)
+	parent.updateAccumulation(&Child{ptr.key, cs.accumulate()})
+	ptr.set(cs)
 }
 
-func (node *node) pull(key []byte) {
-	if !node.exists() {
+func (ptr *ptr) pull(key []byte) {
+	if !ptr.exists() {
 		return // reached at the root
 	}
-	children := node.children()
-	idx, match := children.find(key)
+	node := ptr.node()
+	idx, match := node.find(key)
 
 	if !match {
 		panic("pulling non existing child")
 	}
 
-	children = children.delete(idx)
-	// For sake of efficienty on our use case, we pull only when a node gets
+	node = node.delete(idx)
+	// For sake of efficienty on our use case, we pull only when a ptr gets
 	// empty.
-	// if len(data.Index) >= int(node.tree.m/2) {
-	if len(children) > 0 {
-		node.set(children)
-		node.parent().updateAccumulation(child{node.key, children.accumulate()})
+	// if len(data.Index) >= int(ptr.tree.m/2) {
+	if len(node.Children) > 0 {
+		ptr.set(node)
+		ptr.parent().updateAccumulation(&Child{ptr.key, node.accumulate()})
 		return
 	}
 
 	// merge if possible
-	left := node.leftSibling()
-	right := node.rightSibling()
-	parent := node.parent()
-	node.delete()
-	parent.pull(node.key)
+	left := ptr.leftSibling()
+	right := ptr.rightSibling()
+	parent := ptr.parent()
+	ptr.delete()
+	parent.pull(ptr.key)
 
 	if left.exists() && right.exists() {
 		// parent might be deleted, retrieve from left
 		parent = left.parent()
 		if bytes.Equal(parent.key, right.parent().key) {
-			leftchildren := left.children()
-			rightchildren := right.children()
-			if len(leftchildren)+len(rightchildren) < int(node.tree.m) {
-				left.set(leftchildren.merge(rightchildren))
+			leftnode := left.node()
+			rightnode := right.node()
+			if len(leftnode.Children)+len(rightnode.Children) < int(ptr.tree.m) {
+				left.set(leftnode.merge(rightnode))
 				right.delete()
 				parent.pull(right.key)
-				parent.updateAccumulation(child{left.key, leftchildren.accumulate()})
+				parent.updateAccumulation(&Child{left.key, leftnode.accumulate()})
 			}
 		}
 	}
 }
 
-func (children children) accumulate() (res sdk.Int) {
+func (node Node) accumulate() (res sdk.Int) {
 	res = sdk.ZeroInt()
-	for _, child := range children {
-		res = res.Add(child.Acc)
+	for _, child := range node.Children {
+		res = res.Add(child.Accumulation)
 	}
 	return
+}
+
+func NewNode(cs ...*Child) *Node {
+	return &Node{Children: cs}
 }
 
 // find returns the appropriate position that key should be inserted
 // if match is true, idx is the exact position for the key
 // if match is false, idx is the position where the key should be inserted
-func (children children) find(key []byte) (idx int, match bool) {
-	for idx, child := range children {
+func (node Node) find(key []byte) (idx int, match bool) {
+	for idx, child := range node.Children {
 		if bytes.Equal(child.Index, key) {
 			return idx, true
 		}
@@ -214,33 +228,33 @@ func (children children) find(key []byte) (idx int, match bool) {
 		}
 	}
 
-	return len(children), false
+	return len(node.Children), false
 }
 
-func (children children) set(idx int, child child) children {
-	children[idx] = child
-	return children
+func (node *Node) set(idx int, child *Child) *Node {
+	node.Children[idx] = child
+	return node
 }
 
-func (children children) setAcc(idx int, acc sdk.Int) children {
-	children[idx] = child{children[idx].Index, acc}
-	return children
+func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
+	node.Children[idx] = &Child{node.Children[idx].Index, acc}
+	return node
 }
 
-func (cs children) insert(idx int, c child) children {
-	return append(cs[:idx], append(children{c}, cs[idx:]...)...)
+func (cs *Node) insert(idx int, c *Child) *Node {
+	arr := append(cs.Children[:idx], append([]*Child{c}, cs.Children[idx:]...)...)
+	return NewNode(arr...)
 }
 
-// delete removes the corresponding node from the underlying data store,
-func (children children) delete(idx int) children {
-	children = append(children[:idx], children[idx+1:]...)
-	return children
+func (node *Node) delete(idx int) *Node {
+	node = NewNode(append(node.Children[:idx], node.Children[idx+1:]...)...)
+	return node
 }
 
-func (children children) split(idx int) (children, children) {
-	return children[:idx], children[idx:]
+func (node *Node) split(idx int) (*Node, *Node) {
+	return NewNode(node.Children[:idx]...), NewNode(node.Children[idx:]...)
 }
 
-func (children children) merge(children2 children) children {
-	return append(children, children2...)
+func (node *Node) merge(node2 *Node) *Node {
+	return NewNode(append(node.Children, node2.Children...)...)
 }

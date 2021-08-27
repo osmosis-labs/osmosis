@@ -169,7 +169,7 @@ var (
 
 var _ App = (*OsmosisApp)(nil)
 
-// Gaia extends an ABCI application, but with most of its parameters exported.
+// Osmosis extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
 type OsmosisApp struct {
@@ -227,7 +227,7 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".osmosisd")
 }
 
-// NewOsmosis returns a reference to an initialized Gaia.
+// NewOsmosis returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
@@ -300,7 +300,7 @@ func NewOsmosisApp(
 	// this configures a no-op upgrade handler for the v2 upgrade,
 	// which improves the lockup module's store management.
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v2", func(ctx sdk.Context, plan upgradetypes.Plan) {
+		"v4", func(ctx sdk.Context, plan upgradetypes.Plan) {
 			// Upgrade all of the lock storages
 			locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
 			if err != nil {
@@ -308,29 +308,11 @@ func NewOsmosisApp(
 			}
 			// clear all lockup module locking / unlocking queue items
 			app.LockupKeeper.ClearAllLockRefKeys(ctx)
+			app.LockupKeeper.ClearAccumulationStores(ctx)
 
 			// reset all lock and references
 			for _, lock := range locks {
 				app.LockupKeeper.ResetLock(ctx, lock)
-			}
-
-			// Upgrade every validators min-commission rate
-			validators := app.StakingKeeper.GetAllValidators(ctx)
-			minCommissionRate := app.StakingKeeper.GetParams(ctx).MinCommissionRate
-			for _, v := range validators {
-				if v.Commission.Rate.LT(minCommissionRate) {
-					comm, err := app.StakingKeeper.MustUpdateValidatorCommission(
-						ctx, v, minCommissionRate)
-					if err != nil {
-						panic(err)
-					}
-					v.Commission = comm
-
-					// call the before-modification hook since we're about to update the commission
-					app.StakingKeeper.BeforeValidatorModified(ctx, v.GetOperator())
-
-					app.StakingKeeper.SetValidator(ctx, v)
-				}
 			}
 
 			// Update distribution keeper parameters to remove proposer bonus
@@ -341,7 +323,7 @@ func NewOsmosisApp(
 			app.DistrKeeper.SetParams(ctx, distrParams)
 
 			// configure upgrade for gamm module's pool creation fee param add
-			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1000000000)})) // 1000 OSMO
+			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 		})
 
 	// Create IBC Keeper
@@ -498,7 +480,7 @@ func NewOsmosisApp(
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
 		epochstypes.ModuleName,
 		upgradetypes.ModuleName, minttypes.ModuleName, poolincentivestypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
+		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, capabilitytypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		lockuptypes.ModuleName,
@@ -607,6 +589,7 @@ func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	forks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 

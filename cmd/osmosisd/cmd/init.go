@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"strings"
+
 
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
@@ -80,6 +82,21 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
+
+			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode. 
+			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
+			
+			seeds := []string {
+			"085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656"} // Notional
+		 
+			
+			
+
+			
+
+			//Override default settings in config.toml
+			config.P2P.Seeds = strings.Join(seeds[:],",")
+			config.P2P.MaxNumInboundPeers = 150
 			config.P2P.MaxNumOutboundPeers = 40
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
@@ -87,6 +104,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			config.SetRoot(clientCtx.HomeDir)
 
+
+			//Override default settings in app.toml
 			appConfig := appcfg.DefaultConfig()
 			appConfig.API.Enable = true
 			appConfig.StateSync.SnapshotInterval = 1500
@@ -148,7 +167,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			genDoc.Validators = nil
 			genDoc.AppState = appState
 			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-				return errors.Wrap(err, "Failed to export gensis file")
+				return errors.Wrap(err, "Failed to export genesis file")
 			}
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)

@@ -26,14 +26,12 @@ func TestEpochsExportGenesis(t *testing.T) {
 	require.Equal(t, genesis.Epochs[0].CurrentEpoch, int64(0))
 	require.Equal(t, genesis.Epochs[0].CurrentEpochStartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[0].EpochCountingStarted, false)
-	require.Equal(t, genesis.Epochs[0].CurrentEpochEnded, true)
 	require.Equal(t, genesis.Epochs[1].Identifier, "week")
 	require.Equal(t, genesis.Epochs[1].StartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[1].Duration, time.Hour*24*7)
 	require.Equal(t, genesis.Epochs[1].CurrentEpoch, int64(0))
 	require.Equal(t, genesis.Epochs[1].CurrentEpochStartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[1].EpochCountingStarted, false)
-	require.Equal(t, genesis.Epochs[1].CurrentEpochEnded, true)
 }
 
 func TestEpochsInitGenesis(t *testing.T) {
@@ -61,7 +59,6 @@ func TestEpochsInitGenesis(t *testing.T) {
 				CurrentEpoch:          0,
 				CurrentEpochStartTime: time.Time{},
 				EpochCountingStarted:  true,
-				CurrentEpochEnded:     true,
 			},
 			{
 				Identifier:            "monthly",
@@ -70,7 +67,6 @@ func TestEpochsInitGenesis(t *testing.T) {
 				CurrentEpoch:          0,
 				CurrentEpochStartTime: time.Time{},
 				EpochCountingStarted:  true,
-				CurrentEpochEnded:     true,
 			},
 		},
 	}
@@ -85,7 +81,6 @@ func TestEpochsInitGenesis(t *testing.T) {
 				CurrentEpoch:          0,
 				CurrentEpochStartTime: time.Time{},
 				EpochCountingStarted:  true,
-				CurrentEpochEnded:     true,
 			},
 		},
 	}
@@ -96,7 +91,6 @@ func TestEpochsInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
 	require.Equal(t, epochInfo.Duration, time.Hour*24)
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
-	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), ctx.BlockTime().UTC().String())
+	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), time.Time{}.String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
-	require.Equal(t, epochInfo.CurrentEpochEnded, true)
 }
