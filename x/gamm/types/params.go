@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -10,7 +11,10 @@ import (
 
 // Parameter store keys
 var (
-	KeyPoolCreationFee = []byte("PoolCreationFee")
+	KeyPoolCreationFee             = []byte("PoolCreationFee")
+	KeyNumTwapHistoryPerDeletion   = []byte("NumTwapHistoryPerDeletion")
+	KeyTwapHistoryDeletionInterval = []byte("TwapHistoryDeletionInterval")
+	KeyTwapHistoryKeepDuration     = []byte("TwapHistoryKeepDuration")
 )
 
 // ParamTable for gamm module.
@@ -27,7 +31,10 @@ func NewParams(poolCreationFee sdk.Coins) Params {
 // default gamm module parameters
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+		PoolCreationFee:             sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+		NumTwapHistoryPerDeletion:   10,
+		TwapHistoryDeletionInterval: 5,
+		TwapHistoryKeepDuration:     time.Duration(time.Hour * 24),
 	}
 }
 
@@ -45,6 +52,9 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPoolCreationFee, &p.PoolCreationFee, validatePoolCreationFee),
+		paramtypes.NewParamSetPair(KeyNumTwapHistoryPerDeletion, &p.NumTwapHistoryPerDeletion, validateNumTwapHistoryPerDeletion),
+		paramtypes.NewParamSetPair(KeyTwapHistoryDeletionInterval, &p.TwapHistoryDeletionInterval, validateTwapHistoryDeletionInterval),
+		paramtypes.NewParamSetPair(KeyTwapHistoryKeepDuration, &p.TwapHistoryKeepDuration, validateTwapHistoryKeepDuration),
 	}
 }
 
@@ -56,6 +66,33 @@ func validatePoolCreationFee(i interface{}) error {
 
 	if v.Validate() != nil {
 		return fmt.Errorf("invalid pool creation fee: %+v", i)
+	}
+
+	return nil
+}
+
+func validateNumTwapHistoryPerDeletion(i interface{}) error {
+	_, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateTwapHistoryDeletionInterval(i interface{}) error {
+	_, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateTwapHistoryKeepDuration(i interface{}) error {
+	_, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	return nil

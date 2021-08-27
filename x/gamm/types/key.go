@@ -25,6 +25,8 @@ var (
 	KeyTotalLiquidity = []byte{0x03}
 	// KeyPrefixPoolTwaps defines prefix to store pool twaps
 	KeyPrefixPoolTwaps = []byte{0x04}
+	// KeyNextTwapHistoryDeleteIndex defines key to store the next twap history to be deleted
+	KeyNextTwapHistoryDeleteIndex = []byte{0x05}
 )
 
 func GetPoolShareDenom(poolId uint64) string {
