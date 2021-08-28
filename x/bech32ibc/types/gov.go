@@ -42,7 +42,7 @@ func (p *UpdateHrpIbcChannelProposal) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	return ValidateHRP(p.Hrp)
+	return ValidateHrp(p.Hrp)
 }
 
 func (p UpdateHrpIbcChannelProposal) String() string {

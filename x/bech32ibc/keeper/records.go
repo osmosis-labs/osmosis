@@ -10,7 +10,7 @@ import (
 )
 
 // GetFeeToken returns the fee token record for a specific denom
-func (k Keeper) GetNativeHRP(ctx sdk.Context) (hrp string, err error) {
+func (k Keeper) GetNativeHrp(ctx sdk.Context) (hrp string, err error) {
 	store := ctx.KVStore(k.storeKey)
 
 	if !store.Has(types.NativeHrpKey) {
@@ -26,7 +26,7 @@ func (k Keeper) GetNativeHRP(ctx sdk.Context) (hrp string, err error) {
 func (k Keeper) setNativeHrp(ctx sdk.Context, hrp string) error {
 	store := ctx.KVStore(k.storeKey)
 
-	err := types.ValidateHRP(hrp)
+	err := types.ValidateHrp(hrp)
 	if err != nil {
 		return err
 	}
@@ -41,17 +41,17 @@ func (k Keeper) setNativeHrp(ctx sdk.Context, hrp string) error {
 // - The HRP is not for the chain's native prefix
 // - Check that IBC channels and ports are real
 func (k Keeper) ValidateHrpIbcRecord(ctx sdk.Context, record types.HrpIbcRecord) error {
-	err := types.ValidateHRP(record.HRP)
+	err := types.ValidateHrp(record.Hrp)
 	if err != nil {
 		return err
 	}
 
-	nativeHrp, err := k.GetNativeHRP(ctx)
+	nativeHrp, err := k.GetNativeHrp(ctx)
 	if err != nil {
 		return err
 	}
 
-	if record.HRP == nativeHrp {
+	if record.Hrp == nativeHrp {
 		return sdkerrors.Wrap(types.ErrInvalidHRP, "cannot set a record for the chain's native prefix")
 	}
 
@@ -93,8 +93,8 @@ func (k Keeper) setHrpIbcRecord(ctx sdk.Context, hrpIbcRecord types.HrpIbcRecord
 	prefixStore := prefix.NewStore(store, types.HrpIBCRecordStorePrefix)
 
 	if hrpIbcRecord.SourceChannel == "" {
-		if prefixStore.Has([]byte(hrpIbcRecord.HRP)) {
-			prefixStore.Delete([]byte(hrpIbcRecord.HRP))
+		if prefixStore.Has([]byte(hrpIbcRecord.Hrp)) {
+			prefixStore.Delete([]byte(hrpIbcRecord.Hrp))
 		}
 		return nil
 	}
@@ -104,7 +104,7 @@ func (k Keeper) setHrpIbcRecord(ctx sdk.Context, hrpIbcRecord types.HrpIbcRecord
 		return err
 	}
 
-	prefixStore.Set([]byte(hrpIbcRecord.HRP), bz)
+	prefixStore.Set([]byte(hrpIbcRecord.Hrp), bz)
 	return nil
 }
 

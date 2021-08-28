@@ -12,7 +12,7 @@ import (
 )
 
 func (k Keeper) HandleUpdateHrpIbcChannelProposal(ctx sdk.Context, p *types.UpdateHrpIbcChannelProposal) error {
-	err := types.ValidateHRP(p.Hrp)
+	err := types.ValidateHrp(p.Hrp)
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func (k Keeper) HandleUpdateHrpIbcChannelProposal(ctx sdk.Context, p *types.Upda
 	}
 
 	return k.setHrpIbcRecord(ctx, types.HrpIbcRecord{
-		HRP:           p.Hrp,
+		Hrp:           p.Hrp,
 		SourceChannel: p.SourceChannel,
 	})
 }

@@ -40,7 +40,7 @@ func (k Keeper) HrpSourceChannel(ctx context.Context, req *types.QueryHrpSourceC
 func (k Keeper) NativeHrp(ctx context.Context, _ *types.QueryNativeHrpRequest) (*types.QueryNativeHrpResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	hrp, err := k.GetNativeHRP(sdkCtx)
+	hrp, err := k.GetNativeHrp(sdkCtx)
 	if err != nil {
 		return nil, err
 	}

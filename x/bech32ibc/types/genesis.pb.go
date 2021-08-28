@@ -61,7 +61,7 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
-func (m *GenesisState) GetNativeHRP() string {
+func (m *GenesisState) GetNativeHrp() string {
 	if m != nil {
 		return m.NativeHRP
 	}

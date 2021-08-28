@@ -11,7 +11,7 @@ message HrpIbcRecord {
   option (gogoproto.equal) = true;
 
   // The bech32 human readable prefix that serves as the key
-  string HRP = 1 [ (gogoproto.moretags) = "yaml:\"hrp\"" ];
+  string hrp = 1 [ (gogoproto.moretags) = "yaml:\"hrp\"" ];
   // the channel by which the packet will be sent
   string source_channel = 2
       [ (gogoproto.moretags) = "yaml:\"source_channel\"" ];

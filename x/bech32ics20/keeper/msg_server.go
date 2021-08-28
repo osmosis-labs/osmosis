@@ -44,7 +44,7 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 		return nil, err
 	}
 
-	nativePrefix, err := k.hrpToChannelMapper.GetNativeHRP(ctx)
+	nativePrefix, err := k.hrpToChannelMapper.GetNativeHrp(ctx)
 	if err != nil {
 		return nil, err
 	}

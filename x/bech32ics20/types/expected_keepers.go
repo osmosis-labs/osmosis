@@ -12,7 +12,7 @@ import (
 // The x/bech32ibc keeper is a reference implementation and is expected to satisfy this interface
 type Bech32HrpToSourceChannelMap interface {
 	GetHrpSourceChannel(ctx sdk.Context, hrp string) (sourceChannel string, err error)
-	GetNativeHRP(ctx sdk.Context) (hrp string, err error)
+	GetNativeHrp(ctx sdk.Context) (hrp string, err error)
 }
 
 // ICS20TransferMsgServer defines the contract that must be fulfilled by an ICS20 msg server
