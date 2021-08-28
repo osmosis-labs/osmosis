@@ -242,10 +242,12 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 }
 
 func (suite *KeeperTestSuite) TestLockTokensAlot() {
+	suite.SetupTest()
+
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	startAveragingAt := 1000
-	totalNumLocks := 2000
+	totalNumLocks := 5000
 	for i := 1; i < startAveragingAt; i++ {
 		suite.LockTokens(addr1, coins, time.Second)
 	}
