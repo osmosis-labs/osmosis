@@ -11,7 +11,6 @@ option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 enum SuperfluidAssetType {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  // TODO: what superfluid asset types will be here?
   SuperfluidAssetTypeNative = 0;
   SuperfluidAssetTypeLPShare = 1;
   // SuperfluidAssetTypeLendingShare = 2; // for now not exist

@@ -30,7 +30,6 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type SuperfluidAssetType int32
 
 const (
-	// TODO: what superfluid asset types will be here?
 	SuperfluidAssetTypeNative  SuperfluidAssetType = 0
 	SuperfluidAssetTypeLPShare SuperfluidAssetType = 1
 )

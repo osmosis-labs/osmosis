@@ -18,16 +18,13 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, assetInfo := range genState.SuperfluidAssetInfos {
 		k.SetSuperfluidAssetInfo(ctx, assetInfo)
 	}
-
-	// TODO: do we need EnabledSuperfluidAssetIds ?
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	return &types.GenesisState{
-		SuperfluidAssets:          k.GetAllSuperfluidAssets(ctx),
-		SuperfluidAssetInfos:      k.GetAllSuperfluidAssetInfos(ctx),
-		EnabledSuperfluidAssetIds: []uint64{}, // TODO: do we need this?
+		SuperfluidAssets:     k.GetAllSuperfluidAssets(ctx),
+		SuperfluidAssetInfos: k.GetAllSuperfluidAssetInfos(ctx),
 	}
 }

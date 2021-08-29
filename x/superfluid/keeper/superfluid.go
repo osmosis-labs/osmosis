@@ -52,10 +52,6 @@ func (k Keeper) GetAllSuperfluidAssets(ctx sdk.Context) []types.SuperfluidAsset 
 	return assets
 }
 
-func (k Keeper) SetEnabledSuperfluidAssetIds(ctx sdk.Context) {
-	// TODO: do we need this?
-}
-
 func (k Keeper) SetSuperfluidAssetInfo(ctx sdk.Context, assetInfo types.SuperfluidAssetInfo) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixSuperfluidAsset)
@@ -99,9 +95,4 @@ func (k Keeper) GetAllSuperfluidAssetInfos(ctx sdk.Context) []types.SuperfluidAs
 		assetInfos = append(assetInfos, assetInfo)
 	}
 	return assetInfos
-}
-
-func (k Keeper) GetEnabledSuperfluidAssetInfos() []types.SuperfluidAssetInfo {
-	// TODO: do we need this?
-	return []types.SuperfluidAssetInfo{}
 }
