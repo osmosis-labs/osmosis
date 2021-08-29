@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Make queries to bank total chain balance account for developer vesting correctly.
 * Add ability for nodes to query 
 * Embedded seeds in init.go
+* Added changelog and info about changelog format.
 
 ## [v3.2.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
 
