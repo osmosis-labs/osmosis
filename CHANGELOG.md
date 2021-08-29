@@ -33,8 +33,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
 # Changelog
+All notable changes to this project will be documented in this file.
 
-## [Upcoming]
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
 
 * Significantly speedup epoch times
 * Fix bug in the lockup module code that caused it to take a linear amount of gas.
@@ -42,6 +46,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add events for all tx types in the gamm module.
 * Make queries to bank total chain balance account for developer vesting correctly.
 * Add ability for nodes to query 
+* Embedded seeds in init.go
+* Added changelog and info about changelog format.
 
 ## [v3.2.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
 
