@@ -96,3 +96,8 @@ func (k Keeper) GetAllSuperfluidAssetInfos(ctx sdk.Context) []types.SuperfluidAs
 	}
 	return assetInfos
 }
+
+func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.SuperfluidAsset) sdk.Int {
+	// TODO: we need to figure out how to do this later.
+	return sdk.OneInt()
+}

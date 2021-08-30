@@ -25,7 +25,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.SetSuperfluidAssetInfo(ctx, types.SuperfluidAssetInfo{
 				Denom:                      asset.Denom,
 				TotalStakedAmount:          totalAmt,
-				RiskAdjustedOsmoEquivalent: sdk.OneInt(), // TODO: should adjust this to something else
+				RiskAdjustedOsmoEquivalent: k.GetRiskAdjustedOsmoValue(ctx, asset),
 			})
 		}
 	}
