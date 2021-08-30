@@ -385,6 +385,9 @@ func NewOsmosisApp(
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper, epochsKeeper)
+	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
+		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
+		app.AccountKeeper, *lockupKeeper)
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.EpochsKeeper,
@@ -403,10 +406,6 @@ func NewOsmosisApp(
 		authtypes.FeeCollectorName,
 	)
 	poolIncentivesHooks := app.PoolIncentivesKeeper.Hooks()
-
-	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
-		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
-		app.AccountKeeper, app.LockupKeeper)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
@@ -454,6 +453,7 @@ func NewOsmosisApp(
 			// insert epoch hooks receivers here
 			app.IncentivesKeeper.Hooks(),
 			app.MintKeeper.Hooks(),
+			app.SuperfluidKeeper.Hooks(),
 		),
 	)
 
