@@ -28,13 +28,12 @@ message SuperfluidAsset {
 // SuperfluidAssetInfo stores the information of superfluid asset - real time changes
 message SuperfluidAssetInfo {
   string denom = 1;
-  uint64 superfluid_asset_id = 2;
-  string total_staked_amount = 3 [ 
+  string total_staked_amount = 2 [ 
     (gogoproto.moretags) = "yaml:\"total_staked_amount\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  string risk_adjusted_osmo_equivalent = 4 [
+  string risk_adjusted_osmo_equivalent = 3 [
     (gogoproto.moretags) = "yaml:\"risk_adjusted_osmo_equivalent\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false

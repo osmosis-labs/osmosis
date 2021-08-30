@@ -162,6 +162,7 @@ var (
 		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
+		superfluidtypes.ModuleName:               nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -403,7 +404,9 @@ func NewOsmosisApp(
 	)
 	poolIncentivesHooks := app.PoolIncentivesKeeper.Hooks()
 
-	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(appCodec, keys[superfluidtypes.StoreKey], app.AccountKeeper)
+	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
+		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
+		app.AccountKeeper, app.LockupKeeper)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
@@ -524,6 +527,7 @@ func NewOsmosisApp(
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		poolincentivestypes.ModuleName,
+		superfluidtypes.ModuleName,
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
@@ -782,6 +786,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 
 	return paramsKeeper

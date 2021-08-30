@@ -3,11 +3,13 @@ package osmosis.superfluid;
 
 import "gogoproto/gogo.proto";
 import "osmosis/superfluid/superfluid.proto";
+import "osmosis/superfluid/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 
 // GenesisState defines the module's genesis state.
 message GenesisState {
-    repeated SuperfluidAsset superfluid_assets = 1 [ (gogoproto.nullable) = false ];
-    repeated SuperfluidAssetInfo superfluid_asset_infos = 2 [ (gogoproto.nullable) = false ];
+    Params params = 1 [ (gogoproto.nullable) = false ];
+    repeated SuperfluidAsset superfluid_assets = 2 [ (gogoproto.nullable) = false ];
+    repeated SuperfluidAssetInfo superfluid_asset_infos = 3 [ (gogoproto.nullable) = false ];
 }
