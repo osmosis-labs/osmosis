@@ -17,6 +17,12 @@ func (k Keeper) SetSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset)
 	prefixStore.Set([]byte(asset.Denom), bz)
 }
 
+func (k Keeper) DeleteSuperfluidAsset(ctx sdk.Context, denom string) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixSuperfluidAsset)
+	prefixStore.Delete([]byte(denom))
+}
+
 func (k Keeper) GetSuperfluidAsset(ctx sdk.Context, denom string) types.SuperfluidAsset {
 	asset := types.SuperfluidAsset{}
 	store := ctx.KVStore(k.storeKey)

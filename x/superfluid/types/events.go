@@ -2,7 +2,10 @@ package types
 
 // event types
 const (
-	TypeEvtUpdateSuperfluidAsset = "update_superfluid_asset"
+	TypeEvtSetSuperfluidAsset    = "set_superfluid_asset"
+	TypeEvtAddSuperfluidAsset    = "add_superfluid_asset"
+	TypeEvtRemoveSuperfluidAsset = "remove_superfluid_asset"
 
-	AttributeDenom = "denom"
+	AttributeDenom               = "denom"
+	AttributeSuperfluidAssetType = "superfluid_asset_type"
 )

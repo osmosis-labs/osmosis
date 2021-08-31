@@ -20,25 +20,21 @@ service Query {
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_assets";
   }
-  // Returns enabled superfluid assets
-  rpc EnabledAssets(EnabledAssetsRequest) returns (EnabledAssetsResponse) {
-    option (google.api.http).get = "/osmosis/superfluid/v1beta1/enabled_assets";
-  }
   // Returns superfluid asset info
   rpc AssetInfo(AssetInfoRequest) returns (AssetInfoResponse) {
-    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_info/{asset_id}";
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_info/{denom}";
   }
 }
 
 message AssetTypeRequest {
-    string denom = 1;
+  string denom = 1;
 };
 message AssetTypeResponse {
-   SuperfluidAsset asset = 1;
+  SuperfluidAssetType asset_type = 1;
 };
 
 message AssetInfoRequest {
-  string asset_id = 1;
+  string denom = 1;
 };
 message AssetInfoResponse {
   SuperfluidAssetInfo info = 1;
@@ -46,10 +42,5 @@ message AssetInfoResponse {
 
 message AllAssetsRequest {};
 message AllAssetsResponse {
-   repeated SuperfluidAsset assets = 1;
-};
-
-message EnabledAssetsRequest {};
-message EnabledAssetsResponse {
-   repeated SuperfluidAsset assets = 1;
+   repeated SuperfluidAsset assets = 1 [(gogoproto.nullable) = false];
 };
