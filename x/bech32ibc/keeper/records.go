@@ -22,8 +22,8 @@ func (k Keeper) GetNativeHrp(ctx sdk.Context) (hrp string, err error) {
 	return string(bz), nil
 }
 
-// setNativeHrp sets the native prefix for the chain. Should only be used once.
-func (k Keeper) setNativeHrp(ctx sdk.Context, hrp string) error {
+// SetNativeHrp sets the native prefix for the chain. Should only be used once.
+func (k Keeper) SetNativeHrp(ctx sdk.Context, hrp string) error {
 	store := ctx.KVStore(k.storeKey)
 
 	err := types.ValidateHrp(hrp)
@@ -131,7 +131,7 @@ func (k Keeper) GetHrpIbcRecords(ctx sdk.Context) (HrpIbcRecords []types.HrpIbcR
 	return records
 }
 
-func (k Keeper) setHrpIbcRecords(ctx sdk.Context, hrpIbcRecords []types.HrpIbcRecord) {
+func (k Keeper) SetHrpIbcRecords(ctx sdk.Context, hrpIbcRecords []types.HrpIbcRecord) {
 	for _, record := range hrpIbcRecords {
 		k.setHrpIbcRecord(ctx, record)
 	}
