@@ -9,3 +9,8 @@ import (
 type ChannelKeeper interface {
 	GetChannel(ctx sdk.Context, srcPort, srcChan string) (_ channeltypes.Channel, found bool)
 }
+
+type TransferKeeper interface {
+	// GetPort returns the portID for the transfer module. Used in ExportGenesis
+	GetPort(ctx sdk.Context) string
+}

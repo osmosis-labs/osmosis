@@ -12,5 +12,4 @@ var (
 	ErrInvalidIBCData = sdkerrors.Register(ModuleName, 2, "Invalid IBC Data")
 	ErrRecordNotFound = sdkerrors.Register(ModuleName, 3, "No record found for requested HRP")
 	ErrNoNativeHrp    = sdkerrors.Register(ModuleName, 4, "No native prefix was set")
-	// this line is used by starport scaffolding # ibc/errors
 )

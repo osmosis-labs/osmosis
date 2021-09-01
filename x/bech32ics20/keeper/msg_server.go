@@ -100,7 +100,7 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 	}
 
 	ibcTransferMsg := ibctransfertypes.NewMsgTransfer(
-		ibctransfertypes.DefaultGenesisState().GetPortId(),
+		k.tk.GetPort(ctx),
 		sourceChannel,
 		msg.Amount[0],
 		from,

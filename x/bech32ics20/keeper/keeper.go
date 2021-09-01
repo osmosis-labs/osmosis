@@ -15,30 +15,26 @@ import (
 type (
 	Keeper struct {
 		bk                     bankkeeper.Keeper
+		tk                     types.TransferKeeper
 		hrpToChannelMapper     types.Bech32HrpToSourceChannelMap
 		ics20TransferMsgServer types.ICS20TransferMsgServer
 		cdc                    codec.Marshaler
 		storeKey               sdk.StoreKey
 		memKey                 sdk.StoreKey
-		// this line is used by starport scaffolding # ibc/keeper/attribute
 	}
 )
 
 func NewKeeper(
 	bk bankkeeper.Keeper,
+	tk types.TransferKeeper,
 	hrpToChannelMapper types.Bech32HrpToSourceChannelMap,
 	cdc codec.Marshaler,
-	storeKey,
-	memKey sdk.StoreKey,
-	// this line is used by starport scaffolding # ibc/keeper/parameter
 ) *Keeper {
 	return &Keeper{
 		bk:                 bk,
+		tk:                 tk,
 		hrpToChannelMapper: hrpToChannelMapper,
 		cdc:                cdc,
-		storeKey:           storeKey,
-		memKey:             memKey,
-		// this line is used by starport scaffolding # ibc/keeper/return
 	}
 }
 

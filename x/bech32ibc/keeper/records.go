@@ -6,7 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/bech32ibc/types"
-	// this line is used by starport scaffolding # ibc/keeper/import
 )
 
 // GetFeeToken returns the fee token record for a specific denom

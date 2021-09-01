@@ -19,3 +19,8 @@ type Bech32HrpToSourceChannelMap interface {
 type ICS20TransferMsgServer interface {
 	Transfer(goCtx context.Context, msg *transfertypes.MsgTransfer) (*transfertypes.MsgTransferResponse, error)
 }
+
+type TransferKeeper interface {
+	// GetPort returns the portID for the transfer module. Used in ExportGenesis
+	GetPort(ctx sdk.Context) string
+}

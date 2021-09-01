@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/bech32ibc/types"
-	// this line is used by starport scaffolding # ibc/keeper/import
 )
 
 type (
@@ -17,24 +16,22 @@ type (
 
 		cdc      codec.Marshaler
 		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
-		// this line is used by starport scaffolding # ibc/keeper/attribute
+
+		tk types.TransferKeeper
 	}
 )
 
 func NewKeeper(
 	channelKeeper types.ChannelKeeper,
 	cdc codec.Marshaler,
-	storeKey,
-	memKey sdk.StoreKey,
-	// this line is used by starport scaffolding # ibc/keeper/parameter
+	storeKey sdk.StoreKey,
+	tk types.TransferKeeper,
 ) *Keeper {
 	return &Keeper{
 		channelKeeper: channelKeeper,
 		cdc:           cdc,
 		storeKey:      storeKey,
-		memKey:        memKey,
-		// this line is used by starport scaffolding # ibc/keeper/return
+		tk:            tk,
 	}
 }
 

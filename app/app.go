@@ -75,6 +75,12 @@ import (
 	"github.com/gorilla/mux"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/x/bech32ibc"
+	bech32ibckeeper "github.com/osmosis-labs/osmosis/x/bech32ibc/keeper"
+	bech32ibctypes "github.com/osmosis-labs/osmosis/x/bech32ibc/types"
+	"github.com/osmosis-labs/osmosis/x/bech32ics20"
+	bech32ics20keeper "github.com/osmosis-labs/osmosis/x/bech32ics20/keeper"
+	bech32ics20types "github.com/osmosis-labs/osmosis/x/bech32ics20/types"
 	"github.com/osmosis-labs/osmosis/x/claim"
 	claimkeeper "github.com/osmosis-labs/osmosis/x/claim/keeper"
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
@@ -200,6 +206,8 @@ type OsmosisApp struct {
 	IBCKeeper            *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	EvidenceKeeper       evidencekeeper.Keeper
 	TransferKeeper       ibctransferkeeper.Keeper
+	Bech32IBCKeeper      bech32ibckeeper.Keeper
+	Bech32ICS20Keeper    bech32ics20keeper.Keeper
 	ClaimKeeper          *claimkeeper.Keeper
 	GAMMKeeper           gammkeeper.Keeper
 	IncentivesKeeper     incentiveskeeper.Keeper
@@ -249,6 +257,7 @@ func NewOsmosisApp(
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
 		epochstypes.StoreKey, poolincentivestypes.StoreKey,
+		bech32ibctypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -357,6 +366,15 @@ func NewOsmosisApp(
 	)
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 
+	app.Bech32IBCKeeper = *bech32ibckeeper.NewKeeper(
+		app.IBCKeeper.ChannelKeeper, appCodec, keys[bech32ibctypes.StoreKey],
+		app.TransferKeeper,
+	)
+
+	app.Bech32ICS20Keeper = *bech32ics20keeper.NewKeeper(
+		app.BankKeeper, app.TransferKeeper,
+		app.Bech32IBCKeeper, appCodec,
+	)
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
@@ -482,6 +500,8 @@ func NewOsmosisApp(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
+		bech32ibc.NewAppModule(appCodec, app.Bech32IBCKeeper),
+		bech32ics20.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		claim.NewAppModule(appCodec, *app.ClaimKeeper),
 		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -516,6 +536,8 @@ func NewOsmosisApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		bech32ibctypes.ModuleName,
+		bech32ics20types.ModuleName,
 		poolincentivestypes.ModuleName,
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
