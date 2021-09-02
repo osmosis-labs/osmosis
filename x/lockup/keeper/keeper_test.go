@@ -16,11 +16,21 @@ type KeeperTestSuite struct {
 	ctx     sdk.Context
 	querier sdk.Querier
 	app     *app.OsmosisApp
+	cleanup func()
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+}
+
+func (suite *KeeperTestSuite) SetupTestWithLevelDb() {
+	suite.app, suite.cleanup = app.SetupTestingAppWithLevelDb(false)
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+}
+
+func (suite *KeeperTestSuite) Cleanup() {
+	suite.cleanup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {

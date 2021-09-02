@@ -290,7 +290,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
 			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			denomLockAmt := lock.Coins.AmountOf(gauge.DistributeTo.Denom)
+			denomLockAmt := lock.Coins.AmountOfNoDenomValidation(gauge.DistributeTo.Denom)
 			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 			if amt.IsPositive() {
 				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))

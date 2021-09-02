@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/epochs/types";
 
 message EpochInfo {
+  reserved 7;
   string identifier = 1;
   google.protobuf.Timestamp start_time = 2 [
     (gogoproto.stdtime) = true,
@@ -27,7 +28,6 @@ message EpochInfo {
     (gogoproto.moretags) = "yaml:\"current_epoch_start_time\""
   ];
   bool epoch_counting_started = 6;
-  bool current_epoch_ended = 7;
 }
 
 // GenesisState defines the epochs module's genesis state.

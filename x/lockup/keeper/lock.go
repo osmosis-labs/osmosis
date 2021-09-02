@@ -213,6 +213,16 @@ func (k Keeper) GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp t
 	return combineLocks(notUnlockings, unlockings)
 }
 
+// GetLockedDenom Returns the total amount of denom that are locked
+func (k Keeper) GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int {
+	totalAmtLocked := k.GetPeriodLocksAccumulation(ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         denom,
+		Duration:      duration,
+	})
+	return totalAmtLocked
+}
+
 // GetLocksLongerThanDurationDenom Returns the locks whose unlock duration is longer than duration
 func (k Keeper) GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []types.PeriodLock {
 	// returns both unlocking started and not started
@@ -339,7 +349,7 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 	return lock, nil
 }
 
-func (k Keeper) clearLockRefKeysByPrefix(ctx sdk.Context, prefix []byte) {
+func (k Keeper) clearKeysByPrefix(ctx sdk.Context, prefix []byte) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
@@ -350,8 +360,12 @@ func (k Keeper) clearLockRefKeysByPrefix(ctx sdk.Context, prefix []byte) {
 }
 
 func (k Keeper) ClearAllLockRefKeys(ctx sdk.Context) {
-	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixNotUnlocking)
-	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixUnlocking)
+	k.clearKeysByPrefix(ctx, types.KeyPrefixNotUnlocking)
+	k.clearKeysByPrefix(ctx, types.KeyPrefixUnlocking)
+}
+
+func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
+	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
 
 // ResetLock reset lock to lock's previous state on InitGenesis

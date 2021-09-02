@@ -22,7 +22,6 @@ func DefaultGenesis() *GenesisState {
 			CurrentEpoch:          0,
 			CurrentEpochStartTime: time.Time{},
 			EpochCountingStarted:  false,
-			CurrentEpochEnded:     true,
 		},
 		{
 			Identifier:            "day",
@@ -31,7 +30,6 @@ func DefaultGenesis() *GenesisState {
 			CurrentEpoch:          0,
 			CurrentEpochStartTime: time.Time{},
 			EpochCountingStarted:  false,
-			CurrentEpochEnded:     true,
 		},
 	}
 	return NewGenesisState(epochs)

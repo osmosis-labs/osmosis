@@ -1,39 +1,32 @@
-# Simple usage with a mounted data directory:
-# > docker build -t osmosis .
-# > docker run -it -p 46657:46657 -p 46656:46656 -v ~/.osmosisd:/osmosis/.osmosisd -v ~/.osmosiscli:/osmosis/.osmosiscli osmosis osmosisd init
-# > docker run -it -p 46657:46657 -p 46656:46656 -v ~/.osmosisd:/osmosis/.osmosisd -v ~/.osmosiscli:/osmosis/.osmosiscli osmosis osmosisd start
-FROM golang:alpine AS build-env
+FROM faddat/archlinux AS build
+
+ENV GOPATH=/go
+ENV PATH=$PATH:/go/bin
 
 # Set up dependencies
-ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
+RUN pacman -Syyu --noconfirm curl make git go gcc linux-headers python base-devel protobuf wget && \
+    wget -O /genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 
-# Set working directory for the build
-WORKDIR /go/src/github.com/osmosis-labs/osmosis
 
 # Add source files
-COPY . .
+COPY . /osmosis
 
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
-RUN apk add --no-cache $PACKAGES && \
+RUN cd /osmosis && \
     make install
 
 # Final image
-FROM alpine:edge
+FROM faddat/archlinux
 
-ENV OSMOSIS /osmosis
-
-# Install ca-certificates
-RUN apk add --update ca-certificates
-
-RUN addgroup osmosis && \
-    adduser -S -G osmosis osmosis -h "$OSMOSIS"
-
-USER osmosis
-
-WORKDIR $OSMOSIS
+RUN pacman -Syyu --noconfirm 
 
 # Copy over binaries from the build-env
-COPY --from=build-env /go/bin/osmosisd /usr/bin/osmosisd
+COPY --from=build /go/bin/osmosisd /usr/bin/osmosisd
+COPY --from=build /genesis.json /genesis.json
 
 # Run osmosisd by default, omit entrypoint to ease using container with osmosiscli
-CMD ["osmosisd"]
+EXPOSE 26656
+EXPOSE 26657
+EXPOSE 1317
+EXPOSE 9090
+
