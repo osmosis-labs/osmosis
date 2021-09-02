@@ -1,11 +1,8 @@
 
 #!/bin/bash
 # microtick and bitcanna contributed significantly here.
-
-
 set -e
 
-# Change for your custom chain
 export GOPATH=~/go
 export PATH=$PATH:~/go/bin
 go install ./...
@@ -13,8 +10,7 @@ go install ./...
 
 # MAKE HOME FOLDER AND GET GENESIS
 osmosisd init test 
-wget -O $HOME/.osmosisd/config/genesis.json $GENESIS 
-  
+wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs  
 
 INTERVAL=1500
 
