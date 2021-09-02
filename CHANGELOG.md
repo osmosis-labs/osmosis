@@ -33,16 +33,28 @@ Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
 # Changelog
+All notable changes to this project will be documented in this file.
 
-## [v2.0.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-* Update the cosmos-sdk version we modify to v0.42.6
-* Fix a bug in the min commission rate code that allows validators to be created with commission rates less than the minimum.
-* Automatically upgrade any validator with less than the minimum comission rate to the minimum at upgrade time.
+## [Unreleased]
+
+* Significantly speedup epoch times
 * Fix bug in the lockup module code that caused it to take a linear amount of gas.
 * Make unbonding tokens from the lockup module get automatically claimed when unbonding is done.
 * Add events for all tx types in the gamm module.
 * Make queries to bank total chain balance account for developer vesting correctly.
+* Add ability for nodes to query 
+* Embedded seeds in init.go
+* Added changelog and info about changelog format.
+
+## [v3.2.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
+
+* Update the cosmos-sdk version we modify to v0.42.9
+* Fix a bug in the min commission rate code that allows validators to be created with commission rates less than the minimum.
+* Automatically upgrade any validator with less than the minimum comission rate to the minimum at upgrade time.
+* Unbrick on-chain governance, by fixing the deposit parameter to use `uosmo` instead of `osmo`.
 
 ## [v1.0.2](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.2) - 2021-06-18
 

@@ -150,3 +150,8 @@ func (k Keeper) AccountLockedLongerDurationNotUnlockingOnly(goCtx context.Contex
 	}
 	return &types.AccountLockedLongerDurationNotUnlockingOnlyResponse{Locks: k.GetAccountLockedLongerDurationNotUnlockingOnly(ctx, owner, req.Duration)}, nil
 }
+
+func (k Keeper) LockedDenom(goCtx context.Context, req *types.LockedDenomRequest) (*types.LockedDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return &types.LockedDenomResponse{Amount: k.GetLockedDenom(ctx, req.Denom, req.Duration)}, nil
+}

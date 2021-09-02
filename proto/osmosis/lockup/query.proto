@@ -70,6 +70,12 @@ service Query {
     option (google.api.http).get =
         "/osmosis/lockup/v1beta1/account_locked_pasttime_denom/{owner}";
   }
+
+  // Returns total locked per denom with longer past given time
+  rpc LockedDenom(LockedDenomRequest) returns (LockedDenomResponse) {
+    option (google.api.http).get = "/osmosis/lockup/v1beta1/locked_denom";
+  }
+
   // Returns lock record by id
   rpc LockedByID(LockedRequest) returns (LockedResponse) {
     option (google.api.http).get =
@@ -193,6 +199,22 @@ message AccountLockedPastTimeDenomRequest {
 message AccountLockedPastTimeDenomResponse {
   repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
+
+message LockedDenomRequest {
+  string denom = 1;
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+}
+message LockedDenomResponse {
+  string amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
 
 message LockedRequest { uint64 lock_id = 1; };
 message LockedResponse { PeriodLock lock = 1; };
