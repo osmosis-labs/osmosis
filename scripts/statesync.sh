@@ -16,15 +16,14 @@ GENESIS="https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybs
 APP="OSMOSISD: ~/.osmosisd"
 
 
-  # BitCanna State Sync client config.
-  rm -f osmosisd #deletes a previous downloaded binary
-  rm -rf $HOME/.osmosisd/ #deletes previous installation   
+  # Osmosis State Sync client config.
+  # rm -f osmosisd #deletes a previous downloaded binary
+  # rm -rf $HOME/.osmosisd/ #deletes previous installation   
   wget -nc $BINARY
   mv osmosisd-3.1.0-linux-amd64 osmosisd
   chmod +x osmosisd
   ./osmosisd init test 
-  rm -rf $HOME/.osmosisd/config/genesis.json #deletes the default created genesis
-  curl -s $GENESIS > $HOME/.osmosisd/config/genesis.json
+  wget -O $HOME/.osmosisd/config/genesis.json $GENESIS 
   
   NODE1_IP="95.217.196.54"
   RPC1="http://$NODE1_IP"
