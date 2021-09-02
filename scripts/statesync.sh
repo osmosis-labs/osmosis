@@ -19,21 +19,21 @@ APP="OSMOSISD: ~/.osmosisd"
   # Osmosis State Sync client config.
   # rm -f osmosisd #deletes a previous downloaded binary
   # rm -rf $HOME/.osmosisd/ #deletes previous installation   
-  wget -nc $BINARY
-  mv osmosisd-3.1.0-linux-amd64 osmosisd
-  chmod +x osmosisd
-  ./osmosisd init test 
-  wget -O $HOME/.osmosisd/config/genesis.json $GENESIS 
+wget -nc $BINARY
+mv osmosisd-3.1.0-linux-amd64 osmosisd
+chmod +x osmosisd
+./osmosisd init test 
+wget -O $HOME/.osmosisd/config/genesis.json $GENESIS 
   
-  NODE1_IP="95.217.196.54"
-  RPC1="http://$NODE1_IP"
-  P2P_PORT1=2000
-  RPC_PORT1=2001
+NODE1_IP="95.217.196.54"
+RPC1="http://$NODE1_IP"
+P2P_PORT1=2000
+RPC_PORT1=2001
 
-  NODE2_IP="144.76.183.180"
-  RPC2="http://$NODE2_IP"
-  P2P_PORT2=2000
-  RPC_PORT2=2001
+NODE2_IP="162.55.132.230"
+RPC2="http://$NODE2_IP"
+P2P_PORT2=2000
+RPC_PORT2=2001
 
   #If you want to use a third StateSync Server... 
   #DOMAIN_3=seed1.bitcanna.io     # If you want to use domain names 
@@ -42,38 +42,31 @@ APP="OSMOSISD: ~/.osmosisd"
   #RPC_PORT3=26657
   #P2P_PORT3=26656
 
-  INTERVAL=1000
+INTERVAL=1000
 
-  LATEST_HEIGHT=$(curl -s $RPC1:$RPC_PORT1/block | jq -r .result.block.header.height);
-  BLOCK_HEIGHT=$(($LATEST_HEIGHT-$INTERVAL)) 
+LATEST_HEIGHT=$(curl -s $RPC1:$RPC_PORT1/block | jq -r .result.block.header.height);
+BLOCK_HEIGHT=$(($LATEST_HEIGHT-$INTERVAL)) 
   
-  if [ $BLOCK_HEIGHT -eq 0 ]; then
-    echo "Error: Cannot state sync to block 0; Latest block is $LATEST_HEIGHT and must be at least $INTERVAL; wait a few blocks!"
-    exit 1
-  fi
 
-  TRUST_HASH=$(curl -s "$RPC1:$RPC_PORT1/block?height=$BLOCK_HEIGHT" | jq -r .result.block_id.hash)
-  if [ "$TRUST_HASH" == "null" ]; then
-    echo "Error: Cannot find block hash. This shouldn't happen :/"
-    exit 1
-  fi
 
-  NODE1_ID=$(curl -s "$RPC1:$RPC_PORT1/status" | jq -r .result.node_info.id)
-  NODE2_ID=$(curl -s "$RPC2:$RPC_PORT2/status" | jq -r .result.node_info.id)
-  #NODE3_ID=$(curl -s "$RPC3:$RPC_PORT3/status" | jq -r .result.node_info.id)
+NODE1_ID=$(curl -s "$RPC1:$RPC_PORT1/status" | jq -r .result.node_info.id)
+NODE2_ID=$(curl -s "$RPC2:$RPC_PORT2/status" | jq -r .result.node_info.id)
+#NODE3_ID=$(curl -s "$RPC3:$RPC_PORT3/status" | jq -r .result.node_info.id)
 
-  echo "NODE ONE: $NODE1_ID@$NODE1_IP:$P2P_PORT1"
-  echo "NODE TWO: $NODE2_ID@$NODE2_IP:$P2P_PORT2"
+echo "TRUST HEIGHT: $BLOCK_HEIGHT"
+echo "TRUST HASH: $TRUST_HASH"
+echo "NODE ONE: $NODE1_ID@$NODE1_IP:$P2P_PORT1"
+echo "NODE TWO: $NODE2_ID@$NODE2_IP:$P2P_PORT2"
 
 
 
-  sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1true| ; \
-  s|^(rpc_servers[[:space:]]+=[[:space:]]+).*$|\1\"http://$NODE1_IP:$RPC_PORT1,http://$NODE2_IP:$RPC_PORT2\"| ; \
-  s|^(trust_height[[:space:]]+=[[:space:]]+).*$|\1$BLOCK_HEIGHT| ; \
-  s|^(trust_hash[[:space:]]+=[[:space:]]+).*$|\1\"$TRUST_HASH\"| ; \
-  s|^(persistent_peers[[:space:]]+=[[:space:]]+).*$|\1\"${NODE1_ID}@${NODE1_IP}:${P2P_PORT1},${NODE2_ID}@${NODE2_IP}:${P2P_PORT2}\"|" $HOME/.osmosisd/config/config.toml
+sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1true| ; \
+s|^(rpc_servers[[:space:]]+=[[:space:]]+).*$|\1\"http://$NODE1_IP:$RPC_PORT1,http://$NODE2_IP:$RPC_PORT2\"| ; \
+s|^(trust_height[[:space:]]+=[[:space:]]+).*$|\1$BLOCK_HEIGHT| ; \
+s|^(trust_hash[[:space:]]+=[[:space:]]+).*$|\1\"$TRUST_HASH\"| ; \
+s|^(persistent_peers[[:space:]]+=[[:space:]]+).*$|\1\"${NODE1_ID}@${NODE1_IP}:${P2P_PORT1},${NODE2_ID}@${NODE2_IP}:${P2P_PORT2}\"|" $HOME/.osmosisd/config/config.toml
 
  
 
-  ./osmosisd unsafe-reset-all
-  ./osmosisd start
+./osmosisd unsafe-reset-all
+./osmosisd start
