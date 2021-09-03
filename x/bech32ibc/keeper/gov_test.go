@@ -5,8 +5,6 @@ import (
 	"github.com/osmosis-labs/osmosis/x/bech32ibc/types"
 )
 
-// TODO: write test for HandleUpdateHrpIbcChannelProposal
-
 func (suite *KeeperTestSuite) TestHandleUpdateHrpIbcChannelProposal() {
 	suite.SetupTest()
 

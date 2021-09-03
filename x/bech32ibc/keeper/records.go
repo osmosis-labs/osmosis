@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -40,6 +42,7 @@ func (k Keeper) SetNativeHrp(ctx sdk.Context, hrp string) error {
 // - The HRP is not for the chain's native prefix
 // - Check that IBC channels and ports are real
 func (k Keeper) ValidateHrpIbcRecord(ctx sdk.Context, record types.HrpIbcRecord) error {
+	// TODO: this function is not used in any of the places
 	err := types.ValidateHrp(record.Hrp)
 	if err != nil {
 		return err
@@ -54,7 +57,11 @@ func (k Keeper) ValidateHrpIbcRecord(ctx sdk.Context, record types.HrpIbcRecord)
 		return sdkerrors.Wrap(types.ErrInvalidHRP, "cannot set a record for the chain's native prefix")
 	}
 
-	//TODO: Validate IBC channel ID exists
+	_, found := k.channelKeeper.GetChannel(ctx, k.tk.GetPort(ctx), record.SourceChannel)
+	if !found {
+		return sdkerrors.Wrap(types.ErrInvalidIBCData, fmt.Sprintf("channel not found: %s", record.SourceChannel))
+	}
+
 	return nil
 }
 

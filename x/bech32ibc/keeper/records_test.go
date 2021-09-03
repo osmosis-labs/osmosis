@@ -1,6 +1,9 @@
 package keeper_test
 
-import "github.com/osmosis-labs/osmosis/x/bech32ibc/types"
+import (
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	"github.com/osmosis-labs/osmosis/x/bech32ibc/types"
+)
 
 func (suite *KeeperTestSuite) TestNativeHrpLifeCycle() {
 	suite.SetupTest()
@@ -8,15 +11,15 @@ func (suite *KeeperTestSuite) TestNativeHrpLifeCycle() {
 	// check genesis native hrp
 	nativeHrp, err := suite.app.Bech32IBCKeeper.GetNativeHrp(suite.ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(nativeHrp, "uosmo")
+	suite.Require().Equal(nativeHrp, "osmo")
 
 	// check update of native hrp correctly
-	err = suite.app.Bech32IBCKeeper.SetNativeHrp(suite.ctx, "osmo")
+	err = suite.app.Bech32IBCKeeper.SetNativeHrp(suite.ctx, "osmosis")
 	suite.Require().NoError(err)
 
 	nativeHrp, err = suite.app.Bech32IBCKeeper.GetNativeHrp(suite.ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(nativeHrp, "osmo")
+	suite.Require().Equal(nativeHrp, "osmosis")
 
 	// error for uppercase in denom
 	err = suite.app.Bech32IBCKeeper.SetNativeHrp(suite.ctx, "OSMO")
@@ -102,4 +105,45 @@ func (suite *KeeperTestSuite) TestHrpIbcRecordsLifeCycle() {
 	suite.Require().Error(err)
 }
 
-// TODO: test ValidateHrpIbcRecord
+func (suite *KeeperTestSuite) TestValidateHrpIbcRecord() {
+	suite.SetupTest()
+
+	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, "transfer", "channel-1", channeltypes.Channel{
+		State:    1,
+		Ordering: 1,
+		Counterparty: channeltypes.Counterparty{
+			PortId:    "transfer",
+			ChannelId: "channel-1",
+		},
+		ConnectionHops: []string{},
+		Version:        "ics20",
+	})
+
+	// check invalid prefix for hrp
+	err := suite.app.Bech32IBCKeeper.ValidateHrpIbcRecord(suite.ctx, types.HrpIbcRecord{
+		Hrp:           "AAA",
+		SourceChannel: "channel-1",
+	})
+	suite.Require().Error(err)
+
+	// check native hrp
+	err = suite.app.Bech32IBCKeeper.ValidateHrpIbcRecord(suite.ctx, types.HrpIbcRecord{
+		Hrp:           "osmo",
+		SourceChannel: "channel-1",
+	})
+	suite.Require().Error(err)
+
+	// check invalid channel
+	err = suite.app.Bech32IBCKeeper.ValidateHrpIbcRecord(suite.ctx, types.HrpIbcRecord{
+		Hrp:           "osmo",
+		SourceChannel: "channel-2",
+	})
+	suite.Require().Error(err)
+
+	// check correct one
+	err = suite.app.Bech32IBCKeeper.ValidateHrpIbcRecord(suite.ctx, types.HrpIbcRecord{
+		Hrp:           "akash",
+		SourceChannel: "channel-1",
+	})
+	suite.Require().NoError(err)
+}

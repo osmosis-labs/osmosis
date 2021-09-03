@@ -31,5 +31,5 @@ func (suite *KeeperTestSuite) TestNativeHrp() {
 	// check genesis native hrp
 	resp, err := suite.queryClient.NativeHrp(sdk.WrapSDKContext(suite.ctx), &types.QueryNativeHrpRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Equal(resp.NativeHrp, "uosmo")
+	suite.Require().Equal(resp.NativeHrp, "osmo")
 }
