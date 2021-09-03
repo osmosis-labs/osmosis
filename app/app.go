@@ -141,6 +141,8 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
+		bech32ibc.AppModuleBasic{},
+		bech32ics20.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		gamm.AppModuleBasic{},
 		incentives.AppModuleBasic{},
