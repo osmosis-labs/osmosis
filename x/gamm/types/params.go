@@ -81,9 +81,13 @@ func validateNumTwapHistoryPerDeletion(i interface{}) error {
 }
 
 func validateTwapHistoryDeletionInterval(i interface{}) error {
-	_, ok := i.(uint64)
+	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invlaid parameter type(value of zero): %T", i)
 	}
 
 	return nil

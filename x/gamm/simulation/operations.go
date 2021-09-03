@@ -157,7 +157,10 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 
 		// set the pool params to set the pool creation fee to dust amount of denom
 		k.SetParams(ctx, types.Params{
-			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(denoms[0], 1)},
+			PoolCreationFee:             sdk.Coins{sdk.NewInt64Coin(denoms[0], 1)},
+			NumTwapHistoryPerDeletion:   10,
+			TwapHistoryDeletionInterval: 5,
+			TwapHistoryKeepDuration:     time.Duration(time.Hour * 24),
 		})
 
 		// futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, denoms)

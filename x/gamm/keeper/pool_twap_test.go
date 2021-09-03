@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
-	"time"
 )
 
 func (suite *KeeperTestSuite) TestUpdatePoolTwap() {
@@ -60,7 +61,6 @@ func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 				var barbazSpotPrice sdk.Dec
 				var bazfooSpotPrice sdk.Dec
 				var foobarPriceCumulative sdk.Dec
-
 
 				for _, twapPair := range poolTwap.TwapPairs {
 					if twapPair.TokenIn == "foo" && twapPair.TokenOut == "bar" {
@@ -453,7 +453,7 @@ func (suite *KeeperTestSuite) TestPoolTwapSpotPrice() {
 			},
 		},
 		{
-			fn : func() {
+			fn: func() {
 				poolId := suite.preparePool()
 
 				ctx := suite.ctx.WithBlockTime(time.Now().Add(time.Second))
@@ -471,7 +471,7 @@ func (suite *KeeperTestSuite) TestPoolTwapSpotPrice() {
 		},
 		{
 			// normal case for spot price using twap
-			fn : func() {
+			fn: func() {
 				poolId := suite.preparePool()
 
 				ctx := suite.ctx.WithBlockTime(time.Now().Add(time.Second))
@@ -494,10 +494,135 @@ func (suite *KeeperTestSuite) TestPoolTwapSpotPrice() {
 				suite.Require().Equal(sdk.MustNewDecFromStr("2.000008400000005616"), spotPrice)
 			},
 		},
-
 	}
 	for _, test := range tests {
 		test.fn()
 	}
 }
 
+func (suite *KeeperTestSuite) TestPoolTwapDeleteHistory() {
+	suite.SetupTest()
+
+	tests := []struct {
+		fn func()
+	}{
+		{
+			// test delete pool twap history with three different pools
+			fn: func() {
+				pool1 := suite.preparePool()
+
+				poolParams := types.PoolParams{
+					SwapFee: sdk.NewDec(0),
+					ExitFee: sdk.NewDec(0),
+				}
+				pool2, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, poolParams, []types.PoolAsset{
+					{
+						Weight: sdk.NewInt(100),
+						Token:  sdk.NewCoin("foo", sdk.NewInt(5_000_000)),
+					},
+					{
+						Weight: sdk.NewInt(100),
+						Token:  sdk.NewCoin("bar", sdk.NewInt(5_000_000)),
+					},
+				}, "")
+				suite.NoError(err)
+
+				pool3, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, poolParams, []types.PoolAsset{
+					{
+						Weight: sdk.NewInt(100),
+						Token:  sdk.NewCoin("bar", sdk.NewInt(5_000_000)),
+					},
+					{
+						Weight: sdk.NewInt(100),
+						Token:  sdk.NewCoin("baz", sdk.NewInt(5_000_000)),
+					},
+				}, "")
+				suite.NoError(err)
+
+				foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
+				barcoin := sdk.NewCoin("bar", sdk.NewInt(20))
+
+				ctx := suite.ctx.WithBlockTime(time.Now().Add(time.Minute * 20))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool1, foocoin, "bar", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Minute * 30))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool2, foocoin, "bar", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Minute * 40))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool1, barcoin, "foo", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Minute * 50))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool3, barcoin, "baz", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Minute * 55))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool2, foocoin, "bar", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Hour*1 + time.Minute*20))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool1, foocoin, "bar", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Hour*1 + time.Minute*30))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool3, barcoin, "baz", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Hour*1 + time.Minute*40))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool1, foocoin, "bar", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Hour*1 + time.Minute*50))
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(ctx, acc1, pool2, foocoin, "bar", sdk.ZeroInt())
+				suite.Require().NoError(err)
+
+				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Hour * 25)).WithBlockHeight(10)
+				suite.app.GAMMKeeper.DeleteTwapHistoryWithParams(ctx)
+
+				_, exists := suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool1, time.Now().Add(time.Minute*21))
+				suite.Require().False(exists)
+
+				_, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool1, time.Now().Add(time.Minute*40))
+				suite.Require().False(exists)
+
+				poolTwapHistory, exists := suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool1, time.Now().Add(time.Minute*41))
+				suite.Require().True(exists)
+				suite.Require().Equal(time.Now().Add(time.Minute*40).Second(), poolTwapHistory.TimeStamp.Second())
+
+				poolTwapHistory, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool1, ctx.BlockTime())
+				suite.Require().True(exists)
+				suite.Require().Equal(time.Now().Add(time.Hour*1+time.Minute*40).Second(), poolTwapHistory.TimeStamp.Second())
+
+				_, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool2, time.Now().Add(time.Minute*31))
+				suite.Require().False(exists)
+
+				_, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool2, time.Now().Add(time.Minute*55))
+				suite.Require().False(exists)
+
+				poolTwapHistory, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool2, time.Now().Add(time.Minute*56))
+				suite.Require().True(exists)
+				suite.Require().Equal(time.Now().Add(time.Minute*55).Second(), poolTwapHistory.TimeStamp.Second())
+
+				poolTwapHistory, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool2, ctx.BlockTime())
+				suite.Require().True(exists)
+				suite.Require().Equal(time.Now().Add(time.Hour*1+time.Minute*50).Second(), poolTwapHistory.TimeStamp.Second())
+
+				_, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool3, time.Now().Add(time.Minute*50))
+				suite.Require().False(exists)
+
+				poolTwapHistory, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool3, time.Now().Add(time.Minute*51))
+				suite.Require().True(exists)
+				suite.Require().Equal(time.Now().Add(time.Minute*50).Second(), poolTwapHistory.TimeStamp.Second())
+
+				poolTwapHistory, exists = suite.app.GAMMKeeper.GetPoolTwapHistory(ctx, pool3, ctx.BlockTime())
+				suite.Require().True(exists)
+				suite.Require().Equal(time.Now().Add(time.Hour*1+time.Minute*30).Second(), poolTwapHistory.TimeStamp.Second())
+			},
+		},
+	}
+	for _, test := range tests {
+		test.fn()
+	}
+}

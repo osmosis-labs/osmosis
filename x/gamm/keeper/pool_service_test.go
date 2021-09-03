@@ -209,9 +209,9 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			keeper.SetParams(suite.ctx, types.Params{
-				PoolCreationFee: sdk.Coins{},
-			})
+			params := keeper.GetParams(suite.ctx)
+			params.PoolCreationFee = sdk.Coins{}
+			keeper.SetParams(suite.ctx, params)
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
@@ -230,9 +230,9 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			keeper.SetParams(suite.ctx, types.Params{
-				PoolCreationFee: nil,
-			})
+			params := keeper.GetParams(suite.ctx)
+			params.PoolCreationFee = sdk.Coins{}
+			keeper.SetParams(suite.ctx, params)
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
