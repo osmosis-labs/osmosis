@@ -1,4 +1,4 @@
-name: Compile Osmosis across arch's
+name: Compile Osmosis
 
 # Controls when the action will run.
 #  This workflow runr on pushes to master & every Pull Requests. (Or when manually triggered)
