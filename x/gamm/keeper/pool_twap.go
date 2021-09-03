@@ -275,6 +275,48 @@ func (k Keeper) GetNextTwapHistoryDeleteIndex(ctx sdk.Context) uint64 {
 	return nextTwapHistoryIndex
 }
 
+// DeleteTwapHisotry deletes any twap history records that are beyond currentTime + keepDuration
+func (k Keeper) DeletePoolTwapHistory(ctx sdk.Context, poolId uint64, keepDuration time.Duration) error {
+	if keepDuration < 1 {
+		return fmt.Errorf("duration should be more than 1 seconds")
+	}
+	currentTime := ctx.BlockTime()
+	store := ctx.KVStore(k.storeKey)
+
+	// keep the closest pool twap history further than currentTime + keepDuration
+	lastToKeepPoolTwapHistory, exists := k.GetPoolTwapHistory(ctx, poolId, currentTime.Add(-keepDuration))
+	if !exists {
+		return nil
+	}
+
+	latestPoolTwapHistoryToDelete, exists := k.GetPoolTwapHistory(ctx, poolId, lastToKeepPoolTwapHistory.TimeStamp)
+	for exists {
+		latestPoolTwapHistoryKeyToDelete := k.GetPoolTwapKey(ctx, poolId, latestPoolTwapHistoryToDelete.TimeStamp.Add(time.Second))
+		store.Delete(latestPoolTwapHistoryKeyToDelete)
+		latestPoolTwapHistoryToDelete, exists = k.GetPoolTwapHistory(ctx, poolId, latestPoolTwapHistoryToDelete.TimeStamp.Add(time.Second))
+	}
+
+	return nil
+}
+
+// DeleteTwapHistoryWithParams deletes pool twap history using the interval and duration provided by params
+func (k Keeper) DeleteTwapHistoryWithParams(ctx sdk.Context) {
+	params := k.GetParams(ctx)
+
+	shouldDelete := (uint64(ctx.BlockHeight()) % params.TwapHistoryDeletionInterval) == 0
+	if shouldDelete {
+		poolId := k.GetNextTwapHistoryDeleteIndex(ctx)
+		for i := uint64(0); i < params.NumTwapHistoryPerDeletion; i++ {
+			err := k.DeletePoolTwapHistory(ctx, poolId, params.TwapHistoryKeepDuration)
+			if err != nil {
+				panic(err)
+			}
+			poolId += 1
+		}
+		k.SetNextTwapHistoryDeleteIndex(ctx, poolId)
+	}
+}
+
 // contains function validates whether specic string(s) are contained in a slice
 func contains(s []string, e ...string) bool {
 	for _, a := range s {

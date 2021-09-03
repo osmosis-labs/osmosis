@@ -323,7 +323,9 @@ func NewOsmosisApp(
 			app.DistrKeeper.SetParams(ctx, distrParams)
 
 			// configure upgrade for gamm module's pool creation fee param add
-			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
+			gammParams := app.GAMMKeeper.GetParams(ctx)
+			gammParams.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin("uosmo", 1)} // 1 uOSMO
+			app.GAMMKeeper.SetParams(ctx, gammParams)
 		})
 
 	// Create IBC Keeper
@@ -487,6 +489,7 @@ func NewOsmosisApp(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, claimtypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 		epochstypes.ModuleName,
+		gammtypes.ModuleName,
 	)
 
 	// NOTE: The genutils moodule must occur after staking so that pools are

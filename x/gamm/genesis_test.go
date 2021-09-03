@@ -46,6 +46,9 @@ func TestGammInitGenesis(t *testing.T) {
 		NextPoolNumber: 2,
 		Params: types.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)},
+			NumTwapHistoryPerDeletion: 10,
+			TwapHistoryDeletionInterval: 5,
+			TwapHistoryKeepDuration:  time.Duration(time.Hour * 24),
 		},
 	}, app.AppCodec())
 
