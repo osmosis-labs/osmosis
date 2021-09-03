@@ -46,15 +46,14 @@ func genQueryCondition(
 	blocktime time.Time,
 	coins sdk.Coins,
 	durationOptions []time.Duration) lockuptypes.QueryCondition {
-	lockQueryType := r.Intn(2)
+	lockQueryType := lockuptypes.ByDuration
 	denom := coins[r.Intn(len(coins))].Denom
 	durationOption := r.Intn(len(durationOptions))
 	duration := durationOptions[durationOption]
-	// timestampSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 	timestamp := time.Time{}
 
 	return lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.LockQueryType(lockQueryType),
+		LockQueryType: lockQueryType,
 		Denom:         denom,
 		Duration:      duration,
 		Timestamp:     timestamp,
@@ -70,6 +69,9 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: blockStartTime})
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	expected_num_events := numDenoms * (numLockups / numDenoms) * (numGauges / numDenoms) * 3
+	ctx.EventManager().IncreaseCapacity(expected_num_events)
+	fmt.Println("num events", expected_num_events)
 
 	// setup accounts with balances
 	addrs := []sdk.AccAddress{}
