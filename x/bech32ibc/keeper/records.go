@@ -62,7 +62,7 @@ func (k Keeper) ValidateHrpIbcRecord(ctx sdk.Context, record types.HrpIbcRecord)
 func (k Keeper) GetHrpSourceChannel(ctx sdk.Context, hrp string) (string, error) {
 	record, err := k.GetHrpIbcRecord(ctx, hrp)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return record.SourceChannel, nil
