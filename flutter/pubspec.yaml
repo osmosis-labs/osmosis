@@ -1,0 +1,44 @@
+name: starport_template
+description: Starport template for flutter
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  mobx: 2.0.3
+  uuid: 3.0.4
+  http: 0.13.3
+  decimal: 1.3.0
+  flutter_mobx: 2.0.1
+  cosmos_ui_components:
+    git:
+      url: https://github.com/tendermint/flutter.git
+      path: packages/cosmos_ui_components
+      ref: main
+
+  cosmos_utils:
+    git:
+      url: https://github.com/tendermint/flutter.git
+      path: packages/cosmos_utils
+      ref: main
+
+  transaction_signing_gateway:
+    git:
+      url: https://github.com/tendermint/flutter.git
+      path: packages/transaction_signing_gateway
+      ref: main
+
+  cupertino_icons: ^1.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lint: ^1.5.3
+
+flutter:
+  uses-material-design: true

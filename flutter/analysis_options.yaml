@@ -1,0 +1,107 @@
+include: package:lint/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - lib/**.freezed.dart
+    - lib/**.g.dart
+    - lib/**.gr.dart
+    - lib/**.config.dart
+    - lib/generated/**.dart
+  strong-mode:
+    implicit-dynamic: true
+  errors:
+    sort_pub_dependencies: ignore
+    avoid_setters_without_getters: ignore
+    import_of_legacy_library_into_null_safe: error
+    avoid_single_cascade_in_expression_statements: ignore
+    null_aware_in_logical_operator: error
+    missing_required_param: error
+    implicit_dynamic_map_literal: ignore
+    prefer_single_quotes: ignore
+    missing_return: error
+    always_declare_return_types: error
+    override_on_non_overriding_member: error
+    annotate_overrides: error
+    avoid_relative_lib_imports: error
+    avoid_empty_else: error
+    avoid_returning_null_for_future: error
+    empty_statements: error
+    always_put_control_body_on_new_line: error
+    always_require_non_null_named_parameters: error
+    avoid_renaming_method_parameters: error
+    avoid_void_async: error
+    parameter_assignments: error
+    constant_identifier_names: ignore
+    unawaited_futures: error
+    non_constant_identifier_names: ignore
+    only_throw_errors: error
+    exhaustive_cases: error
+    always_use_package_imports: error
+    missing_enum_constant_in_switch: error
+
+linter:
+  rules:
+    - annotate_overrides
+    - await_only_futures
+    - camel_case_types
+    - cancel_subscriptions
+    - close_sinks
+    - comment_references
+    - control_flow_in_finally
+    - empty_statements
+    - always_declare_return_types
+    - avoid_empty_else
+    - avoid_relative_lib_imports
+    - avoid_returning_null_for_future
+    - always_put_control_body_on_new_line
+    - always_require_non_null_named_parameters
+    - avoid_renaming_method_parameters
+    - avoid_unnecessary_containers
+    - avoid_void_async
+    - parameter_assignments
+    - file_names
+    - empty_constructor_bodies
+    - unnecessary_parenthesis
+    - unnecessary_overrides
+    - use_rethrow_when_possible
+    - always_use_package_imports
+    - avoid_init_to_null
+    - avoid_null_checks_in_equality_operators
+    - avoid_return_types_on_setters
+    - avoid_shadowing_type_parameters
+    - avoid_types_as_parameter_names
+    - camel_case_extensions
+    - curly_braces_in_flow_control_structures
+    - empty_catches
+    - library_names
+    - library_prefixes
+    - no_duplicate_case_values
+    - null_closures
+    - omit_local_variable_types
+    - prefer_adjacent_string_concatenation
+    - prefer_collection_literals
+    - prefer_conditional_assignment
+    - prefer_contains
+    - prefer_equal_for_default_values
+    - prefer_final_fields
+    - prefer_for_elements_to_map_fromIterable
+    - prefer_generic_function_type_aliases
+    - prefer_if_null_operators
+    - prefer_is_empty
+    - prefer_is_not_empty
+    - prefer_iterable_whereType
+    - prefer_single_quotes
+    - prefer_spread_collections
+    - recursive_getters
+    - slash_for_doc_comments
+    - type_init_formals
+    #    - unawaited_futures # we don't rely on pedantic package, thus no unawaited() function
+    - unnecessary_const
+    - unnecessary_new
+    - unnecessary_null_in_if_null_operators
+    - unnecessary_this
+    - unrelated_type_equality_checks
+    - use_function_type_syntax_for_parameters
+    - valid_regexps
+    - exhaustive_cases
