@@ -488,8 +488,8 @@ func NewOsmosisApp(
 		lockuptypes.ModuleName,
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, claimtypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
-		epochstypes.ModuleName,
 		gammtypes.ModuleName,
+		epochstypes.ModuleName,
 	)
 
 	// NOTE: The genutils moodule must occur after staking so that pools are
