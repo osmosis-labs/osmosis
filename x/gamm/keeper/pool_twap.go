@@ -183,8 +183,8 @@ func (k Keeper) GetRecentPoolTwapSpotPrice(
 		return sdk.Dec{}, fmt.Errorf("pool twap history prior to current time does not exist")
 	}
 
-	// TODO: use duration.Seconds?
 	desiredTime := ctx.BlockTime().Add(-duration * time.Second)
+	// a second is added when querying pool twap history as it is queries current time exclusive, with the unit of seconds
 	desiredTimeAdjacentPoolTwap, exists := k.GetPoolTwapHistory(ctx, poolId, desiredTime.Add(time.Second))
 	if !exists {
 		return sdk.Dec{}, fmt.Errorf("pool twap history prior to time before duration does not exist")
@@ -275,7 +275,7 @@ func (k Keeper) GetNextTwapHistoryDeleteIndex(ctx sdk.Context) uint64 {
 	return nextTwapHistoryIndex
 }
 
-// DeleteTwapHisotry deletes any twap history records that are beyond currentTime + keepDuration
+// DeleteTwapHistory deletes any twap history records that are older than currentTime - keepDuration
 func (k Keeper) DeletePoolTwapHistory(ctx sdk.Context, poolId uint64, keepDuration time.Duration) error {
 	if keepDuration < 1 {
 		return fmt.Errorf("duration should be more than 1 seconds")
