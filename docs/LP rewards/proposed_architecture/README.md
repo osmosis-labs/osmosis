@@ -9,7 +9,7 @@ This explanation has been hastily written, I plan on significantly improving it 
 We want the goal of being able to distribute LP rewards every epoch, without the distribution having to iterate over every single user.
 Every pool allows users to bond LP shares, for a time T.
 There are different rewards given to users depending on how long they have bonded their LP shares.
-If they have bonded 
+For instance, if they have bonded for 7 days, they get more rewards than if they bond for 1 day.
 Further, we must prevent the chain and users from being exposed to DOS vectors in this process.
 
 ## Desired general method of doing so
@@ -24,15 +24,11 @@ When they go to withdraw at t=B, we read the accumulator's value at time t=B. (C
 `Rewards_per_share = accum_B - accum_A`.
 Therefore the total rewards here is `total_rewards = Rewards_per_share * num_shares`.
 
-This has been built out before in the cosmos SDK, check out the staking module!
+This has been built out before in the cosmos SDK, check out the distribution module!
 
 https://github.com/cosmos/cosmos-sdk/tree/master/x/distribution/spec
 
-### DOS vectors to be concerned about
-
-- too many options for what bond durations to reward for
-
-### More details on design
+## More details on design
 
 In our case, we want a similar architecture to whats implemented in staking, but with some optimizations.
 
@@ -86,3 +82,41 @@ So what we do is when you start unbonding, we create an accumulation store for f
 Then when we distribute rewards at an epoch boundary, we can uniformly treat everyone whose unbond ends within that epoch the same way, efficiently.
 
 Also, when beginning to unbond, we do as we do in staking, and withdraw rewards for those tokens immediately for simplicity.
+
+### DOS vectors to be concerned about
+
+- too many options for what bond durations to reward for
+  - We handle this by limiting the number of different bond lengths you can get rewarded.
+
+## Code Architecture
+
+Everything here is a suggestion, for how to compile the design into a modular code architecture!
+
+### Simplifying lockups
+
+We can dramatically simplify the lock storage system. Currently we need to store references to every lock, in ways that are complex, so that we can index them by account, and iterate over locks by denomination.
+
+1) For every denomination, we have an accumulation store for bonded tokens. 
+2) For every denomination, we have an accumulation store for unbonding tokens.
+3) For every user (address that has a lock), we have a single struct that describes their locks, and is efficient to query.
+4) Post-F1, we have some accumulated reward values for the various different denominations that are 'active'
+
+
+
+Ideally, we would have an efficient way of going into the locks state-tree, and see all the locks for a given address, sorted by denomination.
+
+Essentially having a map:
+
+```go
+struct lockup_storage_per_address
+```
+
+Except not literally a map, but 
+
+Currently lockups have a confusing 'implicit' architecture in how they are stored in the state tree.
+The SDK supports iterating over values in the tree, based on the lexicographic ordering of the keys.
+So currently, you get the l
+
+## PR structure for ease of review
+
+I suggest one of the first things we do is change up how 
