@@ -400,10 +400,8 @@ github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5/go.mod h1:/wsWhb9smxS
 github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJc5AZX7/PBEpw=
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
-github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210829035621-cec66b14cc50 h1:Mh2KucRLDHaFcLEhEnz+XNfJsalDIlqFSIWjF7G7HOs=
-github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210829035621-cec66b14cc50/go.mod h1:SrclJP9lMXxz2fCbngxb0brsPNuZXqoQQ9VHuQ3Tpf4=
-github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210829064313-2c87644925da h1:kg60BcOfzv5k/2xJuLhpqPzx+/mQ2KRceRIPSvnduxk=
-github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210829064313-2c87644925da/go.mod h1:SrclJP9lMXxz2fCbngxb0brsPNuZXqoQQ9VHuQ3Tpf4=
+github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210908215742-545f8d2e916b h1:yA+NmA0YaotPaXq6t7lnDGarIyxhucIUCWKBO2q+gNY=
+github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210908215742-545f8d2e916b/go.mod h1:SrclJP9lMXxz2fCbngxb0brsPNuZXqoQQ9VHuQ3Tpf4=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
 github.com/otiai10/copy v1.6.0/go.mod h1:XWfuS3CrI0R6IE0FbgHsEazaXO8G0LpMp9o8tos0x4E=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
