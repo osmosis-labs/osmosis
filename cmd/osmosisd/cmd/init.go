@@ -86,7 +86,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			seeds := []string{
 				"085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656",          // Notional
-				"f515a8599b40f0e84dfad935ba414674ab11a668 @osmosis.blockpane.com:26656", // [ block pane ]
+				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656", // [ block pane ]
 			}
 
 			//Override default settings in config.toml
