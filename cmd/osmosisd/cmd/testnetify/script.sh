@@ -28,25 +28,25 @@ sed -i '' 's%AqlNb1FM8veQrT4/apR5B3hww8VApc0LTtZnXhq7FqG0%A9zC0Sa0VCK/lVLi1Kv0C1
 # there are two such locations
 
 # Then correspondingly up the total tokens bonded to the validator
-#           "tokens": "4844955522615", (add 100M to this)
-sed -i '' 's%4844955522615%104844955522615%g' $EXPORTED_GENESIS
-sed -i '' 's%"power": "4844955"%"power": "104844955"%g' $EXPORTED_GENESIS
+#           "tokens": "5041917053916", (add 100M to this)
+sed -i '' 's%5041917053916%105041917053916%g' $EXPORTED_GENESIS
+sed -i '' 's%"power": "5041917"%"power": "105041917"%g' $EXPORTED_GENESIS
 # Update last_total_power (which is last total bonded across validators)
-sed -i '' 's%36834775%136834775%g' $EXPORTED_GENESIS
+sed -i '' 's%37961808%137961808%g' $EXPORTED_GENESIS
 
 # edit operator address, old: 2125267 (2.1 osmo), new: 100000002125267 (100M + 2.1)
 sed -i '' 's%2125267%100000002125267%g' $EXPORTED_GENESIS
 
-# Update total osmo supply, old 371848992476804, new 571M
-sed -i '' 's%371848992476804%571848992476804%g' $EXPORTED_GENESIS
+# Update total osmo supply, old 374314745901464, new 571M
+sed -i '' 's%374314745901464%574314745901464%g' $EXPORTED_GENESIS
 
-# Fix bonded tokens pool balance, old 36834819673258
-sed -i '' 's%36834819673258%1036834819673258%g' $EXPORTED_GENESIS
+# Fix bonded tokens pool balance, old 37961850148775
+sed -i '' 's%37961850148775%137961850148775%g' $EXPORTED_GENESIS
 
 ### Fix gov params
 
 # deposit
-sed -i '' 's%"voting_period": "259200s"%"voting_period": "60s"%g' $EXPORTED_GENESIS
+sed -i '' 's%"voting_period": "259200s"%"voting_period": "120s"%g' $EXPORTED_GENESIS
 
 # epoch length
     #   "epochs": [
