@@ -1,6 +1,8 @@
 package lockup
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -10,7 +12,10 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetLastLockID(ctx, genState.LastLockId)
-	for _, lock := range genState.Locks {
+	for i, lock := range genState.Locks {
+		if i%10000 == 0 {
+			ctx.Logger().Debug(fmt.Sprintf("lock number %d, entry %d\n", lock.ID, i))
+		}
 		// reset lock's main operation is to store reference queues for iteration
 		if err := k.ResetLock(ctx, lock); err != nil {
 			panic(err)
