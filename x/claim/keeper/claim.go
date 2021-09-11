@@ -45,6 +45,7 @@ func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 		key := iterator.Key()
 		store.Delete(key)
 	}
+	iterator.Close()
 }
 
 // SetClaimables set claimable amount from balances object

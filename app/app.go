@@ -312,7 +312,10 @@ func NewOsmosisApp(
 
 			// reset all lock and references
 			for _, lock := range locks {
-				app.LockupKeeper.ResetLock(ctx, lock)
+				err = app.LockupKeeper.ResetLock(ctx, lock)
+				if err != nil {
+					panic(err)
+				}
 			}
 
 			// Update distribution keeper parameters to remove proposer bonus
