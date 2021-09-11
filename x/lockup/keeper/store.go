@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -33,12 +34,28 @@ func lockStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
 }
 
+type cacheEntry struct {
+	key   []byte
+	value []uint64
+}
+
+var lastMarshalsCache map[string]cacheEntry
+
+func init() {
+	lastMarshalsCache = make(map[string]cacheEntry)
+}
+
 // getLockRefs get lock IDs specified on the prefix and timestamp key
 func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)
 	lockIDs := []uint64{}
 	if store.Has(key) {
 		bz := store.Get(key)
+		if val, ok := lastMarshalsCache[string(key)]; ok {
+			if bytes.Equal(bz, val.key) {
+				return val.value
+			}
+		}
 		err := json.Unmarshal(bz, &lockIDs)
 		if err != nil {
 			panic(err)
@@ -59,6 +76,7 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 	if err != nil {
 		return err
 	}
+	lastMarshalsCache[string(key)] = cacheEntry{key: bz, value: lockIDs}
 	store.Set(key, bz)
 	return nil
 }
