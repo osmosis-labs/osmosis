@@ -65,9 +65,25 @@ func (k Keeper) getLegacyLocksFromIterator(ctx sdk.Context, iterator db.Iterator
 
 // GetLegacyPeriodLocks Returns the period locks on pool
 func (k Keeper) GetLegacyPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error) {
-	unlockings := k.getLegacyLocksFromIterator(ctx, k.LockIterator(ctx, true))
-	notUnlockings := k.getLegacyLocksFromIterator(ctx, k.LockIterator(ctx, false))
-	return combineLocks(notUnlockings, unlockings), nil
+	maxID := int(k.GetLastLockID(ctx) + 1)
+
+	locks := make([]types.PeriodLock, 0, maxID)
+	store := ctx.KVStore(k.storeKey)
+	for lockID := 0; lockID < maxID; lockID++ {
+		// Copy in GetLockByID logic, with optimizations for hotloop
+		lockKey := lockStoreKey(uint64(lockID))
+		if !store.Has(lockKey) {
+			continue
+		}
+		lock := types.PeriodLock{}
+		bz := store.Get(lockKey)
+		err := proto.Unmarshal(bz, &lock)
+		if err != nil {
+			return nil, err
+		}
+		locks = append(locks, lock)
+	}
+	return locks, nil
 }
 
 // addLockRefByKey append lock ID into an array associated to provided key
