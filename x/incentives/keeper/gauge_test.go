@@ -9,11 +9,28 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestDistribute() {
+	twoLockupUser := userLocks{
+		lockDurations: []time.Duration{time.Second, 2 * time.Second},
+		lockAmounts:   []sdk.Coins{defaultLPTokens, defaultLPTokens},
+	}
+	defaultGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
+	twoKRewardCoins := oneKRewardCoins.Add(oneKRewardCoins...)
 	tests := []struct {
-		users           userLocks
-		gauge           []types.Gauge
+		users           []userLocks
+		gauge           perpGaugeDesc
 		expectedRewards []sdk.Coins
-	}{}
+	}{
+		{
+			users:           []userLocks{oneLockupUser, twoLockupUser},
+			gauge:           defaultGauge,
+			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
+		},
+	}
 	for _, _ = range tests {
 		suite.SetupTest()
 

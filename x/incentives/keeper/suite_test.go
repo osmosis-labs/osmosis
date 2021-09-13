@@ -15,11 +15,23 @@ var (
 	defaultLPTokens     sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
 	defaultLiquidTokens sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	defaultLockDuration time.Duration = time.Second
+	oneLockupUser       userLocks     = userLocks{
+		lockDurations: []time.Duration{time.Second},
+		lockAmounts:   []sdk.Coins{defaultLPTokens},
+	}
+	defaultRewardDenom string = "rewardDenom"
 )
 
+// TODO: Switch more code to use userLocks and perpGaugeDesc
 type userLocks struct {
 	lockDurations []time.Duration
 	lockAmounts   []sdk.Coins
+}
+
+type perpGaugeDesc struct {
+	lockDenom    string
+	lockDuration time.Duration
+	rewardAmount sdk.Coins
 }
 
 // Leave prefix blank if lazy, it'll be replaced with something random
@@ -56,6 +68,16 @@ func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccA
 	return
 }
 
+func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc) []types.Gauge {
+	gauges := make([]types.Gauge, len(gaugeDescriptors))
+	perpetual := true
+	for i, desc := range gaugeDescriptors {
+		_, gaugePtr, _, _ := suite.setupNewGaugeWithDuration(perpetual, desc.rewardAmount, desc.lockDuration)
+		gauges[i] = *gaugePtr
+	}
+	return gauges
+}
+
 func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
 	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
 	gaugeID, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch)
@@ -79,20 +101,26 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (uint64, *types.Gauge, sdk.Coins, time.Time) {
-	addr2 := sdk.AccAddress([]byte("addr1---------------"))
+func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.Coins, duration time.Duration) (
+	uint64, *types.Gauge, sdk.Coins, time.Time) {
+	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
 	startTime2 := time.Now()
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
-		Duration:      time.Second,
+		Duration:      duration,
 	}
 	numEpochsPaidOver := uint64(2)
 	if isPerpetual {
 		numEpochsPaidOver = uint64(1)
 	}
-	gaugeID, gauge := suite.CreateGauge(isPerpetual, addr2, coins, distrTo, startTime2, numEpochsPaidOver)
+	gaugeID, gauge := suite.CreateGauge(isPerpetual, addr, coins, distrTo, startTime2, numEpochsPaidOver)
 	return gaugeID, gauge, coins, startTime2
+}
+
+// TODO: Delete all usages of this method
+func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (uint64, *types.Gauge, sdk.Coins, time.Time) {
+	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration)
 }
 
 func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coins, coinsPerLock sdk.Coins,
@@ -106,6 +134,7 @@ func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coi
 		addr := suite.setupAddr(i, string(randPrefix), bal)
 		_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coinsPerLock, lockDuration)
 		suite.Require().NoError(err)
+		addrs = append(addrs, addr)
 	}
 	return addrs
 }
