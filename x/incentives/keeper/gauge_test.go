@@ -8,10 +8,17 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-var defaultLPDenom string = "lptoken"
-var defaultLPTokens sdk.Coins = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
-var defaultLiquidTokens sdk.Coins = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-var defaultLockDuration time.Duration = time.Second
+func (suite *KeeperTestSuite) TestDistribute() {
+	tests := []struct {
+		users           userLocks
+		gauge           []types.Gauge
+		expectedRewards []sdk.Coins
+	}{}
+	for _, _ = range tests {
+		suite.SetupTest()
+
+	}
+}
 
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()

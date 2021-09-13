@@ -10,6 +10,52 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
+var (
+	defaultLPDenom      string        = "lptoken"
+	defaultLPTokens     sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
+	defaultLiquidTokens sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	defaultLockDuration time.Duration = time.Second
+)
+
+type userLocks struct {
+	lockDurations []time.Duration
+	lockAmounts   []sdk.Coins
+}
+
+// Leave prefix blank if lazy, it'll be replaced with something random
+func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.Coins) sdk.AccAddress {
+	if prefix == "" {
+		prefixBz := make([]byte, 8)
+		_, _ = rand.Read(prefixBz)
+		prefix = string(prefixBz)
+	} else {
+		prefix = fmt.Sprintf("%8.8s", prefix)
+	}
+
+	addr := sdk.AccAddress([]byte(fmt.Sprintf("addr%s%8d", prefix, addrNum)))
+	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, balance)
+	suite.Require().NoError(err)
+	return addr
+}
+
+func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccAddress) {
+	accs = make([]sdk.AccAddress, len(users))
+	for i, user := range users {
+		suite.Assert().Equal(len(user.lockDurations), len(user.lockAmounts))
+		totalLockAmt := user.lockAmounts[0]
+		for j := 1; j < len(user.lockAmounts); j++ {
+			totalLockAmt = totalLockAmt.Add(user.lockAmounts[j]...)
+		}
+		accs[i] = suite.setupAddr(i, "", totalLockAmt)
+		for j := 0; j < len(user.lockAmounts); j++ {
+			_, err := suite.app.LockupKeeper.LockTokens(
+				suite.ctx, accs[i], user.lockAmounts[j], user.lockDurations[j])
+			suite.Require().NoError(err)
+		}
+	}
+	return
+}
+
 func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
 	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
 	gaugeID, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch)
@@ -57,11 +103,8 @@ func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coi
 
 	bal := liquidBalance.Add(coinsPerLock...)
 	for i := 0; i < numLocks; i++ {
-		addr := sdk.AccAddress([]byte(fmt.Sprintf("addr%s%8d", string(randPrefix), i)))
-		addrs = append(addrs, addr)
-		err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, bal)
-		suite.Require().NoError(err)
-		_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coinsPerLock, lockDuration)
+		addr := suite.setupAddr(i, string(randPrefix), bal)
+		_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coinsPerLock, lockDuration)
 		suite.Require().NoError(err)
 	}
 	return addrs
