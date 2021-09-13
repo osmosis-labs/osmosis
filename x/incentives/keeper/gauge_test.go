@@ -113,8 +113,8 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	gauges := suite.app.IncentivesKeeper.GetNotFinishedGauges(suite.ctx)
 	suite.Require().Len(gauges, 0)
 
-	// setup lock and gauge
-	lockOwner, gaugeID, coins, startTime := suite.SetupLockAndGauge(false)
+	_ = suite.SetupManyLocks(5, sdk.Coins{}, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// check gauges
 	gauges = suite.app.IncentivesKeeper.GetNotFinishedGauges(suite.ctx)
@@ -125,10 +125,6 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Equal(gauges[0].FilledEpochs, uint64(0))
 	suite.Require().Equal(gauges[0].DistributedCoins, sdk.Coins(nil))
 	suite.Require().Equal(gauges[0].StartTime.Unix(), startTime.Unix())
-
-	// check rewards estimation
-	rewardsEst := suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, 100)
-	suite.Require().Equal(coins.String(), rewardsEst.String())
 
 	// add to gauge
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
@@ -198,10 +194,6 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	// check invalid gauge ID
 	_, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID+1000)
 	suite.Require().Error(err)
-
-	// check rewards estimation
-	rewardsEst = suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, 100)
-	suite.Require().Equal(sdk.Coins{}, rewardsEst)
 }
 
 func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
