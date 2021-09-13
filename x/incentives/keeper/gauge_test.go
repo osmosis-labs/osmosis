@@ -8,6 +8,8 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
+// TestDistribute tests that when the distribute command is executed on
+// a provided gauge,
 func (suite *KeeperTestSuite) TestDistribute() {
 	twoLockupUser := userLocks{
 		lockDurations: []time.Duration{time.Second, 2 * time.Second},
@@ -22,18 +24,27 @@ func (suite *KeeperTestSuite) TestDistribute() {
 	twoKRewardCoins := oneKRewardCoins.Add(oneKRewardCoins...)
 	tests := []struct {
 		users           []userLocks
-		gauge           perpGaugeDesc
+		gauges          []perpGaugeDesc
 		expectedRewards []sdk.Coins
 	}{
 		{
 			users:           []userLocks{oneLockupUser, twoLockupUser},
-			gauge:           defaultGauge,
+			gauges:          []perpGaugeDesc{defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
 	}
-	for _, _ = range tests {
+	for _, tc := range tests {
 		suite.SetupTest()
-
+		gauges := suite.SetupGauges(tc.gauges)
+		addrs := suite.SetupUserLocks(tc.users)
+		for _, g := range gauges {
+			suite.app.IncentivesKeeper.Distribute(suite.ctx, g)
+		}
+		// Check expected rewards
+		for i, addr := range addrs {
+			bal := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr)
+			suite.Require().Equal(bal.String(), tc.expectedRewards[i].String())
+		}
 	}
 }
 
