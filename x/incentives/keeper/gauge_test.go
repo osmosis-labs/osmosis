@@ -8,22 +8,25 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
+var defaultLPDenom string = "lptoken"
+var defaultLPTokens sdk.Coins = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
+var defaultLiquidTokens sdk.Coins = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+var defaultLockDuration time.Duration = time.Second
+
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()
 
-	addr := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
-		Denom:         "lptoken",
-		Duration:      time.Second / 2, // 0.5 second
+		Denom:         defaultLPDenom,
+		Duration:      defaultLockDuration / 2, // 0.5 second, invalid duration
 	}
-	_, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addr, coins, distrTo, time.Time{}, 1)
+	_, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
 	suite.Require().Error(err)
 
 	distrTo.Duration = time.Second
-	_, err = suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addr, coins, distrTo, time.Time{}, 1)
+	_, err = suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
 	suite.Require().NoError(err)
 }
 

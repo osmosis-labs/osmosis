@@ -49,16 +49,22 @@ func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (
 	return gaugeID, gauge, coins, startTime2
 }
 
-func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, coinsPerLock sdk.Coins, lockDuration time.Duration) []sdk.AccAddress {
-	accts := make([]sdk.AccAddress, 0, numLocks)
+func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coins, coinsPerLock sdk.Coins,
+	lockDuration time.Duration) []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, 0, numLocks)
 	randPrefix := make([]byte, 8)
 	_, _ = rand.Read(randPrefix)
+
+	bal := liquidBalance.Add(coinsPerLock...)
 	for i := 0; i < numLocks; i++ {
-		lockOwner := sdk.AccAddress([]byte(fmt.Sprintf("addr%s%8d", string(randPrefix), i)))
-		accts = append(accts, lockOwner)
-		suite.LockTokens(lockOwner, coinsPerLock, lockDuration)
+		addr := sdk.AccAddress([]byte(fmt.Sprintf("addr%s%8d", string(randPrefix), i)))
+		addrs = append(addrs, addr)
+		err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, bal)
+		suite.Require().NoError(err)
+		_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coinsPerLock, lockDuration)
+		suite.Require().NoError(err)
 	}
-	return accts
+	return addrs
 }
 
 func (suite *KeeperTestSuite) SetupLockAndGauge(isPerpetual bool) (sdk.AccAddress, uint64, sdk.Coins, time.Time) {
