@@ -398,6 +398,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 			),
 		})
 	}
+	ctx.Logger().Debug(fmt.Sprintf("Gauge %d: Distributed to %d users, across %d locks", gauge.Id, nextID, len(locks)))
 
 	// increase filled epochs after distribution
 	gauge.FilledEpochs += 1
