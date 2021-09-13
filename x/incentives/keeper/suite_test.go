@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,6 +47,18 @@ func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (
 	}
 	gaugeID, gauge := suite.CreateGauge(isPerpetual, addr2, coins, distrTo, startTime2, numEpochsPaidOver)
 	return gaugeID, gauge, coins, startTime2
+}
+
+func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, coinsPerLock sdk.Coins, lockDuration time.Duration) []sdk.AccAddress {
+	accts := make([]sdk.AccAddress, 0, numLocks)
+	randPrefix := make([]byte, 8)
+	_, _ = rand.Read(randPrefix)
+	for i := 0; i < numLocks; i++ {
+		lockOwner := sdk.AccAddress([]byte(fmt.Sprintf("addr%s%8d", string(randPrefix), i)))
+		accts = append(accts, lockOwner)
+		suite.LockTokens(lockOwner, coinsPerLock, lockDuration)
+	}
+	return accts
 }
 
 func (suite *KeeperTestSuite) SetupLockAndGauge(isPerpetual bool) (sdk.AccAddress, uint64, sdk.Coins, time.Time) {
