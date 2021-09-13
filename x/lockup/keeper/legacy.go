@@ -70,6 +70,9 @@ func (k Keeper) GetLegacyPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error
 	locks := make([]types.PeriodLock, 0, maxID)
 	store := ctx.KVStore(k.storeKey)
 	for lockID := 0; lockID < maxID; lockID++ {
+		if lockID%10000 == 0 {
+			ctx.Logger().Info(fmt.Sprintf("Fetched %d locks", lockID))
+		}
 		// Copy in GetLockByID logic, with optimizations for hotloop
 		lockKey := lockStoreKey(uint64(lockID))
 		if !store.Has(lockKey) {
