@@ -312,17 +312,12 @@ func NewOsmosisApp(
 			app.LockupKeeper.ClearAllAccumulationStores(ctx)
 
 			// reset all lock and references
-			for _, lock := range locks {
-				err = app.LockupKeeper.ResetLock(ctx, lock)
-				if err != nil {
-					panic(err)
-				}
 			for i, lock := range locks {
 				if i%10000 == 0 {
 					ctx.Logger().Info(fmt.Sprintf("Reset %d locks", i))
 				}
 				err = app.LockupKeeper.ResetLock(ctx, lock)
-        if err != nil {
+				if err != nil {
 					panic(err)
 				}
 			}
