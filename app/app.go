@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -311,7 +312,10 @@ func NewOsmosisApp(
 			app.LockupKeeper.ClearAccumulationStores(ctx)
 
 			// reset all lock and references
-			for _, lock := range locks {
+			for i, lock := range locks {
+				if i%10000 == 0 {
+					ctx.Logger().Info(fmt.Sprintf("Reset %d locks", i))
+				}
 				app.LockupKeeper.ResetLock(ctx, lock)
 			}
 
