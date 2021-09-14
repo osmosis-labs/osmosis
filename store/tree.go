@@ -55,8 +55,6 @@ func (t Tree) Remove(key []byte) {
 	parent.pull(key)
 }
 
-// ptr is pointer to a specific node inside the tree
-
 func (t Tree) Increase(key []byte, amt sdk.Int) {
 	value := t.Get(key)
 	t.Set(key, value.Add(amt))
