@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+  "encoding/binary"
 	"fmt"
 	"time"
 
@@ -10,6 +11,13 @@ import (
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
 )
+
+func legacyAccumulationKey(duration time.Duration, id uint64) []byte {
+  res := make([]byte, 16)
+  binary.BigEndian.PutUint64(res[:8], uint64(duration))
+  binary.BigEndian.PutUint64(res[8:], id)
+  return res
+}
 
 func findIndex(IDs []uint64, ID uint64) int {
 	for index, id := range IDs {
@@ -65,9 +73,28 @@ func (k Keeper) getLegacyLocksFromIterator(ctx sdk.Context, iterator db.Iterator
 
 // GetLegacyPeriodLocks Returns the period locks on pool
 func (k Keeper) GetLegacyPeriodLocks(ctx sdk.Context) ([]types.PeriodLock, error) {
-	unlockings := k.getLegacyLocksFromIterator(ctx, k.LockIterator(ctx, true))
-	notUnlockings := k.getLegacyLocksFromIterator(ctx, k.LockIterator(ctx, false))
-	return combineLocks(notUnlockings, unlockings), nil
+	maxID := int(k.GetLastLockID(ctx) + 1)
+
+	locks := make([]types.PeriodLock, 0, maxID)
+	store := ctx.KVStore(k.storeKey)
+	for lockID := 0; lockID < maxID; lockID++ {
+		if lockID%10000 == 0 {
+			ctx.Logger().Info(fmt.Sprintf("Fetched %d locks", lockID))
+		}
+		// Copy in GetLockByID logic, with optimizations for hotloop
+		lockKey := lockStoreKey(uint64(lockID))
+		if !store.Has(lockKey) {
+			continue
+		}
+		lock := types.PeriodLock{}
+		bz := store.Get(lockKey)
+		err := proto.Unmarshal(bz, &lock)
+		if err != nil {
+			return nil, err
+		}
+		locks = append(locks, lock)
+	}
+	return locks, nil
 }
 
 // addLockRefByKey append lock ID into an array associated to provided key
@@ -147,7 +174,7 @@ func (k Keeper) LegacyLock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+		k.accumulationStore(ctx, coin.Denom).Set(legacyAccumulationKey(lock.Duration, lock.ID), coin.Amount)
 	}
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
@@ -186,7 +213,7 @@ func (k Keeper) LegacyBeginUnlock(ctx sdk.Context, lock types.PeriodLock) error 
 	}
 
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+		k.accumulationStore(ctx, coin.Denom).Remove(legacyAccumulationKey(lock.Duration, lock.ID))
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -308,12 +309,20 @@ func NewOsmosisApp(
 			}
 			// clear all lockup module locking / unlocking queue items
 			app.LockupKeeper.ClearAllLockRefKeys(ctx)
-			app.LockupKeeper.ClearAccumulationStores(ctx)
+			app.LockupKeeper.ClearAllAccumulationStores(ctx)
 
 			// reset all lock and references
 			for _, lock := range locks {
 				err = app.LockupKeeper.ResetLock(ctx, lock)
 				if err != nil {
+					panic(err)
+				}
+			for i, lock := range locks {
+				if i%10000 == 0 {
+					ctx.Logger().Info(fmt.Sprintf("Reset %d locks", i))
+				}
+				err = app.LockupKeeper.ResetLock(ctx, lock)
+        if err != nil {
 					panic(err)
 				}
 			}

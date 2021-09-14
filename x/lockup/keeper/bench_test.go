@@ -78,5 +78,5 @@ func benchmarkResetLogic(numLockups int, b *testing.B) {
 }
 
 func BenchmarkResetLogicMedium(b *testing.B) {
-	benchmarkResetLogic(20000, b)
+	benchmarkResetLogic(50000, b)
 }

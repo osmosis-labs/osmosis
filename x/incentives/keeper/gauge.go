@@ -281,7 +281,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 }
 
 // Distribute coins from gauge according to its conditions
-func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error) {
+func (k Keeper) debugDistribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
 	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
@@ -328,6 +328,86 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 		})
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
+
+	// increase filled epochs after distribution
+	gauge.FilledEpochs += 1
+	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
+	k.setGauge(ctx, &gauge)
+
+	k.hooks.AfterDistribute(ctx, gauge.Id)
+	return totalDistrCoins, nil
+}
+
+// Distribute coins from gauge according to its conditions
+func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error) {
+	totalDistrCoins := sdk.NewCoins()
+	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
+	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
+
+	if lockSum.IsZero() {
+		return nil, nil
+	}
+
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainEpochs := uint64(1)
+	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
+		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
+	}
+
+	nextID := 0
+	lockOwnerAddrToID := make(map[string]int)
+	idToDecodedAddr := []sdk.AccAddress{}
+	idToDistrCoins := []sdk.Coins{}
+
+	for _, lock := range locks {
+		distrCoins := sdk.Coins{}
+		for _, coin := range remainCoins {
+			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
+			denomLockAmt := lock.Coins.AmountOfNoDenomValidation(gauge.DistributeTo.Denom)
+			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+			if amt.IsPositive() {
+				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+			}
+		}
+		distrCoins = distrCoins.Sort()
+		if distrCoins.Empty() {
+			continue
+		}
+		// Update the amount for that address
+		if id, ok := lockOwnerAddrToID[lock.Owner]; ok {
+			oldDistrCoins := idToDistrCoins[id]
+			idToDistrCoins[id] = distrCoins.Add(oldDistrCoins...)
+		} else {
+			id := nextID
+			nextID += 1
+			lockOwnerAddrToID[lock.Owner] = id
+			decodedOwnerAddr, err := sdk.AccAddressFromBech32(lock.Owner)
+			if err != nil {
+				return nil, err
+			}
+			idToDecodedAddr = append(idToDecodedAddr, decodedOwnerAddr)
+			idToDistrCoins = append(idToDistrCoins, distrCoins)
+		}
+
+		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
+	}
+
+	if err := k.bk.SendCoinsFromModuleToManyAccounts(ctx, types.ModuleName, idToDecodedAddr, idToDistrCoins); err != nil {
+		return nil, err
+	}
+
+	gaugeIDStr := utils.Uint64ToString(gauge.Id)
+	for id := 0; id < nextID; id++ {
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtDistribution,
+				sdk.NewAttribute(types.AttributeGaugeID, gaugeIDStr),
+				sdk.NewAttribute(types.AttributeReceiver, string(idToDecodedAddr[id])),
+				sdk.NewAttribute(types.AttributeAmount, idToDistrCoins[id].String()),
+			),
+		})
+	}
+	ctx.Logger().Debug(fmt.Sprintf("Gauge %d: Distributed to %d users, across %d locks", gauge.Id, nextID, len(locks)))
 
 	// increase filled epochs after distribution
 	gauge.FilledEpochs += 1
