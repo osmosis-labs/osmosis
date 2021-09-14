@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -72,7 +73,7 @@ func (p Params) Validate() error {
 	if err := validateGenesisEpochProvisions(p.GenesisEpochProvisions); err != nil {
 		return err
 	}
-	if err := validateEpochIdentifier(p.EpochIdentifier); err != nil {
+	if err := epochtypes.ValidateEpochIdentifierInterface(p.EpochIdentifier); err != nil {
 		return err
 	}
 	if err := validateReductionPeriodInEpochs(p.ReductionPeriodInEpochs); err != nil {
@@ -105,7 +106,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
 		paramtypes.NewParamSetPair(KeyGenesisEpochProvisions, &p.GenesisEpochProvisions, validateGenesisEpochProvisions),
-		paramtypes.NewParamSetPair(KeyEpochIdentifier, &p.EpochIdentifier, validateEpochIdentifier),
+		paramtypes.NewParamSetPair(KeyEpochIdentifier, &p.EpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
 		paramtypes.NewParamSetPair(KeyReductionPeriodInEpochs, &p.ReductionPeriodInEpochs, validateReductionPeriodInEpochs),
 		paramtypes.NewParamSetPair(KeyReductionFactor, &p.ReductionFactor, validateReductionFactor),
 		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.DistributionProportions, validateDistributionProportions),
@@ -138,19 +139,6 @@ func validateGenesisEpochProvisions(i interface{}) error {
 
 	if v.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("genesis epoch provision must be non-negative")
-	}
-
-	return nil
-}
-
-func validateEpochIdentifier(i interface{}) error {
-	v, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v == "" {
-		return fmt.Errorf("empty distribution epoch identifier: %+v", i)
 	}
 
 	return nil

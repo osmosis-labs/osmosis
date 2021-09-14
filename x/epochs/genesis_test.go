@@ -26,14 +26,12 @@ func TestEpochsExportGenesis(t *testing.T) {
 	require.Equal(t, genesis.Epochs[0].CurrentEpoch, int64(0))
 	require.Equal(t, genesis.Epochs[0].CurrentEpochStartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[0].EpochCountingStarted, false)
-	require.Equal(t, genesis.Epochs[0].CurrentEpochEnded, true)
 	require.Equal(t, genesis.Epochs[1].Identifier, "week")
 	require.Equal(t, genesis.Epochs[1].StartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[1].Duration, time.Hour*24*7)
 	require.Equal(t, genesis.Epochs[1].CurrentEpoch, int64(0))
 	require.Equal(t, genesis.Epochs[1].CurrentEpochStartTime, chainStartTime)
 	require.Equal(t, genesis.Epochs[1].EpochCountingStarted, false)
-	require.Equal(t, genesis.Epochs[1].CurrentEpochEnded, true)
 }
 
 func TestEpochsInitGenesis(t *testing.T) {
@@ -51,7 +49,8 @@ func TestEpochsInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	ctx = ctx.WithBlockTime(now)
 
-	epochs.InitGenesis(ctx, app.EpochsKeeper, types.GenesisState{
+	//test genesisState validation
+	genesisState := types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:            "monthly",
@@ -60,17 +59,38 @@ func TestEpochsInitGenesis(t *testing.T) {
 				CurrentEpoch:          0,
 				CurrentEpochStartTime: time.Time{},
 				EpochCountingStarted:  true,
-				CurrentEpochEnded:     true,
+			},
+			{
+				Identifier:            "monthly",
+				StartTime:             time.Time{},
+				Duration:              time.Hour * 24,
+				CurrentEpoch:          0,
+				CurrentEpochStartTime: time.Time{},
+				EpochCountingStarted:  true,
 			},
 		},
-	})
+	}
+	require.EqualError(t, genesisState.Validate(), "epoch identifier should be unique")
 
+	genesisState = types.GenesisState{
+		Epochs: []types.EpochInfo{
+			{
+				Identifier:            "monthly",
+				StartTime:             time.Time{},
+				Duration:              time.Hour * 24,
+				CurrentEpoch:          0,
+				CurrentEpochStartTime: time.Time{},
+				EpochCountingStarted:  true,
+			},
+		},
+	}
+
+	epochs.InitGenesis(ctx, app.EpochsKeeper, genesisState)
 	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.Identifier, "monthly")
 	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
 	require.Equal(t, epochInfo.Duration, time.Hour*24)
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
-	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), ctx.BlockTime().UTC().String())
+	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), time.Time{}.String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
-	require.Equal(t, epochInfo.CurrentEpochEnded, true)
 }

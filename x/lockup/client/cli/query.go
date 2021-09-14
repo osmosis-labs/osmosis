@@ -44,6 +44,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdAccountLockedLongerDuration(),
 		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
+		GetCmdTotalLockedByDenom(),
 		GetCmdOutputLocksJson(),
 	)
 
@@ -577,7 +578,55 @@ $ %s query lockup account-locked-pasttime <address> <duration> <denom>
 	return cmd
 }
 
-// GetCmdAccountLockedLongerDurationDenom returns account's locked records for a denom with longer duration
+// GetCmdTotalBondedByDenom returns total amount of locked asset
+func GetCmdTotalLockedByDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-locked-of-denom <denom>",
+		Short: "Query locked amount for a specific denom bigger then duration provided",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query locked records for a specific denom bigger then duration provided.
+
+Example:
+$ %s query lockup total-locked-of-denom <denom>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			durationStr, err := cmd.Flags().GetString(FlagMinDuration)
+			if err != nil {
+				return err
+			}
+
+			duration, err := time.ParseDuration(durationStr)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.LockedDenom(cmd.Context(), &types.LockedDenomRequest{Denom: args[0], Duration: duration})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetMinDuration())
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdOutputLocksJson outputs all locks into a file called lock_export.json
 func GetCmdOutputLocksJson() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "output-all-locks <max lock ID>",

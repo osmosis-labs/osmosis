@@ -109,6 +109,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.ValidateGenesisCmd(osmosis.ModuleBasics),
 		AddGenesisAccountCmd(osmosis.DefaultNodeHome),
 		ExportAirdropSnapshotCmd(),
+		ExportDeriveBalancesCmd(),
 		PrepareGenesisCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 		ImportGenesisAccountsFromSnapshotCmd(osmosis.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),

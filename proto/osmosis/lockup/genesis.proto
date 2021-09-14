@@ -8,6 +8,6 @@ option go_package = "github.com/osmosis-labs/osmosis/x/lockup/types";
 
 // GenesisState defines the lockup module's genesis state.
 message GenesisState {
-    uint64 last_lock_id = 1;
-    repeated PeriodLock locks = 2 [ (gogoproto.nullable) = false ];
+  uint64 last_lock_id = 1;
+  repeated PeriodLock locks = 2 [ (gogoproto.nullable) = false ];
 }

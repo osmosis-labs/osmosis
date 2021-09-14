@@ -12,6 +12,7 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, unpacker codectypes.AnyUnpacker) {
+	k.SetParams(ctx, genState.Params)
 	k.SetNextPoolNumber(ctx, genState.NextPoolNumber)
 
 	liquidity := sdk.Coins{}
@@ -56,5 +57,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		NextPoolNumber: k.GetNextPoolNumber(ctx),
 		Pools:          poolAnys,
+		Params:         k.GetParams(ctx),
 	}
 }

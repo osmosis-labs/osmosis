@@ -213,6 +213,16 @@ func (k Keeper) GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp t
 	return combineLocks(notUnlockings, unlockings)
 }
 
+// GetLockedDenom Returns the total amount of denom that are locked
+func (k Keeper) GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int {
+	totalAmtLocked := k.GetPeriodLocksAccumulation(ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         denom,
+		Duration:      duration,
+	})
+	return totalAmtLocked
+}
+
 // GetLocksLongerThanDurationDenom Returns the locks whose unlock duration is longer than duration
 func (k Keeper) GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []types.PeriodLock {
 	// returns both unlocking started and not started
@@ -281,6 +291,51 @@ func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.Per
 	return lock, err
 }
 
+func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
+	lock.Coins = lock.Coins.Add(coins...)
+
+	err := k.setLock(ctx, *lock)
+	if err != nil {
+		return err
+	}
+
+	// modifications to accumulation store
+	for _, coin := range lock.Coins {
+		// remove previous store for the lock ID and add again with updated value
+		k.accumulationStore(ctx, coin.Denom).Remove(accumulationKey(lock.Duration, lock.ID))
+		k.accumulationStore(ctx, coin.Denom).Set(accumulationKey(lock.Duration, lock.ID), coin.Amount)
+	}
+
+	return nil
+}
+
+// AddTokensToLock locks more tokens into a lockup
+// This also saves the lock to the store.
+func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, err
+	}
+	if lock.Owner != owner.String() {
+		return nil, types.ErrNotLockOwner
+	}
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
+		return nil, err
+	}
+
+	err = k.addTokensToLock(ctx, lock, coins)
+	if err != nil {
+		return nil, err
+	}
+
+	if k.hooks == nil {
+		return lock, nil
+	}
+
+	k.hooks.OnTokenLocked(ctx, owner, lock.ID, coins, lock.Duration, lock.EndTime)
+	return lock, nil
+}
+
 // LockTokens lock tokens from an account for specified duration
 func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
@@ -294,7 +349,7 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 	return lock, nil
 }
 
-func (k Keeper) clearLockRefKeysByPrefix(ctx sdk.Context, prefix []byte) {
+func (k Keeper) clearKeysByPrefix(ctx sdk.Context, prefix []byte) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
@@ -305,18 +360,20 @@ func (k Keeper) clearLockRefKeysByPrefix(ctx sdk.Context, prefix []byte) {
 }
 
 func (k Keeper) ClearAllLockRefKeys(ctx sdk.Context) {
-	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixNotUnlocking)
-	k.clearLockRefKeysByPrefix(ctx, types.KeyPrefixUnlocking)
+	k.clearKeysByPrefix(ctx, types.KeyPrefixNotUnlocking)
+	k.clearKeysByPrefix(ctx, types.KeyPrefixUnlocking)
+}
+
+func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
+	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
 
 // ResetLock reset lock to lock's previous state on InitGenesis
 func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(&lock)
+	err := k.setLock(ctx, lock)
 	if err != nil {
 		return err
 	}
-	store.Set(lockStoreKey(lock.ID), bz)
 
 	// store refs by the status of unlock
 	if lock.IsUnlocking() {
@@ -329,6 +386,17 @@ func (k Keeper) ResetLock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 
 	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+}
+
+// setLock is a utility to store lock object into the store
+func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := proto.Marshal(&lock)
+	if err != nil {
+		return err
+	}
+	store.Set(lockStoreKey(lock.ID), bz)
+	return nil
 }
 
 // Lock is a utility to lock coins into module account

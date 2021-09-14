@@ -46,6 +46,8 @@ type Keeper interface {
     UnlockPeriodLockByID(sdk.Context, LockID uint64) (*types.PeriodLock, error)
     // LockTokens lock tokens from an account for specified duration
     LockTokens(sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error)
+    // AddTokensToLock locks more tokens into a lockup
+    AddTokensToLock(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error)
     // Lock is a utility to lock coins into module account
     Lock(sdk.Context, lock types.PeriodLock) error
     // Unlock is a utility to unlock coins from module account

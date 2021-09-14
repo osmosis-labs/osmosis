@@ -119,8 +119,18 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				suite.app.BeginBlocker(suite.ctx, types.RequestBeginBlock{})
 				suite.app.EndBlocker(suite.ctx, types.RequestEndBlock{suite.ctx.BlockHeight()})
 
+				// mint coins to distribution module / community pool so prop12 upgrade doesn't panic
+				var bal = int64(1000000000000)
+				coin := sdk.NewInt64Coin("uosmo", bal)
+				coins := sdk.NewCoins(coin)
+				suite.app.BankKeeper.MintCoins(suite.ctx, "mint", coins)
+				suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, "mint", "distribution", coins)
+				feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(coin))
+				suite.app.DistrKeeper.SetFeePool(suite.ctx, feePool)
+
 				// run upgrades
-				plan := upgradetypes.Plan{Name: "v2", Height: 5}
+				plan := upgradetypes.Plan{Name: "v4", Height: 5}
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 				plan, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
 				suite.Require().True(exists)

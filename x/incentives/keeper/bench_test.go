@@ -66,7 +66,8 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	b.StopTimer()
 
 	blockStartTime := time.Now().UTC()
-	app := app.Setup(false)
+	app, cleanupFn := app.SetupTestingAppWithLevelDb(false)
+	defer cleanupFn()
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: blockStartTime})
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -86,6 +87,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 
 	distrEpoch := app.EpochsKeeper.GetEpochInfo(ctx, app.IncentivesKeeper.GetParams(ctx).DistrEpochIdentifier)
 	durationOptions := app.IncentivesKeeper.GetLockableDurations(ctx)
+	fmt.Println(durationOptions)
 	// setup gauges
 	gaugeIds := []uint64{}
 	for i := 0; i < numGauges; i++ {
@@ -118,17 +120,23 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	futureSecs := r.Intn(1 * 60 * 60 * 24 * 7)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(futureSecs) * time.Second))
 
+	lockSecs := r.Intn(1 * 60 * 60 * 8)
 	// setup lockups
 	for i := 0; i < numLockups; i++ {
-		addr := addrs[r.Int()%numAccts]
+		addr := addrs[i%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
-		duration := time.Second
+
+		if i%10 == 0 {
+			lockSecs = r.Intn(1 * 60 * 60 * 8)
+		}
+		duration := time.Duration(lockSecs) * time.Second
 		_, err := app.LockupKeeper.LockTokens(ctx, addr, simCoins, duration)
 		if err != nil {
 			fmt.Printf("Lock tokens, %v\n", err)
 			b.FailNow()
 		}
 	}
+	fmt.Println("created all lockups")
 
 	// begin distribution for all gauges
 	for _, gaugeId := range gaugeIds {
@@ -173,7 +181,13 @@ func BenchmarkDistributionLogicMedium(b *testing.B) {
 }
 
 func BenchmarkDistributionLogicLarge(b *testing.B) {
-	benchmarkDistributionLogic(100, 10, 100, 100, 5000, b)
+	numAccts := 50000
+	numDenoms := 10
+	numGauges := 60
+	numLockups := 100000
+	numDistrs := 1
+
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
 
 func BenchmarkDistributionLogicHuge(b *testing.B) {
