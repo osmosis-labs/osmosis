@@ -322,13 +322,6 @@ func NewOsmosisApp(
 				}
 			}
 
-			// Update distribution keeper parameters to remove proposer bonus
-			// as it doesn't make sense in the epoch'd staking setting
-			distrParams := app.DistrKeeper.GetParams(ctx)
-			distrParams.BaseProposerReward = sdk.ZeroDec()
-			distrParams.BonusProposerReward = sdk.ZeroDec()
-			app.DistrKeeper.SetParams(ctx, distrParams)
-
 			// configure upgrade for gamm module's pool creation fee param add
 			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
