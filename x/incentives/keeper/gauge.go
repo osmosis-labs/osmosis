@@ -83,7 +83,10 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
-	k.setGauge(ctx, gauge)
+	err := k.setGauge(ctx, gauge)
+	if err != nil {
+		return err
+	}
 
 	curTime := ctx.BlockTime()
 	timeKey := getTimeKey(gauge.StartTime)
@@ -138,7 +141,10 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		return 0, err
 	}
 
-	k.setGauge(ctx, &gauge)
+	err := k.setGauge(ctx, &gauge)
+	if err != nil {
+		return 0, err
+	}
 	k.setLastGaugeID(ctx, gauge.Id)
 
 	// TODO: Do we need to be concerned with case where this should be ActiveGauges?
@@ -163,7 +169,10 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 	}
 
 	gauge.Coins = gauge.Coins.Add(coins...)
-	k.setGauge(ctx, gauge)
+	err = k.setGauge(ctx, gauge)
+	if err != nil {
+		return err
+	}
 	k.hooks.AfterAddToGauge(ctx, gauge.Id)
 	return nil
 }
@@ -447,7 +456,7 @@ func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, refValue []byte) ([]types.Gauge
 	for _, gaugeID := range gaugeIDs {
 		gauge, err := k.GetGaugeByID(ctx, gaugeID)
 		if err != nil {
-			panic(err)
+			return []types.Gauge{}, err
 		}
 		gauges = append(gauges, *gauge)
 	}

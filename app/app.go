@@ -316,7 +316,10 @@ func NewOsmosisApp(
 				if i%10000 == 0 {
 					ctx.Logger().Info(fmt.Sprintf("Reset %d locks", i))
 				}
-				app.LockupKeeper.ResetLock(ctx, lock)
+				err = app.LockupKeeper.ResetLock(ctx, lock)
+				if err != nil {
+					panic(err)
+				}
 			}
 
 			// Update distribution keeper parameters to remove proposer bonus
