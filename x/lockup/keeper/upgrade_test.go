@@ -133,6 +133,20 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 					Denom:         "stake",
 					Duration:      time.Second,
 				})
+				suite.Require().Equal(accum.String(), "20")
+
+				accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         "stake",
+					Duration:      50 * time.Second,
+				})
+				suite.Require().Equal(accum.String(), "20")
+
+				accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         "stake",
+					Duration:      200 * time.Second,
+				})
 				suite.Require().Equal(accum.String(), "10")
 			},
 			true,
