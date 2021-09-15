@@ -378,8 +378,7 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	for i, lock := range locks {
 		if i%25000 == 0 {
 			msg := fmt.Sprintf("Reset %d lock refs, cur lock ID %d", i, lock.ID)
-			fmt.Println(msg)
-			ctx.Logger().Debug(msg)
+			ctx.Logger().Info(msg)
 		}
 		err := k.resetLockNoAccumulationStore(ctx, lock)
 		if err != nil {
@@ -511,11 +510,6 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
-	// remove from accumulation store
-	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-	}
-
 	return nil
 }
 
@@ -548,6 +542,11 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
 	if err != nil {
 		return err
+	}
+
+	// remove from accumulation store
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
 	}
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)

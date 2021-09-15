@@ -18,6 +18,10 @@ func (suite *KeeperTestSuite) BeginUnlocking(addr sdk.AccAddress) {
 	suite.Require().NoError(err)
 }
 
+func (suite *KeeperTestSuite) WithdrawAllMaturedLocks() {
+	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
+}
+
 func (suite *KeeperTestSuite) TestModuleBalance() {
 	suite.SetupTest()
 
@@ -518,6 +522,13 @@ func (suite *KeeperTestSuite) TestLockedDenom() {
 	// test unlocking
 	suite.BeginUnlocking(addr2)
 	duration, _ = time.ParseDuration("2h")
+	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount, sdk.NewInt(20))
+
+	// finish unlocking
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(duration))
+	suite.WithdrawAllMaturedLocks()
 	res, err = suite.app.LockupKeeper.LockedDenom(sdk.WrapSDKContext(suite.ctx), &types.LockedDenomRequest{Denom: "stake", Duration: duration})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Amount, sdk.NewInt(0))
