@@ -377,7 +377,9 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	denoms := []string{}
 	for i, lock := range locks {
 		if i%25000 == 0 {
-			ctx.Logger().Debug(fmt.Sprintf("Reset %d lock refs, cur lock ID %d", i, lock.ID))
+			msg := fmt.Sprintf("Reset %d lock refs, cur lock ID %d", i, lock.ID)
+			fmt.Println(msg)
+			ctx.Logger().Debug(msg)
 		}
 		err := k.resetLockNoAccumulationStore(ctx, lock)
 		if err != nil {
@@ -415,9 +417,9 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 		sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
 		// now that we have a sorted list of durations for this denom,
 		// add them all to accumulation store
-		ctx.Logger().Info(
-			fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
-				denom, len(durations)))
+		msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
+			denom, len(durations))
+		ctx.Logger().Info(msg)
 		for _, d := range durations {
 			amt := curDurationMap[d]
 			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)
