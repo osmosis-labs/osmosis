@@ -367,7 +367,9 @@ func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
 	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
 
-// ResetLock reset lock to lock's previous state on InitGenesis
+// ResetAllLocks takes a set of locks, and initializes state to be storing
+// them all correctly. This utilizes batch optimizations to improve efficiency,
+// as this becomes a bottleneck at chain initialization & upgrades.
 func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	// index by coin.Denom, them duration -> amt
 	// We accumulate the accumulation store entries separately,
@@ -380,7 +382,7 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 			msg := fmt.Sprintf("Reset %d lock refs, cur lock ID %d", i, lock.ID)
 			ctx.Logger().Info(msg)
 		}
-		err := k.resetLockNoAccumulationStore(ctx, lock)
+		err := k.setLockAndResetLockRefs(ctx, lock)
 		if err != nil {
 			return err
 		}
@@ -428,8 +430,9 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	return nil
 }
 
-// ResetLock reset lock to lock's previous state on InitGenesis
-func (k Keeper) resetLockNoAccumulationStore(ctx sdk.Context, lock types.PeriodLock) error {
+// setLockAndResetLockRefs sets the lock, and resets all of its lock references
+// This puts the lock into a 'clean' state, aside from the AccumulationStore.
+func (k Keeper) setLockAndResetLockRefs(ctx sdk.Context, lock types.PeriodLock) error {
 	err := k.setLock(ctx, lock)
 	if err != nil {
 		return err
