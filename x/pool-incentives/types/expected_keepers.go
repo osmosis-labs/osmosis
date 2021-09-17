@@ -37,6 +37,7 @@ type IncentivesKeeper interface {
 }
 
 type DistrKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 	GetFeePool(ctx sdk.Context) (feePool distrtypes.FeePool)
 	SetFeePool(ctx sdk.Context, feePool distrtypes.FeePool)
 }
