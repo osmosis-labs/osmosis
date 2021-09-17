@@ -400,8 +400,8 @@ github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5/go.mod h1:/wsWhb9smxS
 github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJc5AZX7/PBEpw=
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
-github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210911044605-92805585b7ea h1:M9+MPGB1TMTIsPCnqBwDr77vZ31bdWQXV/WdHcmnlNM=
-github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210911044605-92805585b7ea/go.mod h1:QByRyM6mubdL7o30ZuJTFWT2cwjmT+GT19XSYwyS7pc=
+github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210915013958-01114e89a579 h1:wF1dMC97AEdUE4kKCEK4ep1mTnpaPEN6G8IUcL2vu2E=
+github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210915013958-01114e89a579/go.mod h1:QByRyM6mubdL7o30ZuJTFWT2cwjmT+GT19XSYwyS7pc=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417 h1:otchJDd2SjFWfs7Tse3ULblGcVWqMJ50BE02XCaqXOo=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417/go.mod h1:dptYhIpJ2M5kUuenLr+Yyf3zQOv1SgBZcl8/BmWlMBw=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
