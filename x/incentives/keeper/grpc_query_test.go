@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	pooltypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
 func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
@@ -140,68 +139,68 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
 }
 
-func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
-	suite.SetupTest()
+// func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
+// 	suite.SetupTest()
 
-	// initial check
-	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
-		Owner: lockOwner.String(),
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+// 	// initial check
+// 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
+// 	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+// 		Owner: lockOwner.String(),
+// 	})
+// 	suite.Require().NoError(err)
+// 	suite.Require().Equal(res.Coins, sdk.Coins{})
 
-	// setup lock and gauge
-	lockOwner, _, coins, _ := suite.SetupLockAndGauge(false)
+// 	// setup lock and gauge
+// 	lockOwner, _, coins, _ := suite.SetupLockAndGauge(false)
 
-	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
-		Owner:    lockOwner.String(),
-		EndEpoch: 100,
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
-}
+// 	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+// 		Owner:    lockOwner.String(),
+// 		EndEpoch: 100,
+// 	})
+// 	suite.Require().NoError(err)
+// 	suite.Require().Equal(res.Coins, coins)
+// }
 
-func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
-	suite.SetupTest()
+// func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
+// 	suite.SetupTest()
 
-	// initial check
-	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
-		Owner: lockOwner.String(),
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+// 	// initial check
+// 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
+// 	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+// 		Owner: lockOwner.String(),
+// 	})
+// 	suite.Require().NoError(err)
+// 	suite.Require().Equal(res.Coins, sdk.Coins{})
 
-	// setup lock and gauge
-	lockOwner, gaugeID, coins, _ := suite.SetupLockAndGauge(true)
-	distrRecord := pooltypes.DistrRecord{
-		GaugeId: gaugeID,
-		Weight:  sdk.NewInt(100),
-	}
-	err = suite.app.PoolIncentivesKeeper.ReplaceDistrRecords(suite.ctx, distrRecord)
-	suite.Require().NoError(err)
+// 	// setup lock and gauge
+// 	lockOwner, gaugeID, coins, _ := suite.SetupLockAndGauge(true)
+// 	distrRecord := pooltypes.DistrRecord{
+// 		GaugeId: gaugeID,
+// 		Weight:  sdk.NewInt(100),
+// 	}
+// 	err = suite.app.PoolIncentivesKeeper.ReplaceDistrRecords(suite.ctx, distrRecord)
+// 	suite.Require().NoError(err)
 
-	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
-		Owner:    lockOwner.String(),
-		EndEpoch: 10,
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
+// 	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+// 		Owner:    lockOwner.String(),
+// 		EndEpoch: 10,
+// 	})
+// 	suite.Require().NoError(err)
+// 	suite.Require().Equal(res.Coins, coins)
 
-	epochIdentifier := suite.app.MintKeeper.GetParams(suite.ctx).EpochIdentifier
-	curEpochNumber := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, epochIdentifier).CurrentEpoch
-	suite.app.EpochsKeeper.AfterEpochEnd(suite.ctx, epochIdentifier, curEpochNumber)
-	// TODO: Figure out what this number should be
-	mintCoins := sdk.NewCoin(coins[0].Denom, sdk.NewInt(1500000))
+// 	epochIdentifier := suite.app.MintKeeper.GetParams(suite.ctx).EpochIdentifier
+// 	curEpochNumber := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, epochIdentifier).CurrentEpoch
+// 	suite.app.EpochsKeeper.AfterEpochEnd(suite.ctx, epochIdentifier, curEpochNumber)
+// 	// TODO: Figure out what this number should be
+// 	mintCoins := sdk.NewCoin(coins[0].Denom, sdk.NewInt(1500000))
 
-	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
-		Owner:    lockOwner.String(),
-		EndEpoch: 10,
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins.Add(mintCoins))
-}
+// 	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+// 		Owner:    lockOwner.String(),
+// 		EndEpoch: 10,
+// 	})
+// 	suite.Require().NoError(err)
+// 	suite.Require().Equal(res.Coins, coins.Add(mintCoins))
+// }
 
 func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.SetupTest()
