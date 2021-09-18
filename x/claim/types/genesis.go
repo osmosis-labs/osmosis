@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,14 +15,9 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		ModuleAccountBalance: sdk.NewCoin(DefaultClaimDenom, sdk.ZeroInt()),
-		Params: Params{
-			AirdropStartTime:   time.Time{},
-			DurationUntilDecay: DefaultDurationUntilDecay, // 2 month
-			DurationOfDecay:    DefaultDurationOfDecay,    // 4 months
-			ClaimDenom:         DefaultClaimDenom,         // uosmo
-		},
-		ClaimRecords: []ClaimRecord{},
+		ModuleAccountBalance: sdk.NewCoin(DefaultParams().ClaimDenom, sdk.ZeroInt()),
+		Params:               DefaultParams(),
+		ClaimRecords:         []ClaimRecord{},
 	}
 }
 
