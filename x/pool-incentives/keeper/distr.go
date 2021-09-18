@@ -32,12 +32,11 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		return nil
 	}
 
-	amount := sdk.NewCoins(asset)
 	distrInfo := k.GetDistrInfo(ctx)
 
 	if distrInfo.TotalWeight.IsZero() {
 		// If there are no records, put the asset to the community pool
-		return k.distrKeeper.FundCommunityPool(ctx, amount, sdk.AccAddress(k.communityPoolName))
+		return k.FundCommunityPoolFromModule(ctx, asset)
 	}
 
 	assetAmountDec := asset.Amount.ToDec()
@@ -52,7 +51,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		}
 
 		if record.GaugeId == 0 { // fund community pool if gaugeId is zero
-			k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount)), sdk.AccAddress(k.communityPoolName))
+			k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
 			continue
 		}
 
