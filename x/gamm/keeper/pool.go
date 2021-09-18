@@ -125,8 +125,7 @@ func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
 
 	bz := store.Get(types.KeyNextGlobalPoolNumber)
 	if bz == nil {
-		// initialize the pool id numbers
-		poolNumber = 1
+		panic(fmt.Errorf("pool has not been initialized"))
 	} else {
 		val := gogotypes.UInt64Value{}
 
