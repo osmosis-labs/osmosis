@@ -288,12 +288,12 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].Coins, coins)
 	// check accumulation store is correctly updated
-	accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "stake",
-		Duration:      time.Second,
-	})
-	suite.Require().Equal(accum.String(), "10")
+	// accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+	// 	LockQueryType: types.ByDuration,
+	// 	Denom:         "stake",
+	// 	Duration:      time.Second,
+	// })
+	// suite.Require().Equal(accum.String(), "10")
 
 	// add more tokens to lock
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
@@ -308,12 +308,12 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	suite.Require().Equal(locks[0].Coins, coins.Add(addCoins...))
 
 	// check accumulation store is correctly updated
-	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "stake",
-		Duration:      time.Second,
-	})
-	suite.Require().Equal(accum.String(), "20")
+	// accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+	// 	LockQueryType: types.ByDuration,
+	// 	Denom:         "stake",
+	// 	Duration:      time.Second,
+	// })
+	// suite.Require().Equal(accum.String(), "20")
 
 	// try to add tokens to unavailable lock
 	cacheCtx, _ := suite.ctx.CacheContext()
@@ -408,53 +408,53 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.Require().Len(locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockAccumulationStore() {
-	suite.SetupTest()
+// func (suite *KeeperTestSuite) TestLockAccumulationStore() {
+// 	suite.SetupTest()
 
-	// initial check
-	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 0)
+// 	// initial check
+// 	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+// 	suite.Require().NoError(err)
+// 	suite.Require().Len(locks, 0)
 
-	// lock coins
-	addr := sdk.AccAddress([]byte("addr1---------------"))
+// 	// lock coins
+// 	addr := sdk.AccAddress([]byte("addr1---------------"))
 
-	// 1 * time.Second: 10 + 20
-	// 2 * time.Second: 20 + 30
-	// 3 * time.Second: 30
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr, coins, time.Second)
-	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
-	suite.LockTokens(addr, coins, time.Second)
-	suite.LockTokens(addr, coins, time.Second*2)
-	coins = sdk.Coins{sdk.NewInt64Coin("stake", 30)}
-	suite.LockTokens(addr, coins, time.Second*2)
-	suite.LockTokens(addr, coins, time.Second*3)
+// 	// 1 * time.Second: 10 + 20
+// 	// 2 * time.Second: 20 + 30
+// 	// 3 * time.Second: 30
+// 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+// 	suite.LockTokens(addr, coins, time.Second)
+// 	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+// 	suite.LockTokens(addr, coins, time.Second)
+// 	suite.LockTokens(addr, coins, time.Second*2)
+// 	coins = sdk.Coins{sdk.NewInt64Coin("stake", 30)}
+// 	suite.LockTokens(addr, coins, time.Second*2)
+// 	suite.LockTokens(addr, coins, time.Second*3)
 
-	// check accumulations
-	acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: 0,
-	})
-	suite.Require().Equal(int64(110), acc.Int64())
-	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*1,
-	})
-	suite.Require().Equal(int64(110), acc.Int64())
-	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*2,
-	})
-	suite.Require().Equal(int64(80), acc.Int64())
-	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*3,
-	})
-	suite.Require().Equal(int64(30), acc.Int64())
-	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*4,
-	})
-	suite.Require().Equal(int64(0), acc.Int64())
-}
+// 	// check accumulations
+// 	acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+// 		Denom: "stake",
+// 		Duration: 0,
+// 	})
+// 	suite.Require().Equal(int64(110), acc.Int64())
+// 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+// 		Denom: "stake",
+// 		Duration: time.Second*1,
+// 	})
+// 	suite.Require().Equal(int64(110), acc.Int64())
+// 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+// 		Denom: "stake",
+// 		Duration: time.Second*2,
+// 	})
+// 	suite.Require().Equal(int64(80), acc.Int64())
+// 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+// 		Denom: "stake",
+// 		Duration: time.Second*3,
+// 	})
+// 	suite.Require().Equal(int64(30), acc.Int64())
+// 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+// 		Denom: "stake",
+// 		Duration: time.Second*4,
+// 	})
+// 	suite.Require().Equal(int64(0), acc.Int64())
+// }

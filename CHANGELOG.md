@@ -49,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add ability for nodes to query the total amount locked for each denomination.
 * Embedded seeds in init.go
 * Added changelog and info about changelog format.
-* Fix accumulation store only counting bonded tokens, not unbonding tokens, that prevented the front-end from using more correct APY estimates. (Previously, the front-end could only underestimate rewards)
+* Disable the accumulation store until v5
 
 ## [v3.2.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
 

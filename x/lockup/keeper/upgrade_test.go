@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/tendermint/tendermint/abci/types"
 )
 
@@ -128,26 +127,26 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				locks = suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)
 				suite.Require().Len(locks, 0)
 
-				accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
-					LockQueryType: lockuptypes.ByDuration,
-					Denom:         "stake",
-					Duration:      time.Second,
-				})
-				suite.Require().Equal(accum.String(), "20")
+				// accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
+				// 	LockQueryType: lockuptypes.ByDuration,
+				// 	Denom:         "stake",
+				// 	Duration:      time.Second,
+				// })
+				// suite.Require().Equal(accum.String(), "20")
 
-				accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
-					LockQueryType: lockuptypes.ByDuration,
-					Denom:         "stake",
-					Duration:      50 * time.Second,
-				})
-				suite.Require().Equal(accum.String(), "20")
+				// accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
+				// 	LockQueryType: lockuptypes.ByDuration,
+				// 	Denom:         "stake",
+				// 	Duration:      50 * time.Second,
+				// })
+				// suite.Require().Equal(accum.String(), "20")
 
-				accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
-					LockQueryType: lockuptypes.ByDuration,
-					Denom:         "stake",
-					Duration:      200 * time.Second,
-				})
-				suite.Require().Equal(accum.String(), "10")
+				// accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, lockuptypes.QueryCondition{
+				// 	LockQueryType: lockuptypes.ByDuration,
+				// 	Denom:         "stake",
+				// 	Duration:      200 * time.Second,
+				// })
+				// suite.Require().Equal(accum.String(), "10")
 			},
 			true,
 		},

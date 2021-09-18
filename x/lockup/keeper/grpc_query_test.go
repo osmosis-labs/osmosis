@@ -470,47 +470,47 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
 	suite.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockedDenom() {
-	suite.SetupTest()
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+// func (suite *KeeperTestSuite) TestLockedDenom() {
+// 	suite.SetupTest()
+// 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
-	testTotalLockedDuration := func(durationStr string, expectedAmount int64) {
-		duration, _ := time.ParseDuration(durationStr)
-		res, err := suite.app.LockupKeeper.LockedDenom(
-			sdk.WrapSDKContext(suite.ctx),
-			&types.LockedDenomRequest{Denom: "stake", Duration: duration})
-		suite.Require().NoError(err)
-		suite.Require().Equal(res.Amount, sdk.NewInt(expectedAmount))
-	}
+// 	testTotalLockedDuration := func(durationStr string, expectedAmount int64) {
+// 		duration, _ := time.ParseDuration(durationStr)
+// 		res, err := suite.app.LockupKeeper.LockedDenom(
+// 			sdk.WrapSDKContext(suite.ctx),
+// 			&types.LockedDenomRequest{Denom: "stake", Duration: duration})
+// 		suite.Require().NoError(err)
+// 		suite.Require().Equal(res.Amount, sdk.NewInt(expectedAmount))
+// 	}
 
-	// lock coins
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Hour)
+// 	// lock coins
+// 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+// 	suite.LockTokens(addr1, coins, time.Hour)
 
-	// test with single lockup
-	testTotalLockedDuration("0s", 10)
-	testTotalLockedDuration("30m", 10)
-	testTotalLockedDuration("1h", 10)
-	testTotalLockedDuration("2h", 0)
+// 	// test with single lockup
+// 	testTotalLockedDuration("0s", 10)
+// 	testTotalLockedDuration("30m", 10)
+// 	testTotalLockedDuration("1h", 10)
+// 	testTotalLockedDuration("2h", 0)
 
-	// adds different account and lockup for testing
-	addr2 := sdk.AccAddress([]byte("addr2---------------"))
+// 	// adds different account and lockup for testing
+// 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
-	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
-	suite.LockTokens(addr2, coins, time.Hour*2)
+// 	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+// 	suite.LockTokens(addr2, coins, time.Hour*2)
 
-	testTotalLockedDuration("30m", 30)
-	testTotalLockedDuration("1h", 30)
-	testTotalLockedDuration("2h", 20)
+// 	testTotalLockedDuration("30m", 30)
+// 	testTotalLockedDuration("1h", 30)
+// 	testTotalLockedDuration("2h", 20)
 
-	// test unlocking
-	suite.BeginUnlocking(addr2)
-	testTotalLockedDuration("2h", 20)
+// 	// test unlocking
+// 	suite.BeginUnlocking(addr2)
+// 	testTotalLockedDuration("2h", 20)
 
-	// finish unlocking
-	duration, _ := time.ParseDuration("2h")
-	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(duration))
-	suite.WithdrawAllMaturedLocks()
-	testTotalLockedDuration("2h", 0)
-	testTotalLockedDuration("1h", 10)
-}
+// 	// finish unlocking
+// 	duration, _ := time.ParseDuration("2h")
+// 	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(duration))
+// 	suite.WithdrawAllMaturedLocks()
+// 	testTotalLockedDuration("2h", 0)
+// 	testTotalLockedDuration("1h", 10)
+// }
