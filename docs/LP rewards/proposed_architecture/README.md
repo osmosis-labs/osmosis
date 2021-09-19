@@ -1,9 +1,5 @@
 # Generalized F1 for lockups
 
-Short writeup of how we want to be doing the F1 Fee distribution for the lockup module. Made this as a PR so its editable with a commit log. We should hopefully evolve this into docs once implemented.
-
-This explanation has been hastily written, I plan on significantly improving it tomorrow.
-
 ## Goal
 
 We want the goal of being able to distribute LP rewards every epoch, without the distribution having to iterate over every single user.
@@ -21,7 +17,7 @@ We want to track the rewards a user who starts owning 5 shares of something at t
 The way we do this is by storing an accumulator of all the rewards a single share would have gotten at time = 0, until now.
 So when the user starts owning 5 shares of that something at time A, we create a state record to persist the accumulator for all rewards' a single share gets from t=0 to t=A. (Called `accum_A`)
 When they go to withdraw at t=B, we read the accumulator's value at time t=B. (Called `accum_B`)
-`Rewards_per_share = accum_B - accum_A`.
+We compute the rewards per share then as `Rewards_per_share = accum_B - accum_A`.
 Therefore the total rewards here is `total_rewards = Rewards_per_share * num_shares`.
 
 This has been built out before in the cosmos SDK, check out the distribution module!
@@ -34,9 +30,9 @@ In our case, we want a similar architecture to whats implemented in staking, but
 
 #### Fewer Periods
 
-We only need to update share amounts (each update called a `period` in the cosmos SDK & F1 spec) right before each epoch begins, in the `BeforeEpochStart` hook.
+We only need to update total share amounts right before each epoch begins, in the `BeforeEpochStart` hook. (each update is called a `period` in the cosmos SDK & F1 spec)
 This is as opposed to staking, where it must be done on every bond and unbond.
-This is because LP rewards only get at the epoch boundary, so the difference in accumulator values between each intermittent step is 0.
+This is because LP rewards only get sent at the epoch boundary, so the difference in accumulator values between each intermittent step is 0.
 
 This also lowers the priority of implementing the refcount optimization present in the cosmos SDK, if that is a bottleneck here.
 
@@ -52,9 +48,9 @@ The supported durations are found in [this](TBD, get link to code) state variabl
 Per denomination we are rewarding lock-ups for, we store one accumulator value per bonding duration. So there is one accumulator for each (lockable denom, supported reward duration) pair.
 
 Then at epoch time, when adding rewards for `1 day` bonds, the code finds the number of tokens that are bonded for > 1 day, by looking at the accumulation store.
-Then we can increment the accumulator's value for that denom / duration pair by `LP rewards for > 1 day / number of tokens bonded for > 1 day`.
+Then we just increment the accumulator for 1 day bond rewards of that denomination accordingly. (Increment it by `(LP rewards for > 1 day) / (number of tokens bonded for > 1 day)`)
 
-These rewards for `> 1 day` duration only get added to `> 1 day` accumulator, not the other accumulators. People who have locked longer get all the rewards using the method described in claiming rewards:
+These rewards for `> 1 day` duration only get added to `> 1 day` accumulator, not the other accumulators. People who have locked longer get all the rewards using the method described in the next section, claiming rewards.
 
 #### Claiming rewards
 
@@ -64,7 +60,7 @@ If I have a lockup for say `10 days`, last claimed rewards at t=A, then I get to
 
 `rewards_per_share = (accum_1_day_B - accum_1_day_A) + (accum_7_day_B - accum_7_day_A)`
 
-`total_rewards = my number of tokens locked * rewards_per_share`
+`total_rewards = (my number of tokens locked) * rewards_per_share`
 
 In practice, folks may have different numbers of tokens locked for `>1 day` and `>7 day` which would then be handled by taking a linear combination of the terms.
 We can enforce that for a single pool's LP rewards, all your lockups must get their rewards withdrawn together though.
@@ -72,12 +68,10 @@ And every further bonding must withdraw existing rewards
 
 #### Handling unbonding LP shares
 
-TODO: Come back and improve this explanation
-
 If I am unbonding a 14 day LP share bond, I should still be getting the rewards for a 7 day LP shares for 6 days, until I am no longer bonded for a full 7 days remaining.
 
 This means we need to define a 'symmetry' set for every unbonding duration.
-We should likely truncate this to a precision of the epoch level.
+We should truncate this to a precision of the epoch you complete your unbond during.
 So what we do is when you start unbonding, we create an accumulation store for folks whose unbond is ending during {epoch N}.
 Then when we distribute rewards at an epoch boundary, we can uniformly treat everyone whose unbond ends within that epoch the same way, efficiently.
 
@@ -87,36 +81,3 @@ Also, when beginning to unbond, we do as we do in staking, and withdraw rewards 
 
 - too many options for what bond durations to reward for
   - We handle this by limiting the number of different bond lengths you can get rewarded.
-
-## Code Architecture
-
-Everything here is a suggestion, for how to compile the design into a modular code architecture!
-
-### Simplifying lockups
-
-We can dramatically simplify the lock storage system. Currently we need to store references to every lock, in ways that are complex, so that we can index them by account, and iterate over locks by denomination.
-
-1) For every denomination, we have an accumulation store for bonded tokens. 
-2) For every denomination, we have an accumulation store for unbonding tokens.
-3) For every user (address that has a lock), we have a single struct that describes their locks, and is efficient to query.
-4) Post-F1, we have some accumulated reward values for the various different denominations that are 'active'
-
-
-
-Ideally, we would have an efficient way of going into the locks state-tree, and see all the locks for a given address, sorted by denomination.
-
-Essentially having a map:
-
-```go
-struct lockup_storage_per_address
-```
-
-Except not literally a map, but 
-
-Currently lockups have a confusing 'implicit' architecture in how they are stored in the state tree.
-The SDK supports iterating over values in the tree, based on the lexicographic ordering of the keys.
-So currently, you get the l
-
-## PR structure for ease of review
-
-I suggest one of the first things we do is change up how 
