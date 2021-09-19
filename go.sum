@@ -102,8 +102,8 @@ github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXy
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/iavl v0.15.3/go.mod h1:OLjQiAQ4fGD2KDZooyJG9yz+p2ao2IAYSbke8mVvSA4=
-github.com/cosmos/iavl v0.16.0 h1:ICIOB8xysirTX27GmVAaoeSpeozzgSu9d49w36xkVJA=
-github.com/cosmos/iavl v0.16.0/go.mod h1:2A8O/Jz9YwtjqXMO0CjnnbTYEEaovE8jWcwrakH3PoE=
+github.com/cosmos/iavl v0.17.1 h1:b/Cl8h1PRMvsu24+TYNlKchIu7W6tmxIBGe6E9u2Ybw=
+github.com/cosmos/iavl v0.17.1/go.mod h1:7aisPZK8yCpQdy3PMvKeO+bhq1NwDjUwjzxwwROUxFk=
 github.com/cosmos/ledger-cosmos-go v0.11.1 h1:9JIYsGnXP613pb2vPjFeMMjBI5lEDsEaF6oYorTy6J4=
 github.com/cosmos/ledger-cosmos-go v0.11.1/go.mod h1:J8//BsAGTo3OC/vDLjMRFLW6q0WAaXvHnVc7ZmE8iUY=
 github.com/cosmos/ledger-go v0.9.2 h1:Nnao/dLwaVTk1Q5U9THldpUMMXU94BOTWPddSmVB6pI=
@@ -400,8 +400,8 @@ github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5/go.mod h1:/wsWhb9smxS
 github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJc5AZX7/PBEpw=
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
-github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210911044605-92805585b7ea h1:M9+MPGB1TMTIsPCnqBwDr77vZ31bdWQXV/WdHcmnlNM=
-github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210911044605-92805585b7ea/go.mod h1:QByRyM6mubdL7o30ZuJTFWT2cwjmT+GT19XSYwyS7pc=
+github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210919150842-cf94682edd1c h1:JW8+q29A0eQUCugbIULL9F2jsfX+kRnuTDuV/D8Ys+w=
+github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210919150842-cf94682edd1c/go.mod h1:tk3aIBOro0C7wh6R6W1iGNgukIrRcPl+pq6ReFdRkM0=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417 h1:otchJDd2SjFWfs7Tse3ULblGcVWqMJ50BE02XCaqXOo=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417/go.mod h1:dptYhIpJ2M5kUuenLr+Yyf3zQOv1SgBZcl8/BmWlMBw=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
@@ -707,9 +707,8 @@ golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20210309074719-68d13333faf2 h1:46ULzRKLh1CwgRq2dC5SlBzEqqNCi8rreOZnNrbqcIY=
 golang.org/x/sys v0.0.0-20210309074719-68d13333faf2/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20210510120138-977fb7262007 h1:gG67DSER+11cZvqIMb8S8bt0vZtiN6xWYARwirrOSfE=
-golang.org/x/sys v0.0.0-20210510120138-977fb7262007/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221 h1:/ZHdbVpdR/jk3g30/d4yUL0JU9kksj8+F/bnQUVLGDM=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
