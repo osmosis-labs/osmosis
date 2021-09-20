@@ -34,6 +34,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v3.3.0]
+
+* This branch removes the epoch time events, which should drastically help with epoch time performance.
+
+## [v3.3.0-wip]
+
+* This branch uses Tendermint v0.34.13, should be renamed to v3.3.0
+
+## [v3.2.0]
+
+* Introduce several epoch speed improvements over v3.1.0
+
 ## [v1.0.1](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.1) - 2021-06-17
 
 This release fixes a bug in `osmosisd version` always displaying 0.0.1.
