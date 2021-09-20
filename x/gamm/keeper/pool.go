@@ -125,7 +125,7 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 
 	bz := store.Get(types.KeyNextGlobalPoolNumber)
 	if bz == nil {
-		panic(fmt.Errorf("pool has not been initialized"))
+		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
 	} else {
 		val := gogotypes.UInt64Value{}
 

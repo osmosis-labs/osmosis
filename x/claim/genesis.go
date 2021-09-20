@@ -12,6 +12,7 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	// If its the chain genesis, set the airdrop start time to be now, and setup the needed module accounts.
 	if genState.Params.AirdropStartTime.Equal(time.Time{}) {
 		genState.Params.AirdropStartTime = ctx.BlockTime()
 		k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
