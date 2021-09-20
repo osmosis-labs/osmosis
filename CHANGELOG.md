@@ -46,10 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add events for all tx types in the gamm module.
 * Add events for adding LP rewards.
 * Make queries to bank total chain balance account for developer vesting correctly.
-* Add ability for nodes to query the total amount locked for each denomination.
 * Embedded seeds in init.go
-* Added changelog and info about changelog format.
+* Many SDK performance improvements on the epoch's critical path
+* Many accumulation store performance improvements
 * Disable the accumulation store until v5
+* (Disabled until v5) Add ability for nodes to query the total amount locked for each denomination.
 
 ## [v3.2.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
 
