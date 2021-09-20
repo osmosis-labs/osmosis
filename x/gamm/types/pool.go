@@ -41,12 +41,6 @@ type PoolI interface {
 	IsActive(curBlockTime time.Time) bool
 }
 
-var (
-	_                         PoolI   = (*Pool)(nil)
-	MaxUserSpecifiedWeight    sdk.Int = sdk.NewIntFromUint64(1 << 20)
-	GuaranteedWeightPrecision int64   = 1 << 30
-)
-
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
 	return address.Module(ModuleName, key)

@@ -12,20 +12,24 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	// TODO: Can we ensure that the module account created is equal everytime?
-	k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
-
 	if genState.Params.AirdropStartTime.Equal(time.Time{}) {
 		genState.Params.AirdropStartTime = ctx.BlockTime()
+		k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
 	}
 
-	k.SetParams(ctx, genState.Params)
+	err := k.SetParams(ctx, genState.Params)
+	if err != nil {
+		panic(err)
+	}
 	k.SetClaimRecords(ctx, genState.ClaimRecords)
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	params, _ := k.GetParams(ctx)
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 	genesis := types.DefaultGenesis()
 	genesis.ModuleAccountBalance = k.GetModuleAccountBalance(ctx)
 	genesis.Params = params

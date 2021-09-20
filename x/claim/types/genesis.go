@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,5 +46,10 @@ func (gs GenesisState) Validate() error {
 	if !totalClaimable.IsEqual(sdk.NewCoins(gs.ModuleAccountBalance)) {
 		return ErrIncorrectModuleAccountBalance
 	}
+
+	if gs.Params.ClaimDenom != gs.ModuleAccountBalance.Denom {
+		return fmt.Errorf("denom for module and claim does not match")
+	}
+
 	return nil
 }

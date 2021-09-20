@@ -119,7 +119,7 @@ func (m *GenesisState) GetPools() []*types1.Any {
 	return nil
 }
 
-func (m *GenesisState) GetNextPoolNumber() uint64 {
+func (m *GenesisState) GetNextPoolNumberAndIncrement() uint64 {
 	if m != nil {
 		return m.NextPoolNumber
 	}

@@ -44,6 +44,7 @@ func TestClaimInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	claim.InitGenesis(ctx, *app.ClaimKeeper, genesis)
+	app.ClaimKeeper.CreateModuleAccount(ctx, sdk.NewInt64Coin(types.DefaultParams().ClaimDenom, 750000000))
 
 	coin := app.ClaimKeeper.GetModuleAccountBalance(ctx)
 	require.Equal(t, coin.String(), genesis.ModuleAccountBalance.String())
@@ -62,6 +63,7 @@ func TestClaimExportGenesis(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	claim.InitGenesis(ctx, *app.ClaimKeeper, genesis)
+	app.ClaimKeeper.CreateModuleAccount(ctx, sdk.NewInt64Coin(types.DefaultParams().ClaimDenom, 750000000))
 
 	claimRecord, err := app.ClaimKeeper.GetClaimRecord(ctx, acc2)
 	require.NoError(t, err)

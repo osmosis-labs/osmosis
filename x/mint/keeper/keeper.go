@@ -171,7 +171,10 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins)
 	if len(params.WeightedDeveloperRewardsReceivers) == 0 {
 		// fund community pool when rewards address is empty
-		k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		err := k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		if err != nil {
+			return err
+		}
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range params.WeightedDeveloperRewardsReceivers {
@@ -194,7 +197,8 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		}
 	}
 
-	communityPoolCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.CommunityPool))
+	// subtract from original provision to ensure no coins left over after the allocations
+	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(devRewardCoins)
 	k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
 
 	// call an hook after the minting and distribution of new coins
