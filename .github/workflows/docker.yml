@@ -1,8 +1,12 @@
 name: docker
 
-# todo: fix later
-on: [push,pull_request]
-
+# Controls when the action will run.
+# This workflow runs on pushes to master & every Pull Requests. 
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 jobs:
   docker:
     runs-on: ubuntu-latest

@@ -1,13 +1,15 @@
-# This is a basic workflow that is manually triggered
+name: Compile Osmosis
 
-name: compile osmosis
-
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
-on: [push, pull_request, workflow_dispatch]
+# Controls when the action will run.
+#  This workflow runr on pushes to master & every Pull Requests. (Or when manually triggered)
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 # This workflow makes x86_64 binaries for mac, windows, and linux.
-
 jobs:
   build:
     runs-on: ubuntu-latest
