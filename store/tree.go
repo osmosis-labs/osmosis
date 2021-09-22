@@ -55,6 +55,23 @@ func (t Tree) Remove(key []byte) {
 	parent.pull(key)
 }
 
+func (t Tree) Increase(key []byte, amt sdk.Int) {
+	value := t.Get(key)
+	t.Set(key, value.Add(amt))
+}
+
+func (t Tree) Decrease(key []byte, amt sdk.Int) {
+	t.Increase(key, amt.Neg())
+}
+
+func (t Tree) Clear() {
+	iter := t.store.Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		t.store.Delete(iter.Key())
+	}
+}
+
 // ptr is pointer to a specific node inside the tree
 type ptr struct {
 	tree  Tree
@@ -88,9 +105,12 @@ func (iter ptrIterator) ptr() *ptr {
 // nodeKey takes in a nodes layer, and its key, and constructs the
 // its key in the underlying datastore.
 func (t Tree) nodeKey(level uint16, key []byte) []byte {
-	bz := make([]byte, 2)
-	binary.BigEndian.PutUint16(bz, level)
-	return append(append([]byte("node/"), bz...), key...)
+	// node key prefix is of len 7
+	bz := make([]byte, nodeKeyPrefixLen+2+len(key))
+	copy(bz, nodeKeyPrefix)
+	binary.BigEndian.PutUint16(bz[5:], level)
+	copy(bz[nodeKeyPrefixLen+2:], key)
+	return bz
 }
 
 // leafKey constructs a key for a node pointer representing a leaf node.
@@ -99,7 +119,7 @@ func (t Tree) leafKey(key []byte) []byte {
 }
 
 func (t Tree) root() *ptr {
-	iter := stypes.KVStoreReversePrefixIterator(t.store, []byte("node/"))
+	iter := stypes.KVStoreReversePrefixIterator(t.store, nodeKeyPrefix)
 	defer iter.Close()
 	if !iter.Valid() {
 		return nil

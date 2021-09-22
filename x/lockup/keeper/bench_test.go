@@ -72,11 +72,9 @@ func benchmarkResetLogic(numLockups int, b *testing.B) {
 	b.StartTimer()
 	b.ReportAllocs()
 	// distribute coins from gauges to lockup owners
-	for i := 0; i < numLockups; i++ {
-		app.LockupKeeper.ResetLock(ctx, locks[i])
-	}
+	app.LockupKeeper.ResetAllLocks(ctx, locks)
 }
 
 func BenchmarkResetLogicMedium(b *testing.B) {
-	benchmarkResetLogic(20000, b)
+	benchmarkResetLogic(50000, b)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -67,17 +68,25 @@ func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) e
 }
 
 func accumulationStorePrefix(denom string) (res []byte) {
-	res = make([]byte, len(types.KeyPrefixLockAccumulation))
+	capacity := len(types.KeyPrefixLockAccumulation) + len(denom) + 1
+	res = make([]byte, len(types.KeyPrefixLockAccumulation), capacity)
 	copy(res, types.KeyPrefixLockAccumulation)
 	res = append(res, []byte(denom+"/")...)
 	return
 }
 
 // accumulationKey should return sort key upon duration.
-// lockID is for preventing key duplication.
-func accumulationKey(duration time.Duration, lockID uint64) (res []byte) {
-	res = make([]byte, 16)
+func accumulationKey(duration time.Duration) (res []byte) {
+	res = make([]byte, 8)
 	binary.BigEndian.PutUint64(res[:8], uint64(duration))
-	binary.BigEndian.PutUint64(res[8:], lockID)
 	return
+}
+
+func (k Keeper) ClearAllAccumulationStores(ctx sdk.Context) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLockAccumulation)
+	iter := store.Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
 }

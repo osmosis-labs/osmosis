@@ -38,16 +38,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v4.0.0]
 
 * Significantly speedup epoch times
 * Fix bug in the lockup module code that caused it to take a linear amount of gas.
 * Make unbonding tokens from the lockup module get automatically claimed when unbonding is done.
 * Add events for all tx types in the gamm module.
+* Add events for adding LP rewards.
 * Make queries to bank total chain balance account for developer vesting correctly.
-* Add ability for nodes to query 
+* Add ability for nodes to query the total amount locked for each denomination.
 * Embedded seeds in init.go
 * Added changelog and info about changelog format.
+* Fix accumulation store only counting bonded tokens, not unbonding tokens, that prevented the front-end from using more correct APY estimates. (Previously, the front-end could only underestimate rewards)
 
 ## [v3.2.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
 
