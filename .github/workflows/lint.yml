@@ -19,8 +19,10 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Format
-        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+      - uses: Jerome1337/gofmt-action@v1.0.4
+        with:
+          gofmt-path: './src'
+          gofmt-flags: '-l -d'
       - uses: golangci/golangci-lint-action@v2
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
