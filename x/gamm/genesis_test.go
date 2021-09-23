@@ -77,12 +77,6 @@ func TestGammExportGenesis(t *testing.T) {
 		sdk.NewInt64Coin("bar", 100000),
 	})
 
-	app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-		sdk.NewInt64Coin("foo", 100000),
-		sdk.NewInt64Coin("bar", 100000),
-	})
-
 	_, err := app.GAMMKeeper.CreatePool(ctx, acc1, types.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
