@@ -62,6 +62,11 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	}
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
+
+
+
+
+	
 	poolId := suite.preparePool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
