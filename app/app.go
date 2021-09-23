@@ -401,15 +401,16 @@ func NewOsmosisApp(
 		),
 	)
 
-	app.LockupKeeper = *lockupKeeper.SetHooks(
-		lockuptypes.NewMultiLockupHooks(
-		// insert lockup hooks receivers here
-		),
-	)
-
 	app.IncentivesKeeper = *incentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
 		// insert incentive hooks receivers here
+		),
+	)
+
+	app.LockupKeeper = *lockupKeeper.SetHooks(
+		lockuptypes.NewMultiLockupHooks(
+			// insert lockup hooks receivers here
+			app.IncentivesKeeper.Hooks(),
 		),
 	)
 

@@ -90,3 +90,21 @@ func (k Keeper) ClearAllAccumulationStores(ctx sdk.Context) {
 		store.Delete(iter.Key())
 	}
 }
+
+//////////////////////////// STH START //////////////////////////////////
+
+func UnlockingAccumulationStorePrefix(denom string) (res []byte) {
+	capacity := len(types.KeyPrefixUnlockingAccumulation) + len(denom) + 1
+	res = make([]byte, len(types.KeyPrefixUnlockingAccumulation), capacity)
+	copy(res, types.KeyPrefixUnlockingAccumulation)
+	res = append(res, []byte(denom+"/")...)
+	return
+}
+
+// accumulationKey should return sort key upon EndTime.
+func unlockingAccumulationKey(timestamp time.Time) (res []byte) {
+	res = getTimeKey(timestamp) // TODO: Is this right?
+	return
+}
+
+////////////////////////////  STH END //////////////////////////////////

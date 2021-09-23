@@ -58,6 +58,9 @@ var (
 	// KeyPrefixLockAccumulation defines prefix for the lock accumulation store
 	KeyPrefixLockAccumulation = []byte{0x20}
 
+	// KeyPrefixLockAccumulation defines prefix for the lock accumulation store
+	KeyPrefixUnlockingAccumulation = []byte{0x40}
+
 	// KeyIndexSeparator defines separator between keys when combine, it should be one that is not used in denom expression
 	KeyIndexSeparator = []byte{0xFF}
 )

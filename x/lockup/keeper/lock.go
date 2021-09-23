@@ -518,6 +518,11 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
+	// add to unlocking accumulation store
+	for _, coin := range lock.Coins {
+		k.unlockingAccumulationStore(ctx, coin.Denom).Increase(unlockingAccumulationKey(lock.EndTime), coin.Amount)
+	}
+
 	return nil
 }
 
@@ -555,8 +560,31 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// remove from accumulation store
 	for _, coin := range lock.Coins {
 		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+		k.unlockingAccumulationStore(ctx, coin.Denom).Decrease(unlockingAccumulationKey(lock.EndTime), coin.Amount)
 	}
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
+
+//////////////////////////// STH START //////////////////////////////////
+
+func (k Keeper) GetUnlockingsBetweenTimeDenom(ctx sdk.Context, denom string, starttime time.Time, endtime time.Time) []types.PeriodLock {
+	// returns both unlocking started and not started assuming it started unlocking current time
+	return k.getLocksFromIterator(ctx, k.LockIteratorBetweenTimeDenom(ctx, true, denom, starttime, endtime))
+}
+
+func (k Keeper) unlockingAccumulationStore(ctx sdk.Context, denom string) store.Tree {
+	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), UnlockingAccumulationStorePrefix(denom)), 10)
+}
+
+// GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
+// query.Duration
+// func (k Keeper) GetUnlockingPeriodLocksAccumulation(ctx sdk.Context, denom string, beginTime time.Time, endTime time.Time) sdk.Int {
+// 	beginKey := unlockingAccumulationKey(beginTime)
+// 	endKey := unlockingAccumulationKey(endTime)
+
+// 	return k.unlockingAccumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, endKey)
+// }
+
+////////////////////////////  STH END //////////////////////////////////

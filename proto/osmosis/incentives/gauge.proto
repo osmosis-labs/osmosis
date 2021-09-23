@@ -42,3 +42,24 @@ message LockableDurationsInfo {
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
 }
+
+message HistoricalReward {
+  cosmos.base.v1beta1.Coin cummulative_reward_ratio = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+message CurrentReward {
+  uint64 period = 1;
+  bool is_new_epoch = 2;
+  uint32 count = 3;
+  cosmos.base.v1beta1.Coin coin = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  cosmos.base.v1beta1.Coin reward = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
