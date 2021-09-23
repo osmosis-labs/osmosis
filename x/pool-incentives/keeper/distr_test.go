@@ -61,11 +61,6 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		},
 	}
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
-
-
-
-
-
 	
 	poolId := suite.preparePool()
 
