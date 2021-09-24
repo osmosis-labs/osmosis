@@ -599,16 +599,16 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge types.Gauge) error {
 			}
 		}
 		if currentReward.IsNewEpoch {
-			k.CalculateHistoricalRewards(ctx, denom, duration)
+			k.CalculateHistoricalRewards(ctx, denom, duration, ctx.BlockTime())
 		}
 	}
 
 	return nil
 }
 
-func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, denom string, lockDuration time.Duration) (sdk.Coins, error) {
+func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, denom string, duration time.Duration, epochStartTime time.Time) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
-	currentReward := k.GetCurrentReward(denom, lockDuration)
+	currentReward := k.GetCurrentReward(denom, duration)
 
 	if currentReward.IsNewEpoch { // Double check
 		totalStakes := currentReward.Coin.Amount
@@ -619,15 +619,21 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, denom string, lockDu
 		}
 
 		currRewardPerShare := totalReward.Quo(totalStakes)
-		prevHistoricalReward := k.GetHistoricalReward(denom, lockDuration, currentReward.Period-1)
-		currHistoricalReward := k.GetHistoricalReward(denom, lockDuration, currentReward.Period)
+		prevHistoricalReward := k.GetHistoricalReward(denom, duration, currentReward.Period-1)
+		currHistoricalReward := k.GetHistoricalReward(denom, duration, currentReward.Period)
 		currHistoricalReward.CummulativeRewardRatio = prevHistoricalReward.CummulativeRewardRatio.Add(sdk.NewCoin(denom, currRewardPerShare))
+
+		newTotalStakes := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         denom,
+			Duration:      duration,
+		}).Add(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, epochStartTime.Add(duration)))
 
 		// Move to Next Period
 		currentReward.Period++
 		currentReward.IsNewEpoch = false
 		currentReward.Count = 0
-		currentReward.Coin = sdk.NewCoin(denom, sdk.NewInt(0)) // TODO: locksum
+		currentReward.Coin = sdk.NewCoin(denom, newTotalStakes)
 		distrCoins := sdk.NewCoin(denom, currRewardPerShare.Mul(totalStakes))
 		currentReward.Reward = currentReward.Reward.Sub(distrCoins)
 		// currentReward.commit()
