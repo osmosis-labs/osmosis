@@ -574,35 +574,29 @@ func (k Keeper) GetUnlockingsToDistribution(ctx sdk.Context, denom string, epoch
 }
 
 func (k Keeper) PrepareCurrentReward(ctx sdk.Context, epochTime time.Time, epochDuration time.Duration) error {
-	lockableDurations := k.GetLockableDurations(ctx)
 	gauges := k.GetActiveGauges(ctx)
-
 	for _, gauge := range gauges {
 		remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 		remainEpochs := uint64(1)
 		if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
 			remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 		}
-		for _, lockableDuration := range lockableDurations {
-			if gauge.DistributeTo.Duration > lockableDuration { // TODO: support DistributeTo.Timestamp
-				continue
-			}
 
-			for _, coin := range remainCoins {
-				denom := gauge.DistributeTo.Denom
-				currentReward := k.GetCurrentReward(denom, lockableDuration)
-				amt := coin.Amount.Quo(sdk.NewInt(int64(remainEpochs))) // TODO: check range of remainEpochs
-				if amt.IsPositive() {
-					currentReward.Reward.Add(sdk.NewCoin(coin.Denom, amt))
-					gauge.DistributedCoins.Add(sdk.NewCoin(coin.Denom, amt))
-				} else {
-					// TODO: return error?
-				}
-				if !currentReward.IsNewEpoch {
-					locks := k.GetUnlockingsToDistribution(ctx, denom, epochTime, epochDuration, lockableDuration)
-					if len(locks) > 0 {
-						currentReward.IsNewEpoch = true
-					}
+		denom := gauge.DistributeTo.Denom
+		duration := gauge.DistributeTo.Duration
+		currentReward := k.GetCurrentReward(denom, duration)
+		for _, coin := range remainCoins {
+			amt := coin.Amount.Quo(sdk.NewInt(int64(remainEpochs)))
+			if amt.IsPositive() {
+				currentReward.Reward.Add(sdk.NewCoin(coin.Denom, amt))
+				gauge.DistributedCoins.Add(sdk.NewCoin(coin.Denom, amt))
+			} else {
+				// TODO: return error?
+			}
+			if !currentReward.IsNewEpoch {
+				locks := k.GetUnlockingsToDistribution(ctx, denom, epochTime, epochDuration, duration)
+				if len(locks) > 0 {
+					currentReward.IsNewEpoch = true
 				}
 			}
 		}
