@@ -547,6 +547,8 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
+	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+
 	// remove lock from store object
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(lock.ID))
@@ -563,7 +565,6 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		k.unlockingAccumulationStore(ctx, coin.Denom).Decrease(unlockingAccumulationKey(lock.EndTime), coin.Amount)
 	}
 
-	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
 

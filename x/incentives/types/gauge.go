@@ -35,17 +35,17 @@ func (gauge Gauge) IsFinishedGauge(curTime time.Time) bool {
 	return !gauge.IsUpcomingGauge(curTime) && !gauge.IsActiveGauge(curTime)
 }
 
-func NewHistoricalReward(cummulativeRewardRatio sdk.Coin) HistoricalReward {
+func NewHistoricalReward(cummulativeRewardRatio sdk.Coins) HistoricalReward {
 	return HistoricalReward{
 		CummulativeRewardRatio: cummulativeRewardRatio,
 	}
 }
 
-func NewCurrentReward(period uint64, isNewEpoch bool, count uint32, reward sdk.Coin) CurrentReward {
+func NewCurrentReward(period uint64, isNewEpoch bool, count uint32, rewards sdk.Coins) CurrentReward {
 	return CurrentReward{
 		Period:     period,
 		IsNewEpoch: isNewEpoch,
 		Count:      count,
-		Reward:     reward,
+		Rewards:    rewards,
 	}
 }

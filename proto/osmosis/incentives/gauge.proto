@@ -44,9 +44,9 @@ message LockableDurationsInfo {
 }
 
 message HistoricalReward {
-  cosmos.base.v1beta1.Coin cummulative_reward_ratio = 1 [
+  repeated cosmos.base.v1beta1.Coin cummulative_reward_ratio = 1 [
     (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
 
@@ -58,8 +58,8 @@ message CurrentReward {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
-  cosmos.base.v1beta1.Coin reward = 5 [
+  repeated cosmos.base.v1beta1.Coin rewards = 5 [
     (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
