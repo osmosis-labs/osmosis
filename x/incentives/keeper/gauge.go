@@ -587,22 +587,30 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge types.Gauge) error {
 		amt := coin.Amount.Quo(sdk.NewInt(int64(remainEpochs)))
 		if amt.IsPositive() {
 			currentReward.Reward.Add(sdk.NewCoin(coin.Denom, amt))
-			gauge.DistributedCoins.Add(sdk.NewCoin(coin.Denom, amt))
-		} else {
-			// TODO: return error?
-		}
-		if !currentReward.IsNewEpoch {
-			// checking to see if staking ratio has been changed due to unlocking?
-			locks := k.GetUnlockingsToDistribution(ctx, denom, ctx.BlockTime(), duration)
-			if len(locks) > 0 {
-				currentReward.IsNewEpoch = true
-			}
-		}
-		if currentReward.IsNewEpoch {
-			k.CalculateHistoricalRewards(ctx, denom, duration, ctx.BlockTime())
 		}
 	}
 
+	if !currentReward.IsNewEpoch {
+		// checking to see if staking ratio has been changed due to unlocking?
+		locks := k.GetUnlockingsToDistribution(ctx, denom, ctx.BlockTime(), duration)
+		if len(locks) > 0 {
+			currentReward.IsNewEpoch = true
+		}
+	}
+
+	if currentReward.IsNewEpoch || !gauge.IsPerpetual {
+		totalDistrCoins, err := k.CalculateHistoricalRewards(ctx, denom, duration, ctx.BlockTime())
+		if err != nil {
+			// TODO : is error handling enough?
+			return err
+		}
+		gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
+	}
+
+	gauge.FilledEpochs += 1
+	k.setGauge(ctx, &gauge)
+
+	k.hooks.AfterDistribute(ctx, gauge.Id)
 	return nil
 }
 

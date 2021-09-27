@@ -80,7 +80,8 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 			continue
 		}
 		for _, coin := range amount {
-			h.k.GetCurrentReward(coin.GetDenom(), lockableDuration).IsNewEpoch = true
+			currentReward := h.k.GetCurrentReward(coin.GetDenom(), lockableDuration)
+			currentReward.IsNewEpoch = true
 		}
 	}
 }
