@@ -573,7 +573,7 @@ func (k Keeper) GetUnlockingsToDistribution(ctx sdk.Context, denom string, epoch
 	return k.lk.GetUnlockingsBetweenTimeDenom(ctx, denom, startTime, endTime)
 }
 
-func (k Keeper) F1Distribute(ctx sdk.Context, gauge types.Gauge) error {
+func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
@@ -608,9 +608,8 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge types.Gauge) error {
 	}
 
 	gauge.FilledEpochs += 1
-	k.setGauge(ctx, &gauge)
+	k.setGauge(ctx, gauge)
 
-	k.hooks.AfterDistribute(ctx, gauge.Id)
 	return nil
 }
 

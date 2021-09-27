@@ -32,17 +32,18 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// 	panic(err)
 		// }
 		for _, gauge := range gauges {
-			err := k.F1Distribute(ctx, gauge)
+			err := k.F1Distribute(ctx, &gauge)
 			if err != nil {
 				panic(err)
 			}
-			// filled epoch is increased in this step and we compare with +1
-			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
+			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs {
 				if err := k.FinishDistribution(ctx, gauge); err != nil {
 					panic(err)
 				}
 			}
 		}
+
+		k.hooks.AfterEpochDistribution(ctx)
 	}
 }
 
