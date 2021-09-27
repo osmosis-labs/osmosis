@@ -578,6 +578,10 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
+		if remainEpochs == 0 { // prevents divide by 0
+			k.Logger(ctx).Debug(fmt.Sprintf("remainEpochs is 0. Gauge ID = %d", gauge.Id))
+			return nil
+		}
 	}
 
 	denom := gauge.DistributeTo.Denom
@@ -587,6 +591,7 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 		amt := coin.Amount.Quo(sdk.NewInt(int64(remainEpochs)))
 		if amt.IsPositive() {
 			currentReward.Reward.Add(sdk.NewCoin(coin.Denom, amt))
+			gauge.DistributedCoins = gauge.DistributedCoins.Add(sdk.NewCoin(coin.Denom, amt))
 		}
 	}
 
@@ -599,12 +604,10 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 	}
 
 	if currentReward.IsNewEpoch || !gauge.IsPerpetual {
-		totalDistrCoins, err := k.CalculateHistoricalRewards(ctx, denom, duration, ctx.BlockTime())
+		_, err := k.CalculateHistoricalRewards(ctx, denom, duration, ctx.BlockTime())
 		if err != nil {
-			// TODO : is error handling enough?
-			return err
+			return fmt.Errorf("Failed to CalculateHistoricalRewards. Gauge ID = %d. %s", gauge.Id, err.Error())
 		}
-		gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
 	}
 
 	gauge.FilledEpochs += 1
@@ -622,7 +625,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, denom string, durati
 		totalReward := currentReward.Reward.Amount
 
 		if !totalReward.IsPositive() {
-			return totalDistrCoins, nil // TODO: return error?
+			return totalDistrCoins, fmt.Errorf("Current Rewards is negative. reward amount = %d", totalReward)
 		}
 
 		currRewardPerShare := totalReward.Quo(totalStakes)
@@ -630,18 +633,22 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, denom string, durati
 		currHistoricalReward := k.GetHistoricalReward(denom, duration, currentReward.Period)
 		currHistoricalReward.CummulativeRewardRatio = prevHistoricalReward.CummulativeRewardRatio.Add(sdk.NewCoin(denom, currRewardPerShare))
 
+		// Locks (No schedule to unlock)
 		newTotalStakes := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         denom,
 			Duration:      duration,
-		}).Add(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, epochStartTime.Add(duration)))
+		})
+		// Unlocking Locks
+		newTotalStakes.Add(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, epochStartTime.Add(duration)))
 
 		// Move to Next Period
 		currentReward.Period++
 		currentReward.IsNewEpoch = false
 		currentReward.Count = 0
 		currentReward.Coin = sdk.NewCoin(denom, newTotalStakes)
-		distrCoins := sdk.NewCoin(denom, currRewardPerShare.Mul(totalStakes))
+
+		distrCoins := sdk.NewCoin(denom, totalReward)
 		currentReward.Reward = currentReward.Reward.Sub(distrCoins)
 		// currentReward.commit()
 
