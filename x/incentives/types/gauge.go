@@ -49,3 +49,11 @@ func NewCurrentReward(period uint64, isNewEpoch bool, count uint32, rewards sdk.
 		Rewards:    rewards,
 	}
 }
+
+func NewPeriodLockReward(id uint64, period map[string]uint64, rewards sdk.Coins) PeriodLockReward {
+	return PeriodLockReward{
+		ID:      id,
+		Period:  period,
+		Rewards: rewards,
+	}
+}

@@ -552,16 +552,20 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 
 //////////////////////////// STH START //////////////////////////////////
 
-func (k Keeper) GetCurrentReward(denom string, lockDuration time.Duration) *types.CurrentReward {
-	return &types.CurrentReward{} // TODO: get current reward from Store
+func (k Keeper) GetCurrentReward(denom string, lockDuration time.Duration) types.CurrentReward {
+	return types.CurrentReward{} // TODO: get current reward from Store
 }
 
-func (k Keeper) GetCurrentRewardsByLockableDuration(duration time.Duration) *[]types.CurrentReward {
-	return &[]types.CurrentReward{} // TODO: get list of current rewards from Store
+func (k Keeper) GetCurrentRewardsByLockableDuration(duration time.Duration) []types.CurrentReward {
+	return []types.CurrentReward{} // TODO: get list of current rewards from Store
 }
 
-func (k Keeper) GetHistoricalReward(denom string, lockDuration time.Duration, period uint64) *types.HistoricalReward {
-	return &types.HistoricalReward{} // TODO: get historical reward from Store
+func (k Keeper) GetHistoricalReward(denom string, lockDuration time.Duration, period uint64) types.HistoricalReward {
+	return types.HistoricalReward{} // TODO: get historical reward from Store
+}
+
+func (k Keeper) GetPeriodLockReward(id uint64) (types.PeriodLockReward, error) {
+	return types.PeriodLockReward{}, nil // TODO: get current reward from Store
 }
 
 // GetLocksToDistribution get locks that are associated to a condition
@@ -678,24 +682,30 @@ func (k Keeper) UpdateRewardForLock(ctx sdk.Context, address sdk.AccAddress, loc
 	if err != nil {
 		return err
 	}
+	lockReward, err := k.GetPeriodLockReward(lockID)
+	if err != nil {
+		return err
+	}
 
-	for i, coin := range lock.Coins {
-		denom := coin.GetDenom()
+	for _, coin := range lock.Coins {
+		denom := coin.Denom
 		currentPeriod := k.GetCurrentReward(denom, duration).Period - 1 // last updated historical reward, TODO: check this behavior
-		if lock.GetPeriod() == nil {
-			lock.Period = append(lock.Period, currentPeriod)
-		} else {
-			period := lock.Period[i]
+		period, ok := lockReward.Period[denom]
+		if ok {
 			reward, _ := k.CalculateReward(denom, duration, coin.Amount, currentPeriod, period)
-			lock.Rewards.Add(reward...)
-			lock.Period[i] = currentPeriod
+			lockReward.Rewards.Add(reward...)
 		}
+		lockReward.Period[denom] = currentPeriod
 	}
 	return nil
 }
 
 func (k Keeper) ClaimRewardForLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, duration time.Duration, unlockTime time.Time) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+	lockReward, err := k.GetPeriodLockReward(lockID)
 	if err != nil {
 		return err
 	}
@@ -706,15 +716,10 @@ func (k Keeper) ClaimRewardForLock(ctx sdk.Context, address sdk.AccAddress, lock
 	if err != nil {
 		return err
 	}
-	if k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Rewards) != nil {
+	if k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lockReward.Rewards) != nil {
 		return err
 	}
-	for i := range lock.Rewards {
-		// temprorary workaround to keep position of coin and period the same
-		// TODO: map period and coin
-		coin := &lock.Rewards[i]
-		coin.Amount = sdk.NewInt(0)
-	}
+	lockReward.Rewards = sdk.NewCoins()
 
 	return nil
 }

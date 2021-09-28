@@ -63,3 +63,12 @@ message CurrentReward {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
+
+message PeriodLockReward {
+  uint64 ID = 1;
+  map <string, uint64> period = 2;
+  repeated cosmos.base.v1beta1.Coin rewards = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}

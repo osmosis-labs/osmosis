@@ -29,11 +29,6 @@ message PeriodLock {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  repeated uint64 period = 6;
-  repeated cosmos.base.v1beta1.Coin rewards = 7 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
 }
 
 enum LockQueryType {
