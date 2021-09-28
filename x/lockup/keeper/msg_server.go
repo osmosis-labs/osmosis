@@ -50,6 +50,31 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 	return &types.MsgLockTokensResponse{}, nil
 }
 
+func (server msgServer) AddTokensToLock(goCtx context.Context, msg *types.MsgAddTokensToLock) (*types.MsgAddTokensToLockResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = server.keeper.AddTokensToLockByID(ctx, sender, msg.Id, msg.Coins)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtAddTokensToLock,
+			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(msg.Id)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Sender),
+			sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
+		),
+	})
+
+	return &types.MsgAddTokensToLockResponse{}, nil
+}
+
 func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBeginUnlocking) (*types.MsgBeginUnlockingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

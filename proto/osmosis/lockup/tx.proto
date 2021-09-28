@@ -12,6 +12,8 @@ option go_package = "github.com/osmosis-labs/osmosis/x/lockup/types";
 service Msg {
   // LockTokens lock tokens
   rpc LockTokens(MsgLockTokens) returns (MsgLockTokensResponse);
+  // AddTokensToLock add 
+  rpc AddTokensToLock(MsgAddTokensToLock) returns (MsgAddTokensToLockResponse);
   // BeginUnlockingAll begin unlocking all tokens
   rpc BeginUnlockingAll(MsgBeginUnlockingAll)
       returns (MsgBeginUnlockingAllResponse);
@@ -33,6 +35,16 @@ message MsgLockTokens {
   ];
 }
 message MsgLockTokensResponse { uint64 ID = 1; }
+
+message MsgAddTokensToLock {
+  uint64 id = 1;
+  string sender = 2;
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+message MsgAddTokensToLockResponse { }
 
 message MsgBeginUnlockingAll {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];

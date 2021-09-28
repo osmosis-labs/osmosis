@@ -26,6 +26,7 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		NewLockTokensCmd(),
+		NewAddTokensToLockCmd(),
 		NewBeginUnlockingCmd(),
 		NewBeginUnlockByIDCmd(),
 	)
@@ -72,6 +73,44 @@ func NewLockTokensCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(FlagSetLockTokens())
+	flags.AddTxFlagsToCmd(cmd)
+	cmd.MarkFlagRequired(FlagDuration)
+	return cmd
+}
+
+// NewAddTokensToLockCmd add tokens into existing lock up
+func NewAddTokensToLockCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-tokens-to-lock [coins] [lock_id]",
+		Short: "add tokens into existing lock up from user account",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			coins, err := sdk.ParseCoinsNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			id, err := strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgAddTokensToLock(
+				clientCtx.GetFromAddress(),
+				uint64(id),
+				coins,
+			)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.MarkFlagRequired(FlagDuration)
 	return cmd
