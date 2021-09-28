@@ -587,7 +587,8 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 	denom := gauge.DistributeTo.Denom
 	duration := gauge.DistributeTo.Duration
 	currentReward := k.GetCurrentReward(denom, duration)
-	epochStartTime := k.GetEpochInfo(ctx).CurrentEpochStartTime
+	epochInfo := k.GetEpochInfo(ctx)
+	epochStartTime := epochInfo.CurrentEpochStartTime
 
 	for _, coin := range remainCoins {
 		amt := coin.Amount.Quo(sdk.NewInt(int64(remainEpochs)))
@@ -599,7 +600,7 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 
 	if !currentReward.IsNewEpoch {
 		// checking to see if staking ratio has been changed due to unlocking?
-		locks := k.GetUnlockingsToDistribution(ctx, denom, epochStartTime, duration)
+		locks := k.GetUnlockingsToDistribution(ctx, denom, epochStartTime.Add(duration), epochInfo.Duration)
 		if len(locks) > 0 {
 			currentReward.IsNewEpoch = true
 		}
@@ -608,7 +609,7 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 	if currentReward.IsNewEpoch || !gauge.IsPerpetual {
 		_, err := k.CalculateHistoricalRewards(ctx, denom, duration, epochStartTime)
 		if err != nil {
-			return fmt.Errorf("Failed to CalculateHistoricalRewards. Gauge ID = %d. %s", gauge.Id, err.Error())
+			return fmt.Errorf("failed to CalculateHistoricalRewards. Gauge ID = %d. %s", gauge.Id, err.Error())
 		}
 	}
 
@@ -628,7 +629,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, denom string, durati
 			totalReward := coin.Amount
 
 			if !totalReward.IsPositive() {
-				return totalDistrCoins, fmt.Errorf("Current Rewards is negative. reward amount = %d", totalReward)
+				return totalDistrCoins, fmt.Errorf("current rewards is negative. reward amount = %d", totalReward)
 			}
 
 			currRewardPerShare := totalReward.Quo(totalStakes)
@@ -643,7 +644,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, denom string, durati
 				Duration:      duration,
 			})
 			// Unlocking Locks
-			newTotalStakes.Add(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, epochStartTime.Add(duration)))
+			newTotalStakes.Sub(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, epochStartTime.Add(duration)))
 
 			// Move to Next Period
 			currentReward.Period++
