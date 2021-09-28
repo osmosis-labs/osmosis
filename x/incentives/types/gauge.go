@@ -21,10 +21,7 @@ func NewGauge(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, c
 }
 
 func (gauge Gauge) IsUpcomingGauge(curTime time.Time) bool {
-	if curTime.After(gauge.StartTime) {
-		return true
-	}
-	return false
+	return curTime.After(gauge.StartTime)
 }
 
 func (gauge Gauge) IsActiveGauge(curTime time.Time) bool {
