@@ -552,8 +552,35 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 
 //////////////////////////// STH START //////////////////////////////////
 
+func (k Keeper) setCurrentReward(ctx sdk.Context, currentReward types.CurrentReward) error {
+	store := ctx.KVStore(k.storeKey)
+	rewardKey := combineKeys(types.KeyCurrentReward, []byte(currentReward.Coin.Denom), []byte(currentReward.Coin.Amount.String()))
+
+	bz, err := proto.Marshal(&currentReward)
+	if err != nil {
+		return err
+	}
+
+	store.Set(rewardKey, bz)
+
+	return nil
+}
+
 func (k Keeper) GetCurrentReward(ctx sdk.Context, denom string, lockDuration time.Duration) (types.CurrentReward, error) {
-	return types.CurrentReward{}, nil // TODO: get current reward from Store
+	currentReward := types.CurrentReward{}
+	store := ctx.KVStore(k.storeKey)
+	rewardKey := combineKeys(types.KeyCurrentReward, []byte(denom), []byte(lockDuration.String()))
+
+	bz := store.Get(rewardKey)
+	if bz == nil {
+		return currentReward, nil
+	}
+
+	err := proto.Unmarshal(bz, &currentReward)
+	if err != nil {
+		return currentReward, err
+	}
+	return currentReward, nil
 }
 
 func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration time.Duration, period uint64) (types.HistoricalReward, error) {
