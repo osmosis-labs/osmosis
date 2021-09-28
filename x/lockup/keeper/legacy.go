@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"encoding/json"
-  "encoding/binary"
 	"fmt"
 	"time"
 
@@ -13,10 +13,10 @@ import (
 )
 
 func legacyAccumulationKey(duration time.Duration, id uint64) []byte {
-  res := make([]byte, 16)
-  binary.BigEndian.PutUint64(res[:8], uint64(duration))
-  binary.BigEndian.PutUint64(res[8:], id)
-  return res
+	res := make([]byte, 16)
+	binary.BigEndian.PutUint64(res[:8], uint64(duration))
+	binary.BigEndian.PutUint64(res[8:], id)
+	return res
 }
 
 func findIndex(IDs []uint64, ID uint64) int {
