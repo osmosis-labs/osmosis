@@ -703,12 +703,15 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward *types
 				if err != nil {
 					return totalDistrCoins, err
 				}
-				currHistoricalReward, err := k.GetHistoricalReward(ctx, denom, duration, currentReward.Period+1)
+
+				newHistoricalReward := types.HistoricalReward{
+					CummulativeRewardRatio: prevHistoricalReward.CummulativeRewardRatio.Add(sdk.NewCoin(coin.Denom, currRewardPerShare)),
+				}
+
+				err = k.addHistoricalReward(ctx, newHistoricalReward, denom, duration, currentReward.Period+1)
 				if err != nil {
 					return totalDistrCoins, err
 				}
-				currHistoricalReward.CummulativeRewardRatio = prevHistoricalReward.CummulativeRewardRatio.Add(sdk.NewCoin(coin.Denom, currRewardPerShare))
-				// k.setHistoricalReward(ctx, currHistoricalReward)
 			}
 			// Locks (No schedule to unlock)
 			newTotalStakes := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
