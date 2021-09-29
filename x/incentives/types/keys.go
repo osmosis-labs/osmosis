@@ -50,7 +50,10 @@ var (
 	KeyEpochBeginBlock = []byte{0x09}
 
 	// KeyCurrentReward defines key for storing current reward
-	KeyCurrentReward = []byte{0x10}
+	KeyCurrentReward = []byte{0x10} // TODO : Confirm this key name/value
+
+	// KeyHistoricalReward defines key for storing historical reward
+	KeyHistoricalReward = []byte{0x11} // TODO : Confirm this key name/value
 
 	// LockableDurationsKey defines key for storing valid durations for giving incentives
 	LockableDurationsKey = []byte("lockable_durations")

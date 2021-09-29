@@ -552,9 +552,9 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 
 //////////////////////////// STH START //////////////////////////////////
 
-func (k Keeper) setCurrentReward(ctx sdk.Context, currentReward types.CurrentReward) error {
+func (k Keeper) setCurrentReward(ctx sdk.Context, currentReward types.CurrentReward, lockDuration time.Duration) error {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyCurrentReward, []byte(currentReward.Coin.Denom), []byte(currentReward.Coin.Amount.String()))
+	rewardKey := combineKeys(types.KeyCurrentReward, []byte(currentReward.Coin.Denom), []byte(lockDuration.String()))
 
 	bz, err := proto.Marshal(&currentReward)
 	if err != nil {
@@ -583,8 +583,39 @@ func (k Keeper) GetCurrentReward(ctx sdk.Context, denom string, lockDuration tim
 	return currentReward, nil
 }
 
+func (k Keeper) addHistoricalReward(ctx sdk.Context, historicalReward types.HistoricalReward, denom string, lockDuration time.Duration, period uint64) error {
+	store := ctx.KVStore(k.storeKey)
+	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom), []byte(lockDuration.String()), sdk.Uint64ToBigEndian(period))
+
+	if store.Has(rewardKey) {
+		return fmt.Errorf("historical reward is already exist. Denom/Duration/Period = %s/%ds/%d", denom, lockDuration, period)
+	}
+
+	bz, err := proto.Marshal(&historicalReward)
+	if err != nil {
+		return err
+	}
+
+	store.Set(rewardKey, bz)
+
+	return nil
+}
+
 func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration time.Duration, period uint64) (types.HistoricalReward, error) {
-	return types.HistoricalReward{}, nil // TODO: get historical reward from Store
+	historicalReward := types.HistoricalReward{}
+	store := ctx.KVStore(k.storeKey)
+	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom), []byte(lockDuration.String()), sdk.Uint64ToBigEndian(period))
+
+	bz := store.Get(rewardKey)
+	if bz == nil {
+		return historicalReward, nil
+	}
+
+	err := proto.Unmarshal(bz, &historicalReward)
+	if err != nil {
+		return historicalReward, err
+	}
+	return historicalReward, nil
 }
 
 func (k Keeper) GetPeriodLockReward(ctx sdk.Context, id uint64) (types.PeriodLockReward, error) {
