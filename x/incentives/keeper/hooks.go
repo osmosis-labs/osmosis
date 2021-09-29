@@ -81,11 +81,12 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 			continue
 		}
 		for _, coin := range amount {
-			currentReward, err := h.k.GetCurrentReward(ctx, coin.GetDenom(), lockableDuration)
+			currentReward, err := h.k.GetCurrentReward(ctx, coin.Denom, lockableDuration)
 			if err != nil {
 				panic(err)
 			}
 			currentReward.IsNewEpoch = true
+			h.k.setCurrentReward(ctx, currentReward, coin.Denom, lockableDuration)
 		}
 		h.k.UpdateRewardForLock(ctx, address, lockID, amount, lockableDuration, unlockTime)
 	}
