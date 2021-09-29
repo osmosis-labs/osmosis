@@ -91,7 +91,7 @@ func (k Keeper) ClearAllAccumulationStores(ctx sdk.Context) {
 	}
 }
 
-//////////////////////////// STH START //////////////////////////////////
+//////////////////////////// START //////////////////////////////////
 
 func UnlockingAccumulationStorePrefix(denom string) (res []byte) {
 	capacity := len(types.KeyPrefixUnlockingAccumulation) + len(denom) + 1
@@ -107,4 +107,4 @@ func unlockingAccumulationKey(timestamp time.Time) (res []byte) {
 	return
 }
 
-////////////////////////////  STH END //////////////////////////////////
+////////////////////////////  END //////////////////////////////////

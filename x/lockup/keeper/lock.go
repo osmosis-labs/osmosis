@@ -568,7 +568,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
-//////////////////////////// STH START //////////////////////////////////
+//////////////////////////// START //////////////////////////////////
 
 func (k Keeper) GetUnlockingsBetweenTimeDenom(ctx sdk.Context, denom string, beginTime time.Time, endTime time.Time) []types.PeriodLock {
 	// returns both unlocking started and not started assuming it started unlocking current time
@@ -584,4 +584,4 @@ func (k Keeper) GetUnlockingPeriodLocksAccumulation(ctx sdk.Context, denom strin
 	return k.unlockingAccumulationStore(ctx, denom).SubsetAccumulation(beginKey, nil)
 }
 
-////////////////////////////  STH END //////////////////////////////////
+////////////////////////////  END //////////////////////////////////

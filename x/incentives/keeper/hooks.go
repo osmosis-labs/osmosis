@@ -70,7 +70,7 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
-//////////////////////////// STH START //////////////////////////////////
+//////////////////////////// START //////////////////////////////////
 
 var _ lockuptypes.LockupHooks = Hooks{}
 
@@ -81,14 +81,20 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 			continue
 		}
 		for _, coin := range amount {
-			currentReward, err := h.k.GetCurrentReward(ctx, coin.Denom, lockableDuration)
+			denom := coin.Denom
+			currentReward, err := h.k.GetCurrentReward(ctx, denom, lockableDuration)
 			if err != nil {
 				panic(err)
 			}
-			currentReward.IsNewEpoch = true
-			h.k.setCurrentReward(ctx, currentReward, coin.Denom, lockableDuration)
+			_, err = h.k.GetHistoricalReward(ctx, denom, lockableDuration, currentReward.Period)
+			if err != nil {
+				epochInfo := h.k.GetEpochInfo(ctx)
+				epochStartTime := epochInfo.CurrentEpochStartTime
+				h.k.CalculateHistoricalRewards(ctx, &currentReward, denom, lockableDuration, epochStartTime)
+				h.k.setCurrentReward(ctx, currentReward, denom, lockableDuration)
+			}
 		}
-		h.k.UpdateRewardForLock(ctx, address, lockID, amount, lockableDuration, unlockTime)
+		h.k.UpdateRewardForLock(ctx, lockID, lockableDuration)
 	}
 }
 
@@ -101,9 +107,10 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 		// for _, coin := range amount {
 		// 	h.k.GetCurrentReward(coin.GetDenom(), lockableDuration).IsNewEpoch = true
 		// }
-		h.k.UpdateRewardForLock(ctx, address, lockID, amount, lockableDuration, unlockTime)
-		h.k.ClaimRewardForLock(ctx, address, lockID, amount, lockableDuration, unlockTime)
+		h.k.UpdateRewardForLock(ctx, lockID, lockableDuration)
+		h.k.ClaimRewardForLock(ctx, lockID, lockableDuration)
+		h.k.clearPeriodLockReward(ctx, lockID)
 	}
 }
 
-////////////////////////////  STH END //////////////////////////////////
+////////////////////////////  END //////////////////////////////////
