@@ -34,12 +34,11 @@ func init() {
 }
 
 func RegisterDenoms() {
-	// err := sdk.RegisterDenom(HumanCoinUnit, sdk.OneDec())
-	// if err != nil {
-	// 	panic(err)
-	// }
-	sdk.RegisterDenom(HumanCoinUnit, sdk.OneDec())
-	err := sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, OsmoExponent))
+	err := sdk.RegisterDenom(HumanCoinUnit, sdk.OneDec())
+	if err != nil {
+		panic(err)
+	}
+	err = sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, OsmoExponent))
 	if err != nil {
 		panic(err)
 	}
