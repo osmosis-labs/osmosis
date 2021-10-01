@@ -516,3 +516,37 @@ func (suite *KeeperTestSuite) TestGaugesByDenom() {
 	testGaugeByDenom(true)
 	testGaugeByDenom(false)
 }
+
+// TestF1Distribute tests f1 distribution
+func (suite *KeeperTestSuite) TestF1Distribute() {
+	defaultGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+
+	suite.SetupTest()
+	gauges := suite.SetupGauges([]perpGaugeDesc{defaultGauge})
+	gauge := gauges[0]
+	denom := gauge.DistributeTo.Denom
+	duration := gauge.DistributeTo.Duration
+
+	//1st distribute
+	suite.app.IncentivesKeeper.F1Distribute(suite.ctx, &gauge)
+	currentReward, err := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
+	suite.Require().NoError(err)
+	suite.Require().Equal(currentReward.Rewards, defaultGauge.rewardAmount)
+	suite.T().Logf("current_reward=%v", currentReward.Rewards)
+	prevHistoricalReward, err := suite.app.IncentivesKeeper.GetHistoricalReward(suite.ctx, denom, duration, currentReward.Period-1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(prevHistoricalReward.CummulativeRewardRatio, sdk.Coins(nil))
+	suite.T().Logf("historical_reward=%v", prevHistoricalReward.CummulativeRewardRatio)
+
+	//2nd distribute
+	sameGauge, _ := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gauge.GetId())
+	sameGauge.Coins = sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 9000)} //add 6000 more
+	suite.app.IncentivesKeeper.F1Distribute(suite.ctx, sameGauge)
+	currentReward, _ = suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
+	suite.Require().Equal(currentReward.Rewards, defaultGauge.rewardAmount.Add(sdk.NewInt64Coin(defaultRewardDenom, 6000)))
+	suite.T().Logf("current_reward=%v", currentReward.Rewards)
+}
