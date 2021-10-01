@@ -52,13 +52,14 @@ message HistoricalReward {
 
 message CurrentReward {
   uint64 period = 1;
-  bool is_new_epoch = 2;
-  uint32 count = 3;
-  cosmos.base.v1beta1.Coin coin = 4 [
+  int64 last_processed_epoch = 2;
+  bool is_new_epoch = 3;
+  uint32 count = 4;
+  cosmos.base.v1beta1.Coin coin = 5 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
-  repeated cosmos.base.v1beta1.Coin rewards = 5 [
+  repeated cosmos.base.v1beta1.Coin rewards = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];

@@ -86,13 +86,10 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 			if err != nil {
 				panic(err)
 			}
-			_, err = h.k.GetHistoricalReward(ctx, denom, lockableDuration, currentReward.Period)
-			if err != nil {
-				epochInfo := h.k.GetEpochInfo(ctx)
-				epochStartTime := epochInfo.CurrentEpochStartTime
-				h.k.CalculateHistoricalRewards(ctx, &currentReward, denom, lockableDuration, epochStartTime)
-				h.k.setCurrentReward(ctx, currentReward, denom, lockableDuration)
-			}
+			epochInfo := h.k.GetEpochInfo(ctx)
+			h.k.CalculateHistoricalRewards(ctx, &currentReward, denom, lockableDuration, epochInfo)
+			h.k.setCurrentReward(ctx, currentReward, denom, lockableDuration)
+
 		}
 		h.k.UpdateRewardForLock(ctx, lockID, lockableDuration)
 	}
