@@ -610,6 +610,7 @@ func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration 
 
 	// TODO: temporary workaround before adding initialization of period 0
 	if period == 0 {
+		historicalReward.CummulativeRewardRatio = sdk.Coins{}
 		return historicalReward, nil
 	}
 
@@ -627,7 +628,7 @@ func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration 
 
 func (k Keeper) SetPeriodLockReward(ctx sdk.Context, periodLockReward types.PeriodLockReward) error {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(sdk.Uint64ToBigEndian(periodLockReward.ID)))
+	rewardKey := combineKeys(types.KeyHistoricalReward, sdk.Uint64ToBigEndian(periodLockReward.ID))
 
 	bz, err := proto.Marshal(&periodLockReward)
 	if err != nil {
@@ -641,13 +642,13 @@ func (k Keeper) SetPeriodLockReward(ctx sdk.Context, periodLockReward types.Peri
 
 func (k Keeper) clearPeriodLockReward(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(sdk.Uint64ToBigEndian(id)))
+	rewardKey := combineKeys(types.KeyHistoricalReward, sdk.Uint64ToBigEndian(id))
 	store.Delete(rewardKey)
 }
 
 func (k Keeper) GetPeriodLockReward(ctx sdk.Context, id uint64) (types.PeriodLockReward, error) {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(sdk.Uint64ToBigEndian(id)))
+	rewardKey := combineKeys(types.KeyHistoricalReward, sdk.Uint64ToBigEndian(id))
 
 	bz := store.Get(rewardKey)
 	if bz == nil {
@@ -733,7 +734,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward *types
 		totalReward := coin.Amount
 
 		if totalReward.IsNegative() {
-			return totalDistrCoins, fmt.Errorf("current rewards is negative. reward amount = %d", totalReward)
+			return totalDistrCoins, fmt.Errorf("current rewards is negative. reward amount = %d", totalReward.Int64())
 		}
 		currRewardPerShare := sdk.NewInt(0)
 		if !totalStakes.IsZero() {
@@ -752,16 +753,14 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward *types
 		if err != nil {
 			return totalDistrCoins, err
 		}
-		distrCoins := sdk.NewCoin(coin.Denom, totalReward)
+		distrCoins := sdk.NewCoin(coin.Denom, currRewardPerShare.Mul(totalStakes))
 		totalDistrCoins = totalDistrCoins.Add(distrCoins)
 
-		// Locks (No schedule to unlock)
 		newTotalStakes := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         denom,
 			Duration:      duration,
 		})
-		// Unlocking Locks
 		newTotalStakes = newTotalStakes.Sub(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, epochStartTime.Add(duration)))
 
 		// Move to Next Period
@@ -810,7 +809,7 @@ func (k Keeper) UpdateRewardForLock(ctx sdk.Context, lockID uint64, duration tim
 			return err
 		}
 		targetPeriod := currentReward.Period - 1 // last updated historical reward, TODO: check this behavior
-		period, ok := lockReward.Period[denom]
+		period, ok := lockReward.Period[denom+duration.String()]
 		if ok {
 			reward, err := k.CalculateReward(ctx, denom, duration, coin.Amount, targetPeriod, period)
 			if err != nil {
@@ -818,7 +817,7 @@ func (k Keeper) UpdateRewardForLock(ctx sdk.Context, lockID uint64, duration tim
 			}
 			lockReward.Rewards = lockReward.Rewards.Add(reward...)
 		}
-		lockReward.Period[denom] = targetPeriod
+		lockReward.Period[denom+duration.String()] = targetPeriod
 	}
 	k.SetPeriodLockReward(ctx, lockReward)
 	return nil

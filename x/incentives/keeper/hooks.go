@@ -109,8 +109,8 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 		// }
 		h.k.UpdateRewardForLock(ctx, lockID, lockableDuration)
 		h.k.ClaimRewardForLock(ctx, lockID, lockableDuration)
-		h.k.clearPeriodLockReward(ctx, lockID)
 	}
+	h.k.clearPeriodLockReward(ctx, lockID)
 }
 
 ////////////////////////////  END //////////////////////////////////
