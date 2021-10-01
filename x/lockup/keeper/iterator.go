@@ -174,8 +174,8 @@ func (k Keeper) LockIteratorBetweenTimeDenom(ctx sdk.Context, isUnlocking bool, 
 	store := ctx.KVStore(k.storeKey)
 
 	return store.Iterator(
-		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, startTimePrefix),
-		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, endTimePrefix))
+		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom), startTimePrefix),
+		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom), endTimePrefix))
 }
 
 ////////////////////////////  END //////////////////////////////////
