@@ -308,19 +308,10 @@ func NewOsmosisApp(
 			}
 			// clear all lockup module locking / unlocking queue items
 			app.LockupKeeper.ClearAllLockRefKeys(ctx)
-			app.LockupKeeper.ClearAccumulationStores(ctx)
+			app.LockupKeeper.ClearAllAccumulationStores(ctx)
 
 			// reset all lock and references
-			for _, lock := range locks {
-				app.LockupKeeper.ResetLock(ctx, lock)
-			}
-
-			// Update distribution keeper parameters to remove proposer bonus
-			// as it doesn't make sense in the epoch'd staking setting
-			distrParams := app.DistrKeeper.GetParams(ctx)
-			distrParams.BaseProposerReward = sdk.ZeroDec()
-			distrParams.BonusProposerReward = sdk.ZeroDec()
-			app.DistrKeeper.SetParams(ctx, distrParams)
+			app.LockupKeeper.ResetAllLocks(ctx, locks)
 
 			// configure upgrade for gamm module's pool creation fee param add
 			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
@@ -505,6 +496,7 @@ func NewOsmosisApp(
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
+		lockuptypes.ModuleName,
 		gammtypes.ModuleName,
 	)
 

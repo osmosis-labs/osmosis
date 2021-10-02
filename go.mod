@@ -25,10 +25,12 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.12
-
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
 
-replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210829064313-2c87644925da
+replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.12
+
+replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210915013958-01114e89a579
+
+replace github.com/tendermint/tm-db => github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417
