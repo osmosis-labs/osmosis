@@ -13,13 +13,14 @@ This is what you'd use to get a node up and running, fast. It assumes that it is
 
 **Install go**
 ```bash
-wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17
+wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.1
 ```
 
 **Install Osmosis and check that it is on $PATH**
 ```bash
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
+git checkout v4.0.0
 make install
 ```
 
@@ -30,7 +31,12 @@ wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks
 osmosisd start
 ```
 
-That should get you up and synced!  
+More Nodes == More Network
+More Network == Faster Sync
+Faster Sync == Less Developer Friction
+Less Developer Friction == More Osmosis
+
+Thank you for supporting a healthy blockchain network and community by running an Osmosis node!
 
 ## Why Osmosis?
 ### On customizability of liquidity pools
