@@ -433,28 +433,28 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 
 	// check accumulations
 	acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
+		Denom:    "stake",
 		Duration: 0,
 	})
 	suite.Require().Equal(int64(110), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*1,
+		Denom:    "stake",
+		Duration: time.Second * 1,
 	})
 	suite.Require().Equal(int64(110), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*2,
+		Denom:    "stake",
+		Duration: time.Second * 2,
 	})
 	suite.Require().Equal(int64(80), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*3,
+		Denom:    "stake",
+		Duration: time.Second * 3,
 	})
 	suite.Require().Equal(int64(30), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*4,
+		Denom:    "stake",
+		Duration: time.Second * 4,
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
 }
