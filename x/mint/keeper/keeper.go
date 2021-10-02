@@ -57,7 +57,10 @@ func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
+	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // _____________________________________________________________________
@@ -168,17 +171,26 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	devRewardCoins := sdk.NewCoins(devRewardCoin)
 	// This is supposed to come from the developer vesting module address, not the mint module address
 	// we over-allocated to the mint module address earlier though, so we burn it right here.
-	k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins)
+	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins)
+	if err != nil {
+		return err
+	}
 	if len(params.WeightedDeveloperRewardsReceivers) == 0 {
 		// fund community pool when rewards address is empty
-		k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		if err != nil {
+			return err
+		}
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range params.WeightedDeveloperRewardsReceivers {
 			devRewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, devRewardCoin, w.Weight))
 			if w.Address == "" {
-				k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
+				err = k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
 					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+				if err != nil {
+					return err
+				}
 			} else {
 				devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
 				if err != nil {
@@ -195,7 +207,10 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	}
 
 	communityPoolCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.CommunityPool))
-	k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+	if err != nil {
+		return err
+	}
 
 	// call an hook after the minting and distribution of new coins
 	k.hooks.AfterDistributeMintedCoin(ctx, mintedCoin)

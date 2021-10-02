@@ -10,7 +10,9 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetLastLockID(ctx, genState.LastLockId)
-	k.ResetAllLocks(ctx, genState.Locks)
+	if err := k.ResetAllLocks(ctx, genState.Locks); err != nil {
+		return
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.

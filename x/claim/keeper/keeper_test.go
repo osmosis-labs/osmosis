@@ -26,12 +26,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 	airdropStartTime := time.Now()
 	suite.app.ClaimKeeper.CreateModuleAccount(suite.ctx, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
 
-	suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
+	err := suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
 		AirdropStartTime:   airdropStartTime,
 		DurationUntilDecay: types.DefaultDurationUntilDecay,
 		DurationOfDecay:    types.DefaultDurationOfDecay,
 		ClaimDenom:         sdk.DefaultBondDenom,
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	suite.ctx = suite.ctx.WithBlockTime(airdropStartTime)
 }
