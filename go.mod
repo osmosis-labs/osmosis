@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis
 
-go 1.15
+go 1.17
 
 require (
 	github.com/cosmos/cosmos-sdk v0.42.9
