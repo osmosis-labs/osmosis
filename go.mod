@@ -3,10 +3,9 @@ module github.com/osmosis-labs/osmosis
 go 1.15
 
 require (
-	github.com/cosmos/cosmos-proto v0.0.0-20210927212136-a568a532bf8e // indirect
 	github.com/cosmos/cosmos-sdk v0.42.9
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.17.1
+	github.com/cosmos/iavl v0.16.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
@@ -18,7 +17,7 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	github.com/tendermint/tendermint v0.34.13
+	github.com/tendermint/tendermint v0.34.12
 	github.com/tendermint/tm-db v0.6.4
 	google.golang.org/genproto v0.0.0-20210114201628-6edceaf6022f
 	google.golang.org/grpc v1.40.0
@@ -29,6 +28,8 @@ require (
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.12
 
 replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210911044605-92805585b7ea
 
