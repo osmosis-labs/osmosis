@@ -12,6 +12,7 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	// TODO: Can we ensure that the module account created is equal everytime?
 	k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
 
 	if genState.Params.AirdropStartTime.Equal(time.Time{}) {

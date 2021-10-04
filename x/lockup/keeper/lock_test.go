@@ -247,13 +247,17 @@ func (suite *KeeperTestSuite) TestLockTokensAlot() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	startAveragingAt := 1000
-	totalNumLocks := 5000
+	totalNumLocks := 10000
 	for i := 1; i < startAveragingAt; i++ {
 		suite.LockTokens(addr1, coins, time.Second)
 	}
 	runningTotal := uint64(0)
 	maxGas := uint64(0)
 	for i := startAveragingAt; i < totalNumLocks; i++ {
+		if i%1000 == 0 {
+			fmt.Printf("entering %dth lock now\n", i)
+		}
+
 		alreadySpent := suite.ctx.GasMeter().GasConsumed()
 		suite.LockTokens(addr1, coins, time.Second)
 		newSpent := suite.ctx.GasMeter().GasConsumed()
@@ -263,7 +267,7 @@ func (suite *KeeperTestSuite) TestLockTokensAlot() {
 			maxGas = spentNow
 		}
 	}
-	fmt.Println("test deets: total locks created %i, begin average at %i", totalNumLocks, startAveragingAt)
+	fmt.Printf("test deets: total locks created %d, begin average at %d\n", totalNumLocks, startAveragingAt)
 	fmt.Println("average gas / lock:", runningTotal/(uint64(totalNumLocks-startAveragingAt)))
 	fmt.Println("max gas / lock:", maxGas)
 
@@ -402,4 +406,55 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	// now withdraw all locks and ensure all got withdrawn
 	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx.WithBlockTime(unbondBlockTimes[len(times)-1]))
 	suite.Require().Len(locks, 0)
+}
+
+func (suite *KeeperTestSuite) TestLockAccumulationStore() {
+	suite.SetupTest()
+
+	// initial check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr := sdk.AccAddress([]byte("addr1---------------"))
+
+	// 1 * time.Second: 10 + 20
+	// 2 * time.Second: 20 + 30
+	// 3 * time.Second: 30
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr, coins, time.Second)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+	suite.LockTokens(addr, coins, time.Second)
+	suite.LockTokens(addr, coins, time.Second*2)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 30)}
+	suite.LockTokens(addr, coins, time.Second*2)
+	suite.LockTokens(addr, coins, time.Second*3)
+
+	// check accumulations
+	acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: 0,
+	})
+	suite.Require().Equal(int64(110), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 1,
+	})
+	suite.Require().Equal(int64(110), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 2,
+	})
+	suite.Require().Equal(int64(80), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 3,
+	})
+	suite.Require().Equal(int64(30), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 4,
+	})
+	suite.Require().Equal(int64(0), acc.Int64())
 }

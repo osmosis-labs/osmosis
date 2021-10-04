@@ -55,5 +55,3 @@ func TestPow(t *testing.T) {
 		"expected value & actual value's difference should less than precision",
 	)
 }
-
-

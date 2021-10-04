@@ -134,6 +134,8 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesis := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
+		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		am := gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 		am.InitGenesis(ctx, appCodec, genesis)
 	})
 }
