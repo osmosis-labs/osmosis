@@ -31,6 +31,26 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		return nil, err
 	}
 
+	if len(msg.Coins) == 1 {
+		locks := server.keeper.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, msg.Coins[0].Denom, msg.Duration)
+		if len(locks) > 0 { // if existing lock with same duration and denom exists, just add there
+			_, err = server.keeper.AddTokensToLockByID(ctx, owner, locks[0].ID, msg.Coins)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
+
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtAddTokensToLock,
+					sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(locks[0].ID)),
+					sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
+					sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
+				),
+			})
+			return &types.MsgLockTokensResponse{}, nil
+		}
+	}
+
 	lock, err := server.keeper.LockTokens(ctx, owner, msg.Coins, msg.Duration)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
@@ -48,31 +68,6 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 	})
 
 	return &types.MsgLockTokensResponse{}, nil
-}
-
-func (server msgServer) AddTokensToLock(goCtx context.Context, msg *types.MsgAddTokensToLock) (*types.MsgAddTokensToLockResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = server.keeper.AddTokensToLockByID(ctx, sender, msg.Id, msg.Coins)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtAddTokensToLock,
-			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(msg.Id)),
-			sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Sender),
-			sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
-		),
-	})
-
-	return &types.MsgAddTokensToLockResponse{}, nil
 }
 
 func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBeginUnlocking) (*types.MsgBeginUnlockingResponse, error) {

@@ -10,7 +10,6 @@ import (
 // constants
 const (
 	TypeMsgLockTokens        = "lock_tokens"
-	TypeMsgAddTokensToLock   = "add_tokens_to_lock"
 	TypeMsgBeginUnlockingAll = "begin_unlocking_all"
 	TypeMsgBeginUnlocking    = "begin_unlocking"
 )
@@ -39,30 +38,6 @@ func (m MsgLockTokens) GetSignBytes() []byte {
 }
 func (m MsgLockTokens) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
-	return []sdk.AccAddress{owner}
-}
-
-var _ sdk.Msg = &MsgAddTokensToLock{}
-
-// NewMsgAddTokensToLock creates a message to add tokens to lock
-func NewMsgAddTokensToLock(sender sdk.AccAddress, id uint64, coins sdk.Coins) *MsgAddTokensToLock {
-	return &MsgAddTokensToLock{
-		Sender: sender.String(),
-		Id:     id,
-		Coins:  coins,
-	}
-}
-
-func (m MsgAddTokensToLock) Route() string { return RouterKey }
-func (m MsgAddTokensToLock) Type() string  { return TypeMsgAddTokensToLock }
-func (m MsgAddTokensToLock) ValidateBasic() error {
-	return nil
-}
-func (m MsgAddTokensToLock) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-func (m MsgAddTokensToLock) GetSigners() []sdk.AccAddress {
-	owner, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{owner}
 }
 

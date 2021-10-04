@@ -134,52 +134,6 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewAddTokensToLockCmd() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
-		{
-			"lock 201stake tokens for 1 day",
-			[]string{
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(201))).String(),
-				"1",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.NewAddTokensToLockCmd()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-			}
-		})
-	}
-}
-
 func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 	val := s.network.Validators[0]
 
