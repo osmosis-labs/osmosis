@@ -14,7 +14,14 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+
+	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, coins, time.Second)
+	suite.Require().NoError(err)
+
+	// creation of lock via LockTokens
+	msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
+	_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(addr1, time.Second, coins))
 
 	// check locks
 	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
@@ -29,11 +36,10 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	})
 	suite.Require().Equal(accum.String(), "10")
 
-	// add more tokens to lock
+	// add more tokens to lock via LockTokens
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, addCoins)
 
-	msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
 	_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(addr1, locks[0].Duration, addCoins))
 	suite.Require().NoError(err)
 
