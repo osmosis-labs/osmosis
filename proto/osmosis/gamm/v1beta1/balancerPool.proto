@@ -12,7 +12,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";
 
-message PoolAsset {
+message BalancerPoolAsset {
   // Coins we are talking about,
   // the denomination must be unique amongst all PoolAssets for this pool.
   cosmos.base.v1beta1.Coin token = 1
@@ -66,7 +66,7 @@ message SmoothWeightChangeParams {
   // The amount PoolAsset.token.amount field is ignored if present,
   // future type refactorings should just have a type with the denom & weight
   // here.
-  repeated PoolAsset initialPoolWeights = 3 [
+  repeated BalancerPoolAsset initialPoolWeights = 3 [
     (gogoproto.moretags) = "yaml:\"initial_pool_weights\"",
     (gogoproto.nullable) = false
   ];
@@ -74,7 +74,7 @@ message SmoothWeightChangeParams {
   // to time between start_time, and start_time + duration. The amount
   // PoolAsset.token.amount field is ignored if present, future type
   // refactorings should just have a type with the denom & weight here.
-  repeated PoolAsset targetPoolWeights = 4 [
+  repeated BalancerPoolAsset targetPoolWeights = 4 [
     (gogoproto.moretags) = "yaml:\"target_pool_weights\"",
     (gogoproto.nullable) = false
   ];
@@ -87,11 +87,11 @@ message SmoothWeightChangeParams {
   // ];
 }
 
-// PoolParams defined the parameters that will be managed by the pool governance
+// BalancerPoolParams defined the parameters that will be managed by the pool governance
 // in the future. This params are not managed by the chain governanace.
 // Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
-message PoolParams {
+message BalancerPoolParams {
   string swapFee = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
@@ -116,7 +116,7 @@ message Pool {
 
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 id = 2;
-  PoolParams poolParams = 3 [
+  BalancerPoolParams poolParams = 3 [
     (gogoproto.moretags) = "yaml:\"pool_params\"",
     (gogoproto.nullable) = false
   ];
@@ -139,7 +139,7 @@ message Pool {
   ];
   // These are assumed to be sorted by denomiation.
   // They contain the pool asset and the information about the weight
-  repeated PoolAsset poolAssets = 6 [
+  repeated BalancerPoolAsset poolAssets = 6 [
     (gogoproto.moretags) = "yaml:\"pool_assets\"",
     (gogoproto.nullable) = false
   ];

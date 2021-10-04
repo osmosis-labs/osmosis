@@ -2,7 +2,7 @@ syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/gamm/v1beta1/pool.proto";
+import "osmosis/gamm/v1beta1/balancerPool.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -28,17 +28,17 @@ service Query {
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{poolId}";
   }
-  rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
+  rpc BalancerPoolParams(QueryBalancerPoolParamsRequest) returns (QueryBalancerPoolParamsResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/params";
+        "/osmosis/gamm/v1beta1/pools/{poolId}/balancer_params";
   }
   rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/total_shares";
   }
-  rpc PoolAssets(QueryPoolAssetsRequest) returns (QueryPoolAssetsResponse) {
+  rpc BalancerPoolAssets(QueryBalancerPoolAssetsRequest) returns (QueryBalancerPoolAssetsResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/tokens";
+        "/osmosis/gamm/v1beta1/pools/{poolId}/balancer_tokens";
   }
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option (google.api.http).get =
@@ -86,11 +86,11 @@ message QueryNumPoolsResponse {
 }
 
 //=============================== PoolParams
-message QueryPoolParamsRequest {
+message QueryBalancerPoolParamsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryPoolParamsResponse {
-  PoolParams params = 1 [ (gogoproto.nullable) = false ];
+message QueryBalancerPoolParamsResponse {
+  BalancerPoolParams params = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== TotalShares
@@ -105,11 +105,11 @@ message QueryTotalSharesResponse {
 }
 
 //=============================== PoolAssets
-message QueryPoolAssetsRequest {
+message QueryBalancerPoolAssetsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryPoolAssetsResponse {
-  repeated PoolAsset poolAssets = 1 [ (gogoproto.nullable) = false ];
+message QueryBalancerPoolAssetsResponse {
+  repeated BalancerPoolAsset poolAssets = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== SpotPrice
