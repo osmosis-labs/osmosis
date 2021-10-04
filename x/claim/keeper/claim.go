@@ -26,7 +26,7 @@ func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount)); err != nil {
-		return
+		panic(err)
 	}
 
 }

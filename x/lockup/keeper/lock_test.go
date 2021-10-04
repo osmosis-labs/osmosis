@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) TestLock() {
 
 	// lock with balance with same id
 	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
-	suite.Require().Error(err)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().Error(err)
 
