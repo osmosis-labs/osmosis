@@ -20,7 +20,7 @@ func ValidateUserSpecifiedWeight(weight sdk.Int) error {
 	return nil
 }
 
-func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
+func ValidateUserSpecifiedPoolAssets(assets []BalancerPoolAsset) error {
 	// The pool must be swapping between at least two assets
 	if len(assets) < 2 {
 		return ErrTooFewPoolAssets
@@ -47,15 +47,15 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 // SortPoolAssetsOutOfPlaceByDenom sorts pool assets in place, by weight
 // Doesn't deep copy the underlying weights, but it does place the assets
 // into a new slice.
-func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
-	assets_copy := make([]PoolAsset, len(assets))
+func SortPoolAssetsOutOfPlaceByDenom(assets []BalancerPoolAsset) []BalancerPoolAsset {
+	assets_copy := make([]BalancerPoolAsset, len(assets))
 	copy(assets_copy, assets)
 	SortPoolAssetsByDenom(assets_copy)
 	return assets_copy
 }
 
 // SortPoolAssetsByDenom sorts pool assets in place, by weight
-func SortPoolAssetsByDenom(assets []PoolAsset) {
+func SortPoolAssetsByDenom(assets []BalancerPoolAsset) {
 	sort.Slice(assets, func(i, j int) bool {
 		PoolAssetA := assets[i]
 		PoolAssetB := assets[j]
@@ -65,7 +65,7 @@ func SortPoolAssetsByDenom(assets []PoolAsset) {
 }
 
 // Validates a pool asset, to check if it has a valid weight.
-func (asset PoolAsset) ValidateWeight() error {
+func (asset BalancerPoolAsset) ValidateWeight() error {
 	if asset.Weight.LTE(sdk.ZeroInt()) {
 		return fmt.Errorf("a token's weight in the pool must be greater than 0")
 	}
@@ -82,8 +82,8 @@ func (asset PoolAsset) ValidateWeight() error {
 // It assumes that both pool assets have the same token denominations,
 // with the denominations in the same order.
 // Returned weights can (and probably will have some) be negative.
-func subPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
-	weightDifference := make([]PoolAsset, len(base))
+func subPoolAssetWeights(base []BalancerPoolAsset, other []BalancerPoolAsset) []BalancerPoolAsset {
+	weightDifference := make([]BalancerPoolAsset, len(base))
 	// TODO: Consider deleting these panics for performance
 	if len(base) != len(other) {
 		panic("subPoolAssetWeights called with invalid input, len(base) != len(other)")
@@ -95,7 +95,7 @@ func subPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 				i, asset.Token.Denom, other[i].Token.Denom))
 		}
 		curWeightDiff := asset.Weight.Sub(other[i].Weight)
-		weightDifference[i] = PoolAsset{Token: asset.Token, Weight: curWeightDiff}
+		weightDifference[i] = BalancerPoolAsset{Token: asset.Token, Weight: curWeightDiff}
 	}
 	return weightDifference
 }
@@ -104,8 +104,8 @@ func subPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 // It assumes that both pool assets have the same token denominations,
 // with the denominations in the same order.
 // Returned weights can be negative.
-func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
-	weightSum := make([]PoolAsset, len(base))
+func addPoolAssetWeights(base []BalancerPoolAsset, other []BalancerPoolAsset) []BalancerPoolAsset {
+	weightSum := make([]BalancerPoolAsset, len(base))
 	// TODO: Consider deleting these panics for performance
 	if len(base) != len(other) {
 		panic("addPoolAssetWeights called with invalid input, len(base) != len(other)")
@@ -117,26 +117,26 @@ func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 				i, asset.Token.Denom, other[i].Token.Denom))
 		}
 		curWeightSum := asset.Weight.Add(other[i].Weight)
-		weightSum[i] = PoolAsset{Token: asset.Token, Weight: curWeightSum}
+		weightSum[i] = BalancerPoolAsset{Token: asset.Token, Weight: curWeightSum}
 	}
 	return weightSum
 }
 
 // assumes 0 < d < 1
-func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
-	newWeights := make([]PoolAsset, len(base))
+func poolAssetsMulDec(base []BalancerPoolAsset, d sdk.Dec) []BalancerPoolAsset {
+	newWeights := make([]BalancerPoolAsset, len(base))
 	for i, asset := range base {
 		// TODO: This can adversarially panic at the moment! (as can Pool.TotalWeight)
 		// Ensure this won't be able to panic in the future PR where we bound
 		// each assets weight, and add precision
 		newWeight := d.MulInt(asset.Weight).RoundInt()
-		newWeights[i] = PoolAsset{Token: asset.Token, Weight: newWeight}
+		newWeights[i] = BalancerPoolAsset{Token: asset.Token, Weight: newWeight}
 	}
 	return newWeights
 }
 
 // PoolAssetsCoins returns all the coins corresponding to a slice of pool assets
-func PoolAssetsCoins(assets []PoolAsset) sdk.Coins {
+func PoolAssetsCoins(assets []BalancerPoolAsset) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, asset := range assets {
 		coins = coins.Add(asset.Token)

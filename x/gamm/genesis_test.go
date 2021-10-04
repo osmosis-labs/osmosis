@@ -19,10 +19,10 @@ func TestGammInitGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	poolI, err := types.NewPool(1, types.PoolParams{
+	poolI, err := types.NewPool(1, types.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []types.PoolAsset{
+	}, []types.BalancerPoolAsset{
 		{
 			Weight: sdk.NewInt(1),
 			Token:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 10),
@@ -34,7 +34,7 @@ func TestGammInitGenesis(t *testing.T) {
 	}, "", ctx.BlockTime())
 	require.NoError(t, err)
 
-	pool, ok := poolI.(*types.Pool)
+	pool, ok := poolI.(*types.BalancerPool)
 	require.True(t, ok)
 
 	any, err := codectypes.NewAnyWithValue(pool)
@@ -77,10 +77,10 @@ func TestGammExportGenesis(t *testing.T) {
 		sdk.NewInt64Coin("bar", 100000),
 	})
 
-	_, err := app.GAMMKeeper.CreatePool(ctx, acc1, types.PoolParams{
+	_, err := app.GAMMKeeper.CreatePool(ctx, acc1, types.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []types.PoolAsset{{
+	}, []types.BalancerPoolAsset{{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}, {
@@ -89,10 +89,10 @@ func TestGammExportGenesis(t *testing.T) {
 	}}, "")
 	require.NoError(t, err)
 
-	_, err = app.GAMMKeeper.CreatePool(ctx, acc1, types.PoolParams{
+	_, err = app.GAMMKeeper.CreatePool(ctx, acc1, types.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []types.PoolAsset{{
+	}, []types.BalancerPoolAsset{{
 		Weight: sdk.NewInt(70),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}, {
@@ -120,10 +120,10 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		sdk.NewInt64Coin("bar", 100000),
 	})
 
-	_, err := app.GAMMKeeper.CreatePool(ctx, acc1, types.PoolParams{
+	_, err := app.GAMMKeeper.CreatePool(ctx, acc1, types.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []types.PoolAsset{{
+	}, []types.BalancerPoolAsset{{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}, {

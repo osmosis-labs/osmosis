@@ -14,7 +14,7 @@ import (
 	appParams "github.com/osmosis-labs/osmosis/app/params"
 )
 
-var ymlAssetTest = []PoolAsset{
+var ymlAssetTest = []BalancerPoolAsset{
 	{
 		Weight: sdk.NewInt(200),
 		Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -27,7 +27,7 @@ var ymlAssetTest = []PoolAsset{
 
 func TestPoolMarshalYAML(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pacc, err := NewPool(defaultPoolId, PoolParams{
+	pacc, err := NewPool(defaultPoolId, BalancerPoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, ymlAssetTest, defaultFutureGovernor, defaultCurBlockTime)
@@ -67,7 +67,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	lbpParams := SmoothWeightChangeParams{
 		Duration: time.Hour,
-		TargetPoolWeights: []PoolAsset{
+		TargetPoolWeights: []BalancerPoolAsset{
 			{
 				Weight: sdk.NewInt(300),
 				Token:  sdk.NewCoin("test2", sdk.NewInt(0)),
@@ -78,7 +78,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
 			},
 		},
 	}
-	pacc, err := NewPool(defaultPoolId, PoolParams{
+	pacc, err := NewPool(defaultPoolId, BalancerPoolParams{
 		SwapFee:                  defaultSwapFee,
 		ExitFee:                  defaultExitFee,
 		SmoothWeightChangeParams: &lbpParams,
@@ -146,7 +146,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
 func TestPoolJson(t *testing.T) {
 	var poolId uint64 = 10
 
-	jsonAssetTest := []PoolAsset{
+	jsonAssetTest := []BalancerPoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -156,13 +156,13 @@ func TestPoolJson(t *testing.T) {
 			Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
 		},
 	}
-	pacc, err := NewPool(poolId, PoolParams{
+	pacc, err := NewPool(poolId, BalancerPoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, jsonAssetTest, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
-	paccInternal := pacc.(*Pool)
+	paccInternal := pacc.(*BalancerPool)
 
 	bz, err := json.Marshal(pacc)
 	require.NoError(t, err)
@@ -171,7 +171,7 @@ func TestPoolJson(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(bz1), string(bz))
 
-	var a Pool
+	var a BalancerPool
 	require.NoError(t, json.Unmarshal(bz, &a))
 	require.Equal(t, pacc.String(), a.String())
 }

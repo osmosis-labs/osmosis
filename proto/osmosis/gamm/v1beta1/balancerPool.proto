@@ -87,9 +87,9 @@ message SmoothWeightChangeParams {
   // ];
 }
 
-// BalancerPoolParams defined the parameters that will be managed by the pool governance
-// in the future. This params are not managed by the chain governanace.
-// Instead they will be managed by the token holders of the pool.
+// BalancerPoolParams defined the parameters that will be managed by the pool
+// governance in the future. This params are not managed by the chain
+// governanace. Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
 message BalancerPoolParams {
   string swapFee = 1 [
@@ -109,7 +109,7 @@ message BalancerPoolParams {
   ];
 }
 
-message Pool {
+message BalancerPool {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
   option (cosmos_proto.implements_interface) = "PoolI";

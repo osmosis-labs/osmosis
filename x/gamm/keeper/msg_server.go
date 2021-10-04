@@ -21,7 +21,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
+func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *types.MsgCreateBalancerPool) (*types.MsgCreateBalancerPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -46,7 +46,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePo
 		),
 	})
 
-	return &types.MsgCreatePoolResponse{}, nil
+	return &types.MsgCreateBalancerPoolResponse{}, nil
 }
 
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {

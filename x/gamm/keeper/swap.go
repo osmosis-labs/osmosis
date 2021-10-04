@@ -126,8 +126,8 @@ func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
 	pool types.PoolI,
 	sender sdk.AccAddress,
-	updatedPoolAssetIn types.PoolAsset,
-	updatedPoolAssetOut types.PoolAsset,
+	updatedPoolAssetIn types.BalancerPoolAsset,
+	updatedPoolAssetOut types.BalancerPoolAsset,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,
 ) error {

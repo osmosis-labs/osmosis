@@ -864,7 +864,7 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 			} else {
 				s.Require().NoError(err, out.String())
 
-				resp := types.QueryPoolResponse{}
+				resp := types.QueryBalancerPoolResponse{}
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
@@ -900,7 +900,7 @@ func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryPoolParamsResponse{}
+				resp := types.QueryBalancerPoolParamsResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
@@ -937,7 +937,7 @@ func (s *IntegrationTestSuite) TestGetCmdPoolAssets() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryPoolAssetsResponse{}
+				resp := types.QueryBalancerPoolAssetsResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}

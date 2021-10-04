@@ -66,7 +66,7 @@ $ %s query gamm pool 1
 				return err
 			}
 
-			res, err := queryClient.Pool(cmd.Context(), &types.QueryPoolRequest{
+			res, err := queryClient.BalancerPool(cmd.Context(), &types.QueryBalancerPoolRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {
@@ -74,7 +74,7 @@ $ %s query gamm pool 1
 			}
 
 			if clientCtx.OutputFormat == "text" {
-				var pool types.Pool
+				var pool types.BalancerPool
 				pool.XXX_Unmarshal(res.GetPool().Value)
 				out, err := yaml.Marshal(pool)
 
@@ -202,7 +202,7 @@ $ %s query gamm pool-params 1
 				return err
 			}
 
-			res, err := queryClient.PoolParams(cmd.Context(), &types.QueryPoolParamsRequest{
+			res, err := queryClient.BalancerPoolParams(cmd.Context(), &types.QueryBalancerPoolParamsRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {
@@ -357,7 +357,7 @@ $ %s query gamm pool-assets 1
 				return err
 			}
 
-			res, err := queryClient.PoolAssets(cmd.Context(), &types.QueryPoolAssetsRequest{
+			res, err := queryClient.BalancerPoolAssets(cmd.Context(), &types.QueryBalancerPoolAssetsRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {

@@ -34,10 +34,10 @@ func init() {
 
 var _ types.QueryServer = Keeper{}
 
-func (k Keeper) Pool(
+func (k Keeper) BalancerPool(
 	ctx context.Context,
-	req *types.QueryPoolRequest,
-) (*types.QueryPoolResponse, error) {
+	req *types.QueryBalancerPoolRequest,
+) (*types.QueryBalancerPoolResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -49,12 +49,12 @@ func (k Keeper) Pool(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	switch pool := pool.(type) {
-	case *types.Pool:
+	case *types.BalancerPool:
 		any, err := codectypes.NewAnyWithValue(pool)
 		if err != nil {
 			return nil, err
 		}
-		return &types.QueryPoolResponse{Pool: any}, nil
+		return &types.QueryBalancerPoolResponse{Pool: any}, nil
 	default:
 		return nil, status.Error(codes.Internal, "invalid type of pool")
 	}
@@ -85,7 +85,8 @@ func (k Keeper) Pools(
 			return err
 		}
 
-		pool, ok := poolI.(*types.Pool)
+		// TODO: pools query should not be balancer specific
+		pool, ok := poolI.(*types.BalancerPool)
 		if !ok {
 			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
 		}
@@ -123,7 +124,7 @@ func (k Keeper) NumPools(
 	}, nil
 }
 
-func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
+func (k Keeper) BalancerPoolParams(ctx context.Context, req *types.QueryBalancerPoolParamsRequest) (*types.QueryBalancerPoolParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -134,7 +135,7 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryPoolParamsResponse{
+	return &types.QueryBalancerPoolParamsResponse{
 		Params: pool.GetPoolParams(),
 	}, nil
 }
@@ -155,7 +156,7 @@ func (k Keeper) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequ
 	}, nil
 }
 
-func (k Keeper) PoolAssets(ctx context.Context, req *types.QueryPoolAssetsRequest) (*types.QueryPoolAssetsResponse, error) {
+func (k Keeper) BalancerPoolAssets(ctx context.Context, req *types.QueryBalancerPoolAssetsRequest) (*types.QueryBalancerPoolAssetsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -166,7 +167,7 @@ func (k Keeper) PoolAssets(ctx context.Context, req *types.QueryPoolAssetsReques
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryPoolAssetsResponse{
+	return &types.QueryBalancerPoolAssetsResponse{
 		PoolAssets: pool.GetAllPoolAssets(),
 	}, nil
 }

@@ -14,18 +14,18 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 	queryClient := suite.queryClient
 
 	// Invalid param
-	_, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{})
+	_, err := queryClient.BalancerPool(gocontext.Background(), &types.QueryBalancerPoolRequest{})
 	suite.Require().Error(err)
 
 	// Pool not exist
-	_, err = queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+	_, err = queryClient.BalancerPool(gocontext.Background(), &types.QueryBalancerPoolRequest{
 		PoolId: 1,
 	})
 	suite.Require().Error(err)
 
 	for i := 0; i < 10; i++ {
 		poolId := suite.preparePool()
-		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+		poolRes, err := queryClient.BalancerPool(gocontext.Background(), &types.QueryBalancerPoolRequest{
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 
 	for i := 0; i < 10; i++ {
 		poolId := suite.preparePool()
-		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
+		poolRes, err := queryClient.BalancerPool(gocontext.Background(), &types.QueryBalancerPoolRequest{
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
@@ -108,25 +108,25 @@ func (suite *KeeperTestSuite) TestQueryPoolParams() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
-	_, err := queryClient.PoolParams(gocontext.Background(), &types.QueryPoolParamsRequest{PoolId: 1})
+	_, err := queryClient.BalancerPoolParams(gocontext.Background(), &types.QueryBalancerPoolParamsRequest{PoolId: 1})
 	suite.Require().Error(err)
 
-	poolId1 := suite.preparePoolWithPoolParams(types.PoolParams{
+	poolId1 := suite.preparePoolWithPoolParams(types.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(15, 2),
 	})
 
-	poolId2 := suite.preparePoolWithPoolParams(types.PoolParams{
+	poolId2 := suite.preparePoolWithPoolParams(types.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 1),
 		ExitFee: sdk.NewDecWithPrec(15, 3),
 	})
 
-	params1, err := queryClient.PoolParams(gocontext.Background(), &types.QueryPoolParamsRequest{PoolId: poolId1})
+	params1, err := queryClient.BalancerPoolParams(gocontext.Background(), &types.QueryBalancerPoolParamsRequest{PoolId: poolId1})
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewDecWithPrec(1, 2).String(), params1.Params.SwapFee.String())
 	suite.Require().Equal(sdk.NewDecWithPrec(15, 2).String(), params1.Params.ExitFee.String())
 
-	params2, err := queryClient.PoolParams(gocontext.Background(), &types.QueryPoolParamsRequest{PoolId: poolId2})
+	params2, err := queryClient.BalancerPoolParams(gocontext.Background(), &types.QueryBalancerPoolParamsRequest{PoolId: poolId2})
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewDecWithPrec(1, 1).String(), params2.Params.SwapFee.String())
 	suite.Require().Equal(sdk.NewDecWithPrec(15, 3).String(), params2.Params.ExitFee.String())
@@ -178,12 +178,12 @@ func (suite *KeeperTestSuite) TestQueryPoolAssets() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
-	_, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: 1})
+	_, err := queryClient.BalancerPoolAssets(gocontext.Background(), &types.QueryBalancerPoolAssetsRequest{PoolId: 1})
 	suite.Require().Error(err)
 
 	poolId := suite.preparePool()
 
-	res, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: poolId})
+	res, err := queryClient.BalancerPoolAssets(gocontext.Background(), &types.QueryBalancerPoolAssetsRequest{PoolId: poolId})
 	suite.Require().NoError(err)
 
 	/*

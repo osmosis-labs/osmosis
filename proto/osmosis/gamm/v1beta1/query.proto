@@ -25,10 +25,12 @@ service Query {
   }
 
   // Per Pool gRPC Endpoints
-  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+  rpc BalancerPool(QueryBalancerPoolRequest)
+      returns (QueryBalancerPoolResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{poolId}";
   }
-  rpc BalancerPoolParams(QueryBalancerPoolParamsRequest) returns (QueryBalancerPoolParamsResponse) {
+  rpc BalancerPoolParams(QueryBalancerPoolParamsRequest)
+      returns (QueryBalancerPoolParamsResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/balancer_params";
   }
@@ -36,7 +38,8 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/total_shares";
   }
-  rpc BalancerPoolAssets(QueryBalancerPoolAssetsRequest) returns (QueryBalancerPoolAssetsResponse) {
+  rpc BalancerPoolAssets(QueryBalancerPoolAssetsRequest)
+      returns (QueryBalancerPoolAssetsResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/balancer_tokens";
   }
@@ -59,10 +62,10 @@ service Query {
 }
 
 //=============================== Pool
-message QueryPoolRequest {
+message QueryBalancerPoolRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryPoolResponse {
+message QueryBalancerPoolResponse {
   google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 
