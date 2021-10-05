@@ -4,6 +4,7 @@ package osmosis.bech32ics20.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/bech32ics20/types";
 
@@ -28,6 +29,13 @@ message MsgSend {
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  uint64 to_height_offset = 4;
+  google.protobuf.Duration to_time_offset = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "to_time_offset,omitempty",
+    (gogoproto.moretags) = "yaml:\"to_time_offset\""
   ];
 }
 
