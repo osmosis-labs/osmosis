@@ -108,7 +108,7 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 			panic(fmt.Errorf("LockableDuration is not multipleof EpochDuration"))
 		}
 		durationInEpoch := lockableDuration.Nanoseconds() / epochInfo.Duration.Nanoseconds()
-		ctx.Logger().Info(fmt.Sprintf("STH::: TokenUnlocked lockID[%d] Duration[%s] numEpochs[%d], targetEpoch[%d]",
+		ctx.Logger().Debug(fmt.Sprintf("F1::: TokenUnlocked lockID[%d] Duration[%s] numEpochs[%d], targetEpoch[%d]",
 			lockID, lockableDuration.String(), durationInEpoch, epochInfo.CurrentEpoch-durationInEpoch))
 		h.k.UpdateRewardForLockByEpoch(ctx, lockID, lockableDuration, epochInfo.CurrentEpoch-durationInEpoch)
 		h.k.ClaimRewardForLock(ctx, lockID, lockableDuration)
