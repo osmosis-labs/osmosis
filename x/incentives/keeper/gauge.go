@@ -381,7 +381,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, denom string, distrs distri
 			sdk.NewEvent(
 				types.TypeEvtDistribution,
 				sdk.NewAttribute(types.AttributeLockedDenom, denom),
-				sdk.NewAttribute(types.AttributeReceiver, string(distrs.idToDecodedAddr[id])),
+				sdk.NewAttribute(types.AttributeReceiver, distrs.idToDecodedAddr[id].String()),
 				sdk.NewAttribute(types.AttributeAmount, distrs.idToDistrCoins[id].String()),
 			),
 		})
