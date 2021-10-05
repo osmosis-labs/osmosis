@@ -156,21 +156,26 @@ docs:
         echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
         exit 1;\
     else \
-    	echo "\033[92mSwagger docs are in sync\033[0m";\
+        echo "\033[92mSwagger docs are in sync\033[0m";\
     fi
 	@echo
 	@echo "=========== Generate Complete ============"
 	@echo
 
+protoVer=v0.2
+protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
+containerProtoGen=osmosis-proto-gen-$(protoVer)
+containerProtoFmt=osmosis-proto-fmt-$(protoVer)
+
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protocgen.sh; fi
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace \
-	--workdir /workspace tendermintdev/docker-build-proto \
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
 
 ###############################################################################
 ###                                 Devdoc                                  ###
@@ -235,7 +240,7 @@ format:
 ###############################################################################
 
 build-docker-osmosisdnode:
-	$(MAKE) -C networks/local 
+	$(MAKE) -C networks/local
 
 # Run a 4-node testnet locally
 localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
