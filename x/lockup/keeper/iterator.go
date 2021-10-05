@@ -178,4 +178,13 @@ func (k Keeper) LockIteratorBetweenTimeDenom(ctx sdk.Context, isUnlocking bool, 
 		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom), endTimePrefix))
 }
 
+func (k Keeper) AccountLockIteratorExactDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	durationKey := getDurationKey(duration)
+	refKey := combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr, durationKey)
+	store := ctx.KVStore(k.storeKey)
+
+	return store.Iterator(refKey, storetypes.PrefixEndBytes(refKey))
+}
+
 ////////////////////////////  END //////////////////////////////////
