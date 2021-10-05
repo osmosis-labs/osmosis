@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
+// TODO: Make table driven
 func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	suite.SetupTest()
 
