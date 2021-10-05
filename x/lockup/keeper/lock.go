@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/store"
@@ -342,13 +343,36 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockI
 
 // LockTokens lock tokens from an account for specified duration
 func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
+	durationKey := getDurationKey(duration)
+	ownerKey, err := sdk.AccAddressFromBech32(owner.String())
+	if err != nil {
+		return types.PeriodLock{}, err // TODO: temp workaround to build
+	}
+	refKey := combineKeys(types.KeyPrefixNotUnlocking, types.KeyPrefixAccountLockDuration, ownerKey, durationKey)
+	store := ctx.KVStore(k.storeKey)
+
+	locks := k.getLocksFromIterator(ctx, store.Iterator(refKey, storetypes.PrefixEndBytes(refKey)))
+	if len(locks) > 0 {
+		for _, lockWithDuration := range locks {
+			ID := lockWithDuration.ID
+			// TODO: consider calling addTokensToLock()
+			lockRef, err := k.AddTokensToLockByID(ctx, owner, ID, coins)
+			if lockRef == nil {
+				continue
+			}
+			// TODO: consider change ref return type to val
+			return *lockRef, err
+		}
+	}
+
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is set at the beginning of unlocking time
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
-	err := k.Lock(ctx, lock)
+	err = k.Lock(ctx, lock)
 	if err != nil {
 		return lock, err
 	}
+
 	k.SetLastLockID(ctx, lock.ID)
 	return lock, nil
 }
