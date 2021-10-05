@@ -763,6 +763,342 @@ func (m *QueryLockableDurationsResponse) GetLockableDurations() []time.Duration 
 	return nil
 }
 
+type CurrentRewardRequest struct {
+	Denom             string        `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	LockableDurations time.Duration `protobuf:"bytes,2,opt,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
+}
+
+func (m *CurrentRewardRequest) Reset()         { *m = CurrentRewardRequest{} }
+func (m *CurrentRewardRequest) String() string { return proto.CompactTextString(m) }
+func (*CurrentRewardRequest) ProtoMessage()    {}
+func (*CurrentRewardRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{16}
+}
+func (m *CurrentRewardRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CurrentRewardRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CurrentRewardRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CurrentRewardRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CurrentRewardRequest.Merge(m, src)
+}
+func (m *CurrentRewardRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *CurrentRewardRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CurrentRewardRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CurrentRewardRequest proto.InternalMessageInfo
+
+func (m *CurrentRewardRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *CurrentRewardRequest) GetLockableDurations() time.Duration {
+	if m != nil {
+		return m.LockableDurations
+	}
+	return 0
+}
+
+type CurrentRewardResponse struct {
+	Period             uint64                                   `protobuf:"varint,1,opt,name=period,proto3" json:"period,omitempty"`
+	LastProcessedEpoch int64                                    `protobuf:"varint,2,opt,name=last_processed_epoch,json=lastProcessedEpoch,proto3" json:"last_processed_epoch,omitempty"`
+	IsNewEpoch         bool                                     `protobuf:"varint,3,opt,name=is_new_epoch,json=isNewEpoch,proto3" json:"is_new_epoch,omitempty"`
+	Coin               types.Coin                               `protobuf:"bytes,4,opt,name=coin,proto3" json:"coin"`
+	Reward             github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=reward,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"reward"`
+}
+
+func (m *CurrentRewardResponse) Reset()         { *m = CurrentRewardResponse{} }
+func (m *CurrentRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*CurrentRewardResponse) ProtoMessage()    {}
+func (*CurrentRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{17}
+}
+func (m *CurrentRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CurrentRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CurrentRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CurrentRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CurrentRewardResponse.Merge(m, src)
+}
+func (m *CurrentRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *CurrentRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CurrentRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CurrentRewardResponse proto.InternalMessageInfo
+
+func (m *CurrentRewardResponse) GetPeriod() uint64 {
+	if m != nil {
+		return m.Period
+	}
+	return 0
+}
+
+func (m *CurrentRewardResponse) GetLastProcessedEpoch() int64 {
+	if m != nil {
+		return m.LastProcessedEpoch
+	}
+	return 0
+}
+
+func (m *CurrentRewardResponse) GetIsNewEpoch() bool {
+	if m != nil {
+		return m.IsNewEpoch
+	}
+	return false
+}
+
+func (m *CurrentRewardResponse) GetCoin() types.Coin {
+	if m != nil {
+		return m.Coin
+	}
+	return types.Coin{}
+}
+
+func (m *CurrentRewardResponse) GetReward() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Reward
+	}
+	return nil
+}
+
+type HistoricalRewardRequest struct {
+	Denom             string        `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	LockableDurations time.Duration `protobuf:"bytes,2,opt,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
+	Period            int64         `protobuf:"varint,3,opt,name=period,proto3" json:"period,omitempty"`
+}
+
+func (m *HistoricalRewardRequest) Reset()         { *m = HistoricalRewardRequest{} }
+func (m *HistoricalRewardRequest) String() string { return proto.CompactTextString(m) }
+func (*HistoricalRewardRequest) ProtoMessage()    {}
+func (*HistoricalRewardRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{18}
+}
+func (m *HistoricalRewardRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *HistoricalRewardRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_HistoricalRewardRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *HistoricalRewardRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HistoricalRewardRequest.Merge(m, src)
+}
+func (m *HistoricalRewardRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *HistoricalRewardRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_HistoricalRewardRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HistoricalRewardRequest proto.InternalMessageInfo
+
+func (m *HistoricalRewardRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *HistoricalRewardRequest) GetLockableDurations() time.Duration {
+	if m != nil {
+		return m.LockableDurations
+	}
+	return 0
+}
+
+func (m *HistoricalRewardRequest) GetPeriod() int64 {
+	if m != nil {
+		return m.Period
+	}
+	return 0
+}
+
+type HistoricalRewardResponse struct {
+	CumulativeRewardRatio github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=cumulative_reward_ratio,json=cumulativeRewardRatio,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"cumulative_reward_ratio"`
+}
+
+func (m *HistoricalRewardResponse) Reset()         { *m = HistoricalRewardResponse{} }
+func (m *HistoricalRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*HistoricalRewardResponse) ProtoMessage()    {}
+func (*HistoricalRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{19}
+}
+func (m *HistoricalRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *HistoricalRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_HistoricalRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *HistoricalRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HistoricalRewardResponse.Merge(m, src)
+}
+func (m *HistoricalRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *HistoricalRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_HistoricalRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HistoricalRewardResponse proto.InternalMessageInfo
+
+func (m *HistoricalRewardResponse) GetCumulativeRewardRatio() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.CumulativeRewardRatio
+	}
+	return nil
+}
+
+type PeriodLockRewardRequest struct {
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *PeriodLockRewardRequest) Reset()         { *m = PeriodLockRewardRequest{} }
+func (m *PeriodLockRewardRequest) String() string { return proto.CompactTextString(m) }
+func (*PeriodLockRewardRequest) ProtoMessage()    {}
+func (*PeriodLockRewardRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{20}
+}
+func (m *PeriodLockRewardRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PeriodLockRewardRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PeriodLockRewardRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PeriodLockRewardRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PeriodLockRewardRequest.Merge(m, src)
+}
+func (m *PeriodLockRewardRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PeriodLockRewardRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PeriodLockRewardRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PeriodLockRewardRequest proto.InternalMessageInfo
+
+func (m *PeriodLockRewardRequest) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type PeriodLockRewardResponse struct {
+	ID      uint64                                   `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Period  map[string]uint64                        `protobuf:"bytes,2,rep,name=period,proto3" json:"period,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	Rewards github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"rewards"`
+}
+
+func (m *PeriodLockRewardResponse) Reset()         { *m = PeriodLockRewardResponse{} }
+func (m *PeriodLockRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*PeriodLockRewardResponse) ProtoMessage()    {}
+func (*PeriodLockRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{21}
+}
+func (m *PeriodLockRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PeriodLockRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PeriodLockRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PeriodLockRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PeriodLockRewardResponse.Merge(m, src)
+}
+func (m *PeriodLockRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *PeriodLockRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PeriodLockRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PeriodLockRewardResponse proto.InternalMessageInfo
+
+func (m *PeriodLockRewardResponse) GetID() uint64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *PeriodLockRewardResponse) GetPeriod() map[string]uint64 {
+	if m != nil {
+		return m.Period
+	}
+	return nil
+}
+
+func (m *PeriodLockRewardResponse) GetRewards() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Rewards
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ModuleToDistributeCoinsRequest)(nil), "osmosis.incentives.ModuleToDistributeCoinsRequest")
 	proto.RegisterType((*ModuleToDistributeCoinsResponse)(nil), "osmosis.incentives.ModuleToDistributeCoinsResponse")
@@ -780,73 +1116,103 @@ func init() {
 	proto.RegisterType((*RewardsEstResponse)(nil), "osmosis.incentives.RewardsEstResponse")
 	proto.RegisterType((*QueryLockableDurationsRequest)(nil), "osmosis.incentives.QueryLockableDurationsRequest")
 	proto.RegisterType((*QueryLockableDurationsResponse)(nil), "osmosis.incentives.QueryLockableDurationsResponse")
+	proto.RegisterType((*CurrentRewardRequest)(nil), "osmosis.incentives.CurrentRewardRequest")
+	proto.RegisterType((*CurrentRewardResponse)(nil), "osmosis.incentives.CurrentRewardResponse")
+	proto.RegisterType((*HistoricalRewardRequest)(nil), "osmosis.incentives.HistoricalRewardRequest")
+	proto.RegisterType((*HistoricalRewardResponse)(nil), "osmosis.incentives.HistoricalRewardResponse")
+	proto.RegisterType((*PeriodLockRewardRequest)(nil), "osmosis.incentives.PeriodLockRewardRequest")
+	proto.RegisterType((*PeriodLockRewardResponse)(nil), "osmosis.incentives.PeriodLockRewardResponse")
+	proto.RegisterMapType((map[string]uint64)(nil), "osmosis.incentives.PeriodLockRewardResponse.PeriodEntry")
 }
 
 func init() { proto.RegisterFile("osmosis/incentives/query.proto", fileDescriptor_8124258a89427f98) }
 
 var fileDescriptor_8124258a89427f98 = []byte{
-	// 964 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x95, 0xcf, 0x6f, 0xdc, 0x44,
-	0x14, 0xc7, 0x33, 0x9b, 0xa4, 0x34, 0x8f, 0x12, 0x35, 0x43, 0x29, 0xc9, 0x02, 0xde, 0xc5, 0x6a,
-	0xd3, 0x6d, 0x4a, 0xec, 0xee, 0xa6, 0x0a, 0x08, 0x21, 0x24, 0x96, 0x94, 0xaa, 0x52, 0x91, 0xc0,
-	0x02, 0x21, 0x21, 0x21, 0xcb, 0xf6, 0x0c, 0xee, 0x28, 0xbb, 0x9e, 0xed, 0x8e, 0xdd, 0xb0, 0x8a,
-	0x7a, 0x01, 0xce, 0x15, 0x88, 0x0a, 0x71, 0xe8, 0x5f, 0xc0, 0x91, 0x3b, 0x17, 0x4e, 0x3d, 0x56,
-	0xe2, 0xc2, 0x29, 0x45, 0x09, 0x7f, 0x41, 0xff, 0x02, 0xe4, 0x99, 0xf1, 0xfe, 0xe8, 0xda, 0xde,
-	0xf6, 0xd0, 0x2a, 0x27, 0xef, 0xec, 0xfb, 0xf5, 0x79, 0xcf, 0xe3, 0xf7, 0x05, 0x83, 0x8b, 0x2e,
-	0x17, 0x4c, 0xd8, 0x2c, 0x0a, 0x68, 0x14, 0xb3, 0xdb, 0x54, 0xd8, 0xb7, 0x12, 0xda, 0x1f, 0x58,
-	0xbd, 0x3e, 0x8f, 0x39, 0xc6, 0xda, 0x6e, 0x8d, 0xec, 0xd5, 0x33, 0x21, 0x0f, 0xb9, 0x34, 0xdb,
-	0xe9, 0x2f, 0xe5, 0x59, 0x7d, 0x33, 0xe4, 0x3c, 0xec, 0x50, 0xdb, 0xeb, 0x31, 0xdb, 0x8b, 0x22,
-	0x1e, 0x7b, 0x31, 0xe3, 0x91, 0xd0, 0x56, 0x43, 0x5b, 0xe5, 0xc9, 0x4f, 0xbe, 0xb5, 0x49, 0xd2,
-	0x97, 0x0e, 0x99, 0x3d, 0x90, 0x85, 0x6c, 0xdf, 0x13, 0xd4, 0xbe, 0xdd, 0xf4, 0x69, 0xec, 0x35,
-	0xed, 0x80, 0xb3, 0xcc, 0xbe, 0x31, 0x6e, 0x97, 0x80, 0x43, 0xaf, 0x9e, 0x17, 0xb2, 0x68, 0x22,
-	0x57, 0x4e, 0x4f, 0xa1, 0x97, 0x84, 0x54, 0xdb, 0xd7, 0x32, 0x7b, 0x87, 0x07, 0xbb, 0x49, 0x4f,
-	0x3e, 0x94, 0xc9, 0xac, 0x83, 0xf1, 0x29, 0x27, 0x49, 0x87, 0x7e, 0xc1, 0x77, 0x98, 0x88, 0xfb,
-	0xcc, 0x4f, 0x62, 0xfa, 0x31, 0x67, 0x91, 0x70, 0xe8, 0xad, 0x84, 0x8a, 0xd8, 0xfc, 0x11, 0x41,
-	0xad, 0xd0, 0x45, 0xf4, 0x78, 0x24, 0x28, 0xf6, 0x60, 0x31, 0x45, 0x17, 0xab, 0xa8, 0x3e, 0xdf,
-	0x78, 0xb9, 0xb5, 0x66, 0x29, 0x78, 0x2b, 0x85, 0xb7, 0x34, 0xb6, 0x95, 0x86, 0xb4, 0x2f, 0x3f,
-	0x38, 0xa8, 0xcd, 0xfd, 0xfe, 0xa8, 0xd6, 0x08, 0x59, 0x7c, 0x33, 0xf1, 0xad, 0x80, 0x77, 0x6d,
-	0xdd, 0xa9, 0x7a, 0x6c, 0x0a, 0xb2, 0x6b, 0xc7, 0x83, 0x1e, 0x15, 0x96, 0xaa, 0xa1, 0x32, 0x9b,
-	0x35, 0x78, 0x4b, 0x51, 0x8c, 0x18, 0xc8, 0x04, 0xe7, 0x0f, 0x28, 0x6b, 0x65, 0xda, 0xe3, 0xc5,
-	0x61, 0x9a, 0x70, 0xfa, 0x5a, 0x3a, 0xf9, 0xf6, 0xe0, 0xfa, 0x8e, 0x26, 0xc3, 0xcb, 0x50, 0x61,
-	0x64, 0x15, 0xd5, 0x51, 0x63, 0xc1, 0xa9, 0x30, 0x62, 0xee, 0xc0, 0xca, 0x98, 0x8f, 0x66, 0xb3,
-	0x61, 0x51, 0xbe, 0x32, 0xe9, 0x97, 0xb2, 0x4d, 0xdf, 0x43, 0x4b, 0x46, 0x39, 0xca, 0xcf, 0xfc,
-	0x0a, 0x5e, 0x91, 0xe7, 0x6c, 0x00, 0xf8, 0x13, 0x80, 0xd1, 0xcd, 0xd0, 0x69, 0xd6, 0x27, 0x5a,
-	0x54, 0xf7, 0x3c, 0x6b, 0xf4, 0x33, 0x2f, 0xa4, 0x3a, 0xd6, 0x19, 0x8b, 0x34, 0xef, 0x22, 0x58,
-	0xce, 0x32, 0x6b, 0xb8, 0x2d, 0x58, 0x20, 0x5e, 0xec, 0x0d, 0xe7, 0x56, 0xc4, 0xd6, 0x5e, 0x48,
-	0xe7, 0xe6, 0x48, 0x67, 0x7c, 0x6d, 0x82, 0xa7, 0x22, 0x79, 0x2e, 0xcc, 0xe4, 0x51, 0x15, 0x27,
-	0x80, 0xbe, 0x81, 0x57, 0x3f, 0x0a, 0xd2, 0x2a, 0xcf, 0xa7, 0xdf, 0x7b, 0x08, 0xce, 0x4c, 0xe6,
-	0x3f, 0x16, 0x5d, 0xbb, 0xf0, 0xda, 0x97, 0xbd, 0x80, 0x77, 0x59, 0x14, 0x3e, 0x9f, 0xbe, 0x7f,
-	0x45, 0x70, 0xf6, 0xc9, 0x0a, 0xc7, 0xa2, 0x73, 0x01, 0x2b, 0x0e, 0xdd, 0xf3, 0xfa, 0x44, 0x5c,
-	0x15, 0x71, 0xd6, 0xf5, 0x3a, 0x2c, 0xf2, 0xbd, 0x88, 0xf6, 0x65, 0xc3, 0x4b, 0xed, 0xd3, 0x8f,
-	0x0f, 0x6a, 0xa7, 0x06, 0x5e, 0xb7, 0xf3, 0xbe, 0x29, 0xff, 0x36, 0x1d, 0x65, 0xc6, 0x6b, 0x70,
-	0x32, 0x5d, 0x6f, 0x2e, 0x23, 0x62, 0xb5, 0x52, 0x9f, 0x6f, 0x2c, 0x38, 0x2f, 0xa5, 0xe7, 0xeb,
-	0x44, 0xe0, 0x37, 0x60, 0x89, 0x46, 0xc4, 0xa5, 0x3d, 0x1e, 0xdc, 0x5c, 0x9d, 0xaf, 0xa3, 0xc6,
-	0xbc, 0x73, 0x92, 0x46, 0xe4, 0x6a, 0x7a, 0x36, 0xf7, 0x00, 0x8f, 0x17, 0x7d, 0xa1, 0x8b, 0xed,
-	0xf3, 0x74, 0x2e, 0x37, 0x78, 0xb0, 0xeb, 0xf9, 0x1d, 0xba, 0xa3, 0x75, 0x62, 0xb8, 0xd8, 0x7e,
-	0x46, 0x60, 0x14, 0x79, 0x68, 0x4c, 0x0e, 0xb8, 0xa3, 0x8d, 0x6e, 0xa6, 0x33, 0x23, 0x66, 0xa5,
-	0x44, 0x56, 0xa6, 0x44, 0x56, 0x16, 0xdf, 0x3e, 0x9f, 0x32, 0x3f, 0x3e, 0xa8, 0xad, 0xa9, 0x41,
-	0x4e, 0xa7, 0x30, 0x7f, 0x7b, 0x54, 0x43, 0xce, 0x4a, 0xe7, 0xc9, 0xc2, 0xad, 0xfb, 0x00, 0x8b,
-	0x92, 0x09, 0xff, 0x85, 0xe0, 0xf5, 0x02, 0x79, 0xc0, 0xad, 0xbc, 0x8b, 0x53, 0x2e, 0x37, 0xd5,
-	0xad, 0x67, 0x8a, 0x51, 0xfd, 0x9b, 0x1f, 0x7e, 0xff, 0xf7, 0x7f, 0xbf, 0x54, 0xde, 0xc3, 0xdb,
-	0x76, 0x8e, 0x12, 0x66, 0xb2, 0xd9, 0x95, 0x49, 0xdc, 0x98, 0xbb, 0x64, 0x98, 0xc6, 0x95, 0xef,
-	0x00, 0xff, 0x89, 0xe0, 0x6c, 0xbe, 0x76, 0xe0, 0x66, 0x31, 0x4f, 0x81, 0x12, 0x55, 0x5b, 0xcf,
-	0x12, 0xa2, 0x3b, 0xf8, 0x40, 0x76, 0xb0, 0x8d, 0xaf, 0x3c, 0x45, 0x07, 0x23, 0x7c, 0xa2, 0xf9,
-	0xef, 0x22, 0x58, 0x1a, 0x4a, 0x0a, 0x3e, 0x57, 0xfc, 0xbd, 0x8e, 0x54, 0xa9, 0x7a, 0x7e, 0x86,
-	0x97, 0x06, 0xbb, 0x22, 0xc1, 0x2c, 0xfc, 0x4e, 0x19, 0x98, 0x54, 0x24, 0xd7, 0x1f, 0xb8, 0x8c,
-	0xd8, 0xfb, 0x8c, 0xdc, 0xc1, 0xfb, 0x70, 0x42, 0xad, 0x14, 0xfc, 0x76, 0x61, 0x99, 0xe1, 0xbc,
-	0xcc, 0x32, 0x17, 0x8d, 0xb1, 0x21, 0x31, 0xce, 0x61, 0x73, 0x26, 0x86, 0xc0, 0xf7, 0x10, 0x9c,
-	0x1a, 0x5f, 0xe8, 0xf8, 0x42, 0x5e, 0x81, 0x1c, 0x49, 0xa9, 0x36, 0x66, 0x3b, 0x6a, 0x9e, 0xa6,
-	0xe4, 0xb9, 0x84, 0x2f, 0x96, 0xf1, 0x78, 0x32, 0xd2, 0xd5, 0x58, 0xf7, 0x11, 0x2c, 0x4f, 0xee,
-	0x5b, 0x7c, 0x31, 0xaf, 0x5e, 0xee, 0xd6, 0xaf, 0x6e, 0x3c, 0x8d, 0xab, 0x86, 0xdb, 0x92, 0x70,
-	0x9b, 0xf8, 0x52, 0x19, 0x5c, 0xa2, 0x63, 0xdd, 0xd1, 0xd4, 0x60, 0xb4, 0x01, 0x71, 0xee, 0xf5,
-	0x98, 0x5a, 0xcb, 0xd5, 0xf5, 0x59, 0x6e, 0x1a, 0xe9, 0x5d, 0x89, 0xd4, 0xc4, 0x76, 0x19, 0x52,
-	0x5f, 0xc5, 0xb9, 0x54, 0xc4, 0xf6, 0xbe, 0x5c, 0xe7, 0x77, 0xf0, 0x1f, 0x08, 0x56, 0xa6, 0x16,
-	0x5f, 0xfe, 0x57, 0x59, 0xba, 0x46, 0xf3, 0xbf, 0xca, 0xf2, 0xbd, 0x6a, 0x6e, 0x4b, 0xea, 0xcb,
-	0xd8, 0x2a, 0xa3, 0x9e, 0x5e, 0x9b, 0xed, 0x1b, 0x0f, 0x0e, 0x0d, 0xf4, 0xf0, 0xd0, 0x40, 0xff,
-	0x1e, 0x1a, 0xe8, 0xa7, 0x23, 0x63, 0xee, 0xe1, 0x91, 0x31, 0xf7, 0xcf, 0x91, 0x31, 0xf7, 0x75,
-	0x6b, 0x4c, 0x1e, 0x74, 0xce, 0xcd, 0x8e, 0xe7, 0x8b, 0x61, 0x81, 0xef, 0xc6, 0x4b, 0x48, 0xb9,
-	0xf0, 0x4f, 0xc8, 0xcd, 0xbd, 0xf5, 0x7f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x48, 0x27, 0xbd, 0x57,
-	0xbb, 0x0c, 0x00, 0x00,
+	// 1332 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x97, 0xcf, 0x8f, 0x14, 0x45,
+	0x14, 0xc7, 0xb7, 0x7a, 0x67, 0x16, 0x78, 0xc0, 0x66, 0xb7, 0x5c, 0xd8, 0xd9, 0x51, 0x67, 0xc6,
+	0x0e, 0x3f, 0x66, 0x17, 0xb6, 0x9b, 0x9d, 0x45, 0x44, 0x62, 0x4c, 0x1c, 0x06, 0x71, 0x13, 0x34,
+	0x6b, 0x47, 0x63, 0x62, 0x62, 0x3a, 0x3d, 0xdd, 0xe5, 0xd0, 0xd9, 0x9e, 0xae, 0xa1, 0xab, 0x9b,
+	0x75, 0x42, 0xb8, 0x88, 0xf1, 0x48, 0x34, 0x12, 0xc3, 0x41, 0x8d, 0x07, 0xbd, 0x78, 0xf4, 0xe4,
+	0xc5, 0x8b, 0x27, 0x8e, 0x24, 0x5e, 0x3c, 0x81, 0x01, 0xff, 0x02, 0xfe, 0x02, 0xd3, 0x55, 0xd5,
+	0xf3, 0xb3, 0x7b, 0x76, 0x49, 0x58, 0xc2, 0x69, 0xa7, 0x78, 0xaf, 0xea, 0x7d, 0xde, 0xab, 0xd7,
+	0xf5, 0xbe, 0x40, 0x89, 0xb2, 0x36, 0x65, 0x2e, 0xd3, 0x5d, 0xdf, 0x26, 0x7e, 0xe8, 0x5e, 0x27,
+	0x4c, 0xbf, 0x16, 0x91, 0xa0, 0xab, 0x75, 0x02, 0x1a, 0x52, 0x8c, 0xa5, 0x5d, 0xeb, 0xdb, 0x8b,
+	0x0b, 0x2d, 0xda, 0xa2, 0xdc, 0xac, 0xc7, 0xbf, 0x84, 0x67, 0xf1, 0x95, 0x16, 0xa5, 0x2d, 0x8f,
+	0xe8, 0x56, 0xc7, 0xd5, 0x2d, 0xdf, 0xa7, 0xa1, 0x15, 0xba, 0xd4, 0x67, 0xd2, 0x5a, 0x92, 0x56,
+	0xbe, 0x6a, 0x46, 0x9f, 0xeb, 0x4e, 0x14, 0x70, 0x87, 0xc4, 0x6e, 0xf3, 0x40, 0x7a, 0xd3, 0x62,
+	0x44, 0xbf, 0xbe, 0xd6, 0x24, 0xa1, 0xb5, 0xa6, 0xdb, 0xd4, 0x4d, 0xec, 0x2b, 0x83, 0x76, 0x0e,
+	0xd8, 0xf3, 0xea, 0x58, 0x2d, 0xd7, 0x1f, 0x3a, 0x2b, 0x25, 0xa7, 0x96, 0x15, 0xb5, 0x88, 0xb4,
+	0x2f, 0x25, 0x76, 0x8f, 0xda, 0x5b, 0x51, 0x87, 0xff, 0x11, 0x26, 0xb5, 0x02, 0xa5, 0xf7, 0xa9,
+	0x13, 0x79, 0xe4, 0x23, 0xda, 0x70, 0x59, 0x18, 0xb8, 0xcd, 0x28, 0x24, 0x17, 0xa9, 0xeb, 0x33,
+	0x83, 0x5c, 0x8b, 0x08, 0x0b, 0xd5, 0xaf, 0x10, 0x94, 0x33, 0x5d, 0x58, 0x87, 0xfa, 0x8c, 0x60,
+	0x0b, 0xf2, 0x31, 0x3a, 0x2b, 0xa0, 0xca, 0x74, 0xf5, 0x60, 0x6d, 0x49, 0x13, 0xf0, 0x5a, 0x0c,
+	0xaf, 0x49, 0x6c, 0x2d, 0xde, 0x52, 0x3f, 0x73, 0xef, 0x41, 0x79, 0xea, 0xb7, 0x87, 0xe5, 0x6a,
+	0xcb, 0x0d, 0xaf, 0x46, 0x4d, 0xcd, 0xa6, 0x6d, 0x5d, 0x66, 0x2a, 0xfe, 0xac, 0x32, 0x67, 0x4b,
+	0x0f, 0xbb, 0x1d, 0xc2, 0x34, 0x11, 0x43, 0x9c, 0xac, 0x96, 0xe1, 0x55, 0x41, 0xd1, 0x67, 0x70,
+	0x86, 0x38, 0x6f, 0xa1, 0x24, 0x95, 0x71, 0x8f, 0xe7, 0x87, 0xa9, 0xc2, 0xdc, 0xe5, 0xb8, 0xf2,
+	0xf5, 0xee, 0x46, 0x43, 0x92, 0xe1, 0x59, 0x50, 0x5c, 0xa7, 0x80, 0x2a, 0xa8, 0x9a, 0x33, 0x14,
+	0xd7, 0x51, 0x1b, 0x30, 0x3f, 0xe0, 0x23, 0xd9, 0x74, 0xc8, 0xf3, 0x2b, 0xe3, 0x7e, 0x31, 0xdb,
+	0x78, 0x1f, 0x6a, 0x7c, 0x97, 0x21, 0xfc, 0xd4, 0x4f, 0xe0, 0x30, 0x5f, 0x27, 0x05, 0xc0, 0xef,
+	0x02, 0xf4, 0x3b, 0x43, 0x1e, 0x73, 0x62, 0x28, 0x45, 0xd1, 0xe7, 0x49, 0xa2, 0x9b, 0x56, 0x8b,
+	0xc8, 0xbd, 0xc6, 0xc0, 0x4e, 0xf5, 0x36, 0x82, 0xd9, 0xe4, 0x64, 0x09, 0xb7, 0x0e, 0x39, 0xc7,
+	0x0a, 0xad, 0x5e, 0xdd, 0xb2, 0xd8, 0xea, 0xb9, 0xb8, 0x6e, 0x06, 0x77, 0xc6, 0x97, 0x87, 0x78,
+	0x14, 0xce, 0x73, 0x72, 0x47, 0x1e, 0x11, 0x71, 0x08, 0xe8, 0x33, 0x78, 0xe9, 0x1d, 0x3b, 0x8e,
+	0xb2, 0x37, 0xf9, 0xde, 0x41, 0xb0, 0x30, 0x7c, 0xfe, 0x0b, 0x91, 0xb5, 0x09, 0x47, 0x3e, 0xee,
+	0xd8, 0xb4, 0xed, 0xfa, 0xad, 0xbd, 0xc9, 0xfb, 0x7b, 0x04, 0x47, 0x47, 0x23, 0xbc, 0x10, 0x99,
+	0x33, 0x98, 0x37, 0xc8, 0xb6, 0x15, 0x38, 0xec, 0x12, 0x0b, 0x93, 0xac, 0x4f, 0x40, 0x9e, 0x6e,
+	0xfb, 0x24, 0xe0, 0x09, 0x1f, 0xa8, 0xcf, 0x3d, 0x79, 0x50, 0x3e, 0xd4, 0xb5, 0xda, 0xde, 0x05,
+	0x95, 0xff, 0xb3, 0x6a, 0x08, 0x33, 0x5e, 0x82, 0xfd, 0xf1, 0xf3, 0x66, 0xba, 0x0e, 0x2b, 0x28,
+	0x95, 0xe9, 0x6a, 0xce, 0xd8, 0x17, 0xaf, 0x37, 0x1c, 0x86, 0x5f, 0x86, 0x03, 0xc4, 0x77, 0x4c,
+	0xd2, 0xa1, 0xf6, 0xd5, 0xc2, 0x74, 0x05, 0x55, 0xa7, 0x8d, 0xfd, 0xc4, 0x77, 0x2e, 0xc5, 0x6b,
+	0x75, 0x1b, 0xf0, 0x60, 0xd0, 0xe7, 0xfa, 0xb0, 0x7d, 0x18, 0xd7, 0xe5, 0x0a, 0xb5, 0xb7, 0xac,
+	0xa6, 0x47, 0x1a, 0x72, 0x4e, 0xf4, 0x1e, 0xb6, 0x6f, 0x11, 0x94, 0xb2, 0x3c, 0x24, 0x26, 0x05,
+	0xec, 0x49, 0xa3, 0x99, 0xcc, 0x99, 0x3e, 0xb3, 0x98, 0x44, 0x5a, 0x32, 0x89, 0xb4, 0x64, 0x7f,
+	0xfd, 0x78, 0xcc, 0xfc, 0xe4, 0x41, 0x79, 0x49, 0x14, 0x72, 0xfc, 0x08, 0xf5, 0xee, 0xc3, 0x32,
+	0x32, 0xe6, 0xbd, 0xd1, 0xc0, 0xea, 0x8f, 0x08, 0x16, 0x2e, 0x46, 0x41, 0x40, 0xfc, 0x50, 0x54,
+	0x2d, 0xb9, 0xa6, 0x05, 0xc8, 0x3b, 0xc4, 0xa7, 0x6d, 0x71, 0x4d, 0x86, 0x58, 0x64, 0xf0, 0x29,
+	0xf2, 0xa5, 0xdb, 0x0b, 0x3e, 0x05, 0x8e, 0x8c, 0xf0, 0xc9, 0x52, 0x1d, 0x85, 0x99, 0x0e, 0x09,
+	0x5c, 0x9a, 0x3c, 0xc8, 0x72, 0x85, 0xcf, 0xc0, 0x82, 0x67, 0xb1, 0xd0, 0xec, 0x04, 0xd4, 0x26,
+	0x8c, 0x91, 0xa4, 0x4f, 0x14, 0xde, 0x27, 0x38, 0xb6, 0x6d, 0x26, 0x26, 0xde, 0x31, 0xb8, 0x02,
+	0x87, 0x5c, 0x66, 0xfa, 0x64, 0x7b, 0xa0, 0xa3, 0xf6, 0x1b, 0xe0, 0xb2, 0x0f, 0xc8, 0xb6, 0xf0,
+	0x58, 0x87, 0x5c, 0x7c, 0xc7, 0x85, 0x9c, 0x4c, 0x34, 0xb3, 0x79, 0xe4, 0x67, 0x14, 0x3b, 0x63,
+	0x1b, 0x66, 0x02, 0x8e, 0x5c, 0xc8, 0x3f, 0xfb, 0x9e, 0x93, 0x47, 0xab, 0x7f, 0x20, 0x58, 0x7c,
+	0xcf, 0x65, 0x21, 0x0d, 0x5c, 0xdb, 0xf2, 0x5e, 0xc4, 0x2b, 0x1c, 0xb8, 0x28, 0xf1, 0xa9, 0xca,
+	0x95, 0xfa, 0x33, 0x82, 0xc2, 0x38, 0xba, 0xbc, 0xdd, 0x5b, 0x08, 0x16, 0xed, 0xa8, 0x1d, 0x79,
+	0x56, 0xfc, 0x4a, 0x99, 0x22, 0x5b, 0x93, 0x1f, 0xb9, 0x17, 0x9f, 0xf0, 0x91, 0x7e, 0x2c, 0x09,
+	0x12, 0x47, 0x52, 0x97, 0x61, 0x71, 0x93, 0xc3, 0xc6, 0x5f, 0xec, 0x70, 0x71, 0x47, 0xb5, 0xc0,
+	0x4f, 0x0a, 0x14, 0xc6, 0x7d, 0x65, 0x36, 0xb3, 0xa0, 0x6c, 0x34, 0x12, 0xe7, 0x8d, 0x06, 0xde,
+	0xec, 0x95, 0x44, 0xe1, 0xb9, 0x9c, 0x4f, 0x7b, 0x98, 0xb3, 0x4e, 0x93, 0x86, 0x4b, 0x7e, 0x18,
+	0x74, 0x7b, 0x5d, 0x4f, 0x60, 0x9f, 0xa8, 0x11, 0x2b, 0x4c, 0x3f, 0xfb, 0xf2, 0x24, 0x67, 0x17,
+	0xdf, 0x84, 0x83, 0x03, 0xd1, 0xf1, 0x1c, 0x4c, 0x6f, 0x91, 0xae, 0xec, 0xaf, 0xf8, 0x67, 0xdc,
+	0x73, 0xd7, 0x2d, 0x2f, 0x22, 0xbc, 0xa1, 0x72, 0x86, 0x58, 0x5c, 0x50, 0xce, 0xa3, 0xda, 0xd7,
+	0xb3, 0x90, 0xe7, 0xaf, 0x1f, 0xfe, 0x0b, 0xc1, 0x62, 0x86, 0x10, 0xc5, 0xb5, 0xb4, 0x4a, 0x4c,
+	0x16, 0xb6, 0xc5, 0xf5, 0xa7, 0xda, 0x23, 0x8a, 0xa8, 0xbe, 0xfd, 0xe5, 0xdf, 0xff, 0x7d, 0xa7,
+	0x9c, 0xc7, 0xe7, 0xf4, 0x14, 0xcd, 0x9d, 0x08, 0xf4, 0x36, 0x3f, 0xc4, 0x0c, 0xa9, 0xe9, 0xf4,
+	0x8e, 0x31, 0xf9, 0x6b, 0x8f, 0xff, 0x44, 0x70, 0x34, 0x5d, 0xa5, 0xe2, 0xb5, 0x6c, 0x9e, 0x0c,
+	0xcd, 0x5b, 0xac, 0x3d, 0xcd, 0x16, 0x99, 0xc1, 0x5b, 0x3c, 0x83, 0x73, 0xf8, 0xec, 0x2e, 0x32,
+	0xe8, 0xe3, 0x3b, 0x92, 0xff, 0x36, 0x82, 0x03, 0x3d, 0xf1, 0x8a, 0x8f, 0x65, 0x2b, 0x83, 0xbe,
+	0xfe, 0x2d, 0x1e, 0xdf, 0xc1, 0x4b, 0x82, 0x9d, 0xe5, 0x60, 0x1a, 0x3e, 0x3d, 0x09, 0x8c, 0x6b,
+	0x5f, 0xb3, 0xd9, 0x35, 0x5d, 0x47, 0xbf, 0xe1, 0x3a, 0x37, 0xf1, 0x0d, 0x98, 0x11, 0xe2, 0x05,
+	0xbf, 0x96, 0x19, 0xa6, 0x57, 0x2f, 0x75, 0x92, 0x8b, 0xc4, 0x58, 0xe1, 0x18, 0xc7, 0xb0, 0xba,
+	0x23, 0x06, 0xc3, 0x77, 0x10, 0x1c, 0x1a, 0x94, 0x8e, 0xf8, 0x64, 0x5a, 0x80, 0x14, 0xf1, 0x5a,
+	0xac, 0xee, 0xec, 0x28, 0x79, 0xd6, 0x38, 0xcf, 0x29, 0xbc, 0x3c, 0x89, 0xc7, 0xe2, 0x3b, 0x4d,
+	0x89, 0xf5, 0x03, 0x82, 0xd9, 0x61, 0x65, 0x87, 0x97, 0xd3, 0xe2, 0xa5, 0xea, 0xcb, 0xe2, 0xca,
+	0x6e, 0x5c, 0x25, 0xdc, 0x3a, 0x87, 0x5b, 0xc5, 0xa7, 0x26, 0xc1, 0x45, 0x72, 0xaf, 0xd9, 0xaf,
+	0x1a, 0xf4, 0xb5, 0x16, 0x4e, 0x6d, 0x8f, 0x31, 0x01, 0x58, 0x3c, 0xb1, 0x93, 0x9b, 0x44, 0x7a,
+	0x83, 0x23, 0xad, 0x61, 0x7d, 0x12, 0x92, 0x7c, 0x98, 0x4c, 0xc2, 0x42, 0xfd, 0x06, 0x17, 0x8e,
+	0x37, 0xf1, 0xef, 0x08, 0xe6, 0xc7, 0x24, 0x56, 0xfa, 0x57, 0x39, 0x51, 0xb0, 0xa5, 0x7f, 0x95,
+	0x93, 0x15, 0x9c, 0x7a, 0x8e, 0x53, 0x9f, 0xc1, 0xda, 0x24, 0xea, 0xf1, 0xe9, 0x89, 0xef, 0x22,
+	0x38, 0x3c, 0x24, 0x74, 0x70, 0x6a, 0x67, 0xa5, 0x69, 0xb5, 0xe2, 0xf2, 0x2e, 0x3c, 0x25, 0x5e,
+	0x8d, 0xe3, 0x9d, 0xc6, 0x2b, 0x93, 0xf0, 0x6c, 0xb1, 0x55, 0x4e, 0x5d, 0xfc, 0x0b, 0x82, 0xb9,
+	0xd1, 0x41, 0x8d, 0x4f, 0xa5, 0xc5, 0xcc, 0x50, 0x22, 0xc5, 0xd3, 0xbb, 0x73, 0x96, 0x8c, 0xaf,
+	0x73, 0x46, 0x1d, 0xaf, 0x4e, 0x62, 0xbc, 0xda, 0xdb, 0x9d, 0x60, 0xfe, 0x8a, 0x60, 0x6e, 0x74,
+	0x66, 0xa6, 0x63, 0x66, 0xcc, 0xf4, 0x74, 0xcc, 0xac, 0x31, 0xbc, 0xbb, 0x9b, 0x16, 0xe3, 0xd9,
+	0xe4, 0xff, 0x93, 0x11, 0x9c, 0xf5, 0x2b, 0xf7, 0x1e, 0x95, 0xd0, 0xfd, 0x47, 0x25, 0xf4, 0xef,
+	0xa3, 0x12, 0xfa, 0xe6, 0x71, 0x69, 0xea, 0xfe, 0xe3, 0xd2, 0xd4, 0x3f, 0x8f, 0x4b, 0x53, 0x9f,
+	0xd6, 0x06, 0x06, 0xb2, 0x3c, 0x73, 0xd5, 0xb3, 0x9a, 0xac, 0x17, 0xe0, 0x8b, 0xc1, 0x10, 0x7c,
+	0x40, 0x37, 0x67, 0xb8, 0x54, 0x5b, 0xff, 0x3f, 0x00, 0x00, 0xff, 0xff, 0xe3, 0xa2, 0x8e, 0xc2,
+	0x0f, 0x13, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -879,6 +1245,9 @@ type QueryClient interface {
 	RewardsEst(ctx context.Context, in *RewardsEstRequest, opts ...grpc.CallOption) (*RewardsEstResponse, error)
 	// returns lockable durations that are valid to give incentives
 	LockableDurations(ctx context.Context, in *QueryLockableDurationsRequest, opts ...grpc.CallOption) (*QueryLockableDurationsResponse, error)
+	CurrentReward(ctx context.Context, in *CurrentRewardRequest, opts ...grpc.CallOption) (*CurrentRewardResponse, error)
+	HistoricalReward(ctx context.Context, in *HistoricalRewardRequest, opts ...grpc.CallOption) (*HistoricalRewardResponse, error)
+	PeriodLockReward(ctx context.Context, in *PeriodLockRewardRequest, opts ...grpc.CallOption) (*PeriodLockRewardResponse, error)
 }
 
 type queryClient struct {
@@ -961,6 +1330,33 @@ func (c *queryClient) LockableDurations(ctx context.Context, in *QueryLockableDu
 	return out, nil
 }
 
+func (c *queryClient) CurrentReward(ctx context.Context, in *CurrentRewardRequest, opts ...grpc.CallOption) (*CurrentRewardResponse, error) {
+	out := new(CurrentRewardResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/CurrentReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) HistoricalReward(ctx context.Context, in *HistoricalRewardRequest, opts ...grpc.CallOption) (*HistoricalRewardResponse, error) {
+	out := new(HistoricalRewardResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/HistoricalReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PeriodLockReward(ctx context.Context, in *PeriodLockRewardRequest, opts ...grpc.CallOption) (*PeriodLockRewardResponse, error) {
+	out := new(PeriodLockRewardResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/PeriodLockReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// returns coins that is going to be distributed
@@ -981,6 +1377,9 @@ type QueryServer interface {
 	RewardsEst(context.Context, *RewardsEstRequest) (*RewardsEstResponse, error)
 	// returns lockable durations that are valid to give incentives
 	LockableDurations(context.Context, *QueryLockableDurationsRequest) (*QueryLockableDurationsResponse, error)
+	CurrentReward(context.Context, *CurrentRewardRequest) (*CurrentRewardResponse, error)
+	HistoricalReward(context.Context, *HistoricalRewardRequest) (*HistoricalRewardResponse, error)
+	PeriodLockReward(context.Context, *PeriodLockRewardRequest) (*PeriodLockRewardResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1010,6 +1409,15 @@ func (*UnimplementedQueryServer) RewardsEst(ctx context.Context, req *RewardsEst
 }
 func (*UnimplementedQueryServer) LockableDurations(ctx context.Context, req *QueryLockableDurationsRequest) (*QueryLockableDurationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LockableDurations not implemented")
+}
+func (*UnimplementedQueryServer) CurrentReward(ctx context.Context, req *CurrentRewardRequest) (*CurrentRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CurrentReward not implemented")
+}
+func (*UnimplementedQueryServer) HistoricalReward(ctx context.Context, req *HistoricalRewardRequest) (*HistoricalRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HistoricalReward not implemented")
+}
+func (*UnimplementedQueryServer) PeriodLockReward(ctx context.Context, req *PeriodLockRewardRequest) (*PeriodLockRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PeriodLockReward not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1160,6 +1568,60 @@ func _Query_LockableDurations_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_CurrentReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CurrentRewardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).CurrentReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/CurrentReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).CurrentReward(ctx, req.(*CurrentRewardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_HistoricalReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HistoricalRewardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).HistoricalReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/HistoricalReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).HistoricalReward(ctx, req.(*HistoricalRewardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PeriodLockReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PeriodLockRewardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PeriodLockReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/PeriodLockReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PeriodLockReward(ctx, req.(*PeriodLockRewardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.incentives.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1195,6 +1657,18 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LockableDurations",
 			Handler:    _Query_LockableDurations_Handler,
+		},
+		{
+			MethodName: "CurrentReward",
+			Handler:    _Query_CurrentReward_Handler,
+		},
+		{
+			MethodName: "HistoricalReward",
+			Handler:    _Query_HistoricalReward_Handler,
+		},
+		{
+			MethodName: "PeriodLockReward",
+			Handler:    _Query_PeriodLockReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1784,6 +2258,278 @@ func (m *QueryLockableDurationsResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *CurrentRewardRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CurrentRewardRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CurrentRewardRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n10, err10 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.LockableDurations, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDurations):])
+	if err10 != nil {
+		return 0, err10
+	}
+	i -= n10
+	i = encodeVarintQuery(dAtA, i, uint64(n10))
+	i--
+	dAtA[i] = 0x12
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CurrentRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CurrentRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CurrentRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Reward) > 0 {
+		for iNdEx := len(m.Reward) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Reward[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	{
+		size, err := m.Coin.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if m.IsNewEpoch {
+		i--
+		if m.IsNewEpoch {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.LastProcessedEpoch != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.LastProcessedEpoch))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Period != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Period))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *HistoricalRewardRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *HistoricalRewardRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *HistoricalRewardRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Period != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Period))
+		i--
+		dAtA[i] = 0x18
+	}
+	n12, err12 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.LockableDurations, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDurations):])
+	if err12 != nil {
+		return 0, err12
+	}
+	i -= n12
+	i = encodeVarintQuery(dAtA, i, uint64(n12))
+	i--
+	dAtA[i] = 0x12
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *HistoricalRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *HistoricalRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *HistoricalRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.CumulativeRewardRatio) > 0 {
+		for iNdEx := len(m.CumulativeRewardRatio) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.CumulativeRewardRatio[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PeriodLockRewardRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PeriodLockRewardRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PeriodLockRewardRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Id != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PeriodLockRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PeriodLockRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PeriodLockRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Rewards) > 0 {
+		for iNdEx := len(m.Rewards) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Rewards[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Period) > 0 {
+		for k := range m.Period {
+			v := m.Period[k]
+			baseI := i
+			i = encodeVarintQuery(dAtA, i, uint64(v))
+			i--
+			dAtA[i] = 0x10
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintQuery(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintQuery(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.ID != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2020,6 +2766,118 @@ func (m *QueryLockableDurationsResponse) Size() (n int) {
 	if len(m.LockableDurations) > 0 {
 		for _, e := range m.LockableDurations {
 			l = github_com_gogo_protobuf_types.SizeOfStdDuration(e)
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CurrentRewardRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDurations)
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *CurrentRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Period != 0 {
+		n += 1 + sovQuery(uint64(m.Period))
+	}
+	if m.LastProcessedEpoch != 0 {
+		n += 1 + sovQuery(uint64(m.LastProcessedEpoch))
+	}
+	if m.IsNewEpoch {
+		n += 2
+	}
+	l = m.Coin.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	if len(m.Reward) > 0 {
+		for _, e := range m.Reward {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *HistoricalRewardRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockableDurations)
+	n += 1 + l + sovQuery(uint64(l))
+	if m.Period != 0 {
+		n += 1 + sovQuery(uint64(m.Period))
+	}
+	return n
+}
+
+func (m *HistoricalRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.CumulativeRewardRatio) > 0 {
+		for _, e := range m.CumulativeRewardRatio {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *PeriodLockRewardRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovQuery(uint64(m.Id))
+	}
+	return n
+}
+
+func (m *PeriodLockRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ID != 0 {
+		n += 1 + sovQuery(uint64(m.ID))
+	}
+	if len(m.Period) > 0 {
+		for k, v := range m.Period {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovQuery(uint64(len(k))) + 1 + sovQuery(uint64(v))
+			n += mapEntrySize + 1 + sovQuery(uint64(mapEntrySize))
+		}
+	}
+	if len(m.Rewards) > 0 {
+		for _, e := range m.Rewards {
+			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
 	}
@@ -3454,6 +4312,817 @@ func (m *QueryLockableDurationsResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CurrentRewardRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CurrentRewardRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CurrentRewardRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockableDurations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.LockableDurations, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CurrentRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CurrentRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CurrentRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+			}
+			m.Period = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Period |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastProcessedEpoch", wireType)
+			}
+			m.LastProcessedEpoch = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastProcessedEpoch |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IsNewEpoch", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IsNewEpoch = bool(v != 0)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coin", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Coin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reward", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reward = append(m.Reward, types.Coin{})
+			if err := m.Reward[len(m.Reward)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *HistoricalRewardRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HistoricalRewardRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HistoricalRewardRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockableDurations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.LockableDurations, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+			}
+			m.Period = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Period |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *HistoricalRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HistoricalRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HistoricalRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CumulativeRewardRatio", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CumulativeRewardRatio = append(m.CumulativeRewardRatio, types.Coin{})
+			if err := m.CumulativeRewardRatio[len(m.CumulativeRewardRatio)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PeriodLockRewardRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PeriodLockRewardRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PeriodLockRewardRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PeriodLockRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PeriodLockRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PeriodLockRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Period == nil {
+				m.Period = make(map[string]uint64)
+			}
+			var mapkey string
+			var mapvalue uint64
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQuery
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowQuery
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthQuery
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthQuery
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowQuery
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipQuery(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthQuery
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Period[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rewards", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Rewards = append(m.Rewards, types.Coin{})
+			if err := m.Rewards[len(m.Rewards)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if (iNdEx + skippy) > l {

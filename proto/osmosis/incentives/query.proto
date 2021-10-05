@@ -57,6 +57,20 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/lockable_durations";
   }
+
+  rpc CurrentReward(CurrentRewardRequest) returns (CurrentRewardResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/current_reward";
+  }
+  rpc HistoricalReward(HistoricalRewardRequest)
+      returns (HistoricalRewardResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/historical_reward";
+  }
+  rpc PeriodLockReward(PeriodLockRewardRequest)
+      returns (PeriodLockRewardResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/period_lock_reward";
+  }
 }
 
 message ModuleToDistributeCoinsRequest {}
@@ -126,5 +140,50 @@ message QueryLockableDurationsResponse {
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}
+
+message CurrentRewardRequest {
+  string denom = 1;
+  google.protobuf.Duration lockable_durations = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}
+message CurrentRewardResponse {
+  uint64 period = 1;
+  int64 last_processed_epoch = 2;
+  bool is_new_epoch = 3;
+  cosmos.base.v1beta1.Coin coin = 4 [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin reward = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message HistoricalRewardRequest {
+  string denom = 1;
+  google.protobuf.Duration lockable_durations = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+  int64 period = 3;
+}
+message HistoricalRewardResponse {
+  repeated cosmos.base.v1beta1.Coin cumulative_reward_ratio = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message PeriodLockRewardRequest { uint64 id = 1; }
+message PeriodLockRewardResponse {
+  uint64 ID = 1;
+  map<string, uint64> period = 2;
+  repeated cosmos.base.v1beta1.Coin rewards = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
