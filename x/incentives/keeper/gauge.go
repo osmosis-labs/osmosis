@@ -322,7 +322,9 @@ func (k Keeper) debugDistribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, 
 	// increase filled epochs after distribution
 	gauge.FilledEpochs += 1
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
-	k.setGauge(ctx, &gauge)
+	if err := k.setGauge(ctx, &gauge); err != nil {
+		return nil, err
+	}
 
 	k.hooks.AfterDistribute(ctx, gauge.Id)
 	return totalDistrCoins, nil
@@ -439,7 +441,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 	// increase filled epochs after distribution
 	gauge.FilledEpochs += 1
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
-	k.setGauge(ctx, &gauge)
+	if err := k.setGauge(ctx, &gauge); err != nil {
+		return nil, err
+	}
 
 	k.hooks.AfterDistribute(ctx, gauge.Id)
 	return totalDistrCoins, nil
@@ -468,7 +472,9 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 		return nil, fmt.Errorf("gauge with ID %d does not exist", gaugeID)
 	}
 	bz := store.Get(gaugeKey)
-	proto.Unmarshal(bz, &gauge)
+	if err := proto.Unmarshal(bz, &gauge); err != nil {
+		return nil, err
+	}
 	return &gauge, nil
 }
 

@@ -75,7 +75,10 @@ $ %s query gamm pool 1
 
 			if clientCtx.OutputFormat == "text" {
 				var pool types.Pool
-				pool.XXX_Unmarshal(res.GetPool().Value)
+				err := pool.XXX_Unmarshal(res.GetPool().Value)
+				if err != nil {
+					return err
+				}
 				out, err := yaml.Marshal(pool)
 
 				if err != nil {

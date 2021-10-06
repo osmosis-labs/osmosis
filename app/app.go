@@ -311,7 +311,9 @@ func NewOsmosisApp(
 			app.LockupKeeper.ClearAllAccumulationStores(ctx)
 
 			// reset all lock and references
-			app.LockupKeeper.ResetAllLocks(ctx, locks)
+			if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
+				panic(err)
+			}
 
 			// configure upgrade for gamm module's pool creation fee param add
 			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO

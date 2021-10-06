@@ -19,8 +19,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		genState.Params.AirdropStartTime = ctx.BlockTime()
 	}
 
-	k.SetParams(ctx, genState.Params)
-	k.SetClaimRecords(ctx, genState.ClaimRecords)
+	if err := k.SetParams(ctx, genState.Params); err != nil {
+		panic(err)
+	}
+	if err := k.SetClaimRecords(ctx, genState.ClaimRecords); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.

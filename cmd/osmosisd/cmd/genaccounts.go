@@ -231,7 +231,7 @@ Example:
 			defer snapshotJSON.Close()
 			byteValue, _ := ioutil.ReadAll(snapshotJSON)
 			snapshot := Snapshot{}
-			json.Unmarshal(byteValue, &snapshot)
+			err = json.Unmarshal(byteValue, &snapshot)
 			if err != nil {
 				return err
 			}
@@ -245,7 +245,7 @@ Example:
 			defer ionJSON.Close()
 			byteValue2, _ := ioutil.ReadAll(ionJSON)
 			var ionAmts map[string]int64
-			json.Unmarshal(byteValue2, &ionAmts)
+			err = json.Unmarshal(byteValue2, &ionAmts)
 			if err != nil {
 				return err
 			}
