@@ -171,9 +171,8 @@ message CurrentRewardRequest {
 message CurrentRewardResponse {
   uint64 period = 1;
   int64 last_processed_epoch = 2;
-  bool is_new_epoch = 3;
-  cosmos.base.v1beta1.Coin coin = 4 [ (gogoproto.nullable) = false ];
-  repeated cosmos.base.v1beta1.Coin reward = 5 [
+  cosmos.base.v1beta1.Coin coin = 3 [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin reward = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];

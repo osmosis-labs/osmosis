@@ -43,10 +43,8 @@ func NewHistoricalReward(cummulativeRewardRatio sdk.Coins) HistoricalReward {
 
 func NewCurrentReward(period uint64, isNewEpoch bool, count uint32, rewards sdk.Coins) CurrentReward {
 	return CurrentReward{
-		Period:     period,
-		IsNewEpoch: isNewEpoch,
-		Count:      count,
-		Rewards:    rewards,
+		Period:  period,
+		Rewards: rewards,
 	}
 }
 

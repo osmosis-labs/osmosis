@@ -670,12 +670,50 @@ func (k Keeper) GetCurrentReward(ctx sdk.Context, denom string, lockDuration tim
 	return currentReward, nil
 }
 
-func (k Keeper) addHistoricalReward(ctx sdk.Context, historicalReward types.HistoricalReward, denom string, lockDuration time.Duration, period uint64) error {
+func (k Keeper) addHistoricalRewardRefs(ctx sdk.Context, prefix []byte, period uint64, epochNumber int64) error {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom), []byte(lockDuration.String()), sdk.Uint64ToBigEndian(period))
+	periodBz := sdk.Uint64ToBigEndian(period)
+	endKey := combineKeys(prefix, sdk.Uint64ToBigEndian(uint64(epochNumber)))
+
+	if store.Has(endKey) {
+		return fmt.Errorf("HistoricalReward with period exist: %d", period)
+	}
+	store.Set(endKey, periodBz)
+
+	return nil
+}
+
+func (k Keeper) getHistoricalRewardPeriodByEpoch(ctx sdk.Context, denom string, lockDuration time.Duration, epochNumber int64) (uint64, error) {
+
+	store := ctx.KVStore(k.storeKey)
+	period := uint64(0)
+	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom), []byte(lockDuration.String()), sdk.Uint64ToBigEndian(uint64(epochNumber)))
+
+	bz := store.Get(rewardKey)
+	if bz == nil {
+		return period, fmt.Errorf("historical rewards is not present = %d", period)
+	}
+
+	period = sdk.BigEndianToUint64(bz)
+	return period, nil
+}
+
+// func (k Keeper) deleteHistoricalRewardRefs(ctx sdk.Context, prefix []byte, epochNumber uint64, period uint64) error {
+// 	store := ctx.KVStore(k.storeKey)
+// 	endKey := combineKeys(prefix, sdk.Uint64ToBigEndian(epochNumber))
+
+// 	store.Delete(endKey)
+
+// 	return nil
+// }
+
+func (k Keeper) addHistoricalReward(ctx sdk.Context, historicalReward types.HistoricalReward, denom string, lockDuration time.Duration, period uint64, epochNumber int64) error {
+	store := ctx.KVStore(k.storeKey)
+	prefix := combineKeys(types.KeyHistoricalReward, []byte(denom), []byte(lockDuration.String()))
+	rewardKey := combineKeys(prefix, sdk.Uint64ToBigEndian(period))
 
 	if store.Has(rewardKey) {
-		return fmt.Errorf("historical reward is already exist. Denom/Duration/Period = %s/%ds/%d", denom, lockDuration, period)
+		ctx.Logger().Info(fmt.Sprintf("historical reward is already exist. Denom/Duration/Period = %s/%ds/%d", denom, lockDuration, period))
 	}
 
 	bz, err := proto.Marshal(&historicalReward)
@@ -685,7 +723,8 @@ func (k Keeper) addHistoricalReward(ctx sdk.Context, historicalReward types.Hist
 
 	store.Set(rewardKey, bz)
 
-	return nil
+	err = k.addHistoricalRewardRefs(ctx, prefix, period, epochNumber)
+	return err
 }
 
 func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration time.Duration, period uint64) (types.HistoricalReward, error) {
@@ -794,16 +833,9 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 		}
 	}
 
-	if !currentReward.IsNewEpoch {
-		// checking to see if staking ratio has been changed due to unlocking?
-		locks := k.GetUnlockingsToDistribution(ctx, denom, epochStartTime.Add(duration), epochInfo.Duration)
-		if len(locks) > 0 {
-			currentReward.IsNewEpoch = true
-		}
-	}
-
-	// FIXME: when multiple gauges refer one current reward
-	if currentReward.IsNewEpoch {
+	// checking to see if staking ratio has been changed due to unlocking?
+	locks := k.GetUnlockingsToDistribution(ctx, denom, epochStartTime.Add(duration), epochInfo.Duration)
+	if len(locks) > 0 {
 		_, err := k.CalculateHistoricalRewards(ctx, &currentReward, denom, duration, epochInfo)
 		if err != nil {
 			return fmt.Errorf("failed to CalculateHistoricalRewards. Gauge ID = %d. %s", gauge.Id, err.Error())
@@ -849,7 +881,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward *types
 			totalDistrCoins = totalDistrCoins.Add(distrCoins)
 		}
 
-		err = k.addHistoricalReward(ctx, newHistoricalReward, denom, duration, currentReward.Period)
+		err = k.addHistoricalReward(ctx, newHistoricalReward, denom, duration, currentReward.Period, currentEpoch)
 		if err != nil {
 			return totalDistrCoins, err
 		}
@@ -861,17 +893,16 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward *types
 		Denom:         denom,
 		Duration:      duration,
 	})
-	// Unlocking Locks
-	newTotalStakes = newTotalStakes.Sub(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, epochInfo.CurrentEpochStartTime.Add(duration)))
+	targetTime := epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration).Add(duration - time.Nanosecond)
 
-	currentReward.Count = 0
+	// Unlocking Locks
+	newTotalStakes = newTotalStakes.Sub(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, targetTime))
 	currentReward.Coin = sdk.NewCoin(denom, newTotalStakes)
 	currentReward.Rewards = currentReward.Rewards.Sub(totalDistrCoins)
 
 	// Move to Next Period
 	if currentReward.LastProcessedEpoch != currentEpoch {
 		currentReward.Period++
-		currentReward.IsNewEpoch = false
 	}
 	currentReward.LastProcessedEpoch = epochInfo.CurrentEpoch
 
@@ -913,6 +944,34 @@ func (k Keeper) UpdateRewardForLock(ctx sdk.Context, lockID uint64, duration tim
 		}
 		lockRewardKey := denom + "/" + duration.String()
 		targetPeriod := currentReward.Period - 1 // last updated historical reward, TODO: check this behavior
+		period, ok := lockReward.Period[lockRewardKey]
+		if ok {
+			reward, err := k.CalculateReward(ctx, denom, duration, coin.Amount, targetPeriod, period)
+			if err != nil {
+				return err
+			}
+			lockReward.Rewards = lockReward.Rewards.Add(reward...)
+		}
+		lockReward.Period[lockRewardKey] = targetPeriod
+	}
+	k.SetPeriodLockReward(ctx, lockReward)
+	return nil
+}
+
+func (k Keeper) UpdateRewardForLockByEpoch(ctx sdk.Context, lockID uint64, duration time.Duration, epochNumber int64) error {
+	lock, err := k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+	lockReward, err := k.GetPeriodLockReward(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	for _, coin := range lock.Coins {
+		denom := coin.Denom
+		lockRewardKey := denom + "/" + duration.String()
+		targetPeriod, _ := k.getHistoricalRewardPeriodByEpoch(ctx, denom, duration, epochNumber)
 		period, ok := lockReward.Period[lockRewardKey]
 		if ok {
 			reward, err := k.CalculateReward(ctx, denom, duration, coin.Amount, targetPeriod, period)

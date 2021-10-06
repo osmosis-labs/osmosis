@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -101,10 +102,15 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 		if lockDuration < lockableDuration {
 			continue
 		}
-		// for _, coin := range amount {
-		// 	h.k.GetCurrentReward(coin.GetDenom(), lockableDuration).IsNewEpoch = true
-		// }
-		h.k.UpdateRewardForLock(ctx, lockID, lockableDuration)
+		epochInfo := h.k.GetEpochInfo(ctx)
+
+		if lockableDuration.Nanoseconds()%epochInfo.Duration.Nanoseconds() != 0 {
+			panic(fmt.Errorf("LockableDuration is not multipleof EpochDuration"))
+		}
+		durationInEpoch := lockableDuration.Nanoseconds() / epochInfo.Duration.Nanoseconds()
+		ctx.Logger().Info(fmt.Sprintf("STH::: TokenUnlocked lockID[%d] Duration[%s] numEpochs[%d], targetEpoch[%d]",
+			lockID, lockableDuration.String(), durationInEpoch, epochInfo.CurrentEpoch-durationInEpoch))
+		h.k.UpdateRewardForLockByEpoch(ctx, lockID, lockableDuration, epochInfo.CurrentEpoch-durationInEpoch)
 		h.k.ClaimRewardForLock(ctx, lockID, lockableDuration)
 	}
 	h.k.clearPeriodLockReward(ctx, lockID)

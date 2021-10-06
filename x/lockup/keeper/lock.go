@@ -596,7 +596,7 @@ func (k Keeper) unlockingAccumulationStore(ctx sdk.Context, denom string) store.
 
 func (k Keeper) GetUnlockingPeriodLocksAccumulation(ctx sdk.Context, denom string, beginTime time.Time) sdk.Int {
 	beginKey := unlockingAccumulationKey(beginTime)
-	return k.unlockingAccumulationStore(ctx, denom).SubsetAccumulation(beginKey, nil)
+	return k.unlockingAccumulationStore(ctx, denom).SubsetAccumulation(nil, beginKey)
 }
 
 ////////////////////////////  END //////////////////////////////////
