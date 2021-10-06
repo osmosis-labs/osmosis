@@ -694,6 +694,12 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 	if err != nil {
 		return err
 	}
+
+	// Skip gauge process if locked amount is 0
+	if currentReward.Coin.Amount.LTE(sdk.NewInt(0)) {
+		return nil
+	}
+
 	epochInfo := k.GetEpochInfo(ctx)
 	epochStartTime := epochInfo.CurrentEpochStartTime
 
