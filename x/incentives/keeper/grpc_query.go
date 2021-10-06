@@ -132,6 +132,24 @@ func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) 
 	return &types.RewardsEstResponse{Coins: k.GetRewardsEst(ctx, owner, locks, req.EndEpoch)}, nil
 }
 
+// Rewards returns current estimate of accumulated rewards
+func (k Keeper) Rewards(goCtx context.Context, req *types.RewardsRequest) (*types.RewardsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	owner, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return nil, err
+	}
+	locks := make([]lockuptypes.PeriodLock, 0, len(req.LockIds))
+	for _, lockId := range req.LockIds {
+		lock, err := k.lk.GetLockByID(ctx, lockId)
+		if err != nil {
+			return nil, err
+		}
+		locks = append(locks, *lock)
+	}
+	return &types.RewardsResponse{Coins: k.GetRewards(ctx, owner, locks)}, nil
+}
+
 func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDurationsRequest) (*types.QueryLockableDurationsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

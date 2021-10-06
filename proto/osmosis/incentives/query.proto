@@ -51,6 +51,12 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/rewards_est/{owner}";
   }
+  // returns current estimate of accumulated rewards
+  // from both current and historical rewards
+  rpc Rewards(RewardsRequest) returns (RewardsResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/rewards/{owner}";
+  }
   // returns lockable durations that are valid to give incentives
   rpc LockableDurations(QueryLockableDurationsRequest)
       returns (QueryLockableDurationsResponse) {
@@ -128,6 +134,17 @@ message RewardsEstRequest {
   int64 end_epoch = 3;
 }
 message RewardsEstResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message RewardsRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  repeated uint64 lock_ids = 2;
+}
+message RewardsResponse {
   repeated cosmos.base.v1beta1.Coin coins = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
