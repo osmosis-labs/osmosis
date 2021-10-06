@@ -118,7 +118,7 @@ func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
-// GetNextPoolNumberAndIncrement returns the next pool number
+// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry
 func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)
