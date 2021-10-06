@@ -335,6 +335,7 @@ func (k Keeper) debugDistribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, 
 type distributionInfo struct {
 	nextID            int
 	lockOwnerAddrToID map[string]int
+	idToBech32Addr    []string
 	idToDecodedAddr   []sdk.AccAddress
 	idToDistrCoins    []sdk.Coins
 }
@@ -343,6 +344,7 @@ func newDistributionInfo() distributionInfo {
 	return distributionInfo{
 		nextID:            0,
 		lockOwnerAddrToID: make(map[string]int),
+		idToBech32Addr:    []string{},
 		idToDecodedAddr:   []sdk.AccAddress{},
 		idToDistrCoins:    []sdk.Coins{},
 	}
@@ -360,6 +362,7 @@ func (d *distributionInfo) addLockRewards(lock lockuptypes.PeriodLock, rewards s
 		if err != nil {
 			return err
 		}
+		d.idToBech32Addr = append(d.idToBech32Addr, lock.Owner)
 		d.idToDecodedAddr = append(d.idToDecodedAddr, decodedOwnerAddr)
 		d.idToDistrCoins = append(d.idToDistrCoins, rewards)
 	}
@@ -383,7 +386,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, denom string, distrs distri
 			sdk.NewEvent(
 				types.TypeEvtDistribution,
 				sdk.NewAttribute(types.AttributeLockedDenom, denom),
-				sdk.NewAttribute(types.AttributeReceiver, distrs.idToDecodedAddr[id].String()),
+				sdk.NewAttribute(types.AttributeReceiver, distrs.idToBech32Addr[id]),
 				sdk.NewAttribute(types.AttributeAmount, distrs.idToDistrCoins[id].String()),
 			),
 		})
