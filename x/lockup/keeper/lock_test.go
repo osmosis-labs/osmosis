@@ -147,18 +147,21 @@ func (suite *KeeperTestSuite) TestLock() {
 	suite.Require().Error(err)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
 	// lock with balance with same id
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().Error(err)
 
 	// lock with balance with different id
 	lock = types.NewPeriodLock(2, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 }
@@ -173,8 +176,9 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	lock := types.NewPeriodLock(1, addr1, time.Second, now.Add(time.Second), coins)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
-	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
+	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
 	// begin unlock with lock object
@@ -297,7 +301,8 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// add more tokens to lock
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, addCoins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, addCoins)
+	suite.Require().NoError(err)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, addr1, locks[0].ID, addCoins)
 	suite.Require().NoError(err)
 
@@ -317,7 +322,8 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// try to add tokens to unavailable lock
 	cacheCtx, _ := suite.ctx.CacheContext()
-	suite.app.BankKeeper.SetBalances(cacheCtx, addr1, addCoins)
+	err = suite.app.BankKeeper.SetBalances(cacheCtx, addr1, addCoins)
+	suite.Require().NoError(err)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, 1111, addCoins)
 	suite.Require().Error(err)
 
@@ -328,7 +334,8 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// try to add tokens to lock that is owned by others
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	suite.app.BankKeeper.SetBalances(cacheCtx, addr2, addCoins)
+	err = suite.app.BankKeeper.SetBalances(cacheCtx, addr2, addCoins)
+	suite.Require().NoError(err)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr2, locks[0].ID, addCoins)
 	suite.Require().Error(err)
 }
@@ -433,28 +440,28 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 
 	// check accumulations
 	acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
+		Denom:    "stake",
 		Duration: 0,
 	})
 	suite.Require().Equal(int64(110), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*1,
+		Denom:    "stake",
+		Duration: time.Second * 1,
 	})
 	suite.Require().Equal(int64(110), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*2,
+		Denom:    "stake",
+		Duration: time.Second * 2,
 	})
 	suite.Require().Equal(int64(80), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*3,
+		Denom:    "stake",
+		Duration: time.Second * 3,
 	})
 	suite.Require().Equal(int64(30), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		Denom: "stake",
-		Duration: time.Second*4,
+		Denom:    "stake",
+		Duration: time.Second * 4,
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
 }

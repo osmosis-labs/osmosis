@@ -73,7 +73,7 @@ func NewLockTokensCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(FlagSetLockTokens())
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(FlagDuration)
+	_ = cmd.MarkFlagRequired(FlagDuration)
 	return cmd
 }
 

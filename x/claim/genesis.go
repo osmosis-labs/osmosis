@@ -18,11 +18,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
 	}
 
-	err := k.SetParams(ctx, genState.Params)
-	if err != nil {
+	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
-	k.SetClaimRecords(ctx, genState.ClaimRecords)
+	if err := k.SetClaimRecords(ctx, genState.ClaimRecords); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.

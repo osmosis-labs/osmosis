@@ -51,7 +51,9 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		}
 
 		if record.GaugeId == 0 { // fund community pool if gaugeId is zero
-			k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
+			if err := k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount)); err != nil {
+				return err
+			}
 			continue
 		}
 

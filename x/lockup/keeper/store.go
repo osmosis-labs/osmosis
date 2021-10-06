@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-  "github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -68,7 +68,8 @@ func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) e
 }
 
 func accumulationStorePrefix(denom string) (res []byte) {
-	res = make([]byte, len(types.KeyPrefixLockAccumulation))
+	capacity := len(types.KeyPrefixLockAccumulation) + len(denom) + 1
+	res = make([]byte, len(types.KeyPrefixLockAccumulation), capacity)
 	copy(res, types.KeyPrefixLockAccumulation)
 	res = append(res, []byte(denom+"/")...)
 	return

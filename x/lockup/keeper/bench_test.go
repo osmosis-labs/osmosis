@@ -50,7 +50,7 @@ func benchmarkResetLogic(numLockups int, b *testing.B) {
 		for j := 0; j < numDenoms; j++ {
 			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
 		}
-		app.BankKeeper.SetBalances(ctx, addr, coins)
+		_ = app.BankKeeper.SetBalances(ctx, addr, coins)
 		app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
 		addrs = append(addrs, addr)
 	}
@@ -72,9 +72,7 @@ func benchmarkResetLogic(numLockups int, b *testing.B) {
 	b.StartTimer()
 	b.ReportAllocs()
 	// distribute coins from gauges to lockup owners
-	for i := 0; i < numLockups; i++ {
-		app.LockupKeeper.ResetLock(ctx, locks[i])
-	}
+	_ = app.LockupKeeper.ResetAllLocks(ctx, locks)
 }
 
 func BenchmarkResetLogicMedium(b *testing.B) {
