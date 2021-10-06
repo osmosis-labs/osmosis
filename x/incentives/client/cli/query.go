@@ -32,6 +32,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdActiveGauges(),
 		GetCmdUpcomingGauges(),
 		GetCmdRewardsEst(),
+		GetCmdRewards(),
 		GetCurrentReward(),
 		GetHistoricalReward(),
 		GetPeriodLockReward(),
@@ -343,6 +344,63 @@ $ %s query incentives rewards-estimation
 	cmd.Flags().String(FlagOwner, "", "Owner to receive rewards, optionally used when lock-ids flag is NOT set")
 	cmd.Flags().String(FlagLockIds, "", "the lock ids to receive rewards, when it is empty, all lock ids of the owner are used")
 	cmd.Flags().Int64(FlagEndEpoch, 0, "the end epoch number to participate in rewards calculation")
+
+	return cmd
+}
+
+// GetCmdRewards returns current estimate of accumulated rewards
+func GetCmdRewards() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rewards",
+		Short: "Query rewards estimation by combining both current and historical rewards",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query rewards estimation.
+
+Example:
+$ %s query incentives rewards [owner-addr] 
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			owner := args[0]
+
+			lockIdsCombined, err := cmd.Flags().GetString(FlagLockIds)
+			if err != nil {
+				return err
+			}
+
+			lockIdStrs := strings.Split(lockIdsCombined, ",")
+			lockIds := []uint64{}
+			for _, lockIdStr := range lockIdStrs {
+				lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
+				if err != nil {
+					return err
+				}
+				lockIds = append(lockIds, lockId)
+			}
+
+			res, err := queryClient.Rewards(cmd.Context(), &types.RewardsRequest{
+				Owner:    owner,
+				LockIds:  lockIds,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(FlagLockIds, "", "the lock ids to receive rewards, when it is empty, all lock ids of the owner are used")
 
 	return cmd
 }
