@@ -417,7 +417,7 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	for _, denom := range denoms {
 		curDurationMap := accumulationStoreEntries[denom]
 		durations := make([]time.Duration, 0, len(curDurationMap))
-		for duration, _ := range curDurationMap {
+		for duration := range curDurationMap {
 			durations = append(durations, duration)
 		}
 		sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })

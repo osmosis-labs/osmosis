@@ -227,7 +227,7 @@ benchmark:
 ###############################################################################
 
 lint:
-	golangci-lint run
+	golangci-lint run --disable-all -E errcheck
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 
 format:
