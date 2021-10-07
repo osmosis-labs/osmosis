@@ -377,14 +377,16 @@ $ %s query incentives rewards [owner-addr]
 				return err
 			}
 
-			lockIdStrs := strings.Split(lockIdsCombined, ",")
-			lockIds := []uint64{}
-			for _, lockIdStr := range lockIdStrs {
-				lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
-				if err != nil {
-					return err
+			var lockIds []uint64
+			if lockIdsCombined != "" {
+				lockIdStrs := strings.Split(lockIdsCombined, ",")
+				for _, lockIdStr := range lockIdStrs {
+					lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
+					if err != nil {
+						return err
+					}
+					lockIds = append(lockIds, lockId)
 				}
-				lockIds = append(lockIds, lockId)
 			}
 
 			res, err := queryClient.Rewards(cmd.Context(), &types.RewardsRequest{

@@ -547,7 +547,13 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 
 // GetRewards returns current estimate of accumulated rewards
 func (k Keeper) GetRewards(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock) sdk.Coins {
-	return sdk.Coins{}
+	ctx.Logger().Debug(fmt.Sprintf("[F1] GetRewards: addr=%v, locks%v", addr, locks))
+	if len(locks) == 0 {
+		locks = k.lk.GetAccountPeriodLocks(ctx, addr)
+		ctx.Logger().Debug(fmt.Sprintf("[F1] auto detected locks %v", locks))
+	}
+	estimatedRewards := sdk.Coins{}
+	return estimatedRewards
 }
 
 func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
