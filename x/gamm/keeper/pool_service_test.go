@@ -18,7 +18,7 @@ var (
 	defaultFutureGovernor = ""
 )
 
-func (suite *KeeperTestSuite) TestCreatePool() {
+func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	params := suite.app.GAMMKeeper.GetParams(suite.ctx)
 
 	poolCreationFeeDecCoins := sdk.DecCoins{}
@@ -484,7 +484,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestActivePool() {
+func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 	type testCase struct {
 		blockTime  time.Time
 		expectPass bool

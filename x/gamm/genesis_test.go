@@ -34,10 +34,10 @@ func TestGammInitGenesis(t *testing.T) {
 	}, "", ctx.BlockTime())
 	require.NoError(t, err)
 
-	pool, ok := poolI.(*types.BalancerPool)
+	balancerPool, ok := poolI.(*types.BalancerPool)
 	require.True(t, ok)
 
-	any, err := codectypes.NewAnyWithValue(pool)
+	any, err := codectypes.NewAnyWithValue(poolI)
 	require.NoError(t, err)
 
 	gamm.InitGenesis(ctx, app.GAMMKeeper, types.GenesisState{
@@ -51,14 +51,14 @@ func TestGammInitGenesis(t *testing.T) {
 	require.Equal(t, app.GAMMKeeper.GetNextPoolNumber(ctx), uint64(2))
 	poolStored, err := app.GAMMKeeper.GetPool(ctx, 1)
 	require.NoError(t, err)
-	require.Equal(t, pool.GetId(), poolStored.GetId())
-	require.Equal(t, pool.GetAddress(), poolStored.GetAddress())
-	require.Equal(t, pool.GetPoolSwapFee(), poolStored.GetPoolSwapFee())
-	require.Equal(t, pool.GetPoolExitFee(), poolStored.GetPoolExitFee())
-	require.Equal(t, pool.GetTotalWeight(), poolStored.GetTotalWeight())
-	require.Equal(t, pool.GetTotalShares(), poolStored.GetTotalShares())
-	require.Equal(t, pool.GetAllPoolAssets(), poolStored.GetAllPoolAssets())
-	require.Equal(t, pool.String(), poolStored.String())
+	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
+	require.Equal(t, balancerPool.GetAddress(), poolStored.GetAddress())
+	require.Equal(t, balancerPool.GetPoolSwapFee(), poolStored.GetPoolSwapFee())
+	require.Equal(t, balancerPool.GetPoolExitFee(), poolStored.GetPoolExitFee())
+	require.Equal(t, balancerPool.GetTotalWeight(), poolStored.GetTotalWeight())
+	require.Equal(t, balancerPool.GetTotalShares(), poolStored.GetTotalShares())
+	require.Equal(t, balancerPool.GetAllPoolAssets(), poolStored.GetAllPoolAssets())
+	require.Equal(t, balancerPool.String(), poolStored.String())
 
 	_, err = app.GAMMKeeper.GetPool(ctx, 2)
 	require.Error(t, err)

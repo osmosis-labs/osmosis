@@ -1,8 +1,6 @@
 package gamm
 
 import (
-	"fmt"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
@@ -44,11 +42,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 	poolAnys := []*codectypes.Any{}
 	for _, poolI := range pools {
-		pool, ok := poolI.(*types.BalancerPool)
-		if !ok {
-			panic(fmt.Errorf("pool (%d) is not basic pool", poolI.GetId()))
-		}
-		any, err := codectypes.NewAnyWithValue(pool)
+		any, err := codectypes.NewAnyWithValue(poolI)
 		if err != nil {
 			panic(err)
 		}

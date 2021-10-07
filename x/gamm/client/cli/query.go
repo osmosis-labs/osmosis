@@ -74,23 +74,7 @@ $ %s query gamm pool 1
 				return err
 			}
 
-			if clientCtx.OutputFormat == "text" {
-				var pool types.BalancerPool
-				pool.XXX_Unmarshal(res.GetPool().Value)
-				out, err := yaml.Marshal(pool)
-
-				if err != nil {
-					return err
-				}
-				return writeOutputBoilerplate(clientCtx, out)
-			} else {
-				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
-
-				if err != nil {
-					return err
-				}
-				return writeOutputBoilerplate(clientCtx, out)
-			}
+			return clientCtx.PrintProto(res)
 		},
 	}
 
