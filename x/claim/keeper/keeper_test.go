@@ -28,8 +28,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	err := suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
 		AirdropStartTime:   airdropStartTime,
-		DurationUntilDecay: types.DefaultParams().DurationUntilDecay,
-		DurationOfDecay:    types.DefaultParams().DurationOfDecay,
+		DurationUntilDecay: types.DefaultDurationUntilDecay,
+		DurationOfDecay:    types.DefaultDurationOfDecay,
 		ClaimDenom:         sdk.DefaultBondDenom,
 	})
 	if err != nil {
