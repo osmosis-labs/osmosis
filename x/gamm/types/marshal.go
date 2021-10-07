@@ -39,13 +39,14 @@ func (pa PoolAsset) MarshalYAML() (interface{}, error) {
 }
 
 type poolPretty struct {
-	Address            sdk.AccAddress     `json:"address" yaml:"address"`
-	Id                 uint64             `json:"id" yaml:"id"`
-	PoolParams         BalancerPoolParams `json:"pool_params" yaml:"pool_params"`
-	FuturePoolGovernor string             `json:"future_pool_governor" yaml:"future_pool_governor"`
-	TotalWeight        sdk.Dec            `json:"total_weight" yaml:"total_weight"`
-	TotalShares        sdk.Coin           `json:"total_shares" yaml:"total_shares"`
-	PoolAssets         []PoolAsset        `json:"pool_assets" yaml:"pool_assets"`
+	Address            sdk.AccAddress `json:"address" yaml:"address"`
+	Id                 uint64         `json:"id" yaml:"id"`
+	SwapFee            sdk.Dec        `json:"swap_fee" yaml:"swap_fee"`
+	ExitFee            sdk.Dec        `json:"exit_fee" yaml:"exit_fee"`
+	FuturePoolGovernor string         `json:"future_pool_governor" yaml:"future_pool_governor"`
+	TotalWeight        sdk.Dec        `json:"total_weight" yaml:"total_weight"`
+	TotalShares        sdk.Coin       `json:"total_shares" yaml:"total_shares"`
+	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
 
 func (pa BalancerPool) String() string {
@@ -65,7 +66,8 @@ func (pa BalancerPool) MarshalYAML() (interface{}, error) {
 	bz, err := yaml.Marshal(poolPretty{
 		Address:            accAddr,
 		Id:                 pa.Id,
-		PoolParams:         pa.PoolParams,
+		SwapFee:            pa.PoolParams.SwapFee,
+		ExitFee:            pa.PoolParams.ExitFee,
 		FuturePoolGovernor: pa.FuturePoolGovernor,
 		TotalWeight:        decTotalWeight,
 		TotalShares:        pa.TotalShares,
@@ -91,7 +93,8 @@ func (pa BalancerPool) MarshalJSON() ([]byte, error) {
 	return json.Marshal(poolPretty{
 		Address:            accAddr,
 		Id:                 pa.Id,
-		PoolParams:         pa.PoolParams,
+		SwapFee:            pa.PoolParams.SwapFee,
+		ExitFee:            pa.PoolParams.ExitFee,
 		FuturePoolGovernor: pa.FuturePoolGovernor,
 		TotalWeight:        decTotalWeight,
 		TotalShares:        pa.TotalShares,
@@ -108,7 +111,8 @@ func (pa *BalancerPool) UnmarshalJSON(bz []byte) error {
 
 	pa.Address = alias.Address.String()
 	pa.Id = alias.Id
-	pa.PoolParams = alias.PoolParams
+	pa.PoolParams.SwapFee = alias.SwapFee
+	pa.PoolParams.ExitFee = alias.ExitFee
 	pa.FuturePoolGovernor = alias.FuturePoolGovernor
 	pa.TotalWeight = alias.TotalWeight.RoundInt()
 	pa.TotalShares = alias.TotalShares
