@@ -46,7 +46,7 @@ func (k Keeper) CreatePool(
 		coins = append(coins, asset.Token)
 	}
 	if coins == nil {
-		panic("No pool assets were in added in the pool. Two should've been added per validateBasic")
+		return 0, types.ErrTooFewPoolAssets
 	}
 
 	coins = coins.Sort()
