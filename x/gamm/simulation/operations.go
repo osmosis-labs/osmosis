@@ -83,23 +83,23 @@ func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) s
 	}
 }
 
-func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.BalancerPoolAsset {
+func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
 	// selecting random number between [2, Min(coins.Len, 6)]
 	numCoins := 2 + r.Intn(Min(coins.Len(), 6)-1)
 	denomIndices := r.Perm(coins.Len())
-	assets := []types.BalancerPoolAsset{}
+	assets := []types.PoolAsset{}
 	for _, denomIndex := range denomIndices[:numCoins] {
 		denom := coins[denomIndex].Denom
 		amt, _ := simtypes.RandPositiveInt(r, coins[denomIndex].Amount.QuoRaw(100))
 		reserveAmt := sdk.NewCoin(denom, amt)
 		weight := sdk.NewInt(r.Int63n(9) + 1)
-		assets = append(assets, types.BalancerPoolAsset{Token: reserveAmt, Weight: weight})
+		assets = append(assets, types.PoolAsset{Token: reserveAmt, Weight: weight})
 	}
 
 	return assets
 }
 
-func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.BalancerPoolAsset) types.BalancerPoolParams {
+func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.BalancerPoolParams {
 	// swapFeeInt := int64(r.Intn(1e5))
 	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -109,9 +109,8 @@ func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.BalancerPoo
 	// TODO: Randomly generate LBP params
 	return types.BalancerPoolParams{
 		// SwapFee:                  swapFee,
-		SwapFee:                  sdk.ZeroDec(),
-		ExitFee:                  exitFee,
-		SmoothWeightChangeParams: nil,
+		SwapFee: sdk.ZeroDec(),
+		ExitFee: exitFee,
 	}
 }
 
@@ -142,7 +141,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		}
 
 		poolAssets := genPoolAssets(r, simAccount, simCoins)
-		BalancerPoolParams := genPoolParams(r, ctx.BlockTime(), poolAssets)
+		PoolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
 
 		// Commented out as genFuturePoolGovernor() panics on empty denom slice.
 		// TODO: fix and provide proper denom types.
@@ -165,7 +164,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 			Sender:             simAccount.Address.String(),
 			FuturePoolGovernor: "",
 			PoolAssets:         poolAssets,
-			PoolParams:         BalancerPoolParams,
+			PoolParams:         PoolParams,
 		}
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)

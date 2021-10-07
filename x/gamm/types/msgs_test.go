@@ -25,7 +25,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			},
-			PoolAssets: []BalancerPoolAsset{
+			PoolAssets: []PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("test", sdk.NewInt(100)),
@@ -73,7 +73,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has no BalancerPoolAsset",
+			name: "has no PoolAsset",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
 				msg.PoolAssets = nil
 				return msg
@@ -83,7 +83,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "has no PoolAsset2",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []BalancerPoolAsset{}
+				msg.PoolAssets = []PoolAsset{}
 				return msg
 			}),
 			expectPass: false,
@@ -91,7 +91,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "has one Pool Asset",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []BalancerPoolAsset{
+				msg.PoolAssets = []PoolAsset{
 					msg.PoolAssets[0],
 				}
 				return msg
@@ -99,7 +99,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has the BalancerPoolAsset that includes 0 weight",
+			name: "has the PoolAsset that includes 0 weight",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(0)
 				return msg
@@ -107,7 +107,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has a BalancerPoolAsset that includes a negative weight",
+			name: "has a PoolAsset that includes a negative weight",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
@@ -115,7 +115,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has a BalancerPoolAsset that includes a negative weight",
+			name: "has a PoolAsset that includes a negative weight",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
@@ -123,7 +123,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has a BalancerPoolAsset that includes a zero coin",
+			name: "has a PoolAsset that includes a zero coin",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
 				msg.PoolAssets[0].Token = sdk.NewCoin("test1", sdk.NewInt(0))
 				return msg
@@ -131,7 +131,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has a BalancerPoolAsset that includes a negative coin",
+			name: "has a PoolAsset that includes a negative coin",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
 				msg.PoolAssets[0].Token = sdk.Coin{
 					Denom:  "test1",
@@ -251,7 +251,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 				msg.PoolParams.SmoothWeightChangeParams = &SmoothWeightChangeParams{
 					StartTime: time.Now(),
 					Duration:  time.Hour,
-					TargetPoolWeights: []BalancerPoolAsset{
+					TargetPoolWeights: []PoolAsset{
 						{
 							Weight: sdk.NewInt(200),
 							Token:  sdk.NewCoin("test", sdk.NewInt(1)),

@@ -135,8 +135,44 @@ func (k Keeper) BalancerPoolParams(ctx context.Context, req *types.QueryBalancer
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	balancerPool, ok := pool.(*types.BalancerPool)
+	if !ok {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	return &types.QueryBalancerPoolParamsResponse{
-		Params: pool.GetPoolParams(),
+		Params: balancerPool.PoolParams,
+	}, nil
+}
+
+func (k Keeper) SwapFee(ctx context.Context, req *types.QuerySwapFeeRequest) (*types.QuerySwapFeeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	pool, err := k.GetPool(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QuerySwapFeeResponse{
+		SwapFee: pool.GetPoolSwapFee().String(),
+	}, nil
+}
+
+func (k Keeper) ExitFee(ctx context.Context, req *types.QueryExitFeeRequest) (*types.QueryExitFeeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	pool, err := k.GetPool(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryExitFeeResponse{
+		ExitFee: pool.GetPoolExitFee().String(),
 	}, nil
 }
 
@@ -156,7 +192,7 @@ func (k Keeper) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequ
 	}, nil
 }
 
-func (k Keeper) BalancerPoolAssets(ctx context.Context, req *types.QueryBalancerPoolAssetsRequest) (*types.QueryBalancerPoolAssetsResponse, error) {
+func (k Keeper) PoolAssets(ctx context.Context, req *types.QueryPoolAssetsRequest) (*types.QueryPoolAssetsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -167,7 +203,7 @@ func (k Keeper) BalancerPoolAssets(ctx context.Context, req *types.QueryBalancer
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryBalancerPoolAssetsResponse{
+	return &types.QueryPoolAssetsResponse{
 		PoolAssets: pool.GetAllPoolAssets(),
 	}, nil
 }

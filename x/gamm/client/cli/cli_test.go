@@ -871,7 +871,7 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
+func (s *IntegrationTestSuite) TestGetCmdSwapFee() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -880,7 +880,7 @@ func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
 		expectErr bool
 	}{
 		{
-			"query pool params by id", // osmosisd query gamm pool-params 1
+			"query swap fee by id", // osmosisd query gamm swap-fee 1
 			[]string{
 				"1",
 				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
@@ -893,14 +893,50 @@ func (s *IntegrationTestSuite) TestGetCmdPoolParams() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdPoolParams()
+			cmd := cli.GetCmdSwapFee()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryBalancerPoolParamsResponse{}
+				resp := types.QuerySwapFeeResponse{}
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			}
+		})
+	}
+}
+func (s *IntegrationTestSuite) TestGetCmdExitFee() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"query exit fee by id", // osmosisd query gamm exit-fee 1
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdExitFee()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				resp := types.QueryExitFeeResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
@@ -937,7 +973,7 @@ func (s *IntegrationTestSuite) TestGetCmdPoolAssets() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryBalancerPoolAssetsResponse{}
+				resp := types.QueryPoolAssetsResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}

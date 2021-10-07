@@ -12,7 +12,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";
 
-message BalancerPoolAsset {
+message PoolAsset {
   // Coins we are talking about,
   // the denomination must be unique amongst all PoolAssets for this pool.
   cosmos.base.v1beta1.Coin token = 1
@@ -66,7 +66,7 @@ message SmoothWeightChangeParams {
   // The amount PoolAsset.token.amount field is ignored if present,
   // future type refactorings should just have a type with the denom & weight
   // here.
-  repeated BalancerPoolAsset initialPoolWeights = 3 [
+  repeated PoolAsset initialPoolWeights = 3 [
     (gogoproto.moretags) = "yaml:\"initial_pool_weights\"",
     (gogoproto.nullable) = false
   ];
@@ -74,7 +74,7 @@ message SmoothWeightChangeParams {
   // to time between start_time, and start_time + duration. The amount
   // PoolAsset.token.amount field is ignored if present, future type
   // refactorings should just have a type with the denom & weight here.
-  repeated BalancerPoolAsset targetPoolWeights = 4 [
+  repeated PoolAsset targetPoolWeights = 4 [
     (gogoproto.moretags) = "yaml:\"target_pool_weights\"",
     (gogoproto.nullable) = false
   ];
@@ -102,7 +102,6 @@ message BalancerPoolParams {
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];
-  //
   SmoothWeightChangeParams smoothWeightChangeParams = 3 [
     (gogoproto.moretags) = "yaml:\"smooth_weight_change_params\"",
     (gogoproto.nullable) = true
@@ -116,19 +115,20 @@ message BalancerPool {
 
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 id = 2;
+
   BalancerPoolParams poolParams = 3 [
-    (gogoproto.moretags) = "yaml:\"pool_params\"",
+    (gogoproto.moretags) = "yaml:\"balancer_pool_params\"",
     (gogoproto.nullable) = false
   ];
+
   // This string specifies who will govern the pool in the future.
   // Valid forms of this are:
   // {token name},{duration}
   // {duration}
-  // where {token name} if specified is the token which determines the governor,
-  // and if not specified is the LP token for this pool.
-  // duration is a time specified as 0w,1w,2w, etc. which specifies how long the
-  // token would need to be locked up to count in governance. 0w means no
-  // lockup.
+  // where {token name} if specified is the token which determines the
+  // governor, and if not specified is the LP token for this pool.duration is
+  // a time specified as 0w,1w,2w, etc. which specifies how long the token
+  // would need to be locked up to count in governance. 0w means no lockup.
   // TODO: Further improve these docs
   string future_pool_governor = 4
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
@@ -139,7 +139,7 @@ message BalancerPool {
   ];
   // These are assumed to be sorted by denomiation.
   // They contain the pool asset and the information about the weight
-  repeated BalancerPoolAsset poolAssets = 6 [
+  repeated PoolAsset poolAssets = 6 [
     (gogoproto.moretags) = "yaml:\"pool_assets\"",
     (gogoproto.nullable) = false
   ];

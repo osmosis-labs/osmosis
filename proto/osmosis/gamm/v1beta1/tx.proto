@@ -35,7 +35,7 @@ message MsgCreateBalancerPool {
     (gogoproto.nullable) = false
   ];
 
-  repeated BalancerPoolAsset poolAssets = 3 [ (gogoproto.nullable) = false ];
+  repeated PoolAsset poolAssets = 3 [ (gogoproto.nullable) = false ];
 
   string future_pool_governor = 4
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];

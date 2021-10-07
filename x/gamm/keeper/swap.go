@@ -40,7 +40,7 @@ func (k Keeper) SwapExactAmountIn(
 		outPoolAsset.Token.Amount.ToDec(),
 		outPoolAsset.Weight.ToDec(),
 		tokenIn.Amount.ToDec(),
-		pool.GetPoolParams().SwapFee,
+		pool.GetPoolSwapFee(),
 	).TruncateInt()
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -97,7 +97,7 @@ func (k Keeper) SwapExactAmountOut(
 		outPoolAsset.Token.Amount.ToDec(),
 		outPoolAsset.Weight.ToDec(),
 		tokenOut.Amount.ToDec(),
-		pool.GetPoolParams().SwapFee,
+		pool.GetPoolSwapFee(),
 	).TruncateInt()
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -126,8 +126,8 @@ func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
 	pool types.PoolI,
 	sender sdk.AccAddress,
-	updatedPoolAssetIn types.BalancerPoolAsset,
-	updatedPoolAssetOut types.BalancerPoolAsset,
+	updatedPoolAssetIn types.PoolAsset,
+	updatedPoolAssetOut types.PoolAsset,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,
 ) error {
@@ -179,7 +179,7 @@ func (k Keeper) CalculateSpotPriceWithSwapFee(ctx sdk.Context, poolId uint64, to
 		inPoolAsset.Weight.ToDec(),
 		outPoolAsset.Token.Amount.ToDec(),
 		outPoolAsset.Weight.ToDec(),
-		pool.GetPoolParams().SwapFee,
+		pool.GetPoolSwapFee(),
 	), nil
 }
 

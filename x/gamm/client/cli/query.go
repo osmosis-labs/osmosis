@@ -29,7 +29,8 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdPool(),
 		GetCmdPools(),
 		GetCmdNumPools(),
-		GetCmdPoolParams(),
+		GetCmdSwapFee(),
+		GetCmdExitFee(),
 		GetCmdTotalShares(),
 		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
@@ -176,15 +177,15 @@ $ %s query gamm num-pools
 	return cmd
 }
 
-// GetCmdPoolParams return pool params
-func GetCmdPoolParams() *cobra.Command {
+// GetCmdSwapFee return pool swap fee
+func GetCmdSwapFee() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pool-params <poolID>",
-		Short: "Query pool-params",
+		Use:   "swap-fee <poolID>",
+		Short: "Query swap-fee",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query pool-params.
+			fmt.Sprintf(`Query swap-fee.
 Example:
-$ %s query gamm pool-params 1
+$ %s query gamm swap-fee 1
 `,
 				version.AppName,
 			),
@@ -202,7 +203,7 @@ $ %s query gamm pool-params 1
 				return err
 			}
 
-			res, err := queryClient.BalancerPoolParams(cmd.Context(), &types.QueryBalancerPoolParamsRequest{
+			res, err := queryClient.SwapFee(cmd.Context(), &types.QuerySwapFeeRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {
@@ -210,7 +211,63 @@ $ %s query gamm pool-params 1
 			}
 
 			if clientCtx.OutputFormat == "text" {
-				out, err := yaml.Marshal(res.GetParams())
+				out, err := yaml.Marshal(res.SwapFee)
+
+				if err != nil {
+					return err
+				}
+				return writeOutputBoilerplate(clientCtx, out)
+			} else {
+				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
+
+				if err != nil {
+					return err
+				}
+				return writeOutputBoilerplate(clientCtx, out)
+			}
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdExitFee return pool exit fee
+func GetCmdExitFee() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exit-fee <poolID>",
+		Short: "Query exit-fee",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query exit-fee.
+Example:
+$ %s query gamm exit-fee 1
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			poolID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.ExitFee(cmd.Context(), &types.QueryExitFeeRequest{
+				PoolId: uint64(poolID),
+			})
+			if err != nil {
+				return err
+			}
+
+			if clientCtx.OutputFormat == "text" {
+				out, err := yaml.Marshal(res.ExitFee)
 
 				if err != nil {
 					return err
@@ -357,7 +414,7 @@ $ %s query gamm pool-assets 1
 				return err
 			}
 
-			res, err := queryClient.BalancerPoolAssets(cmd.Context(), &types.QueryBalancerPoolAssetsRequest{
+			res, err := queryClient.PoolAssets(cmd.Context(), &types.QueryPoolAssetsRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {

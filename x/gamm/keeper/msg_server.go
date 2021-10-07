@@ -29,7 +29,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	poolId, err := server.keeper.CreatePool(ctx, sender, msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
+	poolId, err := server.keeper.CreateBalancerPool(ctx, sender, msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
 	}

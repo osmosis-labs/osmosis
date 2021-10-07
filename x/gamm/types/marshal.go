@@ -12,7 +12,7 @@ type poolAssetPretty struct {
 	Weight sdk.Dec  `json:"weight" yaml:"weight"`
 }
 
-func (asset BalancerPoolAsset) prettify() poolAssetPretty {
+func (asset PoolAsset) prettify() poolAssetPretty {
 	return poolAssetPretty{
 		Weight: sdk.NewDecFromInt(asset.Weight).QuoInt64(GuaranteedWeightPrecision),
 		Token:  asset.Token,
@@ -20,16 +20,16 @@ func (asset BalancerPoolAsset) prettify() poolAssetPretty {
 }
 
 // D: at name
-// func (asset poolAssetPretty) uglify() BalancerPoolAsset {
-// 	return BalancerPoolAsset{
+// func (asset poolAssetPretty) uglify() PoolAsset {
+// 	return PoolAsset{
 // 		Weight: asset.Weight.MulInt64(GuaranteedWeightPrecision).RoundInt(),
 // 		Token:  asset.Token,
 // 	}
 // }
 
-// MarshalYAML returns the YAML representation of a BalancerPoolAsset.
+// MarshalYAML returns the YAML representation of a PoolAsset.
 // This is assumed to not be called on a stand-alone instance, so it removes the first marshalled line.
-func (pa BalancerPoolAsset) MarshalYAML() (interface{}, error) {
+func (pa PoolAsset) MarshalYAML() (interface{}, error) {
 	bz, err := yaml.Marshal(pa.prettify())
 	if err != nil {
 		return nil, err
@@ -39,13 +39,13 @@ func (pa BalancerPoolAsset) MarshalYAML() (interface{}, error) {
 }
 
 type poolPretty struct {
-	Address            sdk.AccAddress      `json:"address" yaml:"address"`
-	Id                 uint64              `json:"id" yaml:"id"`
-	BalancerPoolParams BalancerPoolParams  `json:"pool_params" yaml:"pool_params"`
-	FuturePoolGovernor string              `json:"future_pool_governor" yaml:"future_pool_governor"`
-	TotalWeight        sdk.Dec             `json:"total_weight" yaml:"total_weight"`
-	TotalShares        sdk.Coin            `json:"total_shares" yaml:"total_shares"`
-	PoolAssets         []BalancerPoolAsset `json:"pool_assets" yaml:"pool_assets"`
+	Address            sdk.AccAddress     `json:"address" yaml:"address"`
+	Id                 uint64             `json:"id" yaml:"id"`
+	PoolParams         BalancerPoolParams `json:"pool_params" yaml:"pool_params"`
+	FuturePoolGovernor string             `json:"future_pool_governor" yaml:"future_pool_governor"`
+	TotalWeight        sdk.Dec            `json:"total_weight" yaml:"total_weight"`
+	TotalShares        sdk.Coin           `json:"total_shares" yaml:"total_shares"`
+	PoolAssets         []PoolAsset        `json:"pool_assets" yaml:"pool_assets"`
 }
 
 func (pa BalancerPool) String() string {
@@ -65,7 +65,7 @@ func (pa BalancerPool) MarshalYAML() (interface{}, error) {
 	bz, err := yaml.Marshal(poolPretty{
 		Address:            accAddr,
 		Id:                 pa.Id,
-		BalancerPoolParams: pa.BalancerPoolParams,
+		PoolParams:         pa.PoolParams,
 		FuturePoolGovernor: pa.FuturePoolGovernor,
 		TotalWeight:        decTotalWeight,
 		TotalShares:        pa.TotalShares,
@@ -91,7 +91,7 @@ func (pa BalancerPool) MarshalJSON() ([]byte, error) {
 	return json.Marshal(poolPretty{
 		Address:            accAddr,
 		Id:                 pa.Id,
-		BalancerPoolParams: pa.BalancerPoolParams,
+		PoolParams:         pa.PoolParams,
 		FuturePoolGovernor: pa.FuturePoolGovernor,
 		TotalWeight:        decTotalWeight,
 		TotalShares:        pa.TotalShares,
@@ -108,7 +108,7 @@ func (pa *BalancerPool) UnmarshalJSON(bz []byte) error {
 
 	pa.Address = alias.Address.String()
 	pa.Id = alias.Id
-	pa.BalancerPoolParams = alias.BalancerPoolParams
+	pa.PoolParams = alias.PoolParams
 	pa.FuturePoolGovernor = alias.FuturePoolGovernor
 	pa.TotalWeight = alias.TotalWeight.RoundInt()
 	pa.TotalShares = alias.TotalShares

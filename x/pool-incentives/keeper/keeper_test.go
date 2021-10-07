@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) preparePoolWithPoolParams(BalancerPoolParams gammt
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, BalancerPoolParams, []gammtypes.BalancerPoolAsset{
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, BalancerPoolParams, []gammtypes.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
