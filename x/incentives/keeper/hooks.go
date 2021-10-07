@@ -76,6 +76,15 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 var _ lockuptypes.LockupHooks = Hooks{}
 
 func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+	lock, err := h.k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return
+	}
+	lockReward, err := h.k.GetPeriodLockReward(ctx, lockID)
+	if err != nil {
+		return
+	}
+	epochInfo := h.k.GetEpochInfo(ctx)
 	lockableDurations := h.k.GetLockableDurations(ctx)
 	for _, lockableDuration := range lockableDurations {
 		if lockDuration < lockableDuration {
@@ -87,32 +96,42 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 			if err != nil {
 				panic(err)
 			}
-			epochInfo := h.k.GetEpochInfo(ctx)
 			h.k.CalculateHistoricalRewards(ctx, &currentReward, denom, lockableDuration, epochInfo)
 			h.k.setCurrentReward(ctx, currentReward, denom, lockableDuration)
-
 		}
-		h.k.UpdateRewardForLock(ctx, lockID, lockableDuration)
+	}
+	err = h.k.UpdateRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
+	if err != nil {
+		return
 	}
 }
 
 func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+	lock, err := h.k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return
+	}
+	lockReward, err := h.k.GetPeriodLockReward(ctx, lockID)
+	if err != nil {
+		return
+	}
+	epochInfo := h.k.GetEpochInfo(ctx)
 	lockableDurations := h.k.GetLockableDurations(ctx)
 	for _, lockableDuration := range lockableDurations {
 		if lockDuration < lockableDuration {
 			continue
 		}
-		epochInfo := h.k.GetEpochInfo(ctx)
 
 		if lockableDuration.Nanoseconds()%epochInfo.Duration.Nanoseconds() != 0 {
 			panic(fmt.Errorf("LockableDuration is not multipleof EpochDuration"))
 		}
-		durationInEpoch := lockableDuration.Nanoseconds() / epochInfo.Duration.Nanoseconds()
-		ctx.Logger().Debug(fmt.Sprintf("F1::: TokenUnlocked lockID[%d] Duration[%s] numEpochs[%d], targetEpoch[%d]",
-			lockID, lockableDuration.String(), durationInEpoch, epochInfo.CurrentEpoch-durationInEpoch))
-		h.k.UpdateRewardForLockByEpoch(ctx, lockID, lockableDuration, epochInfo.CurrentEpoch-durationInEpoch)
-		h.k.ClaimRewardForLock(ctx, lockID, lockableDuration)
 	}
+	newLockReward, err := h.k.GetRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
+	if err != nil {
+		return
+	}
+	h.k.ClaimRewardForLock(ctx, *lock, &newLockReward, lockableDurations)
+
 	h.k.clearPeriodLockReward(ctx, lockID)
 }
 
