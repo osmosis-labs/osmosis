@@ -231,7 +231,7 @@ type BalancerPool struct {
 	// {token name},{duration}
 	// {duration}
 	// where {token name} if specified is the token which determines the
-	// governor, and if not specified is the LP token for this pool. duration is
+	// governor, and if not specified is the LP token for this pool.duration is
 	// a time specified as 0w,1w,2w, etc. which specifies how long the token
 	// would need to be locked up to count in governance. 0w means no lockup.
 	// TODO: Further improve these docs

@@ -34,10 +34,10 @@ func init() {
 
 var _ types.QueryServer = Keeper{}
 
-func (k Keeper) BalancerPool(
+func (k Keeper) Pool(
 	ctx context.Context,
-	req *types.QueryBalancerPoolRequest,
-) (*types.QueryBalancerPoolResponse, error) {
+	req *types.QueryPoolRequest,
+) (*types.QueryPoolResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -54,7 +54,7 @@ func (k Keeper) BalancerPool(
 		if err != nil {
 			return nil, err
 		}
-		return &types.QueryBalancerPoolResponse{Pool: any}, nil
+		return &types.QueryPoolResponse{Pool: any}, nil
 	default:
 		return nil, status.Error(codes.Internal, "invalid type of pool")
 	}

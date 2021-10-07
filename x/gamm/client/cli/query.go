@@ -67,7 +67,7 @@ $ %s query gamm pool 1
 				return err
 			}
 
-			res, err := queryClient.BalancerPool(cmd.Context(), &types.QueryBalancerPoolRequest{
+			res, err := queryClient.Pool(cmd.Context(), &types.QueryPoolRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {
