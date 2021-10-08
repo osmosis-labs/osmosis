@@ -17,6 +17,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if epochIdentifier == params.RefreshEpochIdentifier {
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			// TODO: should include unlocking asset as well
+			// TODO: should we enable all the locks for specific lp token
+			// or only locks that people want to participiate in superfluid staking within those locks?
 			totalAmt := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.ByDuration,
 				Denom:         asset.Denom,
@@ -25,9 +27,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.SetSuperfluidAssetInfo(ctx, types.SuperfluidAssetInfo{
 				Denom:                      asset.Denom,
 				TotalStakedAmount:          totalAmt,
-				RiskAdjustedOsmoEquivalent: k.GetRiskAdjustedOsmoValue(ctx, asset),
+				RiskAdjustedOsmoEquivalent: k.GetRiskAdjustedOsmoValue(ctx, asset, totalAmt),
 			})
 		}
+
+		// TODO: how to get GAMM pool ids to fetch price info - do all ids?
+		// TODO: should get twap price from gamm module and use the price
+		k.SetEpochTwapPrice(ctx, epochNumber, 1, sdk.NewDec(1))
 	}
 }
 

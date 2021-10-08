@@ -7,9 +7,23 @@ import "osmosis/superfluid/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 
+// TODO: should we change this to EpochPoolShareTokenOsmoEquivalent or
+// PoolShareTokenOsmoEquivalent?
+message EpochTwapPrice {
+    int64 epoch = 1;
+    uint64 pool_id = 2;
+    string price = 3 [
+      (gogoproto.moretags) = "yaml:\"price\"",
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable) = false
+    ];
+}
+
 // GenesisState defines the module's genesis state.
 message GenesisState {
     Params params = 1 [ (gogoproto.nullable) = false ];
     repeated SuperfluidAsset superfluid_assets = 2 [ (gogoproto.nullable) = false ];
     repeated SuperfluidAssetInfo superfluid_asset_infos = 3 [ (gogoproto.nullable) = false ];
+    repeated EpochTwapPrice twap_price_records = 4
+        [ (gogoproto.nullable) = false ];
 }
