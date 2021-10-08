@@ -550,3 +550,162 @@ func (suite *KeeperTestSuite) TestF1Distribute() {
 	suite.Require().Equal(currentReward.Rewards, defaultGauge.rewardAmount.Add(sdk.NewInt64Coin(defaultRewardDenom, 6000)))
 	suite.T().Logf("current_reward=%v", currentReward.Rewards)
 }
+
+func (suite *KeeperTestSuite) TestCalculateHistoricalRewards() {
+	period := uint64(2)
+	lastProcessedEpoch := int64(1)
+	totalStake := sdk.NewCoin("stake", sdk.NewInt(1000000))
+	rewardCoin := sdk.NewCoin("reward", sdk.NewInt(100))
+	totalReward := sdk.NewCoins(rewardCoin)
+	k := suite.app.IncentivesKeeper
+	duration := k.GetLockableDurations(suite.ctx)[0]
+	epochInfo := k.GetEpochInfo(suite.ctx)
+	currentReward := types.CurrentReward{
+		Period:             period,
+		LastProcessedEpoch: lastProcessedEpoch,
+		Coin:               totalStake,
+		Rewards:            totalReward,
+	}
+
+	prevCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000))
+	prevHistoricalReward := types.HistoricalReward{
+		CummulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
+	}
+	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, uint64(lastProcessedEpoch), (epochInfo.CurrentEpoch - 1))
+
+	result, err := k.CalculateHistoricalRewards(suite.ctx, &currentReward, "stake", duration, epochInfo)
+	suite.Require().NoError(err)
+	suite.Require().Equal(result, totalReward)
+	resultHistoricalReward, err := k.GetHistoricalReward(suite.ctx, "stake", duration, period)
+	suite.Require().NoError(err)
+
+	expectedCurrentReward := types.CurrentReward{
+		Period:             period + 1,
+		LastProcessedEpoch: epochInfo.CurrentEpoch,
+		Coin:               totalStake,
+		Rewards:            sdk.NewCoins(),
+	}
+	suite.Require().Equal(currentReward.Period, expectedCurrentReward.Period)
+	suite.Require().Equal(currentReward.LastProcessedEpoch, expectedCurrentReward.LastProcessedEpoch)
+
+	resultAmount := prevCummulativeReward.Amount.Add(rewardCoin.Amount.ToDec().Quo(totalStake.Amount.ToDec()))
+	suite.Require().Equal(resultHistoricalReward.CummulativeRewardRatio, sdk.NewDecCoins(sdk.NewDecCoinFromDec("reward", resultAmount)))
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardBetweenPeriod() {
+	k := suite.app.IncentivesKeeper
+	duration := k.GetLockableDurations(suite.ctx)[0]
+	prevCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000))
+	prevHistoricalReward := types.HistoricalReward{
+		CummulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
+	}
+	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, 1, 1)
+
+	currCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(2000))
+	currHistoricalReward := types.HistoricalReward{
+		CummulativeRewardRatio: sdk.NewDecCoins(currCummulativeReward),
+	}
+	k.AddHistoricalReward(suite.ctx, currHistoricalReward, "stake", duration, 10, 100)
+
+	numStake := sdk.NewInt(100)
+	resultCoins, err := k.CalculateRewardBetweenPeriod(suite.ctx, "stake", duration, numStake, 10, 1)
+	suite.Require().NoError(err)
+	// expectedAmt := currCummulativeReward.Amount.Sub(prevCummulativeReward.Amount).MulInt(numStake).TruncateInt()
+	expectedAmt := sdk.NewInt((2000 - 1000) * 100)
+	expectedCoin := sdk.NewCoins(sdk.NewCoin("reward", expectedAmt))
+	suite.Require().Equal(expectedCoin, resultCoins)
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardForLock() {
+	k := suite.app.IncentivesKeeper
+
+	numStake := sdk.NewInt(100)
+	lockedCoin := sdk.NewCoin("stake", numStake)
+	lockedCoins := sdk.NewCoins(lockedCoin)
+
+	duration := k.GetLockableDurations(suite.ctx)[0]
+
+	currentReward := types.CurrentReward{
+		Period:             11,
+		LastProcessedEpoch: 1,
+		Coin:               lockedCoin,
+	}
+	k.SetCurrentReward(suite.ctx, currentReward, "stake", duration)
+
+	lock := lockuptypes.PeriodLock{
+		ID:    1,
+		Coins: lockedCoins,
+	}
+
+	lockReward := types.PeriodLockReward{
+		ID:      lock.ID,
+		Period:  make(map[string]uint64),
+		Rewards: sdk.Coins{},
+	}
+
+	prevCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000))
+	prevHistoricalReward := types.HistoricalReward{
+		CummulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
+	}
+	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, 1, 1)
+	lockReward.Period["stake/"+duration.String()] = 1
+
+	currCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(2000))
+	currHistoricalReward := types.HistoricalReward{
+		CummulativeRewardRatio: sdk.NewDecCoins(currCummulativeReward),
+	}
+	k.AddHistoricalReward(suite.ctx, currHistoricalReward, "stake", duration, 10, 100)
+	expectedAmount := sdk.NewInt((2000 - 1000) * 100)
+	expectedRewards := sdk.NewCoins(sdk.NewCoin("reward", expectedAmount))
+
+	err := k.CalculateRewardForLock(suite.ctx, lock, &lockReward, duration)
+	suite.Require().NoError(err)
+	suite.Require().Equal(expectedRewards, lockReward.Rewards)
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardForLockByEpoch() {
+	k := suite.app.IncentivesKeeper
+
+	numStake := sdk.NewInt(100)
+	lockedCoin := sdk.NewCoin("stake", numStake)
+	lockedCoins := sdk.NewCoins(lockedCoin)
+
+	duration := k.GetLockableDurations(suite.ctx)[0]
+
+	currentReward := types.CurrentReward{
+		Period:             11,
+		LastProcessedEpoch: 1,
+		Coin:               lockedCoin,
+	}
+	k.SetCurrentReward(suite.ctx, currentReward, "stake", duration)
+
+	lock := lockuptypes.PeriodLock{
+		ID:    1,
+		Coins: lockedCoins,
+	}
+
+	lockReward := types.PeriodLockReward{
+		ID:      lock.ID,
+		Period:  make(map[string]uint64),
+		Rewards: sdk.Coins{},
+	}
+
+	prevCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000))
+	prevHistoricalReward := types.HistoricalReward{
+		CummulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
+	}
+	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, 1, 1)
+	lockReward.Period["stake/"+duration.String()] = 1
+
+	currCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(2000))
+	currHistoricalReward := types.HistoricalReward{
+		CummulativeRewardRatio: sdk.NewDecCoins(currCummulativeReward),
+	}
+	k.AddHistoricalReward(suite.ctx, currHistoricalReward, "stake", duration, 10, 100)
+	expectedAmount := sdk.NewInt((2000 - 1000) * 100)
+	expectedRewards := sdk.NewCoins(sdk.NewCoin("reward", expectedAmount))
+
+	err := k.CalculateRewardForLockByEpoch(suite.ctx, lock, &lockReward, duration, 100)
+	suite.Require().NoError(err)
+	suite.Require().Equal(expectedRewards, lockReward.Rewards)
+}

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -95,8 +96,12 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 			if err != nil {
 				panic(err)
 			}
-			h.k.CalculateHistoricalRewards(ctx, &currentReward, denom, lockableDuration, epochInfo)
-			h.k.setCurrentReward(ctx, currentReward, denom, lockableDuration)
+			_, err = h.k.CalculateHistoricalRewards(ctx, &currentReward, denom, lockableDuration, epochInfo)
+			if err != nil {
+				ctx.Logger().Debug(fmt.Sprintf("F1::: err(%v)", err))
+			}
+
+			h.k.SetCurrentReward(ctx, currentReward, denom, lockableDuration)
 		}
 	}
 	err = h.k.UpdateRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
