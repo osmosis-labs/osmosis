@@ -221,6 +221,12 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 	return []lockuptypes.PeriodLock{}
 }
 
+// GetLocksToF1Distribution Get locks that are eligible to get gauge incentives
+func (k Keeper) GetLocksToF1Distribution(ctx sdk.Context, denom string, duration time.Duration) []lockuptypes.PeriodLock {
+	timestamp := k.GetEpochInfo(ctx).CurrentEpochStartTime.Add(duration)
+	return k.lk.GetLocksLongerThanTargetTime(ctx, denom, timestamp, duration)
+}
+
 // FilteredLocksDistributionEst estimate distribution amount coins from gauge for fitting conditions
 // Expectation: gauge is a valid gauge
 // filteredLocks are all locks that are valid for gauge
@@ -861,20 +867,12 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward *types
 		}
 	}
 
-	// Locks (No schedule to unlock)
-	newTotalStakes := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         denom,
-		Duration:      duration,
-	})
-	targetTime := epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration).Add(duration - time.Nanosecond)
-	ctx.Logger().Debug(fmt.Sprintf("F1::: [%s]:[%s] LockedTotalStakes %d", denom, duration.String(), newTotalStakes.Int64()))
-	ctx.Logger().Debug(fmt.Sprintf("F1::: [%s]:[%s] [%s] UnlockedStakes %d", denom, duration.String(), targetTime.String(), k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, targetTime).Int64()))
+	locks := k.GetLocksToF1Distribution(ctx, denom, duration)
+	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
 
-	// Unlocking Locks
-	newTotalStakes = newTotalStakes.Sub(k.lk.GetUnlockingPeriodLocksAccumulation(ctx, denom, targetTime))
-	ctx.Logger().Debug(fmt.Sprintf("F1::: [%s]:[%s] newTotalStakes %d", denom, duration.String(), newTotalStakes.Int64()))
-	currentReward.Coin = sdk.NewCoin(denom, newTotalStakes)
+	ctx.Logger().Debug(fmt.Sprintf("F1::: [%s]:[%s] LockedTotalStakes %d", denom, duration.String(), lockSum.Int64()))
+
+	currentReward.Coin = sdk.NewCoin(denom, lockSum)
 	currentReward.Rewards = currentReward.Rewards.Sub(totalDistrCoins)
 
 	// Move to Next Period
