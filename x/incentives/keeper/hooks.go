@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -117,15 +116,6 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 	}
 	epochInfo := h.k.GetEpochInfo(ctx)
 	lockableDurations := h.k.GetLockableDurations(ctx)
-	for _, lockableDuration := range lockableDurations {
-		if lockDuration < lockableDuration {
-			continue
-		}
-
-		if lockableDuration.Nanoseconds()%epochInfo.Duration.Nanoseconds() != 0 {
-			panic(fmt.Errorf("LockableDuration is not multipleof EpochDuration"))
-		}
-	}
 	newLockReward, err := h.k.GetRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
 	if err != nil {
 		return

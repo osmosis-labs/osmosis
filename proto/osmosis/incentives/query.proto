@@ -188,9 +188,9 @@ message HistoricalRewardRequest {
   int64 period = 3;
 }
 message HistoricalRewardResponse {
-  repeated cosmos.base.v1beta1.Coin cumulative_reward_ratio = 1 [
+  repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
     (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
 }
 

@@ -684,7 +684,7 @@ func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration 
 
 	// TODO: temporary workaround before adding initialization of period 0
 	if period == 0 {
-		historicalReward.CummulativeRewardRatio = sdk.Coins{}
+		historicalReward.CummulativeRewardRatio = sdk.DecCoins{}
 		return historicalReward, nil
 	}
 
@@ -831,22 +831,27 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward *types
 
 		ctx.Logger().Debug(fmt.Sprintf("F1::: CalculateHistoricalRewards:::  prevHistoricalReward[%d] duration: %s cummulativeReward[%v]", prevPeriod, duration.String(), prevHistoricalReward.CummulativeRewardRatio))
 		for _, coin := range currentReward.Rewards {
-			totalReward := coin.Amount
+			totalReward := coin.Amount.ToDec()
 
 			if totalReward.IsNegative() {
 				return totalDistrCoins, fmt.Errorf("current rewards is negative. reward amount = %d", totalReward)
 			}
-			currRewardPerShare := sdk.NewInt(0)
+			currRewardPerShare := sdk.NewDec(0)
 			if !totalStakes.IsZero() {
-				currRewardPerShare = totalReward.Quo(totalStakes)
+				currRewardPerShare = totalReward.Quo(totalStakes.ToDec())
 			}
 
-			newHistoricalReward.CummulativeRewardRatio = newHistoricalReward.CummulativeRewardRatio.Add(sdk.NewCoin(coin.Denom, currRewardPerShare))
+			newHistoricalReward.CummulativeRewardRatio = newHistoricalReward.CummulativeRewardRatio.Add(sdk.NewDecCoinFromDec(coin.Denom, currRewardPerShare))
 
-			ctx.Logger().Debug(fmt.Sprintf("F1::: CalculateHistoricalRewards::: totalReward %d totalStakes: %d rewardPerShare %d", totalReward.Int64(), totalStakes.Int64(), currRewardPerShare.Int64()))
+			ctx.Logger().Debug(fmt.Sprintf("F1::: CalculateHistoricalRewards::: totalReward %v totalStakes: %d rewardPerShare %v", totalReward, totalStakes.Int64(), currRewardPerShare))
 
-			distrCoins := sdk.NewCoin(coin.Denom, currRewardPerShare.Mul(totalStakes))
-			totalDistrCoins = totalDistrCoins.Add(distrCoins)
+			distrDecCoin := currRewardPerShare.Mul(totalStakes.ToDec())
+			if coin.Amount != distrDecCoin.RoundInt() {
+				distrDecCoin := currRewardPerShare.Mul(totalStakes.ToDec())
+				ctx.Logger().Debug(fmt.Sprintf("F1::: CalculateHistoricalRewards::: DecCoin[%v] RoundDecCoin[%v] Coin[%v]", distrDecCoin, distrDecCoin.RoundInt(), coin.Amount))
+			}
+			// totalDistrCoins = totalDistrCoins.Add(sdk.NewCoin(coin.Denom, currRewardPerShare.Mul(totalStakes.ToDec()).RoundInt()))
+			totalDistrCoins = totalDistrCoins.Add(coin)
 		}
 
 		ctx.Logger().Debug(fmt.Sprintf("F1::: CalculateHistoricalRewards::: currHistoricalReward[%d] duration: %s cummulativeReward[%v]", currentReward.Period, duration.String(), newHistoricalReward.CummulativeRewardRatio))
@@ -897,10 +902,11 @@ func (k Keeper) CalculateRewardBetweenPeriod(ctx sdk.Context, denom string, dura
 	ctx.Logger().Debug(fmt.Sprintf("[F1] historical-reward: start-period=%v, %v", prevPeriod, prevHistoricalReward))
 
 	accumReward := targetHistoricalReward.CummulativeRewardRatio.Sub(prevHistoricalReward.CummulativeRewardRatio)
-	for _, coin := range accumReward {
-		if coin.IsPositive() {
-			ctx.Logger().Debug(fmt.Sprintf("[F1] + historical-reward=%v", sdk.NewCoin(coin.Denom, coin.Amount.Mul(amount))))
-			totalReward = totalReward.Add(sdk.NewCoin(coin.Denom, coin.Amount.Mul(amount)))
+	for _, decCoin := range accumReward {
+		if decCoin.IsPositive() {
+			reward := decCoin.Amount.Mul(amount.ToDec()).TruncateInt()
+			ctx.Logger().Debug(fmt.Sprintf("[F1] + historical-reward=%v", sdk.NewCoin(decCoin.Denom, reward)))
+			totalReward = totalReward.Add(sdk.NewCoin(decCoin.Denom, reward))
 		}
 	}
 	return totalReward, nil
