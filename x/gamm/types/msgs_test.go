@@ -46,7 +46,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	})
 
 	require.Equal(t, default_msg.Route(), RouterKey)
-	require.Equal(t, default_msg.Type(), "create_pool")
+	require.Equal(t, default_msg.Type(), "create_balancer_pool")
 	signers := default_msg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
