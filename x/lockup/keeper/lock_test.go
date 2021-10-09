@@ -465,3 +465,41 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
 }
+
+func (suite *KeeperTestSuite) TestLocksLongerThanTargetTime() {
+	suite.SetupTest()
+
+	// initial check
+	duration := time.Minute
+	timestamp := suite.ctx.BlockTime()
+	locks := suite.app.LockupKeeper.GetLocksLongerThanTargetTime(suite.ctx, "stake", timestamp, duration)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	for i := 0; i < 100; i++ {
+		coins := sdk.Coins{sdk.NewInt64Coin("stake", 1+int64(i))}
+		itv := time.Duration(time.Second.Nanoseconds() * int64(i))
+		suite.LockTokens(addr1, coins, time.Minute+itv)
+	}
+
+	for i := 0; i < 100; i++ {
+		coins := sdk.Coins{sdk.NewInt64Coin("stake", 1+int64(i))}
+		itv := time.Duration(time.Second.Microseconds() * int64(i))
+		suite.LockTokens(addr1, coins, time.Minute*5+itv)
+	}
+
+	accountLocks := suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, timestamp.Add(time.Minute*5))
+	for _, lock := range accountLocks {
+		suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock)
+	}
+
+	// final check
+	timestamp = suite.ctx.BlockTime().Add(time.Minute - time.Second)
+	for i := 0; i < 100; i++ {
+		locks = suite.app.LockupKeeper.GetLocksLongerThanTargetTime(suite.ctx, "stake", timestamp, duration)
+		suite.Require().Len(locks, 200-i)
+		timestamp = timestamp.Add(time.Second)
+	}
+
+}
