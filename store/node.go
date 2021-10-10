@@ -23,9 +23,10 @@ func (ptr *ptr) node() (res *Node) {
 	res = new(Node)
 	bz := ptr.tree.store.Get(ptr.tree.nodeKey(ptr.level, ptr.key))
 	if bz != nil {
-		if err := proto.Unmarshal(bz, res); err != nil {
-			panic(err)
-		}
+		proto.Unmarshal(bz, res)
+		// if err := ; err != nil {
+		// 	panic(err)
+		// }
 	}
 	return
 }
