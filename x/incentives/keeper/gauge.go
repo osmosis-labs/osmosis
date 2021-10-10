@@ -318,7 +318,7 @@ func (d *distributionInfo) addLockRewards(lock lockuptypes.PeriodLock, rewards s
 	return nil
 }
 
-func (k Keeper) doDistributionSends(ctx sdk.Context, distrs distributionInfo) error {
+func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) error {
 	numIDs := len(distrs.idToDecodedAddr)
 	ctx.Logger().Debug(fmt.Sprintf("Beginning distribution to %d users", numIDs))
 	err := k.bk.SendCoinsFromModuleToManyAccounts(
@@ -329,7 +329,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs distributionInfo) er
 	if err != nil {
 		return err
 	}
-	ctx.Logger().Debug(fmt.Sprintf("Finished sending, now creating liquidity add events"))
+	ctx.Logger().Debug("Finished sending, now creating liquidity add events")
 	for id := 0; id < numIDs; id++ {
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
@@ -346,7 +346,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs distributionInfo) er
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo computed. It also updates the gauge for the distribution.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, distrInfo distributionInfo) (sdk.Coins, error) {
+	ctx sdk.Context, gauge types.Gauge, distrInfo *distributionInfo) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
 	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
@@ -400,14 +400,14 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
-		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, distrInfo)
+		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, &distrInfo)
 		if err != nil {
 			return nil, err
 		}
 		totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
 	}
 
-	err := k.doDistributionSends(ctx, distrInfo)
+	err := k.doDistributionSends(ctx, &distrInfo)
 	if err != nil {
 		return nil, err
 	}
