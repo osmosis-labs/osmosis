@@ -18,7 +18,7 @@ service Query {
 
   // HrpIbcRecord returns the record for a requested HRP
   rpc HrpIbcRecord(QueryHrpIbcRecordRequest)
-      returns (QueryHrpHrpIbcRecordResponse) {
+      returns (QueryHrpIbcRecordResponse) {
     option (google.api.http).get =
         "/osmosis/txfees/v1beta1/hrp_source_channel/{hrp}";
   }
@@ -40,7 +40,7 @@ message QueryHrpIbcRecordsResponse {
 message QueryHrpIbcRecordRequest {
   string hrp = 1 [ (gogoproto.moretags) = "yaml:\"hrp\"" ];
 }
-message QueryHrpHrpIbcRecordResponse {
+message QueryHrpIbcRecordResponse {
   HrpIbcRecord hrp_ibc_record = 1 [
     (gogoproto.moretags) = "yaml:\"hrp_ibc_record\"",
     (gogoproto.nullable) = false
