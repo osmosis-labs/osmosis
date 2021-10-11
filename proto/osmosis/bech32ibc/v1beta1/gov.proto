@@ -3,6 +3,7 @@ package osmosis.bech32ibc.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/bech32ibc/v1beta1/types.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/bech32ibc/types";
 
@@ -21,4 +22,11 @@ message UpdateHrpIbcChannelProposal {
   string hrp = 3 [ (gogoproto.moretags) = "yaml:\"hrp\"" ];
   string source_channel = 4
       [ (gogoproto.moretags) = "yaml:\"source_channel\"" ];
+  uint64 ics_to_height_offset = 5;
+  google.protobuf.Duration ics_to_time_offset = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "to_time_offset,omitempty",
+    (gogoproto.moretags) = "yaml:\"to_time_offset\""
+  ];
 }
