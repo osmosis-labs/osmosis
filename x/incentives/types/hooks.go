@@ -7,7 +7,7 @@ type IncentiveHooks interface {
 	AfterAddToGauge(ctx sdk.Context, gaugeId uint64)
 	AfterStartDistribution(ctx sdk.Context, gaugeId uint64)
 	AfterFinishDistribution(ctx sdk.Context, gaugeId uint64)
-	AfterDistribute(ctx sdk.Context, gaugeId uint64)
+	AfterEpochDistribution(ctx sdk.Context)
 }
 
 var _ IncentiveHooks = MultiIncentiveHooks{}
@@ -43,8 +43,8 @@ func (h MultiIncentiveHooks) AfterFinishDistribution(ctx sdk.Context, gaugeId ui
 	}
 }
 
-func (h MultiIncentiveHooks) AfterDistribute(ctx sdk.Context, gaugeId uint64) {
+func (h MultiIncentiveHooks) AfterEpochDistribution(ctx sdk.Context) {
 	for i := range h {
-		h[i].AfterDistribute(ctx, gaugeId)
+		h[i].AfterEpochDistribution(ctx)
 	}
 }

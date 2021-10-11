@@ -10,6 +10,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -151,13 +152,14 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	b.StartTimer()
 	// distribute coins from gauges to lockup owners
 	for i := 0; i < numDistrs; i++ {
+		gauges := []types.Gauge{}
 		for _, gaugeId := range gaugeIds {
 			gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-			_, err := app.IncentivesKeeper.Distribute(ctx, *gauge)
-			if err != nil {
-				fmt.Printf("Distribute, %v\n", err)
-				b.FailNow()
-			}
+			gauges = append(gauges, *gauge)
+		}
+		_, err := app.IncentivesKeeper.Distribute(ctx, gauges)
+		if err != nil {
+			b.FailNow()
 		}
 	}
 }
