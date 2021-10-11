@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.bech32ibc.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/bech32ibc/types";
 
@@ -15,4 +16,11 @@ message HrpIbcRecord {
   // the channel by which the packet will be sent
   string source_channel = 2
       [ (gogoproto.moretags) = "yaml:\"source_channel\"" ];
+  uint64 ics_to_height_offset = 3;
+  google.protobuf.Duration ics_to_time_offset = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "ics_to_time_offset,omitempty",
+    (gogoproto.moretags) = "yaml:\"ics_to_time_offset\""
+  ];
 }
