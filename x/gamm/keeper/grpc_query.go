@@ -124,7 +124,7 @@ func (k Keeper) NumPools(
 	}, nil
 }
 
-func (k Keeper) BalancerPoolParams(ctx context.Context, req *types.QueryBalancerPoolParamsRequest) (*types.QueryBalancerPoolParamsResponse, error) {
+func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -135,44 +135,20 @@ func (k Keeper) BalancerPoolParams(ctx context.Context, req *types.QueryBalancer
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	// TODO: add
 	balancerPool, ok := pool.(*types.BalancerPool)
 	if !ok {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryBalancerPoolParamsResponse{
-		Params: balancerPool.PoolParams,
-	}, nil
-}
 
-func (k Keeper) SwapFee(ctx context.Context, req *types.QuerySwapFeeRequest) (*types.QuerySwapFeeResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	pool, err := k.GetPool(sdkCtx, req.PoolId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	return &types.QuerySwapFeeResponse{
-		SwapFee: pool.GetPoolSwapFee().String(),
-	}, nil
-}
-
-func (k Keeper) ExitFee(ctx context.Context, req *types.QueryExitFeeRequest) (*types.QueryExitFeeResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	pool, err := k.GetPool(sdkCtx, req.PoolId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	return &types.QueryExitFeeResponse{
-		ExitFee: pool.GetPoolExitFee().String(),
+	return &types.QueryPoolParamsResponse{
+		Params: &types.QueryPoolParamsResponse_BalancerPoolParams{
+			BalancerPoolParams: &types.BalancerPoolParams{
+				SwapFee:                  balancerPool.GetPoolExitFee(),
+				ExitFee:                  balancerPool.GetPoolExitFee(),
+				SmoothWeightChangeParams: balancerPool.PoolParams.SmoothWeightChangeParams,
+			},
+		},
 	}, nil
 }
 

@@ -28,18 +28,11 @@ service Query {
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{poolId}";
   }
-  rpc BalancerPoolParams(QueryBalancerPoolParamsRequest)
-      returns (QueryBalancerPoolParamsResponse) {
+  rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/params";
   }
-  rpc SwapFee(QuerySwapFeeRequest) returns (QuerySwapFeeResponse) {
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/swap_fee";
-  }
-  rpc ExitFee(QueryExitFeeRequest) returns (QueryExitFeeResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{poolId}/exit";
-  }
+
   rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/total_shares";
@@ -94,27 +87,11 @@ message QueryNumPoolsResponse {
 }
 
 //=============================== PoolParams
-message QueryBalancerPoolParamsRequest {
+message QueryPoolParamsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryBalancerPoolParamsResponse {
-  BalancerPoolParams params = 1 [ (gogoproto.nullable) = false ];
-}
-
-//=============================== SwapFee
-message QuerySwapFeeRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-}
-message QuerySwapFeeResponse {
-  string swapFee = 1 [ (gogoproto.moretags) = "yaml:\"swap_fee\"" ];
-}
-
-//=============================== ExitFee
-message QueryExitFeeRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-}
-message QueryExitFeeResponse {
-  string exitFee = 1 [ (gogoproto.moretags) = "yaml:\"exit_fee\"" ];
+message QueryPoolParamsResponse {
+  oneof params { BalancerPoolParams balancerPoolParams = 1; }
 }
 
 //=============================== TotalShares
