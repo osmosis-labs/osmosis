@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,23 +85,9 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 	}
 	epochInfo := h.k.GetEpochInfo(ctx)
 	lockableDurations := h.k.GetLockableDurations(ctx)
-	for _, lockableDuration := range lockableDurations {
-		if lockDuration < lockableDuration {
-			continue
-		}
-		for _, coin := range amount {
-			denom := coin.Denom
-			currentReward, err := h.k.GetCurrentReward(ctx, denom, lockableDuration)
-			if err != nil {
-				panic(err)
-			}
-			_, err = h.k.CalculateHistoricalRewards(ctx, &currentReward, denom, lockableDuration, epochInfo)
-			if err != nil {
-				ctx.Logger().Debug(fmt.Sprintf("F1::: err(%v)", err))
-			}
-
-			h.k.SetCurrentReward(ctx, currentReward, denom, lockableDuration)
-		}
+	err = h.k.UpdateHistoricalRewardFromCurrentReward(ctx, amount, lockDuration, epochInfo, lockableDurations)
+	if err != nil {
+		return
 	}
 	err = h.k.UpdateRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
 	if err != nil {
@@ -125,7 +110,10 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 	if err != nil {
 		return
 	}
-	h.k.ClaimRewardForLock(ctx, *lock, &newLockReward, lockableDurations)
+	_, err = h.k.ClaimRewardForLock(ctx, *lock, newLockReward, lockableDurations)
+	if err != nil {
+		return
+	}
 
 	h.k.clearPeriodLockReward(ctx, lockID)
 }

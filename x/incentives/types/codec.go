@@ -13,6 +13,8 @@ import (
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateGauge{}, "osmosis/incentives/create-gauge", nil)
 	cdc.RegisterConcrete(&MsgAddToGauge{}, "osmosis/incentives/add-to-gauge", nil)
+	cdc.RegisterConcrete(&MsgClaimLockReward{}, "osmosis/incentives/claim-lock-reward", nil)
+	cdc.RegisterConcrete(&MsgClaimLockRewardAll{}, "osmosis/incentives/claim-lock-reward-all", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -20,6 +22,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateGauge{},
 		&MsgAddToGauge{},
+		&MsgClaimLockReward{},
+		&MsgClaimLockRewardAll{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
