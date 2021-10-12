@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 * Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
+* Update Notional Labs seed node in cmd/osmosisd/cmd/init.go
 
 ## [v4.0.0]
 
