@@ -21,7 +21,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// initialize epoch twap price
 	for _, priceRecord := range genState.TwapPriceRecords {
-		k.SetEpochTwapPrice(ctx, priceRecord.Epoch, priceRecord.PoolId, priceRecord.Price)
+		k.SetEpochOsmoEquivalentTWAP(ctx, priceRecord.Epoch, priceRecord.PoolId, priceRecord.Price)
 	}
 }
 
@@ -30,6 +30,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		SuperfluidAssets:     k.GetAllSuperfluidAssets(ctx),
 		SuperfluidAssetInfos: k.GetAllSuperfluidAssetInfos(ctx),
-		TwapPriceRecords:     k.GetAllTwapPrices(ctx),
+		TwapPriceRecords:     k.GetAllOsmoEquivalentTWAPs(ctx),
 	}
 }

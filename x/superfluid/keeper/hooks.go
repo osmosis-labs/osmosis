@@ -33,7 +33,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		// TODO: how to get GAMM pool ids to fetch price info - do all ids?
 		// TODO: should get twap price from gamm module and use the price
-		k.SetEpochTwapPrice(ctx, epochNumber, 1, sdk.NewDec(1))
+		k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, 1, sdk.NewDec(1))
 	}
 }
 

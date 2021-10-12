@@ -16,7 +16,7 @@ func DefaultGenesis() *GenesisState {
 		Params:               DefaultParams(),
 		SuperfluidAssets:     []SuperfluidAsset{},
 		SuperfluidAssetInfos: []SuperfluidAssetInfo{},
-		TwapPriceRecords:     []EpochTwapPrice{},
+		TwapPriceRecords:     []EpochOsmoEquivalentTWAP{},
 	}
 }
 
