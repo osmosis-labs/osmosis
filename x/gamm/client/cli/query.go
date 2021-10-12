@@ -29,8 +29,6 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdPool(),
 		GetCmdPools(),
 		GetCmdNumPools(),
-		GetCmdSwapFee(),
-		GetCmdExitFee(),
 		GetCmdTotalShares(),
 		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
@@ -81,6 +79,28 @@ $ %s query gamm pool 1
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// TODO: Push this to the SDK
+func writeOutputBoilerplate(ctx client.Context, out []byte) error {
+	writer := ctx.Output
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	_, err := writer.Write(out)
+	if err != nil {
+		return err
+	}
+
+	if ctx.OutputFormat != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetCmdPools return pools
@@ -159,140 +179,6 @@ $ %s query gamm num-pools
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-// GetCmdSwapFee return pool swap fee
-func GetCmdSwapFee() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "swap-fee <poolID>",
-		Short: "Query swap-fee",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query swap-fee.
-Example:
-$ %s query gamm swap-fee 1
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.SwapFee(cmd.Context(), &types.QuerySwapFeeRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			if clientCtx.OutputFormat == "text" {
-				out, err := yaml.Marshal(res.SwapFee)
-
-				if err != nil {
-					return err
-				}
-				return writeOutputBoilerplate(clientCtx, out)
-			} else {
-				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
-
-				if err != nil {
-					return err
-				}
-				return writeOutputBoilerplate(clientCtx, out)
-			}
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdExitFee return pool exit fee
-func GetCmdExitFee() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "exit-fee <poolID>",
-		Short: "Query exit-fee",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query exit-fee.
-Example:
-$ %s query gamm exit-fee 1
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.ExitFee(cmd.Context(), &types.QueryExitFeeRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			if clientCtx.OutputFormat == "text" {
-				out, err := yaml.Marshal(res.ExitFee)
-
-				if err != nil {
-					return err
-				}
-				return writeOutputBoilerplate(clientCtx, out)
-			} else {
-				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
-
-				if err != nil {
-					return err
-				}
-				return writeOutputBoilerplate(clientCtx, out)
-			}
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// TODO: Push this to the SDK
-func writeOutputBoilerplate(ctx client.Context, out []byte) error {
-	writer := ctx.Output
-	if writer == nil {
-		writer = os.Stdout
-	}
-
-	_, err := writer.Write(out)
-	if err != nil {
-		return err
-	}
-
-	if ctx.OutputFormat != "text" {
-		// append new-line for formats besides YAML
-		_, err = writer.Write([]byte("\n"))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // GetCmdTotalShares return total share

@@ -104,57 +104,7 @@ func (suite *KeeperTestSuite) TestQueryNumPools2() {
 	suite.Require().Equal(uint64(10), res.NumPools)
 }
 
-func (suite *KeeperTestSuite) TestQueryBalancerPoolSwapFee() {
-	queryClient := suite.queryClient
-
-	_, err := queryClient.SwapFee(gocontext.Background(), &types.QuerySwapFeeRequest{PoolId: 1})
-	suite.Require().Error(err)
-
-	poolId1 := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(15, 2),
-	})
-
-	poolId2 := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 1),
-		ExitFee: sdk.NewDecWithPrec(15, 3),
-	})
-
-	params1, err := queryClient.SwapFee(gocontext.Background(), &types.QuerySwapFeeRequest{PoolId: poolId1})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewDecWithPrec(1, 2).String(), params1.SwapFee)
-
-	params2, err := queryClient.SwapFee(gocontext.Background(), &types.QuerySwapFeeRequest{PoolId: poolId2})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewDecWithPrec(1, 1).String(), params2.SwapFee)
-}
-
-func (suite *KeeperTestSuite) TestQueryBalancerPoolExitFee() {
-	queryClient := suite.queryClient
-
-	_, err := queryClient.ExitFee(gocontext.Background(), &types.QueryExitFeeRequest{PoolId: 1})
-	suite.Require().Error(err)
-
-	poolId1 := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(15, 2),
-	})
-
-	poolId2 := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 1),
-		ExitFee: sdk.NewDecWithPrec(15, 3),
-	})
-
-	params1, err := queryClient.ExitFee(gocontext.Background(), &types.QueryExitFeeRequest{PoolId: poolId1})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewDecWithPrec(15, 2).String(), params1.ExitFee)
-
-	params2, err := queryClient.ExitFee(gocontext.Background(), &types.QueryExitFeeRequest{PoolId: poolId2})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewDecWithPrec(15, 3).String(), params2.ExitFee)
-}
-
-func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalShares() {
+func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
