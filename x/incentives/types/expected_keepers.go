@@ -24,7 +24,6 @@ type LockupKeeper interface {
 	GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp time.Time) []lockuptypes.PeriodLock
 	GetUnlockingsBetweenTimeDenom(ctx sdk.Context, denom string, starttime time.Time, endtime time.Time) []lockuptypes.PeriodLock
 	GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []lockuptypes.PeriodLock
-	GetLocksLongerThanTargetTime(ctx sdk.Context, denom string, timestamp time.Time, duration time.Duration) []lockuptypes.PeriodLock
 	GetPeriodLocksAccumulation(ctx sdk.Context, query lockuptypes.QueryCondition) sdk.Int
 	GetUnlockingPeriodLocksAccumulation(ctx sdk.Context, denom string, beginTime time.Time) sdk.Int
 	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock

@@ -222,8 +222,23 @@ func (suite *KeeperTestSuite) TestLocksPastTimeDenom() {
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.LockTokens(addr1, coins, time.Second)
 
-	// final check
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Minute)
+
+	// check locks
 	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", now)
+	suite.Require().Len(locks, 2)
+
+	// unlock 1 sec lock
+	for _, lock := range locks {
+		if lock.Duration == time.Second {
+			suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock)
+			break
+		}
+	}
+
+	// final check
+	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", now.Add(time.Second))
 	suite.Require().Len(locks, 1)
 }
 
@@ -464,41 +479,4 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 		Duration: time.Second * 4,
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
-}
-
-func (suite *KeeperTestSuite) TestLocksLongerThanTargetTime() {
-	suite.SetupTest()
-
-	duration := time.Minute
-	targetTime := suite.ctx.BlockTime()
-	locks := suite.app.LockupKeeper.GetLocksLongerThanTargetTime(suite.ctx, "stake", targetTime, duration)
-	suite.Require().Len(locks, 0)
-
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-
-	// Add 1 min lock
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 1)}
-	duration = time.Minute
-	suite.LockTokens(addr1, coins, duration)
-
-	// Add 5 min lock
-	coins = sdk.Coins{sdk.NewInt64Coin("stake", 1)}
-	duration = time.Minute * 5
-	suite.LockTokens(addr1, coins, duration)
-
-	// Add 1 min to the target time
-	targetTime = suite.ctx.BlockTime().Add(time.Minute)
-	locks = suite.app.LockupKeeper.GetLocksLongerThanTargetTime(suite.ctx, "stake", targetTime, time.Minute)
-	suite.Require().Len(locks, 2)
-
-	// Unlock 1 min lock
-	for _, lock := range locks {
-		if lock.Duration == time.Minute {
-			suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock)
-			break
-		}
-	}
-
-	locks = suite.app.LockupKeeper.GetLocksLongerThanTargetTime(suite.ctx, "stake", targetTime, time.Minute)
-	suite.Require().Len(locks, 1)
 }
