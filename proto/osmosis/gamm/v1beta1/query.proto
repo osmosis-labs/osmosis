@@ -2,7 +2,8 @@ syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/gamm/v1beta1/balancerPool.proto";
+import "osmosis/gamm/pool-models/balancerPool.proto";
+import "osmosis/gamm/v1beta1/pool.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -91,7 +92,9 @@ message QueryPoolParamsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message QueryPoolParamsResponse {
-  oneof params { BalancerPoolParams balancerPoolParams = 1; }
+  oneof params {
+    osmosis.gamm.poolmodels.BalancerPoolParams balancerPoolParams = 1;
+  }
 }
 
 //=============================== TotalShares
