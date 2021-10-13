@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	"time"
 )
 
 var (
@@ -19,9 +20,6 @@ var (
 
 func (suite *KeeperTestSuite) TestF1Distribute() {
 	now, height := suite.setupEpochAndLockableDurations()
-
-	//make sure that now passed an epoch
-	now = now.Add(time.Second)
 
 	//next epoch
 	suite.nextEpoch(&now, &height)
@@ -106,7 +104,12 @@ func (suite *KeeperTestSuite) setupEpochAndLockableDurations() (time.Time, int64
 }
 
 func (suite *KeeperTestSuite) nextEpoch(now *time.Time, height *int64) {
-	*now = (*now).Add(DayDuration)
+	epochInfo := suite.app.EpochsKeeper.AllEpochInfos(suite.ctx)[0]
+	if epochInfo.StartTime.After(epochInfo.CurrentEpochStartTime) {
+		*now = (*now).Add(DayDuration + time.Second)
+	} else {
+		*now = epochInfo.CurrentEpochStartTime.Add(DayDuration + time.Second)
+	}
 	*height = *height + 1
 	suite.ctx = suite.ctx.WithBlockHeight(*height).WithBlockTime(*now)
 	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
@@ -135,7 +138,6 @@ func (suite *KeeperTestSuite) setupNonPerpetualGauge(owner sdk.AccAddress, now t
 
 func (suite *KeeperTestSuite) TestLockFor1Day() {
 	now, height := suite.setupEpochAndLockableDurations()
-	now = now.Add(time.Second)
 	suite.nextEpoch(&now, &height)
 
 	//new non-perpetual gauge
@@ -157,7 +159,6 @@ func (suite *KeeperTestSuite) TestLockFor1Day() {
 
 func (suite *KeeperTestSuite) TestLockFor14Days() {
 	now, height := suite.setupEpochAndLockableDurations()
-	now = now.Add(time.Second)
 	suite.nextEpoch(&now, &height)
 
 	//new non-perpetual gauge
@@ -183,7 +184,6 @@ func (suite *KeeperTestSuite) TestLockFor14Days() {
 
 func (suite *KeeperTestSuite) TestLockAndUnlockFor14Days() {
 	now, height := suite.setupEpochAndLockableDurations()
-	now = now.Add(time.Second)
 	suite.nextEpoch(&now, &height)
 
 	//new non-perpetual gauge

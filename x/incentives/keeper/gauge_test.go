@@ -520,8 +520,8 @@ func (suite *KeeperTestSuite) TestGaugesByDenom() {
 func (suite *KeeperTestSuite) TestCalculateHistoricalRewards() {
 	period := uint64(2)
 	lastProcessedEpoch := int64(1)
-	totalStake := sdk.NewCoin("stake", sdk.NewInt(1000000))
-	rewardCoin := sdk.NewCoin("reward", sdk.NewInt(100))
+	totalStake := sdk.NewCoin("stake", sdk.NewInt(1000))
+	rewardCoin := sdk.NewCoin("reward", sdk.NewInt(10000))
 	totalReward := sdk.NewCoins(rewardCoin)
 	k := suite.app.IncentivesKeeper
 	duration := k.GetLockableDurations(suite.ctx)[0]
@@ -539,20 +539,13 @@ func (suite *KeeperTestSuite) TestCalculateHistoricalRewards() {
 	}
 	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, uint64(lastProcessedEpoch), (epochInfo.CurrentEpoch - 1))
 
-	result, err := k.CalculateHistoricalRewards(suite.ctx, &currentReward, "stake", duration, epochInfo)
-	suite.Require().NoError(err)
-	suite.Require().Equal(result, totalReward)
-	resultHistoricalReward, err := k.GetHistoricalReward(suite.ctx, "stake", duration, period)
-	suite.Require().NoError(err)
-
-	expectedCurrentReward := types.CurrentReward{
-		Period:             period + 1,
-		LastProcessedEpoch: epochInfo.CurrentEpoch,
-		Coin:               totalStake,
-		Rewards:            sdk.NewCoins(),
+	expectedCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000+10))
+	expectedHistoricalReward := types.HistoricalReward{
+		CummulativeRewardRatio: sdk.NewDecCoins(expectedCummulativeReward),
 	}
-	suite.Require().Equal(currentReward.Period, expectedCurrentReward.Period)
-	suite.Require().Equal(currentReward.LastProcessedEpoch, expectedCurrentReward.LastProcessedEpoch)
+	resultHistoricalReward, err := k.CalculateHistoricalRewards(suite.ctx, currentReward, "stake", duration, epochInfo)
+	suite.Require().NoError(err)
+	suite.Require().Equal(*resultHistoricalReward, expectedHistoricalReward)
 
 	resultAmount := prevCummulativeReward.Amount.Add(rewardCoin.Amount.ToDec().Quo(totalStake.Amount.ToDec()))
 	suite.Require().Equal(resultHistoricalReward.CummulativeRewardRatio, sdk.NewDecCoins(sdk.NewDecCoinFromDec("reward", resultAmount)))
