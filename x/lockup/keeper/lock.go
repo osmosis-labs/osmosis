@@ -586,7 +586,6 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 //////////////////////////// START //////////////////////////////////
 
 func (k Keeper) GetUnlockingsBetweenTimeDenom(ctx sdk.Context, denom string, beginTime time.Time, endTime time.Time) []types.PeriodLock {
-	// returns both unlocking started and not started assuming it started unlocking current time
 	return k.getLocksFromIterator(ctx, k.LockIteratorBetweenTimeDenom(ctx, true, denom, beginTime, endTime))
 }
 
@@ -597,6 +596,12 @@ func (k Keeper) unlockingAccumulationStore(ctx sdk.Context, denom string) store.
 func (k Keeper) GetUnlockingPeriodLocksAccumulation(ctx sdk.Context, denom string, beginTime time.Time) sdk.Int {
 	beginKey := unlockingAccumulationKey(beginTime)
 	return k.unlockingAccumulationStore(ctx, denom).SubsetAccumulation(nil, beginKey)
+}
+
+func (k Keeper) GetLocksValidAfterTimeDenomDuration(ctx sdk.Context, denom string, timestamp time.Time, duration time.Duration) []types.PeriodLock {
+	unlockings := k.getLocksFromIterator(ctx, k.LockIteratorAfterTimeDenom(ctx, true, denom, timestamp))
+	notUnlockings := k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, false, denom, duration))
+	return combineLocks(notUnlockings, unlockings)
 }
 
 ////////////////////////////  END //////////////////////////////////

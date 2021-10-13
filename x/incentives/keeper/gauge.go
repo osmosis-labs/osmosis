@@ -223,8 +223,9 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 
 // GetLocksToF1Distribution Get locks that are eligible to get gauge incentives
 func (k Keeper) GetLocksToF1Distribution(ctx sdk.Context, denom string, duration time.Duration) []lockuptypes.PeriodLock {
-	timestamp := k.GetEpochInfo(ctx).CurrentEpochStartTime.Add(duration)
-	return k.lk.GetLocksPastTimeDenom(ctx, denom, timestamp)
+	epochInfo := k.GetEpochInfo(ctx)
+	timestamp := epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration).Add(duration)
+	return k.lk.GetLocksValidAfterTimeDenomDuration(ctx, denom, timestamp, duration)
 }
 
 // FilteredLocksDistributionEst estimate distribution amount coins from gauge for fitting conditions
