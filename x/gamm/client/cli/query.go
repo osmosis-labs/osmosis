@@ -28,6 +28,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdPool(),
 		GetCmdPools(),
 		GetCmdNumPools(),
+		GetCmdPoolParams(),
 		GetCmdTotalShares(),
 		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
@@ -172,6 +173,62 @@ $ %s query gamm num-pools
 			}
 
 			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdPoolParams return pool params
+func GetCmdPoolParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pool-params <poolID>",
+		Short: "Query pool-params",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query pool-params.
+Example:
+$ %s query gamm pool-params 1
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			poolID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.PoolParams(cmd.Context(), &types.QueryPoolParamsRequest{
+				PoolId: uint64(poolID),
+			})
+			if err != nil {
+				return err
+			}
+
+			if clientCtx.OutputFormat == "text" {
+				out, err := yaml.Marshal(res.GetParams())
+
+				if err != nil {
+					return err
+				}
+				return writeOutputBoilerplate(clientCtx, out)
+			} else {
+				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
+
+				if err != nil {
+					return err
+				}
+				return writeOutputBoilerplate(clientCtx, out)
+			}
 		},
 	}
 
