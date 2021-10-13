@@ -368,7 +368,8 @@ func (k Keeper) distributeInternal(
 			denomLockAmt := lock.Coins.AmountOfNoDenomValidation(gauge.DistributeTo.Denom)
 			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 			if amt.IsPositive() {
-				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
+				distrCoins = distrCoins.Add(newlyDistributedCoin)
 			}
 		}
 		distrCoins = distrCoins.Sort()
