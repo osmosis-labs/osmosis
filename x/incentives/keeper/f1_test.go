@@ -5,13 +5,16 @@ import (
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"time"
 )
 
 var (
-	DayDuration = time.Hour * 24
-	OwnerAddr   = "addr1---------------"
-	User1Addr   = "user1---------------"
+	DayDuration          = time.Hour * 24
+	SevenDaysDuration    = time.Hour * 24 * 7
+	FourteenDaysDuration = time.Hour * 24 * 14
+	OwnerAddr            = "addr1---------------"
+	User1Addr            = "user1---------------"
 )
 
 func (suite *KeeperTestSuite) TestF1Distribute() {
@@ -114,4 +117,109 @@ func (suite *KeeperTestSuite) nextBlock(now *time.Time, height *int64) {
 	*height = *height + 1
 	suite.ctx = suite.ctx.WithBlockHeight(*height).WithBlockTime(*now)
 	epochs.BeginBlocker(suite.ctx, suite.app.EpochsKeeper)
+}
+
+func (suite *KeeperTestSuite) setupNonPerpetualGauge(owner sdk.AccAddress, now time.Time, duration time.Duration) (string, time.Duration) {
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 1400)}
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         "lptoken",
+		Duration:      duration,
+	}
+	numEpochsPaidOver := uint64(14)
+	_, initGauge := suite.CreateGauge(false, owner, coins, distrTo, now, numEpochsPaidOver)
+	return initGauge.DistributeTo.Denom, initGauge.DistributeTo.Duration
+}
+
+func (suite *KeeperTestSuite) TestLockFor1Day() {
+	now, height := suite.setupEpochAndLockableDurations()
+	now = now.Add(time.Second)
+	suite.nextEpoch(&now, &height)
+
+	//new non-perpetual gauge
+	owner := sdk.AccAddress(OwnerAddr)
+	denom, duration := suite.setupNonPerpetualGauge(owner, now, DayDuration)
+
+	suite.nextBlock(&now, &height)
+
+	//lock
+	suite.LockTokens(owner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, DayDuration)
+
+	for i := 2; i <= 15; i++ {
+		suite.nextEpoch(&now, &height)
+		currentReward, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
+		suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*(i-1)))}, currentReward.Rewards)
+		suite.T().Logf("period=%v, current_reward=%v", i, currentReward.Rewards)
+	}
+}
+
+func (suite *KeeperTestSuite) TestLockFor14Days() {
+	now, height := suite.setupEpochAndLockableDurations()
+	now = now.Add(time.Second)
+	suite.nextEpoch(&now, &height)
+
+	//new non-perpetual gauge
+	owner := sdk.AccAddress(OwnerAddr)
+	denom, _ := suite.setupNonPerpetualGauge(owner, now, DayDuration)
+	suite.setupNonPerpetualGauge(owner, now, SevenDaysDuration)
+	suite.setupNonPerpetualGauge(owner, now, FourteenDaysDuration)
+
+	suite.nextBlock(&now, &height)
+
+	//lock
+	suite.LockTokens(owner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, FourteenDaysDuration)
+
+	for i := 2; i <= 15; i++ {
+		suite.nextEpoch(&now, &height)
+		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
+		currentReward7Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
+		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
+		//suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*i))}, currentReward.Rewards)
+		suite.T().Logf("period=%v, current_reward={1d=%v, 7d=%v, 14d=%v}", i, currentReward1Day.Rewards, currentReward7Day.Rewards, currentReward14Day.Rewards)
+	}
+}
+
+func (suite *KeeperTestSuite) TestLockAndUnlockFor14Days() {
+	now, height := suite.setupEpochAndLockableDurations()
+	now = now.Add(time.Second)
+	suite.nextEpoch(&now, &height)
+
+	//new non-perpetual gauge
+	owner := sdk.AccAddress(OwnerAddr)
+	denom, _ := suite.setupNonPerpetualGauge(owner, now, DayDuration)
+	suite.setupNonPerpetualGauge(owner, now, SevenDaysDuration)
+	suite.setupNonPerpetualGauge(owner, now, FourteenDaysDuration)
+
+	suite.nextBlock(&now, &height)
+
+	//lock
+	suite.LockTokens(owner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, FourteenDaysDuration)
+
+	//unlock
+	suite.app.LockupKeeper.BeginUnlockPeriodLockByID(suite.ctx, 1)
+
+	for i := 2; i <= 15; i++ {
+		suite.nextEpoch(&now, &height)
+		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
+		currentReward7Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
+		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
+		//suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*i))}, currentReward.Rewards)
+		suite.T().Logf("period=%v, current_reward={1d=%v, 7d=%v, 14d=%v}", i, currentReward1Day, currentReward7Day, currentReward14Day)
+	}
+
+	suite.nextEpoch(&now, &height)
+	suite.nextEpoch(&now, &height)
+	suite.nextEpoch(&now, &height)
+	suite.nextEpoch(&now, &height)
+
+	epochInfo := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, "day")
+	lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+	currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
+	currentReward7Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
+	currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
+	suite.T().Logf(">>> END <<< ")
+	suite.T().Logf(" - epoch=%v", epochInfo.CurrentEpoch)
+	suite.T().Logf(" - lock=%v", lock)
+	suite.T().Logf(" - current_reward={1d=%v, 7d=%v, 14d=%v}", currentReward1Day, currentReward7Day, currentReward14Day)
+
 }
