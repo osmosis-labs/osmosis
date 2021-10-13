@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 // GetQueryCmd returns the cli query commands for this module
