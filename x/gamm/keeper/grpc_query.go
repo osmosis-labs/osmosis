@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	pool_models "github.com/osmosis-labs/osmosis/x/gamm/pool-models"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -49,7 +50,7 @@ func (k Keeper) Pool(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	switch pool := pool.(type) {
-	case *types.BalancerPool:
+	case *pool_models.BalancerPool:
 		any, err := codectypes.NewAnyWithValue(pool)
 		if err != nil {
 			return nil, err
@@ -135,19 +136,17 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	// TODO: add
+	// TODO: change default return type to err in case of all type conversion failed
 	balancerPool, ok := pool.(*types.BalancerPool)
 	if !ok {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryPoolParamsResponse{
-		Params: &types.QueryPoolParamsResponse_BalancerPoolParams{
-			BalancerPoolParams: &types.BalancerPoolParams{
-				SwapFee:                  balancerPool.GetPoolExitFee(),
-				ExitFee:                  balancerPool.GetPoolExitFee(),
-				SmoothWeightChangeParams: balancerPool.PoolParams.SmoothWeightChangeParams,
-			},
+		Params: &types.BalancerPoolParams{
+			SwapFee:                  balancerPool.GetPoolExitFee(),
+			ExitFee:                  balancerPool.GetPoolExitFee(),
+			SmoothWeightChangeParams: balancerPool.PoolParams.SmoothWeightChangeParams,
 		},
 	}, nil
 }

@@ -91,11 +91,7 @@ message QueryNumPoolsResponse {
 message QueryPoolParamsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryPoolParamsResponse {
-  oneof params {
-    osmosis.gamm.poolmodels.BalancerPoolParams balancerPoolParams = 1;
-  }
-}
+message QueryPoolParamsResponse { google.protobuf.Any params = 1; }
 
 //=============================== TotalShares
 message QueryTotalSharesRequest {

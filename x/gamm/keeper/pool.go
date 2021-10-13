@@ -9,6 +9,7 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	pool_models "github.com/osmosis-labs/osmosis/x/gamm/pool-models"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -81,7 +82,7 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 
 // newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
 // parameters, initial assets, and future governor.
-func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams types.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
+func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams pool_models.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
 	poolId := k.GetNextPoolNumber(ctx)
 
 	pool, err := types.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
