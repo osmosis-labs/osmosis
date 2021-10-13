@@ -109,6 +109,7 @@ func (suite *KeeperTestSuite) nextEpoch(now *time.Time, height *int64) {
 	*now = (*now).Add(DayDuration)
 	*height = *height + 1
 	suite.ctx = suite.ctx.WithBlockHeight(*height).WithBlockTime(*now)
+	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
 	epochs.BeginBlocker(suite.ctx, suite.app.EpochsKeeper)
 }
 
@@ -116,6 +117,7 @@ func (suite *KeeperTestSuite) nextBlock(now *time.Time, height *int64) {
 	*now = (*now).Add(time.Second)
 	*height = *height + 1
 	suite.ctx = suite.ctx.WithBlockHeight(*height).WithBlockTime(*now)
+	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
 	epochs.BeginBlocker(suite.ctx, suite.app.EpochsKeeper)
 }
 
