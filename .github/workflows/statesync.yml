@@ -6,7 +6,8 @@ name: State Sync
 # or API.
 on: [workflow_dispatch]
 
-# This workflow makes x86_64 binaries for mac, windows, and linux.
+# This workflow tests state sync against the Notional archive server. 
+# To decentralize this workflow, add additional nodes to scripts/statesync.sh
 
 jobs:
   build:
