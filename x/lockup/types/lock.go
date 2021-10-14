@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,8 +25,12 @@ func (p PeriodLock) IsUnlocking() bool {
 
 func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	sum := sdk.NewInt(0)
+	err := sdk.ValidateDenom(denom)
+	if err != nil {
+		panic(fmt.Errorf("invalid denom used internally: %s, %v", denom, err))
+	}
 	for _, lock := range locks {
-		sum = sum.Add(lock.Coins.AmountOf(denom))
+		sum = sum.Add(lock.Coins.AmountOfNoDenomValidation(denom))
 	}
 	return sum
 }
