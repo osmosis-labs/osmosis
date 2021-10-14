@@ -1,7 +1,9 @@
 
 #!/bin/bash
 # microtick and bitcanna contributed significantly here.
-set -e
+
+# PRINT EVERY COMMAND
+set -uxe
 
 export GOPATH=~/go
 export PATH=$PATH:~/go/bin
