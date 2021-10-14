@@ -480,3 +480,48 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
 }
+
+func (suite *KeeperTestSuite) TestGetUnlockingsBetweenTimeDenom() {
+	suite.SetupTest()
+
+	// initial check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	addr := sdk.AccAddress([]byte("addr1---------------"))
+
+	// lock 1sec duration coins
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr, coins, time.Second)
+
+	// lock 3sec duration coins
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+	suite.LockTokens(addr, coins, time.Second*3)
+
+	// Get 1~4sec endTime unlocking locks
+	beginTime := suite.ctx.BlockTime().Add(time.Second)
+	endTime := suite.ctx.BlockTime().Add(time.Second * 4)
+	locks = suite.app.LockupKeeper.GetUnlockingsBetweenTimeDenom(suite.ctx, "stake", beginTime, endTime)
+	suite.Require().Len(locks, 0)
+
+	// unlock 1sec duration coins
+	lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+	suite.app.LockupKeeper.BeginUnlock(suite.ctx, *lock)
+
+	locks = suite.app.LockupKeeper.GetUnlockingsBetweenTimeDenom(suite.ctx, "stake", beginTime, endTime)
+	suite.Require().Len(locks, 1)
+
+	// unlock 3sec duration coins
+	lock, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, 2)
+	suite.app.LockupKeeper.BeginUnlock(suite.ctx, *lock)
+
+	locks = suite.app.LockupKeeper.GetUnlockingsBetweenTimeDenom(suite.ctx, "stake", beginTime, endTime)
+	suite.Require().Len(locks, 2)
+
+	// Get 2~4sec endTime unlocking locks
+	beginTime = suite.ctx.BlockTime().Add(time.Second * 2)
+	endTime = suite.ctx.BlockTime().Add(time.Second * 4)
+	locks = suite.app.LockupKeeper.GetUnlockingsBetweenTimeDenom(suite.ctx, "stake", beginTime, endTime)
+	suite.Require().Len(locks, 1)
+}
