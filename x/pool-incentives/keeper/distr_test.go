@@ -24,8 +24,10 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
 	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
 	mintCoins := sdk.Coins{mintCoin}
-	mintKeeper.MintCoins(suite.ctx, mintCoins)
-	err := mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
+	err := mintKeeper.MintCoins(suite.ctx, mintCoins)
+	suite.NoError(err)
+
+	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
@@ -38,7 +40,8 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 	// Community pool should be increased
 	mintCoin = sdk.NewCoin("stake", sdk.NewInt(100000))
 	mintCoins = sdk.Coins{mintCoin}
-	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err = mintKeeper.MintCoins(suite.ctx, mintCoins)
+	suite.NoError(err)
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
@@ -97,7 +100,9 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	// In this time, there are 3 records, so the assets to be allocated to the gauges proportionally.
 	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
 	mintCoins := sdk.Coins{mintCoin}
-	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err = mintKeeper.MintCoins(suite.ctx, mintCoins)
+	suite.NoError(err)
+
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
@@ -120,7 +125,8 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	// Allocate more.
 	mintCoin = sdk.NewCoin("stake", sdk.NewInt(50000))
 	mintCoins = sdk.Coins{mintCoin}
-	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err = mintKeeper.MintCoins(suite.ctx, mintCoins)
+	suite.NoError(err)
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
@@ -163,7 +169,8 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	// In this time, there are 3 records, so the assets to be allocated to the gauges proportionally.
 	mintCoin = sdk.NewCoin("stake", sdk.NewInt(100000))
 	mintCoins = sdk.Coins{mintCoin}
-	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err = mintKeeper.MintCoins(suite.ctx, mintCoins)
+	suite.NoError(err)
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
@@ -185,7 +192,8 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	// In this time, all should be allocated to community pool
 	mintCoin = sdk.NewCoin("stake", sdk.NewInt(100000))
 	mintCoins = sdk.Coins{mintCoin}
-	mintKeeper.MintCoins(suite.ctx, mintCoins)
+	err = mintKeeper.MintCoins(suite.ctx, mintCoins)
+	suite.NoError(err)
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 

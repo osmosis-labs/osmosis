@@ -36,7 +36,7 @@ func GetTxCmd() *cobra.Command {
 // NewLockTokensCmd lock tokens into lockup pool from user's account
 func NewLockTokensCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "lock-tokens",
+		Use:   "lock-tokens [tokens]",
 		Short: "lock tokens into lockup pool from user account",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -73,7 +73,7 @@ func NewLockTokensCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(FlagSetLockTokens())
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(FlagDuration)
+	_ = cmd.MarkFlagRequired(FlagDuration)
 	return cmd
 }
 
@@ -106,7 +106,7 @@ func NewBeginUnlockingCmd() *cobra.Command {
 // NewBeginUnlockByIDCmd unlock individual period lock by ID
 func NewBeginUnlockByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "begin-unlock-by-id",
+		Use:   "begin-unlock-by-id [id]",
 		Short: "begin unlock individual period lock by ID",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -1,0 +1,61 @@
+{
+    "body": {
+        "messages": [
+            {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                    "moniker": "stakefish",
+                    "identity": "90B597A673FC950E",
+                    "website": "https://stake.fish",
+                    "security_contact": "",
+                    "details": "We are the leading staking service provider for blockchain projects. Join our community to help secure networks and earn rewards. We know staking."
+                },
+                "commission": {
+                    "rate": "0.100000000000000000",
+                    "max_rate": "0.200000000000000000",
+                    "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "osmo1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u8slkgw",
+                "validator_address": "osmovaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9ua8h4lf",
+                "pubkey": {
+                    "@type": "/cosmos.crypto.ed25519.PubKey",
+                    "key": "DCJh91Oqh9P76gYC71pFSzd0cxnvqRDyZ6/PLFZfgLE="
+                },
+                "value": {
+                    "denom": "uosmo",
+                    "amount": "1000000"
+                }
+            }
+        ],
+        "memo": "3fdea38ec164686d552cd3010ba3d3e018109836@192.168.31.211:26656",
+        "timeout_height": "0",
+        "extension_options": [],
+        "non_critical_extension_options": []
+    },
+    "auth_info": {
+        "signer_infos": [
+            {
+                "public_key": {
+                    "@type": "/cosmos.crypto.secp256k1.PubKey",
+                    "key": "A2/+IgTx8HlG4xa68Nkw6dXOWobR+PFOKDhMTrYS5q0r"
+                },
+                "mode_info": {
+                    "single": {
+                        "mode": "SIGN_MODE_DIRECT"
+                    }
+                },
+                "sequence": "0"
+            }
+        ],
+        "fee": {
+            "amount": [],
+            "gas_limit": "200000",
+            "payer": "",
+            "granter": ""
+        }
+    },
+    "signatures": [
+        "F15xzrHh/yoJWZJAwIZ6EO6WRTIvy7GQCh+63noWK51Mr2BG0X5QwZr0Wn6NztVsmxbgXNDAoeo6ucX56mUwTQ=="
+    ]
+}
