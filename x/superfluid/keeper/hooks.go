@@ -35,8 +35,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			twap := sdk.NewDec(1)
 			if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 				// TODO: should get twap price from gamm module and use the price
+				// potential calculation rule
+				// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 			} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 				// TODO: should get twap price from gamm module and use the price
+				// which pool should it use to calculate native token price?
 			}
 			k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
 		}
