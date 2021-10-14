@@ -2,8 +2,8 @@ syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/gamm/pool-models/balancerPool.proto";
 import "osmosis/gamm/v1beta1/pool.proto";
+import "google/protobuf/any.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";
@@ -31,7 +31,7 @@ service Msg {
 message MsgCreateBalancerPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
-  osmosis.gamm.poolmodels.BalancerPoolParams poolParams = 2 [
+  google.protobuf.Any poolParams = 2 [
     (gogoproto.moretags) = "yaml:\"pool_params\"",
     (gogoproto.nullable) = false
   ];

@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	pool_models "github.com/osmosis-labs/osmosis/x/gamm/pool-models"
 )
 
 // constants
@@ -79,6 +81,10 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 		return err
 	}
 
+	// balancerPoolParams, ok := msg.PoolParams.(*pool_models.BalancerPoolParams)
+	// params := msg.GetPoolParams()
+	params := msg.GetBalancerPoolParams()
+	err = params.Validate(msg.PoolAssets)
 	err = msg.PoolParams.Validate(msg.PoolAssets)
 	if err != nil {
 		return err
@@ -100,6 +106,14 @@ func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{sender}
+}
+
+func (msg MsgCreateBalancerPool) GetBalancerPoolParams() pool_models.BalancerPoolParams {
+	balancerPoolParams, ok := msg.PoolParams.GetCachedValue().(pool_models.BalancerPoolParams)
+	if !ok {
+		return pool_models.BalancerPoolParams{}
+	}
+	return balancerPoolParams
 }
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}

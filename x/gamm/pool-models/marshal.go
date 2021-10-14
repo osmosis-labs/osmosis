@@ -1,4 +1,4 @@
-package types
+package pool_models
 
 import (
 	"encoding/json"

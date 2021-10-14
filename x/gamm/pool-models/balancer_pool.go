@@ -2,10 +2,12 @@ package pool_models
 
 import (
 	"errors"
-	fmt "fmt"
+	"fmt"
 	"sort"
 	"strings"
-	time "time"
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
@@ -19,10 +21,10 @@ func NewBalancerPool(poolId uint64, balancerPoolParams BalancerPoolParams, asset
 
 	// pool thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
-	pool := &pool_models.BalancerPool{
+	pool := &BalancerPool{
 		Address:            poolAddr.String(),
 		Id:                 poolId,
-		PoolParams:         pool_models.BalancerPoolParams{},
+		PoolParams:         BalancerPoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
 		TotalShares:        sdk.NewCoin(GetPoolShareDenom(poolId), sdk.ZeroInt()),
 		PoolAssets:         nil,
