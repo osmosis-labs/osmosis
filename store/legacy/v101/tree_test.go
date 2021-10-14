@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -18,13 +19,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/store"
-	"github.com/osmosis-labs/osmosis/store/legacy/v101"
+	v101 "github.com/osmosis-labs/osmosis/store/legacy/v101"
 )
 
 func setupStore() sdk.KVStore {
 	db := dbm.NewMemDB()
 	tree, _ := iavl.NewMutableTree(db, 100)
-	tree.SaveVersion()
+	_, _, err := tree.SaveVersion()
+	if err != nil {
+		panic(err)
+	}
 	kvstore := iavlstore.UnsafeNewStore(tree)
 	return kvstore
 }

@@ -1,0 +1,61 @@
+{
+    "body": {
+        "messages": [
+            {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                    "moniker": "Citadel.one",
+                    "identity": "EBB03EB4BB4CFCA7",
+                    "website": "https://citadel.one",
+                    "security_contact": "",
+                    "details": "Citadel.one is a multi-asset non-custodial staking platform that lets anyone become a part of decentralized infrastructure and earn passive income. Stake with our nodes or any other validator across multiple networks in a few clicks"
+                },
+                "commission": {
+                    "rate": "0.050000000000000000",
+                    "max_rate": "0.200000000000000000",
+                    "max_change_rate": "0.030000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "osmo1lzhlnpahvznwfv4jmay2tgaha5kmz5qx5v6xe7",
+                "validator_address": "osmovaloper1lzhlnpahvznwfv4jmay2tgaha5kmz5qxwmj9we",
+                "pubkey": {
+                    "@type": "/cosmos.crypto.ed25519.PubKey",
+                    "key": "T1wp5ELzvqVOqBm6eGYiQQWe0TaC2LV2BThHaVxh/rk="
+                },
+                "value": {
+                    "denom": "uosmo",
+                    "amount": "300000000"
+                }
+            }
+        ],
+        "memo": "b3783e2ad6f65de01dd14323d1e08651f8cc15e1@10.130.0.25:26656",
+        "timeout_height": "0",
+        "extension_options": [],
+        "non_critical_extension_options": []
+    },
+    "auth_info": {
+        "signer_infos": [
+            {
+                "public_key": {
+                    "@type": "/cosmos.crypto.secp256k1.PubKey",
+                    "key": "A+bm11ueYY98+HxRwsbNXy6P+Ru6FBS71ZD7krR2yUHf"
+                },
+                "mode_info": {
+                    "single": {
+                        "mode": "SIGN_MODE_DIRECT"
+                    }
+                },
+                "sequence": "0"
+            }
+        ],
+        "fee": {
+            "amount": [],
+            "gas_limit": "200000",
+            "payer": "",
+            "granter": ""
+        }
+    },
+    "signatures": [
+        "dQ+ZsaPWjJkZzhU6qnYF7g7SXQGwNrVieTPfXoLNOPsrMJ0MhlDx4IVw5PDUY1VuUrAkv58dq/CYNsjifogPOw=="
+    ]
+}

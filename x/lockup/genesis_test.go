@@ -71,8 +71,9 @@ func TestExportGenesis(t *testing.T) {
 	genesis := testGenesis
 	lockup.InitGenesis(ctx, app.LockupKeeper, genesis)
 
-	app.BankKeeper.SetBalance(ctx, acc2, sdk.NewInt64Coin("foo", 5000000))
-	_, err := app.LockupKeeper.LockTokens(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
+	err := app.BankKeeper.SetBalance(ctx, acc2, sdk.NewInt64Coin("foo", 5000000))
+	require.NoError(t, err)
+	_, err = app.LockupKeeper.LockTokens(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
 	require.NoError(t, err)
 
 	coins := app.LockupKeeper.GetAccountLockedCoins(ctx, acc2)
@@ -121,8 +122,9 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	appCodec := encodingConfig.Marshaler
 	am := lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 
-	app.BankKeeper.SetBalance(ctx, acc2, sdk.NewInt64Coin("foo", 5000000))
-	_, err := app.LockupKeeper.LockTokens(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
+	err := app.BankKeeper.SetBalance(ctx, acc2, sdk.NewInt64Coin("foo", 5000000))
+	require.NoError(t, err)
+	_, err = app.LockupKeeper.LockTokens(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
 	require.NoError(t, err)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)

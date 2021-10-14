@@ -16,7 +16,10 @@ func (k Keeper) GetModuleAccountAddress(ctx sdk.Context) sdk.AccAddress {
 // GetModuleAccountBalance gets the airdrop coin balance of module account
 func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
 	moduleAccAddr := k.GetModuleAccountAddress(ctx)
-	params, _ := k.GetParams(ctx)
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, params.ClaimDenom)
 }
 
@@ -25,7 +28,10 @@ func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
+	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount)); err != nil {
+		panic(err)
+	}
+
 }
 
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {

@@ -38,7 +38,8 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		gauges := suite.SetupGauges(tc.gauges)
 		addrs := suite.SetupUserLocks(tc.users)
 		for _, g := range gauges {
-			suite.app.IncentivesKeeper.Distribute(suite.ctx, g)
+			_, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, g)
+			suite.Require().NoError(err)
 		}
 		// Check expected rewards
 		for i, addr := range addrs {

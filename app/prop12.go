@@ -23,7 +23,9 @@ func prop12(ctx sdk.Context, app *OsmosisApp) {
 			panic(err)
 		}
 		coins := sdk.NewCoins(sdk.NewInt64Coin("uosmo", amount))
-		app.BankKeeper.SendCoinsFromModuleToAccount(ctx, "distribution", addr, coins)
+		if err := app.BankKeeper.SendCoinsFromModuleToAccount(ctx, "distribution", addr, coins); err != nil {
+			panic(err)
+		}
 		total += amount
 	}
 

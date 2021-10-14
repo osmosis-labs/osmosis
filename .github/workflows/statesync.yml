@@ -1,0 +1,19 @@
+# This is a basic workflow that is manually triggered
+
+name: State Sync
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on: [workflow_dispatch]
+
+# This workflow makes x86_64 binaries for mac, windows, and linux.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: osmosis state sync
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: state sync
+        run: bash scripts/statesync.sh

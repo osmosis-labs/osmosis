@@ -46,8 +46,10 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				var bal = int64(1000000000000)
 				coin := sdk.NewInt64Coin("uosmo", bal)
 				coins := sdk.NewCoins(coin)
-				suite.app.BankKeeper.MintCoins(suite.ctx, "mint", coins)
-				suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, "mint", "distribution", coins)
+				err := suite.app.BankKeeper.MintCoins(suite.ctx, "mint", coins)
+				suite.Require().NoError(err)
+				err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, "mint", "distribution", coins)
+				suite.Require().NoError(err)
 				feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
 				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(coin))
 				suite.app.DistrKeeper.SetFeePool(suite.ctx, feePool)
@@ -57,7 +59,8 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				// run upgrade
 
 				plan := upgradetypes.Plan{Name: "v4", Height: 5}
-				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+				err := suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+				suite.Require().NoError(err)
 				plan, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
 				suite.Require().True(exists)
 				suite.Require().NotPanics(func() {

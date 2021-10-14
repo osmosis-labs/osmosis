@@ -64,7 +64,9 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		return
+	}
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -121,14 +123,14 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	am.keeper.InitGenesis(ctx, &genesisState)
+	InitGenesis(ctx, am.keeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the pool-incentives
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx)
+	gs := ExportGenesis(ctx, am.keeper)
 	return cdc.MustMarshalJSON(gs)
 }
 
