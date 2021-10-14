@@ -21,7 +21,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// initialize epoch twap price
 	for _, priceRecord := range genState.TwapPriceRecords {
-		k.SetEpochOsmoEquivalentTWAP(ctx, priceRecord.Epoch, priceRecord.PoolId, priceRecord.Price)
+		k.SetEpochOsmoEquivalentTWAP(ctx, priceRecord.Epoch, priceRecord.Denom, priceRecord.EpochTwapPrice)
 	}
 }
 

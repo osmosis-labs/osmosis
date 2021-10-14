@@ -7,31 +7,31 @@ import (
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
-func (k Keeper) SetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, poolId uint64, price sdk.Dec) {
+func (k Keeper) SetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom string, price sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))
 	priceRecord := types.EpochOsmoEquivalentTWAP{
-		Epoch:  epoch,
-		PoolId: poolId,
-		Price:  price,
+		Epoch:          epoch,
+		Denom:          denom,
+		EpochTwapPrice: price,
 	}
 	bz, err := proto.Marshal(&priceRecord)
 	if err != nil {
 		panic(err)
 	}
-	prefixStore.Set(sdk.Uint64ToBigEndian(poolId), bz)
+	prefixStore.Set([]byte(denom), bz)
 }
 
-func (k Keeper) DeleteEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, poolId uint64) {
+func (k Keeper) DeleteEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom string) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))
-	prefixStore.Delete(sdk.Uint64ToBigEndian(poolId))
+	prefixStore.Delete([]byte(denom))
 }
 
-func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, poolId uint64) sdk.Dec {
+func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom string) sdk.Dec {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))
-	bz := prefixStore.Get(sdk.Uint64ToBigEndian(poolId))
+	bz := prefixStore.Get([]byte(denom))
 	if bz == nil {
 		return sdk.ZeroDec()
 	}
@@ -40,7 +40,7 @@ func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, poolId 
 	if err != nil {
 		panic(err)
 	}
-	return priceRecord.Price
+	return priceRecord.EpochTwapPrice
 }
 
 func (k Keeper) GetAllEpochOsmoEquivalentTWAPs(ctx sdk.Context, epoch int64) []types.EpochOsmoEquivalentTWAP {

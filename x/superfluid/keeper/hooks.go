@@ -31,9 +31,15 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			})
 		}
 
-		// TODO: how to get GAMM pool ids to fetch price info - do all ids?
-		// TODO: should get twap price from gamm module and use the price
-		k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, 1, sdk.NewDec(1))
+		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
+			twap := sdk.NewDec(1)
+			if asset.AssetType == types.SuperfluidAssetTypeLPShare {
+				// TODO: should get twap price from gamm module and use the price
+			} else if asset.AssetType == types.SuperfluidAssetTypeNative {
+				// TODO: should get twap price from gamm module and use the price
+			}
+			k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
+		}
 	}
 }
 
