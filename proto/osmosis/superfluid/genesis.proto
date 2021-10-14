@@ -10,7 +10,7 @@ option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 message EpochOsmoEquivalentTWAP {
   int64 epoch = 1;
   uint64 pool_id = 2;
-  string price = 3 [
+  string epoch_twap_price = 3 [
     (gogoproto.moretags) = "yaml:\"price\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
