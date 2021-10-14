@@ -2,8 +2,8 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"time"
 
@@ -94,7 +94,7 @@ func AppStateRandomizedFn(
 		numInitiallyBonded = numAccs
 	}
 
-	fmt.Printf(
+	log.Printf(
 		`Selected randomly generated parameters for simulated genesis:
 {
   stake_per_account: "%d",

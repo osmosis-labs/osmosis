@@ -143,3 +143,8 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 
 	return info.LockableDurations
 }
+
+func (k Keeper) ExportGenesis(ctx sdk.Context) interface{} {
+	fmt.Println("you have hit a very silly placeholder, smartly suggested by the IDE")
+	return nil
+}

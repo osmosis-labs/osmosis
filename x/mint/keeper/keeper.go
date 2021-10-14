@@ -206,7 +206,8 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		}
 	}
 
-	communityPoolCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.CommunityPool))
+	// subtract from original provision to ensure no coins left over after the allocations
+	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(devRewardCoins)
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return err

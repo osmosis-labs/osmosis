@@ -103,7 +103,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		ak:             accountKeeper,
-		bk:             bankKeeper,
 	}
 }
 
@@ -182,3 +181,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(simState.AppParams, simState.Cdc, am.ak, am.bk, am.keeper)
 }
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+

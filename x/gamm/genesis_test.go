@@ -48,7 +48,7 @@ func TestGammInitGenesis(t *testing.T) {
 		},
 	}, app.AppCodec())
 
-	require.Equal(t, app.GAMMKeeper.GetNextPoolNumber(ctx), uint64(2))
+	require.Equal(t, app.GAMMKeeper.GetNextPoolNumberAndIncrement(ctx), uint64(2))
 	poolStored, err := app.GAMMKeeper.GetPool(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, pool.GetId(), poolStored.GetId())

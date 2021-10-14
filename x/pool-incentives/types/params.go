@@ -27,7 +27,7 @@ func NewParams(mintedDenom string) Params {
 
 // DefaultParams is the default parameter configuration for the pool-incentives module
 func DefaultParams() Params {
-	return NewParams("stake")
+	return NewParams(sdk.DefaultBondDenom)
 }
 
 func (p Params) Validate() error {

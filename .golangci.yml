@@ -1,0 +1,26 @@
+run:
+  tests: false
+#   # timeout for analysis, e.g. 30s, 5m, default is 1m
+#   timeout: 5m
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gofmt
+    # - goimports
+    # - golint
+    - maligned
+
+issues:
+  exclude-rules:
+    - path: bench_test\.go
+      linters:
+        - errcheck
+  max-issues-per-linter: 10000
+  max-same-issues: 10000
+
+linters-settings:
+  maligned:
+    # print struct with more effective memory layout or not, false by default
+    suggest-new: true

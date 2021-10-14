@@ -1,20 +1,26 @@
-package keeper
+package pool_incentives
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
-func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState *types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	k.SetLockableDurations(ctx, genState.LockableDurations)
-	if genState.DistrInfo != nil {
+	if genState.DistrInfo == nil {
+		k.SetDistrInfo(ctx, types.DistrInfo{
+			TotalWeight: sdk.NewInt(0),
+			Records:     nil,
+		})
+	} else {
 		k.SetDistrInfo(ctx, *genState.DistrInfo)
 	}
 }
 
-func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	distrInfo := k.GetDistrInfo(ctx)
 
 	return &types.GenesisState{

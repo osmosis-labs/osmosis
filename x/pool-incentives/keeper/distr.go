@@ -70,18 +70,6 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 func (k Keeper) GetDistrInfo(ctx sdk.Context) types.DistrInfo {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.DistrInfoKey)
-
-	if len(bz) == 0 {
-		distrInfo := types.DistrInfo{
-			TotalWeight: sdk.NewInt(0),
-			Records:     nil,
-		}
-		bz = k.cdc.MustMarshal(&distrInfo)
-
-		store.Set(types.DistrInfoKey, bz)
-		return distrInfo
-	}
-
 	distrInfo := types.DistrInfo{}
 	k.cdc.MustUnmarshal(bz, &distrInfo)
 
