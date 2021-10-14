@@ -559,16 +559,9 @@ func (k Keeper) GetRewards(ctx sdk.Context, addr sdk.AccAddress, locks []lockupt
 		locks = k.lk.GetAccountPeriodLocks(ctx, addr)
 		ctx.Logger().Debug(fmt.Sprintf("[F1] auto detected locks %v", locks))
 	}
-	epochInfo := k.GetEpochInfo(ctx)
-	lockableDurations := k.GetLockableDurations(ctx)
 	rewards = sdk.Coins{}
 	for _, lock := range locks {
-		periodLockReward, err := k.GetPeriodLockReward(ctx, lock.ID)
-		if err != nil {
-			ctx.Logger().Debug(fmt.Sprintf("[F1] getLockRewards failed: unable to find period-lock for lock_id=%v; %v", lock.ID, err))
-			continue
-		}
-		estLockReward, err := k.GetRewardForLock(ctx, lock, periodLockReward, epochInfo, lockableDurations)
+		estLockReward, err := k.EstimateLockReward(ctx, lock)
 		if err != nil {
 			ctx.Logger().Debug(fmt.Sprintf("[F1] getLockRewards failed: unable to get period-lock reward for lock_id=%v; %v", lock.ID, err))
 			continue
@@ -1063,6 +1056,94 @@ func (k Keeper) ClaimRewardForLock(ctx sdk.Context, lock lockuptypes.PeriodLock,
 	ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimRewardForLock::: lock[%d] NewRewards:%v", lock.ID, reward))
 
 	return reward, nil
+}
+
+func (k Keeper) ClaimLockReward(ctx sdk.Context, lock lockuptypes.PeriodLock, owner sdk.AccAddress) (sdk.Coins, error) {
+	lockID := lock.ID
+	lockReward, err := k.GetPeriodLockReward(ctx, lockID)
+	if err != nil {
+		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: error:%s", err.Error()))
+		return nil, err
+	}
+	epochInfo := k.GetEpochInfo(ctx)
+	lockableDurations := k.GetLockableDurations(ctx)
+	err = k.UpdateHistoricalRewardFromCurrentReward(ctx, lock.Coins, lock.Duration, epochInfo, lockableDurations)
+	if err != nil {
+		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: error:%s", err.Error()))
+		return nil, err
+	}
+	lockReward, err = k.GetRewardForLock(ctx, lock, lockReward, epochInfo, lockableDurations)
+	if err != nil {
+		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: error:%s", err.Error()))
+		return nil, err
+	}
+	sentRewards, err := k.ClaimRewardForLock(ctx, lock, lockReward, lockableDurations)
+	if err != nil {
+		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: error:%s", err.Error()))
+		return nil, err
+	}
+
+	ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: reward:%s", sentRewards.String()))
+
+	return sentRewards, nil
+}
+
+func (k Keeper) EstimateLockReward(ctx sdk.Context, lock lockuptypes.PeriodLock) (types.PeriodLockReward, error) {
+	lockID := lock.ID
+	lockReward, err := k.GetPeriodLockReward(ctx, lockID)
+	if err != nil {
+		ctx.Logger().Debug(fmt.Sprintf("F1::: EstimateLockReward::: error:%s", err.Error()))
+		return types.PeriodLockReward{}, err
+	}
+	epochInfo := k.GetEpochInfo(ctx)
+	lockableDurations := k.GetLockableDurations(ctx)
+	lockReward, err = k.GetRewardForLock(ctx, lock, lockReward, epochInfo, lockableDurations)
+	if err != nil {
+		ctx.Logger().Debug(fmt.Sprintf("F1::: EstimateLockReward::: error:%s", err.Error()))
+		return types.PeriodLockReward{}, err
+	}
+
+	for _, lockableDuration := range lockableDurations {
+		if lock.Duration < lockableDuration {
+			continue
+		}
+		// check current reward can be applied to this lock
+		if lock.IsUnlocking() && lock.EndTime.Before(epochInfo.CurrentEpochStartTime.Add(lockableDuration)) {
+			continue
+		}
+		for _, coin := range lock.Coins {
+			denom := coin.Denom
+			currentReward, err := k.GetCurrentReward(ctx, denom, lockableDuration)
+			if err != nil {
+				ctx.Logger().Debug(fmt.Sprintf("F1::: UpdateHistoricalRewardFromCurrentReward::: err(%v)", err))
+				return types.PeriodLockReward{}, err
+			}
+			historicalReward, err := k.CalculateHistoricalRewards(ctx, currentReward, denom, lockableDuration, epochInfo)
+			if err != nil {
+				ctx.Logger().Debug(fmt.Sprintf("F1::: UpdateHistoricalRewardFromCurrentReward:::CalculateHistoricalRewards err(%v)", err))
+				return types.PeriodLockReward{}, err
+			}
+			if historicalReward != nil {
+				prevHistoricalReward, err := k.GetHistoricalReward(ctx, denom, lockableDuration, currentReward.Period-1)
+				if err != nil {
+					ctx.Logger().Debug(fmt.Sprintf("F1::: UpdateHistoricalRewardFromCurrentReward::: err(%v)", err))
+					return types.PeriodLockReward{}, err
+				}
+
+				estDecCoins := historicalReward.CummulativeRewardRatio.Sub(prevHistoricalReward.CummulativeRewardRatio).MulDec(coin.Amount.ToDec())
+				ctx.Logger().Debug(fmt.Sprintf("F1::: EstimateLockReward::: estDecCoins:%s", estDecCoins.String()))
+				for _, decCoin := range estDecCoins {
+					estCoin := sdk.NewCoin(decCoin.Denom, decCoin.Amount.TruncateInt())
+					lockReward.Rewards = lockReward.Rewards.Add(estCoin)
+					ctx.Logger().Debug(fmt.Sprintf("F1::: EstimateLockReward::: estCoin:%s", estCoin.String()))
+				}
+			}
+		}
+	}
+
+	ctx.Logger().Debug(fmt.Sprintf("F1::: EstimateLockReward::: reward:%v", lockReward.Rewards))
+
+	return lockReward, nil
 }
 
 ////////////////////////////  END //////////////////////////////////

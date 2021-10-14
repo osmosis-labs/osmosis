@@ -195,7 +195,6 @@ func (suite *KeeperTestSuite) TestLockAndUnlockFor14Days() {
 	suite.nextBlock(&now, &height)
 
 	stakeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, owner, "stake")
-	lpBalance := suite.app.BankKeeper.GetBalance(suite.ctx, owner, "lpBalance")
 
 	//lock
 	suite.LockTokens(owner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, FourteenDaysDuration)
@@ -210,6 +209,11 @@ func (suite *KeeperTestSuite) TestLockAndUnlockFor14Days() {
 		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
 		//suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*i))}, currentReward.Rewards)
 		suite.T().Logf("period=%v, current_reward={1d=%v, 7d=%v, 14d=%v}", i, currentReward1Day, currentReward7Day, currentReward14Day)
+
+		lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+		estLockReward, err := suite.app.IncentivesKeeper.EstimateLockReward(suite.ctx, *lock)
+		suite.Require().NoError(err)
+		suite.T().Logf("period=%v, EstimatedLockReward=%v", i, estLockReward.Rewards)
 	}
 
 	suite.nextEpoch(&now, &height)
@@ -228,10 +232,7 @@ func (suite *KeeperTestSuite) TestLockAndUnlockFor14Days() {
 	suite.T().Logf(" - current_reward={1d=%v, 7d=%v, 14d=%v}", currentReward1Day, currentReward7Day, currentReward14Day)
 
 	newStakeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, owner, "stake")
-	newLpBalance := suite.app.BankKeeper.GetBalance(suite.ctx, owner, "lpBalance")
-
 	suite.T().Logf(" - stakeBalance %v->%v", stakeBalance, newStakeBalance)
-	suite.T().Logf(" - lpBalance %v->%v", lpBalance, newLpBalance)
 }
 
 func (suite *KeeperTestSuite) TestMultipleTokenLockOnSingleLock() {

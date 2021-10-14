@@ -69,41 +69,23 @@ func (server msgServer) AddToGauge(goCtx context.Context, msg *types.MsgAddToGau
 func (server msgServer) ClaimLockReward(goCtx context.Context, msg *types.MsgClaimLockReward) (*types.MsgClaimLockRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	lockID := msg.ID
-	lock, err := server.keeper.lk.GetLockByID(ctx, lockID)
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-
+	lock, err := server.keeper.lk.GetLockByID(ctx, msg.ID)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 	if msg.Owner != lock.Owner {
 		ctx.Logger().Debug(fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, lock.Owner))
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, lock.Owner))
 	}
 
-	lockReward, err := server.keeper.GetPeriodLockReward(ctx, lockID)
+	sentRewards, err := server.keeper.ClaimLockReward(ctx, *lock, owner)
 	if err != nil {
-		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: error:%s", err.Error()))
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	epochInfo := server.keeper.GetEpochInfo(ctx)
-	lockableDurations := server.keeper.GetLockableDurations(ctx)
-	err = server.keeper.UpdateHistoricalRewardFromCurrentReward(ctx, lock.Coins, lock.Duration, epochInfo, lockableDurations)
-	if err != nil {
-		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: error:%s", err.Error()))
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-	lockReward, err = server.keeper.GetRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
-	if err != nil {
-		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: error:%s", err.Error()))
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-	sentRewards, err := server.keeper.ClaimRewardForLock(ctx, *lock, lockReward, lockableDurations)
-	if err != nil {
-		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: error:%s", err.Error()))
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
-	ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockReward::: reward:%s", sentRewards.String()))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -123,49 +105,29 @@ func (server msgServer) ClaimLockRewardAll(goCtx context.Context, msg *types.Msg
 	sentRewards := sdk.Coins{}
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-
 	locks := server.keeper.lk.GetAccountPeriodLocks(ctx, sdk.AccAddress(owner))
 	ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: locks:%d", len(locks)))
 
 	for _, lock := range locks {
-		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: lock:%d", lock.ID))
 		if msg.Owner != lock.Owner {
 			ctx.Logger().Debug(fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, lock.Owner))
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, lock.Owner))
 		}
-		lockID := lock.ID
 
-		lockReward, err := server.keeper.GetPeriodLockReward(ctx, lockID)
+		rewards, err := server.keeper.ClaimLockReward(ctx, lock, owner)
 		if err != nil {
-			ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: error:%s", err.Error()))
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
-		epochInfo := server.keeper.GetEpochInfo(ctx)
-		lockableDurations := server.keeper.GetLockableDurations(ctx)
-		err = server.keeper.UpdateHistoricalRewardFromCurrentReward(ctx, lock.Coins, lock.Duration, epochInfo, lockableDurations)
-		if err != nil {
-			ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: error:%s", err.Error()))
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-		}
-		lockReward, err = server.keeper.GetRewardForLock(ctx, lock, lockReward, epochInfo, lockableDurations)
-		if err != nil {
-			ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: error:%s", err.Error()))
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-		}
-		rewards, err := server.keeper.ClaimRewardForLock(ctx, lock, lockReward, lockableDurations)
-		if err != nil {
-			ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: error:%s", err.Error()))
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-		}
+		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: reward:%s", rewards.String()))
 
 		// TODO: refactor
 		lockRewards = append(lockRewards, rewards)
 		sentRewards = sentRewards.Add(rewards...)
 
-		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: reward:%s", rewards.String()))
 	}
+
 	ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: total reward:%s", sentRewards.String()))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
