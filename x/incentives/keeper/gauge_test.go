@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -584,13 +585,6 @@ func (suite *KeeperTestSuite) TestCalculateRewardForLock() {
 
 	duration := k.GetLockableDurations(suite.ctx)[0]
 
-	currentReward := types.CurrentReward{
-		Period:             11,
-		LastProcessedEpoch: 1,
-		Coin:               lockedCoin,
-	}
-	k.SetCurrentReward(suite.ctx, currentReward, "stake", duration)
-
 	lock := lockuptypes.PeriodLock{
 		ID:    1,
 		Coins: lockedCoins,
@@ -617,9 +611,23 @@ func (suite *KeeperTestSuite) TestCalculateRewardForLock() {
 	expectedAmount := sdk.NewInt((2000 - 1000) * 100)
 	expectedRewards := sdk.NewCoins(sdk.NewCoin("reward", expectedAmount))
 
-	err := k.CalculateRewardForLock(suite.ctx, lock, &lockReward, duration)
+	epochInfo := epochtypes.EpochInfo{
+		CurrentEpoch: 101,
+	}
+
+	currentReward := types.CurrentReward{
+		Period:             11,
+		LastProcessedEpoch: 100,
+		Coin:               lockedCoin,
+	}
+
+	k.SetCurrentReward(suite.ctx, currentReward, "stake", duration)
+
+	err := k.CalculateRewardForLock(suite.ctx, lock, &lockReward, epochInfo, duration)
 	suite.Require().NoError(err)
 	suite.Require().Equal(expectedRewards, lockReward.Rewards)
+
+	k.SetCurrentReward(suite.ctx, currentReward, "stake", duration)
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardForLockByEpoch() {
