@@ -1,18 +1,18 @@
 package app
 
 import (
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
 
 	ibcclient "github.com/cosmos/ibc-go/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
@@ -304,38 +304,37 @@ func NewOsmosisApp(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 
+	/*
+		// this configures a no-op upgrade handler for the v2 upgrade,
+		// which improves the lockup module's store management.
+		app.UpgradeKeeper.SetUpgradeHandler(
+			"v4", func(ctx sdk.Context, plan upgradetypes.Plan) {
+				// Upgrade all of the lock storages
+				locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
+				if err != nil {
+					panic(err)
+				}
+				// clear all lockup module locking / unlocking queue items
+				app.LockupKeeper.ClearAllLockRefKeys(ctx)
+				app.LockupKeeper.ClearAllAccumulationStores(ctx)
 
-/*
-	// this configures a no-op upgrade handler for the v2 upgrade,
-	// which improves the lockup module's store management.
-	app.UpgradeKeeper.SetUpgradeHandler(
-		"v4", func(ctx sdk.Context, plan upgradetypes.Plan) {
-			// Upgrade all of the lock storages
-			locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
-			if err != nil {
-				panic(err)
-			}
-			// clear all lockup module locking / unlocking queue items
-			app.LockupKeeper.ClearAllLockRefKeys(ctx)
-			app.LockupKeeper.ClearAllAccumulationStores(ctx)
+				// reset all lock and references
+				if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
+					panic(err)
+				}
 
-			// reset all lock and references
-			if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
-				panic(err)
-			}
+				// configure upgrade for gamm module's pool creation fee param add
+				app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
-			// configure upgrade for gamm module's pool creation fee param add
-			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
+				prop12(ctx, app)
 
-			prop12(ctx, app)
-
-		})
+			})
 
 	*/
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,	)
+		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper)
 
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
@@ -515,7 +514,7 @@ func NewOsmosisApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter()))
+	app.mm.RegisterServices(module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter()))
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -580,8 +579,8 @@ func NewOsmosisApp(
 		// that in-memory capabilities get regenerated on app restart.
 		// Note that since this reads from the store, we can only perform it when
 		// `loadLatest` is set to true.
-		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-		app.CapabilityKeeper.InitializeAndSeal(ctx)
+		// ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+		app.CapabilityKeeper.Seal()
 	}
 
 	app.ScopedIBCKeeper = scopedIBCKeeper

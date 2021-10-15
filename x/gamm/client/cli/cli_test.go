@@ -334,7 +334,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -346,7 +346,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinPoolAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinPoolAddr", keyring.English, sdk.FullFundraiserPath, "", hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())

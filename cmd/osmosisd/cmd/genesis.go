@@ -51,7 +51,7 @@ Example:
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.JSONMarshaler
+			depCdc := clientCtx.Codec
 			cdc := depCdc.(codec.Codec)
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -104,7 +104,7 @@ Example:
 }
 
 func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams GenesisParams, chainID string) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
-	depCdc := clientCtx.JSONMarshaler
+	depCdc := clientCtx.Codec
 	cdc := depCdc.(codec.Codec)
 
 	// chain params genesis

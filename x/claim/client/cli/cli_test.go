@@ -86,9 +86,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		NumValidators:   1,
 		BondDenom:       sdk.DefaultBondDenom,
 		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:   sdk.TokensFromConsensusPower(1000),
-		StakingTokens:   sdk.TokensFromConsensusPower(500),
-		BondedTokens:    sdk.TokensFromConsensusPower(100),
+		AccountTokens:   sdk.TokensFromConsensusPower(1000, sdk.NewInt(1)),
+		StakingTokens:   sdk.TokensFromConsensusPower(500, sdk.NewInt(1)),
+		BondedTokens:    sdk.TokensFromConsensusPower(100, sdk.NewInt(1)),
 		PruningStrategy: storetypes.PruningOptionNothing,
 		CleanupDir:      true,
 		SigningAlgo:     string(hd.Secp256k1Type),
@@ -174,7 +174,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimRecord() {
 			s.Require().NoError(err)
 
 			var result types.QueryClaimRecordResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 		})
 	}
 }
@@ -209,7 +209,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 			s.Require().NoError(err)
 
 			var result types.QueryClaimableForActionResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(result.Coins.String(), tc.coins.String())
 		})
 	}
