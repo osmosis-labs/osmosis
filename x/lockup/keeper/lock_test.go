@@ -75,6 +75,43 @@ func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
 	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
 }
 
+func (suite *KeeperTestSuite) TestBeginPartialUnlockPeriodLock() {
+	suite.SetupTest()
+
+	// initial check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks[0].EndTime, time.Time{})
+	suite.Require().Equal(locks[0].IsUnlocking(), false)
+
+	// begin unlock
+	lock1, lock2, err := suite.app.LockupKeeper.BeginPartialUnlockPeriodLockByID(suite.ctx, 1, sdk.NewCoins(sdk.NewInt64Coin("stake", 1)))
+	suite.Require().NoError(err)
+	suite.Require().Equal(lock1.ID, uint64(1))
+	suite.Require().Equal(lock2.ID, uint64(2))
+
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+
+	// check locks
+	suite.Require().Len(locks, 2)
+	suite.Require().Equal(locks[0].EndTime, time.Time{})
+	suite.Require().Equal(locks[0].IsUnlocking(), false)
+	suite.Require().NotEqual(locks[1].EndTime, time.Time{})
+	suite.Require().Equal(locks[1].IsUnlocking(), true)
+}
+
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.SetupTest()
 

@@ -322,6 +322,110 @@ func (m *MsgBeginUnlockingResponse) GetSuccess() bool {
 	return false
 }
 
+type MsgBeginPartialUnlocking struct {
+	Owner string                                   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
+	ID    uint64                                   `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+}
+
+func (m *MsgBeginPartialUnlocking) Reset()         { *m = MsgBeginPartialUnlocking{} }
+func (m *MsgBeginPartialUnlocking) String() string { return proto.CompactTextString(m) }
+func (*MsgBeginPartialUnlocking) ProtoMessage()    {}
+func (*MsgBeginPartialUnlocking) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcdad5af0d24735f, []int{6}
+}
+func (m *MsgBeginPartialUnlocking) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBeginPartialUnlocking) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBeginPartialUnlocking.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBeginPartialUnlocking) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBeginPartialUnlocking.Merge(m, src)
+}
+func (m *MsgBeginPartialUnlocking) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBeginPartialUnlocking) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBeginPartialUnlocking.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBeginPartialUnlocking proto.InternalMessageInfo
+
+func (m *MsgBeginPartialUnlocking) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *MsgBeginPartialUnlocking) GetID() uint64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *MsgBeginPartialUnlocking) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+type MsgBeginPartialUnlockingResponse struct {
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+}
+
+func (m *MsgBeginPartialUnlockingResponse) Reset()         { *m = MsgBeginPartialUnlockingResponse{} }
+func (m *MsgBeginPartialUnlockingResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBeginPartialUnlockingResponse) ProtoMessage()    {}
+func (*MsgBeginPartialUnlockingResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcdad5af0d24735f, []int{7}
+}
+func (m *MsgBeginPartialUnlockingResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBeginPartialUnlockingResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBeginPartialUnlockingResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBeginPartialUnlockingResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBeginPartialUnlockingResponse.Merge(m, src)
+}
+func (m *MsgBeginPartialUnlockingResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBeginPartialUnlockingResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBeginPartialUnlockingResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBeginPartialUnlockingResponse proto.InternalMessageInfo
+
+func (m *MsgBeginPartialUnlockingResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*MsgLockTokens)(nil), "osmosis.lockup.MsgLockTokens")
 	proto.RegisterType((*MsgLockTokensResponse)(nil), "osmosis.lockup.MsgLockTokensResponse")
@@ -329,45 +433,50 @@ func init() {
 	proto.RegisterType((*MsgBeginUnlockingAllResponse)(nil), "osmosis.lockup.MsgBeginUnlockingAllResponse")
 	proto.RegisterType((*MsgBeginUnlocking)(nil), "osmosis.lockup.MsgBeginUnlocking")
 	proto.RegisterType((*MsgBeginUnlockingResponse)(nil), "osmosis.lockup.MsgBeginUnlockingResponse")
+	proto.RegisterType((*MsgBeginPartialUnlocking)(nil), "osmosis.lockup.MsgBeginPartialUnlocking")
+	proto.RegisterType((*MsgBeginPartialUnlockingResponse)(nil), "osmosis.lockup.MsgBeginPartialUnlockingResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/lockup/tx.proto", fileDescriptor_bcdad5af0d24735f) }
 
 var fileDescriptor_bcdad5af0d24735f = []byte{
-	// 528 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0xbf, 0x6f, 0xd3, 0x40,
-	0x14, 0x8e, 0x1d, 0x4a, 0xcb, 0x01, 0x81, 0x5a, 0x45, 0x24, 0x16, 0xd8, 0xc1, 0xe2, 0x47, 0x90,
-	0xda, 0x3b, 0x52, 0x60, 0x61, 0x40, 0x22, 0x64, 0xa0, 0x82, 0x48, 0xc8, 0x2a, 0x0b, 0x03, 0x92,
-	0xed, 0x1c, 0x57, 0x2b, 0x8e, 0xcf, 0xca, 0xb3, 0xa1, 0xd9, 0xf9, 0x03, 0x18, 0x99, 0x19, 0xf9,
-	0x4b, 0x3a, 0x76, 0x64, 0x4a, 0x51, 0xb2, 0x31, 0xf6, 0x2f, 0x40, 0xbe, 0xf3, 0x59, 0x4d, 0x52,
-	0xd1, 0x4c, 0xe7, 0x77, 0xdf, 0x7b, 0xdf, 0x7b, 0xdf, 0xe7, 0x67, 0xa3, 0xdb, 0x1c, 0x86, 0x1c,
-	0x42, 0x20, 0x11, 0x0f, 0x06, 0x59, 0x42, 0xd2, 0x43, 0x9c, 0x8c, 0x78, 0xca, 0x8d, 0x5a, 0x01,
-	0x60, 0x09, 0x98, 0x5b, 0x8c, 0x33, 0x2e, 0x20, 0x92, 0x3f, 0xc9, 0x2c, 0xd3, 0x62, 0x9c, 0xb3,
-	0x88, 0x12, 0x11, 0xf9, 0xd9, 0x67, 0xd2, 0xcf, 0x46, 0x5e, 0x1a, 0xf2, 0x58, 0xe1, 0x81, 0xa0,
-	0x21, 0xbe, 0x07, 0x94, 0x7c, 0x69, 0xfb, 0x34, 0xf5, 0xda, 0x24, 0xe0, 0xa1, 0xc2, 0x1b, 0x0b,
-	0xed, 0xf3, 0x43, 0x42, 0xce, 0x37, 0x1d, 0x5d, 0xef, 0x01, 0x7b, 0xc7, 0x83, 0xc1, 0x3e, 0x1f,
-	0xd0, 0x18, 0x8c, 0x87, 0x68, 0x8d, 0x7f, 0x8d, 0xe9, 0xa8, 0xae, 0x35, 0xb5, 0xd6, 0x95, 0xce,
-	0xcd, 0xd3, 0x89, 0x7d, 0x6d, 0xec, 0x0d, 0xa3, 0x17, 0x8e, 0xb8, 0x76, 0x5c, 0x09, 0x1b, 0x07,
-	0x68, 0x43, 0x8d, 0x51, 0xd7, 0x9b, 0x5a, 0xeb, 0xea, 0x6e, 0x03, 0xcb, 0x39, 0xb1, 0x9a, 0x13,
-	0x77, 0x8b, 0x84, 0x4e, 0xfb, 0x68, 0x62, 0x57, 0xfe, 0x4e, 0x6c, 0x43, 0x95, 0x6c, 0xf3, 0x61,
-	0x98, 0xd2, 0x61, 0x92, 0x8e, 0x4f, 0x27, 0xf6, 0x0d, 0xc9, 0xaf, 0x30, 0xe7, 0xc7, 0x89, 0xad,
-	0xb9, 0x25, 0xbb, 0xe1, 0xa1, 0xb5, 0x5c, 0x0c, 0xd4, 0xab, 0xcd, 0xaa, 0x68, 0x23, 0xe5, 0xe2,
-	0x5c, 0x2e, 0x2e, 0xe4, 0xe2, 0xd7, 0x3c, 0x8c, 0x3b, 0x4f, 0xf2, 0x36, 0xbf, 0x4e, 0xec, 0x16,
-	0x0b, 0xd3, 0x83, 0xcc, 0xc7, 0x01, 0x1f, 0x92, 0xc2, 0x1b, 0x79, 0xec, 0x40, 0x7f, 0x40, 0xd2,
-	0x71, 0x42, 0x41, 0x14, 0x80, 0x2b, 0x99, 0x9d, 0x47, 0xe8, 0xd6, 0x9c, 0x0b, 0x2e, 0x85, 0x84,
-	0xc7, 0x40, 0x8d, 0x1a, 0xd2, 0xf7, 0xba, 0xc2, 0x8a, 0x4b, 0xae, 0xbe, 0xd7, 0x75, 0x5e, 0xa2,
-	0xad, 0x1e, 0xb0, 0x0e, 0x65, 0x61, 0xfc, 0x21, 0xce, 0x7d, 0x0c, 0x63, 0xf6, 0x2a, 0x8a, 0x56,
-	0x75, 0xcd, 0xd9, 0x47, 0x77, 0xce, 0xab, 0x2f, 0xfb, 0x3d, 0x43, 0xeb, 0x99, 0xb8, 0x87, 0xba,
-	0x26, 0xd4, 0x9a, 0x78, 0x7e, 0x45, 0xf0, 0x7b, 0x3a, 0x0a, 0x79, 0x3f, 0x1f, 0xd5, 0x55, 0xa9,
-	0xce, 0x5b, 0xb4, 0xb9, 0xc4, 0xba, 0xf2, 0x8b, 0x94, 0x12, 0xf5, 0x52, 0xe2, 0x73, 0xd4, 0x58,
-	0x22, 0x2b, 0xe7, 0xab, 0xa3, 0x75, 0xc8, 0x82, 0x80, 0x02, 0x08, 0xda, 0x0d, 0x57, 0x85, 0xbb,
-	0x3f, 0x75, 0x54, 0xed, 0x01, 0x33, 0x5c, 0x84, 0xce, 0x6c, 0xd3, 0xdd, 0xc5, 0xf1, 0xe7, 0x6c,
-	0x36, 0x1f, 0xfc, 0x17, 0x2e, 0xbb, 0x32, 0xb4, 0xb9, 0x6c, 0xf9, 0xfd, 0x73, 0x6a, 0x97, 0xb2,
-	0xcc, 0xed, 0x55, 0xb2, 0xca, 0x46, 0x9f, 0x50, 0x6d, 0xc1, 0xc5, 0x7b, 0x17, 0xd6, 0x9b, 0x8f,
-	0x2f, 0x4c, 0x51, 0xfc, 0x9d, 0x37, 0x47, 0x53, 0x4b, 0x3b, 0x9e, 0x5a, 0xda, 0x9f, 0xa9, 0xa5,
-	0x7d, 0x9f, 0x59, 0x95, 0xe3, 0x99, 0x55, 0xf9, 0x3d, 0xb3, 0x2a, 0x1f, 0xf1, 0x99, 0x95, 0x2d,
-	0xe8, 0x76, 0x22, 0xcf, 0x07, 0x15, 0x90, 0xc3, 0xf2, 0xe7, 0x91, 0xaf, 0xaf, 0x7f, 0x59, 0x7c,
-	0x64, 0x4f, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0xd6, 0x38, 0xe4, 0xad, 0x5b, 0x04, 0x00, 0x00,
+	// 575 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0xcd, 0x6e, 0xd3, 0x4c,
+	0x14, 0x8d, 0x93, 0xaf, 0x5f, 0xcb, 0x05, 0x02, 0xb5, 0x5a, 0xe1, 0x58, 0x60, 0x07, 0x8b, 0x9f,
+	0x20, 0xb5, 0x33, 0x4d, 0x81, 0x0d, 0x42, 0x48, 0x84, 0x2c, 0xa8, 0x20, 0x52, 0x65, 0x95, 0x0d,
+	0x0b, 0x24, 0xdb, 0x19, 0xa6, 0x56, 0x1c, 0x4f, 0x94, 0xb1, 0xa1, 0xd9, 0xf3, 0x00, 0xec, 0xe0,
+	0x19, 0xd8, 0xf3, 0x0e, 0x5d, 0x76, 0xc9, 0x2a, 0x45, 0xc9, 0x8e, 0x65, 0x9f, 0x00, 0x79, 0xec,
+	0xb1, 0x9a, 0x9f, 0x92, 0x48, 0x48, 0xac, 0xc6, 0x33, 0xe7, 0xdc, 0x73, 0xef, 0xb9, 0x73, 0x3d,
+	0x70, 0x83, 0xf1, 0x2e, 0xe3, 0x3e, 0xc7, 0x01, 0xf3, 0x3a, 0x71, 0x0f, 0x47, 0x47, 0xa8, 0xd7,
+	0x67, 0x11, 0x53, 0xcb, 0x19, 0x80, 0x52, 0x40, 0xdf, 0xa0, 0x8c, 0x32, 0x01, 0xe1, 0xe4, 0x2b,
+	0x65, 0xe9, 0x06, 0x65, 0x8c, 0x06, 0x04, 0x8b, 0x9d, 0x1b, 0xbf, 0xc7, 0xed, 0xb8, 0xef, 0x44,
+	0x3e, 0x0b, 0x25, 0xee, 0x09, 0x19, 0xec, 0x3a, 0x9c, 0xe0, 0x0f, 0x75, 0x97, 0x44, 0x4e, 0x1d,
+	0x7b, 0xcc, 0x97, 0x78, 0x65, 0x2a, 0x7d, 0xb2, 0xa4, 0x90, 0xf5, 0xa9, 0x08, 0x57, 0x5b, 0x9c,
+	0xbe, 0x66, 0x5e, 0xe7, 0x80, 0x75, 0x48, 0xc8, 0xd5, 0x7b, 0xb0, 0xc2, 0x3e, 0x86, 0xa4, 0xaf,
+	0x29, 0x55, 0xa5, 0x76, 0xa9, 0x71, 0xfd, 0x6c, 0x68, 0x5e, 0x19, 0x38, 0xdd, 0xe0, 0x89, 0x25,
+	0x8e, 0x2d, 0x3b, 0x85, 0xd5, 0x43, 0x58, 0x93, 0x65, 0x68, 0xc5, 0xaa, 0x52, 0xbb, 0xbc, 0x5b,
+	0x41, 0x69, 0x9d, 0x48, 0xd6, 0x89, 0x9a, 0x19, 0xa1, 0x51, 0x3f, 0x1e, 0x9a, 0x85, 0x5f, 0x43,
+	0x53, 0x95, 0x21, 0x5b, 0xac, 0xeb, 0x47, 0xa4, 0xdb, 0x8b, 0x06, 0x67, 0x43, 0xf3, 0x5a, 0xaa,
+	0x2f, 0x31, 0xeb, 0xeb, 0xa9, 0xa9, 0xd8, 0xb9, 0xba, 0xea, 0xc0, 0x4a, 0x62, 0x86, 0x6b, 0xa5,
+	0x6a, 0x49, 0xa4, 0x49, 0xed, 0xa2, 0xc4, 0x2e, 0xca, 0xec, 0xa2, 0x17, 0xcc, 0x0f, 0x1b, 0x3b,
+	0x49, 0x9a, 0x6f, 0xa7, 0x66, 0x8d, 0xfa, 0xd1, 0x61, 0xec, 0x22, 0x8f, 0x75, 0x71, 0xd6, 0x9b,
+	0x74, 0xd9, 0xe6, 0xed, 0x0e, 0x8e, 0x06, 0x3d, 0xc2, 0x45, 0x00, 0xb7, 0x53, 0x65, 0xeb, 0x3e,
+	0x6c, 0x4e, 0x74, 0xc1, 0x26, 0xbc, 0xc7, 0x42, 0x4e, 0xd4, 0x32, 0x14, 0xf7, 0x9a, 0xa2, 0x15,
+	0xff, 0xd9, 0xc5, 0xbd, 0xa6, 0xf5, 0x0c, 0x36, 0x5a, 0x9c, 0x36, 0x08, 0xf5, 0xc3, 0x37, 0x61,
+	0xd2, 0x47, 0x3f, 0xa4, 0xcf, 0x83, 0x60, 0xd9, 0xae, 0x59, 0x07, 0x70, 0x73, 0x5e, 0x7c, 0x9e,
+	0xef, 0x11, 0xac, 0xc6, 0xe2, 0x9c, 0x6b, 0x8a, 0x70, 0xab, 0xa3, 0xc9, 0x11, 0x41, 0xfb, 0xa4,
+	0xef, 0xb3, 0x76, 0x52, 0xaa, 0x2d, 0xa9, 0xd6, 0x2b, 0x58, 0x9f, 0x51, 0x5d, 0xfa, 0x22, 0x53,
+	0x8b, 0xc5, 0xdc, 0xe2, 0x63, 0xa8, 0xcc, 0x88, 0xe5, 0xf5, 0x69, 0xb0, 0xca, 0x63, 0xcf, 0x23,
+	0x9c, 0x0b, 0xd9, 0x35, 0x5b, 0x6e, 0xad, 0xef, 0x0a, 0x68, 0x32, 0x6e, 0xdf, 0xe9, 0x47, 0xbe,
+	0x13, 0xfc, 0x75, 0x2d, 0xff, 0xe2, 0xea, 0x9f, 0x42, 0xf5, 0xa2, 0xb2, 0x17, 0xbb, 0xde, 0xfd,
+	0x52, 0x82, 0x52, 0x8b, 0x53, 0xd5, 0x06, 0x38, 0xf7, 0x0f, 0xdd, 0x9a, 0xbe, 0xb4, 0x89, 0xe1,
+	0xd2, 0xef, 0xfe, 0x11, 0xce, 0xb3, 0x52, 0x58, 0x9f, 0x1d, 0xb4, 0x3b, 0x73, 0x62, 0x67, 0x58,
+	0xfa, 0xd6, 0x32, 0xac, 0x3c, 0xd1, 0x3b, 0x28, 0x4f, 0xcd, 0xce, 0xed, 0x85, 0xf1, 0xfa, 0x83,
+	0x85, 0x94, 0x5c, 0x9f, 0xc3, 0xe6, 0xfc, 0xb1, 0xa8, 0x5d, 0xa4, 0x31, 0xcd, 0xd4, 0x77, 0x96,
+	0x65, 0xca, 0xa4, 0x8d, 0x97, 0xc7, 0x23, 0x43, 0x39, 0x19, 0x19, 0xca, 0xcf, 0x91, 0xa1, 0x7c,
+	0x1e, 0x1b, 0x85, 0x93, 0xb1, 0x51, 0xf8, 0x31, 0x36, 0x0a, 0x6f, 0xd1, 0xb9, 0x11, 0xc9, 0x54,
+	0xb7, 0x03, 0xc7, 0xe5, 0x72, 0x83, 0x8f, 0xf2, 0x77, 0x3a, 0x19, 0x17, 0xf7, 0x7f, 0xf1, 0x9e,
+	0x3d, 0xfc, 0x1d, 0x00, 0x00, 0xff, 0xff, 0xd7, 0x00, 0x0a, 0xc8, 0xc6, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -388,6 +497,9 @@ type MsgClient interface {
 	BeginUnlockingAll(ctx context.Context, in *MsgBeginUnlockingAll, opts ...grpc.CallOption) (*MsgBeginUnlockingAllResponse, error)
 	// MsgBeginUnlocking begins unlocking tokens by lock ID
 	BeginUnlocking(ctx context.Context, in *MsgBeginUnlocking, opts ...grpc.CallOption) (*MsgBeginUnlockingResponse, error)
+	// MsgBeginPartialUnlocking begins unlocking  partial amount of tokens by lock
+	// ID
+	BeginPartialUnlocking(ctx context.Context, in *MsgBeginPartialUnlocking, opts ...grpc.CallOption) (*MsgBeginPartialUnlockingResponse, error)
 }
 
 type msgClient struct {
@@ -425,6 +537,15 @@ func (c *msgClient) BeginUnlocking(ctx context.Context, in *MsgBeginUnlocking, o
 	return out, nil
 }
 
+func (c *msgClient) BeginPartialUnlocking(ctx context.Context, in *MsgBeginPartialUnlocking, opts ...grpc.CallOption) (*MsgBeginPartialUnlockingResponse, error) {
+	out := new(MsgBeginPartialUnlockingResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Msg/BeginPartialUnlocking", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// LockTokens lock tokens
@@ -433,6 +554,9 @@ type MsgServer interface {
 	BeginUnlockingAll(context.Context, *MsgBeginUnlockingAll) (*MsgBeginUnlockingAllResponse, error)
 	// MsgBeginUnlocking begins unlocking tokens by lock ID
 	BeginUnlocking(context.Context, *MsgBeginUnlocking) (*MsgBeginUnlockingResponse, error)
+	// MsgBeginPartialUnlocking begins unlocking  partial amount of tokens by lock
+	// ID
+	BeginPartialUnlocking(context.Context, *MsgBeginPartialUnlocking) (*MsgBeginPartialUnlockingResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -447,6 +571,9 @@ func (*UnimplementedMsgServer) BeginUnlockingAll(ctx context.Context, req *MsgBe
 }
 func (*UnimplementedMsgServer) BeginUnlocking(ctx context.Context, req *MsgBeginUnlocking) (*MsgBeginUnlockingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BeginUnlocking not implemented")
+}
+func (*UnimplementedMsgServer) BeginPartialUnlocking(ctx context.Context, req *MsgBeginPartialUnlocking) (*MsgBeginPartialUnlockingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BeginPartialUnlocking not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -507,6 +634,24 @@ func _Msg_BeginUnlocking_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BeginPartialUnlocking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBeginPartialUnlocking)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BeginPartialUnlocking(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Msg/BeginPartialUnlocking",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BeginPartialUnlocking(ctx, req.(*MsgBeginPartialUnlocking))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.lockup.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -522,6 +667,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BeginUnlocking",
 			Handler:    _Msg_BeginUnlocking_Handler,
+		},
+		{
+			MethodName: "BeginPartialUnlocking",
+			Handler:    _Msg_BeginPartialUnlocking_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -743,6 +892,88 @@ func (m *MsgBeginUnlockingResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgBeginPartialUnlocking) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBeginPartialUnlocking) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBeginPartialUnlocking) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.ID != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBeginPartialUnlockingResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBeginPartialUnlockingResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBeginPartialUnlockingResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Success {
+		i--
+		if m.Success {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -832,6 +1063,40 @@ func (m *MsgBeginUnlocking) Size() (n int) {
 }
 
 func (m *MsgBeginUnlockingResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Success {
+		n += 2
+	}
+	return n
+}
+
+func (m *MsgBeginPartialUnlocking) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.ID != 0 {
+		n += 1 + sovTx(uint64(m.ID))
+	}
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgBeginPartialUnlockingResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1361,6 +1626,211 @@ func (m *MsgBeginUnlockingResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgBeginUnlockingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Success = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBeginPartialUnlocking) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBeginPartialUnlocking: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBeginPartialUnlocking: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBeginPartialUnlockingResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBeginPartialUnlockingResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBeginPartialUnlockingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

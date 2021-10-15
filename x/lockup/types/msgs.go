@@ -9,9 +9,10 @@ import (
 
 // constants
 const (
-	TypeMsgLockTokens        = "lock_tokens"
-	TypeMsgBeginUnlockingAll = "begin_unlocking_all"
-	TypeMsgBeginUnlocking    = "begin_unlocking"
+	TypeMsgLockTokens            = "lock_tokens"
+	TypeMsgBeginUnlockingAll     = "begin_unlocking_all"
+	TypeMsgBeginUnlocking        = "begin_unlocking"
+	TypeMsgBeginPartialUnlocking = "begin_partial_unlocking"
 )
 
 var _ sdk.Msg = &MsgLockTokens{}
@@ -82,6 +83,28 @@ func (m MsgBeginUnlocking) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
+}
+
+// NewMsgBeginPartialUnlocking creates a message to begin partial unlocking the tokens of a specific lock
+func NewMsgBeginPartialUnlocking(owner sdk.AccAddress, id uint64, coins sdk.Coins) *MsgBeginPartialUnlocking {
+	return &MsgBeginPartialUnlocking{
+		Owner: owner.String(),
+		ID:    id,
+		Coins: coins,
+	}
+}
+
+func (m MsgBeginPartialUnlocking) Route() string { return RouterKey }
+func (m MsgBeginPartialUnlocking) Type() string  { return TypeMsgBeginPartialUnlocking }
+func (m MsgBeginPartialUnlocking) ValidateBasic() error {
+	return nil
+}
+func (m MsgBeginPartialUnlocking) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgBeginPartialUnlocking) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }

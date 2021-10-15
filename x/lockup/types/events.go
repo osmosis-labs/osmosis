@@ -2,10 +2,11 @@ package types
 
 // event types
 const (
-	TypeEvtLockTokens      = "lock_tokens"
-	TypeEvtAddTokensToLock = "add_tokens_to_lock"
-	TypeEvtBeginUnlockAll  = "begin_unlock_all"
-	TypeEvtBeginUnlock     = "begin_unlock"
+	TypeEvtLockTokens         = "lock_tokens"
+	TypeEvtAddTokensToLock    = "add_tokens_to_lock"
+	TypeEvtBeginUnlockAll     = "begin_unlock_all"
+	TypeEvtBeginUnlock        = "begin_unlock"
+	TypeEvtBeginPartialUnlock = "begin_partial_unlock"
 
 	AttributePeriodLockID         = "period_lock_id"
 	AttributePeriodLockOwner      = "owner"

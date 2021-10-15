@@ -118,16 +118,27 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 	}
 	epochInfo := h.k.GetEpochInfo(ctx)
 	lockableDurations := h.k.GetLockableDurations(ctx)
-	newLockReward, err := h.k.GetRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
-	if err != nil {
-		return
-	}
-	_, err = h.k.ClaimRewardForLock(ctx, *lock, newLockReward, lockableDurations)
-	if err != nil {
-		return
-	}
+	if lock.Coins.IsAllGT(amount) {
+		err = h.k.UpdateHistoricalRewardFromCurrentReward(ctx, amount, lockDuration, epochInfo, lockableDurations)
+		if err != nil {
+			return
+		}
+		err = h.k.UpdateRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
+		if err != nil {
+			return
+		}
+	} else {
+		newLockReward, err := h.k.GetRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
+		if err != nil {
+			return
+		}
+		_, err = h.k.ClaimRewardForLock(ctx, *lock, newLockReward, lockableDurations)
+		if err != nil {
+			return
+		}
 
-	h.k.clearPeriodLockReward(ctx, lockID)
+		h.k.clearPeriodLockReward(ctx, lockID)
+	}
 }
 
 ////////////////////////////  END //////////////////////////////////

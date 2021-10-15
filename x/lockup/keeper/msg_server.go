@@ -129,3 +129,45 @@ func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgB
 
 	return &types.MsgBeginUnlockingAllResponse{}, nil
 }
+
+func (server msgServer) BeginPartialUnlocking(goCtx context.Context, msg *types.MsgBeginPartialUnlocking) (*types.MsgBeginPartialUnlockingResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	lock, unlock, err := server.keeper.BeginPartialUnlockPeriodLockByID(ctx, msg.ID, msg.Coins)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if lock != nil && msg.Owner != lock.Owner {
+		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, lock.Owner))
+	}
+
+	if unlock != nil && msg.Owner != unlock.Owner {
+		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, unlock.Owner))
+	}
+
+	if lock == nil {
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtBeginUnlock,
+				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(unlock.ID)),
+				sdk.NewAttribute(types.AttributePeriodLockOwner, unlock.Owner),
+				sdk.NewAttribute(types.AttributePeriodLockDuration, unlock.Duration.String()),
+				sdk.NewAttribute(types.AttributePeriodLockUnlockTime, unlock.EndTime.String()),
+			),
+		})
+	} else {
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtBeginPartialUnlock,
+				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(unlock.ID)),
+				sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
+				sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+				sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
+			),
+		})
+	}
+
+	return &types.MsgBeginPartialUnlockingResponse{}, nil
+}

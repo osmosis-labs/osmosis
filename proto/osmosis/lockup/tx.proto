@@ -17,6 +17,10 @@ service Msg {
       returns (MsgBeginUnlockingAllResponse);
   // MsgBeginUnlocking begins unlocking tokens by lock ID
   rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
+  // MsgBeginPartialUnlocking begins unlocking  partial amount of tokens by lock
+  // ID
+  rpc BeginPartialUnlocking(MsgBeginPartialUnlocking)
+      returns (MsgBeginPartialUnlockingResponse);
 }
 
 message MsgLockTokens {
@@ -44,3 +48,13 @@ message MsgBeginUnlocking {
   uint64 ID = 2;
 }
 message MsgBeginUnlockingResponse { bool success = 1; }
+
+message MsgBeginPartialUnlocking {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 ID = 2;
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+message MsgBeginPartialUnlockingResponse { bool success = 1; }

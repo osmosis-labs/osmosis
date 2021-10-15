@@ -589,4 +589,50 @@ func (k Keeper) GetLocksValidAfterTimeDenomDuration(ctx sdk.Context, denom strin
 	return combineLocks(notUnlockings, unlockings)
 }
 
+func (k Keeper) BeginPartialUnlockPeriodLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, *types.PeriodLock, error) {
+	lockRef, err := k.GetLockByID(ctx, lockID)
+	if err != nil || lockRef == nil {
+		return nil, nil, err
+	}
+
+	lock := *lockRef
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if lockRef.IsUnlocking() {
+		return lockRef, nil, fmt.Errorf("lock is already unlocking: %d", lockID)
+	}
+
+	if lock.Coins.IsEqual(coins) {
+		unlock, err := k.BeginUnlockPeriodLockByID(ctx, lockID)
+		return nil, unlock, err
+	}
+
+	lock.Coins = lock.Coins.Sub(coins)
+	// store lock object into the store
+	store := ctx.KVStore(k.storeKey)
+	bz, err := proto.Marshal(&lock)
+	if err != nil {
+		return lockRef, nil, err
+	}
+	store.Set(lockStoreKey(lock.ID), bz)
+
+	partialLockID := k.GetLastLockID(ctx) + 1
+	partialLock := types.NewPeriodLock(partialLockID, owner, lock.Duration, time.Time{}, coins)
+	k.BeginUnlock(ctx, partialLock)
+	k.SetLastLockID(ctx, partialLock.ID)
+	partialLockRef, err := k.GetLockByID(ctx, partialLockID)
+	if err != nil || partialLockRef == nil {
+		return nil, nil, err
+	}
+	partialLock = *partialLockRef
+
+	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, owner, partialLockID, coins, partialLock.Duration, partialLock.EndTime)
+
+	return lockRef, partialLockRef, nil
+}
+
 ////////////////////////////  END //////////////////////////////////

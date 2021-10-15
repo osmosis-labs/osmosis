@@ -28,6 +28,7 @@ func GetTxCmd() *cobra.Command {
 		NewLockTokensCmd(),
 		NewBeginUnlockingCmd(),
 		NewBeginUnlockByIDCmd(),
+		NewBeginPartialUnlockByIDCmd(),
 	)
 
 	return cmd
@@ -125,6 +126,44 @@ func NewBeginUnlockByIDCmd() *cobra.Command {
 			msg := types.NewMsgBeginUnlocking(
 				clientCtx.GetFromAddress(),
 				uint64(id),
+			)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewBeginPartialUnlockByIDCmd partially unlock individual period lock by ID
+func NewBeginPartialUnlockByIDCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "begin-partial-unlock-by-id [id] [tokens]",
+		Short: "begin partial unlock individual period lock by ID",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			id, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			coins, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgBeginPartialUnlocking(
+				clientCtx.GetFromAddress(),
+				uint64(id),
+				coins,
 			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
