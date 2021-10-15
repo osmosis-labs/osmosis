@@ -533,11 +533,6 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
-	// add to unlocking accumulation store
-	for _, coin := range lock.Coins {
-		k.unlockingAccumulationStore(ctx, coin.Denom).Increase(unlockingAccumulationKey(lock.EndTime), coin.Amount)
-	}
-
 	return nil
 }
 
@@ -577,7 +572,6 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// remove from accumulation store
 	for _, coin := range lock.Coins {
 		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-		k.unlockingAccumulationStore(ctx, coin.Denom).Decrease(unlockingAccumulationKey(lock.EndTime), coin.Amount)
 	}
 
 	return nil
@@ -587,15 +581,6 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 func (k Keeper) GetUnlockingsBetweenTimeDenom(ctx sdk.Context, denom string, beginTime time.Time, endTime time.Time) []types.PeriodLock {
 	return k.getLocksFromIterator(ctx, k.LockIteratorBetweenTimeDenom(ctx, true, denom, beginTime, endTime))
-}
-
-func (k Keeper) unlockingAccumulationStore(ctx sdk.Context, denom string) store.Tree {
-	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), UnlockingAccumulationStorePrefix(denom)), 10)
-}
-
-func (k Keeper) GetUnlockingPeriodLocksAccumulation(ctx sdk.Context, denom string, beginTime time.Time) sdk.Int {
-	beginKey := unlockingAccumulationKey(beginTime)
-	return k.unlockingAccumulationStore(ctx, denom).SubsetAccumulation(nil, beginKey)
 }
 
 func (k Keeper) GetLocksValidAfterTimeDenomDuration(ctx sdk.Context, denom string, timestamp time.Time, duration time.Duration) []types.PeriodLock {
