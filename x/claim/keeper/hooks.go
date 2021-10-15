@@ -53,6 +53,14 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // gamm hooks
+func (h Hooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalId uint64) {
+
+}
+
+func (h Hooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalId uint64) {
+
+}
+
 func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
 	h.k.AfterAddLiquidity(ctx, sender)
 }
