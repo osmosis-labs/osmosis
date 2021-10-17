@@ -277,8 +277,8 @@ github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 h1:JWuenKqqX8nojt
 github.com/facebookgo/stack v0.0.0-20160209184415-751773369052/go.mod h1:UbMTZqLaRiH3MsBH8va0n7s1pQYcu3uTb8G4tygF4Zg=
 github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 h1:E2s37DuLxFhQDg5gKsWoLBOB0n+ZW8s599zru8FJ2/Y=
 github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870/go.mod h1:5tD+neXqOorC30/tWg0LCSkrqj/AR6gu8yY8/fpw1q0=
-github.com/faddat/basecoin v0.44.2-osmo h1:mfvWY2Z6z2kqV4j3dJO9EgB89ksRjKsbZcBtD/aCkCU=
-github.com/faddat/basecoin v0.44.2-osmo/go.mod h1:NTuapEfv4ahUQo78L7JCIwB2wLAWYwtEi2At7m84SPk=
+github.com/faddat/basecoin v0.44.2-osmo4 h1:d6P2gIhZGnl5LAauLPWSrcitMeMsOCSUIe5FaNAhoRE=
+github.com/faddat/basecoin v0.44.2-osmo4/go.mod h1:NTuapEfv4ahUQo78L7JCIwB2wLAWYwtEi2At7m84SPk=
 github.com/fatih/color v1.3.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
