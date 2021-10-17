@@ -22,7 +22,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		// distribute due to epoch event
-		ctx.EventManager().IncreaseCapacity(2E6)
+		ctx.EventManager().IncreaseCapacity(2e6)
 		gauges = k.GetActiveGauges(ctx)
 		_, err := k.Distribute(ctx, gauges)
 		if err != nil {
