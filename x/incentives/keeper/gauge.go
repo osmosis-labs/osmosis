@@ -190,7 +190,6 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
 		return err
 	}
-	k.hooks.AfterStartDistribution(ctx, gauge.Id)
 	return nil
 }
 
