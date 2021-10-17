@@ -189,4 +189,3 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
