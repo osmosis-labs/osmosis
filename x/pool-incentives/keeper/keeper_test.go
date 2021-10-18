@@ -14,7 +14,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/app"
 
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
@@ -45,7 +47,7 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
-func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolParams gammtypes.BalancerPoolParams) uint64 {
+func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolParams balancer.BalancerPoolParams) uint64 {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 		err := suite.app.BankKeeper.AddCoins(
@@ -82,7 +84,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolPara
 }
 
 func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
-	poolId := suite.prepareBalancerPoolWithPoolParams(gammtypes.BalancerPoolParams{
+	poolId := suite.prepareBalancerPoolWithPoolParams(balancer.BalancerPoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})

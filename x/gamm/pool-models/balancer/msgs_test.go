@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/app/params"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func TestMsgCreateBalancerPool(t *testing.T) {
@@ -18,7 +19,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgCreateBalancerPool) MsgCreateBalancerPool) MsgCreateBalancerPool {
-		testPoolAsset := []PoolAsset{
+		testPoolAsset := []types.PoolAsset{
 			{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("test", sdk.NewInt(100)),
@@ -43,7 +44,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		return msg
 	})
 
-	require.Equal(t, default_msg.Route(), RouterKey)
+	require.Equal(t, default_msg.Route(), types.RouterKey)
 	require.Equal(t, default_msg.Type(), "create_balancer_pool")
 	signers := default_msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -81,7 +82,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "has no PoolAsset2",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []PoolAsset{}
+				msg.PoolAssets = []types.PoolAsset{}
 				return msg
 			}),
 			expectPass: false,
@@ -89,7 +90,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "has one Pool Asset",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []PoolAsset{
+				msg.PoolAssets = []types.PoolAsset{
 					msg.PoolAssets[0],
 				}
 				return msg

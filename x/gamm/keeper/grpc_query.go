@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pool_models "github.com/osmosis-labs/osmosis/x/gamm/pool-models"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -49,16 +49,11 @@ func (k Keeper) Pool(
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	switch pool := pool.(type) {
-	case *pool_models.BalancerPool:
-		any, err := codectypes.NewAnyWithValue(pool)
-		if err != nil {
-			return nil, err
-		}
-		return &types.QueryPoolResponse{Pool: any}, nil
-	default:
-		return nil, status.Error(codes.Internal, "invalid type of pool")
+	any, err := codectypes.NewAnyWithValue(pool)
+	if err != nil {
+		return nil, err
 	}
+	return &types.QueryPoolResponse{Pool: any}, nil
 }
 
 func (k Keeper) Pools(
@@ -87,7 +82,7 @@ func (k Keeper) Pools(
 		}
 
 		// TODO: pools query should not be balancer specific
-		pool, ok := poolI.(*types.BalancerPool)
+		pool, ok := poolI.(*balancer.BalancerPool)
 		if !ok {
 			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
 		}
@@ -137,17 +132,18 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	// TODO: change default return type to err in case of all type conversion failed
-	balancerPool, ok := pool.(*types.BalancerPool)
+	balancerPool, ok := pool.(*balancer.BalancerPool)
 	if !ok {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	any, err := codectypes.NewAnyWithValue(&balancerPool.PoolParams)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.QueryPoolParamsResponse{
-		Params: &types.BalancerPoolParams{
-			SwapFee:                  balancerPool.GetPoolExitFee(),
-			ExitFee:                  balancerPool.GetPoolExitFee(),
-			SmoothWeightChangeParams: balancerPool.PoolParams.SmoothWeightChangeParams,
-		},
+		Params: any,
 	}, nil
 }
 

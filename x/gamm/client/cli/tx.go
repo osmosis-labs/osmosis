@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -375,15 +376,11 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		})
 	}
 
-	msg := &types.MsgCreateBalancerPool{
-		Sender: clientCtx.GetFromAddress().String(),
-		PoolParams: types.BalancerPoolParams{
-			SwapFee: swapFee,
-			ExitFee: exitFee,
-		},
-		PoolAssets:         poolAssets,
-		FuturePoolGovernor: pool.FutureGovernor,
+	params := balancer.BalancerPoolParams{
+		SwapFee: swapFee,
+		ExitFee: exitFee,
 	}
+	msg, err := balancer.NewMsgCreateBalancerPool(clientCtx.GetFromAddress().String(), params, poolAssets)
 
 	if (pool.SmoothWeightChangeParams != smoothWeightChangeParamsInputs{}) {
 		duration, err := time.ParseDuration(pool.SmoothWeightChangeParams.Duration)
@@ -410,7 +407,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 			})
 		}
 
-		smoothWeightParams := types.SmoothWeightChangeParams{
+		smoothWeightParams := balancer.SmoothWeightChangeParams{
 			Duration:           duration,
 			InitialPoolWeights: poolAssets,
 			TargetPoolWeights:  targetPoolAssets,
@@ -425,7 +422,8 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 			smoothWeightParams.StartTime = startTime
 		}
 
-		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
+		params.SmoothWeightChangeParams = &smoothWeightParams
+		msg.SetPoolParams(params)
 	}
 
 	return txf, msg, nil

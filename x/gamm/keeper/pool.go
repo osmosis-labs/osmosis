@@ -9,7 +9,7 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	pool_models "github.com/osmosis-labs/osmosis/x/gamm/pool-models"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -82,10 +82,10 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 
 // newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
 // parameters, initial assets, and future governor.
-func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams pool_models.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
+func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
 	poolId := k.GetNextPoolNumber(ctx)
 
-	pool, err := types.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
+	pool, err := balancer.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams pool_models.
 		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
 	}
 
-	err = k.SetPool(ctx, pool)
+	err = k.SetPool(ctx, &pool)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams pool_models.
 	))
 	k.accountKeeper.SetAccount(ctx, acc)
 
-	return pool, nil
+	return &pool, nil
 }
 
 // SetNextPoolNumber sets next pool number

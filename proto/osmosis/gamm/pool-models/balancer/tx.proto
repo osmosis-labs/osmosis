@@ -6,7 +6,9 @@ import "google/protobuf/any.proto";
 import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types/pool-models/balancer";
+import "osmosis/gamm/v1beta1/pool.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer";
 
 service Msg {
   rpc CreateBalancerPool(MsgCreateBalancerPool)
@@ -22,7 +24,8 @@ message MsgCreateBalancerPool {
     (gogoproto.nullable) = false
   ];
 
-  repeated PoolAsset poolAssets = 3 [ (gogoproto.nullable) = false ];
+  repeated osmosis.gamm.v1beta1.PoolAsset poolAssets = 3
+      [ (gogoproto.nullable) = false ];
 
   string future_pool_governor = 4
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];

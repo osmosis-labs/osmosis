@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 var (
@@ -21,14 +22,14 @@ var (
 	defaultFutureGovernor = ""
 	defaultCurBlockTime   = time.Unix(1618700000, 0)
 	//
-	dummyPoolAssets = []PoolAsset{}
+	dummyPoolAssets = []types.PoolAsset{}
 	wantErr         = true
 	noErr           = false
 )
 
 // Expected is un-scaled
-func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolI) {
-	scaledExpected := expected.MulRaw(GuaranteedWeightPrecision)
+func testTotalWeight(t *testing.T, expected sdk.Int, pool BalancerPool) {
+	scaledExpected := expected.MulRaw(types.GuaranteedWeightPrecision)
 	require.Equal(t,
 		scaledExpected.String(),
 		pool.GetTotalWeight().String())
@@ -89,7 +90,7 @@ func TestBalancerPoolParams(t *testing.T) {
 func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 	var poolId uint64 = 10
 
-	initialAssets := []PoolAsset{
+	initialAssets := []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -113,37 +114,36 @@ func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 	// Break abstractions and start reasoning about the underlying internal representation's APIs.
 	// TODO: This test actually just needs to be refactored to not be doing this, and just
 	// create a different pool each time.
-	pacc_internal := pacc.(*BalancerPool)
 
-	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
+	err = pacc.setInitialPoolAssets([]types.PoolAsset{types.PoolAsset{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("negativeWeight", sdk.NewInt(50000)),
 	}})
 
 	require.Error(t, err)
 
-	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
+	err = pacc.setInitialPoolAssets([]types.PoolAsset{types.PoolAsset{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("zeroWeight", sdk.NewInt(50000)),
 	}})
 	require.Error(t, err)
 
-	err = pacc_internal.UpdatePoolAssetBalance(
+	err = pacc.UpdatePoolAssetBalance(
 		sdk.NewCoin("test1", sdk.NewInt(0)))
 	require.Error(t, err)
 
-	err = pacc_internal.UpdatePoolAssetBalance(
+	err = pacc.UpdatePoolAssetBalance(
 		sdk.Coin{Denom: "test1", Amount: sdk.NewInt(-1)},
 	)
 	require.Error(t, err)
 
-	err = pacc_internal.UpdatePoolAssetBalance(
+	err = pacc.UpdatePoolAssetBalance(
 		sdk.NewCoin("test1", sdk.NewInt(1)))
 	require.NoError(t, err)
 
-	testTotalWeight(t, sdk.NewInt(300), pacc_internal)
+	testTotalWeight(t, sdk.NewInt(300), pacc)
 
-	PoolAsset, err := pacc_internal.GetPoolAsset("test1")
+	PoolAsset, err := pacc.GetPoolAsset("test1")
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(1).String(), PoolAsset.Token.Amount.String())
 }
@@ -152,12 +152,12 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	// TODO: Add more cases
 	// asset names should be i ascending order, starting from test1
 	tests := []struct {
-		assets    []PoolAsset
+		assets    []types.PoolAsset
 		shouldErr bool
 	}{
 		// weight 0
 		{
-			[]PoolAsset{
+			[]types.PoolAsset{
 				{
 					Weight: sdk.NewInt(0),
 					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -167,7 +167,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// negative weight
 		{
-			[]PoolAsset{
+			[]types.PoolAsset{
 				{
 					Weight: sdk.NewInt(-1),
 					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -177,7 +177,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// 0 token amount
 		{
-			[]PoolAsset{
+			[]types.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
@@ -187,7 +187,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// negative token amount
 		{
-			[]PoolAsset{
+			[]types.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token: sdk.Coin{
@@ -200,7 +200,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// total weight 300
 		{
-			[]PoolAsset{
+			[]types.PoolAsset{
 				{
 					Weight: sdk.NewInt(200),
 					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -214,7 +214,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// two of the same token
 		{
-			[]PoolAsset{
+			[]types.PoolAsset{
 				{
 					Weight: sdk.NewInt(200),
 					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -232,7 +232,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// total weight 7300
 		{
-			[]PoolAsset{
+			[]types.PoolAsset{
 				{
 					Weight: sdk.NewInt(200),
 					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -254,7 +254,6 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 
 	for i, tc := range tests {
 		pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
-		pacc_internal := pacc.(*BalancerPool)
 		if tc.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 		} else {
@@ -264,7 +263,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 				expectedTotalWeight = expectedTotalWeight.Add(asset.Weight)
 
 				// Ensure pool assets are sorted
-				require.Equal(t, "test"+fmt.Sprint(i+1), pacc_internal.PoolAssets[i].Token.Denom)
+				require.Equal(t, "test"+fmt.Sprint(i+1), pacc.PoolAssets[i].Token.Denom)
 			}
 			testTotalWeight(t, expectedTotalWeight, pacc)
 		}
@@ -281,7 +280,7 @@ func TestGetBalancerPoolAssets(t *testing.T) {
 	// and fails for things not in it.
 	denomNotInPool := "xyzCoin"
 
-	assets := []PoolAsset{
+	assets := []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -328,7 +327,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 	// sets its start time to be the first start time it is called on
 	defaultDuration := 100 * time.Second
 
-	initialPoolAssets := []PoolAsset{
+	initialPoolAssets := []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(1),
 			Token:  sdk.NewCoin("asset1", sdk.NewInt(1000)),
@@ -341,7 +340,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 
 	params := SmoothWeightChangeParams{
 		Duration: defaultDuration,
-		TargetPoolWeights: []PoolAsset{
+		TargetPoolWeights: []types.PoolAsset{
 			{
 				Weight: sdk.NewInt(1),
 				Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -359,12 +358,10 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 		ExitFee:                  defaultExitFee,
 	}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
-	balancerPool, ok := pacc.(*BalancerPool)
-	require.True(t, ok)
 	// Consistency check that SmoothWeightChangeParams params are set
-	require.NotNil(t, balancerPool.PoolParams.SmoothWeightChangeParams)
+	require.NotNil(t, pacc.PoolParams.SmoothWeightChangeParams)
 	// Ensure that the start time got set
-	require.Equal(t, balancerPool.PoolParams.SmoothWeightChangeParams.StartTime, defaultCurBlockTime)
+	require.Equal(t, pacc.PoolParams.SmoothWeightChangeParams.StartTime, defaultCurBlockTime)
 }
 
 func TestBalancerPoolPokeTokenWeights(t *testing.T) {
@@ -372,7 +369,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	defaultStartTime := time.Unix(1618703511, 0)
 	defaultStartTimeUnix := defaultStartTime.Unix()
 	defaultDuration := 100 * time.Second
-	floatGuaranteedPrecison := float64(GuaranteedWeightPrecision)
+	floatGuaranteedPrecison := float64(types.GuaranteedWeightPrecision)
 
 	// testCases don't need to be ordered by time. but the blockTime should be
 	// less than the end time of the SmoothWeightChange. Testing past the end time
@@ -397,7 +394,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 			params: SmoothWeightChangeParams{
 				StartTime: defaultStartTime,
 				Duration:  defaultDuration,
-				InitialPoolWeights: []PoolAsset{
+				InitialPoolWeights: []types.PoolAsset{
 					{
 						Weight: sdk.NewInt(1),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -407,7 +404,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
-				TargetPoolWeights: []PoolAsset{
+				TargetPoolWeights: []types.PoolAsset{
 					{
 						Weight: sdk.NewInt(1),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -423,16 +420,16 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 					// Halfway through at 50 seconds elapsed
 					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
 					expectedWeights: []sdk.Int{
-						sdk.NewInt(1 * GuaranteedWeightPrecision),
+						sdk.NewInt(1 * types.GuaranteedWeightPrecision),
 						// Halfway between 1 & 2
-						sdk.NewInt(3 * GuaranteedWeightPrecision / 2),
+						sdk.NewInt(3 * types.GuaranteedWeightPrecision / 2),
 					},
 				},
 				{
 					// Quarter way through at 25 seconds elapsed
 					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
 					expectedWeights: []sdk.Int{
-						sdk.NewInt(1 * GuaranteedWeightPrecision),
+						sdk.NewInt(1 * types.GuaranteedWeightPrecision),
 						// Quarter way between 1 & 2 = 1.25
 						sdk.NewInt(int64(1.25 * floatGuaranteedPrecison)),
 					},
@@ -445,7 +442,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 			params: SmoothWeightChangeParams{
 				StartTime: defaultStartTime,
 				Duration:  defaultDuration,
-				InitialPoolWeights: []PoolAsset{
+				InitialPoolWeights: []types.PoolAsset{
 					{
 						Weight: sdk.NewInt(2),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -455,7 +452,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
-				TargetPoolWeights: []PoolAsset{
+				TargetPoolWeights: []types.PoolAsset{
 					{
 						Weight: sdk.NewInt(4),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -472,9 +469,9 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
 					expectedWeights: []sdk.Int{
 						// Halfway between 2 & 4
-						sdk.NewInt(6 * GuaranteedWeightPrecision / 2),
+						sdk.NewInt(6 * types.GuaranteedWeightPrecision / 2),
 						// Halfway between 1 & 2
-						sdk.NewInt(3 * GuaranteedWeightPrecision / 2),
+						sdk.NewInt(3 * types.GuaranteedWeightPrecision / 2),
 					},
 				},
 				{
@@ -500,7 +497,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		initialWeights := make([]sdk.Int, len(params.InitialPoolWeights))
 		finalWeights := make([]sdk.Int, len(params.TargetPoolWeights))
 		for i, v := range params.InitialPoolWeights {
-			initialWeights[i] = v.Weight.MulRaw(GuaranteedWeightPrecision)
+			initialWeights[i] = v.Weight.MulRaw(types.GuaranteedWeightPrecision)
 		}
 		for i, v := range params.TargetPoolWeights {
 			// Doesn't need to be scaled, due to this being done already in param initialization,
@@ -538,9 +535,9 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	for poolNum, tc := range tests {
 		paramsCopy := tc.params
 		// First we create the initial pool assets we will use
-		initialPoolAssets := make([]PoolAsset, len(paramsCopy.InitialPoolWeights))
+		initialPoolAssets := make([]types.PoolAsset, len(paramsCopy.InitialPoolWeights))
 		for i, asset := range paramsCopy.InitialPoolWeights {
-			assetCopy := PoolAsset{
+			assetCopy := types.PoolAsset{
 				Weight: asset.Weight,
 				Token:  sdk.NewInt64Coin(asset.Token.Denom, 10000),
 			}
@@ -553,10 +550,9 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 			SmoothWeightChangeParams: &tc.params,
 		}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 		require.NoError(t, err, "poolNumber %v", poolNum)
-		balancerPool, ok := pacc.(*BalancerPool)
-		require.True(t, ok)
+
 		// Consistency check that SmoothWeightChangeParams params are set
-		require.NotNil(t, balancerPool.PoolParams.SmoothWeightChangeParams)
+		require.NotNil(t, pacc.PoolParams.SmoothWeightChangeParams)
 
 		testCases := addDefaultCases(paramsCopy, tc.cases)
 		for caseNum, testCase := range testCases {
@@ -575,7 +571,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 			require.Equal(t, totalWeight, pacc.GetTotalWeight())
 		}
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
-		require.Nil(t, balancerPool.PoolParams.SmoothWeightChangeParams)
+		require.Nil(t, pacc.PoolParams.SmoothWeightChangeParams)
 	}
 
 }

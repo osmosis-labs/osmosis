@@ -20,9 +20,13 @@ type PoolI interface {
 	GetPoolSwapFee() sdk.Dec
 	GetPoolExitFee() sdk.Dec
 	GetTotalWeight() sdk.Int
+	// might be not needed
 	GetTotalShares() sdk.Coin
+	// might be not needed
 	AddTotalShares(amt sdk.Int)
+	// might be not needed
 	SubTotalShares(amt sdk.Int)
+	// might be not needed
 	GetPoolAsset(denom string) (PoolAsset, error)
 	// UpdatePoolAssetBalance updates the balances for
 	// the token with denomination coin.denom
@@ -47,30 +51,6 @@ var (
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
 	return address.Module(ModuleName, key)
-}
-
-func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
-	// The pool must be swapping between at least two assets
-	if len(assets) < 2 {
-		return ErrTooFewPoolAssets
-	}
-
-	// TODO: Add the limit of binding token to the pool params?
-	if len(assets) > 8 {
-		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(assets))
-	}
-
-	for _, asset := range assets {
-		err := ValidateUserSpecifiedWeight(asset.Weight)
-		if err != nil {
-			return err
-		}
-
-		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
-		}
-	}
-	return nil
 }
 
 func ValidateUserSpecifiedWeight(weight sdk.Int) error {

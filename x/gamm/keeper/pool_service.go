@@ -7,14 +7,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	pool_models "github.com/osmosis-labs/osmosis/x/gamm/pool-models"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func (k Keeper) CreateBalancerPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	BalancerPoolParams pool_models.BalancerPoolParams,
+	BalancerPoolParams balancer.BalancerPoolParams,
 	poolAssets []types.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {

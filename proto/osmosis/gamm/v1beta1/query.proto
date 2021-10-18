@@ -2,9 +2,10 @@ syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
-import "osmosis/gamm/v1beta1/pool.proto";
+
 import "osmosis/gamm/v1beta1/tx.proto";
+import "osmosis/gamm/v1beta1/pool.proto";
+
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";

@@ -8,8 +8,8 @@ import (
 	simapp "github.com/osmosis-labs/osmosis/app"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/x/gamm"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/x/gamm/types/pool-models/balancer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -23,7 +23,7 @@ func TestGammInitGenesis(t *testing.T) {
 	poolI, err := balancer.NewBalancerPool(1, balancer.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []balancer.PoolAsset{
+	}, []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(1),
 			Token:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 10),
@@ -35,10 +35,7 @@ func TestGammInitGenesis(t *testing.T) {
 	}, "", ctx.BlockTime())
 	require.NoError(t, err)
 
-	balancerPool, ok := poolI.(*balancer.BalancerPool)
-	require.True(t, ok)
-
-	any, err := codectypes.NewAnyWithValue(poolI)
+	any, err := codectypes.NewAnyWithValue(&poolI)
 	require.NoError(t, err)
 
 	gamm.InitGenesis(ctx, app.GAMMKeeper, types.GenesisState{
@@ -52,14 +49,14 @@ func TestGammInitGenesis(t *testing.T) {
 	require.Equal(t, app.GAMMKeeper.GetNextPoolNumber(ctx), uint64(2))
 	poolStored, err := app.GAMMKeeper.GetPool(ctx, 1)
 	require.NoError(t, err)
-	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
-	require.Equal(t, balancerPool.GetAddress(), poolStored.GetAddress())
-	require.Equal(t, balancerPool.GetPoolSwapFee(), poolStored.GetPoolSwapFee())
-	require.Equal(t, balancerPool.GetPoolExitFee(), poolStored.GetPoolExitFee())
-	require.Equal(t, balancerPool.GetTotalWeight(), poolStored.GetTotalWeight())
-	require.Equal(t, balancerPool.GetTotalShares(), poolStored.GetTotalShares())
-	require.Equal(t, balancerPool.GetAllPoolAssets(), poolStored.GetAllPoolAssets())
-	require.Equal(t, balancerPool.String(), poolStored.String())
+	require.Equal(t, poolI.GetId(), poolStored.GetId())
+	require.Equal(t, poolI.GetAddress(), poolStored.GetAddress())
+	require.Equal(t, poolI.GetPoolSwapFee(), poolStored.GetPoolSwapFee())
+	require.Equal(t, poolI.GetPoolExitFee(), poolStored.GetPoolExitFee())
+	require.Equal(t, poolI.GetTotalWeight(), poolStored.GetTotalWeight())
+	require.Equal(t, poolI.GetTotalShares(), poolStored.GetTotalShares())
+	require.Equal(t, poolI.GetAllPoolAssets(), poolStored.GetAllPoolAssets())
+	require.Equal(t, poolI.String(), poolStored.String())
 
 	_, err = app.GAMMKeeper.GetPool(ctx, 2)
 	require.Error(t, err)

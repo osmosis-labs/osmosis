@@ -5,33 +5,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	proto "github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/golang/protobuf/proto"
-)
 
-var (
-	amino = codec.NewLegacyAmino()
-
-	// ModuleCdc references the global x/bank module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
-	//
-	// The actual codec used for serialization should be provided to x/staking and
-	// defined at the application level.
-	ModuleCdc = codec.NewAminoCodec(amino)
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 const (
-	RouterKey = "gamm"
-
 	TypeMsgCreateBalancerPool = "create_balancer_pool"
 )
 
-func NewMsgCreateBalancerPool(sender string, balancerPoolParams BalancerPoolParamsI, poolAssets []PoolAsset) (*MsgCreateBalancerPool, error) {
+func NewMsgCreateBalancerPool(sender string, balancerPoolParams BalancerPoolParamsI, poolAssets []types.PoolAsset) (*MsgCreateBalancerPool, error) {
 	m := &MsgCreateBalancerPool{
 		Sender:     sender,
 		PoolAssets: poolAssets,
@@ -45,7 +32,7 @@ func NewMsgCreateBalancerPool(sender string, balancerPoolParams BalancerPoolPara
 
 var _ sdk.Msg = &MsgCreateBalancerPool{}
 
-func (msg MsgCreateBalancerPool) Route() string { return RouterKey }
+func (msg MsgCreateBalancerPool) Route() string { return types.RouterKey }
 func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
 func (msg MsgCreateBalancerPool) ValidateBasic() error {
 
@@ -54,7 +41,7 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	err = ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
+	err = types.ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
 	if err != nil {
 		return err
 	}
@@ -70,7 +57,7 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 	return nil
 }
 func (msg MsgCreateBalancerPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(types.ModuleCdc.MustMarshalJSON(&msg))
 }
 func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -93,7 +80,7 @@ func (msg MsgCreateBalancerPool) SetPoolParams(balancerPoolParams BalancerPoolPa
 	if !ok {
 		return fmt.Errorf("can't proto marshl &T", m)
 	}
-	any, err := types.NewAnyWithValue(m)
+	any, err := codectypes.NewAnyWithValue(m)
 	if err != nil {
 		return err
 	}

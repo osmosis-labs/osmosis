@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/x/gamm/types/pool-models/balancer"
 )
 
 type msgServer struct {
@@ -20,7 +21,14 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	}
 }
 
+func NewBalancerMsgServerImpl(keeper Keeper) balancer.MsgServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
 var _ types.MsgServer = msgServer{}
+var _ balancer.MsgServer = msgServer{}
 
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -30,7 +38,12 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 		return nil, err
 	}
 
-	poolId, err := server.keeper.CreateBalancerPool(ctx, sender, msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
+	balancerPoolParams, ok := msg.PoolParams.GetCachedValue().(balancer.BalancerPoolParams)
+	if !ok {
+		return nil, fmt.Errorf("can't get cached value for pool params")
+	}
+
+	poolId, err := server.keeper.CreateBalancerPool(ctx, sender, balancerPoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +60,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 		),
 	})
 
-	return &types.MsgCreateBalancerPoolResponse{}, nil
+	return &balancer.MsgCreateBalancerPoolResponse{}, nil
 }
 
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {

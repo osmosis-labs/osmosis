@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 )
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
@@ -228,7 +228,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 				panic(err)
 			}
 
-			poolId := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
+			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.BalancerPoolParams{
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})
