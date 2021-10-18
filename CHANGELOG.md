@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* Upgraded Osmosis to Cosmos-sdk 0.44.2
 * Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
 * Update peer ID of statesync-enabled node run by notional
 * Created a pull request template
