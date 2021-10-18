@@ -7,13 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	pool_models "github.com/osmosis-labs/osmosis/x/gamm/pool-models"
 )
 
 // constants
 const (
-	TypeMsgCreateBalancerPool      = "create_balancer_pool"
 	TypeMsgSwapExactAmountIn       = "swap_exact_amount_in"
 	TypeMsgSwapExactAmountOut      = "swap_exact_amount_out"
 	TypeMsgJoinPool                = "join_pool"
@@ -63,57 +60,6 @@ func ValidateFutureGovernor(governor string) error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 	}
 	return nil
-}
-
-var _ sdk.Msg = &MsgCreateBalancerPool{}
-
-func (msg MsgCreateBalancerPool) Route() string { return RouterKey }
-func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
-func (msg MsgCreateBalancerPool) ValidateBasic() error {
-
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
-	}
-
-	err = ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
-	if err != nil {
-		return err
-	}
-
-	// balancerPoolParams, ok := msg.PoolParams.(*pool_models.BalancerPoolParams)
-	// params := msg.GetPoolParams()
-	params := msg.GetBalancerPoolParams()
-	err = params.Validate(msg.PoolAssets)
-	err = msg.PoolParams.Validate(msg.PoolAssets)
-	if err != nil {
-		return err
-	}
-
-	// validation for future owner
-	if err = ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
-		return err
-	}
-
-	return nil
-}
-func (msg MsgCreateBalancerPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
-
-func (msg MsgCreateBalancerPool) GetBalancerPoolParams() pool_models.BalancerPoolParams {
-	balancerPoolParams, ok := msg.PoolParams.GetCachedValue().(pool_models.BalancerPoolParams)
-	if !ok {
-		return pool_models.BalancerPoolParams{}
-	}
-	return balancerPoolParams
 }
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}

@@ -1,4 +1,4 @@
-package pool_models
+package balancer
 
 import (
 	"fmt"
@@ -42,6 +42,30 @@ func SortPoolAssetsByDenom(assets []PoolAsset) {
 
 		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
 	})
+}
+
+func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
+	// The pool must be swapping between at least two assets
+	if len(assets) < 2 {
+		return ErrTooFewPoolAssets
+	}
+
+	// TODO: Add the limit of binding token to the pool params?
+	if len(assets) > 8 {
+		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(assets))
+	}
+
+	for _, asset := range assets {
+		err := ValidateUserSpecifiedWeight(asset.Weight)
+		if err != nil {
+			return err
+		}
+
+		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
+		}
+	}
+	return nil
 }
 
 // Validates a pool asset, to check if it has a valid weight.

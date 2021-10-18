@@ -9,6 +9,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/x/gamm"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/types/pool-models/balancer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -19,10 +20,10 @@ func TestGammInitGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	poolI, err := types.NewBalancerPool(1, types.BalancerPoolParams{
+	poolI, err := balancer.NewBalancerPool(1, balancer.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []types.PoolAsset{
+	}, []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(1),
 			Token:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 10),
@@ -34,7 +35,7 @@ func TestGammInitGenesis(t *testing.T) {
 	}, "", ctx.BlockTime())
 	require.NoError(t, err)
 
-	balancerPool, ok := poolI.(*types.BalancerPool)
+	balancerPool, ok := poolI.(*balancer.BalancerPool)
 	require.True(t, ok)
 
 	any, err := codectypes.NewAnyWithValue(poolI)
@@ -78,7 +79,7 @@ func TestGammExportGenesis(t *testing.T) {
 		sdk.NewInt64Coin("bar", 100000),
 	})
 
-	_, err := app.GAMMKeeper.CreateBalancerPool(ctx, acc1, types.BalancerPoolParams{
+	_, err := app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{{
@@ -90,7 +91,7 @@ func TestGammExportGenesis(t *testing.T) {
 	}}, "")
 	require.NoError(t, err)
 
-	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, types.BalancerPoolParams{
+	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{{
@@ -121,7 +122,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		sdk.NewInt64Coin("bar", 100000),
 	})
 
-	_, err := app.GAMMKeeper.CreateBalancerPool(ctx, acc1, types.BalancerPoolParams{
+	_, err := app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.BalancerPoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{{

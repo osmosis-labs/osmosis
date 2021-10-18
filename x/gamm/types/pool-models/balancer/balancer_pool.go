@@ -1,4 +1,4 @@
-package pool_models
+package balancer
 
 import (
 	"errors"
@@ -50,57 +50,11 @@ func NewBalancerPool(poolId uint64, balancerPoolParams BalancerPoolParams, asset
 	return pool, nil
 }
 
-func (params BalancerPoolParams) Validate(poolWeights []PoolAsset) error {
-	if params.ExitFee.IsNegative() {
-		return ErrNegativeExitFee
+func NewBalancerPoolParams(swapFee sdk.Dec, exitFee sdk.Dec) BalancerPoolParamsI {
+	return &BalancerPoolParams{
+		SwapFee: swapFee,
+		ExitFee: exitFee,
 	}
-
-	if params.ExitFee.GTE(sdk.OneDec()) {
-		return ErrTooMuchExitFee
-	}
-
-	if params.SwapFee.IsNegative() {
-		return ErrNegativeSwapFee
-	}
-
-	if params.SwapFee.GTE(sdk.OneDec()) {
-		return ErrTooMuchSwapFee
-	}
-
-	if params.SmoothWeightChangeParams != nil {
-		targetWeights := params.SmoothWeightChangeParams.TargetPoolWeights
-		// Ensure it has the right number of weights
-		if len(targetWeights) != len(poolWeights) {
-			return ErrPoolParamsInvalidNumDenoms
-		}
-		// Validate all user specified weights
-		for _, v := range targetWeights {
-			err := ValidateUserSpecifiedWeight(v.Weight)
-			if err != nil {
-				return err
-			}
-		}
-		// Ensure that all the target weight denoms are same as pool asset weights
-		sortedTargetPoolWeights := SortPoolAssetsOutOfPlaceByDenom(targetWeights)
-		sortedPoolWeights := SortPoolAssetsOutOfPlaceByDenom(poolWeights)
-		for i, v := range sortedPoolWeights {
-			if sortedTargetPoolWeights[i].Token.Denom != v.Token.Denom {
-				return ErrPoolParamsInvalidDenom
-			}
-		}
-
-		// No start time validation needed
-
-		// We do not need to validate InitialPoolWeights, as we set that ourselves
-		// in setInitialPoolParams
-
-		// TODO: Is there anything else we can validate for duration?
-		if params.SmoothWeightChangeParams.Duration <= 0 {
-			return errors.New("params.SmoothWeightChangeParams must have a positive duration")
-		}
-	}
-
-	return nil
 }
 
 // GetAddress returns the address of a pool.
@@ -439,4 +393,65 @@ func (pa BalancerPool) IsActive(curBlockTime time.Time) bool {
 	// Add frozen pool checking, etc...
 
 	return true
+}
+
+func (params BalancerPoolParams) Validate(poolWeights []PoolAsset) error {
+	if params.ExitFee.IsNegative() {
+		return ErrNegativeExitFee
+	}
+
+	if params.ExitFee.GTE(sdk.OneDec()) {
+		return ErrTooMuchExitFee
+	}
+
+	if params.SwapFee.IsNegative() {
+		return ErrNegativeSwapFee
+	}
+
+	if params.SwapFee.GTE(sdk.OneDec()) {
+		return ErrTooMuchSwapFee
+	}
+
+	if params.SmoothWeightChangeParams != nil {
+		targetWeights := params.SmoothWeightChangeParams.TargetPoolWeights
+		// Ensure it has the right number of weights
+		if len(targetWeights) != len(poolWeights) {
+			return ErrPoolParamsInvalidNumDenoms
+		}
+		// Validate all user specified weights
+		for _, v := range targetWeights {
+			err := ValidateUserSpecifiedWeight(v.Weight)
+			if err != nil {
+				return err
+			}
+		}
+		// Ensure that all the target weight denoms are same as pool asset weights
+		sortedTargetPoolWeights := SortPoolAssetsOutOfPlaceByDenom(targetWeights)
+		sortedPoolWeights := SortPoolAssetsOutOfPlaceByDenom(poolWeights)
+		for i, v := range sortedPoolWeights {
+			if sortedTargetPoolWeights[i].Token.Denom != v.Token.Denom {
+				return ErrPoolParamsInvalidDenom
+			}
+		}
+
+		// No start time validation needed
+
+		// We do not need to validate InitialPoolWeights, as we set that ourselves
+		// in setInitialPoolParams
+
+		// TODO: Is there anything else we can validate for duration?
+		if params.SmoothWeightChangeParams.Duration <= 0 {
+			return errors.New("params.SmoothWeightChangeParams must have a positive duration")
+		}
+	}
+
+	return nil
+}
+
+func (params BalancerPoolParams) GetPoolSwapFee() sdk.Dec {
+	return params.SwapFee
+}
+
+func (params BalancerPoolParams) GetPoolExitFee() sdk.Dec {
+	return params.ExitFee
 }

@@ -1,4 +1,4 @@
-package pool_models
+package balancer
 
 import (
 	"encoding/json"

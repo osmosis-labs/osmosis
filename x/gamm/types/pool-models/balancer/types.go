@@ -1,4 +1,4 @@
-package pool_models
+package balancer
 
 import (
 	"time"
@@ -67,6 +67,11 @@ type PoolI interface {
 	GetTokenBalance(denom string) (sdk.Int, error)
 	NumAssets() int
 	IsActive(curBlockTime time.Time) bool
+}
+
+type BalancerPoolParamsI interface {
+	GetPoolSwapFee() sdk.Dec
+	GetPoolExitFee() sdk.Dec
 }
 
 var (

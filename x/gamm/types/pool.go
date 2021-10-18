@@ -39,11 +39,6 @@ type PoolI interface {
 	IsActive(curBlockTime time.Time) bool
 }
 
-type PoolParamsI interface {
-	GetPoolSwapFee() sdk.Dec
-	GetPoolExitFee() sdk.Dec
-}
-
 var (
 	MaxUserSpecifiedWeight    sdk.Int = sdk.NewIntFromUint64(1 << 20)
 	GuaranteedWeightPrecision int64   = 1 << 30
@@ -74,6 +69,17 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
+	}
+	return nil
+}
+
+func ValidateUserSpecifiedWeight(weight sdk.Int) error {
+	if !weight.IsPositive() {
+		return sdkerrors.Wrap(ErrNotPositiveWeight, weight.String())
+	}
+
+	if weight.GTE(MaxUserSpecifiedWeight) {
+		return sdkerrors.Wrap(ErrWeightTooLarge, weight.String())
 	}
 	return nil
 }

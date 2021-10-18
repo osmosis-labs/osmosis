@@ -1,21 +1,20 @@
-package types
+package balancer
 
 import (
-	"fmt"
+	fmt "fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pool_models "github.com/osmosis-labs/osmosis/x/gamm/pool-models"
 )
 
 var (
 	defaultSwapFee            = sdk.MustNewDecFromStr("0.025")
 	defaultExitFee            = sdk.MustNewDecFromStr("0.025")
 	defaultPoolId             = uint64(10)
-	defaultBalancerPoolParams = pool_models.BalancerPoolParams{
+	defaultBalancerPoolParams = BalancerPoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
@@ -38,7 +37,7 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolI) {
 func TestBalancerPoolShareDenom(t *testing.T) {
 	var poolId uint64 = 10
 
-	pacc, err := pool_models.NewBalancerPool(poolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	require.Equal(t, "gamm/pool/10", pacc.GetTotalShares().Denom)
@@ -70,7 +69,7 @@ func TestBalancerPoolParams(t *testing.T) {
 	}
 
 	for i, params := range tests {
-		PoolParams := pool_models.BalancerPoolParams{
+		PoolParams := BalancerPoolParams{
 			SwapFee: params.SwapFee,
 			ExitFee: params.ExitFee,
 		}
