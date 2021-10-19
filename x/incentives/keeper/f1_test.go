@@ -283,6 +283,7 @@ func (suite *KeeperTestSuite) TestMultipleLocks() {
 	//new non-perpetual gauge
 	owner := sdk.AccAddress(OwnerAddr)
 	denom, _ := suite.setupNonPerpetualGauge(owner, now, DayDuration)
+	suite.setupNonPerpetualGauge(owner, now, SevenDaysDuration)
 	suite.setupNonPerpetualGauge(owner, now, FourteenDaysDuration)
 
 	suite.nextBlock(&now, &height)
@@ -352,8 +353,14 @@ func (suite *KeeperTestSuite) TestMultipleLocks() {
 	suite.T().Logf("epoch(%v) : current_reward={1d=%v, 7d=%v, 14d=%v}", epochInfo.CurrentEpoch, currentReward1Day, currentReward7Day, currentReward14Day)
 
 	user2Lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 2)
-	user2Reward, _ := suite.app.IncentivesKeeper.EstimateLockReward(suite.ctx, *user2Lock)
+	user2Reward, err := suite.app.IncentivesKeeper.EstimateLockReward(suite.ctx, *user2Lock)
+	suite.Require().NoError(err)
 	suite.T().Logf("           estimated_reward={user2=%v}", user2Reward.Rewards)
-	claimedReward, _ := suite.app.IncentivesKeeper.ClaimLockReward(suite.ctx, *user2Lock, owner)
+	claimedReward, err := suite.app.IncentivesKeeper.ClaimLockReward(suite.ctx, *user2Lock, owner)
+	suite.Require().NoError(err)
 	suite.T().Logf("           claimed_reward={user2=%v}", claimedReward)
+
+	user1Bal := suite.app.BankKeeper.GetBalance(suite.ctx, user1, "stake")
+	user2Bal := suite.app.BankKeeper.GetBalance(suite.ctx, user2, "stake")
+	suite.T().Logf("           Balance={user1=%v}, {user2=%v}", user1Bal, user2Bal)
 }

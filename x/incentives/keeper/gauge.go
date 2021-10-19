@@ -640,8 +640,8 @@ func (k Keeper) getHistoricalRewardPeriodByEpoch(ctx sdk.Context, denom string, 
 
 	bz := store.Get(rewardKey)
 	if bz == nil {
-		ctx.Logger().Debug(fmt.Sprintf("historical rewards is not present = %d", period))
-		return period, fmt.Errorf("historical rewards is not present = %d", period)
+		ctx.Logger().Debug(fmt.Sprintf("historical rewards is not present = %d", epochNumber))
+		return period, fmt.Errorf("historical rewards is not present = %d", epochNumber)
 	}
 
 	period = sdk.BigEndianToUint64(bz)
@@ -969,7 +969,9 @@ func (k Keeper) GetRewardForLock(ctx sdk.Context, lock lockuptypes.PeriodLock, l
 			continue
 		}
 		// check current reward can be applied to this lock
-		if lock.IsUnlocking() && lock.EndTime.Before(epochInfo.CurrentEpochStartTime.Add(lockableDuration)) {
+		// if lock.IsUnlocking() && lock.EndTime.Before(epochInfo.CurrentEpochStartTime.Add(lockableDuration)) {
+		if lock.IsUnlocking() &&
+			(lock.EndTime.Before(epochInfo.CurrentEpochStartTime.Add(lockableDuration)) || !lock.EndTime.After(ctx.BlockTime())) {
 			remainEpoch := lock.EndTime.Sub(epochInfo.CurrentEpochStartTime).Nanoseconds() / epochInfo.Duration.Nanoseconds()
 			durationInEpoch := lockableDuration.Nanoseconds() / epochInfo.Duration.Nanoseconds()
 

@@ -128,15 +128,14 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 			return
 		}
 	} else {
-		newLockReward, err := h.k.GetRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
+		owner, err := sdk.AccAddressFromBech32(lock.Owner)
 		if err != nil {
 			return
 		}
-		_, err = h.k.ClaimRewardForLock(ctx, *lock, newLockReward, lockableDurations)
+		_, err = h.k.ClaimLockReward(ctx, *lock, owner)
 		if err != nil {
 			return
 		}
-
 		h.k.clearPeriodLockReward(ctx, lockID)
 	}
 }
