@@ -342,20 +342,6 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockI
 
 // LockTokens lock tokens from an account for specified duration
 func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
-	locks := k.getLocksFromIterator(ctx, k.AccountLockIteratorExactDuration(ctx, false, owner, duration))
-	if len(locks) > 0 {
-		for _, lockWithDuration := range locks {
-			ID := lockWithDuration.ID
-			// TODO: consider calling addTokensToLock()
-			lockRef, err := k.AddTokensToLockByID(ctx, owner, ID, coins)
-			if lockRef == nil {
-				continue
-			}
-			// TODO: consider change ref return type to val
-			return *lockRef, err
-		}
-	}
-
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is set at the beginning of unlocking time
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
@@ -363,7 +349,6 @@ func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 	if err != nil {
 		return lock, err
 	}
-
 	k.SetLastLockID(ctx, lock.ID)
 	return lock, nil
 }
