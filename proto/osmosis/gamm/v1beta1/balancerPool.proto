@@ -89,7 +89,7 @@ message SmoothWeightChangeParams {
 
 // BalancerPoolParams defined the parameters that will be managed by the pool
 // governance in the future. This params are not managed by the chain
-// governanace. Instead they will be managed by the token holders of the pool.
+// governance. Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
 message BalancerPoolParams {
   string swapFee = 1 [
