@@ -115,14 +115,14 @@ func TestPoolUpdatePoolAssetBalance(t *testing.T) {
 	// create a different pool each time.
 	pacc_internal := pacc.(*BalancerPool)
 
-	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
+	err = pacc_internal.setInitialPoolAssets([]PoolAsset{{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("negativeWeight", sdk.NewInt(50000)),
 	}})
 
 	require.Error(t, err)
 
-	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
+	err = pacc_internal.setInitialPoolAssets([]PoolAsset{{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("zeroWeight", sdk.NewInt(50000)),
 	}})
