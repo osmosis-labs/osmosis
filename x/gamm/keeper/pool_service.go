@@ -10,10 +10,10 @@ import (
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
-func (k Keeper) CreatePool(
+func (k Keeper) CreateBalancerPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolParams types.PoolParams,
+	BalancerPoolParams types.BalancerPoolParams,
 	poolAssets []types.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {
@@ -35,7 +35,7 @@ func (k Keeper) CreatePool(
 		return 0, err
 	}
 
-	pool, err := k.newPool(ctx, poolParams, poolAssets, futurePoolGovernor)
+	pool, err := k.newBalancerPool(ctx, BalancerPoolParams, poolAssets, futurePoolGovernor)
 	if err != nil {
 		return 0, err
 	}
@@ -195,7 +195,7 @@ func (k Keeper) JoinSwapExternAmountIn(
 		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		tokenIn.Amount.ToDec(),
-		pool.GetPoolParams().SwapFee,
+		pool.GetPoolSwapFee(),
 	).TruncateInt()
 
 	if shareOutAmount.LTE(sdk.ZeroInt()) {
@@ -263,7 +263,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		shareOutAmount.ToDec(),
-		pool.GetPoolParams().SwapFee,
+		pool.GetPoolSwapFee(),
 	).TruncateInt()
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
@@ -316,7 +316,7 @@ func (k Keeper) ExitPool(
 	}
 
 	totalSharesAmount := pool.GetTotalShares().Amount
-	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 	shareRatio := shareInAmountAfterExitFee.ToDec().QuoInt(totalSharesAmount)
 
@@ -415,8 +415,8 @@ func (k Keeper) ExitSwapShareAmountIn(
 		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		shareInAmount.ToDec(),
-		pool.GetPoolParams().SwapFee,
-		pool.GetPoolParams().ExitFee,
+		pool.GetPoolSwapFee(),
+		pool.GetPoolExitFee(),
 	).TruncateInt()
 
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
@@ -433,7 +433,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
-	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 
 	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
@@ -500,8 +500,8 @@ func (k Keeper) ExitSwapExternAmountOut(
 		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		tokenOut.Amount.ToDec(),
-		pool.GetPoolParams().SwapFee,
-		pool.GetPoolParams().ExitFee,
+		pool.GetPoolSwapFee(),
+		pool.GetPoolExitFee(),
 	).TruncateInt()
 
 	if shareInAmount.LTE(sdk.ZeroInt()) {
@@ -518,7 +518,7 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, err
 	}
 
-	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 
 	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{

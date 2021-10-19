@@ -99,7 +99,7 @@ func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types
 	return assets
 }
 
-func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.PoolParams {
+func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.BalancerPoolParams {
 	// swapFeeInt := int64(r.Intn(1e5))
 	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -107,11 +107,10 @@ func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) 
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
 	// TODO: Randomly generate LBP params
-	return types.PoolParams{
+	return types.BalancerPoolParams{
 		// SwapFee:                  swapFee,
-		SwapFee:                  sdk.ZeroDec(),
-		ExitFee:                  exitFee,
-		SmoothWeightChangeParams: nil,
+		SwapFee: sdk.ZeroDec(),
+		ExitFee: exitFee,
 	}
 }
 
@@ -142,7 +141,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		}
 
 		poolAssets := genPoolAssets(r, simAccount, simCoins)
-		poolParams := genPoolParams(r, ctx.BlockTime(), poolAssets)
+		PoolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
 
 		// Commented out as genFuturePoolGovernor() panics on empty denom slice.
 		// TODO: fix and provide proper denom types.
@@ -161,11 +160,11 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		})
 
 		// futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, denoms)
-		msg := types.MsgCreatePool{
+		msg := types.MsgCreateBalancerPool{
 			Sender:             simAccount.Address.String(),
 			FuturePoolGovernor: "",
 			PoolAssets:         poolAssets,
-			PoolParams:         poolParams,
+			PoolParams:         PoolParams,
 		}
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)
