@@ -118,7 +118,7 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 	}
 	epochInfo := h.k.GetEpochInfo(ctx)
 	lockableDurations := h.k.GetLockableDurations(ctx)
-	if lock.Coins.IsAllGT(amount) {
+	if lock.Coins.IsAnyGT(amount) {
 		err = h.k.UpdateHistoricalRewardFromCurrentReward(ctx, amount, lockDuration, epochInfo, lockableDurations)
 		if err != nil {
 			return
