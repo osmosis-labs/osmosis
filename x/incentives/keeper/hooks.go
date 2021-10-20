@@ -89,48 +89,48 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 
 	lockReward, err := h.k.GetPeriodLockReward(ctx, lockID)
 	if err != nil {
-		return
+		panic(err)
 	}
 	epochInfo := h.k.GetEpochInfo(ctx)
 	lockableDurations := h.k.GetLockableDurations(ctx)
 	err = h.k.UpdateHistoricalRewardFromCurrentReward(ctx, amount, lockDuration, epochInfo, lockableDurations)
 	if err != nil {
-		return
+		panic(err)
 	}
 	err = h.k.UpdateRewardForLock(ctx, prevLock, lockReward, epochInfo, lockableDurations)
 	if err != nil {
-		return
+		panic(err)
 	}
 }
 
 func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
 	lock, err := h.k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
-		return
+		panic(err)
 	}
 	lockReward, err := h.k.GetPeriodLockReward(ctx, lockID)
 	if err != nil {
-		return
+		panic(err)
 	}
 	epochInfo := h.k.GetEpochInfo(ctx)
 	lockableDurations := h.k.GetLockableDurations(ctx)
 	if lock.Coins.IsAnyGT(amount) {
 		err = h.k.UpdateHistoricalRewardFromCurrentReward(ctx, amount, lockDuration, epochInfo, lockableDurations)
 		if err != nil {
-			return
+			panic(err)
 		}
 		err = h.k.UpdateRewardForLock(ctx, *lock, lockReward, epochInfo, lockableDurations)
 		if err != nil {
-			return
+			panic(err)
 		}
 	} else {
 		owner, err := sdk.AccAddressFromBech32(lock.Owner)
 		if err != nil {
-			return
+			panic(err)
 		}
 		_, err = h.k.ClaimLockReward(ctx, *lock, owner)
 		if err != nil {
-			return
+			panic(err)
 		}
 		h.k.clearPeriodLockReward(ctx, lockID)
 	}

@@ -823,7 +823,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward types.
 			totalReward := coin.Amount.ToDec()
 
 			if totalReward.IsNegative() {
-				return nil, fmt.Errorf("current rewards is negative. reward amount = %d", totalReward)
+				return nil, fmt.Errorf("current rewards is negative. denom: %s, duration: %s, reward amount = %d", denom, duration.String(), totalReward)
 			}
 			currRewardPerShare := sdk.NewDec(0)
 			if !totalStakes.IsZero() {
@@ -833,7 +833,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward types.
 			newHistoricalReward.CummulativeRewardRatio = newHistoricalReward.CummulativeRewardRatio.Add(sdk.NewDecCoinFromDec(coin.Denom, currRewardPerShare))
 		}
 
-		return &newHistoricalReward, err
+		return &newHistoricalReward, nil
 	}
 
 	return nil, nil
@@ -961,7 +961,10 @@ func (k Keeper) UpdateHistoricalRewardFromCurrentReward(ctx sdk.Context, lockedC
 					return err
 				}
 				currentReward.LastProcessedEpoch = epochInfo.CurrentEpoch
-				k.SetCurrentReward(ctx, currentReward, denom, lockableDuration)
+				err = k.SetCurrentReward(ctx, currentReward, denom, lockableDuration)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -973,7 +976,12 @@ func (k Keeper) UpdateRewardForLock(ctx sdk.Context, lock lockuptypes.PeriodLock
 	if err != nil {
 		return err
 	}
-	k.SetPeriodLockReward(ctx, estLockReward)
+
+	err = k.SetPeriodLockReward(ctx, estLockReward)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
