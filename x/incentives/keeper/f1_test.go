@@ -283,7 +283,8 @@ func (suite *KeeperTestSuite) TestMultipleLocks() {
 	//new non-perpetual gauge
 	owner := sdk.AccAddress(OwnerAddr)
 	denom, _ := suite.setupNonPerpetualGauge(owner, now, DayDuration)
-	suite.setupNonPerpetualGauge(owner, now, SevenDaysDuration)
+	/* no 7day gauge */
+	/* suite.setupNonPerpetualGauge(owner, now, SevenDaysDuration) */
 	suite.setupNonPerpetualGauge(owner, now, FourteenDaysDuration)
 
 	suite.nextBlock(&now, &height)
@@ -301,7 +302,6 @@ func (suite *KeeperTestSuite) TestMultipleLocks() {
 		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
 		currentReward7Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
 		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
-		//suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*i))}, currentReward.Rewards)
 		suite.T().Logf("epoch(%v) : current_reward={1d=%v, 7d=%v, 14d=%v}", epochInfo.CurrentEpoch, currentReward1Day, currentReward7Day, currentReward14Day)
 
 		user1Lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
@@ -320,7 +320,6 @@ func (suite *KeeperTestSuite) TestMultipleLocks() {
 		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
 		currentReward7Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
 		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
-		//suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*i))}, currentReward.Rewards)
 		suite.T().Logf("epoch(%v) : current_reward={1d=%v, 7d=%v, 14d=%v}", epochInfo.CurrentEpoch, currentReward1Day, currentReward7Day, currentReward14Day)
 
 		user2Lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 2)
@@ -337,7 +336,6 @@ func (suite *KeeperTestSuite) TestMultipleLocks() {
 		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
 		currentReward7Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
 		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
-		//suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*i))}, currentReward.Rewards)
 		suite.T().Logf("epoch(%v) : current_reward={1d=%v, 7d=%v, 14d=%v}", epochInfo.CurrentEpoch, currentReward1Day, currentReward7Day, currentReward14Day)
 
 		user2Lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 2)
@@ -360,7 +358,11 @@ func (suite *KeeperTestSuite) TestMultipleLocks() {
 	suite.Require().NoError(err)
 	suite.T().Logf("           claimed_reward={user2=%v}", claimedReward)
 
-	user1Bal := suite.app.BankKeeper.GetBalance(suite.ctx, user1, "stake")
-	user2Bal := suite.app.BankKeeper.GetBalance(suite.ctx, user2, "stake")
+	suite.nextEpoch(&now, &height) //move to last epoch and finish unlocking lock2
+
+	user1Bal := suite.app.BankKeeper.GetAllBalances(suite.ctx, user1)
+	user2Bal := suite.app.BankKeeper.GetAllBalances(suite.ctx, user2)
 	suite.T().Logf("           Balance={user1=%v}, {user2=%v}", user1Bal, user2Bal)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("lptoken", 10), sdk.NewInt64Coin("stake", 150)), user1Bal)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("lptoken", 10), sdk.NewInt64Coin("stake", 1850)), user2Bal)
 }
