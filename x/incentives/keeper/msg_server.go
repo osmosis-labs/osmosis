@@ -101,14 +101,12 @@ func (server msgServer) ClaimLockReward(goCtx context.Context, msg *types.MsgCla
 
 func (server msgServer) ClaimLockRewardAll(goCtx context.Context, msg *types.MsgClaimLockRewardAll) (*types.MsgClaimLockRewardResponseAll, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	lockRewards := []sdk.Coins{}
 	sentRewards := sdk.Coins{}
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	locks := server.keeper.lk.GetAccountPeriodLocks(ctx, sdk.AccAddress(owner))
-	ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: locks:%d", len(locks)))
 
 	for _, lock := range locks {
 		if msg.Owner != lock.Owner {
@@ -120,15 +118,18 @@ func (server msgServer) ClaimLockRewardAll(goCtx context.Context, msg *types.Msg
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
-		ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: reward:%s", rewards.String()))
 
-		// TODO: refactor
-		lockRewards = append(lockRewards, rewards)
 		sentRewards = sentRewards.Add(rewards...)
 
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtClaimLockReward,
+				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+				sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
+				sdk.NewAttribute(types.AttributeRewardCoins, rewards.String()),
+			),
+		})
 	}
-
-	ctx.Logger().Debug(fmt.Sprintf("F1::: ClaimLockRewardAll::: total reward:%s", sentRewards.String()))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -137,16 +138,6 @@ func (server msgServer) ClaimLockRewardAll(goCtx context.Context, msg *types.Msg
 			sdk.NewAttribute(types.AttributeRewardCoins, sentRewards.String()),
 		),
 	})
-	for i, lock := range locks {
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				types.TypeEvtClaimLockReward,
-				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
-				sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
-				sdk.NewAttribute(types.AttributeRewardCoins, lockRewards[i].String()),
-			),
-		})
-	}
 
 	return &types.MsgClaimLockRewardResponseAll{}, nil
 }

@@ -70,8 +70,6 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
-//////////////////////////// START //////////////////////////////////
-
 var _ lockuptypes.LockupHooks = Hooks{}
 
 func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
@@ -81,9 +79,7 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 	}
 	prevLock := *lockRef
 
-	// tracking difference of coins.
-	// TODO: coin of amount 0 needs to be tracked but sdk.Coins sanitize coin of amount 0.
-	// prevLock.Coins = prevLock.Coins.Sub(amount)
+	// coin of amount 0 needs to be tracked but sdk.Coins.Sub sanitize coin of amount 0.
 	prevLockCoins := []sdk.Coin{}
 	for _, lockedCoin := range prevLock.Coins {
 		prevLockCoins = append(prevLockCoins, sdk.NewCoin(lockedCoin.Denom, lockedCoin.Amount.Sub(amount.AmountOf(lockedCoin.Denom))))
@@ -139,5 +135,3 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 		h.k.clearPeriodLockReward(ctx, lockID)
 	}
 }
-
-////////////////////////////  END //////////////////////////////////

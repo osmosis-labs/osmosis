@@ -562,8 +562,6 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
-//////////////////////////// START //////////////////////////////////
-
 func (k Keeper) GetUnlockingsBetweenTimeDenom(ctx sdk.Context, denom string, beginTime time.Time, endTime time.Time) []types.PeriodLock {
 	return k.getLocksFromIterator(ctx, k.LockIteratorBetweenTimeDenom(ctx, true, denom, beginTime, endTime))
 }
@@ -619,5 +617,3 @@ func (k Keeper) BeginPartialUnlockPeriodLockByID(ctx sdk.Context, lockID uint64,
 
 	return lockRef, partialLockRef, nil
 }
-
-////////////////////////////  END //////////////////////////////////

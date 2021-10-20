@@ -164,8 +164,6 @@ func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bo
 	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
 }
 
-//////////////////////////// START //////////////////////////////////
-
 func (k Keeper) LockIteratorBetweenTimeDenom(ctx sdk.Context, isUnlocking bool, denom string, starttime time.Time, endtime time.Time) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	startTimePrefix := getTimeKey(starttime)
@@ -177,5 +175,3 @@ func (k Keeper) LockIteratorBetweenTimeDenom(ctx sdk.Context, isUnlocking bool, 
 		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom), startTimePrefix),
 		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom), endTimePrefix))
 }
-
-////////////////////////////  END //////////////////////////////////

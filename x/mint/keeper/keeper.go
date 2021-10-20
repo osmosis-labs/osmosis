@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -164,10 +162,6 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 
 	// allocate pool allocation ratio to pool-incentives module account account
 	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.PoolIncentives))
-
-	for _, coin := range poolIncentivesCoins {
-		ctx.Logger().Debug(fmt.Sprintf("F1::: [%s] ->[%s] mint coin %d", coin.Denom, poolincentivestypes.ModuleName, coin.Amount.Uint64()))
-	}
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, poolincentivestypes.ModuleName, poolIncentivesCoins)
 	if err != nil {
 		return err
