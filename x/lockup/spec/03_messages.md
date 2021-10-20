@@ -59,3 +59,24 @@ type MsgBeginUnlocking struct {
 - Add lock references to `Unlocking` queue
 
 Note: If another module needs past `PeriodLock` item, it can log the details themselves using the hooks.
+## Begin partial unlock for a lock
+
+Once time is over, users can withdraw partial of unlocked coins from lockup `ModuleAccount`.
+
+```go
+type MsgBeginPartialUnlocking struct {
+	Owner string
+	ID    uint64
+	Coins sdk.Coins
+}
+```
+
+**State modifications:**
+
+- Check `PeriodLock` with `ID` specified by `MsgBeginPartialUnlocking` is not started unlocking yet
+- Generate new `PeriodLock` record if unlock token amount is smaller than that of `PeriodLock` with `ID`
+- Set generated `PeriodLock`'s unlock time
+- Remove lock references from `NotUnlocking` queue if needed
+- Add lock references to `Unlocking` queue
+
+Note: If another module needs past `PeriodLock` item, it can log the details themselves using the hooks.
