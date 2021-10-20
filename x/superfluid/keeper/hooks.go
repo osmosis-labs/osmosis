@@ -4,7 +4,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
@@ -32,11 +34,22 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			twap := sdk.NewDec(1)
+			priceMultiplier := sdk.NewInt(10000)
+			twap := sdk.NewDecFromInt(priceMultiplier)
 			if asset.AssetType == types.SuperfluidAssetTypeLPShare {
-				// TODO: should get twap price from gamm module and use the price
-				// potential calculation rule
 				// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
+				poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
+				pool, err := k.gk.GetPool(ctx, poolId)
+				if err != nil {
+					panic(err)
+				}
+				// get OSMO amount
+				osmoPoolAsset, err := pool.GetPoolAsset(appparams.BaseCoinUnit)
+				if err != nil {
+					panic(err)
+				}
+
+				twap = sdk.Dec(osmoPoolAsset.Token.Amount.Mul(priceMultiplier).Quo(pool.GetTotalShares().Amount))
 			} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 				// TODO: should get twap price from gamm module and use the price
 				// which pool should it use to calculate native token price?
