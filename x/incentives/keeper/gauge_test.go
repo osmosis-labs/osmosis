@@ -623,56 +623,9 @@ func (suite *KeeperTestSuite) TestCalculateRewardForLock() {
 
 	k.SetCurrentReward(suite.ctx, currentReward, "stake", duration)
 
-	err := k.CalculateRewardForLock(suite.ctx, lock, &lockReward, epochInfo, duration)
+	err := k.CalculateRewardForLock(suite.ctx, lock, &lockReward, epochInfo, duration, false)
 	suite.Require().NoError(err)
 	suite.Require().Equal(expectedRewards, lockReward.Rewards)
 
 	k.SetCurrentReward(suite.ctx, currentReward, "stake", duration)
-}
-
-func (suite *KeeperTestSuite) TestCalculateRewardForLockByEpoch() {
-	k := suite.app.IncentivesKeeper
-
-	numStake := sdk.NewInt(100)
-	lockedCoin := sdk.NewCoin("stake", numStake)
-	lockedCoins := sdk.NewCoins(lockedCoin)
-
-	duration := k.GetLockableDurations(suite.ctx)[0]
-
-	currentReward := types.CurrentReward{
-		Period:             11,
-		LastProcessedEpoch: 1,
-		Coin:               lockedCoin,
-	}
-	k.SetCurrentReward(suite.ctx, currentReward, "stake", duration)
-
-	lock := lockuptypes.PeriodLock{
-		ID:    1,
-		Coins: lockedCoins,
-	}
-
-	lockReward := types.PeriodLockReward{
-		ID:      lock.ID,
-		Period:  make(map[string]uint64),
-		Rewards: sdk.Coins{},
-	}
-
-	prevCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000))
-	prevHistoricalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
-	}
-	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, 1, 1)
-	lockReward.Period["stake/"+duration.String()] = 1
-
-	currCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(2000))
-	currHistoricalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(currCummulativeReward),
-	}
-	k.AddHistoricalReward(suite.ctx, currHistoricalReward, "stake", duration, 10, 100)
-	expectedAmount := sdk.NewInt((2000 - 1000) * 100)
-	expectedRewards := sdk.NewCoins(sdk.NewCoin("reward", expectedAmount))
-
-	err := k.CalculateRewardForLockByEpoch(suite.ctx, lock, &lockReward, duration, 100)
-	suite.Require().NoError(err)
-	suite.Require().Equal(expectedRewards, lockReward.Rewards)
 }

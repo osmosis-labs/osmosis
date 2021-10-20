@@ -265,10 +265,10 @@ func (suite *KeeperTestSuite) TestMultipleTokenLock() {
 		lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockID)
 		epochInfo := suite.app.EpochsKeeper.AllEpochInfos(suite.ctx)[0]
 		durations := []time.Duration{duration}
-		err := suite.app.IncentivesKeeper.UpdateHistoricalRewardFromCurrentReward(suite.ctx, lock.Coins, duration, epochInfo, durations)
+		err := suite.app.IncentivesKeeper.UpdateHistoricalReward(suite.ctx, lock.Coins, duration, epochInfo, durations)
 		suite.Require().NoError(err)
 		periodLockReward, _ := suite.app.IncentivesKeeper.GetPeriodLockReward(suite.ctx, lockID)
-		err = suite.app.IncentivesKeeper.UpdateRewardForLock(suite.ctx, *lock, periodLockReward, epochInfo, durations)
+		err = suite.app.IncentivesKeeper.UpdatePeriodLockReward(suite.ctx, *lock, periodLockReward, epochInfo, durations)
 		periodLockReward, _ = suite.app.IncentivesKeeper.GetPeriodLockReward(suite.ctx, lockID)
 		suite.Require().NoError(err)
 		suite.T().Logf("periodLockReward=%v", periodLockReward)
