@@ -587,7 +587,9 @@ func (k Keeper) BeginPartialUnlockPeriodLockByID(ctx sdk.Context, lockID uint64,
 	if lockRef.IsUnlocking() {
 		return lockRef, nil, fmt.Errorf("lock is already unlocking: %d", lockID)
 	}
-
+	if coins.Empty() || coins.IsAnyGT(lock.Coins) {
+		return lockRef, nil, fmt.Errorf("invalid coins amount: %d", lockID)
+	}
 	if lock.Coins.IsEqual(coins) {
 		unlock, err := k.BeginUnlockPeriodLockByID(ctx, lockID)
 		return nil, unlock, err
