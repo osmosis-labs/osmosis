@@ -853,7 +853,6 @@ func (k Keeper) CalculateRewardBetweenPeriod(ctx sdk.Context, denom string, dura
 	for _, decCoin := range accumReward {
 		if decCoin.IsPositive() {
 			reward := decCoin.Amount.Mul(amount.ToDec()).TruncateInt()
-			ctx.Logger().Debug(fmt.Sprintf("[F1] + historical-reward=%v", sdk.NewCoin(decCoin.Denom, reward)))
 			totalReward = totalReward.Add(sdk.NewCoin(decCoin.Denom, reward))
 		}
 	}
