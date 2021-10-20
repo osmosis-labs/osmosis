@@ -34,20 +34,29 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, types.ErrTooManyFeeCoins
 	}
 
+	baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	// If there is a fee attached to the tx, make sure the fee denom is a valid denom
+	if len(feeCoins) == 1 {
+		feeDenom := feeCoins.GetDenomByIndex(0)
+		if feeDenom != baseDenom {
+			_, err := mfd.TxFeesKeeper.GetFeeToken(ctx, feeDenom)
+			if err != nil {
+				return ctx, err
+			}
+		}
+	}
+
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
 	// is only ran on check tx.
 	if ctx.IsCheckTx() && !simulate {
 		minGasPrices := ctx.MinGasPrices()
-		baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
-		if err != nil {
-			return ctx, err
-		}
-
 		baseDenomAmt := minGasPrices.AmountOf(baseDenom)
 		if !(baseDenomAmt.IsZero()) {
-
-			// requiredFees := make(sdk.Coins, len(minGasPrices))
 
 			if len(feeCoins) != 1 {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")

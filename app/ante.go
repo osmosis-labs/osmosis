@@ -6,10 +6,14 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+
+	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
 func NewAnteHandler(
 	ak ante.AccountKeeper, bankKeeper authtypes.BankKeeper,
+	txFeesKeeper txfeeskeeper.Keeper, spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
 ) sdk.AnteHandler {
@@ -17,6 +21,7 @@ func NewAnteHandler(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		ante.NewRejectExtensionOptionsDecorator(),
 		ante.NewMempoolFeeDecorator(),
+		txfeeskeeper.NewMempoolFeeDecorator(txFeesKeeper, spotPriceCalculator),
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),

@@ -76,7 +76,7 @@ func NewCmdSubmitUpdateFeeTokenProposal() *cobra.Command {
 
 			content := types.NewUpdateFeeTokenProposal(title, description, feeToken)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, from)
 			if err != nil {
 				return err
 			}

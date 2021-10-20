@@ -108,6 +108,9 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
 const appName = "OsmosisApp"
@@ -145,6 +148,7 @@ var (
 		poolincentives.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
+		txfees.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -162,6 +166,7 @@ var (
 		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
+		txfeestypes.ModuleName:                   nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -209,6 +214,7 @@ type OsmosisApp struct {
 	LockupKeeper         lockupkeeper.Keeper
 	EpochsKeeper         epochskeeper.Keeper
 	PoolIncentivesKeeper poolincentiveskeeper.Keeper
+	TxFeesKeeper         txfeeskeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -251,7 +257,7 @@ func NewOsmosisApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
-		epochstypes.StoreKey, poolincentivestypes.StoreKey,
+		epochstypes.StoreKey, poolincentivestypes.StoreKey, txfeestypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -401,6 +407,13 @@ func NewOsmosisApp(
 		),
 	)
 
+	app.TxFeesKeeper = *txfeeskeeper.NewKeeper(
+		appCodec,
+		keys[txfeestypes.StoreKey],
+		memKeys[txfeestypes.MemStoreKey],
+		app.GAMMKeeper,
+	)
+
 	app.LockupKeeper = *lockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
 		// insert lockup hooks receivers here
@@ -469,6 +482,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		txfees.NewAppModule(appCodec, app.TxFeesKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -503,6 +517,7 @@ func NewOsmosisApp(
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		gammtypes.ModuleName,
+		txfeestypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -530,6 +545,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		transferModule,
 	)
 
@@ -548,7 +564,9 @@ func NewOsmosisApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
 		NewAnteHandler(
-			app.AccountKeeper, app.BankKeeper, ante.DefaultSigVerificationGasConsumer,
+			app.AccountKeeper, app.BankKeeper,
+			app.TxFeesKeeper, app.GAMMKeeper,
+			ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
 		),
 	)

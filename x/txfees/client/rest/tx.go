@@ -47,7 +47,7 @@ func newUpdateFeeTokenHandler(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		content := types.NewUpdateFeeTokenProposal(req.Title, req.Description, req.FeeToken)
-		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		msg, err := govtypes.NewMsgSubmitProposal(&content, req.Deposit, fromAddr)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

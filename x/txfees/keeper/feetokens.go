@@ -15,6 +15,10 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 		return sdk.Coin{}, err
 	}
 
+	if inputFee.Denom == baseDenom {
+		return inputFee, nil
+	}
+
 	feeToken, err := k.GetFeeToken(ctx, inputFee.Denom)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -42,7 +46,7 @@ func (k Keeper) GetBaseDenom(ctx sdk.Context) (denom string, err error) {
 }
 
 // SetBaseDenom sets the base fee denom for the chain. Should only be used once.
-func (k Keeper) setBaseDenom(ctx sdk.Context, denom string) error {
+func (k Keeper) SetBaseDenom(ctx sdk.Context, denom string) error {
 	store := ctx.KVStore(k.storeKey)
 
 	err := sdk.ValidateDenom(denom)
@@ -99,6 +103,11 @@ func (k Keeper) setFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 		return nil
 	}
 
+	err := k.ValidateFeeToken(ctx, feeToken)
+	if err != nil {
+		return err
+	}
+
 	bz, err := proto.Marshal(&feeToken)
 	if err != nil {
 		return err
@@ -131,7 +140,7 @@ func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {
 	return feeTokens
 }
 
-func (k Keeper) setFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) {
+func (k Keeper) SetFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) {
 	for _, feeToken := range feetokens {
 		k.setFeeToken(ctx, feeToken)
 	}

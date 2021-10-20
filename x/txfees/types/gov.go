@@ -19,8 +19,8 @@ func init() {
 
 var _ govtypes.Content = &UpdateFeeTokenProposal{}
 
-func NewUpdateFeeTokenProposal(title, description string, feeToken FeeToken) govtypes.Content {
-	return &UpdateFeeTokenProposal{
+func NewUpdateFeeTokenProposal(title, description string, feeToken FeeToken) UpdateFeeTokenProposal {
+	return UpdateFeeTokenProposal{
 		Title:       title,
 		Description: description,
 		Feetoken:    feeToken,
