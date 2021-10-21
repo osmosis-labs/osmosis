@@ -797,12 +797,15 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 			}
 		}
 		gauge.FilledEpochs += 1
-		k.setGauge(ctx, gauge)
+		err := k.setGauge(ctx, gauge)
+		if err != nil {
+			return err
+		}
 	}
 
-	k.SetCurrentReward(ctx, currentReward, denom, duration)
+	err = k.SetCurrentReward(ctx, currentReward, denom, duration)
 
-	return nil
+	return err
 }
 
 func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward types.CurrentReward, denom string, duration time.Duration, epochInfo epochtypes.EpochInfo) (*types.HistoricalReward, error) {
