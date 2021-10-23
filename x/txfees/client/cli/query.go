@@ -31,7 +31,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	return cmd
 }
 
-// GetCmdGaugeIds takes the pool id and returns the matching gauge ids and durations
+// GetCmdFeeTokens takes the pool id and returns the matching gauge ids and durations
 func GetCmdFeeTokens() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fee-tokens",
@@ -67,7 +67,7 @@ $ %s query txfees fee-tokens
 	return cmd
 }
 
-// GetCmdGaugeIds takes the pool id and returns the matching gauge ids and durations
+// GetCmdDenomPoolID takes the pool id and returns the matching gauge ids and durations
 func GetCmdDenomPoolID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denom-pool-id",
@@ -105,7 +105,7 @@ $ %s query txfees denom-pool-id [denom]
 	return cmd
 }
 
-// GetCmdDistrInfo takes the pool id and returns the matching gauge ids and weights
+// GetCmdBaseDenom takes the pool id and returns the matching gauge ids and weights
 func GetCmdBaseDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "base-denom",

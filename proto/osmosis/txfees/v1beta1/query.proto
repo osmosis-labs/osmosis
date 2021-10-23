@@ -17,7 +17,7 @@ service Query {
 
   rpc DenomPoolId(QueryDenomPoolIdRequest) returns (QueryDenomPoolIdResponse) {
     option (google.api.http).get =
-        "/osmosis/txfees/v1beta1/denon_pool_id/{denom}";
+        "/osmosis/txfees/v1beta1/denom_pool_id/{denom}";
   }
 
   rpc BaseDenom(QueryBaseDenomRequest) returns (QueryBaseDenomResponse) {
