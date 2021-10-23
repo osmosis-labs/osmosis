@@ -21,7 +21,7 @@ func NewAnteHandler(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		ante.NewRejectExtensionOptionsDecorator(),
 		ante.NewMempoolFeeDecorator(),
-		txfeeskeeper.NewMempoolFeeDecorator(txFeesKeeper, spotPriceCalculator),
+		txfeeskeeper.NewMempoolFeeDecorator(txFeesKeeper),
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),

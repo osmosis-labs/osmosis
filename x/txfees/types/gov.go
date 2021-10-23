@@ -52,6 +52,6 @@ func (p UpdateFeeTokenProposal) String() string {
   Title:       %s
   Description: %s
   Records:     %s
-`, p.Title, p.Description, p.Feetoken.String))
+`, p.Title, p.Description, p.Feetoken.String()))
 	return b.String()
 }

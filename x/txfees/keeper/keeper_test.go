@@ -51,7 +51,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 			suite.ctx,
 			acc,
 			sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(100000000000000000)), // Needed for pool creation fee
 				sdk.NewCoin("uion", sdk.NewInt(10000000)),
 				sdk.NewCoin("foo", sdk.NewInt(10000000)),
 				sdk.NewCoin("bar", sdk.NewInt(10000000)),

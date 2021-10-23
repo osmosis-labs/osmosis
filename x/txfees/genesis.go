@@ -9,14 +9,14 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	k.SetBaseDenom(ctx, genState.Basetoken)
+	k.SetBaseDenom(ctx, genState.Basedenom)
 	k.SetFeeTokens(ctx, genState.Feetokens)
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
-	genesis.Basetoken, _ = k.GetBaseDenom(ctx)
+	genesis.Basedenom, _ = k.GetBaseDenom(ctx)
 	genesis.Feetokens = k.GetFeeTokens(ctx)
 	return genesis
 }

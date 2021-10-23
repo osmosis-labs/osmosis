@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 	// this line is used by starport scaffolding # ibc/keeper/import
@@ -78,7 +79,7 @@ func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, erro
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
 	if !prefixStore.Has([]byte(denom)) {
-		return types.FeeToken{}, types.ErrInvalidFeeToken
+		return types.FeeToken{}, sdkerrors.Wrapf(types.ErrInvalidFeeToken, "%s", denom)
 	}
 	bz := prefixStore.Get([]byte(denom))
 

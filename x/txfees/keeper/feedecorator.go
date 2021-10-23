@@ -17,8 +17,10 @@ type MempoolFeeDecorator struct {
 	TxFeesKeeper Keeper
 }
 
-func NewMempoolFeeDecorator(txFeesKeeper Keeper, spotPriceCalculator types.SpotPriceCalculator) MempoolFeeDecorator {
-	return MempoolFeeDecorator{}
+func NewMempoolFeeDecorator(txFeesKeeper Keeper) MempoolFeeDecorator {
+	return MempoolFeeDecorator{
+		TxFeesKeeper: txFeesKeeper,
+	}
 }
 
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {

@@ -13,7 +13,7 @@ func (suite *KeeperTestSuite) TestFeeTokens() { // test for all unlockable coins
 		[]gammtypes.PoolAsset{
 			{
 				Weight: sdk.NewInt(1),
-				Token:  sdk.NewInt64Coin("uosmo", 500),
+				Token:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 			},
 			{
 				Weight: sdk.NewInt(1),
@@ -25,10 +25,10 @@ func (suite *KeeperTestSuite) TestFeeTokens() { // test for all unlockable coins
 	// Test getting basedenom (should be default from genesis)
 	baseDenom, err := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal("uosmo", baseDenom)
+	suite.Require().Equal(sdk.DefaultBondDenom, baseDenom)
 
-	converted, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin("uosmo", 10))
-	suite.Require().True(converted.IsEqual(sdk.NewInt64Coin("uosmo", 10)))
+	converted, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
+	suite.Require().True(converted.IsEqual(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))
 	suite.Require().NoError(err)
 
 	// Make sure there's no external whitelisted fee tokens at launch
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestFeeTokens() { // test for all unlockable coins
 	suite.Require().NoError(suite.app.TxFeesKeeper.ValidateFeeToken(suite.ctx, feeTokens[0]))
 	converted, err = suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin("uion", 10))
 	suite.Require().NoError(err)
-	suite.Require().True(sdk.NewInt64Coin("uosmo", 10).IsEqual(converted))
+	suite.Require().True(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10).IsEqual(converted))
 	queriedPoolId, err := suite.queryClient.DenomPoolId(suite.ctx.Context(),
 		&types.QueryDenomPoolIdRequest{
 			Denom: "uion",
@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestFeeTokens() { // test for all unlockable coins
 		[]gammtypes.PoolAsset{
 			{
 				Weight: sdk.NewInt(1),
-				Token:  sdk.NewInt64Coin("uosmo", 500),
+				Token:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 			},
 			{
 				Weight: sdk.NewInt(1),

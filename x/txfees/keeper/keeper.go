@@ -26,8 +26,8 @@ func NewKeeper(
 	storeKey,
 	memKey sdk.StoreKey,
 	spotPriceCalculator types.SpotPriceCalculator,
-) *Keeper {
-	return &Keeper{
+) Keeper {
+	return Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		memKey:              memKey,

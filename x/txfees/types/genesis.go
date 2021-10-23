@@ -11,7 +11,7 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Basetoken: "uosmo",
+		Basedenom: sdk.DefaultBondDenom,
 		Feetokens: []FeeToken{},
 	}
 }
@@ -19,7 +19,7 @@ func DefaultGenesis() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	err := sdk.ValidateDenom(gs.Basetoken)
+	err := sdk.ValidateDenom(gs.Basedenom)
 	if err != nil {
 		return err
 	}

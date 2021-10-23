@@ -143,12 +143,12 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		gamm.AppModuleBasic{},
+		txfees.AppModuleBasic{},
 		incentives.AppModuleBasic{},
 		lockup.AppModuleBasic{},
 		poolincentives.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
-		txfees.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -407,7 +407,7 @@ func NewOsmosisApp(
 		),
 	)
 
-	app.TxFeesKeeper = *txfeeskeeper.NewKeeper(
+	app.TxFeesKeeper = txfeeskeeper.NewKeeper(
 		appCodec,
 		keys[txfeestypes.StoreKey],
 		memKeys[txfeestypes.MemStoreKey],
@@ -478,11 +478,11 @@ func NewOsmosisApp(
 		transferModule,
 		claim.NewAppModule(appCodec, *app.ClaimKeeper),
 		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		txfees.NewAppModule(appCodec, app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
-		txfees.NewAppModule(appCodec, app.TxFeesKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -510,14 +510,15 @@ func NewOsmosisApp(
 	app.mm.SetOrderInitGenesis(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
-		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		ibchost.ModuleName,
+		gammtypes.ModuleName,
+		txfeestypes.ModuleName,
+		genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		poolincentivestypes.ModuleName,
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
-		gammtypes.ModuleName,
-		txfeestypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -532,6 +533,8 @@ func NewOsmosisApp(
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
+		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		txfees.NewAppModule(appCodec, app.TxFeesKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
@@ -540,12 +543,10 @@ func NewOsmosisApp(
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
-		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		transferModule,
 	)
 
