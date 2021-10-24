@@ -19,6 +19,7 @@ package keeper
 //// - Should be able to get native lockup ID from shadow and from native to shadows
 
 // TODO: add shadow lockups into genesis if required
+// TODO: how to manage unbonding shadow lockups accumulation?
 
 func (k Keeper) setShadowLockup(lockID uint64, shadow string) {
 
@@ -38,12 +39,16 @@ func (k Keeper) GetAllShadows(lockID uint64) {
 
 // CreateShadowLockup create shadow of lockup with lock id and shadow(denom suffix)
 func (k Keeper) CreateShadowLockup(lockID uint64, shadow string) {
-
+	// for _, coin := range coins {
+	// 	k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
+	// }
 }
 
 // CreateShadowLockup delete shadow of lockup with lock id and shadow(denom suffix)
 func (k Keeper) DeleteShadowLockup(lockID uint64, shadow string) {
-
+	// for _, coin := range coins {
+	// 	k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+	// }
 }
 
 // DeleteAllShadowByLockup delete all the shadows of lockup by id
