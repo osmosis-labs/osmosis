@@ -5,24 +5,28 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	types "github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&BalancerPool{}, "osmosis/gamm/BalancerPool", nil)
-	cdc.RegisterConcrete(&MsgCreateBalancerPool{}, "osmosis/gamm/create-pool", nil)
+	cdc.RegisterConcrete(&MsgCreateBalancerPool{}, "osmosis/gamm/create-balancer-pool", nil)
+	cdc.RegisterConcrete(&BalancerPoolParams{}, "osmosis/gamm/BalancerPoolParams", nil)
 }
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-
 	registry.RegisterInterface(
 		"osmosis.gamm.v1beta1.PoolI",
 		(*types.PoolI)(nil),
 		&BalancerPool{},
 	)
-
+	registry.RegisterInterface(
+		"osmosis.gamm.poolmodels.BalancerPoolParams",
+		(*BalancerPoolParamsI)(nil),
+		&BalancerPoolParams{},
+	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateBalancerPool{},

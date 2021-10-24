@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -30,13 +31,16 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			},
 		}
 
-		properMsg, err := NewMsgCreateBalancerPool(
-			addr1,
-			NewBalancerPoolParams(sdk.NewDecWithPrec(1, 2), sdk.NewDecWithPrec(1, 2)),
-			testPoolAsset)
+		msg := &MsgCreateBalancerPool{
+			Sender:             addr1,
+			PoolParams:         codectypes.Any{},
+			PoolAssets:         testPoolAsset,
+			FuturePoolGovernor: "",
+		}
+		err := msg.SetPoolParams(NewBalancerPoolParams(sdk.NewDecWithPrec(1, 2), sdk.NewDecWithPrec(1, 2)))
 
 		require.NoError(t, err)
-		return after(*properMsg)
+		return after(*msg)
 	}
 
 	default_msg := createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {

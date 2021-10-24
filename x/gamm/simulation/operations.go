@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	osmo_simulation "github.com/osmosis-labs/osmosis/x/simulation"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -160,10 +161,16 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(denoms[0], 1)},
 		})
 
-		msg, err := balancer.NewMsgCreateBalancerPool(simAccount.Address.String(), PoolParams, poolAssets)
+		msg := &balancer.MsgCreateBalancerPool{
+			Sender:             simAccount.Address.String(),
+			PoolParams:         codectypes.Any{},
+			PoolAssets:         poolAssets,
+			FuturePoolGovernor: "",
+		}
+		err := msg.SetPoolParams(PoolParams)
 		if err != nil {
 			return simtypes.NoOpMsg(
-				types.ModuleName, balancer.TypeMsgCreateBalancerPool, "Account doesn't have 2 different coin types"), nil, nil
+				types.ModuleName, balancer.TypeMsgCreateBalancerPool, "Cannot set msg"), nil, nil
 		}
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)

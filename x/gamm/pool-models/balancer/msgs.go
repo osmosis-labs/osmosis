@@ -18,18 +18,6 @@ const (
 	TypeMsgCreateBalancerPool = "create_balancer_pool"
 )
 
-func NewMsgCreateBalancerPool(sender string, balancerPoolParams BalancerPoolParamsI, poolAssets []types.PoolAsset) (*MsgCreateBalancerPool, error) {
-	m := &MsgCreateBalancerPool{
-		Sender:     sender,
-		PoolAssets: poolAssets,
-	}
-	err := m.SetPoolParams(balancerPoolParams)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 var _ sdk.Msg = &MsgCreateBalancerPool{}
 
 func (msg MsgCreateBalancerPool) Route() string { return types.RouterKey }
@@ -75,7 +63,7 @@ func (msg MsgCreateBalancerPool) GetBalancerPoolParams() BalancerPoolParams {
 	return balancerPoolParams
 }
 
-func (msg MsgCreateBalancerPool) SetPoolParams(balancerPoolParams BalancerPoolParamsI) error {
+func (msg *MsgCreateBalancerPool) SetPoolParams(balancerPoolParams BalancerPoolParamsI) error {
 	m, ok := balancerPoolParams.(proto.Message)
 	if !ok {
 		return fmt.Errorf("can't proto marshl &T", m)
