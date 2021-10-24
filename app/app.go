@@ -332,13 +332,13 @@ func NewOsmosisApp(
 
 	*/
 
-/* TODO: wat?  I don't have a clue why this suddenly breaks. -- unless maybe it came in with the most recent merge.
+	/* TODO: wat?  I don't have a clue why this suddenly breaks. -- unless maybe it came in with the most recent merge.
 	app.UpgradeKeeper.SetUpgradeHandler("v5", types.UpgradeHandler(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap{}) {
 		totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
 		app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
 		app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
 	})
-*/
+	*/
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(

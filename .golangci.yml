@@ -8,9 +8,9 @@ linters:
   enable:
     - errcheck
     - gofmt
+    - govet
     # - goimports
     # - golint
-    - maligned
 
 issues:
   exclude-rules:

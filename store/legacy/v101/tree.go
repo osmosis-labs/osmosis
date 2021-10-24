@@ -30,9 +30,9 @@ func migrateBranchValue(oldValueBz []byte) *store.Node {
 	}
 	cs := make([]*store.Child, len(oldValue))
 	for i, oldChild := range oldValue {
-		cs[i] = &store.Child{oldChild.Index, oldChild.Acc}
+		cs[i] = &store.Child{Index: oldChild.Index, Accumulation: oldChild.Acc}
 	}
-	return &store.Node{cs}
+	return &store.Node{Children: cs}
 }
 
 func migrateLeafValue(index []byte, oldValueBz []byte) *store.Leaf {
