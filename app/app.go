@@ -332,6 +332,12 @@ func NewOsmosisApp(
 
 	*/
 
+	app.UpgradeKeeper.SetUpgradeHandler("v5", func(ctx sdk.Context, plan upgradetypes.Plan) {
+		totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
+		app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
+		app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
+	})
+
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper)
