@@ -18,6 +18,8 @@ package keeper
 //// Shadow lockup could exist more than one per denom, and if suffix is same, only one could exist.
 //// - Should be able to get native lockup ID from shadow and from native to shadows
 
+// TODO: add shadow lockups into genesis if required
+
 func (k Keeper) setShadowLockup(lockID uint64, shadow string) {
 
 }
