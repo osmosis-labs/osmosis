@@ -1,10 +1,6 @@
 package balancer
 
 import (
-	"fmt"
-	"strings"
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -52,45 +48,4 @@ func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{sender}
-}
-
-func ValidateFutureGovernor(governor string) error {
-	// allow empty governor
-	if governor == "" {
-		return nil
-	}
-
-	// validation for future owner
-	// "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
-	_, err := sdk.AccAddressFromBech32(governor)
-	if err == nil {
-		return nil
-	}
-
-	lockTimeStr := ""
-	splits := strings.Split(governor, ",")
-	if len(splits) > 2 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
-	}
-
-	// token,100h
-	if len(splits) == 2 {
-		lpTokenStr := splits[0]
-		if sdk.ValidateDenom(lpTokenStr) != nil {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
-		}
-		lockTimeStr = splits[1]
-	}
-
-	// 100h
-	if len(splits) == 1 {
-		lockTimeStr = splits[0]
-	}
-
-	// Note that a duration of 0 is allowed
-	_, err = time.ParseDuration(lockTimeStr)
-	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
-	}
-	return nil
 }

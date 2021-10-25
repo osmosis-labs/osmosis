@@ -22,11 +22,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*types.PoolI)(nil),
 		&BalancerPool{},
 	)
-	registry.RegisterInterface(
-		"osmosis.gamm.poolmodels.BalancerPoolParams",
-		(*BalancerPoolParamsI)(nil),
-		&BalancerPoolParams{},
-	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateBalancerPool{},
