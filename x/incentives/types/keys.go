@@ -55,8 +55,11 @@ var (
 	// KeyHistoricalReward defines key for storing historical reward
 	KeyHistoricalReward = []byte{0x11} // TODO : Confirm this key name/value
 
+	// KeyHistoricalReward defines key for storing historical reward
+	KeyHistoricalRewardRef = []byte{0x12} // TODO : Confirm this key name/value
+
 	// KeyPeriodLockReward defines key for storing period lock reward
-	KeyPeriodLockReward = []byte{0x12} // TODO : Confirm this key name/value
+	KeyPeriodLockReward = []byte{0x13} // TODO : Confirm this key name/value
 
 	// LockableDurationsKey defines key for storing valid durations for giving incentives
 	LockableDurationsKey = []byte("lockable_durations")

@@ -614,8 +614,8 @@ func (k Keeper) addHistoricalRewardRefs(ctx sdk.Context, prefix []byte, period u
 	endKey := combineKeys(prefix, sdk.Uint64ToBigEndian(uint64(epochNumber)))
 
 	if store.Has(endKey) {
-		ctx.Logger().Debug(fmt.Sprintf("HistoricalReward with period exist: %d", period))
-		return fmt.Errorf("HistoricalReward with period exist: %d", period)
+		ctx.Logger().Debug(fmt.Sprintf("HistoricalRewardRef with period exist: %d", period))
+		return fmt.Errorf("HistoricalRewardRef with period exist: %d", period)
 	}
 
 	store.Set(endKey, periodBz)
@@ -626,7 +626,7 @@ func (k Keeper) addHistoricalRewardRefs(ctx sdk.Context, prefix []byte, period u
 func (k Keeper) getHistoricalRewardPeriodByEpoch(ctx sdk.Context, denom string, lockDuration time.Duration, epochNumber int64) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 	period := uint64(0)
-	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom+"/"+lockDuration.String()), sdk.Uint64ToBigEndian(uint64(epochNumber)))
+	rewardKey := combineKeys(types.KeyHistoricalRewardRef, []byte(denom+"/"+lockDuration.String()), sdk.Uint64ToBigEndian(uint64(epochNumber)))
 
 	bz := store.Get(rewardKey)
 	if bz == nil {
@@ -663,6 +663,7 @@ func (k Keeper) AddHistoricalReward(ctx sdk.Context, historicalReward types.Hist
 
 	store.Set(rewardKey, bz)
 
+	prefix = combineKeys(types.KeyHistoricalRewardRef, []byte(denom+"/"+lockDuration.String()))
 	err = k.addHistoricalRewardRefs(ctx, prefix, period, epochNumber)
 	return err
 }
