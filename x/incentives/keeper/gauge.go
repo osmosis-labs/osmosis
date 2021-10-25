@@ -597,7 +597,7 @@ func (k Keeper) GetCurrentReward(ctx sdk.Context, denom string, lockDuration tim
 	if bz == nil {
 		currentReward.Period = 1 // starting period is 1
 		currentReward.Coin = sdk.NewCoin(denom, sdk.NewInt(0))
-		currentReward.LastProcessedEpoch = 0
+		currentReward.LastProcessedEpoch = -1
 		return currentReward, nil
 	}
 
