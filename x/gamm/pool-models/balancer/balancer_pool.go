@@ -52,13 +52,6 @@ func NewBalancerPool(poolId uint64, balancerPoolParams BalancerPoolParams, asset
 	return *pool, nil
 }
 
-func NewBalancerPoolParams(swapFee sdk.Dec, exitFee sdk.Dec) BalancerPoolParamsI {
-	return &BalancerPoolParams{
-		SwapFee: swapFee,
-		ExitFee: exitFee,
-	}
-}
-
 // GetAddress returns the address of a pool.
 // If the pool address is not bech32 valid, it returns an empty address.
 func (pa BalancerPool) GetAddress() sdk.AccAddress {

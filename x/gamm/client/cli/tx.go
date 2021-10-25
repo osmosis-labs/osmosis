@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -377,24 +376,16 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		})
 	}
 
-	params := &balancer.BalancerPoolParams{
+	poolParams := &balancer.BalancerPoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	}
 
 	msg := &balancer.MsgCreateBalancerPool{
 		Sender:             clientCtx.GetFromAddress().String(),
-		PoolParams:         codectypes.Any{},
+		PoolParams:         poolParams,
 		PoolAssets:         poolAssets,
 		FuturePoolGovernor: pool.FutureGovernor,
-	}
-	fmt.Println("======BEFORE SET PARAMS")
-	fmt.Println(msg.GetPoolParams())
-	fmt.Println(msg.GetBalancerPoolParams())
-	err = msg.SetPoolParams(params)
-
-	if err != nil {
-		return txf, nil, err
 	}
 
 	if (pool.SmoothWeightChangeParams != smoothWeightChangeParamsInputs{}) {
@@ -437,17 +428,8 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 			smoothWeightParams.StartTime = startTime
 		}
 
-		params.SmoothWeightChangeParams = &smoothWeightParams
-		err = msg.SetPoolParams(params)
-		if err != nil {
-			return txf, nil, err
-		}
+		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
 	}
-	fmt.Println("======AFTER SET PARAMS")
-	fmt.Println(msg.GetPoolParams())
-	fmt.Println(msg.GetBalancerPoolParams())
-	fmt.Println("======SENDER")
-	fmt.Println(msg.Sender)
 
 	return txf, msg, nil
 }

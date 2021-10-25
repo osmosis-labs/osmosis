@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,12 +37,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 		return nil, err
 	}
 
-	balancerPoolParams, ok := msg.PoolParams.GetCachedValue().(balancer.BalancerPoolParams)
-	if !ok {
-		return nil, fmt.Errorf("can't get cached value for pool params")
-	}
-
-	poolId, err := server.keeper.CreateBalancerPool(ctx, sender, balancerPoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
+	poolId, err := server.keeper.CreateBalancerPool(ctx, sender, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
 	}

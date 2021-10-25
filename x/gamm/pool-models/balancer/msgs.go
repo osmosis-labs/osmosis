@@ -5,9 +5,6 @@ import (
 	"strings"
 	"time"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	proto "github.com/gogo/protobuf/proto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -34,8 +31,10 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 		return err
 	}
 
-	params := msg.GetBalancerPoolParams()
-	err = params.Validate(msg.PoolAssets)
+	err = msg.PoolParams.Validate(msg.PoolAssets)
+	if err != nil {
+		return err
+	}
 
 	// validation for future owner
 	if err = ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
@@ -53,27 +52,6 @@ func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{sender}
-}
-
-func (msg MsgCreateBalancerPool) GetBalancerPoolParams() BalancerPoolParams {
-	balancerPoolParams, ok := msg.PoolParams.GetCachedValue().(BalancerPoolParams)
-	if !ok {
-		return BalancerPoolParams{}
-	}
-	return balancerPoolParams
-}
-
-func (msg *MsgCreateBalancerPool) SetPoolParams(balancerPoolParams BalancerPoolParamsI) error {
-	m, ok := balancerPoolParams.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto marshl &T", m)
-	}
-	any, err := codectypes.NewAnyWithValue(m)
-	if err != nil {
-		return err
-	}
-	msg.PoolParams = *any
-	return nil
 }
 
 func ValidateFutureGovernor(governor string) error {

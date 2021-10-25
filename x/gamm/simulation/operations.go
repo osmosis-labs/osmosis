@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	osmo_simulation "github.com/osmosis-labs/osmosis/x/simulation"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -143,7 +142,7 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 		}
 
 		poolAssets := genPoolAssets(r, simAccount, simCoins)
-		PoolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
+		poolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
 
 		// Commented out as genFuturePoolGovernor() panics on empty denom slice.
 		// TODO: fix and provide proper denom types.
@@ -163,14 +162,9 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 
 		msg := &balancer.MsgCreateBalancerPool{
 			Sender:             simAccount.Address.String(),
-			PoolParams:         codectypes.Any{},
+			PoolParams:         &poolParams,
 			PoolAssets:         poolAssets,
 			FuturePoolGovernor: "",
-		}
-		err := msg.SetPoolParams(PoolParams)
-		if err != nil {
-			return simtypes.NoOpMsg(
-				types.ModuleName, balancer.TypeMsgCreateBalancerPool, "Cannot set msg"), nil, nil
 		}
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)

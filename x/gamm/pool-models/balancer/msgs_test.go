@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -31,15 +30,18 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			},
 		}
 
+		poolParams := &BalancerPoolParams{
+			SwapFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.NewDecWithPrec(1, 2),
+		}
+
 		msg := &MsgCreateBalancerPool{
 			Sender:             addr1,
-			PoolParams:         codectypes.Any{},
+			PoolParams:         poolParams,
 			PoolAssets:         testPoolAsset,
 			FuturePoolGovernor: "",
 		}
-		err := msg.SetPoolParams(NewBalancerPoolParams(sdk.NewDecWithPrec(1, 2), sdk.NewDecWithPrec(1, 2)))
 
-		require.NoError(t, err)
 		return after(*msg)
 	}
 
@@ -147,8 +149,10 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "negative swap fee with zero exit fee",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				balancerPoolParams := NewBalancerPoolParams(sdk.NewDecWithPrec(-1, 2), sdk.NewDecWithPrec(0, 0))
-				msg.SetPoolParams(balancerPoolParams)
+				msg.PoolParams = &BalancerPoolParams{
+					SwapFee: sdk.NewDecWithPrec(-1, 2),
+					ExitFee: sdk.NewDecWithPrec(0, 0),
+				}
 				return msg
 			}),
 			expectPass: false,
@@ -188,8 +192,10 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "zero swap fee, zero exit fee",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				balancerPoolParams := NewBalancerPoolParams(sdk.NewDecWithPrec(0, 0), sdk.NewDecWithPrec(0, 0))
-				msg.SetPoolParams(balancerPoolParams)
+				msg.PoolParams = &BalancerPoolParams{
+					ExitFee: sdk.NewDecWithPrec(0, 0),
+					SwapFee: sdk.NewDecWithPrec(0, 0),
+				}
 				return msg
 			}),
 			expectPass: true,
