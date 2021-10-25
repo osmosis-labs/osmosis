@@ -606,7 +606,10 @@ func (k Keeper) BeginPartialUnlockPeriodLockByID(ctx sdk.Context, lockID uint64,
 
 	partialLockID := k.GetLastLockID(ctx) + 1
 	partialLock := types.NewPeriodLock(partialLockID, owner, lock.Duration, time.Time{}, coins)
-	k.BeginUnlock(ctx, partialLock)
+	err = k.BeginUnlock(ctx, partialLock)
+	if err != nil {
+		return nil, nil, err
+	}
 	k.SetLastLockID(ctx, partialLock.ID)
 	partialLockRef, err := k.GetLockByID(ctx, partialLockID)
 	if err != nil || partialLockRef == nil {

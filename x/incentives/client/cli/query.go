@@ -390,8 +390,8 @@ $ %s query incentives rewards [owner-addr]
 			}
 
 			res, err := queryClient.Rewards(cmd.Context(), &types.RewardsRequest{
-				Owner:    owner,
-				LockIds:  lockIds,
+				Owner:   owner,
+				LockIds: lockIds,
 			})
 			if err != nil {
 				return err
