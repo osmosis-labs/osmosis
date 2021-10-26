@@ -55,6 +55,12 @@ var (
 	// KeyPrefixAccountDenomLockTimestamp defines prefix for the iteration of lock IDs by account, denomination and timestamp
 	KeyPrefixAccountDenomLockTimestamp = []byte{0x0E}
 
+	// KeyPrefixPeriodLock defines prefix to store shadow lockup by lock ID and shadow
+	KeyPrefixShadowLockup = []byte{0x0F}
+
+	// KeyPrefixShadowLockTimestamp defines prefix for the iteration of shadow lock IDs by timestamp
+	KeyPrefixShadowLockTimestamp = []byte{0x10}
+
 	// KeyPrefixLockAccumulation defines prefix for the lock accumulation store
 	KeyPrefixLockAccumulation = []byte{0x20}
 

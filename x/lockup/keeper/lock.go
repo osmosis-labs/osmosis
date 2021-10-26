@@ -28,6 +28,7 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 }
 
 func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins, error) {
+	// Note: this shouldn't be called for combination of shadow and native lockups
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
@@ -73,7 +74,34 @@ func (k Keeper) deleteLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types
 	return nil
 }
 
+func (k Keeper) addShadowLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
+	refKeys, err := shadowLockRefKeys(lock)
+	if err != nil {
+		return err
+	}
+	for _, refKey := range refKeys {
+		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) deleteShadowLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
+	refKeys, err := shadowLockRefKeys(lock)
+	if err != nil {
+		return err
+	}
+	for _, refKey := range refKeys {
+		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
+	// Note: this shouldn't be called for combination of shadow and native lockups
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
@@ -433,6 +461,88 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	}
 
 	return nil
+}
+
+func (k Keeper) ResetAllShadowLocks(ctx sdk.Context, shadowLocks []types.ShadowLock) error {
+	// index by coin.Denom, them duration -> amt
+	// We accumulate the accumulation store entries separately,
+	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
+	// We then save these once to the accumulation store at the end.
+	accumulationStoreEntries := make(map[string]map[time.Duration]sdk.Int)
+	denoms := []string{}
+	for i, shadowLock := range shadowLocks {
+		if i%25000 == 0 {
+			msg := fmt.Sprintf("Reset %d shadow lock refs", i)
+			ctx.Logger().Info(msg)
+		}
+
+		lock, err := k.GetLockByID(ctx, shadowLock.LockId)
+		if err != nil {
+			return err
+		}
+		lock.Coins = shadowCoins(lock.Coins, shadowLock.Shadow)
+		lock.EndTime = shadowLock.EndTime
+
+		err = k.setShadowLockAndResetRefs(ctx, *lock, shadowLock)
+		if err != nil {
+			return err
+		}
+
+		// Add to the accumlation store cache
+		for _, coin := range lock.Coins {
+			// update or create the new map from duration -> Int for this denom.
+			var curDurationMap map[time.Duration]sdk.Int
+			if durationMap, ok := accumulationStoreEntries[coin.Denom]; ok {
+				curDurationMap = durationMap
+				// update or create new amount in the duration map
+				newAmt := coin.Amount
+				if curAmt, ok := durationMap[lock.Duration]; ok {
+					newAmt = newAmt.Add(curAmt)
+				}
+				curDurationMap[lock.Duration] = newAmt
+			} else {
+				denoms = append(denoms, coin.Denom)
+				curDurationMap = map[time.Duration]sdk.Int{lock.Duration: coin.Amount}
+			}
+			accumulationStoreEntries[coin.Denom] = curDurationMap
+		}
+	}
+
+	// deterministically iterate over durationMap cache.
+	sort.Strings(denoms)
+	for _, denom := range denoms {
+		curDurationMap := accumulationStoreEntries[denom]
+		durations := make([]time.Duration, 0, len(curDurationMap))
+		for duration := range curDurationMap {
+			durations = append(durations, duration)
+		}
+		sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
+		// now that we have a sorted list of durations for this denom,
+		// add them all to accumulation store
+		msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
+			denom, len(durations))
+		ctx.Logger().Info(msg)
+		for _, d := range durations {
+			amt := curDurationMap[d]
+			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)
+		}
+	}
+
+	return nil
+}
+
+func (k Keeper) setShadowLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, shadowLock types.ShadowLock) error {
+	err := k.setShadowLockup(ctx, shadowLock.LockId, shadowLock.Shadow, shadowLock.EndTime)
+	if err != nil {
+		return err
+	}
+
+	// store refs by the status of unlock
+	if lock.IsUnlocking() {
+		return k.addShadowLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	}
+
+	return k.addShadowLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 }
 
 // setLockAndResetLockRefs sets the lock, and resets all of its lock references

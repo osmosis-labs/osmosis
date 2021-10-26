@@ -33,6 +33,21 @@ func lockStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
 }
 
+// shadowLockStoreKey returns shadow store key from ID and shadow
+func shadowLockStoreKey(lockID uint64, shadow string) []byte {
+	return combineKeys(combineKeys(types.KeyPrefixShadowLockup, sdk.Uint64ToBigEndian(lockID)), []byte(shadow))
+}
+
+// shadowLockTimeStoreKey returns shadow store key from ID, shadow and time
+func shadowLockTimeStoreKey(lockID uint64, shadow string, endTime time.Time) []byte {
+	return combineKeys(
+		combineKeys(
+			combineKeys(types.KeyPrefixShadowLockTimestamp, getTimeKey(endTime)),
+			sdk.Uint64ToBigEndian(lockID),
+		),
+		[]byte(shadow))
+}
+
 // getLockRefs get lock IDs specified on the prefix and timestamp key
 func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)

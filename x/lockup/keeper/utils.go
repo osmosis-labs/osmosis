@@ -68,6 +68,37 @@ func lockRefKeys(lock types.PeriodLock) ([][]byte, error) {
 	return refKeys, nil
 }
 
+// shadowLockRefKeys are different from native lockRefKeys to avoid conflicts
+func shadowLockRefKeys(lock types.PeriodLock) ([][]byte, error) {
+	// Note: shadowLockRefKeys should be only used for querying and should not be combined with native lockup operations
+	// Shadow denom should not conflict with native denom
+	refKeys := [][]byte{}
+	timeKey := getTimeKey(lock.EndTime)
+	durationKey := getDurationKey(lock.Duration)
+
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, coin := range lock.Coins {
+		denomBz := []byte(coin.Denom)
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockTimestamp, denomBz, timeKey))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockDuration, denomBz, durationKey))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockTimestamp, owner, denomBz, timeKey))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockDuration, owner, denomBz, durationKey))
+	}
+	return refKeys, nil
+}
+
+func shadowCoins(coins sdk.Coins, shadow string) sdk.Coins {
+	shadowCoins := sdk.Coins{}
+	for _, coin := range coins {
+		coins = coins.Add(sdk.NewCoin(coin.Denom+shadow, coin.Amount))
+	}
+	return shadowCoins
+}
+
 func combineLocks(pl1 []types.PeriodLock, pl2 []types.PeriodLock) []types.PeriodLock {
 	return append(pl1, pl2...)
 }

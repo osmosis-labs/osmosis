@@ -55,3 +55,14 @@ message QueryCondition {
     (gogoproto.moretags) = "yaml:\"timestamp\""
   ];
 }
+
+// ShadowLock is a single unit of shadow of lock
+message ShadowLock {
+  uint64 lock_id = 1;
+  string shadow = 2;
+  google.protobuf.Timestamp end_time = 3 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"end_time\""
+  ];
+}

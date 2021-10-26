@@ -20,5 +20,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		return []abci.ValidatorUpdate{}
 	}
 	k.WithdrawAllMaturedLocks(ctx)
+	k.DeleteAllMaturedShadowLocks(ctx)
 	return []abci.ValidatorUpdate{}
 }

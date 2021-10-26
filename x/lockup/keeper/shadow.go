@@ -1,5 +1,14 @@
 package keeper
 
+import (
+	"fmt"
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/x/lockup/types"
+)
+
 // Shadow lockup spec
 // - Shadow lockup uses same denom as prefix ({origin_denom}/staked_{validator_id})
 // - Shadow lockup addition, deletion, state transition to unbonding should be called by external modules
@@ -18,45 +27,158 @@ package keeper
 //// Shadow lockup could exist more than one per denom, and if suffix is same, only one could exist.
 //// - Should be able to get native lockup ID from shadow and from native to shadows
 
-// TODO: add shadow lockups into genesis if required
-// TODO: how to manage unbonding shadow lockups accumulation?
-
-func (k Keeper) setShadowLockup(lockID uint64, shadow string) {
-
+func (k Keeper) setShadowLockup(ctx sdk.Context, lockID uint64, shadow string, endTime time.Time) error {
+	shadowLock := &types.ShadowLock{
+		LockId:  lockID,
+		Shadow:  shadow,
+		EndTime: endTime,
+	}
+	store := ctx.KVStore(k.storeKey)
+	bz, err := proto.Marshal(shadowLock)
+	if err != nil {
+		return err
+	}
+	store.Set(shadowLockStoreKey(lockID, shadow), bz)
+	store.Set(shadowLockTimeStoreKey(lockID, shadow, endTime), bz)
+	return nil
 }
 
-func (k Keeper) GetShadowLockup(lockID uint64, shadow string) {
-
+func (k Keeper) deleteShadowLockup(ctx sdk.Context, lockID uint64, shadow string) {
+	store := ctx.KVStore(k.storeKey)
+	shadowLock, _ := k.GetShadowLockup(ctx, lockID, shadow)
+	if shadowLock != nil {
+		store.Delete(shadowLockTimeStoreKey(lockID, shadow, shadowLock.EndTime))
+	}
+	store.Delete(shadowLockStoreKey(lockID, shadow))
 }
 
-func (k Keeper) GetAllShadowsByLockup(lockID uint64) {
-
+func (k Keeper) GetShadowLockup(ctx sdk.Context, lockID uint64, shadow string) (*types.ShadowLock, error) {
+	shadowLock := types.ShadowLock{}
+	store := ctx.KVStore(k.storeKey)
+	shadowLockKey := shadowLockStoreKey(lockID, shadow)
+	if !store.Has(shadowLockKey) {
+		return nil, fmt.Errorf("shadow lock with ID %d and shadow %s does not exist", lockID, shadow)
+	}
+	bz := store.Get(shadowLockKey)
+	err := proto.Unmarshal(bz, &shadowLock)
+	return &shadowLock, err
 }
 
-func (k Keeper) GetAllShadows(lockID uint64) {
+func (k Keeper) GetAllShadowsByLockup(ctx sdk.Context, lockID uint64) []types.ShadowLock {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixShadowLockup, sdk.Uint64ToBigEndian(lockID)))
 
+	shadowLocks := []types.ShadowLock{}
+	for ; iterator.Valid(); iterator.Next() {
+		shadowLock := types.ShadowLock{}
+		err := proto.Unmarshal(iterator.Value(), &shadowLock)
+		if err != nil {
+			panic(err)
+		}
+		shadowLocks = append(shadowLocks, shadowLock)
+	}
+	return shadowLocks
+}
+
+func (k Keeper) GetAllShadows(ctx sdk.Context) []types.ShadowLock {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixShadowLockup)
+
+	shadowLocks := []types.ShadowLock{}
+	for ; iterator.Valid(); iterator.Next() {
+		shadowLock := types.ShadowLock{}
+		err := proto.Unmarshal(iterator.Value(), &shadowLock)
+		if err != nil {
+			panic(err)
+		}
+		shadowLocks = append(shadowLocks, shadowLock)
+	}
+	return shadowLocks
 }
 
 // CreateShadowLockup create shadow of lockup with lock id and shadow(denom suffix)
-func (k Keeper) CreateShadowLockup(lockID uint64, shadow string) {
-	// for _, coin := range coins {
-	// 	k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
-	// }
+func (k Keeper) CreateShadowLockup(ctx sdk.Context, lockID uint64, shadow string, isUnlocking bool) error {
+	// Note: shadow lock up is doing everything same as lockup except coin movement
+	// There is no relationship between unbonding and bonding shadow lockup, it's managed separately
+	// Accumulation store works without caring about unlocking shadow or not
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	lock.Coins = shadowCoins(lock.Coins, shadow)
+	if isUnlocking { // end time is set automatically if it's unlocking lockup
+		lock.EndTime = ctx.BlockTime().Add(lock.Duration)
+	} else {
+		lock.EndTime = time.Time{}
+	}
+
+	// set shadow lockup object
+	k.setShadowLockup(ctx, lockID, shadow, lock.EndTime)
+
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+
+	// add lock refs into not unlocking queue
+	err = k.addShadowLockRefs(ctx, unlockingPrefix, *lock)
+	if err != nil {
+		return err
+	}
+
+	// add to accumulation store
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
+	}
+	return nil
 }
 
-// CreateShadowLockup delete shadow of lockup with lock id and shadow(denom suffix)
-func (k Keeper) DeleteShadowLockup(lockID uint64, shadow string) {
-	// for _, coin := range coins {
-	// 	k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-	// }
+// DeleteShadowLockup delete shadow of lockup with lock id and shadow(denom suffix)
+func (k Keeper) DeleteShadowLockup(ctx sdk.Context, lockID uint64, shadow string) error {
+	shadowLock, err := k.GetShadowLockup(ctx, lockID, shadow)
+	if err != nil {
+		return err
+	}
+
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	// update lock for shadow lock
+	lock.Coins = shadowCoins(lock.Coins, shadow)
+	lock.EndTime = shadowLock.EndTime
+
+	k.deleteShadowLockup(ctx, lockID, shadow)
+
+	// delete lock refs from the unlocking queue
+	err = k.deleteShadowLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *lock)
+	if err != nil {
+		return err
+	}
+
+	// remove from accumulation store
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+	}
+	return nil
 }
 
 // DeleteAllShadowByLockup delete all the shadows of lockup by id
-func (k Keeper) DeleteAllShadowsByLockup(lockID uint64) {
-
+func (k Keeper) DeleteAllShadowsByLockup(ctx sdk.Context, lockID uint64) {
+	shadowLocks := k.GetAllShadowsByLockup(ctx, lockID)
+	for _, shadowLock := range shadowLocks {
+		k.DeleteShadowLockup(ctx, lockID, shadowLock.Shadow)
+	}
 }
 
-// BeginUnbondShadowLockup begin unbonding for shadow lockup
-func (k Keeper) BeginUnbondShadowLockup(lockID uint64, shadow string) {
-
+func (k Keeper) DeleteAllMaturedShadowLocks(ctx sdk.Context) {
+	iterator := k.iteratorBeforeTime(ctx, combineKeys(types.KeyPrefixShadowLockTimestamp), ctx.BlockTime())
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		shadowLock := types.ShadowLock{}
+		err := proto.Unmarshal(iterator.Value(), &shadowLock)
+		if err != nil {
+			panic(err)
+		}
+		k.deleteShadowLockup(ctx, shadowLock.LockId, shadowLock.Shadow)
+	}
 }
