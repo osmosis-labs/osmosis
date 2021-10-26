@@ -24,6 +24,9 @@ func NewMempoolFeeDecorator(txFeesKeeper Keeper) MempoolFeeDecorator {
 }
 
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+        // The SDK currently requires all txs to be FeeTx's in CheckTx, within its mempool fee decorator.
+        // See: https://github.com/cosmos/cosmos-sdk/blob/f726a2398a26bdaf71d78dbf56a82621e84fd098/x/auth/middleware/fee.go#L34-L37
+        // So this is not a real restriction at the moment.
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -41,7 +44,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, err
 	}
 
-	// If there is a fee attached to the tx, make sure the fee denom is a valid denom
+	// If there is a fee attached to the tx, make sure the fee denom is a denom accepted by the chain
 	if len(feeCoins) == 1 {
 		feeDenom := feeCoins.GetDenomByIndex(0)
 		if feeDenom != baseDenom {
@@ -52,9 +55,10 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	// Ensure that the provided fees meet a minimum threshold for the validator,
-	// if this is a CheckTx. This is only for local mempool purposes, and thus
-	// is only ran on check tx.
+	// If we are in CheckTx, this function is ran locally to determine if these fees are sufficient
+	// to enter our mempool.
+	// So we ensure that the provided fees meet a minimum threshold for the validator,
+	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
 	if ctx.IsCheckTx() && !simulate {
 		minGasPrices := ctx.MinGasPrices()
 		baseDenomAmt := minGasPrices.AmountOf(baseDenom)

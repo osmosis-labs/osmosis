@@ -20,7 +20,6 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-	// querier sdk.Querier
 	app *app.OsmosisApp
 
 	queryClient types.QueryClient

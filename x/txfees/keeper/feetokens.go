@@ -63,18 +63,23 @@ func (k Keeper) SetBaseDenom(ctx sdk.Context, denom string) error {
 // It checks:
 // - The denom exists
 // - The gamm pool exists
-// - The gamm pool includes the base token
+// - The gamm pool includes the base token and fee token
 func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
+       // This not returning an error implies that:
+       // - feeToken.Denom exists
+       // - feeToken.PoolID exists
+       // - feeToken.PoolID has both feeToken.Denom and baseDenom
 	_, err = k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
 
 	return err
 }
 
-// GetFeeToken returns the fee token record for a specific denom
+// GetFeeToken returns the fee token record for a specific denom.
+// If the denom doesn't exist, returns an error.
 func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
@@ -92,7 +97,8 @@ func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, erro
 	return feeToken, nil
 }
 
-// setFeeToken sets a new fee token record for a specific denom
+// setFeeToken sets a new fee token record for a specific denom.
+// If the feeToken pool ID is 0, deletes the fee Token entry.
 func (k Keeper) setFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
@@ -122,6 +128,7 @@ func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
 
+     // this entire store just contains FeeTokens, so iterate over all entries.
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 
