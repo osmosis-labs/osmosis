@@ -196,6 +196,7 @@ message HistoricalRewardResponse {
 
 message PeriodLockRewardRequest { uint64 id = 1; }
 message PeriodLockRewardResponse {
+  option (gogoproto.stable_marshaler) = true;
   uint64 ID = 1;
   map<string, uint64> period = 2;
   repeated cosmos.base.v1beta1.Coin rewards = 3 [
