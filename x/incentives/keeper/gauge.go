@@ -692,7 +692,7 @@ func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration 
 
 func (k Keeper) SetPeriodLockReward(ctx sdk.Context, periodLockReward types.PeriodLockReward) error {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyHistoricalReward, sdk.Uint64ToBigEndian(periodLockReward.ID))
+	rewardKey := combineKeys(types.KeyPeriodLockReward, sdk.Uint64ToBigEndian(periodLockReward.ID))
 
 	bz, err := proto.Marshal(&periodLockReward)
 	if err != nil {
@@ -706,13 +706,13 @@ func (k Keeper) SetPeriodLockReward(ctx sdk.Context, periodLockReward types.Peri
 
 func (k Keeper) clearPeriodLockReward(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyHistoricalReward, sdk.Uint64ToBigEndian(id))
+	rewardKey := combineKeys(types.KeyPeriodLockReward, sdk.Uint64ToBigEndian(id))
 	store.Delete(rewardKey)
 }
 
 func (k Keeper) GetPeriodLockReward(ctx sdk.Context, id uint64) (types.PeriodLockReward, error) {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyHistoricalReward, sdk.Uint64ToBigEndian(id))
+	rewardKey := combineKeys(types.KeyPeriodLockReward, sdk.Uint64ToBigEndian(id))
 
 	bz := store.Get(rewardKey)
 	if bz == nil {
