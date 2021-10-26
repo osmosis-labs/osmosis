@@ -5,7 +5,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
-	// this line is used by starport scaffolding # ibc/keeper/import
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
