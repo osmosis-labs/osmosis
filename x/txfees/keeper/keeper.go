@@ -16,7 +16,6 @@ type (
 	Keeper struct {
 		cdc      codec.Marshaler
 		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
 
 		spotPriceCalculator types.SpotPriceCalculator
 	}
@@ -24,14 +23,12 @@ type (
 
 func NewKeeper(
 	cdc codec.Marshaler,
-	storeKey,
-	memKey sdk.StoreKey,
+	storeKey sdk.StoreKey,
 	spotPriceCalculator types.SpotPriceCalculator,
 ) Keeper {
 	return Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
-		memKey:              memKey,
 		spotPriceCalculator: spotPriceCalculator,
 	}
 }

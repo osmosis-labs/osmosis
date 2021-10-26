@@ -410,7 +410,6 @@ func NewOsmosisApp(
 	app.TxFeesKeeper = txfeeskeeper.NewKeeper(
 		appCodec,
 		keys[txfeestypes.StoreKey],
-		memKeys[txfeestypes.MemStoreKey],
 		app.GAMMKeeper,
 	)
 
