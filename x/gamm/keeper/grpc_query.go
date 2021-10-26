@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
@@ -131,20 +132,20 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	// TODO: change default return type to err in case of all type conversion failed
-	balancerPool, ok := pool.(*balancer.BalancerPool)
-	if !ok {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
 
-	any, err := codectypes.NewAnyWithValue(&balancerPool.PoolParams)
-	if err != nil {
-		return nil, err
+	switch pool := pool.(type) {
+	case *balancer.BalancerPool:
+		any, err := codectypes.NewAnyWithValue(&pool.PoolParams)
+		if err != nil {
+			return nil, err
+		}
+		return &types.QueryPoolParamsResponse{
+			Params: any,
+		}, nil
+	default:
+		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
-
-	return &types.QueryPoolParamsResponse{
-		Params: any,
-	}, nil
 }
 
 func (k Keeper) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequest) (*types.QueryTotalSharesResponse, error) {
