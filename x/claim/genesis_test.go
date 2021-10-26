@@ -20,7 +20,7 @@ var testGenesis = types.GenesisState{
 	ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 750000000),
 	Params: types.Params{
 		AirdropStartTime:   now,
-		DurationUntilDecay: types.DefaultDurationOfDecay,
+		DurationUntilDecay: types.DefaultDurationUntilDecay,
 		DurationOfDecay:    types.DefaultDurationOfDecay,
 		ClaimDenom:         types.DefaultClaimDenom, // uosmo
 	},

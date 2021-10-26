@@ -189,7 +189,7 @@ osmosisd tx gamm join-pool [flags]
 #### Example
 Join pool 1 with 1 OSMO and the respective amount of ATOM, using myKeyringWallet.
 ```sh
-osmosisd tx gamm join-pool --pool-id 1 --max-amounts-in 1000000uosmo --share-amount-out 1000000 --from myKeyringWallet
+osmosisd tx gamm join-pool --pool-id 2 --max-amounts-in 1000000uosmo --max-amounts-in 1000000uion --share-amount-out 1000000 --from myKeyringWallet
 ```
 
 

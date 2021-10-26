@@ -21,6 +21,9 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	lockableDurations := suite.app.IncentivesKeeper.GetLockableDurations(suite.ctx)
+	lockableDurations = append(lockableDurations, 2*time.Second)
+	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, lockableDurations)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -32,8 +32,11 @@ osmosisd start
 ```
 
 More Nodes ==> More Network
+
 More Network ==> Faster Sync
+
 Faster Sync ==> Less Developer Friction
+
 Less Developer Friction ==> More Osmosis
 
 Thank you for supporting a healthy blockchain network and community by running an Osmosis node!
