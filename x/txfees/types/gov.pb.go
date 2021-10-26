@@ -24,8 +24,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // UpdateFeeTokenProposal is a gov Content type for adding a new whitelisted fee
-// token It must specify a denom along with gamm pool ID to use as a spot price
-// calculator It can be used to add a new denom to the whitelist It can also be
+// token. It must specify a denom along with gamm pool ID to use as a spot price
+// calculator. It can be used to add a new denom to the whitelist It can also be
 // used to update the Pool to associate with the denom. If Pool ID is set to 0,
 // it will remove the denom from the whitelisted set.
 type UpdateFeeTokenProposal struct {

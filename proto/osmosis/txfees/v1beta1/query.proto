@@ -10,7 +10,9 @@ import "osmosis/txfees/v1beta1/feetoken.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/txfees/types";
 
 service Query {
-  // GaugeIds takes the pool id and returns the matching gauge ids and durations
+  // FeeTokens returns a list of all the whitelisted fee tokens and their
+  // corresponding pools It does not include the BaseDenom, which has its own
+  // query endpoint
   rpc FeeTokens(QueryFeeTokensRequest) returns (QueryFeeTokensResponse) {
     option (google.api.http).get = "/osmosis/txfees/v1beta1/fee_tokens";
   }

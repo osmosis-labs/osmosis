@@ -338,7 +338,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// GaugeIds takes the pool id and returns the matching gauge ids and durations
+	// FeeTokens returns a list of all the whitelisted fee tokens and their
+	// corresponding pools It does not include the BaseDenom, which has its own
+	// query endpoint
 	FeeTokens(ctx context.Context, in *QueryFeeTokensRequest, opts ...grpc.CallOption) (*QueryFeeTokensResponse, error)
 	DenomPoolId(ctx context.Context, in *QueryDenomPoolIdRequest, opts ...grpc.CallOption) (*QueryDenomPoolIdResponse, error)
 	BaseDenom(ctx context.Context, in *QueryBaseDenomRequest, opts ...grpc.CallOption) (*QueryBaseDenomResponse, error)
@@ -381,7 +383,9 @@ func (c *queryClient) BaseDenom(ctx context.Context, in *QueryBaseDenomRequest, 
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// GaugeIds takes the pool id and returns the matching gauge ids and durations
+	// FeeTokens returns a list of all the whitelisted fee tokens and their
+	// corresponding pools It does not include the BaseDenom, which has its own
+	// query endpoint
 	FeeTokens(context.Context, *QueryFeeTokensRequest) (*QueryFeeTokensResponse, error)
 	DenomPoolId(context.Context, *QueryDenomPoolIdRequest) (*QueryDenomPoolIdResponse, error)
 	BaseDenom(context.Context, *QueryBaseDenomRequest) (*QueryBaseDenomResponse, error)

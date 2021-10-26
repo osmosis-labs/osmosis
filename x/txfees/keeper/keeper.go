@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
@@ -37,4 +38,9 @@ func NewKeeper(
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) GetFeeTokensStore(ctx sdk.Context) sdk.KVStore {
+	store := ctx.KVStore(k.storeKey)
+	return prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
 }

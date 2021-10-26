@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
@@ -69,10 +68,10 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 	if err != nil {
 		return err
 	}
-       // This not returning an error implies that:
-       // - feeToken.Denom exists
-       // - feeToken.PoolID exists
-       // - feeToken.PoolID has both feeToken.Denom and baseDenom
+	// This not returning an error implies that:
+	// - feeToken.Denom exists
+	// - feeToken.PoolID exists
+	// - feeToken.PoolID has both feeToken.Denom and baseDenom
 	_, err = k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
 
 	return err
@@ -81,8 +80,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 // GetFeeToken returns the fee token record for a specific denom.
 // If the denom doesn't exist, returns an error.
 func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, error) {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
+	prefixStore := k.GetFeeTokensStore(ctx)
 	if !prefixStore.Has([]byte(denom)) {
 		return types.FeeToken{}, sdkerrors.Wrapf(types.ErrInvalidFeeToken, "%s", denom)
 	}
@@ -100,8 +98,7 @@ func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, erro
 // setFeeToken sets a new fee token record for a specific denom.
 // If the feeToken pool ID is 0, deletes the fee Token entry.
 func (k Keeper) setFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
+	prefixStore := k.GetFeeTokensStore(ctx)
 
 	if feeToken.PoolID == 0 {
 		if prefixStore.Has([]byte(feeToken.Denom)) {
@@ -125,10 +122,9 @@ func (k Keeper) setFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 }
 
 func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
+	prefixStore := k.GetFeeTokensStore(ctx)
 
-     // this entire store just contains FeeTokens, so iterate over all entries.
+	// this entire store just contains FeeTokens, so iterate over all entries.
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 
@@ -148,8 +144,12 @@ func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {
 	return feeTokens
 }
 
-func (k Keeper) SetFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) {
+func (k Keeper) SetFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) error {
 	for _, feeToken := range feetokens {
-		k.setFeeToken(ctx, feeToken)
+		err := k.setFeeToken(ctx, feeToken)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
-func (suite *KeeperTestSuite) TestFeeTokens() { // test for all unlockable coins
+func (suite *KeeperTestSuite) TestFeeTokens() {
 	suite.SetupTest()
 
 	uionPoolId := suite.preparePool(
