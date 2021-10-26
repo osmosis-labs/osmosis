@@ -803,10 +803,12 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 			return err
 		}
 	}
+	if currentReward.LastProcessedEpoch != -1 {
+		err = k.SetCurrentReward(ctx, currentReward, denom, duration)
+		return err
+	}
 
-	err = k.SetCurrentReward(ctx, currentReward, denom, duration)
-
-	return err
+	return nil
 }
 
 func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward types.CurrentReward, denom string, duration time.Duration, epochInfo epochtypes.EpochInfo) (*types.HistoricalReward, error) {
