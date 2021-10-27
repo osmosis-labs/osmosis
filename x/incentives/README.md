@@ -72,3 +72,20 @@ MsgAddToGauge:
 ```bash
 osmosisd tx incentives add-to-gauge $GAUGE_ID 500MyToken
 ```
+
+
+## Estimating and Claiming Rewards
+
+The accumulated rewards can be estimated and claimed.
+
+### Examples
+
+```bash
+# estimate rewards
+osmosisd query incentives rewards $(osmosisd keys show -a validator --keyring-backend=test) \
+  --lock-ids [lock ids, nullable]
+
+# claim rewards
+osmosisd tx incentives claim-lock-reward [lock_id] --from=validator --keyring-backend=test 
+
+```
