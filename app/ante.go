@@ -11,6 +11,8 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
+// Link to default ante handler used by cosmos sdk:
+// https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
 func NewAnteHandler(
 	ak ante.AccountKeeper, bankKeeper authtypes.BankKeeper,
 	txFeesKeeper txfeeskeeper.Keeper, spotPriceCalculator txfeestypes.SpotPriceCalculator,
@@ -20,7 +22,6 @@ func NewAnteHandler(
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		ante.NewRejectExtensionOptionsDecorator(),
-		ante.NewMempoolFeeDecorator(),
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		txfeeskeeper.NewMempoolFeeDecorator(txFeesKeeper),
