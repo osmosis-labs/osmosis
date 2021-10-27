@@ -13,15 +13,18 @@ This is what you'd use to get a node up and running, fast. It assumes that it is
 
 **Install go**
 ```bash
-wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.1
+wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.2
 ```
+
+Then exit and re-enter your shell.
 
 **Install Osmosis and check that it is on $PATH**
 ```bash
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
-git checkout v4.0.0
+git checkout v4.1.0
 make install
+which osmosisd
 ```
 
 **Launch Osmosis**
