@@ -20,9 +20,9 @@ var testGenesis = types.GenesisState{
 	ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 750000000),
 	Params: types.Params{
 		AirdropStartTime:   now,
-		DurationUntilDecay: types.DefaultDurationUntilDecay, // 2 month
-		DurationOfDecay:    types.DefaultDurationOfDecay,    // 4 months
-		ClaimDenom:         types.DefaultClaimDenom,         // uosmo
+		DurationUntilDecay: types.DefaultDurationUntilDecay,
+		DurationOfDecay:    types.DefaultDurationOfDecay,
+		ClaimDenom:         types.DefaultClaimDenom, // uosmo
 	},
 	ClaimRecords: []types.ClaimRecord{
 		{
@@ -44,6 +44,7 @@ func TestClaimInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	claim.InitGenesis(ctx, *app.ClaimKeeper, genesis)
+	app.ClaimKeeper.CreateModuleAccount(ctx, sdk.NewInt64Coin(types.DefaultClaimDenom, 750000000))
 
 	coin := app.ClaimKeeper.GetModuleAccountBalance(ctx)
 	require.Equal(t, coin.String(), genesis.ModuleAccountBalance.String())
@@ -62,6 +63,7 @@ func TestClaimExportGenesis(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	claim.InitGenesis(ctx, *app.ClaimKeeper, genesis)
+	app.ClaimKeeper.CreateModuleAccount(ctx, sdk.NewInt64Coin(types.DefaultClaimDenom, 750000000))
 
 	claimRecord, err := app.ClaimKeeper.GetClaimRecord(ctx, acc2)
 	require.NoError(t, err)

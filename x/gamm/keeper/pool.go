@@ -79,12 +79,12 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	return nil
 }
 
-// newPool is an internal function that creates a new Pool object with the provided
+// newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
 // parameters, initial assets, and future governor.
-func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
-	poolId := k.GetNextPoolNumber(ctx)
+func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams types.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
+	poolId := k.GetNextPoolNumberAndIncrement(ctx)
 
-	pool, err := types.NewPool(poolId, poolParams, assets, futureGovernor, ctx.BlockTime())
+	pool, err := types.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
 	if err != nil {
 		return nil, err
 	}
@@ -118,15 +118,14 @@ func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
-// GetNextPoolNumber returns the next pool number
-func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
+// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry
+func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.KeyNextGlobalPoolNumber)
 	if bz == nil {
-		// initialize the pool id numbers
-		poolNumber = 1
+		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
 	} else {
 		val := gogotypes.UInt64Value{}
 

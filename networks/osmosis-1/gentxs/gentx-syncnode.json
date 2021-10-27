@@ -1,0 +1,61 @@
+{
+    "body": {
+        "messages": [
+            {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                    "moniker": "syncnode",
+                    "identity": "F422F328C14AFBFA",
+                    "website": "",
+                    "security_contact": "",
+                    "details": ""
+                },
+                "commission": {
+                    "rate": "0.100000000000000000",
+                    "max_rate": "0.900000000000000000",
+                    "max_change_rate": "0.050000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "osmo19j2hd230c3hw6ds843yu8akc0xgvdvyu02t2sd",
+                "validator_address": "osmovaloper19j2hd230c3hw6ds843yu8akc0xgvdvyu4arf82",
+                "pubkey": {
+                    "@type": "/cosmos.crypto.ed25519.PubKey",
+                    "key": "b2DVNBLrIFXkQ19WXmbzlUKh+sQrBaSY1s8hSPkFFMY="
+                },
+                "value": {
+                    "denom": "uosmo",
+                    "amount": "1000000"
+                }
+            }
+        ],
+        "memo": "afc6b913f27e96c78c3b76780deb1bd1545507f2@37.120.245.167:26656",
+        "timeout_height": "0",
+        "extension_options": [],
+        "non_critical_extension_options": []
+    },
+    "auth_info": {
+        "signer_infos": [
+            {
+                "public_key": {
+                    "@type": "/cosmos.crypto.secp256k1.PubKey",
+                    "key": "Ahnp+4CCJLf8bdFqYv+6FN3dYAEx5fKwaVwOcKKumGzn"
+                },
+                "mode_info": {
+                    "single": {
+                        "mode": "SIGN_MODE_DIRECT"
+                    }
+                },
+                "sequence": "0"
+            }
+        ],
+        "fee": {
+            "amount": [],
+            "gas_limit": "200000",
+            "payer": "",
+            "granter": ""
+        }
+    },
+    "signatures": [
+        "ar0t0q/EJicWtFVIaNgS03lL8F3mqhOkF2UBObF44tVu70V4Www5K9NbSZ2WRvNIG8Vog8uSLK8x5Wj/2i2kZg=="
+    ]
+}

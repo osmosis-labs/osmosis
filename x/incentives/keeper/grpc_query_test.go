@@ -203,6 +203,8 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	suite.Require().Equal(res.Coins, coins.Add(mintCoins))
 }
 
+// TODO: make this test table driven, or simpler
+// I have no idea at a glance what its doing.
 func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.SetupTest()
 
@@ -222,6 +224,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
+	gauges := []types.Gauge{*gauge}
 
 	// check after gauge creation
 	res, err = suite.app.IncentivesKeeper.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
@@ -229,7 +232,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.Require().Equal(res.Coins, coins)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
 
@@ -239,6 +242,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.Require().NotNil(gauge)
 	suite.Require().Equal(gauge.FilledEpochs, uint64(1))
 	suite.Require().Equal(gauge.DistributedCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
+	gauges = []types.Gauge{*gauge}
 
 	// start distribution
 	suite.ctx = suite.ctx.WithBlockTime(startTime)
@@ -251,9 +255,9 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.Require().Equal(res.Coins, coins.Sub(distrCoins))
 
 	// distribute second round to stakers
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
 	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 6)})
+	suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 6)}, distrCoins)
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
@@ -280,6 +284,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
+	gauges := []types.Gauge{*gauge}
 
 	// check after gauge creation
 	res, err = suite.app.IncentivesKeeper.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
@@ -292,7 +297,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
 
@@ -302,6 +307,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().NotNil(gauge)
 	suite.Require().Equal(gauge.FilledEpochs, uint64(1))
 	suite.Require().Equal(gauge.DistributedCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
+	gauges = []types.Gauge{*gauge}
 
 	// check after distribution
 	res, err = suite.app.IncentivesKeeper.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
@@ -309,9 +315,9 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().Equal(res.Coins, distrCoins)
 
 	// distribute second round to stakers
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
 	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 6)})
+	suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 6)}, distrCoins)
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
