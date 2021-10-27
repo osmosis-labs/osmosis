@@ -94,7 +94,7 @@ func shadowLockRefKeys(lock types.PeriodLock) ([][]byte, error) {
 func shadowCoins(coins sdk.Coins, shadow string) sdk.Coins {
 	shadowCoins := sdk.Coins{}
 	for _, coin := range coins {
-		coins = coins.Add(sdk.NewCoin(coin.Denom+shadow, coin.Amount))
+		shadowCoins = shadowCoins.Add(sdk.NewCoin(coin.Denom+shadow, coin.Amount))
 	}
 	return shadowCoins
 }

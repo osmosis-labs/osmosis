@@ -364,6 +364,9 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockI
 		return lock, nil
 	}
 
+	// TODO: handle shadow lock changes for lockup change
+	// This should be changed directly here or it should be handled by OnTokenLocked hook receiver?
+
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, coins, lock.Duration, lock.EndTime)
 	return lock, nil
 }
@@ -532,7 +535,7 @@ func (k Keeper) ResetAllShadowLocks(ctx sdk.Context, shadowLocks []types.ShadowL
 }
 
 func (k Keeper) setShadowLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, shadowLock types.ShadowLock) error {
-	err := k.setShadowLockup(ctx, shadowLock.LockId, shadowLock.Shadow, shadowLock.EndTime)
+	err := k.setShadowLockupObject(ctx, shadowLock.LockId, shadowLock.Shadow, shadowLock.EndTime)
 	if err != nil {
 		return err
 	}
@@ -666,6 +669,9 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	for _, coin := range lock.Coins {
 		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
 	}
+
+	// TODO: handle shadow lock changes for lockup removal
+	// This should be removed directly here or it should be handled by OnTokenUnlocked hook receiver?
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil

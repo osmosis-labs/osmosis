@@ -27,7 +27,7 @@ import (
 //// Shadow lockup could exist more than one per denom, and if suffix is same, only one could exist.
 //// - Should be able to get native lockup ID from shadow and from native to shadows
 
-func (k Keeper) setShadowLockup(ctx sdk.Context, lockID uint64, shadow string, endTime time.Time) error {
+func (k Keeper) setShadowLockupObject(ctx sdk.Context, lockID uint64, shadow string, endTime time.Time) error {
 	shadowLock := &types.ShadowLock{
 		LockId:  lockID,
 		Shadow:  shadow,
@@ -39,14 +39,16 @@ func (k Keeper) setShadowLockup(ctx sdk.Context, lockID uint64, shadow string, e
 		return err
 	}
 	store.Set(shadowLockStoreKey(lockID, shadow), bz)
-	store.Set(shadowLockTimeStoreKey(lockID, shadow, endTime), bz)
+	if !endTime.Equal(time.Time{}) {
+		store.Set(shadowLockTimeStoreKey(lockID, shadow, endTime), bz)
+	}
 	return nil
 }
 
-func (k Keeper) deleteShadowLockup(ctx sdk.Context, lockID uint64, shadow string) {
+func (k Keeper) deleteShadowLockupObject(ctx sdk.Context, lockID uint64, shadow string) {
 	store := ctx.KVStore(k.storeKey)
 	shadowLock, _ := k.GetShadowLockup(ctx, lockID, shadow)
-	if shadowLock != nil {
+	if shadowLock != nil && !shadowLock.EndTime.Equal(time.Time{}) {
 		store.Delete(shadowLockTimeStoreKey(lockID, shadow, shadowLock.EndTime))
 	}
 	store.Delete(shadowLockStoreKey(lockID, shadow))
@@ -114,7 +116,10 @@ func (k Keeper) CreateShadowLockup(ctx sdk.Context, lockID uint64, shadow string
 	}
 
 	// set shadow lockup object
-	k.setShadowLockup(ctx, lockID, shadow, lock.EndTime)
+	err = k.setShadowLockupObject(ctx, lockID, shadow, lock.EndTime)
+	if err != nil {
+		return err
+	}
 
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 
@@ -147,7 +152,7 @@ func (k Keeper) DeleteShadowLockup(ctx sdk.Context, lockID uint64, shadow string
 	lock.Coins = shadowCoins(lock.Coins, shadow)
 	lock.EndTime = shadowLock.EndTime
 
-	k.deleteShadowLockup(ctx, lockID, shadow)
+	k.deleteShadowLockupObject(ctx, lockID, shadow)
 
 	// delete lock refs from the unlocking queue
 	err = k.deleteShadowLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *lock)
@@ -163,11 +168,15 @@ func (k Keeper) DeleteShadowLockup(ctx sdk.Context, lockID uint64, shadow string
 }
 
 // DeleteAllShadowByLockup delete all the shadows of lockup by id
-func (k Keeper) DeleteAllShadowsByLockup(ctx sdk.Context, lockID uint64) {
+func (k Keeper) DeleteAllShadowsByLockup(ctx sdk.Context, lockID uint64) error {
 	shadowLocks := k.GetAllShadowsByLockup(ctx, lockID)
 	for _, shadowLock := range shadowLocks {
-		k.DeleteShadowLockup(ctx, lockID, shadowLock.Shadow)
+		err := k.DeleteShadowLockup(ctx, lockID, shadowLock.Shadow)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (k Keeper) DeleteAllMaturedShadowLocks(ctx sdk.Context) {
@@ -179,6 +188,6 @@ func (k Keeper) DeleteAllMaturedShadowLocks(ctx sdk.Context) {
 		if err != nil {
 			panic(err)
 		}
-		k.deleteShadowLockup(ctx, shadowLock.LockId, shadowLock.Shadow)
+		k.DeleteShadowLockup(ctx, shadowLock.LockId, shadowLock.Shadow)
 	}
 }
