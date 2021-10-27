@@ -25,5 +25,4 @@ message GenesisState {
 message GenesisReward {
   CurrentReward current_reward = 1 [ (gogoproto.nullable) = false ];
   repeated HistoricalReward historical_reward = 2 [ (gogoproto.nullable) = false ];
-  repeated uint64 historical_reward_epoch = 3 [ (gogoproto.nullable) = false ];
 }

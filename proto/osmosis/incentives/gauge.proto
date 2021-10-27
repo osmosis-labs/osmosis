@@ -48,6 +48,8 @@ message HistoricalReward {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
+  uint64 period = 2;
+  uint64 last_eligible_epoch = 3;
 }
 
 message CurrentReward {

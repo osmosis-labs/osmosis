@@ -52,18 +52,30 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	denom := "stake"
 	duration := time.Hour
 	currentReward := types.CurrentReward{
-		Period:             3,
-		LastProcessedEpoch: 9,
+		Period:             4,
+		LastProcessedEpoch: 7,
 		Coin:               sdk.NewCoin("stake", sdk.NewInt(10)),
 		Denom:              denom,
 		Duration:           duration,
 	}
 	app.IncentivesKeeper.SetCurrentReward(ctx, currentReward, denom, duration)
-	historicalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000)),
+	historicalReward1 := types.HistoricalReward{
+		Period:            1,
+		LastEligibleEpoch: 1,
 	}
-	app.IncentivesKeeper.AddHistoricalReward(ctx, historicalReward, denom, duration, 1, 1)
-	app.IncentivesKeeper.AddHistoricalReward(ctx, historicalReward, denom, duration, 2, 2)
+	historicalReward2 := types.HistoricalReward{
+		CumulativeRewardRatio: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000)),
+		Period:                2,
+		LastEligibleEpoch:     3,
+	}
+	historicalReward3 := types.HistoricalReward{
+		CumulativeRewardRatio: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000)),
+		Period:                3,
+		LastEligibleEpoch:     5,
+	}
+	app.IncentivesKeeper.AddHistoricalReward(ctx, historicalReward1, denom, duration, 1, 1)
+	app.IncentivesKeeper.AddHistoricalReward(ctx, historicalReward2, denom, duration, 2, 3)
+	app.IncentivesKeeper.AddHistoricalReward(ctx, historicalReward3, denom, duration, 3, 5)
 	periodLockReward := types.PeriodLockReward{
 		ID:     1,
 		Period: map[string]uint64{"gamm/pool/1/1h0s": 1},
@@ -71,8 +83,9 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	app.IncentivesKeeper.SetPeriodLockReward(ctx, periodLockReward)
 	genesis = incentives.ExportGenesis(ctx, app.IncentivesKeeper)
 	require.Equal(t, genesis.GenesisReward[0].CurrentReward, currentReward)
-	require.Equal(t, genesis.GenesisReward[0].HistoricalReward[0], historicalReward)
-	require.Equal(t, genesis.GenesisReward[0].HistoricalReward[1], historicalReward)
+	require.Equal(t, genesis.GenesisReward[0].HistoricalReward[0], historicalReward1)
+	require.Equal(t, genesis.GenesisReward[0].HistoricalReward[1], historicalReward2)
+	require.Equal(t, genesis.GenesisReward[0].HistoricalReward[2], historicalReward3)
 	require.Equal(t, genesis.PeriodLockReward[0], periodLockReward)
 }
 
@@ -110,12 +123,13 @@ func TestIncentivesInitGenesis(t *testing.T) {
 		Duration:           duration,
 	}
 	historicalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000)),
+		CumulativeRewardRatio: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000)),
+		Period:                1,
+		LastEligibleEpoch:     1,
 	}
 	genesisReward := types.GenesisReward{
-		CurrentReward:         currentReward,
-		HistoricalReward:      []types.HistoricalReward{historicalReward},
-		HistoricalRewardEpoch: []uint64{1},
+		CurrentReward:    currentReward,
+		HistoricalReward: []types.HistoricalReward{historicalReward},
 	}
 	periodLockReward := types.PeriodLockReward{
 		ID:     1,
@@ -132,7 +146,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 			time.Hour * 3,
 			time.Hour * 7,
 		},
-		GenesisReward: []types.GenesisReward{genesisReward},
+		GenesisReward:    []types.GenesisReward{genesisReward},
 		PeriodLockReward: []types.PeriodLockReward{periodLockReward},
 	})
 

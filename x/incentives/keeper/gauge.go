@@ -597,21 +597,14 @@ func (k Keeper) GetGenesisRewards(ctx sdk.Context) []types.GenesisReward {
 		genesisReward := types.GenesisReward{}
 		genesisReward.CurrentReward = currentReward
 		var historicalRewards []types.HistoricalReward
-		var historicalRewardEpochs []uint64
 		for i := uint64(1); i < currentReward.Period; i++ {
 			historicalReward, err := k.GetHistoricalReward(ctx, denom, duration, i)
-			if err != nil || historicalReward.CummulativeRewardRatio == nil {
-				continue
-			}
-			historicalRewardEpoch, err := k.getHistoricalRewardPeriodByEpoch(ctx, denom, duration, int64(i))
 			if err != nil {
-				continue
+				panic(fmt.Sprintf("unable to retrieve historical reward for denom(%v) d(%v) period(%v)", denom, duration, i))
 			}
 			historicalRewards = append(historicalRewards, historicalReward)
-			historicalRewardEpochs = append(historicalRewardEpochs, historicalRewardEpoch)
 		}
 		genesisReward.HistoricalReward = historicalRewards
-		genesisReward.HistoricalRewardEpoch = historicalRewardEpochs
 		genesisRewards = append(genesisRewards, genesisReward)
 	}
 	return genesisRewards
@@ -701,6 +694,8 @@ func (k Keeper) AddHistoricalReward(ctx sdk.Context, historicalReward types.Hist
 		ctx.Logger().Info(fmt.Sprintf("historical reward is already exist. Denom/Duration/Period = %s/%ds/%d", denom, lockDuration, period))
 	}
 
+	historicalReward.Period = period
+	historicalReward.LastEligibleEpoch = uint64(epochNumber)
 	bz, err := proto.Marshal(&historicalReward)
 	if err != nil {
 		return err

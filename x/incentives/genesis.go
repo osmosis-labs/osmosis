@@ -25,8 +25,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		if err != nil {
 			panic(err)
 		}
-		for i := uint64(1); i < currentReward.Period; i++ {
-			err := k.AddHistoricalReward(ctx, genesisReward.HistoricalReward[i-1], denom, duration, i, int64(genesisReward.HistoricalRewardEpoch[i-1]))
+		for _, historicalReward := range genesisReward.HistoricalReward {
+			err := k.AddHistoricalReward(ctx, historicalReward, denom, duration, historicalReward.Period, int64(historicalReward.LastEligibleEpoch))
 			if err != nil {
 				panic(err)
 			}
