@@ -61,6 +61,12 @@ message CurrentReward {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  string denom = 5;
+  google.protobuf.Duration duration = 6 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
 }
 
 message PeriodLockReward {

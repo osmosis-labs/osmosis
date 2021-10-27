@@ -577,6 +577,8 @@ func (k Keeper) SetCurrentReward(ctx sdk.Context, currentReward types.CurrentRew
 	store := ctx.KVStore(k.storeKey)
 	rewardKey := combineKeys(types.KeyCurrentReward, []byte(denom), []byte(lockDuration.String()))
 
+	currentReward.Denom = denom
+	currentReward.Duration = lockDuration
 	bz, err := proto.Marshal(&currentReward)
 	if err != nil {
 		return err
@@ -585,6 +587,49 @@ func (k Keeper) SetCurrentReward(ctx sdk.Context, currentReward types.CurrentRew
 	store.Set(rewardKey, bz)
 
 	return nil
+}
+
+func (k Keeper) GetGenesisRewards(ctx sdk.Context) []types.GenesisReward {
+	var genesisRewards []types.GenesisReward
+	for _, currentReward := range k.GetAllCurrentReward(ctx) {
+		denom := currentReward.Denom
+		duration := currentReward.Duration
+		genesisReward := types.GenesisReward{}
+		genesisReward.CurrentReward = currentReward
+		var historicalRewards []types.HistoricalReward
+		var historicalRewardEpochs []uint64
+		for i := uint64(1); i < currentReward.Period; i++ {
+			historicalReward, err := k.GetHistoricalReward(ctx, denom, duration, i)
+			if err != nil || historicalReward.CummulativeRewardRatio == nil {
+				continue
+			}
+			historicalRewardEpoch, err := k.getHistoricalRewardPeriodByEpoch(ctx, denom, duration, int64(i))
+			if err != nil {
+				continue
+			}
+			historicalRewards = append(historicalRewards, historicalReward)
+			historicalRewardEpochs = append(historicalRewardEpochs, historicalRewardEpoch)
+		}
+		genesisReward.HistoricalReward = historicalRewards
+		genesisReward.HistoricalRewardEpoch = historicalRewardEpochs
+		genesisRewards = append(genesisRewards, genesisReward)
+	}
+	return genesisRewards
+}
+
+func (k Keeper) GetAllCurrentReward(ctx sdk.Context) []types.CurrentReward {
+	iterator := k.iterator(ctx, types.KeyCurrentReward)
+	currentRewards := []types.CurrentReward{}
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		currentReward := types.CurrentReward{}
+		err := proto.Unmarshal(iterator.Value(), &currentReward)
+		if err != nil {
+			panic(err)
+		}
+		currentRewards = append(currentRewards, currentReward)
+	}
+	return currentRewards
 }
 
 func (k Keeper) GetCurrentReward(ctx sdk.Context, denom string, lockDuration time.Duration) (types.CurrentReward, error) {
@@ -708,6 +753,21 @@ func (k Keeper) clearPeriodLockReward(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	rewardKey := combineKeys(types.KeyPeriodLockReward, sdk.Uint64ToBigEndian(id))
 	store.Delete(rewardKey)
+}
+
+func (k Keeper) GetAllPeriodLockReward(ctx sdk.Context) []types.PeriodLockReward {
+	iterator := k.iterator(ctx, types.KeyPeriodLockReward)
+	periodLockRewards := []types.PeriodLockReward{}
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		periodLockReward := types.PeriodLockReward{}
+		err := proto.Unmarshal(iterator.Value(), &periodLockReward)
+		if err != nil {
+			panic(err)
+		}
+		periodLockRewards = append(periodLockRewards, periodLockReward)
+	}
+	return periodLockRewards
 }
 
 func (k Keeper) GetPeriodLockReward(ctx sdk.Context, id uint64) (types.PeriodLockReward, error) {
