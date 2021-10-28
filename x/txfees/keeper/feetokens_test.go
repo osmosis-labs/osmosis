@@ -6,7 +6,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestBaseDenom() {
-	suite.SetupTest()
+	suite.SetupTest(false)
 
 	// Test getting basedenom (should be default from genesis)
 	baseDenom, err := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestBaseDenom() {
 }
 
 func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
-	suite.SetupTest()
+	suite.SetupTest(false)
 
 	uionPoolId := suite.PreparePoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
@@ -104,15 +104,7 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 		feeTokensBefore := suite.app.TxFeesKeeper.GetFeeTokens(suite.ctx)
 
 		// Add a new whitelisted fee token via a governance proposal
-		upgradeProp := types.NewUpdateFeeTokenProposal(
-			"Test Proposal",
-			"test",
-			types.FeeToken{
-				Denom:  tc.feeToken,
-				PoolID: tc.poolId,
-			},
-		)
-		err := suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
+		err := suite.ExecuteUpgradeFeeTokenProposal(tc.feeToken, tc.poolId)
 
 		feeTokensAfter := suite.app.TxFeesKeeper.GetFeeTokens(suite.ctx)
 
@@ -160,7 +152,7 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 }
 
 func (suite *KeeperTestSuite) TestFeeTokenConversions() {
-	suite.SetupTest()
+	suite.SetupTest(false)
 
 	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
 
@@ -207,22 +199,14 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 	}
 
 	for _, tc := range tests {
-		suite.SetupTest()
+		suite.SetupTest(false)
 
 		poolId := suite.PreparePoolWithAssets(
 			tc.baseDenomPoolInput,
 			tc.feeTokenPoolInput,
 		)
 
-		upgradeProp := types.NewUpdateFeeTokenProposal(
-			"Test Proposal",
-			"test",
-			types.FeeToken{
-				Denom:  tc.feeTokenPoolInput.Denom,
-				PoolID: poolId,
-			},
-		)
-		suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
+		suite.ExecuteUpgradeFeeTokenProposal(tc.feeTokenPoolInput.Denom, poolId)
 
 		converted, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, tc.inputFee)
 		if tc.expectedConvertable {

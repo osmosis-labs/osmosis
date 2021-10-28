@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -22,6 +23,8 @@ type KeeperTestSuite struct {
 	ctx sdk.Context
 	app *app.OsmosisApp
 
+	clientCtx client.Context
+
 	queryClient types.QueryClient
 }
 
@@ -31,9 +34,9 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
-func (suite *KeeperTestSuite) SetupTest() {
-	app := app.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
+	app := app.Setup(isCheckTx)
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.TxFeesKeeper)
@@ -65,6 +68,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+func (suite *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
+	upgradeProp := types.NewUpdateFeeTokenProposal(
+		"Test Proposal",
+		"test",
+		types.FeeToken{
+			Denom:  feeToken,
+			PoolID: poolId,
+		},
+	)
+	return suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
 }
 
 func (suite *KeeperTestSuite) PreparePoolWithAssets(asset1, asset2 sdk.Coin) uint64 {
