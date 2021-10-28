@@ -832,15 +832,12 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 			if err != nil {
 				return err
 			}
+			currentReward.LastProcessedEpoch = epochInfo.CurrentEpoch
+			currentReward.Period++
+			currentReward.Rewards = sdk.Coins{}
 		}
 
-		currentReward.LastProcessedEpoch = epochInfo.CurrentEpoch
-	}
-	if epochInfo.CurrentEpoch == currentReward.LastProcessedEpoch {
-		// Move to Next Period
-		currentReward.Period++
 		currentReward.Coin = sdk.NewCoin(denom, lockSum)
-		currentReward.Rewards = sdk.Coins{}
 	}
 
 	// Skip gauge process if locked amount is 0
@@ -942,10 +939,7 @@ func (k Keeper) CalculateRewardForLock(ctx sdk.Context, lock lockuptypes.PeriodL
 				return err
 			}
 		} else {
-			targetPeriod = currentReward.Period // last updated historical reward
-			if epochInfo.CurrentEpoch != currentReward.LastProcessedEpoch {
-				targetPeriod--
-			}
+			targetPeriod = currentReward.Period - 1 // last updated historical reward
 		}
 		period, ok := lockReward.Period[lockRewardKey]
 		if ok {
@@ -1001,6 +995,8 @@ func (k Keeper) UpdateHistoricalReward(ctx sdk.Context, lockedCoins sdk.Coins, l
 					return err
 				}
 				currentReward.LastProcessedEpoch = epochInfo.CurrentEpoch
+				currentReward.Period++
+				currentReward.Rewards = sdk.Coins{}
 				err = k.SetCurrentReward(ctx, currentReward, denom, lockableDuration)
 				if err != nil {
 					return err
