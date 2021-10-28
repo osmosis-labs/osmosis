@@ -60,3 +60,57 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	})
 	suite.Require().Equal(accum.String(), "20")
 }
+
+func (suite *KeeperTestSuite) TestMsgBeginPartialUnlocking() {
+	suite.SetupTest()
+
+	// initial check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check locks
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks[0].EndTime, time.Time{})
+	suite.Require().Equal(locks[0].IsUnlocking(), false)
+
+	// 1st begin partial unlocking
+	msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
+	_, err = msgServer.BeginPartialUnlocking(sdk.WrapSDKContext(suite.ctx), types.NewMsgBeginPartialUnlocking(addr1, 1, sdk.Coins{sdk.NewInt64Coin("stake", 1)}))
+	suite.Require().NoError(err)
+
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+
+	// check locks
+	suite.Require().Len(locks, 2)
+	suite.Require().Equal(locks[0].EndTime, time.Time{})
+	suite.Require().Equal(locks[0].IsUnlocking(), false)
+	suite.Require().Equal(locks[0].Coins.AmountOf("stake"), sdk.NewInt(9))
+	suite.Require().NotEqual(locks[1].EndTime, time.Time{})
+	suite.Require().Equal(locks[1].IsUnlocking(), true)
+	suite.Require().Equal(locks[1].Coins.AmountOf("stake"), sdk.NewInt(1))
+
+	// 2nd begin partial unlocking (all amount)
+	_, err = msgServer.BeginPartialUnlocking(sdk.WrapSDKContext(suite.ctx), types.NewMsgBeginPartialUnlocking(addr1, 1, sdk.Coins{sdk.NewInt64Coin("stake", 9)}))
+	suite.Require().NoError(err)
+
+	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+
+	// check locks
+	suite.Require().Len(locks, 2)
+	suite.Require().NotEqual(locks[0].EndTime, time.Time{})
+	suite.Require().Equal(locks[0].IsUnlocking(), true)
+	suite.Require().Equal(locks[0].Coins.AmountOf("stake"), sdk.NewInt(9))
+	suite.Require().NotEqual(locks[1].EndTime, time.Time{})
+	suite.Require().Equal(locks[1].IsUnlocking(), true)
+	suite.Require().Equal(locks[1].Coins.AmountOf("stake"), sdk.NewInt(1))
+}
