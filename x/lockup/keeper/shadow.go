@@ -188,6 +188,9 @@ func (k Keeper) DeleteAllMaturedShadowLocks(ctx sdk.Context) {
 		if err != nil {
 			panic(err)
 		}
-		k.DeleteShadowLockup(ctx, shadowLock.LockId, shadowLock.Shadow)
+		err = k.DeleteShadowLockup(ctx, shadowLock.LockId, shadowLock.Shadow)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
