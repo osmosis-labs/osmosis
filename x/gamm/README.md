@@ -278,3 +278,7 @@ Swap 1 ATOM through pool 1 into at most 2.5 OSMO using MyKeyringWallet.
 ```sh
 osmosisd tx gamm swap-exact-amount-out 1000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 250000 --swap-route-pool-ids 1 --swap-route-denoms uosmo --from MyKeyringWallet
 ```
+
+# Other resources
+* [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
+* [Creating a pool with a pool file](./client/docs/create-pool.md)
