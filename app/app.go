@@ -545,6 +545,7 @@ func NewOsmosisApp(
 		NewAnteHandler(
 			app.AccountKeeper, app.BankKeeper, ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
+			app.IBCKeeper.ChannelKeeper,
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
