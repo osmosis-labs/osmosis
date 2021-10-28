@@ -652,7 +652,6 @@ func (k Keeper) addHistoricalRewardRefs(ctx sdk.Context, prefix []byte, period u
 	endKey := combineKeys(prefix, sdk.Uint64ToBigEndian(uint64(epochNumber)))
 
 	if store.Has(endKey) {
-		ctx.Logger().Debug(fmt.Sprintf("HistoricalRewardRef with period exist: %d", period))
 		return fmt.Errorf("HistoricalRewardRef with period exist: %d", period)
 	}
 
@@ -668,7 +667,6 @@ func (k Keeper) getHistoricalRewardPeriodByEpoch(ctx sdk.Context, denom string, 
 
 	bz := store.Get(rewardKey)
 	if bz == nil {
-		ctx.Logger().Debug(fmt.Sprintf("historical rewards is not present = %d", epochNumber))
 		return period, ErrHistoricalRewardNotExists
 	}
 
@@ -689,10 +687,6 @@ func (k Keeper) AddHistoricalReward(ctx sdk.Context, historicalReward types.Hist
 	store := ctx.KVStore(k.storeKey)
 	prefix := combineKeys(types.KeyHistoricalReward, []byte(denom+"/"+lockDuration.String()))
 	rewardKey := combineKeys(prefix, sdk.Uint64ToBigEndian(period))
-
-	if store.Has(rewardKey) {
-		ctx.Logger().Info(fmt.Sprintf("historical reward is already exist. Denom/Duration/Period = %s/%ds/%d", denom, lockDuration, period))
-	}
 
 	historicalReward.Period = period
 	historicalReward.LastEligibleEpoch = uint64(epochNumber)
