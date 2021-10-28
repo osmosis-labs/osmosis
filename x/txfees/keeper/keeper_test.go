@@ -67,6 +67,21 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
+func (suite *KeeperTestSuite) PreparePoolWithAssets(asset1, asset2 sdk.Coin) uint64 {
+	return suite.preparePool(
+		[]gammtypes.PoolAsset{
+			{
+				Weight: sdk.NewInt(1),
+				Token:  asset1,
+			},
+			{
+				Weight: sdk.NewInt(1),
+				Token:  asset2,
+			},
+		},
+	)
+}
+
 func (suite *KeeperTestSuite) preparePool(assets []gammtypes.PoolAsset) uint64 {
 	suite.Require().Len(assets, 2)
 
