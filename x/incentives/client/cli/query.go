@@ -351,7 +351,7 @@ $ %s query incentives rewards-estimation
 // GetCmdRewards returns current estimate of accumulated rewards
 func GetCmdRewards() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rewards",
+		Use:   "rewards [owner-addr]",
 		Short: "Query rewards estimation by combining both current and historical rewards",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query rewards estimation.
@@ -409,7 +409,7 @@ $ %s query incentives rewards [owner-addr]
 
 func GetCurrentReward() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "current-reward",
+		Use:   "current-reward [denom] [lockable-duration]",
 		Short: "Query current reward",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query current reward.
@@ -454,7 +454,7 @@ $ %s query incentives current-reward [denom] [lockable-duration]
 
 func GetHistoricalReward() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "historical-reward",
+		Use:   "historical-reward [denom] [lockable-duration] [period]",
 		Short: "Query historical reward",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query historical reward.
@@ -502,7 +502,7 @@ $ %s query incentives historical-reward [denom] [lockable-duration] [period]
 
 func GetPeriodLockReward() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "period-lock-reward",
+		Use:   "period-lock-reward [id]",
 		Short: "Query period lock reward",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query period lock reward.
