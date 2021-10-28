@@ -8,8 +8,6 @@ import (
 )
 
 // TODO: add test for ResetAllShadowLocks
-// TODO: add test for querying shadow denoms
-// TODO: add test for querying non-shadow queries after adding shadows
 
 func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	suite.SetupTest()
@@ -32,6 +30,52 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 		Duration:      time.Second,
 	})
 	suite.Require().Equal(accum.String(), "10")
+
+	// check queries for native denom before shadow
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stake", time.Second)
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stake", time.Second)
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second)
+	suite.Require().Len(locks, 1)
+	amount := suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stake", time.Second)
+	suite.Require().Equal(amount.String(), "10")
+
+	// check queries for shadow denom before shadow
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stakestakedtovalidator1", suite.ctx.BlockTime())
+	suite.Require().Len(locks, 0)
+	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
+	suite.Require().Len(locks, 0)
+	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
+	suite.Require().Len(locks, 0)
+	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stakestakedtovalidator1", suite.ctx.BlockTime())
+	suite.Require().Len(locks, 0)
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
+	suite.Require().Len(locks, 0)
+	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
+	suite.Require().Equal(amount.String(), "0")
+
+	// check non-denom related queries before shadow
+	moduleBalance := suite.app.LockupKeeper.GetModuleBalance(suite.ctx)
+	suite.Require().Equal(moduleBalance.String(), "10stake")
+	moduleLockedCoins := suite.app.LockupKeeper.GetModuleLockedCoins(suite.ctx)
+	suite.Require().Equal(moduleLockedCoins.String(), "10stake")
+	accountUnlockableCoins := suite.app.LockupKeeper.GetAccountUnlockableCoins(suite.ctx, addr1)
+	suite.Require().Equal(accountUnlockableCoins.String(), "")
+	accountUnlockingCoins := suite.app.LockupKeeper.GetAccountUnlockingCoins(suite.ctx, addr1)
+	suite.Require().Equal(accountUnlockingCoins.String(), "")
+	accountLockedCoins := suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
+	suite.Require().Equal(accountLockedCoins.String(), "10stake")
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTime(suite.ctx, addr1, suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeNotUnlockingOnly(suite.ctx, addr1, suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
+	suite.Require().Len(locks, 0)
 
 	err = suite.app.LockupKeeper.CreateShadowLockup(suite.ctx, 1, "stakedtovalidator1", false)
 	suite.Require().NoError(err)
@@ -59,6 +103,52 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 		Duration:      time.Second,
 	})
 	suite.Require().Equal(accum.String(), "10")
+
+	// check queries for native denom after shadow
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stake", time.Second)
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stake", time.Second)
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second)
+	suite.Require().Len(locks, 1)
+	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stake", time.Second)
+	suite.Require().Equal(amount.String(), "10")
+
+	// check queries for shadow denom after shadow
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stakestakedtovalidator1", suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stakestakedtovalidator1", suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
+	suite.Require().Len(locks, 1)
+	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
+	suite.Require().Equal(amount.String(), "10")
+
+	// check non-denom related queries after shadow
+	moduleBalance = suite.app.LockupKeeper.GetModuleBalance(suite.ctx)
+	suite.Require().Equal(moduleBalance.String(), "10stake")
+	moduleLockedCoins = suite.app.LockupKeeper.GetModuleLockedCoins(suite.ctx)
+	suite.Require().Equal(moduleLockedCoins.String(), "10stake")
+	accountUnlockableCoins = suite.app.LockupKeeper.GetAccountUnlockableCoins(suite.ctx, addr1)
+	suite.Require().Equal(accountUnlockableCoins.String(), "")
+	accountUnlockingCoins = suite.app.LockupKeeper.GetAccountUnlockingCoins(suite.ctx, addr1)
+	suite.Require().Equal(accountUnlockingCoins.String(), "")
+	accountLockedCoins = suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
+	suite.Require().Equal(accountLockedCoins.String(), "10stake")
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTime(suite.ctx, addr1, suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeNotUnlockingOnly(suite.ctx, addr1, suite.ctx.BlockTime())
+	suite.Require().Len(locks, 1)
+	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
+	suite.Require().Len(locks, 0)
 
 	err = suite.app.LockupKeeper.DeleteShadowLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
