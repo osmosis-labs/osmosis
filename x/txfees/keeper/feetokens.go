@@ -60,12 +60,16 @@ func (k Keeper) SetBaseDenom(ctx sdk.Context, denom string) error {
 // ValidateFeeToken validates that a fee token record is valid
 // It checks:
 // - The denom exists
+// - The denom is not the base denom
 // - The gamm pool exists
 // - The gamm pool includes the base token and fee token
 func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
+	}
+	if baseDenom == feeToken.Denom {
+		return sdkerrors.Wrap(types.ErrInvalidFeeToken, "cannot add basedenom as a whitelisted fee token")
 	}
 	// This not returning an error implies that:
 	// - feeToken.Denom exists

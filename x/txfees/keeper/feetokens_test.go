@@ -16,110 +16,221 @@ func (suite *KeeperTestSuite) TestBaseDenom() {
 	converted, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 	suite.Require().True(converted.IsEqual(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))
 	suite.Require().NoError(err)
-
 }
 
-func (suite *KeeperTestSuite) TestFeeTokens() {
+func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 	suite.SetupTest()
 
-	// Make sure there's no external whitelisted fee tokens at launch
-	feeTokens := suite.app.TxFeesKeeper.GetFeeTokens(suite.ctx)
-	suite.Require().Len(feeTokens, 0)
-
-	// Create a pool with basedenom and uion
 	uionPoolId := suite.PreparePoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("uion", 500),
 	)
 
-	// Add a new whitelisted fee token via a governance proposal
-	upgradeProp := types.NewUpdateFeeTokenProposal(
-		"Test Proposal",
-		"test",
-		types.FeeToken{
-			Denom:  "uion",
-			PoolID: uionPoolId,
-		},
+	uionPoolId2 := suite.PreparePoolWithAssets(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
+		sdk.NewInt64Coin("uion", 500),
 	)
-	err := suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
-	suite.Require().NoError(err)
-
-	// Check to make sure length of whitelisted fee tokens increased
-	feeTokens = suite.app.TxFeesKeeper.GetFeeTokens(suite.ctx)
-	suite.Require().Len(feeTokens, 1)
-
-	// Make sure new fee token was set correct and is convertable
-	suite.Require().Equal("uion", feeTokens[0].Denom)
-	suite.Require().NoError(suite.app.TxFeesKeeper.ValidateFeeToken(suite.ctx, feeTokens[0]))
-	converted, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin("uion", 10))
-	suite.Require().NoError(err)
-	suite.Require().True(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10).IsEqual(converted))
-	queriedPoolId, err := suite.queryClient.DenomPoolId(suite.ctx.Context(),
-		&types.QueryDenomPoolIdRequest{
-			Denom: "uion",
-		},
-	)
-	suite.Require().Equal(uionPoolId, queriedPoolId.GetPoolID())
-
-	// Upgrade proposal for non-existent pool
-	upgradeProp = types.NewUpdateFeeTokenProposal(
-		"Test Proposal 2",
-		"test",
-		types.FeeToken{
-			Denom:  "foo",
-			PoolID: 5,
-		},
-	)
-	err = suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
-	suite.Require().Error(err)
-
-	// Upgrade proposal with wrong pool
-	upgradeProp = types.NewUpdateFeeTokenProposal(
-		"Test Proposal 3",
-		"test",
-		types.FeeToken{
-			Denom:  "foo",
-			PoolID: uionPoolId,
-		},
-	)
-	err = suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
-	suite.Require().Error(err)
 
 	// Make pool with fee token but no OSMO and make sure governance proposal fails
-	badPoolId := suite.PreparePoolWithAssets(
+	noBasePoolId := suite.PreparePoolWithAssets(
 		sdk.NewInt64Coin("uion", 500),
 		sdk.NewInt64Coin("foo", 500),
 	)
 
-	upgradeProp = types.NewUpdateFeeTokenProposal(
-		"Test Proposal 4",
-		"test",
-		types.FeeToken{
-			Denom:  "foo",
-			PoolID: badPoolId,
-		},
-	)
-	err = suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
-	suite.Require().Error(err)
-
 	// Create correct pool and governance proposal
 	fooPoolId := suite.PreparePoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
-		sdk.NewInt64Coin("foo", 500),
+		sdk.NewInt64Coin("foo", 1000),
 	)
-	upgradeProp = types.NewUpdateFeeTokenProposal(
-		"Test Proposal 5",
-		"test",
-		types.FeeToken{
-			Denom:  "foo",
-			PoolID: fooPoolId,
-		},
-	)
-	err = suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
-	suite.Require().NoError(err)
 
-	// Make sure there's two whitelisted fee tokens
-	responseFeeTokens, err := suite.queryClient.FeeTokens(suite.ctx.Context(), &types.QueryFeeTokensRequest{})
-	suite.Require().Len(responseFeeTokens.FeeTokens, 2)
-	suite.Require().NoError(err)
+	tests := []struct {
+		name       string
+		feeToken   string
+		poolId     uint64
+		expectPass bool
+	}{
+		{
+			name:       "uion pool",
+			feeToken:   "uion",
+			poolId:     uionPoolId,
+			expectPass: true,
+		},
+		{
+			name:       "try with basedenom",
+			feeToken:   sdk.DefaultBondDenom,
+			poolId:     uionPoolId,
+			expectPass: false,
+		},
+		{
+			name:       "proposal with non-existent pool",
+			feeToken:   "foo",
+			poolId:     100000000000,
+			expectPass: false,
+		},
+		{
+			name:       "proposal with wrong pool for fee token",
+			feeToken:   "foo",
+			poolId:     uionPoolId,
+			expectPass: false,
+		},
+		{
+			name:       "proposal with pool with no base denom",
+			feeToken:   "foo",
+			poolId:     noBasePoolId,
+			expectPass: false,
+		},
+		{
+			name:       "proposal to add foo correctly",
+			feeToken:   "foo",
+			poolId:     fooPoolId,
+			expectPass: true,
+		},
+		{
+			name:       "proposal to replace pool for fee token",
+			feeToken:   "uion",
+			poolId:     uionPoolId2,
+			expectPass: true,
+		},
+		{
+			name:       "proposal to replace uion as fee denom",
+			feeToken:   "uion",
+			poolId:     0,
+			expectPass: true,
+		},
+	}
+
+	for _, tc := range tests {
+
+		feeTokensBefore := suite.app.TxFeesKeeper.GetFeeTokens(suite.ctx)
+
+		// Add a new whitelisted fee token via a governance proposal
+		upgradeProp := types.NewUpdateFeeTokenProposal(
+			"Test Proposal",
+			"test",
+			types.FeeToken{
+				Denom:  tc.feeToken,
+				PoolID: tc.poolId,
+			},
+		)
+		err := suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
+
+		feeTokensAfter := suite.app.TxFeesKeeper.GetFeeTokens(suite.ctx)
+
+		if tc.expectPass {
+			// Make sure no error during setting of proposal
+			suite.Require().NoError(err, "test: %s", tc.name)
+
+			// For a proposal that adds a feetoken
+			if tc.poolId != 0 {
+				// Make sure the length of fee tokens is >= before
+				suite.Require().GreaterOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
+				// Ensure that the fee token is convertable to base token
+				_, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(tc.feeToken, 10))
+				suite.Require().NoError(err, "test: %s", tc.name)
+				// make sure the queried poolId is the same as expected
+				queriedPoolId, err := suite.queryClient.DenomPoolId(suite.ctx.Context(),
+					&types.QueryDenomPoolIdRequest{
+						Denom: tc.feeToken,
+					},
+				)
+				suite.Require().NoError(err, "test: %s", tc.name)
+				suite.Require().Equal(tc.poolId, queriedPoolId.GetPoolID(), "test: %s", tc.name)
+			} else {
+				// if this proposal deleted a fee token
+				// ensure that the length of fee tokens is <= to before
+				suite.Require().LessOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
+				// Ensure that the fee token is not convertable to base token
+				_, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(tc.feeToken, 10))
+				suite.Require().Error(err, "test: %s", tc.name)
+				// make sure the queried poolId errors
+				_, err = suite.queryClient.DenomPoolId(suite.ctx.Context(),
+					&types.QueryDenomPoolIdRequest{
+						Denom: tc.feeToken,
+					},
+				)
+				suite.Require().Error(err, "test: %s", tc.name)
+			}
+		} else {
+			// Make sure errors during setting of proposal
+			suite.Require().Error(err, "test: %s", tc.name)
+			// fee tokens should be the same
+			suite.Require().Equal(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
+		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestFeeTokenConversions() {
+	suite.SetupTest()
+
+	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
+
+	tests := []struct {
+		name                string
+		baseDenomPoolInput  sdk.Coin
+		feeTokenPoolInput   sdk.Coin
+		inputFee            sdk.Coin
+		expectedConvertable bool
+		expectedOutput      sdk.Coin
+	}{
+		{
+			name:                "equal value",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:   sdk.NewInt64Coin("uion", 100),
+			inputFee:            sdk.NewInt64Coin("uion", 10),
+			expectedOutput:      sdk.NewInt64Coin(baseDenom, 10),
+			expectedConvertable: true,
+		},
+		{
+			name:                "unequal value",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:   sdk.NewInt64Coin("foo", 200),
+			inputFee:            sdk.NewInt64Coin("foo", 10),
+			expectedOutput:      sdk.NewInt64Coin(baseDenom, 20),
+			expectedConvertable: true,
+		},
+		{
+			name:                "basedenom value",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:   sdk.NewInt64Coin("foo", 200),
+			inputFee:            sdk.NewInt64Coin(baseDenom, 10),
+			expectedOutput:      sdk.NewInt64Coin(baseDenom, 10),
+			expectedConvertable: true,
+		},
+		{
+			name:                "convert non-existent",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:   sdk.NewInt64Coin("uion", 200),
+			inputFee:            sdk.NewInt64Coin("foo", 10),
+			expectedOutput:      sdk.Coin{},
+			expectedConvertable: false,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.SetupTest()
+
+		poolId := suite.PreparePoolWithAssets(
+			tc.baseDenomPoolInput,
+			tc.feeTokenPoolInput,
+		)
+
+		upgradeProp := types.NewUpdateFeeTokenProposal(
+			"Test Proposal",
+			"test",
+			types.FeeToken{
+				Denom:  tc.feeTokenPoolInput.Denom,
+				PoolID: poolId,
+			},
+		)
+		suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
+
+		converted, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, tc.inputFee)
+		if tc.expectedConvertable {
+			suite.Require().NoError(err, "test: %s", tc.name)
+			suite.Require().True(converted.IsEqual(tc.expectedOutput), "test: %s", tc.name)
+		} else {
+			suite.Require().Error(err, "test: %s", tc.name)
+		}
+	}
+
 }

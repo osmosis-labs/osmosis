@@ -60,9 +60,12 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
 	if ctx.IsCheckTx() && !simulate {
 		minGasPrices := ctx.MinGasPrices()
-		baseDenomAmt := minGasPrices.AmountOf(baseDenom)
-		if !(baseDenomAmt.IsZero()) {
-			err = mfd.IsSufficientFees(ctx, baseDenomAmt, feeTx.GetGas(), feeCoins)
+		minBaseGasPrice := minGasPrices.AmountOf(baseDenom)
+		if !(minBaseGasPrice.IsZero()) {
+			if len(feeCoins) != 1 {
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
+			}
+			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
 			if err != nil {
 				return ctx, err
 			}
@@ -72,34 +75,23 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
-func (mfd MempoolFeeDecorator) IsSufficientFees(ctx sdk.Context, minBaseDenomGasPrice sdk.Dec, gasRequested uint64, feeCoins sdk.Coins) error {
-	baseDenom, err := mfd.TxFeesKeeper.GetBaseDenom(ctx)
-
+func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
+	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
-	}
-
-	if len(feeCoins) != 1 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
 	}
 
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 	glDec := sdk.NewDec(int64(gasRequested))
-	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseDenomGasPrice.Mul(glDec).Ceil().RoundInt())
+	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
 
-	if feeCoins[0].Denom == baseDenom {
-		if !(feeCoins[0].IsGTE(requiredBaseFee)) {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredBaseFee)
-		}
-	} else {
-		convertedFee, err := mfd.TxFeesKeeper.ConvertToBaseToken(ctx, feeCoins[0])
-		if err != nil {
-			return err
-		}
-		if !(convertedFee.IsGTE(requiredBaseFee)) {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoins, convertedFee, requiredBaseFee)
-		}
+	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
+	if err != nil {
+		return err
+	}
+	if !(convertedFee.IsGTE(requiredBaseFee)) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
 	}
 
 	return nil
