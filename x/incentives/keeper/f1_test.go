@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestF1Distribute() {
 
 	prevHistoricalReward, err := suite.app.IncentivesKeeper.GetHistoricalReward(suite.ctx, denom, duration, currentReward.Period-1)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewInt64DecCoin("stake", 100), prevHistoricalReward.CummulativeRewardRatio[0])
+	suite.Require().Equal(sdk.NewInt64DecCoin("stake", 100), prevHistoricalReward.CumulativeRewardRatio[0])
 }
 
 func (suite *KeeperTestSuite) setupEpochAndLockableDurations() (time.Time, int64) {

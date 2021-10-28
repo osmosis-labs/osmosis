@@ -173,7 +173,9 @@ func (k Keeper) HistoricalReward(ctx context.Context, req *types.HistoricalRewar
 	res, err := k.GetHistoricalReward(sdkCtx, req.Denom, req.LockableDurations, uint64(req.Period))
 
 	return &types.HistoricalRewardResponse{
-		CumulativeRewardRatio: res.CummulativeRewardRatio,
+		CumulativeRewardRatio: res.CumulativeRewardRatio,
+		Period:                res.Period,
+		LastEligibleEpoch:     res.LastEligibleEpoch,
 	}, err
 }
 

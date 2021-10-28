@@ -714,7 +714,7 @@ func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration 
 	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom+"/"+lockDuration.String()), sdk.Uint64ToBigEndian(period))
 
 	if period == 0 {
-		historicalReward.CummulativeRewardRatio = sdk.DecCoins{}
+		historicalReward.CumulativeRewardRatio = sdk.DecCoins{}
 		return historicalReward, nil
 	}
 
@@ -874,7 +874,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward types.
 			return nil, err
 		}
 		newHistoricalReward := types.HistoricalReward{
-			CummulativeRewardRatio: prevHistoricalReward.CummulativeRewardRatio,
+			CumulativeRewardRatio: prevHistoricalReward.CumulativeRewardRatio,
 		}
 
 		for _, coin := range currentReward.Rewards {
@@ -888,7 +888,7 @@ func (k Keeper) CalculateHistoricalRewards(ctx sdk.Context, currentReward types.
 				currRewardPerShare = totalReward.Quo(totalStakes.ToDec())
 			}
 
-			newHistoricalReward.CummulativeRewardRatio = newHistoricalReward.CummulativeRewardRatio.Add(sdk.NewDecCoinFromDec(coin.Denom, currRewardPerShare))
+			newHistoricalReward.CumulativeRewardRatio = newHistoricalReward.CumulativeRewardRatio.Add(sdk.NewDecCoinFromDec(coin.Denom, currRewardPerShare))
 		}
 
 		return &newHistoricalReward, nil
@@ -907,7 +907,7 @@ func (k Keeper) CalculateRewardBetweenPeriod(ctx sdk.Context, denom string, dura
 	if err != nil {
 		return totalReward, err
 	}
-	accumReward := targetHistoricalReward.CummulativeRewardRatio.Sub(prevHistoricalReward.CummulativeRewardRatio)
+	accumReward := targetHistoricalReward.CumulativeRewardRatio.Sub(prevHistoricalReward.CumulativeRewardRatio)
 	for _, decCoin := range accumReward {
 		if decCoin.IsPositive() {
 			reward := decCoin.Amount.Mul(amount.ToDec()).TruncateInt()
@@ -1102,7 +1102,7 @@ func (k Keeper) EstimateLockReward(ctx sdk.Context, lock lockuptypes.PeriodLock)
 					return types.PeriodLockReward{}, err
 				}
 
-				estDecCoins := historicalReward.CummulativeRewardRatio.Sub(prevHistoricalReward.CummulativeRewardRatio).MulDec(coin.Amount.ToDec())
+				estDecCoins := historicalReward.CumulativeRewardRatio.Sub(prevHistoricalReward.CumulativeRewardRatio).MulDec(coin.Amount.ToDec())
 				for _, decCoin := range estDecCoins {
 					estCoin := sdk.NewCoin(decCoin.Denom, decCoin.Amount.TruncateInt())
 					lockReward.Rewards = lockReward.Rewards.Add(estCoin)

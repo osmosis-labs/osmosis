@@ -64,14 +64,17 @@ service Query {
         "/osmosis/incentives/v1beta1/lockable_durations";
   }
 
+  // returns CurrentReward in this epoch
   rpc CurrentReward(CurrentRewardRequest) returns (CurrentRewardResponse) {
     option (google.api.http).get = "/osmosis/incentives/v1beta1/current_reward";
   }
+  // returns HistoricalReward with given period
   rpc HistoricalReward(HistoricalRewardRequest)
       returns (HistoricalRewardResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/historical_reward";
   }
+  // returns PeriodLockReward with given lockID
   rpc PeriodLockReward(PeriodLockRewardRequest)
       returns (PeriodLockRewardResponse) {
     option (google.api.http).get =
@@ -192,6 +195,8 @@ message HistoricalRewardResponse {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
+  uint64 period = 2;
+  uint64 last_eligible_epoch = 3;
 }
 
 message PeriodLockRewardRequest { uint64 id = 1; }

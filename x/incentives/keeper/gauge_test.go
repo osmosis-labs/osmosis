@@ -536,20 +536,20 @@ func (suite *KeeperTestSuite) TestCalculateHistoricalRewards() {
 
 	prevCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000))
 	prevHistoricalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
+		CumulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
 	}
 	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, uint64(lastProcessedEpoch), (epochInfo.CurrentEpoch - 1))
 
 	expectedCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000+10))
 	expectedHistoricalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(expectedCummulativeReward),
+		CumulativeRewardRatio: sdk.NewDecCoins(expectedCummulativeReward),
 	}
 	resultHistoricalReward, err := k.CalculateHistoricalRewards(suite.ctx, currentReward, "stake", duration, epochInfo)
 	suite.Require().NoError(err)
 	suite.Require().Equal(*resultHistoricalReward, expectedHistoricalReward)
 
 	resultAmount := prevCummulativeReward.Amount.Add(rewardCoin.Amount.ToDec().Quo(totalStake.Amount.ToDec()))
-	suite.Require().Equal(resultHistoricalReward.CummulativeRewardRatio, sdk.NewDecCoins(sdk.NewDecCoinFromDec("reward", resultAmount)))
+	suite.Require().Equal(resultHistoricalReward.CumulativeRewardRatio, sdk.NewDecCoins(sdk.NewDecCoinFromDec("reward", resultAmount)))
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardBetweenPeriod() {
@@ -557,13 +557,13 @@ func (suite *KeeperTestSuite) TestCalculateRewardBetweenPeriod() {
 	duration := k.GetLockableDurations(suite.ctx)[0]
 	prevCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000))
 	prevHistoricalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
+		CumulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
 	}
 	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, 1, 1)
 
 	currCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(2000))
 	currHistoricalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(currCummulativeReward),
+		CumulativeRewardRatio: sdk.NewDecCoins(currCummulativeReward),
 	}
 	k.AddHistoricalReward(suite.ctx, currHistoricalReward, "stake", duration, 10, 100)
 
@@ -598,14 +598,14 @@ func (suite *KeeperTestSuite) TestCalculateRewardForLock() {
 
 	prevCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(1000))
 	prevHistoricalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
+		CumulativeRewardRatio: sdk.NewDecCoins(prevCummulativeReward),
 	}
 	k.AddHistoricalReward(suite.ctx, prevHistoricalReward, "stake", duration, 1, 1)
 	lockReward.Period["stake/"+duration.String()] = 1
 
 	currCummulativeReward := sdk.NewDecCoin("reward", sdk.NewInt(2000))
 	currHistoricalReward := types.HistoricalReward{
-		CummulativeRewardRatio: sdk.NewDecCoins(currCummulativeReward),
+		CumulativeRewardRatio: sdk.NewDecCoins(currCummulativeReward),
 	}
 	k.AddHistoricalReward(suite.ctx, currHistoricalReward, "stake", duration, 10, 100)
 	expectedAmount := sdk.NewInt((2000 - 1000) * 100)

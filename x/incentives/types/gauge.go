@@ -35,9 +35,9 @@ func (gauge Gauge) IsFinishedGauge(curTime time.Time) bool {
 	return !gauge.IsUpcomingGauge(curTime) && !gauge.IsActiveGauge(curTime)
 }
 
-func NewHistoricalReward(cummulativeRewardRatio sdk.DecCoins) HistoricalReward {
+func NewHistoricalReward(cumulativeRewardRatio sdk.DecCoins) HistoricalReward {
 	return HistoricalReward{
-		CummulativeRewardRatio: cummulativeRewardRatio,
+		CumulativeRewardRatio: cumulativeRewardRatio,
 	}
 }
 
