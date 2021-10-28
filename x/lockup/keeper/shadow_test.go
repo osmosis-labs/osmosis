@@ -7,8 +7,6 @@ import (
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-// TODO: add test for ResetAllShadowLocks
-
 func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	suite.SetupTest()
 
@@ -248,4 +246,66 @@ func (suite *KeeperTestSuite) TestShadowLockupDeleteAllMaturedShadowLocks() {
 	suite.Require().NoError(err)
 	_, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator2")
 	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) TestResetAllShadowLocks() {
+	suite.SetupTest()
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check locks
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks[0].Coins, coins)
+
+	suite.app.LockupKeeper.ResetAllShadowLocks(suite.ctx, []types.ShadowLock{
+		{
+			LockId:  1,
+			Shadow:  "stakedtovalidator1",
+			EndTime: time.Time{},
+		},
+		{
+			LockId:  1,
+			Shadow:  "stakedtovalidator2",
+			EndTime: suite.ctx.BlockTime().Add(time.Second),
+		},
+	})
+
+	shadowLock, err := suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	suite.Require().NoError(err)
+	suite.Require().Equal(*shadowLock, types.ShadowLock{
+		LockId:  1,
+		Shadow:  "stakedtovalidator1",
+		EndTime: time.Time{},
+	})
+	shadowLock, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator2")
+	suite.Require().NoError(err)
+	suite.Require().Equal(*shadowLock, types.ShadowLock{
+		LockId:  1,
+		Shadow:  "stakedtovalidator2",
+		EndTime: suite.ctx.BlockTime().Add(time.Second),
+	})
+
+	accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
+	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stakestakedtovalidator1",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
+	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stakestakedtovalidator2",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
 }
