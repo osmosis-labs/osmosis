@@ -323,3 +323,57 @@ func (suite *KeeperTestSuite) TestMultipleLocksFromMultipleUsers() {
 	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("lptoken", 10), sdk.NewInt64Coin("stake", 150)), user1Bal)
 	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("lptoken", 10), sdk.NewInt64Coin("stake", 1850)), user2Bal)
 }
+
+func (suite *KeeperTestSuite) TestInactiveGauge() {
+	now, height := suite.setupEpochAndLockableDurations()
+	suite.nextEpoch(&now, &height)
+
+	//new non-perpetual gauge
+	owner := sdk.AccAddress(OwnerAddr)
+	denom, _ := suite.setupNonPerpetualGauge(owner, now, SevenDaysDuration)
+
+	suite.nextBlock(&now, &height)
+
+	//lock
+	suite.LockTokens(owner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, FourteenDaysDuration)
+	for i := 1; i <= 10; i++ {
+		suite.nextEpoch(&now, &height)
+		currentReward, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
+		lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+		estLockReward, _ := suite.app.IncentivesKeeper.EstimateLockReward(suite.ctx, *lock)
+		stakeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, owner, "stake")
+		suite.Require().Equal(estLockReward.Rewards, currentReward.Rewards)
+		suite.Require().Equal(sdk.NewInt(0), stakeBalance.Amount)
+	}
+
+	//unlock
+	suite.app.LockupKeeper.BeginUnlockPeriodLockByID(suite.ctx, 1)
+	for i := 11; i <= 13; i++ {
+		suite.nextEpoch(&now, &height)
+		currentReward, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
+		lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+		estLockReward, _ := suite.app.IncentivesKeeper.EstimateLockReward(suite.ctx, *lock)
+		stakeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, owner, "stake")
+		suite.Require().Equal(estLockReward.Rewards, currentReward.Rewards)
+		suite.Require().Equal(sdk.NewInt(0), stakeBalance.Amount)
+	}
+
+	//inactive gauge; the lock is being unlocked
+	for i := 14; i <= 23; i++ {
+		suite.nextEpoch(&now, &height)
+		lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+		estLockReward, _ := suite.app.IncentivesKeeper.EstimateLockReward(suite.ctx, *lock)
+		stakeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, owner, "stake")
+		suite.Require().Equal(sdk.NewInt(1400), estLockReward.Rewards.AmountOf("stake"))
+		suite.Require().Equal(sdk.NewInt(0), stakeBalance.Amount)
+	}
+
+	//lock is completely unlocked, no longer exists
+	for i := 24; i <= 25; i++ {
+		suite.nextEpoch(&now, &height)
+		lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+		stakeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, owner, "stake")
+		suite.Require().Equal((*lockuptypes.PeriodLock)(nil), lock)
+		suite.Require().Equal(sdk.NewInt(1400), stakeBalance.Amount)
+	}
+}
