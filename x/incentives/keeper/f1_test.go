@@ -147,11 +147,15 @@ func (suite *KeeperTestSuite) TestLockFor1Day() {
 	//lock
 	suite.LockTokens(owner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, DayDuration)
 
-	for i := 2; i <= 15; i++ {
+	for i := 2; i <= 14; i++ {
 		suite.nextEpoch(&now, &height)
 		currentReward, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
 		suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*(i-1)))}, currentReward.Rewards)
 	}
+	//gauge is finished
+	suite.nextEpoch(&now, &height)
+	currentReward, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
+	suite.Require().Equal(sdk.Coins(nil), currentReward.Rewards)
 }
 
 func (suite *KeeperTestSuite) TestLockFor14Days() {
@@ -169,7 +173,7 @@ func (suite *KeeperTestSuite) TestLockFor14Days() {
 	//lock
 	suite.LockTokens(owner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, FourteenDaysDuration)
 
-	for i := 2; i <= 15; i++ {
+	for i := 2; i <= 14; i++ {
 		suite.nextEpoch(&now, &height)
 		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
 		currentReward7Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
@@ -178,6 +182,15 @@ func (suite *KeeperTestSuite) TestLockFor14Days() {
 		suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*(i-1)))}, currentReward7Day.Rewards)
 		suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(100*(i-1)))}, currentReward14Day.Rewards)
 	}
+	suite.nextEpoch(&now, &height)
+
+	//test gauge is finished
+	currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
+	currentReward7Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, SevenDaysDuration)
+	currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
+	suite.Require().Equal(sdk.Coins(nil), currentReward1Day.Rewards)
+	suite.Require().Equal(sdk.Coins(nil), currentReward7Day.Rewards)
+	suite.Require().Equal(sdk.Coins(nil), currentReward14Day.Rewards)
 }
 
 func (suite *KeeperTestSuite) TestLockAndUnlockFor14Days() {
