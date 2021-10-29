@@ -22,7 +22,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
@@ -334,29 +333,13 @@ Example:
 			}
 
 			// Read snapshot file
-			snapshotInput := args[0]
-			snapshotJSON, err := os.Open(snapshotInput)
-			if err != nil {
-				return err
-			}
-			defer snapshotJSON.Close()
-			byteValue, _ := ioutil.ReadAll(snapshotJSON)
-			snapshot := Snapshot{}
-			err = json.Unmarshal(byteValue, &snapshot)
+			snapshot, err := GetOsmoSnapshot(args[0])
 			if err != nil {
 				return err
 			}
 
 			// Read ions file
-			ionInput := args[1]
-			ionJSON, err := os.Open(ionInput)
-			if err != nil {
-				return err
-			}
-			defer ionJSON.Close()
-			byteValue2, _ := ioutil.ReadAll(ionJSON)
-			var ionAmts map[string]int64
-			err = json.Unmarshal(byteValue2, &ionAmts)
+			ionAmts, err := GetIonSnapshot(args[1])
 			if err != nil {
 				return err
 			}
@@ -378,17 +361,15 @@ Example:
 			}
 
 			for addr, amt := range ionAmts {
-				setCosmosBech32Prefixes()
-				address, err := sdk.AccAddressFromBech32(addr)
+				address, err := CosmosToOsmoAddress(addr)
 				if err != nil {
 					return err
 				}
-				appparams.SetAddressPrefixes()
 
-				if val, ok := nonAirdropAccs[address.String()]; ok {
-					nonAirdropAccs[address.String()] = val.Add(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
+				if val, ok := nonAirdropAccs[address]; ok {
+					nonAirdropAccs[address] = val.Add(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
 				} else {
-					nonAirdropAccs[address.String()] = sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
+					nonAirdropAccs[address] = sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
 				}
 			}
 
@@ -404,17 +385,11 @@ Example:
 
 			// for each account in the snapshot
 			for _, acc := range snapshot.Accounts {
-				// set atom bech32 prefixes
-				setCosmosBech32Prefixes()
-
-				// read address from snapshot
-				address, err := sdk.AccAddressFromBech32(acc.AtomAddress)
+				// convert cosmos address to osmo address
+				address, err := CosmosToOsmoAddress(acc.AtomAddress)
 				if err != nil {
 					return err
 				}
-
-				// set osmo bech32 prefixes
-				appparams.SetAddressPrefixes()
 
 				// skip accounts with 0 balance
 				if !acc.OsmoBalanceBase.IsPositive() {
@@ -429,13 +404,13 @@ Example:
 				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
 				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, liquidAmount))
 
-				if coins, ok := nonAirdropAccs[address.String()]; ok {
+				if coins, ok := nonAirdropAccs[address]; ok {
 					liquidCoins = liquidCoins.Add(coins...)
-					delete(nonAirdropAccs, address.String())
+					delete(nonAirdropAccs, address)
 				}
 
 				liquidBalances = append(liquidBalances, banktypes.Balance{
-					Address: address.String(),
+					Address: address,
 					Coins:   liquidCoins,
 				})
 
@@ -443,7 +418,7 @@ Example:
 				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
 
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
-					Address:                address.String(),
+					Address:                address,
 					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimableAmount)),
 					ActionCompleted:        []bool{false, false, false, false},
 				})
@@ -451,7 +426,11 @@ Example:
 				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
 
 				// Add the new account to the set of genesis accounts
-				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
+				sdkaddr, err := sdk.AccAddressFromBech32(address)
+				if err != nil {
+					return err
+				}
+				baseAccount := authtypes.NewBaseAccount(sdkaddr, nil, 0, 0)
 				if err := baseAccount.Validate(); err != nil {
 					return fmt.Errorf("failed to validate new genesis account: %w", err)
 				}
