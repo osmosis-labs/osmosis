@@ -43,6 +43,30 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 	return nil
 }
 
+// ClawbackAirdrop implements prop 32 by clawing back all the OSMO and IONs from airdrop
+// recipient accounts with a sequence number of 0
+func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
+	for bechAddr := range types.AirdropAddrs {
+		addr, err := sdk.AccAddressFromBech32(bechAddr)
+		if err != nil {
+			return err
+		}
+		seq, err := k.accountKeeper.GetSequence(ctx, addr)
+		if err != nil {
+			return err
+		}
+		if seq == 0 {
+			osmoBal := k.bankKeeper.GetBalance(ctx, addr, "uosmo")
+			ionBal := k.bankKeeper.GetBalance(ctx, addr, "uion")
+			err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(osmoBal, ionBal), addr)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // ClearClaimables clear claimable amounts
 func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)

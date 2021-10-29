@@ -19,6 +19,10 @@ type BankKeeper interface {
 type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI)
+	// Fetch the sequence of an account at a specified address.
+	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
+	// Remove an account from the store.
+	RemoveAccount(sdk.Context, types.AccountI)
 }
 
 // DistrKeeper is the keeper of the distribution store

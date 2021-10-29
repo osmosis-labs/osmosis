@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -178,6 +179,116 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetOsmoSnapshot(inputFile string) (Snapshot, error) {
+	snapshotJSON, err := os.Open(inputFile)
+	if err != nil {
+		return Snapshot{}, err
+	}
+	defer snapshotJSON.Close()
+
+	byteValue, err := ioutil.ReadAll(snapshotJSON)
+	if err != nil {
+		return Snapshot{}, err
+	}
+
+	snapshot := Snapshot{}
+	err = json.Unmarshal(byteValue, &snapshot)
+	if err != nil {
+		return Snapshot{}, err
+	}
+	return snapshot, nil
+}
+
+func GetIonSnapshot(inputFile string) (map[string]int64, error) {
+	ionJSON, err := os.Open(inputFile)
+	if err != nil {
+		return nil, err
+	}
+	defer ionJSON.Close()
+	byteValue2, _ := ioutil.ReadAll(ionJSON)
+
+	var ionAmts map[string]int64
+	err = json.Unmarshal(byteValue2, &ionAmts)
+	if err != nil {
+		return nil, err
+	}
+	return ionAmts, nil
+}
+
+func CosmosToOsmoAddress(cosmosAddr string) (string, error) {
+	_, bz, err := bech32.DecodeAndConvert(cosmosAddr)
+	if err != nil {
+		return "", err
+	}
+
+	convertedAddr, err := bech32.ConvertAndEncode("osmo", bz)
+	if err != nil {
+		panic(err)
+	}
+
+	return convertedAddr, nil
+}
+
+func GetAirdropAccountsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-airdrop-accounts [input-snapshot-file] [input-ions-file]",
+		Short: "Get list of all accounts that are being airdropped to at genesis",
+		Long: `Get list of all accounts that are being airdropped to at genesis
+Both OSMO and ION recipients
+
+Example:
+	osmosisd import-genesis-accounts-from-snapshot ../snapshot.json ../ions.json ./address.txt
+`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			airdropAddrs := map[string]bool{}
+
+			// Read snapshot file
+			snapshot, err := GetOsmoSnapshot(args[0])
+			if err != nil {
+				return err
+			}
+
+			// Read ions file
+			ionAmts, err := GetIonSnapshot(args[1])
+			if err != nil {
+				return err
+			}
+
+			for _, acc := range snapshot.Accounts {
+				if !acc.OsmoBalance.Equal(sdk.ZeroInt()) {
+					osmoAddr, err := CosmosToOsmoAddress(acc.AtomAddress)
+					if err != nil {
+						return err
+					}
+
+					airdropAddrs[osmoAddr] = true
+				}
+			}
+
+			for addr := range ionAmts {
+				ionAddr, err := CosmosToOsmoAddress(addr)
+				if err != nil {
+					return err
+				}
+
+				airdropAddrs[ionAddr] = true
+			}
+
+			airdropAddrsJSON, err := json.Marshal(airdropAddrs)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile(args[2], airdropAddrsJSON, 0644)
+			return err
+		},
+	}
+
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
