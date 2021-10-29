@@ -41,20 +41,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v4.2.0]
 
-<<<<<<< HEAD
-* Fix seed node links
-
+* [\#561](https://github.com/osmosis-labs/osmosis/pull/561) Significantly lower I/O usage at epoch.
+* [\#556](https://github.com/osmosis-labs/osmosis/pull/556) Add IBC mempool filter to prevent redundant IBC transfers from entering your mempool
+* Add a mempool filter to only include txs that take under 25M gas
+* [\#529](https://github.com/osmosis-labs/osmosis/pull/529) Upgrade to Tendermint v0.34.14
+  * Includes postgres indexer for events
 
 ## [v4.1.0]
 
 * Significantly reduce epoch load and events
 * Fix bug in epoch distribution events, used to use raw address, now uses bech32 addr
-=======
-* Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
-* Update peer ID of statesync-enabled node run by notional
-* Created a pull request template
-* Update Notional Labs seed node in cmd/osmosisd/cmd/init.go
->>>>>>> fdaca2b... Update statesync.yml (#521)
 
 ## [v4.0.0]
 
