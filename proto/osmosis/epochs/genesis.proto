@@ -28,8 +28,7 @@ message EpochInfo {
   ];
   bool epoch_counting_started = 6;
   reserved 7;
-  int64 start_height = 8;
-  int64 current_epoch_start_height = 9;
+  int64 current_epoch_start_height = 8;
 }
 
 // GenesisState defines the epochs module's genesis state.

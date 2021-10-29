@@ -18,7 +18,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			epoch.StartTime = ctx.BlockTime()
 		}
 
-		epoch.StartHeight = ctx.BlockHeight()
+		epoch.CurrentEpochStartHeight = ctx.BlockHeight()
 
 		k.SetEpochInfo(ctx, epoch)
 	}

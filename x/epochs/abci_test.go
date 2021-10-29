@@ -18,22 +18,19 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 	var epochInfo types.EpochInfo
 
 	now := time.Now()
-	initialBlockHeight := int64(1)
 
 	tests := []struct {
 		expCurrentEpochStartTime   time.Time
 		expCurrentEpochStartHeight int64
 		expCurrentEpoch            int64
-		expInitialEpochStartHeight int64
 		expInitialEpochStartTime   time.Time
 		fn                         func()
 	}{
 		{
 			// Only advance 2 seconds, do not increment epoch
-			expCurrentEpochStartHeight: 1,
+			expCurrentEpochStartHeight: 2,
 			expCurrentEpochStartTime:   now,
 			expCurrentEpoch:            1,
-			expInitialEpochStartHeight: initialBlockHeight,
 			expInitialEpochStartTime:   now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
@@ -42,10 +39,9 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartHeight: 1,
+			expCurrentEpochStartHeight: 2,
 			expCurrentEpochStartTime:   now,
 			expCurrentEpoch:            1,
-			expInitialEpochStartHeight: initialBlockHeight,
 			expInitialEpochStartTime:   now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
@@ -54,10 +50,9 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			expCurrentEpochStartHeight: 1,
+			expCurrentEpochStartHeight: 2,
 			expCurrentEpochStartTime:   now,
 			expCurrentEpoch:            1,
-			expInitialEpochStartHeight: initialBlockHeight,
 			expInitialEpochStartTime:   now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
@@ -72,7 +67,6 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 			expCurrentEpochStartHeight: 3,
 			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
 			expCurrentEpoch:            2,
-			expInitialEpochStartHeight: initialBlockHeight,
 			expInitialEpochStartTime:   now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
@@ -86,7 +80,6 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 			expCurrentEpochStartHeight: 3,
 			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
 			expCurrentEpoch:            2,
-			expInitialEpochStartHeight: initialBlockHeight,
 			expInitialEpochStartTime:   now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
@@ -102,7 +95,6 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 			expCurrentEpochStartHeight: 3,
 			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
 			expCurrentEpoch:            2,
-			expInitialEpochStartHeight: initialBlockHeight,
 			expInitialEpochStartTime:   now,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
@@ -127,14 +119,13 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 			app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
 		}
 
-		ctx = ctx.WithBlockHeight(initialBlockHeight).WithBlockTime(now)
+		ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
 
 		// check init genesis
 		epochs.InitGenesis(ctx, app.EpochsKeeper, types.GenesisState{
 			Epochs: []types.EpochInfo{
 				{
 					Identifier:              "monthly",
-					StartHeight:             ctx.BlockHeight(),
 					StartTime:               time.Time{},
 					Duration:                time.Hour * 24 * 31,
 					CurrentEpoch:            0,
@@ -148,7 +139,6 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 		test.fn()
 
 		require.Equal(t, epochInfo.Identifier, "monthly")
-		require.Equal(t, epochInfo.StartHeight, test.expInitialEpochStartHeight)
 		require.Equal(t, epochInfo.StartTime.UTC().String(), test.expInitialEpochStartTime.UTC().String())
 		require.Equal(t, epochInfo.Duration, time.Hour*24*31)
 		require.Equal(t, epochInfo.CurrentEpoch, test.expCurrentEpoch)
@@ -172,13 +162,13 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	now := time.Now()
 	week := time.Hour * 24 * 7
 	month := time.Hour * 24 * 30
-	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
+	initialBlockHeight := int64(1)
+	ctx = ctx.WithBlockHeight(initialBlockHeight).WithBlockTime(now)
 
 	epochs.InitGenesis(ctx, app.EpochsKeeper, types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
-				StartHeight:             ctx.BlockHeight(),
 				StartTime:               now.Add(month),
 				Duration:                time.Hour * 24 * 30,
 				CurrentEpoch:            0,
@@ -192,7 +182,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	// epoch not started yet
 	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
-	require.Equal(t, epochInfo.CurrentEpochStartHeight, epochInfo.StartHeight)
+	require.Equal(t, epochInfo.CurrentEpochStartHeight, initialBlockHeight)
 	require.Equal(t, epochInfo.CurrentEpochStartTime, time.Time{})
 	require.Equal(t, epochInfo.EpochCountingStarted, false)
 
@@ -203,7 +193,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	// epoch not started yet
 	epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
-	require.Equal(t, epochInfo.CurrentEpochStartHeight, epochInfo.StartHeight)
+	require.Equal(t, epochInfo.CurrentEpochStartHeight, initialBlockHeight)
 	require.Equal(t, epochInfo.CurrentEpochStartTime, time.Time{})
 	require.Equal(t, epochInfo.EpochCountingStarted, false)
 
@@ -214,7 +204,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	// epoch started
 	epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.CurrentEpoch, int64(1))
-	require.Equal(t, epochInfo.CurrentEpochStartHeight, epochInfo.StartHeight)
+	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
 }

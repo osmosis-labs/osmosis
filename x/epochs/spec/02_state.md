@@ -31,12 +31,11 @@ message EpochInfo {
     ];
     bool epoch_counting_started = 6;
     reserved 7;
-    int64 start_height = 8;
-    int64 current_epoch_start_height = 9;
+    int64 current_epoch_start_height = 8;
 }
 ```
 
-EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`, `current_epoch_start_time`,  `epoch_counting_started`, `start_height`, `current_epoch_start_height`.
+EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`, `current_epoch_start_time`,  `epoch_counting_started`, `current_epoch_start_height`.
 
 1. `identifier` keeps epoch identification string.
 2. `start_time` keeps epoch counting start time, if block time passes `start_time`, `epoch_counting_started` is set.
@@ -44,5 +43,4 @@ EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`, `current
 4. `current_epoch` keeps current active epoch number.
 5. `current_epoch_start_time` keeps the start time of current epoch.
 6. `epoch_number` is counted only when `epoch_counting_started` flag is set.
-7. `start_height` keeps epoch start block height.
-8. `current_epoch_start_height` keeps the start block height of current epoch.
+7. `current_epoch_start_height` keeps the start block height of current epoch.

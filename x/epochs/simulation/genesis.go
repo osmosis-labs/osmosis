@@ -16,7 +16,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	epochs := []types.EpochInfo{
 		{
 			Identifier:              "day",
-			StartHeight:             0,
 			StartTime:               time.Time{},
 			Duration:                time.Hour * 24,
 			CurrentEpoch:            0,
@@ -26,7 +25,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		},
 		{
 			Identifier:              "hour",
-			StartHeight:             0,
 			StartTime:               time.Time{},
 			Duration:                time.Hour,
 			CurrentEpoch:            0,

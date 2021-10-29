@@ -23,7 +23,6 @@ func TestEpochsExportGenesis(t *testing.T) {
 
 	require.Equal(t, genesis.Epochs[0].Identifier, "day")
 	require.Equal(t, genesis.Epochs[0].StartTime, chainStartTime)
-	require.Equal(t, genesis.Epochs[0].StartHeight, chainStartHeight)
 	require.Equal(t, genesis.Epochs[0].Duration, time.Hour*24)
 	require.Equal(t, genesis.Epochs[0].CurrentEpoch, int64(0))
 	require.Equal(t, genesis.Epochs[0].CurrentEpochStartHeight, chainStartHeight)
@@ -31,7 +30,6 @@ func TestEpochsExportGenesis(t *testing.T) {
 	require.Equal(t, genesis.Epochs[0].EpochCountingStarted, false)
 	require.Equal(t, genesis.Epochs[1].Identifier, "week")
 	require.Equal(t, genesis.Epochs[1].StartTime, chainStartTime)
-	require.Equal(t, genesis.Epochs[1].StartHeight, chainStartHeight)
 	require.Equal(t, genesis.Epochs[1].Duration, time.Hour*24*7)
 	require.Equal(t, genesis.Epochs[1].CurrentEpoch, int64(0))
 	require.Equal(t, genesis.Epochs[1].CurrentEpochStartHeight, chainStartHeight)
@@ -59,7 +57,6 @@ func TestEpochsInitGenesis(t *testing.T) {
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
-				StartHeight:             ctx.BlockHeight(),
 				StartTime:               time.Time{},
 				Duration:                time.Hour * 24,
 				CurrentEpoch:            0,
@@ -69,7 +66,6 @@ func TestEpochsInitGenesis(t *testing.T) {
 			},
 			{
 				Identifier:              "monthly",
-				StartHeight:             ctx.BlockHeight(),
 				StartTime:               time.Time{},
 				Duration:                time.Hour * 24,
 				CurrentEpoch:            0,
@@ -85,7 +81,6 @@ func TestEpochsInitGenesis(t *testing.T) {
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
-				StartHeight:             ctx.BlockHeight(),
 				StartTime:               time.Time{},
 				Duration:                time.Hour * 24,
 				CurrentEpoch:            0,
@@ -99,7 +94,6 @@ func TestEpochsInitGenesis(t *testing.T) {
 	epochs.InitGenesis(ctx, app.EpochsKeeper, genesisState)
 	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.Identifier, "monthly")
-	require.Equal(t, epochInfo.StartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
 	require.Equal(t, epochInfo.Duration, time.Hour*24)
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
