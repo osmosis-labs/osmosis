@@ -9,6 +9,8 @@ import (
 
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
+	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/keeper"
+	ibcante "github.com/cosmos/cosmos-sdk/x/ibc/core/ante"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 )
@@ -20,6 +22,7 @@ func NewAnteHandler(
 	txFeesKeeper txfeeskeeper.Keeper, spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
+	channelKeeper channelkeeper.Keeper,
 ) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
@@ -39,6 +42,7 @@ func NewAnteHandler(
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
 		ante.NewSigVerificationDecorator(ak, signModeHandler),
 		ante.NewIncrementSequenceDecorator(ak),
+		ibcante.NewAnteDecorator(channelKeeper),
 	)
 }
 
