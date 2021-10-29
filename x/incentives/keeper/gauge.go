@@ -222,6 +222,22 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 	return []lockuptypes.PeriodLock{}
 }
 
+// getLocksToDistributionWithMaxDuration get locks that are associated to a condition
+// and if its by duration, then use the min Duration
+func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []lockuptypes.PeriodLock {
+	switch distrTo.LockQueryType {
+	case lockuptypes.ByDuration:
+		if distrTo.Duration > minDuration {
+			return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, minDuration)
+		}
+		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
+	case lockuptypes.ByTime:
+		panic("Gauge by time is present!?!? Should have been blocked in ValidateBasic")
+	default:
+	}
+	return []lockuptypes.PeriodLock{}
+}
+
 // FilteredLocksDistributionEst estimate distribution amount coins from gauge for fitting conditions
 // Expectation: gauge is a valid gauge
 // filteredLocks are all locks that are valid for gauge
@@ -345,10 +361,10 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo computed. It also updates the gauge for the distribution.
+// locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, distrInfo *distributionInfo) (sdk.Coins, error) {
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
-	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
 	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
 
 	if lockSum.IsZero() {
@@ -397,9 +413,20 @@ func (k Keeper) distributeInternal(
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
 
+	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
+
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
-		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, &distrInfo)
+		// All gauges have a precondition of being ByDuration
+		if _, ok := locksByDenomCache[gauge.DistributeTo.Denom]; !ok {
+			locksByDenomCache[gauge.DistributeTo.Denom] = k.getLocksToDistributionWithMaxDuration(
+				ctx, gauge.DistributeTo, time.Millisecond)
+		}
+		// get this from memory instead of hitting iterators / underlying stores.
+		// due to many details of cacheKVStore, iteration will still cause expensive IAVL reads.
+		allLocks := locksByDenomCache[gauge.DistributeTo.Denom]
+		filteredLocks := FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
+		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		if err != nil {
 			return nil, err
 		}
