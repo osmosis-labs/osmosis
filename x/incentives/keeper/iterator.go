@@ -6,6 +6,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 // Returns an iterator over all gauges in the {prefix} space of state, that begin distributing rewards after a specific time
@@ -56,4 +57,14 @@ func (k Keeper) ActiveGaugesIterator(ctx sdk.Context) sdk.Iterator {
 // FinishedGaugesIterator returns iterator for finished gauges
 func (k Keeper) FinishedGaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixFinishedGauges)
+}
+
+func FilterLocksByMinDuration(locks []lockuptypes.PeriodLock, minDuration time.Duration) []lockuptypes.PeriodLock {
+	filteredLocks := make([]lockuptypes.PeriodLock, 0, len(locks)/2)
+	for _, lock := range locks {
+		if lock.Duration >= minDuration {
+			filteredLocks = append(filteredLocks, lock)
+		}
+	}
+	return filteredLocks
 }
