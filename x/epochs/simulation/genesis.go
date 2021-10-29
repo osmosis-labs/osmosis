@@ -15,20 +15,24 @@ import (
 func RandomizedGenState(simState *module.SimulationState) {
 	epochs := []types.EpochInfo{
 		{
-			Identifier:            "day",
-			StartTime:             time.Time{},
-			Duration:              time.Hour * 24,
-			CurrentEpoch:          0,
-			CurrentEpochStartTime: time.Time{},
-			EpochCountingStarted:  false,
+			Identifier:              "day",
+			StartHeight:             0,
+			StartTime:               time.Time{},
+			Duration:                time.Hour * 24,
+			CurrentEpoch:            0,
+			CurrentEpochStartHeight: 0,
+			CurrentEpochStartTime:   time.Time{},
+			EpochCountingStarted:    false,
 		},
 		{
-			Identifier:            "hour",
-			StartTime:             time.Time{},
-			Duration:              time.Hour,
-			CurrentEpoch:          0,
-			CurrentEpochStartTime: time.Time{},
-			EpochCountingStarted:  false,
+			Identifier:              "hour",
+			StartHeight:             0,
+			StartTime:               time.Time{},
+			Duration:                time.Hour,
+			CurrentEpoch:            0,
+			CurrentEpochStartHeight: 0,
+			CurrentEpochStartTime:   time.Time{},
+			EpochCountingStarted:    false,
 		},
 	}
 	epochGenesis := types.NewGenesisState(epochs)
