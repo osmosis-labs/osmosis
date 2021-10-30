@@ -62,9 +62,5 @@ func writeGenesis(genesis app.GenesisState, path string) error {
 	}
 	defer file.Close()
 	encoder := json.NewEncoder(file)
-	err = encoder.Encode(genesis)
-	if err != nil {
-		return err
-	}
-	return nil
+	return encoder.Encode(genesis)
 }
