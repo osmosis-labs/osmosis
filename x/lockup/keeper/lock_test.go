@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -243,39 +242,6 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	// final check
 	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", duration)
 	suite.Require().Len(locks, 1)
-}
-
-func (suite *KeeperTestSuite) TestLockTokensAlot() {
-	suite.SetupTest()
-
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	startAveragingAt := 1000
-	totalNumLocks := 10000
-	for i := 1; i < startAveragingAt; i++ {
-		suite.LockTokens(addr1, coins, time.Second)
-	}
-	runningTotal := uint64(0)
-	maxGas := uint64(0)
-	for i := startAveragingAt; i < totalNumLocks; i++ {
-		if i%1000 == 0 {
-			fmt.Printf("entering %dth lock now\n", i)
-		}
-
-		alreadySpent := suite.ctx.GasMeter().GasConsumed()
-		suite.LockTokens(addr1, coins, time.Second)
-		newSpent := suite.ctx.GasMeter().GasConsumed()
-		spentNow := newSpent - alreadySpent
-		runningTotal += spentNow
-		if spentNow > maxGas {
-			maxGas = spentNow
-		}
-	}
-	fmt.Printf("test deets: total locks created %d, begin average at %d\n", totalNumLocks, startAveragingAt)
-	fmt.Println("average gas / lock:", runningTotal/(uint64(totalNumLocks-startAveragingAt)))
-	fmt.Println("max gas / lock:", maxGas)
-
-	// panic(1)
 }
 
 func (suite *KeeperTestSuite) TestAddTokensToLock() {

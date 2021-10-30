@@ -47,6 +47,18 @@ func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
 				},
 			},
 		},
+		{ // zero-weight record
+			proposal: &types.UpdatePoolIncentivesProposal{
+				Title:       "title",
+				Description: "proposal to update pool incentives",
+				Records: []types.DistrRecord{
+					{
+						GaugeId: 1,
+						Weight:  sdk.NewInt(0),
+					},
+				},
+			},
+		},
 		{ // two records
 			proposal: &types.UpdatePoolIncentivesProposal{
 				Title:       "title",

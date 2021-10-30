@@ -16,7 +16,7 @@ func TestDistrRecord(t *testing.T) {
 		Weight:  sdk.NewInt(0),
 	}
 
-	require.Error(t, zeroWeight.ValidateBasic())
+	require.NoError(t, zeroWeight.ValidateBasic())
 
 	negativeWeight := types.DistrRecord{
 		GaugeId: 1,
