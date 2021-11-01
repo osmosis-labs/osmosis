@@ -544,7 +544,7 @@ func (suite *KeeperTestSuite) TestCalculateHistoricalRewards() {
 	expectedHistoricalReward := types.HistoricalReward{
 		CumulativeRewardRatio: sdk.NewDecCoins(expectedCummulativeReward),
 	}
-	resultHistoricalReward, err := k.CalculateHistoricalRewards(suite.ctx, currentReward, "stake", duration, epochInfo)
+	resultHistoricalReward, err := k.CalculateHistoricalRewards(suite.ctx, currentReward, "stake", duration, epochInfo.CurrentEpoch)
 	suite.Require().NoError(err)
 	suite.Require().Equal(*resultHistoricalReward, expectedHistoricalReward)
 

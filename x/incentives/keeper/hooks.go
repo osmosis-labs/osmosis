@@ -33,22 +33,15 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				panic(err)
 			}
 			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs {
-				// move to next period if gauge is finished since f1Distribution will not be called
-				lastGaugeEpoch := k.GetEpochInfo(ctx)
-				lastGaugeEpoch.CurrentEpoch++
-				lastGaugeEpoch.CurrentEpochStartTime.Add(lastGaugeEpoch.Duration)
-				denom := gauge.DistributeTo.Denom
-				duration := gauge.DistributeTo.Duration
-				if err := k.updateHistoricalReward(ctx, denom, duration, lastGaugeEpoch); err != nil {
+				// increment period if gauge is finished because f1Distribution will not be invoked for that gauge ever again
+				if err := k.updateHistoricalReward(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration, epochNumber); err != nil {
 					panic(err)
 				}
-
 				if err := k.FinishDistribution(ctx, gauge); err != nil {
 					panic(err)
 				}
 			}
 		}
-
 		k.hooks.AfterEpochDistribution(ctx)
 	}
 }
