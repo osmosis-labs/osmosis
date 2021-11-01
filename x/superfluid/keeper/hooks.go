@@ -34,7 +34,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			priceMultiplier := sdk.NewInt(10000)
+			priceMultiplier := gammtypes.InitPoolSharesSupply
 			twap := sdk.NewDecFromInt(priceMultiplier)
 			if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 				// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
@@ -49,10 +49,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					panic(err)
 				}
 
-				twap = sdk.Dec(osmoPoolAsset.Token.Amount.Mul(priceMultiplier).Quo(pool.GetTotalShares().Amount))
+				twap = osmoPoolAsset.Token.Amount.Mul(priceMultiplier).ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
 			} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 				// TODO: should get twap price from gamm module and use the price
 				// which pool should it use to calculate native token price?
+				panic("unsupported superfluid asset type")
 			}
 			k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
 		}
