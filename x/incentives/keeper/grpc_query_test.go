@@ -343,8 +343,8 @@ func (suite *KeeperTestSuite) TestGRPCCurrentReward() {
 	suite.Require().NoError(err)
 
 	res, err := suite.app.IncentivesKeeper.CurrentReward(sdk.WrapSDKContext(suite.ctx), &types.CurrentRewardRequest{
-		Denom:             denom,
-		LockableDurations: duration,
+		Denom:            denom,
+		LockableDuration: duration,
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(currentReward.Period, res.Period)
@@ -368,9 +368,9 @@ func (suite *KeeperTestSuite) TestGRPCHistoricalReward() {
 	suite.Require().NoError(err)
 
 	res, err := suite.app.IncentivesKeeper.HistoricalReward(sdk.WrapSDKContext(suite.ctx), &types.HistoricalRewardRequest{
-		Denom:             denom,
-		LockableDurations: duration,
-		Period:            1,
+		Denom:            denom,
+		LockableDuration: duration,
+		Period:           1,
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(historicalReward.CumulativeRewardRatio, res.CumulativeRewardRatio)

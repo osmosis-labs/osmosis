@@ -666,7 +666,7 @@ func (k Keeper) getHistoricalRewardPeriodByEpoch(ctx sdk.Context, denom string, 
 
 	iterator := k.HistoricalRewardBeforeEpochIterator(ctx, rewardKey, epochNumber)
 	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
+	if iterator.Valid() {
 		period = sdk.BigEndianToUint64(iterator.Value())
 		return period, nil
 	}

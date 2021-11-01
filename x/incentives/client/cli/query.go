@@ -436,8 +436,8 @@ $ %s query incentives current-reward [denom] [lockable-duration]
 			}
 
 			res, err := queryClient.CurrentReward(cmd.Context(), &types.CurrentRewardRequest{
-				Denom:             denom,
-				LockableDurations: duration,
+				Denom:            denom,
+				LockableDuration: duration,
 			})
 			if err != nil {
 				return err
@@ -483,9 +483,9 @@ $ %s query incentives historical-reward [denom] [lockable-duration] [period]
 			period, err := strconv.ParseInt(args[2], 10, 64)
 
 			res, err := queryClient.HistoricalReward(cmd.Context(), &types.HistoricalRewardRequest{
-				Denom:             denom,
-				LockableDurations: duration,
-				Period:            period,
+				Denom:            denom,
+				LockableDuration: duration,
+				Period:           period,
 			})
 			if err != nil {
 				return err
