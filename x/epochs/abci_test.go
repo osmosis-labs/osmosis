@@ -208,3 +208,45 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
 }
+
+// This test ensures legacy EpochInfo messages will not throw errors via InitGenesis and BeginBlocker
+func TestLegacyEpochSerialization(t *testing.T) {
+	// Legacy Epoch Info message - without CurrentEpochStartHeight property
+	legacyEpochInfo := types.EpochInfo{
+		Identifier:            "monthly",
+		StartTime:             time.Time{},
+		Duration:              time.Hour * 24 * 31,
+		CurrentEpoch:          0,
+		CurrentEpochStartTime: time.Time{},
+		EpochCountingStarted:  false,
+	}
+
+	now := time.Now()
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	// On init genesis, default epochs information is set
+	// To check init genesis again, should make it fresh status
+	epochInfos := app.EpochsKeeper.AllEpochInfos(ctx)
+	for _, epochInfo := range epochInfos {
+		app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+	}
+
+	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
+
+	// check init genesis
+	epochs.InitGenesis(ctx, app.EpochsKeeper, types.GenesisState{
+		Epochs: []types.EpochInfo{legacyEpochInfo},
+	})
+
+	// Do not increment epoch
+	ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
+	epochs.BeginBlocker(ctx, app.EpochsKeeper)
+
+	// Increment epoch
+	ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
+	epochs.BeginBlocker(ctx, app.EpochsKeeper)
+	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+
+	require.NotEqual(t, epochInfo.CurrentEpochStartHeight, int64(0))
+}
