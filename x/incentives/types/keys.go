@@ -46,20 +46,17 @@ var (
 	// KeyCurrentEpoch defines key for storing current epoch
 	KeyCurrentEpoch = []byte{0x08}
 
-	// KeyEpochBeginBlock defines key for storing begin block of current epoch
-	KeyEpochBeginBlock = []byte{0x09}
-
 	// KeyCurrentReward defines key for storing current reward
-	KeyCurrentReward = []byte{0x10} // TODO : Confirm this key name/value
+	KeyCurrentReward = []byte{0x09}
 
 	// KeyHistoricalReward defines key for storing historical reward
-	KeyHistoricalReward = []byte{0x11} // TODO : Confirm this key name/value
+	KeyHistoricalReward = []byte{0x10}
 
 	// KeyHistoricalReward defines key for storing historical reward
-	KeyHistoricalRewardRef = []byte{0x12} // TODO : Confirm this key name/value
+	KeyHistoricalRewardRef = []byte{0x11}
 
 	// KeyPeriodLockReward defines key for storing period lock reward
-	KeyPeriodLockReward = []byte{0x13} // TODO : Confirm this key name/value
+	KeyPeriodLockReward = []byte{0x12}
 
 	// LockableDurationsKey defines key for storing valid durations for giving incentives
 	LockableDurationsKey = []byte("lockable_durations")

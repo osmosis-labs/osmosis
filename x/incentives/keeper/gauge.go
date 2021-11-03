@@ -575,7 +575,7 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 
 func (k Keeper) SetCurrentReward(ctx sdk.Context, currentReward types.CurrentReward, denom string, lockDuration time.Duration) error {
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyCurrentReward, []byte(denom), []byte(lockDuration.String()))
+	rewardKey := combineKeys(types.KeyCurrentReward, []byte(denom+"/"+lockDuration.String()))
 
 	currentReward.Denom = denom
 	currentReward.Duration = lockDuration
@@ -629,7 +629,7 @@ func (k Keeper) GetCurrentReward(ctx sdk.Context, denom string, lockDuration tim
 	currentReward := types.CurrentReward{}
 	currentReward.Coin.Denom = denom
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyCurrentReward, []byte(denom), []byte(lockDuration.String()))
+	rewardKey := combineKeys(types.KeyCurrentReward, []byte(denom+"/"+lockDuration.String()))
 
 	bz := store.Get(rewardKey)
 	if bz == nil {
