@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 
@@ -46,7 +47,12 @@ func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.
 	valStore := prefix.NewStore(store, types.KeyPrefixGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := k.GetGaugeFromIDs(ctx, value)
+		gaugeIDs := []uint64{}
+		err := json.Unmarshal(value, &gaugeIDs)
+		if err != nil {
+			panic(err)
+		}
+		newGauges, err := k.GetGaugeFromIDs(ctx, gaugeIDs)
 		if err != nil {
 			panic(err)
 		}
@@ -70,7 +76,12 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := k.GetGaugeFromIDs(ctx, value)
+		gaugeIDs := []uint64{}
+		err := json.Unmarshal(value, &gaugeIDs)
+		if err != nil {
+			panic(err)
+		}
+		newGauges, err := k.GetGaugeFromIDs(ctx, gaugeIDs)
 		if err != nil {
 			panic(err)
 		}
@@ -86,6 +97,36 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 	return &types.ActiveGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
+// ActiveGaugesPerDenom returns active gauges for the specified denom
+func (k Keeper) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGaugesPerDenomRequest) (*types.ActiveGaugesPerDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	gauges := []types.Gauge{}
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		guageIDs := k.getAllGaugeIDsByDenom(ctx, req.Denom)
+		for _, id := range guageIDs {
+			gauge, err := k.GetGaugeByID(ctx, id)
+			if err != nil {
+				panic(err)
+			}
+			if gauge.IsPerpetual {
+				gauges = append(gauges, *gauge)
+			} else if gauge.NumEpochsPaidOver < gauge.FilledEpochs {
+				gauges = append(gauges, *gauge)
+			}
+		}
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.ActiveGaugesPerDenomResponse{Data: gauges, Pagination: pageRes}, nil
+}
+
 // UpcomingGauges returns scheduled gauges
 func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesRequest) (*types.UpcomingGaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -94,7 +135,12 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := k.GetGaugeFromIDs(ctx, value)
+		gaugeIDs := []uint64{}
+		err := json.Unmarshal(value, &gaugeIDs)
+		if err != nil {
+			panic(err)
+		}
+		newGauges, err := k.GetGaugeFromIDs(ctx, gaugeIDs)
 		if err != nil {
 			panic(err)
 		}
