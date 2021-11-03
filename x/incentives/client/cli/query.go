@@ -29,6 +29,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdDistributedCoins(),
 		GetCmdGaugeByID(),
 		GetCmdActiveGauges(),
+		GetCmdActiveGaugesPerDenom(),
 		GetCmdUpcomingGauges(),
 		GetCmdRewardsEst(),
 	)
@@ -220,6 +221,47 @@ $ %s query incentives active-gauges
 			}
 
 			res, err := queryClient.ActiveGauges(cmd.Context(), &types.ActiveGaugesRequest{Pagination: pageReq})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "incentives")
+
+	return cmd
+}
+
+// GetCmdActiveGaugesPerDenom returns active gauges for specified denom
+func GetCmdActiveGaugesPerDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "active-gauges-per-denom [denom]",
+		Short: "Query active gauges per denom",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query active gauges.
+
+Example:
+$ %s query incentives active-gauges-per-denom [denom]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.ActiveGaugesPerDenom(cmd.Context(), &types.ActiveGaugesPerDenomRequest{Denom: args[0], Pagination: pageReq})
 			if err != nil {
 				return err
 			}
