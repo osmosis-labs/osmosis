@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis
 go 1.17
 
 require (
-	github.com/cosmos/cosmos-sdk v0.42.9
+	github.com/cosmos/cosmos-sdk v0.44.3
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.16.0
 	github.com/gogo/protobuf v1.3.3
@@ -115,6 +115,5 @@ replace (
 	github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.14
 	github.com/tendermint/tm-db => github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
-
 
 )

@@ -1,10 +1,11 @@
 package epochs
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
-	"time"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
@@ -12,10 +13,12 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// set epoch info from genesis
 	for _, epoch := range genState.Epochs {
-		// when epoch counting start time is not set, set it
+		// Initialize empty epoch values via Cosmos SDK
 		if epoch.StartTime.Equal(time.Time{}) {
 			epoch.StartTime = ctx.BlockTime()
 		}
+
+		epoch.CurrentEpochStartHeight = ctx.BlockHeight()
 
 		k.SetEpochInfo(ctx, epoch)
 	}
