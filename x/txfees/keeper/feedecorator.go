@@ -58,7 +58,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// to enter our mempool.
 	// So we ensure that the provided fees meet a minimum threshold for the validator,
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
-	if (ctx.IsCheckTx() || ctx.IsRecheckTx()) && !simulate {
+	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
 		minGasPrices := ctx.MinGasPrices()
 		minBaseGasPrice := minGasPrices.AmountOf(baseDenom)
 		if !(minBaseGasPrice.IsZero()) {
