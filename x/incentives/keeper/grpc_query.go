@@ -47,12 +47,7 @@ func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.
 	valStore := prefix.NewStore(store, types.KeyPrefixGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		gaugeIDs := []uint64{}
-		err := json.Unmarshal(value, &gaugeIDs)
-		if err != nil {
-			panic(err)
-		}
-		newGauges, err := k.GetGaugeFromIDs(ctx, gaugeIDs)
+		newGauges, err := k.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
 			panic(err)
 		}
@@ -76,12 +71,7 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		gaugeIDs := []uint64{}
-		err := json.Unmarshal(value, &gaugeIDs)
-		if err != nil {
-			panic(err)
-		}
-		newGauges, err := k.GetGaugeFromIDs(ctx, gaugeIDs)
+		newGauges, err := k.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
 			panic(err)
 		}
@@ -105,16 +95,10 @@ func (k Keeper) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGau
 	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		guageIDs := k.getAllGaugeIDsByDenom(ctx, req.Denom)
-		for _, id := range guageIDs {
-			gauge, err := k.GetGaugeByID(ctx, id)
-			if err != nil {
-				panic(err)
-			}
-			if gauge.IsPerpetual {
-				gauges = append(gauges, *gauge)
-			} else if gauge.NumEpochsPaidOver < gauge.FilledEpochs {
-				gauges = append(gauges, *gauge)
+		activeGauges := k.GetActiveGauges(ctx)
+		for _, gauge := range activeGauges {
+			if gauge.DistributeTo.Denom == req.Denom {
+				gauges = append(gauges, gauge)
 			}
 		}
 		return true, nil
@@ -135,12 +119,7 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		gaugeIDs := []uint64{}
-		err := json.Unmarshal(value, &gaugeIDs)
-		if err != nil {
-			panic(err)
-		}
-		newGauges, err := k.GetGaugeFromIDs(ctx, gaugeIDs)
+		newGauges, err := k.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
 			panic(err)
 		}
@@ -182,4 +161,22 @@ func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDur
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
+}
+
+// getGaugeFromIDJsonBytes returns gauges from gauge id json bytes
+func (k Keeper) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
+	gauges := []types.Gauge{}
+	gaugeIDs := []uint64{}
+	err := json.Unmarshal(refValue, &gaugeIDs)
+	if err != nil {
+		return gauges, err
+	}
+	for _, gaugeID := range gaugeIDs {
+		gauge, err := k.GetGaugeByID(ctx, gaugeID)
+		if err != nil {
+			return []types.Gauge{}, err
+		}
+		gauges = append(gauges, *gauge)
+	}
+	return gauges, nil
 }
