@@ -13,7 +13,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.ResetAllLocks(ctx, genState.Locks); err != nil {
 		return
 	}
-	if err := k.ResetAllShadowLocks(ctx, genState.Shadows); err != nil {
+	if err := k.ResetAllSyntheticLocks(ctx, genState.SyntheticLocks); err != nil {
 		return
 	}
 }
@@ -25,8 +25,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 	return &types.GenesisState{
-		LastLockId: k.GetLastLockID(ctx),
-		Locks:      locks,
-		Shadows:    k.GetAllShadows(ctx),
+		LastLockId:     k.GetLastLockID(ctx),
+		Locks:          locks,
+		SyntheticLocks: k.GetAllSyntheticLockups(ctx),
 	}
 }

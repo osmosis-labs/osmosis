@@ -52,16 +52,16 @@ type Keeper interface {
     Lock(sdk.Context, lock types.PeriodLock) error
     // Unlock is a utility to unlock coins from module account
     Unlock(sdk.Context, lock types.PeriodLock) error
-    GetShadowLockup(ctx sdk.Context, lockID uint64, shadow string) (*types.ShadowLock, error)
-    GetAllShadowsByLockup(ctx sdk.Context, lockID uint64) []types.ShadowLock
-    GetAllShadows(ctx sdk.Context) []types.ShadowLock
-    // CreateShadowLockup create shadow of lockup with lock id and shadow(denom suffix)
-    CreateShadowLockup(ctx sdk.Context, lockID uint64, shadow string, isUnlocking bool) error
-    // DeleteShadowLockup delete shadow of lockup with lock id and shadow(denom suffix)
-    DeleteShadowLockup(ctx sdk.Context, lockID uint64, shadow string) error
-    // DeleteAllShadowByLockup delete all the shadows of lockup by id
-    DeleteAllShadowsByLockup(ctx sdk.Context, lockID uint64) error
-    DeleteAllMaturedShadowLocks(ctx sdk.Context)
+    GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*types.SyntheticLock, error)
+    GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []types.SyntheticLock
+    GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock
+    // CreateSyntheticLockup create synthetic lockup with lock id and denom suffix
+    CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, isUnlocking bool) error
+    // DeleteSyntheticLockup delete synthetic lockup with lock id and suffix
+    DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
+    // DeleteAllSyntheticLocksByLockup deletes all the synthetic lockups by lockup id
+    DeleteAllSyntheticLocksByLockup(ctx sdk.Context, lockID uint64) error
+    DeleteAllMaturedSyntheticLocks(ctx sdk.Context)
 ```
 
 # Lock Admin Keeper

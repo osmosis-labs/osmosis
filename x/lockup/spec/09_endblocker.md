@@ -21,4 +21,4 @@ For synthetic lockups, no coin movement is made, but lockup record and reference
 **State modifications:**
 
 - Fetch all synthetic lockups that is matured
-- Remove `ShadowLock` records from the state along with reference queues
+- Remove `SyntheticLock` records from the state along with reference queues

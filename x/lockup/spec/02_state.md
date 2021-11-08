@@ -75,19 +75,19 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 
 The goal of synthetic lockup is to support the querying of locks by denom especially for delegated staking. By combining native denom and synthetic suffix, lockup supports querying with synthetic denom with existing denom querying functions.
 
-External modules are managing shadow locks to use it on their own logic implementation. (e.g. delegated staking and superfluid staking)
+External modules are managing synthetic locks to use it on their own logic implementation. (e.g. delegated staking and superfluid staking)
 
-A `ShadowLock` is a single unit of synthetic lockup. Each synthetic lockup has reference `PeriodLock` ID, synthetic prefix (`Shadow`) and synthetic lock's removal time (`EndTime`).
+A `SyntheticLock` is a single unit of synthetic lockup. Each synthetic lockup has reference `PeriodLock` ID, synthetic suffix (`Suffix`) and synthetic lock's removal time (`EndTime`).
 
 ```go
-type ShadowLock struct {
+type SyntheticLock struct {
 	LockId  uint64
-	Shadow  string
+	Suffix  string
 	EndTime time.Time
 }
 ```
 
-All synthetic locks are stored on the KVStore as value at `{KeyPrefixPeriodLock}{LockID}{Shadow}` key.
+All synthetic locks are stored on the KVStore as value at `{KeyPrefixPeriodLock}{LockID}{Suffix}` key.
 
 ### Synthetic lock reference queues
 
@@ -98,10 +98,10 @@ To provide time efficient queries, several reference queues are managed by denom
 3. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{SyntheticDenom}{LockEndTime}`
 4. `{KeyPrefixAccountDenomLockDuration}{Owner}{SyntheticDenom}{Duration}`
 
-SyntheticDenom is expressed as `{Denom}{Shadow}`. (Note: we can change this to `{Shadow}{Denom}` as per discussion with Dev)
+SyntheticDenom is expressed as `{Denom}{Suffix}`. (Note: we can change this to `{Prefix}{Denom}` as per discussion with Dev)
 
 For end time keys, they are converted to sortable string by using `sdk.FormatTimeBytes` function.
 
 **Note:**
 To implement the auto removal of synthetic lockups that is already finished, we manage a separate time basis queue at
-`{KeyPrefixShadowLockTimestamp}{EndTime}{LockId}{Shadow}`
+`{KeyPrefixSyntheticLockTimestamp}{EndTime}{LockId}{Suffix}`

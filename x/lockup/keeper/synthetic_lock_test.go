@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
+func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	suite.SetupTest()
 
 	// lock coins
@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	})
 	suite.Require().Equal(accum.String(), "10")
 
-	// check queries for native denom before shadow
+	// check queries for native denom before creating synthetic lockup
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
 	suite.Require().Len(locks, 1)
 	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stake", time.Second)
@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	amount := suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stake", time.Second)
 	suite.Require().Equal(amount.String(), "10")
 
-	// check queries for shadow denom before shadow
+	// check queries for synthetic denom before creating synthetic lockup
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stakestakedtovalidator1", suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
 	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
 	suite.Require().Equal(amount.String(), "0")
 
-	// check non-denom related queries before shadow
+	// check non-denom related queries before creating synthetic lockup
 	moduleBalance := suite.app.LockupKeeper.GetModuleBalance(suite.ctx)
 	suite.Require().Equal(moduleBalance.String(), "10stake")
 	moduleLockedCoins := suite.app.LockupKeeper.GetModuleLockedCoins(suite.ctx)
@@ -75,26 +75,26 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
 
-	err = suite.app.LockupKeeper.CreateShadowLockup(suite.ctx, 1, "stakedtovalidator1", false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", false)
 	suite.Require().NoError(err)
 
-	shadowLock, err := suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
-	suite.Require().Equal(*shadowLock, types.ShadowLock{
+	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		LockId:  1,
-		Shadow:  "stakedtovalidator1",
+		Suffix:  "stakedtovalidator1",
 		EndTime: time.Time{},
 	})
 
-	shadowLocks := suite.app.LockupKeeper.GetAllShadowsByLockup(suite.ctx, 1)
-	suite.Require().Len(shadowLocks, 1)
-	suite.Require().Equal(*shadowLock, shadowLocks[0])
+	synthLocks := suite.app.LockupKeeper.GetAllSyntheticLockupsByLockup(suite.ctx, 1)
+	suite.Require().Len(synthLocks, 1)
+	suite.Require().Equal(*synthLock, synthLocks[0])
 
-	shadowLocks = suite.app.LockupKeeper.GetAllShadows(suite.ctx)
-	suite.Require().Len(shadowLocks, 1)
-	suite.Require().Equal(*shadowLock, shadowLocks[0])
+	synthLocks = suite.app.LockupKeeper.GetAllSyntheticLockups(suite.ctx)
+	suite.Require().Len(synthLocks, 1)
+	suite.Require().Equal(*synthLock, synthLocks[0])
 
-	// check accumulation store is correctly updated for shadow lock
+	// check accumulation store is correctly updated for synthetic lockup
 	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 		LockQueryType: types.ByDuration,
 		Denom:         "stakestakedtovalidator1",
@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	})
 	suite.Require().Equal(accum.String(), "10")
 
-	// check queries for native denom after shadow
+	// check queries for native denom after creating synthetic lockup
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
 	suite.Require().Len(locks, 1)
 	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stake", time.Second)
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stake", time.Second)
 	suite.Require().Equal(amount.String(), "10")
 
-	// check queries for shadow denom after shadow
+	// check queries for synthetic denom after creating synthetic lockup
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stakestakedtovalidator1", suite.ctx.BlockTime())
 	suite.Require().Len(locks, 1)
 	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
 	suite.Require().Equal(amount.String(), "10")
 
-	// check non-denom related queries after shadow
+	// check non-denom related queries after creating synthetic lockup
 	moduleBalance = suite.app.LockupKeeper.GetModuleBalance(suite.ctx)
 	suite.Require().Equal(moduleBalance.String(), "10stake")
 	moduleLockedCoins = suite.app.LockupKeeper.GetModuleLockedCoins(suite.ctx)
@@ -148,14 +148,14 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
 
-	err = suite.app.LockupKeeper.DeleteShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	err = suite.app.LockupKeeper.DeleteSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
 
-	shadowLock, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().Error(err)
-	suite.Require().Nil(shadowLock)
+	suite.Require().Nil(synthLock)
 
-	// check accumulation store is correctly updated for shadow lock
+	// check accumulation store is correctly updated for synthetic lock
 	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 		LockQueryType: types.ByDuration,
 		Denom:         "stakestakedtovalidator1",
@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestShadowLockupCreateGetDeleteAccumulation() {
 	suite.Require().Equal(accum.String(), "0")
 }
 
-func (suite *KeeperTestSuite) TestShadowLockupDeleteAllShadowsByLockup() {
+func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllSyntheticLocksByLockup() {
 	suite.SetupTest()
 
 	// lock coins
@@ -178,26 +178,26 @@ func (suite *KeeperTestSuite) TestShadowLockupDeleteAllShadowsByLockup() {
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].Coins, coins)
 
-	err = suite.app.LockupKeeper.CreateShadowLockup(suite.ctx, 1, "stakedtovalidator1", false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", false)
 	suite.Require().NoError(err)
 
-	shadowLock, err := suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
-	suite.Require().Equal(*shadowLock, types.ShadowLock{
+	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		LockId:  1,
-		Shadow:  "stakedtovalidator1",
+		Suffix:  "stakedtovalidator1",
 		EndTime: time.Time{},
 	})
 
-	err = suite.app.LockupKeeper.DeleteAllShadowsByLockup(suite.ctx, 1)
+	err = suite.app.LockupKeeper.DeleteAllSyntheticLocksByLockup(suite.ctx, 1)
 	suite.Require().NoError(err)
 
-	shadowLock, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().Error(err)
-	suite.Require().Nil(shadowLock)
+	suite.Require().Nil(synthLock)
 }
 
-func (suite *KeeperTestSuite) TestShadowLockupDeleteAllMaturedShadowLocks() {
+func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks() {
 	suite.SetupTest()
 
 	// lock coins
@@ -211,44 +211,44 @@ func (suite *KeeperTestSuite) TestShadowLockupDeleteAllMaturedShadowLocks() {
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].Coins, coins)
 
-	err = suite.app.LockupKeeper.CreateShadowLockup(suite.ctx, 1, "stakedtovalidator1", false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", false)
 	suite.Require().NoError(err)
 
-	err = suite.app.LockupKeeper.CreateShadowLockup(suite.ctx, 1, "stakedtovalidator2", true)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator2", true)
 	suite.Require().NoError(err)
 
-	shadowLock, err := suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
-	suite.Require().Equal(*shadowLock, types.ShadowLock{
+	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		LockId:  1,
-		Shadow:  "stakedtovalidator1",
+		Suffix:  "stakedtovalidator1",
 		EndTime: time.Time{},
 	})
-	shadowLock, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator2")
+	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator2")
 	suite.Require().NoError(err)
-	suite.Require().Equal(*shadowLock, types.ShadowLock{
+	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		LockId:  1,
-		Shadow:  "stakedtovalidator2",
+		Suffix:  "stakedtovalidator2",
 		EndTime: suite.ctx.BlockTime().Add(time.Second),
 	})
 
-	suite.app.LockupKeeper.DeleteAllMaturedShadowLocks(suite.ctx)
+	suite.app.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.ctx)
 
-	_, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator2")
+	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator2")
 	suite.Require().NoError(err)
 
 	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Second * 2))
-	suite.app.LockupKeeper.DeleteAllMaturedShadowLocks(suite.ctx)
+	suite.app.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.ctx)
 
-	_, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator2")
+	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator2")
 	suite.Require().Error(err)
 }
 
-func (suite *KeeperTestSuite) TestResetAllShadowLocks() {
+func (suite *KeeperTestSuite) TestResetAllSyntheticLocks() {
 	suite.SetupTest()
 
 	// lock coins
@@ -262,31 +262,31 @@ func (suite *KeeperTestSuite) TestResetAllShadowLocks() {
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].Coins, coins)
 
-	suite.app.LockupKeeper.ResetAllShadowLocks(suite.ctx, []types.ShadowLock{
+	suite.app.LockupKeeper.ResetAllSyntheticLocks(suite.ctx, []types.SyntheticLock{
 		{
 			LockId:  1,
-			Shadow:  "stakedtovalidator1",
+			Suffix:  "stakedtovalidator1",
 			EndTime: time.Time{},
 		},
 		{
 			LockId:  1,
-			Shadow:  "stakedtovalidator2",
+			Suffix:  "stakedtovalidator2",
 			EndTime: suite.ctx.BlockTime().Add(time.Second),
 		},
 	})
 
-	shadowLock, err := suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
-	suite.Require().Equal(*shadowLock, types.ShadowLock{
+	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		LockId:  1,
-		Shadow:  "stakedtovalidator1",
+		Suffix:  "stakedtovalidator1",
 		EndTime: time.Time{},
 	})
-	shadowLock, err = suite.app.LockupKeeper.GetShadowLockup(suite.ctx, 1, "stakedtovalidator2")
+	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator2")
 	suite.Require().NoError(err)
-	suite.Require().Equal(*shadowLock, types.ShadowLock{
+	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		LockId:  1,
-		Shadow:  "stakedtovalidator2",
+		Suffix:  "stakedtovalidator2",
 		EndTime: suite.ctx.BlockTime().Add(time.Second),
 	})
 

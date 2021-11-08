@@ -68,10 +68,10 @@ func lockRefKeys(lock types.PeriodLock) ([][]byte, error) {
 	return refKeys, nil
 }
 
-// shadowLockRefKeys are different from native lockRefKeys to avoid conflicts
-func shadowLockRefKeys(lock types.PeriodLock) ([][]byte, error) {
-	// Note: shadowLockRefKeys should be only used for querying and should not be combined with native lockup operations
-	// Shadow denom should not conflict with native denom
+// syntheticLockRefKeys are different from native lockRefKeys to avoid conflicts
+func syntheticLockRefKeys(lock types.PeriodLock) ([][]byte, error) {
+	// Note: syntheticLockRefKeys should be only used for querying and should not be combined with native lockup operations
+	// synthetic suffix denom should not conflict with native denom
 	refKeys := [][]byte{}
 	timeKey := getTimeKey(lock.EndTime)
 	durationKey := getDurationKey(lock.Duration)
@@ -91,12 +91,12 @@ func shadowLockRefKeys(lock types.PeriodLock) ([][]byte, error) {
 	return refKeys, nil
 }
 
-func shadowCoins(coins sdk.Coins, shadow string) sdk.Coins {
-	shadowCoins := sdk.Coins{}
+func syntheticCoins(coins sdk.Coins, suffix string) sdk.Coins {
+	syntheticCoins := sdk.Coins{}
 	for _, coin := range coins {
-		shadowCoins = shadowCoins.Add(sdk.NewCoin(coin.Denom+shadow, coin.Amount))
+		syntheticCoins = syntheticCoins.Add(sdk.NewCoin(coin.Denom+suffix, coin.Amount))
 	}
-	return shadowCoins
+	return syntheticCoins
 }
 
 func combineLocks(pl1 []types.PeriodLock, pl2 []types.PeriodLock) []types.PeriodLock {

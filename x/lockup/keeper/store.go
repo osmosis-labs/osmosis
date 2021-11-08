@@ -33,19 +33,19 @@ func lockStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
 }
 
-// shadowLockStoreKey returns shadow store key from ID and shadow
-func shadowLockStoreKey(lockID uint64, shadow string) []byte {
-	return combineKeys(combineKeys(types.KeyPrefixShadowLockup, sdk.Uint64ToBigEndian(lockID)), []byte(shadow))
+// syntheticLockStoreKey returns synthetic store key from ID and suffix
+func syntheticLockStoreKey(lockID uint64, suffix string) []byte {
+	return combineKeys(combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)), []byte(suffix))
 }
 
-// shadowLockTimeStoreKey returns shadow store key from ID, shadow and time
-func shadowLockTimeStoreKey(lockID uint64, shadow string, endTime time.Time) []byte {
+// syntheticLockTimeStoreKey returns synthetic store key from ID, suffix and time
+func syntheticLockTimeStoreKey(lockID uint64, suffix string, endTime time.Time) []byte {
 	return combineKeys(
 		combineKeys(
-			combineKeys(types.KeyPrefixShadowLockTimestamp, getTimeKey(endTime)),
+			combineKeys(types.KeyPrefixSyntheticLockTimestamp, getTimeKey(endTime)),
 			sdk.Uint64ToBigEndian(lockID),
 		),
-		[]byte(shadow))
+		[]byte(suffix))
 }
 
 // getLockRefs get lock IDs specified on the prefix and timestamp key

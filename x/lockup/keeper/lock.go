@@ -28,7 +28,7 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 }
 
 func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins, error) {
-	// Note: this shouldn't be called for combination of shadow and native lockups
+	// Note: this shouldn't be called for combination of synthetic and native lockups
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
@@ -74,8 +74,8 @@ func (k Keeper) deleteLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types
 	return nil
 }
 
-func (k Keeper) addShadowLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
-	refKeys, err := shadowLockRefKeys(lock)
+func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
+	refKeys, err := syntheticLockRefKeys(lock)
 	if err != nil {
 		return err
 	}
@@ -87,8 +87,8 @@ func (k Keeper) addShadowLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock ty
 	return nil
 }
 
-func (k Keeper) deleteShadowLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
-	refKeys, err := shadowLockRefKeys(lock)
+func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
+	refKeys, err := syntheticLockRefKeys(lock)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (k Keeper) deleteShadowLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock
 }
 
 func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
-	// Note: this shouldn't be called for combination of shadow and native lockups
+	// Note: this shouldn't be called for combination of synthetic and native lockups
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
@@ -364,7 +364,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockI
 		return lock, nil
 	}
 
-	// TODO: handle shadow lock changes for lockup change
+	// TODO: handle synthetic lock changes for lockup change
 	// This should be changed directly here or it should be handled by OnTokenLocked hook receiver?
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, coins, lock.Duration, lock.EndTime)
@@ -466,27 +466,27 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	return nil
 }
 
-func (k Keeper) ResetAllShadowLocks(ctx sdk.Context, shadowLocks []types.ShadowLock) error {
+func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.SyntheticLock) error {
 	// index by coin.Denom, them duration -> amt
 	// We accumulate the accumulation store entries separately,
 	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
 	// We then save these once to the accumulation store at the end.
 	accumulationStoreEntries := make(map[string]map[time.Duration]sdk.Int)
 	denoms := []string{}
-	for i, shadowLock := range shadowLocks {
+	for i, synthLock := range syntheticLocks {
 		if i%25000 == 0 {
-			msg := fmt.Sprintf("Reset %d shadow lock refs", i)
+			msg := fmt.Sprintf("Reset %d synthetic lock refs", i)
 			ctx.Logger().Info(msg)
 		}
 
-		lock, err := k.GetLockByID(ctx, shadowLock.LockId)
+		lock, err := k.GetLockByID(ctx, synthLock.LockId)
 		if err != nil {
 			return err
 		}
-		lock.Coins = shadowCoins(lock.Coins, shadowLock.Shadow)
-		lock.EndTime = shadowLock.EndTime
+		lock.Coins = syntheticCoins(lock.Coins, synthLock.Suffix)
+		lock.EndTime = synthLock.EndTime
 
-		err = k.setShadowLockAndResetRefs(ctx, *lock, shadowLock)
+		err = k.setSyntheticLockAndResetRefs(ctx, *lock, synthLock)
 		if err != nil {
 			return err
 		}
@@ -534,18 +534,18 @@ func (k Keeper) ResetAllShadowLocks(ctx sdk.Context, shadowLocks []types.ShadowL
 	return nil
 }
 
-func (k Keeper) setShadowLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, shadowLock types.ShadowLock) error {
-	err := k.setShadowLockupObject(ctx, shadowLock.LockId, shadowLock.Shadow, shadowLock.EndTime)
+func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
+	err := k.setSyntheticLockupObject(ctx, synthLock.LockId, synthLock.Suffix, synthLock.EndTime)
 	if err != nil {
 		return err
 	}
 
 	// store refs by the status of unlock
 	if lock.IsUnlocking() {
-		return k.addShadowLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, lock)
 	}
 
-	return k.addShadowLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 }
 
 // setLockAndResetLockRefs sets the lock, and resets all of its lock references
@@ -670,7 +670,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
 	}
 
-	// TODO: handle shadow lock changes for lockup removal
+	// TODO: handle synthetic lockup changes for lockup removal
 	// This should be removed directly here or it should be handled by OnTokenUnlocked hook receiver?
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)

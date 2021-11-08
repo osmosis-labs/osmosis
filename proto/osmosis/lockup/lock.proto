@@ -56,10 +56,10 @@ message QueryCondition {
   ];
 }
 
-// ShadowLock is a single unit of shadow of lock
-message ShadowLock {
+// SyntheticLock is a single unit of synthetic lockup
+message SyntheticLock {
   uint64 lock_id = 1;
-  string shadow = 2;
+  string suffix = 2;
   google.protobuf.Timestamp end_time = 3 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
