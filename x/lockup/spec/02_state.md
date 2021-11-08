@@ -33,11 +33,13 @@ All locks are stored on the KVStore as value at `{KeyPrefixPeriodLock}{ID}` key.
 
 To provide time efficient queries, several reference queues are managed by denom, unlock time, and duration.
 There are two big queues to store the lock references. (`a_prefix_key`)
+
 1. Lock references that hasn't started with unlocking yet has prefix of `KeyPrefixNotUnlocking`.
 2. Lock references that has started unlocking already has prefix of `KeyPrefixUnlocking`.
 3. Lock references that has withdrawn, it's removed from the store.
 
 Regardless the lock has started unlocking or not, it stores below references. (`b_prefix_key`)
+
 1. `{KeyPrefixLockTimestamp}{LockEndTime}`
 2. `{KeyPrefixLockDuration}{Duration}`
 3. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
@@ -68,3 +70,38 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 	return nil
 }
 ```
+
+### Synthetic Lockup
+
+The goal of synthetic lockup is to support the querying of locks by denom especially for delegated staking. By combining native denom and synthetic suffix, lockup supports querying with synthetic denom with existing denom querying functions.
+
+External modules are managing shadow locks to use it on their own logic implementation. (e.g. delegated staking and superfluid staking)
+
+A `ShadowLock` is a single unit of synthetic lockup. Each synthetic lockup has reference `PeriodLock` ID, synthetic prefix (`Shadow`) and synthetic lock's removal time (`EndTime`).
+
+```go
+type ShadowLock struct {
+	LockId  uint64
+	Shadow  string
+	EndTime time.Time
+}
+```
+
+All synthetic locks are stored on the KVStore as value at `{KeyPrefixPeriodLock}{LockID}{Shadow}` key.
+
+### Synthetic lock reference queues
+
+To provide time efficient queries, several reference queues are managed by denom, unlock time, and duration.
+
+1. `{KeyPrefixDenomLockTimestamp}{SyntheticDenom}{LockEndTime}`
+2. `{KeyPrefixDenomLockDuration}{SyntheticDenom}{Duration}`
+3. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{SyntheticDenom}{LockEndTime}`
+4. `{KeyPrefixAccountDenomLockDuration}{Owner}{SyntheticDenom}{Duration}`
+
+SyntheticDenom is expressed as `{Denom}{Shadow}`. (Note: we can change this to `{Shadow}{Denom}` as per discussion with Dev)
+
+For end time keys, they are converted to sortable string by using `sdk.FormatTimeBytes` function.
+
+**Note:**
+To implement the auto removal of synthetic lockups that is already finished, we manage a separate time basis queue at
+`{KeyPrefixShadowLockTimestamp}{EndTime}{LockId}{Shadow}`
