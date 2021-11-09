@@ -28,7 +28,9 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 }
 
 func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins, error) {
-	// Note: this shouldn't be called for combination of synthetic and native lockups
+	// Note: this function is only used for an account
+	// and this has no conflicts with synthetic lockups
+
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
@@ -101,7 +103,9 @@ func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, l
 }
 
 func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
-	// Note: this shouldn't be called for combination of synthetic and native lockups
+	// Note: this function is only used for an account
+	// and this has no conflicts with synthetic lockups
+
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {

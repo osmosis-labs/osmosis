@@ -9,24 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-// Synthetic lockup spec
-// - Synthetic lockup uses same denom as prefix ({origin_denom}/staked_{validator_id})
-// - Synthetic lockup addition, deletion, state transition to unbonding should be called by external modules
-// - Synthetic lockup should follow the changes of native lockups
-// - Synthetic lockup has reference to native lockup ID
-// - AccumulationStore should be managed for synthetic lockups as another denom
-
-// Scenario
-// - Distribution module distribute rewards to synthetic lockups using accumulation store I guess
-// - If a user begin unlock the lockup, synthetic lockup automatically move to unlocking lockup if exist.
-// (Staking module or superfluid module should make following actions for this for voting power change etc.)
-// - If unlock of the lockup finishes and lockup is deleted, synthetic lockup should be deleted together. (Do it via hooks? or do directly?)
-//// - Superfluid module create synthetic lockup if a user want to use his lockup for superfluid staking
-//// - Superfluid module start unbonding of synthetic lockup if a user don't want to do superfluid staking
-//// - Superfluid module add unbonding synthetic lockup if the user redelegate to another validator
-//// Synthetic lockup could exist more than one per denom, and if suffix is same, only one could exist.
-//// - Should be able to get native lockup ID from synthetic and from native to synthetic
-
 func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, lockID uint64, suffix string, endTime time.Time) error {
 	synthLock := &types.SyntheticLock{
 		LockId:  lockID,
