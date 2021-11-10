@@ -40,13 +40,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+* [\#499](https://github.com/osmosis-labs/osmosis/pull/499) Spec out gamm module proto
 
-* Store block height in epochs module for debugging
-* Allow zero-weight pool-incentive distribution records
-* Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
-* Update peer ID of statesync-enabled node run by notional
-* Created a pull request template
-* Update Notional Labs seed node in cmd/osmosisd/cmd/init.go
+## [v5.0.0]
+* [\#394](https://github.com/osmosis-labs/osmosis/pull/394) Allow whitelisted tx fee tokens based on conversion rate to OSMO
+* [\#464](https://github.com/osmosis-labs/osmosis/pull/464) Increase maximum outbound peers for validator nodes
+* [\#505](https://github.com/osmosis-labs/osmosis/pull/505) Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
+* [\#444](https://github.com/osmosis-labs/osmosis/pull/444) Add script for state sync
+* [\#515](https://github.com/osmosis-labs/osmosis/pull/515) Bump Osmosis-SDK: Add debug command for converting secp pubkeys
+* [\#510](https://github.com/osmosis-labs/osmosis/pull/510) Performance improvement for gauge distribution
+* [\#517](https://github.com/osmosis-labs/osmosis/pull/517) Linear time improvement for epoch time by 10%
+* [\#525](https://github.com/osmosis-labs/osmosis/pull/525) Update Notional Labs seed node in cmd/osmosisd/cmd/init.go
+* [\#522](https://github.com/osmosis-labs/osmosis/pull/522) Create pull request template
+* [\#521](https://github.com/osmosis-labs/osmosis/pull/521) Update peer ID of statesync-enabled node run by notional
+* [\#516](https://github.com/osmosis-labs/osmosis/pull/516) Add benchmark for gamm serialization
+* [\#540](https://github.com/osmosis-labs/osmosis/pull/540) Fix git lfs links
+* [\#544](https://github.com/osmosis-labs/osmosis/pull/544) Update total liquidity tracking to be denom basis
+* [\#563](https://github.com/osmosis-labs/osmosis/pull/563) Allow zero-weight pool-incentive distribution records
+* [\#562](https://github.com/osmosis-labs/osmosis/pull/562) Store block height in epochs module for debugging
+
 
 ## [v4.0.0]
 
