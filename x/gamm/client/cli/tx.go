@@ -375,9 +375,9 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		})
 	}
 
-	msg := &types.MsgCreateBalancerPool{
+	msg := &types.MsgCreatePool{
 		Sender: clientCtx.GetFromAddress().String(),
-		PoolParams: types.BalancerPoolParams{
+		PoolParams: types.PoolParams{
 			SwapFee: swapFee,
 			ExitFee: exitFee,
 		},

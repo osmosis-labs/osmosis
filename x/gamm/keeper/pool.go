@@ -79,12 +79,12 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	return nil
 }
 
-// newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
+// newPool is an internal function that creates a new Pool object with the provided
 // parameters, initial assets, and future governor.
-func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams types.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
+func (k Keeper) newPool(ctx sdk.Context, poolParams types.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
 	poolId := k.GetNextPoolNumberAndIncrement(ctx)
 
-	pool, err := types.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
+	pool, err := types.NewPool(poolId, poolParams, assets, futureGovernor, ctx.BlockTime())
 	if err != nil {
 		return nil, err
 	}

@@ -74,7 +74,7 @@ $ %s query gamm pool 1
 			}
 
 			if clientCtx.OutputFormat == "text" {
-				var pool types.BalancerPool
+				var pool types.Pool
 				err := pool.XXX_Unmarshal(res.GetPool().Value)
 				if err != nil {
 					return err
@@ -99,28 +99,6 @@ $ %s query gamm pool 1
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-// TODO: Push this to the SDK
-func writeOutputBoilerplate(ctx client.Context, out []byte) error {
-	writer := ctx.Output
-	if writer == nil {
-		writer = os.Stdout
-	}
-
-	_, err := writer.Write(out)
-	if err != nil {
-		return err
-	}
-
-	if ctx.OutputFormat != "text" {
-		// append new-line for formats besides YAML
-		_, err = writer.Write([]byte("\n"))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // GetCmdPools return pools
@@ -255,6 +233,28 @@ $ %s query gamm pool-params 1
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// TODO: Push this to the SDK
+func writeOutputBoilerplate(ctx client.Context, out []byte) error {
+	writer := ctx.Output
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	_, err := writer.Write(out)
+	if err != nil {
+		return err
+	}
+
+	if ctx.OutputFormat != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetCmdTotalShares return total share

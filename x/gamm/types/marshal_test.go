@@ -25,9 +25,9 @@ var ymlAssetTest = []PoolAsset{
 	},
 }
 
-func TestBalancerPoolMarshalYAML(t *testing.T) {
+func TestPoolMarshalYAML(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pacc, err := NewBalancerPool(defaultPoolId, BalancerPoolParams{
+	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, ymlAssetTest, defaultFutureGovernor, defaultCurBlockTime)
@@ -78,7 +78,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
 			},
 		},
 	}
-	pacc, err := NewBalancerPool(defaultPoolId, BalancerPoolParams{
+	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee:                  defaultSwapFee,
 		ExitFee:                  defaultExitFee,
 		SmoothWeightChangeParams: &lbpParams,
@@ -143,7 +143,7 @@ func TestLBPPoolMarshalYAML(t *testing.T) {
 	require.Equal(t, want, string(bs))
 }
 
-func TestBalancerPoolJson(t *testing.T) {
+func TestPoolJson(t *testing.T) {
 	var poolId uint64 = 10
 
 	jsonAssetTest := []PoolAsset{
@@ -156,13 +156,13 @@ func TestBalancerPoolJson(t *testing.T) {
 			Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
 		},
 	}
-	pacc, err := NewBalancerPool(poolId, BalancerPoolParams{
+	pacc, err := NewPool(poolId, PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, jsonAssetTest, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
-	paccInternal := pacc.(*BalancerPool)
+	paccInternal := pacc.(*Pool)
 
 	bz, err := json.Marshal(pacc)
 	require.NoError(t, err)
@@ -171,7 +171,7 @@ func TestBalancerPoolJson(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(bz1), string(bz))
 
-	var a BalancerPool
+	var a Pool
 	require.NoError(t, json.Unmarshal(bz, &a))
 	require.Equal(t, pacc.String(), a.String())
 }

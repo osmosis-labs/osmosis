@@ -23,8 +23,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.ExitPool(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgCreateBalancerPool:
-			res, err := msgServer.CreateBalancerPool(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgCreatePool:
+			res, err := msgServer.CreatePool(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgSwapExactAmountIn:

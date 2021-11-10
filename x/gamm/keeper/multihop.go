@@ -86,7 +86,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.S
 			outAsset.Token.Amount.ToDec(),
 			outAsset.Weight.ToDec(),
 			tokenOut.Amount.ToDec(),
-			pool.GetPoolSwapFee(),
+			pool.GetPoolParams().SwapFee,
 		).TruncateInt()
 
 		insExpected[i] = tokenInAmount

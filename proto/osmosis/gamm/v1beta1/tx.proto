@@ -2,14 +2,13 @@ syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/gamm/v1beta1/balancerPool.proto";
+import "osmosis/gamm/v1beta1/pool.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";
 
 service Msg {
-  rpc CreateBalancerPool(MsgCreateBalancerPool)
-      returns (MsgCreateBalancerPoolResponse);
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
   rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
   rpc SwapExactAmountIn(MsgSwapExactAmountIn)
@@ -27,10 +26,10 @@ service Msg {
 }
 
 // ===================== MsgCreatePool
-message MsgCreateBalancerPool {
+message MsgCreatePool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
-  BalancerPoolParams poolParams = 2 [
+  PoolParams poolParams = 2 [
     (gogoproto.moretags) = "yaml:\"pool_params\"",
     (gogoproto.nullable) = false
   ];
@@ -41,7 +40,7 @@ message MsgCreateBalancerPool {
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
-message MsgCreateBalancerPoolResponse {}
+message MsgCreatePoolResponse {}
 
 // ===================== MsgJoinPool
 message MsgJoinPool {

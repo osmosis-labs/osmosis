@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	defaultSwapFee            = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee            = sdk.MustNewDecFromStr("0.025")
-	defaultPoolId             = uint64(10)
-	defaultBalancerPoolParams = BalancerPoolParams{
+	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
+	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
+	defaultPoolId     = uint64(10)
+	defaultPoolParams = PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
@@ -37,7 +37,7 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolI) {
 func TestPoolShareDenom(t *testing.T) {
 	var poolId uint64 = 10
 
-	pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewPool(poolId, defaultPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	require.Equal(t, "gamm/pool/10", pacc.GetTotalShares().Denom)
@@ -69,15 +69,15 @@ func TestPoolPoolParams(t *testing.T) {
 	}
 
 	for i, params := range tests {
-		PoolParams := BalancerPoolParams{
+		poolParams := PoolParams{
 			SwapFee: params.SwapFee,
 			ExitFee: params.ExitFee,
 		}
-		err := PoolParams.Validate(dummyPoolAssets)
+		err := poolParams.Validate(dummyPoolAssets)
 		if params.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 			// Check that these are also caught if passed to the underlying pool creation func
-			_, err = NewBalancerPool(1, PoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+			_, err = NewPool(1, poolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 			require.Error(t, err)
 		} else {
 			require.NoError(t, err, "unexpected error, tc %v", i)
@@ -100,7 +100,7 @@ func TestPoolUpdatePoolAssetBalance(t *testing.T) {
 		},
 	}
 
-	pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, initialAssets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewPool(poolId, defaultPoolParams, initialAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	_, err = pacc.GetPoolAsset("unknown")
@@ -113,16 +113,16 @@ func TestPoolUpdatePoolAssetBalance(t *testing.T) {
 	// Break abstractions and start reasoning about the underlying internal representation's APIs.
 	// TODO: This test actually just needs to be refactored to not be doing this, and just
 	// create a different pool each time.
-	pacc_internal := pacc.(*BalancerPool)
+	pacc_internal := pacc.(*Pool)
 
-	err = pacc_internal.setInitialPoolAssets([]PoolAsset{{
+	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("negativeWeight", sdk.NewInt(50000)),
 	}})
 
 	require.Error(t, err)
 
-	err = pacc_internal.setInitialPoolAssets([]PoolAsset{{
+	err = pacc_internal.setInitialPoolAssets([]PoolAsset{PoolAsset{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("zeroWeight", sdk.NewInt(50000)),
 	}})
@@ -253,8 +253,8 @@ func TestPoolPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	var poolId uint64 = 10
 
 	for i, tc := range tests {
-		pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
-		pacc_internal := pacc.(*BalancerPool)
+		pacc, err := NewPool(poolId, defaultPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
+		pacc_internal := pacc.(*Pool)
 		if tc.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 		} else {
@@ -301,7 +301,7 @@ func TestGetPoolAssets(t *testing.T) {
 	}
 
 	// TODO: We need way more robust test cases here, and should table drive these cases
-	pacc, err := NewBalancerPool(defaultPoolId, defaultBalancerPoolParams, assets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewPool(defaultPoolId, defaultPoolParams, assets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	// Hardcoded GetPoolAssets tests.
@@ -353,18 +353,16 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 		},
 	}
 
-	pacc, err := NewBalancerPool(defaultPoolId, BalancerPoolParams{
-		SmoothWeightChangeParams: &params,
+	pacc, err := NewPool(defaultPoolId, PoolParams{
 		SwapFee:                  defaultSwapFee,
 		ExitFee:                  defaultExitFee,
+		SmoothWeightChangeParams: &params,
 	}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
-	balancerPool, ok := pacc.(*BalancerPool)
-	require.True(t, ok)
 	// Consistency check that SmoothWeightChangeParams params are set
-	require.NotNil(t, balancerPool.PoolParams.SmoothWeightChangeParams)
+	require.NotNil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
 	// Ensure that the start time got set
-	require.Equal(t, balancerPool.PoolParams.SmoothWeightChangeParams.StartTime, defaultCurBlockTime)
+	require.Equal(t, pacc.GetPoolParams().SmoothWeightChangeParams.StartTime, defaultCurBlockTime)
 }
 
 func TestPoolPokeTokenWeights(t *testing.T) {
@@ -547,16 +545,14 @@ func TestPoolPokeTokenWeights(t *testing.T) {
 			initialPoolAssets[i] = assetCopy
 		}
 		// Initialize the pool
-		pacc, err := NewBalancerPool(uint64(poolNum), BalancerPoolParams{
+		pacc, err := NewPool(uint64(poolNum), PoolParams{
 			SwapFee:                  defaultSwapFee,
 			ExitFee:                  defaultExitFee,
 			SmoothWeightChangeParams: &tc.params,
 		}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 		require.NoError(t, err, "poolNumber %v", poolNum)
-		balancerPool, ok := pacc.(*BalancerPool)
-		require.True(t, ok)
 		// Consistency check that SmoothWeightChangeParams params are set
-		require.NotNil(t, balancerPool.PoolParams.SmoothWeightChangeParams)
+		require.NotNil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
 
 		testCases := addDefaultCases(paramsCopy, tc.cases)
 		for caseNum, testCase := range testCases {
@@ -575,7 +571,7 @@ func TestPoolPokeTokenWeights(t *testing.T) {
 			require.Equal(t, totalWeight, pacc.GetTotalWeight())
 		}
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
-		require.Nil(t, balancerPool.PoolParams.SmoothWeightChangeParams)
+		require.Nil(t, pacc.GetPoolParams().SmoothWeightChangeParams)
 	}
 
 }
@@ -595,8 +591,8 @@ func TestPoolParamStartTime(t *testing.T) {
 	}
 
 	for tcn, tc := range testCases {
-		params := defaultBalancerPoolParams
-		pool, err := NewBalancerPool(poolId, params, dummyPoolAssets, defaultFutureGovernor, tc.blockTime)
+		params := defaultPoolParams
+		pool, err := NewPool(poolId, params, dummyPoolAssets, defaultFutureGovernor, tc.blockTime)
 		require.NoError(t, err)
 
 		require.Equal(t, tc.valid, pool.IsActive(tc.blockTime),

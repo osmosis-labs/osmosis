@@ -24,7 +24,7 @@ func genPoolAssets(r *rand.Rand) []gammtypes.PoolAsset {
 	return assets
 }
 
-func genPoolParams(r *rand.Rand) gammtypes.BalancerPoolParams {
+func genPoolParams(r *rand.Rand) gammtypes.PoolParams {
 	swapFeeInt := int64(r.Intn(1e5))
 	swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -32,7 +32,7 @@ func genPoolParams(r *rand.Rand) gammtypes.BalancerPoolParams {
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
 	// TODO: Randomly generate LBP params
-	return gammtypes.BalancerPoolParams{
+	return gammtypes.PoolParams{
 		SwapFee:                  swapFee,
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: nil,
@@ -46,7 +46,7 @@ func setupPools(maxNumPoolsToGen int) []gammtypes.PoolI {
 	for i := 0; i < maxNumPoolsToGen; i++ {
 		assets := genPoolAssets(r)
 		params := genPoolParams(r)
-		pool, _ := gammtypes.NewBalancerPool(uint64(i), params, assets, "FutureGovernorString", time.Now())
+		pool, _ := gammtypes.NewPool(uint64(i), params, assets, "FutureGovernorString", time.Now())
 		pools = append(pools, pool)
 	}
 	return pools

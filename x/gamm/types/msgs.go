@@ -63,11 +63,11 @@ func ValidateFutureGovernor(governor string) error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateBalancerPool{}
+var _ sdk.Msg = &MsgCreatePool{}
 
-func (msg MsgCreateBalancerPool) Route() string { return RouterKey }
-func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreatePool }
-func (msg MsgCreateBalancerPool) ValidateBasic() error {
+func (msg MsgCreatePool) Route() string { return RouterKey }
+func (msg MsgCreatePool) Type() string  { return TypeMsgCreatePool }
+func (msg MsgCreatePool) ValidateBasic() error {
 
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -91,10 +91,10 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 
 	return nil
 }
-func (msg MsgCreateBalancerPool) GetSignBytes() []byte {
+func (msg MsgCreatePool) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
-func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
+func (msg MsgCreatePool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
