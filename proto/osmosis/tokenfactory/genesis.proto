@@ -1,0 +1,11 @@
+syntax = "proto3";
+package osmosislabs.osmosis.tokenfactory;
+
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/osmosis-labs/osmosis/x/tokenfactory/types";
+
+// GenesisState defines the tokenfactory module's genesis state.
+message GenesisState {
+  // this line is used by starport scaffolding # genesis/proto/state
+}
