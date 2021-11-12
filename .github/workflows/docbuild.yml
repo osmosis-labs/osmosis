@@ -12,6 +12,7 @@ jobs:
 
       - name: Install and Build 🔧 # This will create version inside the 'build' folder.
         run: |
+          cd docs
           npm install
           npm run build
 
@@ -19,4 +20,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
           branch: gh-pages-docs # The branch the action should deploy to.
-          folder: build # The folder the action should deploy.
+          folder: docs/build # The folder the action should deploy.
