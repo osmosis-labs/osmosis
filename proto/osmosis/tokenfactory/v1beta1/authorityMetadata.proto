@@ -1,0 +1,13 @@
+syntax = "proto3";
+package osmosis.tokenfactory.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/tokenfactory/types";
+
+message DenomAuthorityMetadata {
+  option (gogoproto.equal) = true;
+
+  string Admin = 1 [ (gogoproto.moretags) = "yaml:\"admin\"" ];
+}

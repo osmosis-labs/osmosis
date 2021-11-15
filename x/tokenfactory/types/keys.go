@@ -1,5 +1,9 @@
 package types
 
+import (
+	"strings"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "tokenfactory"
@@ -18,11 +22,24 @@ const (
 )
 
 var (
-	DenomAdminsStorePrefix  = "admins"
-	DenomMintersStorePrefix = "minters"
-	DenomBurnersStorePrefix = "burners"
+	DenomAuthorityMetadataKey = "authoritymetadata"
+	DenomsPrefixKey           = "denoms"
+	CreatorPrefixKey          = "creator"
+	AdminPrefixKey            = "admin"
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
+func GetDenomPrefixStore(denom string) []byte {
+	return []byte(strings.Join([]string{DenomsPrefixKey, denom, ""}, "|"))
 }
+
+func GetCreatorPrefix(creator string) []byte {
+	return []byte(strings.Join([]string{CreatorPrefixKey, creator, ""}, "|"))
+}
+
+func GetCreatorsPrefix() []byte {
+	return []byte(strings.Join([]string{CreatorPrefixKey, ""}, "|"))
+}
+
+// func GetAdminPrefix(admin string) []byte {
+// 	return []byte(strings.Join([]string{admin, "admin", ""}, "|"))
+// }

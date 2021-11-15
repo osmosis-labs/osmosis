@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/osmosis-labs/osmosis/x/tokenfactory/types"
@@ -10,10 +8,7 @@ import (
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
 func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomnonce string) error {
-
-	denom := strings.Join([]string{"factory", creatorAddr, denomnonce}, "/")
-
-	err := sdk.ValidateDenom(denom)
+	denom, err := types.GetTokenDenom(creatorAddr, denomnonce)
 	if err != nil {
 		return err
 	}
@@ -35,5 +30,14 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomnonce stri
 
 	k.bankKeeper.SetDenomMetaData(ctx, denomMetaData)
 
+	authorityMetadata := types.DenomAuthorityMetadata{
+		Admin: creatorAddr,
+	}
+	err = k.SetAuthorityMetadata(ctx, denom, authorityMetadata)
+	if err != nil {
+		return err
+	}
+
+	k.addDenomFromCreator(ctx, creatorAddr, denom)
 	return nil
 }

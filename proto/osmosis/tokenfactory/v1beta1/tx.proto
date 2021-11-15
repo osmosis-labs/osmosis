@@ -1,0 +1,74 @@
+syntax = "proto3";
+package osmosis.tokenfactory.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/tokenfactory/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc CreateDenom(MsgCreateDenom) returns (MsgCreateDenomResponse);
+  rpc Mint(MsgMint) returns (MsgMintResponse);
+  rpc Burn(MsgBurn) returns (MsgBurnResponse);
+  rpc ForceTransfer(MsgForceTransfer) returns (MsgForceTransferResponse);
+  rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
+}
+
+// ===================== MsgCreateDenom
+message MsgCreateDenom {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string nonce = 2 [ (gogoproto.moretags) = "yaml:\"nonce\"" ];
+}
+
+message MsgCreateDenomResponse {}
+
+// ===================== MsgMint
+message MsgMint {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string mintToAddress = 3
+      [ (gogoproto.moretags) = "yaml:\"mint_to_address\"" ];
+}
+
+message MsgMintResponse {}
+
+// ===================== MsgBurn
+message MsgBurn {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string burnFromAddress = 3
+      [ (gogoproto.moretags) = "yaml:\"burn_from_address\"" ];
+}
+
+message MsgBurnResponse {}
+
+// ===================== MsgForceTransfer
+message MsgForceTransfer {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string transferFromAddress = 3
+      [ (gogoproto.moretags) = "yaml:\"transfer_from_address\"" ];
+  string transferToAddress = 4
+      [ (gogoproto.moretags) = "yaml:\"transfer_to_address\"" ];
+}
+
+message MsgForceTransferResponse {}
+
+// ===================== MsgChangeAdmin
+message MsgChangeAdmin {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string newAdmin = 3 [ (gogoproto.moretags) = "yaml:\"new_admin\"" ];
+}
+
+message MsgChangeAdminResponse {}
