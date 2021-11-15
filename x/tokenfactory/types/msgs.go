@@ -49,8 +49,8 @@ func (m MsgCreateDenom) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgMint{}
 
-// NewMsgMsgMint creates a message to mint tokens
-func NewMsgMsgMint(sender string, amount sdk.Coin, mintTo string) *MsgMint {
+// NewMsgMint creates a message to mint tokens
+func NewMsgMint(sender string, amount sdk.Coin, mintTo string) *MsgMint {
 	return &MsgMint{
 		Sender:        sender,
 		Amount:        amount,
@@ -87,8 +87,8 @@ func (m MsgMint) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgBurn{}
 
-// NewMsgMsgBurn creates a message to burn tokens
-func NewMsgMsgBurn(sender string, amount sdk.Coin, burnFrom string) *MsgBurn {
+// NewMsgBurn creates a message to burn tokens
+func NewMsgBurn(sender string, amount sdk.Coin, burnFrom string) *MsgBurn {
 	return &MsgBurn{
 		Sender:          sender,
 		Amount:          amount,
@@ -169,9 +169,10 @@ func (m MsgForceTransfer) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChangeAdmin{}
 
 // NewMsgChangeAdmin creates a message to burn tokens
-func NewMsgChangeAdmin(sender string, newAdmin string) *MsgChangeAdmin {
+func NewMsgChangeAdmin(sender, denom, newAdmin string) *MsgChangeAdmin {
 	return &MsgChangeAdmin{
 		Sender:   sender,
+		Denom:    denom,
 		NewAdmin: newAdmin,
 	}
 }
@@ -187,6 +188,11 @@ func (m MsgChangeAdmin) ValidateBasic() error {
 	_, err = sdk.AccAddressFromBech32(m.NewAdmin)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid address (%s)", err)
+	}
+
+	_, _, err = DeconstructDenom(m.Denom)
+	if err != nil {
+		return err
 	}
 
 	return nil
