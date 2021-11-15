@@ -18,6 +18,7 @@ Currently the only supported metadata & spot price calculator is using a GAMM po
   * The osmo-equivalent price for determining sufficiency is rechecked after every block. (During the mempools RecheckTx)
     * TODO: further consider if we want to take this tradeoff. Allows someone who manipulates price for one block to flush txs using that asset as fee from most of the networks' mempools.
     * The simple alternative is only check fee equivalency at a txs entry into the mempool, which allows someone to manipulate price down to have many txs enter the chain at low cost.
+    * Another alternative is to use TWAP instead of Spot Price once it is available on-chain
     * The former concern isn't very worrisome as long as some nodes have 0 min tx fees.
 
 ## New SDK messages
