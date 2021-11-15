@@ -203,3 +203,37 @@ func (s *IntegrationTestSuite) TestGetCmdIncentivizedPools() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestGetCmdExternalIncentiveGauges() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query external incentivized pools",
+			false, &types.QueryExternalIncentiveGaugesResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdExternalIncentiveGauges()
+			clientCtx := val.ClientCtx
+
+			args := []string{}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
