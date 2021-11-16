@@ -51,7 +51,9 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		}
 
 		if record.GaugeId == 0 { // fund community pool if gaugeId is zero
-			k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount))
+			if err := k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount)); err != nil {
+				return err
+			}
 			continue
 		}
 
@@ -69,17 +71,6 @@ func (k Keeper) GetDistrInfo(ctx sdk.Context) types.DistrInfo {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.DistrInfoKey)
 
-	if len(bz) == 0 {
-		distrInfo := types.DistrInfo{
-			TotalWeight: sdk.NewInt(0),
-			Records:     nil,
-		}
-		bz = k.cdc.MustMarshalBinaryBare(&distrInfo)
-
-		store.Set(types.DistrInfoKey, bz)
-		return distrInfo
-	}
-
 	distrInfo := types.DistrInfo{}
 	k.cdc.MustUnmarshalBinaryBare(bz, &distrInfo)
 
@@ -92,27 +83,13 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 	store.Set(types.DistrInfoKey, bz)
 }
 
-// indexOfDistrRecordByGaugeId returns the index of the record for the specific gauge id.
-// If there is no record matched to the gauge id, return -1.
-func (k Keeper) indexOfDistrRecordByGaugeId(ctx sdk.Context, gaugeId uint64) int {
-	distrInfo := k.GetDistrInfo(ctx)
-	records := distrInfo.Records
-	for i, record := range records {
-		if record.GaugeId == gaugeId {
-			return i
-		}
-	}
-	return -1
-}
-
-// This is checked for no err when a proposal is made, and executed when a proposal passes
-func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
-	distrInfo := k.GetDistrInfo(ctx)
-
+// Validates a list of records to ensure that:
+// 1) there are no duplicates,
+// 2) the records are in sorted order.
+// 3) the records only pay to gauges that exist
+func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	lastGaugeID := uint64(0)
 	gaugeIdFlags := make(map[uint64]bool)
-
-	totalWeight := sdk.NewInt(0)
 
 	for _, record := range records {
 		if gaugeIdFlags[record.GaugeId] {
@@ -147,6 +124,22 @@ func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecor
 		}
 
 		gaugeIdFlags[record.GaugeId] = true
+	}
+	return nil
+}
+
+// This is checked for no err when a proposal is made, and executed when a proposal passes
+func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
+	distrInfo := k.GetDistrInfo(ctx)
+
+	err := k.validateRecords(ctx, records...)
+	if err != nil {
+		return err
+	}
+
+	totalWeight := sdk.NewInt(0)
+
+	for _, record := range records {
 		totalWeight = totalWeight.Add(record.Weight)
 	}
 
@@ -168,44 +161,12 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 		totalWeight = totalWeight.Add(existingRecord.Weight)
 	}
 
-	lastGaugeID := uint64(0)
-	// TODO: Delete gaugeIdFlags
-	gaugeIdFlags := make(map[uint64]bool)
+	err := k.validateRecords(ctx, records...)
+	if err != nil {
+		return err
+	}
 
 	for _, record := range records {
-		if gaugeIdFlags[record.GaugeId] {
-			return sdkerrors.Wrapf(
-				types.ErrDistrRecordRegisteredGauge,
-				"Gauge ID #%d has duplications.",
-				record.GaugeId,
-			)
-		}
-
-		// Ensure records are sorted because ~AESTHETIC~
-		if record.GaugeId < lastGaugeID {
-			return sdkerrors.Wrapf(
-				types.ErrDistrRecordNotSorted,
-				"Gauge ID #%d came after Gauge ID #%d.",
-				record.GaugeId, lastGaugeID,
-			)
-		}
-		lastGaugeID = record.GaugeId
-
-		// unless GaugeID is 0 for the community pool, don't allow distribution records for gauges that don't exist
-		if record.GaugeId != 0 {
-			gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
-			if err != nil {
-				return err
-			}
-			if !gauge.IsPerpetual {
-				return sdkerrors.Wrapf(types.ErrDistrRecordRegisteredGauge,
-					"Gauge ID #%d is not perpetual.",
-					record.GaugeId)
-			}
-		}
-
-		gaugeIdFlags[record.GaugeId] = true
-
 		if val, ok := recordsMap[record.GaugeId]; ok {
 			totalWeight = totalWeight.Sub(val.Weight)
 			recordsMap[record.GaugeId] = record

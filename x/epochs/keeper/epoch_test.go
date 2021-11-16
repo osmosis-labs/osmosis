@@ -16,7 +16,6 @@ func (suite *KeeperTestSuite) TestEpochLifeCycle() {
 		CurrentEpoch:          0,
 		CurrentEpochStartTime: time.Time{},
 		EpochCountingStarted:  false,
-		CurrentEpochEnded:     true,
 	}
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochInfo)
 	epochInfoSaved := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, "monthly")

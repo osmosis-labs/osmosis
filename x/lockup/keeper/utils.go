@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,14 +10,7 @@ import (
 
 // combineKeys combine bytes array into a single bytes
 func combineKeys(keys ...[]byte) []byte {
-	combined := []byte{}
-	for i, key := range keys {
-		combined = append(combined, key...)
-		if i < len(keys)-1 { // not last item
-			combined = append(combined, types.KeyIndexSeparator...)
-		}
-	}
-	return combined
+	return bytes.Join(keys, types.KeyIndexSeparator)
 }
 
 // getTimeKey returns the key used for getting a set of period locks

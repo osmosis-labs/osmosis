@@ -8,25 +8,80 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
+// TestDistribute tests that when the distribute command is executed on
+// a provided gauge,
+func (suite *KeeperTestSuite) TestDistribute() {
+	twoLockupUser := userLocks{
+		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
+		lockAmounts:   []sdk.Coins{defaultLPTokens, defaultLPTokens},
+	}
+	defaultGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+	doubleLengthGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: 2 * defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
+	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
+	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
+	tests := []struct {
+		users           []userLocks
+		gauges          []perpGaugeDesc
+		expectedRewards []sdk.Coins
+	}{
+		// gauge 1 gives 3k coins. Three locks, all eligible. 1k coins per lock
+		// so 1k to oneLockupUser, 2k to twoLockupUser
+		{
+			users:           []userLocks{oneLockupUser, twoLockupUser},
+			gauges:          []perpGaugeDesc{defaultGauge},
+			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
+		},
+		// gauge 1 gives 3k coins. Three locks, all eligible.
+		// gauge 2 gives 3k coins to one lock, in twoLockupUser
+		// so 1k to oneLockupUser, 5k to twoLockupUser
+		{
+			users:           []userLocks{oneLockupUser, twoLockupUser},
+			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
+			expectedRewards: []sdk.Coins{oneKRewardCoins, fiveKRewardCoins},
+		},
+	}
+	for tcIndex, tc := range tests {
+		suite.SetupTest()
+		gauges := suite.SetupGauges(tc.gauges)
+		addrs := suite.SetupUserLocks(tc.users)
+		_, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
+		suite.Require().NoError(err)
+		// Check expected rewards
+		for i, addr := range addrs {
+			bal := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr)
+			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "tcnum %d, person %d", tcIndex, i)
+		}
+	}
+}
+
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()
 
-	addr := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
-		Denom:         "lptoken",
-		Duration:      time.Second / 2, // 0.5 second
+		Denom:         defaultLPDenom,
+		Duration:      defaultLockDuration / 2, // 0.5 second, invalid duration
 	}
-	_, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addr, coins, distrTo, time.Time{}, 1)
+	_, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
 	suite.Require().Error(err)
 
-	distrTo.Duration = time.Second
-	_, err = suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addr, coins, distrTo, time.Time{}, 1)
+	distrTo.Duration = defaultLockDuration
+	_, err = suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
 	suite.Require().NoError(err)
 }
 
+// TODO: Make this test table driven, or move whatever it tests into
+// the much simpler TestDistribute
 func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -62,7 +117,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 105)})
 
@@ -71,6 +126,8 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	suite.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...).Sub(distrCoins))
 }
 
+// TODO: Make this test table driven, or move whatever it tests into
+// the much simpler TestDistribute
 func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.SetupTest()
 
@@ -93,7 +150,7 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 5)})
 
@@ -102,6 +159,9 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.Require().Equal(coins, distrCoins)
 }
 
+// TODO: Make this test table driven
+// OR if it needs to be script based,
+// remove lots of boilerplate so this can actually be followed
 func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -110,8 +170,10 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	gauges := suite.app.IncentivesKeeper.GetNotFinishedGauges(suite.ctx)
 	suite.Require().Len(gauges, 0)
 
-	// setup lock and gauge
-	lockOwner, gaugeID, coins, startTime := suite.SetupLockAndGauge(false)
+	lockOwners := suite.SetupManyLocks(5, defaultLiquidTokens, defaultLPTokens, time.Second)
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	// evenly distributed per lock
+	expectedCoinsPerLock := sdk.Coins{sdk.NewInt64Coin("stake", 2)}
 
 	// check gauges
 	gauges = suite.app.IncentivesKeeper.GetNotFinishedGauges(suite.ctx)
@@ -124,8 +186,8 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Equal(gauges[0].StartTime.Unix(), startTime.Unix())
 
 	// check rewards estimation
-	rewardsEst := suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, 100)
-	suite.Require().Equal(coins.String(), rewardsEst.String())
+	rewardsEst := suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
+	suite.Require().Equal(expectedCoinsPerLock.String(), rewardsEst.String())
 
 	// add to gauge
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
@@ -166,7 +228,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Len(gauges, 0)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 105)})
 
@@ -196,8 +258,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	_, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID+1000)
 	suite.Require().Error(err)
 
-	// check rewards estimation
-	rewardsEst = suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwner, []lockuptypes.PeriodLock{}, 100)
+	rewardsEst = suite.app.IncentivesKeeper.GetRewardsEst(suite.ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
 	suite.Require().Equal(sdk.Coins{}, rewardsEst)
 }
 
@@ -270,16 +331,16 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	suite.Require().Len(gauges, 0)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// distributing twice without adding more for perpetual gauge
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins{})
+	suite.Require().True(distrCoins.Empty())
 
 	// add to gauge
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
@@ -288,7 +349,7 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	// distributing twice with adding more for perpetual gauge
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 200)})
 
@@ -344,7 +405,7 @@ func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins(nil))
 
@@ -389,7 +450,7 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
+	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins(nil))
 
@@ -399,86 +460,59 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
 
-func (suite *KeeperTestSuite) TestNonPerpetualActiveGaugesByDenom() {
-	// test for module get gauges
-	suite.SetupTest()
+func (suite *KeeperTestSuite) TestGaugesByDenom() {
+	// TODO: This is not a good test. We should refactor it to be table driven,
+	// specifying a list of gauges to define, and then the expected result of gauges by denom
+	testGaugeByDenom := func(isPerpetual bool) {
+		// test for module get gauges
+		suite.SetupTest()
 
-	// initial module gauges check
-	gaugeIds := suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
-	suite.Require().Len(gaugeIds, 0)
+		// initial module gauges check
+		gaugeIds := suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
+		suite.Require().Len(gaugeIds, 0)
 
-	// setup lock and gauge
-	_, gaugeID, _, startTime := suite.SetupLockAndGauge(false)
+		// setup lock and gauge
+		_, gaugeID, _, startTime := suite.SetupLockAndGauge(isPerpetual)
 
-	// check gauges
-	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
-	suite.Require().Len(gaugeIds, 1)
-	suite.Require().Equal(gaugeIds[0], gaugeID)
+		// check gauges
+		gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
+		suite.Require().Len(gaugeIds, 1, "perpetual %b", isPerpetual)
+		suite.Require().Equal(gaugeIds[0], gaugeID)
 
-	// start distribution
-	suite.ctx = suite.ctx.WithBlockTime(startTime)
-	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
-	suite.Require().NoError(err)
-	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
-	suite.Require().NoError(err)
+		// start distribution
+		suite.ctx = suite.ctx.WithBlockTime(startTime)
+		gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+		suite.Require().NoError(err)
+		err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
+		suite.Require().NoError(err)
 
-	// check gauge ids by denom
-	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
-	suite.Require().Len(gaugeIds, 1)
+		// check gauge ids by denom
+		gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
+		suite.Require().Len(gaugeIds, 1)
 
-	// distribute coins to stakers
-	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
-	suite.Require().NoError(err)
+		// check gauge ids by other denom
+		gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lpt")
+		suite.Require().Len(gaugeIds, 0)
 
-	// finish distribution
-	err = suite.app.IncentivesKeeper.FinishDistribution(suite.ctx, *gauge)
-	suite.Require().NoError(err)
+		// distribute coins to stakers
+		_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, []types.Gauge{*gauge})
+		suite.Require().NoError(err)
 
-	// check gauge ids by denom
-	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
-	suite.Require().Len(gaugeIds, 0)
-}
+		// finish distribution for non perpetual gauge
+		if !gauge.IsPerpetual {
+			err = suite.app.IncentivesKeeper.FinishDistribution(suite.ctx, *gauge)
+			suite.Require().NoError(err)
+		}
 
-func (suite *KeeperTestSuite) TestPerpetualActiveGaugesByDenom() {
-	// test for module get gauges
-	suite.SetupTest()
+		expectedNumGauges := 1
+		if !isPerpetual {
+			expectedNumGauges = 0
+		}
+		// check gauge ids by denom
+		gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
+		suite.Require().Len(gaugeIds, expectedNumGauges)
+	}
 
-	// initial module gauges check
-	gaugeIds := suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
-	suite.Require().Len(gaugeIds, 0)
-
-	// setup lock and gauge
-	_, gaugeID, _, startTime := suite.SetupLockAndGauge(true)
-
-	// check gauges
-	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
-	suite.Require().Len(gaugeIds, 1)
-	suite.Require().Equal(gaugeIds[0], gaugeID)
-
-	// start distribution
-	suite.ctx = suite.ctx.WithBlockTime(startTime)
-	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
-	suite.Require().NoError(err)
-	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
-	suite.Require().NoError(err)
-
-	// check gauge ids by denom
-	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
-	suite.Require().Len(gaugeIds, 1)
-
-	// check gauge ids by other denom
-	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lpt")
-	suite.Require().Len(gaugeIds, 0)
-
-	// check gauge ids by other denom
-	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "token")
-	suite.Require().Len(gaugeIds, 0)
-
-	// distribute coins to stakers
-	_, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, *gauge)
-	suite.Require().NoError(err)
-
-	// check gauge ids by denom
-	gaugeIds = suite.app.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.ctx, "lptoken")
-	suite.Require().Len(gaugeIds, 1)
+	testGaugeByDenom(true)
+	testGaugeByDenom(false)
 }

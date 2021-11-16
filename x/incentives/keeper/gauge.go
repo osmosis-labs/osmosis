@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/x/gamm/utils"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
@@ -83,7 +82,10 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
-	k.setGauge(ctx, gauge)
+	err := k.setGauge(ctx, gauge)
+	if err != nil {
+		return err
+	}
 
 	curTime := ctx.BlockTime()
 	timeKey := getTimeKey(gauge.StartTime)
@@ -138,7 +140,10 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		return 0, err
 	}
 
-	k.setGauge(ctx, &gauge)
+	err := k.setGauge(ctx, &gauge)
+	if err != nil {
+		return 0, err
+	}
 	k.setLastGaugeID(ctx, gauge.Id)
 
 	// TODO: Do we need to be concerned with case where this should be ActiveGauges?
@@ -163,7 +168,10 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 	}
 
 	gauge.Coins = gauge.Coins.Add(coins...)
-	k.setGauge(ctx, gauge)
+	err = k.setGauge(ctx, gauge)
+	if err != nil {
+		return err
+	}
 	k.hooks.AfterAddToGauge(ctx, gauge.Id)
 	return nil
 }
@@ -182,7 +190,6 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
 		return err
 	}
-	k.hooks.AfterStartDistribution(ctx, gauge.Id)
 	return nil
 }
 
@@ -271,8 +278,74 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	return gauge, filteredDistrCoins, nil
 }
 
-// Distribute coins from gauge according to its conditions
-func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error) {
+// distributionInfo stores all of the information for pent up sends for rewards distributions.
+// This enables us to lower the number of events and calls to back
+type distributionInfo struct {
+	nextID            int
+	lockOwnerAddrToID map[string]int
+	idToBech32Addr    []string
+	idToDecodedAddr   []sdk.AccAddress
+	idToDistrCoins    []sdk.Coins
+}
+
+func newDistributionInfo() distributionInfo {
+	return distributionInfo{
+		nextID:            0,
+		lockOwnerAddrToID: make(map[string]int),
+		idToBech32Addr:    []string{},
+		idToDecodedAddr:   []sdk.AccAddress{},
+		idToDistrCoins:    []sdk.Coins{},
+	}
+}
+
+func (d *distributionInfo) addLockRewards(lock lockuptypes.PeriodLock, rewards sdk.Coins) error {
+	if id, ok := d.lockOwnerAddrToID[lock.Owner]; ok {
+		oldDistrCoins := d.idToDistrCoins[id]
+		d.idToDistrCoins[id] = rewards.Add(oldDistrCoins...)
+	} else {
+		id := d.nextID
+		d.nextID += 1
+		d.lockOwnerAddrToID[lock.Owner] = id
+		decodedOwnerAddr, err := sdk.AccAddressFromBech32(lock.Owner)
+		if err != nil {
+			return err
+		}
+		d.idToBech32Addr = append(d.idToBech32Addr, lock.Owner)
+		d.idToDecodedAddr = append(d.idToDecodedAddr, decodedOwnerAddr)
+		d.idToDistrCoins = append(d.idToDistrCoins, rewards)
+	}
+	return nil
+}
+
+func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) error {
+	numIDs := len(distrs.idToDecodedAddr)
+	ctx.Logger().Debug(fmt.Sprintf("Beginning distribution to %d users", numIDs))
+	err := k.bk.SendCoinsFromModuleToManyAccounts(
+		ctx,
+		types.ModuleName,
+		distrs.idToDecodedAddr,
+		distrs.idToDistrCoins)
+	if err != nil {
+		return err
+	}
+	ctx.Logger().Debug("Finished sending, now creating liquidity add events")
+	for id := 0; id < numIDs; id++ {
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtDistribution,
+				sdk.NewAttribute(types.AttributeReceiver, distrs.idToBech32Addr[id]),
+				sdk.NewAttribute(types.AttributeAmount, distrs.idToDistrCoins[id].String()),
+			),
+		})
+	}
+	ctx.Logger().Debug(fmt.Sprintf("Finished Distributing to %d users", numIDs))
+	return nil
+}
+
+// distributeInternal runs the distribution logic for a gauge, and adds the sends to
+// the distrInfo computed. It also updates the gauge for the distribution.
+func (k Keeper) distributeInternal(
+	ctx sdk.Context, gauge types.Gauge, distrInfo *distributionInfo) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
 	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
@@ -286,47 +359,61 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
+
 	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
 			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			denomLockAmt := lock.Coins.AmountOf(gauge.DistributeTo.Denom)
+			denomLockAmt := lock.Coins.AmountOfNoDenomValidation(gauge.DistributeTo.Denom)
 			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 			if amt.IsPositive() {
-				distrCoins = distrCoins.Add(sdk.NewCoin(coin.Denom, amt))
+				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
+				distrCoins = distrCoins.Add(newlyDistributedCoin)
 			}
 		}
 		distrCoins = distrCoins.Sort()
 		if distrCoins.Empty() {
 			continue
 		}
-		owner, err := sdk.AccAddressFromBech32(lock.Owner)
+		// Update the amount for that address
+		err := distrInfo.addLockRewards(lock, distrCoins)
 		if err != nil {
 			return nil, err
 		}
-		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, distrCoins); err != nil {
-			return nil, err
-		}
 
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				types.TypeEvtDistribution,
-				sdk.NewAttribute(types.AttributeGaugeID, utils.Uint64ToString(gauge.Id)),
-				sdk.NewAttribute(types.AttributeLockID, utils.Uint64ToString(lock.ID)),
-				sdk.NewAttribute(types.AttributeReceiver, lock.Owner),
-				sdk.NewAttribute(types.AttributeAmount, distrCoins.String()),
-			),
-		})
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
 	// increase filled epochs after distribution
 	gauge.FilledEpochs += 1
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
-	k.setGauge(ctx, &gauge)
+	if err := k.setGauge(ctx, &gauge); err != nil {
+		return nil, err
+	}
 
-	k.hooks.AfterDistribute(ctx, gauge.Id)
 	return totalDistrCoins, nil
+}
+
+// Distribute coins from gauge according to its conditions
+func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
+	distrInfo := newDistributionInfo()
+
+	totalDistributedCoins := sdk.Coins{}
+	for _, gauge := range gauges {
+		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, &distrInfo)
+		if err != nil {
+			return nil, err
+		}
+		totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
+	}
+
+	err := k.doDistributionSends(ctx, &distrInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	k.hooks.AfterEpochDistribution(ctx)
+	return totalDistributedCoins, nil
 }
 
 // GetModuleToDistributeCoins returns sum of to distribute coins for all of the module
@@ -352,22 +439,19 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 		return nil, fmt.Errorf("gauge with ID %d does not exist", gaugeID)
 	}
 	bz := store.Get(gaugeKey)
-	proto.Unmarshal(bz, &gauge)
+	if err := proto.Unmarshal(bz, &gauge); err != nil {
+		return nil, err
+	}
 	return &gauge, nil
 }
 
 // GetGaugeFromIDs returns gauges from gauge ids reference
-func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
+func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
-	gaugeIDs := []uint64{}
-	err := json.Unmarshal(refValue, &gaugeIDs)
-	if err != nil {
-		return gauges, err
-	}
 	for _, gaugeID := range gaugeIDs {
 		gauge, err := k.GetGaugeByID(ctx, gaugeID)
 		if err != nil {
-			panic(err)
+			return []types.Gauge{}, err
 		}
 		gauges = append(gauges, *gauge)
 	}
@@ -416,7 +500,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	}
 	gauges := []types.Gauge{}
 	// initialize gauges to active and upcomings if not set
-	for s, _ := range denomSet {
+	for s := range denomSet {
 		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, s)
 		// Each gauge only rewards locks to one denom, so no duplicates
 		for _, id := range gaugeIDs {

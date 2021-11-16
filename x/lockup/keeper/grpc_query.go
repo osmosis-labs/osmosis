@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -26,7 +27,7 @@ func (k Keeper) AccountUnlockableCoins(goCtx context.Context, req *types.Account
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -38,7 +39,7 @@ func (k Keeper) AccountUnlockingCoins(goCtx context.Context, req *types.AccountU
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -50,7 +51,7 @@ func (k Keeper) AccountLockedCoins(goCtx context.Context, req *types.AccountLock
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,7 @@ func (k Keeper) AccountLockedPastTime(goCtx context.Context, req *types.AccountL
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -74,7 +75,7 @@ func (k Keeper) AccountUnlockedBeforeTime(goCtx context.Context, req *types.Acco
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -87,7 +88,7 @@ func (k Keeper) AccountLockedPastTimeDenom(goCtx context.Context, req *types.Acc
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -106,7 +107,7 @@ func (k Keeper) AccountLockedLongerDuration(goCtx context.Context, req *types.Ac
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -119,7 +120,7 @@ func (k Keeper) AccountLockedLongerDurationDenom(goCtx context.Context, req *typ
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func (k Keeper) AccountLockedPastTimeNotUnlockingOnly(goCtx context.Context, req
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
@@ -144,9 +145,14 @@ func (k Keeper) AccountLockedLongerDurationNotUnlockingOnly(goCtx context.Contex
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
 	if req.Owner == "" {
-		owner = sdk.AccAddress{}
+		return nil, errors.New("empty address")
 	} else if err != nil {
 		return nil, err
 	}
 	return &types.AccountLockedLongerDurationNotUnlockingOnlyResponse{Locks: k.GetAccountLockedLongerDurationNotUnlockingOnly(ctx, owner, req.Duration)}, nil
+}
+
+func (k Keeper) LockedDenom(goCtx context.Context, req *types.LockedDenomRequest) (*types.LockedDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return &types.LockedDenomResponse{Amount: k.GetLockedDenom(ctx, req.Denom, req.Duration)}, nil
 }

@@ -6,8 +6,8 @@ const (
 	TypeEvtAddToGauge   = "add_to_gauge"
 	TypeEvtDistribution = "distribution"
 
-	AttributeGaugeID  = "gauge_id"
-	AttributeLockID   = "lock_id"
-	AttributeReceiver = "receiver"
-	AttributeAmount   = "amount"
+	AttributeGaugeID     = "gauge_id"
+	AttributeLockedDenom = "denom"
+	AttributeReceiver    = "receiver"
+	AttributeAmount      = "amount"
 )
