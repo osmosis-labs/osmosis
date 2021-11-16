@@ -446,13 +446,8 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 }
 
 // GetGaugeFromIDs returns gauges from gauge ids reference
-func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
+func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
-	gaugeIDs := []uint64{}
-	err := json.Unmarshal(refValue, &gaugeIDs)
-	if err != nil {
-		return gauges, err
-	}
 	for _, gaugeID := range gaugeIDs {
 		gauge, err := k.GetGaugeByID(ctx, gaugeID)
 		if err != nil {
