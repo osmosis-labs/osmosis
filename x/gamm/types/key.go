@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,6 +26,15 @@ var (
 	// KeyTotalLiquidity defines key to store total liquidity
 	KeyTotalLiquidity = []byte{0x03}
 )
+
+func MustGetPoolIdFromShareDenom(denom string) uint64 {
+	numberStr := strings.TrimLeft(denom, "gamm/pool/")
+	number, err := strconv.Atoi(numberStr)
+	if err != nil {
+		panic(err)
+	}
+	return uint64(number)
+}
 
 func GetDenomPrefix(denom string) []byte {
 	return append(KeyTotalLiquidity, []byte(denom)...)

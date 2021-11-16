@@ -18,13 +18,18 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, assetInfo := range genState.SuperfluidAssetInfos {
 		k.SetSuperfluidAssetInfo(ctx, assetInfo)
 	}
+
+	// initialize epoch twap price
+	for _, priceRecord := range genState.TwapPriceRecords {
+		k.SetEpochOsmoEquivalentTWAP(ctx, priceRecord.Epoch, priceRecord.Denom, priceRecord.EpochTwapPrice)
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-
 	return &types.GenesisState{
 		SuperfluidAssets:     k.GetAllSuperfluidAssets(ctx),
 		SuperfluidAssetInfos: k.GetAllSuperfluidAssetInfos(ctx),
+		TwapPriceRecords:     k.GetAllOsmoEquivalentTWAPs(ctx),
 	}
 }

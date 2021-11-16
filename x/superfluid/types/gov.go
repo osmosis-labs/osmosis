@@ -18,7 +18,7 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&SetSuperfluidAssetsProposal{}, "osmosis/SetSuperfluidAssetsProposal")
 	govtypes.RegisterProposalType(ProposalTypeAddSuperfluidAssets)
 	govtypes.RegisterProposalTypeCodec(&AddSuperfluidAssetsProposal{}, "osmosis/AddSuperfluidAssetsProposal")
-	govtypes.RegisterProposalType(ProposalTypeAddSuperfluidAssets)
+	govtypes.RegisterProposalType(ProposalTypeRemoveSuperfluidAssets)
 	govtypes.RegisterProposalTypeCodec(&RemoveSuperfluidAssetsProposal{}, "osmosis/RemoveSuperfluidAssetsProposal")
 }
 

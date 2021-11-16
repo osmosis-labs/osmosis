@@ -1,5 +1,9 @@
 package types
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 var (
 	// ModuleName defines the module name
 	ModuleName = "superfluid"
@@ -18,4 +22,11 @@ var (
 
 	// KeyPrefixSuperfluidAssetInfo defines prefix key for superfluid asset info
 	KeyPrefixSuperfluidAssetInfo = []byte{0x02}
+
+	// KeyPrefixTokenPriceTwap defines prefix key per epoch
+	KeyPrefixTokenPriceTwap = []byte{0x03}
 )
+
+func TokenPriceTwapEpochPrefix(epoch int64) []byte {
+	return append(KeyPrefixTokenPriceTwap, sdk.Uint64ToBigEndian(uint64(epoch))...)
+}

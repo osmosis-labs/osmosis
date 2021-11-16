@@ -19,16 +19,18 @@ type Keeper struct {
 
 	ak authkeeper.AccountKeeper
 	lk types.LockupKeeper
+	gk types.GammKeeper
 }
 
 // NewKeeper returns an instance of Keeper
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, lk types.LockupKeeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, lk types.LockupKeeper, gk types.GammKeeper) *Keeper {
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
 		ak:         ak,
 		lk:         lk,
+		gk:         gk,
 	}
 }
 
