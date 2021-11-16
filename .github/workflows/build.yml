@@ -1,13 +1,15 @@
-# This is a basic workflow that is manually triggered
+name: Compile Osmosis
 
-name: compile osmosis
-
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
-on: [push, pull_request, workflow_dispatch]
+# Controls when the action will run.
+#  This workflow runr on pushes to master & every Pull Requests. (Or when manually triggered)
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 # This workflow makes x86_64 binaries for mac, windows, and linux.
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,8 +23,8 @@ jobs:
     name: osmosis ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.3
-        with: 
+      - uses: actions/setup-go@v2.1.4
+        with:
           go-version: '^1.17'
         env:
           GOOS: ${{ matrix.targetos }}
@@ -33,7 +35,7 @@ jobs:
           go mod download
           cd cmd/osmosisd
           go build .
-        
+
       - uses: actions/upload-artifact@v2
         with:
           name: osmosisd ${{ matrix.targetos }} ${{ matrix.arch }}

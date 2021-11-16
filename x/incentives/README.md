@@ -27,7 +27,7 @@ osmosisd tx incentives create-gauge [denom] [reward]
 ### Examples
 
 #### Case 1
-```
+
 I want to make incentives for LP tokens of pool X, namely LPToken, that have been locked up for at least 1 day.
 I want to reward 1000 Mytoken to this pool over 2 days (2 epochs). (500 rewarded on each day)
 I want the rewards to start disbursing at 2022 Jan 01.

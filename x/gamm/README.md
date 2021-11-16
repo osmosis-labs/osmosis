@@ -189,7 +189,7 @@ osmosisd tx gamm join-pool [flags]
 #### Example
 Join pool 1 with 1 OSMO and the respective amount of ATOM, using myKeyringWallet.
 ```sh
-osmosisd tx gamm join-pool --pool-id 1 --max-amounts-in 1000000uosmo --share-amount-out 1000000 --from myKeyringWallet
+osmosisd tx gamm join-pool --pool-id 2 --max-amounts-in 1000000uosmo --max-amounts-in 1000000uion --share-amount-out 1000000 --from myKeyringWallet
 ```
 
 
@@ -278,3 +278,7 @@ Swap 1 ATOM through pool 1 into at most 2.5 OSMO using MyKeyringWallet.
 ```sh
 osmosisd tx gamm swap-exact-amount-out 1000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 250000 --swap-route-pool-ids 1 --swap-route-denoms uosmo --from MyKeyringWallet
 ```
+
+# Other resources
+* [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
+* [Creating a pool with a pool file](./client/docs/create-pool.md)

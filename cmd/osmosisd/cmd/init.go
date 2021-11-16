@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 	"strings"
-
+	"time"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
@@ -82,28 +81,23 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-
-			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode. 
+			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode.
 			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
-			
-			seeds := []string {
-			"085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656"} // Notional
-		 
-			
-			
 
-			
+			seeds := []string{
+				"63aba59a7da5197c0fbcdc13e760d7561791dca8@162.55.132.230:2000",         // Notional
+				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656", // [ block pane ]
+			}
 
 			//Override default settings in config.toml
-			config.P2P.Seeds = strings.Join(seeds[:],",")
-			config.P2P.MaxNumInboundPeers = 150
+			config.P2P.Seeds = strings.Join(seeds[:], ",")
+			config.P2P.MaxNumInboundPeers = 320
 			config.P2P.MaxNumOutboundPeers = 40
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
 			config.FastSync.Version = "v0"
 
 			config.SetRoot(clientCtx.HomeDir)
-
 
 			//Override default settings in app.toml
 			appConfig := appcfg.DefaultConfig()
@@ -167,7 +161,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			genDoc.Validators = nil
 			genDoc.AppState = appState
 			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-				return errors.Wrap(err, "Failed to export gensis file")
+				return errors.Wrap(err, "Failed to export genesis file")
 			}
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)

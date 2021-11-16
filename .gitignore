@@ -196,3 +196,6 @@ $RECYCLE.BIN/
 /osmosisd
 /.idea/
 /artifacts/
+/.vscode/
+/scripts/local/
+/x/incentives/keeper/osmosis_testing/

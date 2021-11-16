@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
@@ -11,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -40,6 +44,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdAccountLockedLongerDuration(),
 		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
+		GetCmdTotalLockedByDenom(),
+		GetCmdOutputLocksJson(),
 	)
 
 	return cmd
@@ -564,6 +570,137 @@ $ %s query lockup account-locked-pasttime <address> <duration> <denom>
 			}
 
 			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdTotalBondedByDenom returns total amount of locked asset
+func GetCmdTotalLockedByDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-locked-of-denom <denom>",
+		Short: "Query locked amount for a specific denom bigger then duration provided",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query locked records for a specific denom bigger then duration provided.
+
+Example:
+$ %s query lockup total-locked-of-denom <denom>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			durationStr, err := cmd.Flags().GetString(FlagMinDuration)
+			if err != nil {
+				return err
+			}
+
+			duration, err := time.ParseDuration(durationStr)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.LockedDenom(cmd.Context(), &types.LockedDenomRequest{Denom: args[0], Duration: duration})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetMinDuration())
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdOutputLocksJson outputs all locks into a file called lock_export.json
+func GetCmdOutputLocksJson() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "output-all-locks <max lock ID>",
+		Short: "output all locks into a json file",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Output all locks into a json file.
+Example:
+$ %s query lockup output-all-locks <max lock ID>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			maxLockID, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				return err
+			}
+
+			// status
+			const (
+				doesnt_exist_status = iota
+				unbonding_status
+				bonded_status
+			)
+
+			type LockResult struct {
+				Id            int
+				Status        int // one of {doesnt_exist, }
+				Denom         string
+				Amount        sdk.Int
+				Address       string
+				UnbondEndTime time.Time
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			results := []LockResult{}
+			for i := 0; i <= int(maxLockID); i++ {
+				curLockResult := LockResult{Id: i}
+				res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: uint64(i)})
+				if err != nil {
+					curLockResult.Status = doesnt_exist_status
+					results = append(results, curLockResult)
+					continue
+				}
+				// 1527019420 is hardcoded time well before launch, but well after year 1
+				if res.Lock.EndTime.Before(time.Unix(1527019420, 0)) {
+					curLockResult.Status = bonded_status
+				} else {
+					curLockResult.Status = unbonding_status
+					curLockResult.UnbondEndTime = res.Lock.EndTime
+					curLockResult.Denom = res.Lock.Coins[0].Denom
+					curLockResult.Amount = res.Lock.Coins[0].Amount
+					curLockResult.Address = res.Lock.Owner
+				}
+				results = append(results, curLockResult)
+			}
+
+			bz, err := json.Marshal(results)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile("lock_export.json", []byte(bz), 0777)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Writing to lock_export.json")
+			return nil
 		},
 	}
 

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -147,18 +146,21 @@ func (suite *KeeperTestSuite) TestLock() {
 	suite.Require().Error(err)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
 	// lock with balance with same id
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().Error(err)
 
 	// lock with balance with different id
 	lock = types.NewPeriodLock(2, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 }
@@ -173,8 +175,9 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	lock := types.NewPeriodLock(1, addr1, time.Second, now.Add(time.Second), coins)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
-	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
+	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
 	// begin unlock with lock object
@@ -241,23 +244,6 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	suite.Require().Len(locks, 1)
 }
 
-func (suite *KeeperTestSuite) TestLockTokensAlot() {
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	skipLogsFor := 1000
-	for i := 0; i < skipLogsFor; i++ {
-		suite.LockTokens(addr1, coins, time.Second)
-	}
-	for i := 0; i < 1000; i++ {
-		alreadySpent := suite.ctx.GasMeter().GasConsumed()
-		suite.LockTokens(addr1, coins, time.Second)
-		newSpent := suite.ctx.GasMeter().GasConsumed()
-		spentNow := newSpent - alreadySpent
-		fmt.Println("sum up - consumed gas", i+skipLogsFor, spentNow)
-	}
-	// panic(1)
-}
-
 func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	suite.SetupTest()
 
@@ -281,7 +267,8 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// add more tokens to lock
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, addCoins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, addCoins)
+	suite.Require().NoError(err)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, addr1, locks[0].ID, addCoins)
 	suite.Require().NoError(err)
 
@@ -301,7 +288,8 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// try to add tokens to unavailable lock
 	cacheCtx, _ := suite.ctx.CacheContext()
-	suite.app.BankKeeper.SetBalances(cacheCtx, addr1, addCoins)
+	err = suite.app.BankKeeper.SetBalances(cacheCtx, addr1, addCoins)
+	suite.Require().NoError(err)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, 1111, addCoins)
 	suite.Require().Error(err)
 
@@ -312,7 +300,8 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// try to add tokens to lock that is owned by others
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	suite.app.BankKeeper.SetBalances(cacheCtx, addr2, addCoins)
+	err = suite.app.BankKeeper.SetBalances(cacheCtx, addr2, addCoins)
+	suite.Require().NoError(err)
 	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr2, locks[0].ID, addCoins)
 	suite.Require().Error(err)
 }
@@ -390,4 +379,55 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	// now withdraw all locks and ensure all got withdrawn
 	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx.WithBlockTime(unbondBlockTimes[len(times)-1]))
 	suite.Require().Len(locks, 0)
+}
+
+func (suite *KeeperTestSuite) TestLockAccumulationStore() {
+	suite.SetupTest()
+
+	// initial check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr := sdk.AccAddress([]byte("addr1---------------"))
+
+	// 1 * time.Second: 10 + 20
+	// 2 * time.Second: 20 + 30
+	// 3 * time.Second: 30
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr, coins, time.Second)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+	suite.LockTokens(addr, coins, time.Second)
+	suite.LockTokens(addr, coins, time.Second*2)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 30)}
+	suite.LockTokens(addr, coins, time.Second*2)
+	suite.LockTokens(addr, coins, time.Second*3)
+
+	// check accumulations
+	acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: 0,
+	})
+	suite.Require().Equal(int64(110), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 1,
+	})
+	suite.Require().Equal(int64(110), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 2,
+	})
+	suite.Require().Equal(int64(80), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 3,
+	})
+	suite.Require().Equal(int64(30), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 4,
+	})
+	suite.Require().Equal(int64(0), acc.Int64())
 }

@@ -13,15 +13,12 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// set epoch info from genesis
 	for _, epoch := range genState.Epochs {
-		// when epoch counting start time is not set, set it
+		// Initialize empty epoch values via Cosmos SDK
 		if epoch.StartTime.Equal(time.Time{}) {
 			epoch.StartTime = ctx.BlockTime()
 		}
 
-		// when epoch counting started and current_epoch_start_time is not set, set it
-		if epoch.EpochCountingStarted && epoch.CurrentEpochStartTime.Equal(time.Time{}) {
-			epoch.CurrentEpochStartTime = ctx.BlockTime()
-		}
+		epoch.CurrentEpochStartHeight = ctx.BlockHeight()
 
 		k.SetEpochInfo(ctx, epoch)
 	}

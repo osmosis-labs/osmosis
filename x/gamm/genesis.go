@@ -44,7 +44,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 	poolAnys := []*codectypes.Any{}
 	for _, poolI := range pools {
-		pool, ok := poolI.(*types.Pool)
+		pool, ok := poolI.(*types.BalancerPool)
 		if !ok {
 			panic(fmt.Errorf("pool (%d) is not basic pool", poolI.GetId()))
 		}
@@ -55,7 +55,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		poolAnys = append(poolAnys, any)
 	}
 	return &types.GenesisState{
-		NextPoolNumber: k.GetNextPoolNumber(ctx),
+		NextPoolNumber: k.GetNextPoolNumberAndIncrement(ctx),
 		Pools:          poolAnys,
 		Params:         k.GetParams(ctx),
 	}

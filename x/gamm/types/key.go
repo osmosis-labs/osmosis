@@ -36,6 +36,10 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 	return uint64(number)
 }
 
+func GetDenomPrefix(denom string) []byte {
+	return append(KeyTotalLiquidity, []byte(denom)...)
+}
+
 func GetPoolShareDenom(poolId uint64) string {
 	return fmt.Sprintf("gamm/pool/%d", poolId)
 }
