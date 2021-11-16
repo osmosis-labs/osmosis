@@ -108,6 +108,17 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	superfluid "github.com/osmosis-labs/osmosis/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 const appName = "OsmosisApp"
@@ -162,6 +173,7 @@ var (
 		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
+		superfluidtypes.ModuleName:               nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -209,6 +221,7 @@ type OsmosisApp struct {
 	LockupKeeper         lockupkeeper.Keeper
 	EpochsKeeper         epochskeeper.Keeper
 	PoolIncentivesKeeper poolincentiveskeeper.Keeper
+	SuperfluidKeeper     superfluidkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -367,6 +380,9 @@ func NewOsmosisApp(
 	lockupKeeper := lockupkeeper.NewKeeper(appCodec, keys[lockuptypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper, epochsKeeper)
+	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
+		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
+		app.AccountKeeper, *lockupKeeper)
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.EpochsKeeper,
@@ -393,7 +409,8 @@ func NewOsmosisApp(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(app.PoolIncentivesKeeper))
+		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(app.PoolIncentivesKeeper)).
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(app.SuperfluidKeeper))
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
@@ -431,6 +448,7 @@ func NewOsmosisApp(
 			// insert epoch hooks receivers here
 			app.IncentivesKeeper.Hooks(),
 			app.MintKeeper.Hooks(),
+			app.SuperfluidKeeper.Hooks(),
 		),
 	)
 
@@ -504,6 +522,7 @@ func NewOsmosisApp(
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		poolincentivestypes.ModuleName,
+		superfluidtypes.ModuleName,
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
@@ -763,6 +782,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 
 	return paramsKeeper

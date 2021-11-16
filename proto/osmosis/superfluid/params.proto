@@ -1,0 +1,13 @@
+syntax = "proto3";
+package osmosis.superfluid;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
+
+// Params holds parameters for the superfluid module
+message Params {
+  // refresh epoch identifier for staked amount
+  string refresh_epoch_identifier = 1
+      [ (gogoproto.moretags) = "yaml:\"refresh_epoch_identifier\"" ];
+}
