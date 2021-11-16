@@ -24,4 +24,6 @@ message GenesisState {
     repeated SuperfluidAssetInfo superfluid_asset_infos = 3 [ (gogoproto.nullable) = false ];
     repeated EpochOsmoEquivalentTWAP twap_price_records = 4
         [ (gogoproto.nullable) = false ];
+    repeated SuperfluidIntermediaryAccount intermediary_accounts = 5
+        [ (gogoproto.nullable) = false ];
 }

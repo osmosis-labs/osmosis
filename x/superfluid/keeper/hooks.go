@@ -58,6 +58,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
 		}
 
+		// TODO:
 		// slashing
 		// 	Currently for double signs, we iterate over all unbondings and all redelegations. We handle slashing delegated tokens, via a “rebase” factor.
 		// 	Meaning, that if we have a 10% slash say, we just alter the conversion rate between “delegation pool shares” and “osmo” when withdrawing your stake.

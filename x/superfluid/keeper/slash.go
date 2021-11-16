@@ -1,5 +1,6 @@
 package keeper
 
+// TODO:
 // Add hook for slash event, send slashed LP token amount to community pool, update LP token amount
 // Methods to look at:
 // SlashUnbondingDelegation
