@@ -21,7 +21,10 @@ message MsgCreateDenom {
   string nonce = 2 [ (gogoproto.moretags) = "yaml:\"nonce\"" ];
 }
 
-message MsgCreateDenomResponse {}
+message MsgCreateDenomResponse {
+  string new_token_denom = 1
+      [ (gogoproto.moretags) = "yaml:\"new_token_denom\"" ];
+}
 
 // ===================== MsgMint
 message MsgMint {

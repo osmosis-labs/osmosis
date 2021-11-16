@@ -7,15 +7,15 @@ import (
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
-func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomnonce string) error {
+func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomnonce string) (newTokenDenom string, err error) {
 	denom, err := types.GetTokenDenom(creatorAddr, denomnonce)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, found := k.bankKeeper.GetDenomMetaData(ctx, denom)
 	if found {
-		return types.ErrDenomExists
+		return "", types.ErrDenomExists
 	}
 
 	baseDenomUnit := banktypes.DenomUnit{
@@ -35,9 +35,9 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomnonce stri
 	}
 	err = k.SetAuthorityMetadata(ctx, denom, authorityMetadata)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	k.addDenomFromCreator(ctx, creatorAddr, denom)
-	return nil
+	return denom, nil
 }

@@ -23,16 +23,23 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateDenom) (*types.MsgCreateDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.Keeper.CreateDenom(ctx, msg.Sender, msg.Nonce)
+	denom, err := server.Keeper.CreateDenom(ctx, msg.Sender, msg.Nonce)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: events
-	// ctx.EventManager().EmitEvents(sdk.Events{})
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgCreateDenom,
+			sdk.NewAttribute(types.AttributeCreator, msg.Sender),
+			sdk.NewAttribute(types.AttributeNewTokenDenom, denom),
+		),
+	})
 
-	return &types.MsgCreateDenomResponse{}, nil
+	return &types.MsgCreateDenomResponse{
+		NewTokenDenom: denom,
+	}, nil
 }
 
 func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
@@ -49,8 +56,13 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 
 	server.Keeper.mintTo(ctx, msg.Amount, msg.MintToAddress)
 
-	// TODO: events
-	// ctx.EventManager().EmitEvents(sdk.Events{})
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgMint,
+			sdk.NewAttribute(types.AttributeMintToAddress, msg.MintToAddress),
+			sdk.NewAttribute(types.AttributeAmount, msg.Amount.String()),
+		),
+	})
 
 	return &types.MsgMintResponse{}, nil
 }
@@ -69,8 +81,13 @@ func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.
 
 	server.Keeper.burnFrom(ctx, msg.Amount, msg.GetBurnFromAddress())
 
-	// TODO: events
-	// ctx.EventManager().EmitEvents(sdk.Events{})
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgBurn,
+			sdk.NewAttribute(types.AttributeBurnFromAddress, msg.BurnFromAddress),
+			sdk.NewAttribute(types.AttributeAmount, msg.Amount.String()),
+		),
+	})
 
 	return &types.MsgBurnResponse{}, nil
 }
@@ -89,8 +106,14 @@ func (server msgServer) ForceTransfer(goCtx context.Context, msg *types.MsgForce
 
 	server.Keeper.forceTransfer(ctx, msg.Amount, msg.TransferFromAddress, msg.TransferToAddress)
 
-	// TODO: events
-	// ctx.EventManager().EmitEvents(sdk.Events{})
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgForceTransfer,
+			sdk.NewAttribute(types.AttributeTransferFromAddress, msg.TransferFromAddress),
+			sdk.NewAttribute(types.AttributeTransferToAddress, msg.TransferToAddress),
+			sdk.NewAttribute(types.AttributeAmount, msg.Amount.String()),
+		),
+	})
 
 	return &types.MsgForceTransferResponse{}, nil
 }
@@ -113,7 +136,13 @@ func (server msgServer) ChangeAdmin(goCtx context.Context, msg *types.MsgChangeA
 	}
 
 	// TODO: events
-	// ctx.EventManager().EmitEvents(sdk.Events{})
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgChangeAdmin,
+			sdk.NewAttribute(types.AttributeDenom, msg.GetDenom()),
+			sdk.NewAttribute(types.AttributeNewAdmin, msg.NewAdmin),
+		),
+	})
 
 	return &types.MsgChangeAdminResponse{}, nil
 }
