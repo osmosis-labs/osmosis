@@ -364,12 +364,18 @@ func (suite *KeeperTestSuite) TestClawbackAirdrop() {
 			name:           "airdrop address inactive",
 			address:        "osmo10008uvk6fj3ja05u092ya5sx6fn355wayx20rq",
 			sequence:       0,
+			expectClawback: true,
+		},
+		{
+			name:           "non airdrop address active",
+			address:        sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+			sequence:       1,
 			expectClawback: false,
 		},
 		{
 			name:           "non airdrop address inactive",
 			address:        sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
-			sequence:       1,
+			sequence:       0,
 			expectClawback: false,
 		},
 	}
