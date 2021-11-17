@@ -335,6 +335,7 @@ func NewOsmosisApp(
 		totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
 		app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
 		app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
+		whitelistInitial(ctx, app)
 	})
 
 	// Create IBC Keeper
