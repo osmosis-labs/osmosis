@@ -41,7 +41,10 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 	}
 	k.clearInitialClaimables(ctx)
 
-	k.ClawbackAirdrop(ctx)
+	err = k.ClawbackAirdrop(ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
