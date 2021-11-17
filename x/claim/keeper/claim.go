@@ -40,6 +40,8 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 		return err
 	}
 	k.clearInitialClaimables(ctx)
+
+	k.ClawbackAirdrop(ctx)
 	return nil
 }
 
@@ -51,16 +53,20 @@ func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
 		if err != nil {
 			return err
 		}
-		seq, err := k.accountKeeper.GetSequence(ctx, addr)
-		if err != nil {
-			return err
-		}
-		if seq == 0 {
-			osmoBal := k.bankKeeper.GetBalance(ctx, addr, "uosmo")
-			ionBal := k.bankKeeper.GetBalance(ctx, addr, "uion")
-			err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(osmoBal, ionBal), addr)
+
+		acc := k.accountKeeper.GetAccount(ctx, addr)
+		if acc != nil {
+			seq, err := k.accountKeeper.GetSequence(ctx, addr)
 			if err != nil {
 				return err
+			}
+			if seq == 0 {
+				osmoBal := k.bankKeeper.GetBalance(ctx, addr, "uosmo")
+				ionBal := k.bankKeeper.GetBalance(ctx, addr, "uion")
+				err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(osmoBal, ionBal), addr)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

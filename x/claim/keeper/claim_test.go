@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -356,13 +357,13 @@ func (suite *KeeperTestSuite) TestClawbackAirdrop() {
 	}{
 		{
 			name:           "airdrop address active",
-			address:        "osmo1000644etcp4k4awz77kvy3pryplv8ky8py962d",
+			address:        "osmo122fypjdzwscz998aytrrnmvavtaaarjjt6223p",
 			sequence:       1,
 			expectClawback: false,
 		},
 		{
 			name:           "airdrop address inactive",
-			address:        "osmo10008uvk6fj3ja05u092ya5sx6fn355wayx20rq",
+			address:        "osmo122g3jv9que3zkxy25a2wt0wlgh68mudwptyvzw",
 			sequence:       0,
 			expectClawback: true,
 		},
@@ -387,6 +388,7 @@ func (suite *KeeperTestSuite) TestClawbackAirdrop() {
 		err = acc.SetSequence(tc.sequence)
 		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		fmt.Println(acc)
 		suite.app.BankKeeper.AddCoins(suite.ctx, addr, sdk.NewCoins(
 			sdk.NewInt64Coin("uosmo", 100), sdk.NewInt64Coin("uion", 100),
 		))
