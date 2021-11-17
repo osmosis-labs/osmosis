@@ -43,6 +43,26 @@ func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom s
 	return priceRecord.EpochTwapPrice
 }
 
+// TODO: should add test for GetLastEpochOsmoEquivalentTWAP -
+func (k Keeper) GetLastEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) types.EpochOsmoEquivalentTWAP {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
+	iterator := prefixStore.ReverseIterator(nil, nil)
+	defer iterator.Close()
+
+	if iterator.Valid() {
+		priceRecord := types.EpochOsmoEquivalentTWAP{}
+
+		err := proto.Unmarshal(iterator.Value(), &priceRecord)
+		if err != nil {
+			panic(err)
+		}
+		return priceRecord
+	}
+
+	return types.EpochOsmoEquivalentTWAP{}
+}
+
 func (k Keeper) GetAllEpochOsmoEquivalentTWAPs(ctx sdk.Context, epoch int64) []types.EpochOsmoEquivalentTWAP {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))
