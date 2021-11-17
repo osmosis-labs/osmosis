@@ -1,0 +1,15 @@
+{
+  "name": "docs",
+  "description": "Osmosis Documentation",
+  "version": "1.0.2",
+  "main": "index.js",
+  "author": "Osmosis Labs",
+  "license": "MIT",
+  "devDependencies": {
+    "vuepress": "^2.0.0-beta.27"
+  },
+  "scripts": {
+    "dev": "vuepress dev",
+    "build": "vuepress build"
+  }
+}
