@@ -51,7 +51,7 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 // ClawbackAirdrop implements prop 32 by clawing back all the OSMO and IONs from airdrop
 // recipient accounts with a sequence number of 0
 func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
-	for bechAddr := range types.AirdropAddrs {
+	for _, bechAddr := range types.AirdropAddrs {
 		addr, err := sdk.AccAddressFromBech32(bechAddr)
 		if err != nil {
 			return err
