@@ -17,6 +17,7 @@ type LockupKeeper interface {
 	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
 	CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, isUnlocking bool) error
+	DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
 }
 
 // GammKeeper defines the expected interface needed for superfluid module

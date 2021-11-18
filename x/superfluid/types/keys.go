@@ -25,6 +25,12 @@ var (
 
 	// KeyPrefixTokenPriceTwap defines prefix key per epoch
 	KeyPrefixTokenPriceTwap = []byte{0x03}
+
+	// KeyPrefixIntermediaryAccount defines prefix to set intermediary account struct to its address
+	KeyPrefixIntermediaryAccount = []byte{0x04}
+
+	// KeyPrefixLockIntermediaryAccAddr defines prefix to connect lockId and intermediary account address
+	KeyPrefixLockIntermediaryAccAddr = []byte{0x05}
 )
 
 func TokenPriceTwapEpochPrefix(epoch int64) []byte {

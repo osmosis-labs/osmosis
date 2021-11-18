@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -11,8 +12,8 @@ import (
 )
 
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr string) error {
-	// Register a synthetic lockup for superfluid staking with `superdelegation{valAddr}` suffix
-	suffix := fmt.Sprintf("superdelegation%s", valAddr)
+	// Register a synthetic lockup for superfluid staking with `superbonding{valAddr}` suffix
+	suffix := fmt.Sprintf("superbonding%s", valAddr)
 	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, false)
 
 	lock, err := k.lk.GetLockByID(ctx, lockID)
@@ -23,11 +24,27 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		return fmt.Errorf("multiple coins lock is not supported")
 	}
 
+	// prevent unbonding lockups to be not able to be used for superfluid staking
+	if lock.IsUnlocking() {
+		return fmt.Errorf("unbonding lockup is not allowed to participate in superfluid staking")
+	}
+
+	// length check
+	if lock.Duration < time.Hour*24*14 { // if less than 2 weeks bonding, skip
+		return fmt.Errorf("lockup does not have enough lock duration")
+	}
+
 	// create intermediary account that converts LP token to OSMO
 	acc := types.SuperfluidIntermediaryAccount{
 		Denom:   lock.Coins[0].Denom,
 		ValAddr: valAddr,
 	}
+
+	// connect intermediary account struct to its address
+	k.SetIntermediaryAccount(ctx, acc)
+
+	// create connection record between lock id and intermediary account
+	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
 
 	mAddr := acc.GetAddress()
 	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
@@ -56,20 +73,33 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	return nil
 }
 
-func (k Keeper) SuperfluidRedelegate(lockID uint64, newValAddr string) {
-	// TODO: Delete previous synthetic lockup, should use native lockup module only or just record lockID
-	// - shadow pair on superfluid module?
-	// Since synthetic lockup could be used in several places, would be better to create matching on own storage
-	// TODO: Create unbonding synthetic lockup for previous shadow
-	// synthetic suffix = `redelegating{valAddr}`
-	// TODO: Register a synthetic lockup, call SuperfluidDelegate?
+func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
+	// Remove previously created synthetic lockup
+	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
+	suffix := fmt.Sprintf("superbonding%s", intermediaryAcc.ValAddr)
+	err := k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
+	if err != nil {
+		return err
+	}
+
+	// unbonding synthetic suffix = `unbonding{valAddr}`
+	suffix = fmt.Sprintf("superunbonding%s", intermediaryAcc.ValAddr)
+	// TODO: synthetic lockup unbonding duration should be different from regular unbonding lockup, should set the duration here
+	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, true)
+
 	// TODO: Unbonding amount should be modified for TWAP change or not?
+	return nil
 }
 
-func (k Keeper) SuperfluidUndelegate(lockID uint64) {
-	// Create unbonding synthetic lockup
-	// TODO: Unbonding amount should be modified for TWAP change or not?
-	// synthetic suffix = `unbonding{valAddr}`
+func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr string) error {
+	err := k.SuperfluidUndelegate(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	k.SuperfluidDelegate(ctx, lockID, newValAddr)
+	return nil
 }
 
 func (k Keeper) SuperfluidWithdraw(lockID uint64) {
@@ -78,6 +108,8 @@ func (k Keeper) SuperfluidWithdraw(lockID uint64) {
 	// TODO: automatically done or manually done?
 	// TODO: check synthetic suffix = `unbonding{valAddr}`, lockID is matured and removed already on lockup storage
 }
+
+// TODO: Implement hook for native lockup unbonding
 
 // TODO: Need to (eventually) override the existing staking messages and queries, for undelegating, delegating, rewards, and redelegating, to all be going through all superfluid module.
 // Want integrators to be able to use the same staking queries and messages
