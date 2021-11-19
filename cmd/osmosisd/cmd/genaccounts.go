@@ -235,13 +235,13 @@ func CosmosToOsmoAddress(cosmosAddr string) (string, error) {
 
 func GetAirdropAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-airdrop-accounts [input-snapshot-file] [input-ions-file]",
+		Use:   "get-airdrop-accounts [input-snapshot-file] [input-ions-file] [output-file]",
 		Short: "Get list of all accounts that are being airdropped to at genesis",
 		Long: `Get list of all accounts that are being airdropped to at genesis
-Both OSMO and ION recipients
+Both OSMO and ION recipients. If erroring, ensure to `git lfs pull`
 
 Example:
-	osmosisd import-genesis-accounts-from-snapshot ../snapshot.json ../ions.json ./address.txt
+	osmosisd import-genesis-accounts-from-snapshot networks/cosmoshub-3/snapshot.json networks/osmosis-1/ions.json output_address.json
 `,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
