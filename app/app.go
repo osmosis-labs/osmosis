@@ -313,7 +313,7 @@ func NewOsmosisApp(
 	// this configures a no-op upgrade handler for the v4 upgrade,
 	// which improves the lockup module's store management.
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v4", func(ctx sdk.Context, plan upgradetypes.Plan) {
+		"v4", func(_ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 			// // Upgrade all of the lock storages
 			// locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
 			// if err != nil {
@@ -332,13 +332,16 @@ func NewOsmosisApp(
 			// app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
 			// prop12(ctx, app)
+			return vm, nil
 		})
 
-	app.UpgradeKeeper.SetUpgradeHandler("v5", func(ctx sdk.Context, plan upgradetypes.Plan) {
-		totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
-		app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
-		app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
-	})
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"v5", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
+			app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
+			app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
+			return vm, nil
+		})
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
@@ -571,18 +574,15 @@ func NewOsmosisApp(
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		},
+	app.SetAnteHandler(
+		NewAnteHandler(
+			app.AccountKeeper, app.BankKeeper,
+			app.TxFeesKeeper, app.GAMMKeeper,
+			ante.DefaultSigVerificationGasConsumer,
+			encodingConfig.TxConfig.SignModeHandler(),
+			app.IBCKeeper.ChannelKeeper,
+		),
 	)
-	if err != nil {
-		panic(err)
-	}
-	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
