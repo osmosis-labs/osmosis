@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -10,10 +11,10 @@ import (
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
-func (k Keeper) CreatePool(
+func (k Keeper) CreateBalancerPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolParams types.PoolParams,
+	BalancerPoolParams types.BalancerPoolParams,
 	poolAssets []types.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {
@@ -35,7 +36,7 @@ func (k Keeper) CreatePool(
 		return 0, err
 	}
 
-	pool, err := k.newPool(ctx, poolParams, poolAssets, futurePoolGovernor)
+	pool, err := k.newBalancerPool(ctx, BalancerPoolParams, poolAssets, futurePoolGovernor)
 	if err != nil {
 		return 0, err
 	}
@@ -195,7 +196,7 @@ func (k Keeper) JoinSwapExternAmountIn(
 		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		tokenIn.Amount.ToDec(),
-		pool.GetPoolParams().SwapFee,
+		pool.GetPoolSwapFee(),
 	).TruncateInt()
 
 	if shareOutAmount.LTE(sdk.ZeroInt()) {
@@ -263,7 +264,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		shareOutAmount.ToDec(),
-		pool.GetPoolParams().SwapFee,
+		pool.GetPoolSwapFee(),
 	).TruncateInt()
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
@@ -316,7 +317,7 @@ func (k Keeper) ExitPool(
 	}
 
 	totalSharesAmount := pool.GetTotalShares().Amount
-	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 	shareRatio := shareInAmountAfterExitFee.ToDec().QuoInt(totalSharesAmount)
 
@@ -415,8 +416,8 @@ func (k Keeper) ExitSwapShareAmountIn(
 		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		shareInAmount.ToDec(),
-		pool.GetPoolParams().SwapFee,
-		pool.GetPoolParams().ExitFee,
+		pool.GetPoolSwapFee(),
+		pool.GetPoolExitFee(),
 	).TruncateInt()
 
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
@@ -433,7 +434,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
-	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 
 	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
@@ -500,8 +501,8 @@ func (k Keeper) ExitSwapExternAmountOut(
 		pool.GetTotalShares().Amount.ToDec(),
 		pool.GetTotalWeight().ToDec(),
 		tokenOut.Amount.ToDec(),
-		pool.GetPoolParams().SwapFee,
-		pool.GetPoolParams().ExitFee,
+		pool.GetPoolSwapFee(),
+		pool.GetPoolExitFee(),
 	).TruncateInt()
 
 	if shareInAmount.LTE(sdk.ZeroInt()) {
@@ -518,7 +519,7 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, err
 	}
 
-	exitFee := pool.GetPoolParams().ExitFee.MulInt(shareInAmount).TruncateInt()
+	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 
 	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
@@ -559,31 +560,74 @@ func (k Keeper) ExitSwapExternAmountOut(
 }
 
 func (k Keeper) GetTotalLiquidity(ctx sdk.Context) sdk.Coins {
-	store := ctx.KVStore(k.storeKey)
-	if !store.Has(types.KeyTotalLiquidity) {
-		return sdk.Coins{}
-	}
-
-	bz := store.Get(types.KeyTotalLiquidity)
-	coins, err := sdk.ParseCoinsNormalized(string(bz))
-	if err != nil {
-		panic("invalid total liquidity value set")
-	}
-
+	coins := sdk.Coins{}
+	k.IterateDenomLiquidity(ctx, func(coin sdk.Coin) bool {
+		coins = coins.Add(coin)
+		return false
+	})
 	return coins
 }
 
 func (k Keeper) SetTotalLiquidity(ctx sdk.Context, coins sdk.Coins) {
+	for _, coin := range coins {
+		k.SetDenomLiquidity(ctx, coin.Denom, coin.Amount)
+	}
+}
+
+func (k Keeper) SetDenomLiquidity(ctx sdk.Context, denom string, amount sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.KeyTotalLiquidity, []byte(coins.String()))
+	bz, err := amount.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	store.Set(types.GetDenomPrefix(denom), bz)
+}
+
+func (k Keeper) GetDenomLiquidity(ctx sdk.Context, denom string) sdk.Int {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetDenomPrefix(denom))
+	if bz == nil {
+		return sdk.NewInt(0)
+	}
+
+	var amount sdk.Int
+	if err := amount.Unmarshal(bz); err != nil {
+		panic(err)
+	}
+	return amount
+}
+
+func (k Keeper) IterateDenomLiquidity(ctx sdk.Context, cb func(sdk.Coin) bool) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyTotalLiquidity)
+
+	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var amount sdk.Int
+		if err := amount.Unmarshal(iterator.Value()); err != nil {
+			panic(err)
+		}
+
+		if cb(sdk.NewCoin(string(iterator.Key()), amount)) {
+			break
+		}
+	}
 }
 
 func (k Keeper) RecordTotalLiquidityIncrease(ctx sdk.Context, coins sdk.Coins) {
-	liquidity := k.GetTotalLiquidity(ctx)
-	k.SetTotalLiquidity(ctx, liquidity.Add(coins...))
+	for _, coin := range coins {
+		amount := k.GetDenomLiquidity(ctx, coin.Denom)
+		amount = amount.Add(coin.Amount)
+		k.SetDenomLiquidity(ctx, coin.Denom, amount)
+	}
 }
 
 func (k Keeper) RecordTotalLiquidityDecrease(ctx sdk.Context, coins sdk.Coins) {
-	liquidity := k.GetTotalLiquidity(ctx)
-	k.SetTotalLiquidity(ctx, liquidity.Sub(coins))
+	for _, coin := range coins {
+		amount := k.GetDenomLiquidity(ctx, coin.Denom)
+		amount = amount.Sub(coin.Amount)
+		k.SetDenomLiquidity(ctx, coin.Denom, amount)
+	}
 }

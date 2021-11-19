@@ -22,7 +22,7 @@ Then exit and re-enter your shell.
 ```bash
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
-git checkout v4.1.0
+git checkout v3.1.0
 make install
 which osmosisd
 ```

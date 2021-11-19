@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* Store block height in epochs module for debugging
+* Allow zero-weight pool-incentive distribution records
 * Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
 * Update peer ID of statesync-enabled node run by notional
 * Created a pull request template

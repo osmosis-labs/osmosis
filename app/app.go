@@ -108,6 +108,9 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
 const appName = "OsmosisApp"
@@ -140,6 +143,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		gamm.AppModuleBasic{},
+		txfees.AppModuleBasic{},
 		incentives.AppModuleBasic{},
 		lockup.AppModuleBasic{},
 		poolincentives.AppModuleBasic{},
@@ -162,6 +166,7 @@ var (
 		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
+		txfeestypes.ModuleName:                   nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -209,6 +214,7 @@ type OsmosisApp struct {
 	LockupKeeper         lockupkeeper.Keeper
 	EpochsKeeper         epochskeeper.Keeper
 	PoolIncentivesKeeper poolincentiveskeeper.Keeper
+	TxFeesKeeper         txfeeskeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -251,7 +257,7 @@ func NewOsmosisApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
-		epochstypes.StoreKey, poolincentivestypes.StoreKey,
+		epochstypes.StoreKey, poolincentivestypes.StoreKey, txfeestypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -324,6 +330,12 @@ func NewOsmosisApp(
 			prop12(ctx, app)
 
 		})
+
+	app.UpgradeKeeper.SetUpgradeHandler("v5", func(ctx sdk.Context, plan upgradetypes.Plan) {
+		totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
+		app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
+		app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
+	})
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
@@ -401,6 +413,12 @@ func NewOsmosisApp(
 		),
 	)
 
+	app.TxFeesKeeper = txfeeskeeper.NewKeeper(
+		appCodec,
+		keys[txfeestypes.StoreKey],
+		app.GAMMKeeper,
+	)
+
 	app.LockupKeeper = *lockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
 		// insert lockup hooks receivers here
@@ -465,6 +483,7 @@ func NewOsmosisApp(
 		transferModule,
 		claim.NewAppModule(appCodec, *app.ClaimKeeper),
 		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		txfees.NewAppModule(appCodec, app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
@@ -496,13 +515,15 @@ func NewOsmosisApp(
 	app.mm.SetOrderInitGenesis(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
-		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		ibchost.ModuleName,
+		gammtypes.ModuleName,
+		txfeestypes.ModuleName,
+		genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		poolincentivestypes.ModuleName,
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
-		gammtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -517,6 +538,8 @@ func NewOsmosisApp(
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
+		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		txfees.NewAppModule(appCodec, app.TxFeesKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
@@ -525,7 +548,6 @@ func NewOsmosisApp(
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
@@ -547,8 +569,10 @@ func NewOsmosisApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
-		ante.NewAnteHandler(
-			app.AccountKeeper, app.BankKeeper, ante.DefaultSigVerificationGasConsumer,
+		NewAnteHandler(
+			app.AccountKeeper, app.BankKeeper,
+			app.TxFeesKeeper, app.GAMMKeeper,
+			ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
 		),
 	)
