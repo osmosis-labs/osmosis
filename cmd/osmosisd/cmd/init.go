@@ -110,8 +110,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}
 
-			fmt.Println("help")
-
 			// Get bip39 mnemonic
 			var mnemonic string
 			recover, _ := cmd.Flags().GetBool(FlagRecover)

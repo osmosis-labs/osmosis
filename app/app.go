@@ -310,33 +310,29 @@ func NewOsmosisApp(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 
-	/*
-		// this configures a no-op upgrade handler for the v2 upgrade,
-		// which improves the lockup module's store management.
-		app.UpgradeKeeper.SetUpgradeHandler(
-			"v4", func(ctx sdk.Context, plan upgradetypes.Plan) {
-				// Upgrade all of the lock storages
-				locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
-				if err != nil {
-					panic(err)
-				}
-				// clear all lockup module locking / unlocking queue items
-				app.LockupKeeper.ClearAllLockRefKeys(ctx)
-				app.LockupKeeper.ClearAllAccumulationStores(ctx)
+	// this configures a no-op upgrade handler for the v4 upgrade,
+	// which improves the lockup module's store management.
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"v4", func(ctx sdk.Context, plan upgradetypes.Plan) {
+			// // Upgrade all of the lock storages
+			// locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
+			// if err != nil {
+			// 	panic(err)
+			// }
+			// // clear all lockup module locking / unlocking queue items
+			// app.LockupKeeper.ClearAllLockRefKeys(ctx)
+			// app.LockupKeeper.ClearAllAccumulationStores(ctx)
 
-				// reset all lock and references
-				if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
-					panic(err)
-				}
+			// // reset all lock and references
+			// if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
+			// 	panic(err)
+			// }
 
-				// configure upgrade for gamm module's pool creation fee param add
-				app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
+			// // configure upgrade for gamm module's pool creation fee param add
+			// app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
-				prop12(ctx, app)
-
-			})
-
-	*/
+			// prop12(ctx, app)
+		})
 
 	app.UpgradeKeeper.SetUpgradeHandler("v5", func(ctx sdk.Context, plan upgradetypes.Plan) {
 		totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
