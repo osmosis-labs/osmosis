@@ -16,12 +16,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 )
 
@@ -183,6 +183,116 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	return cmd
 }
 
+func GetOsmoSnapshot(inputFile string) (Snapshot, error) {
+	snapshotJSON, err := os.Open(inputFile)
+	if err != nil {
+		return Snapshot{}, err
+	}
+	defer snapshotJSON.Close()
+
+	byteValue, err := ioutil.ReadAll(snapshotJSON)
+	if err != nil {
+		return Snapshot{}, err
+	}
+
+	snapshot := Snapshot{}
+	err = json.Unmarshal(byteValue, &snapshot)
+	if err != nil {
+		return Snapshot{}, err
+	}
+	return snapshot, nil
+}
+
+func GetIonSnapshot(inputFile string) (map[string]int64, error) {
+	ionJSON, err := os.Open(inputFile)
+	if err != nil {
+		return nil, err
+	}
+	defer ionJSON.Close()
+	byteValue2, _ := ioutil.ReadAll(ionJSON)
+
+	var ionAmts map[string]int64
+	err = json.Unmarshal(byteValue2, &ionAmts)
+	if err != nil {
+		return nil, err
+	}
+	return ionAmts, nil
+}
+
+func CosmosToOsmoAddress(cosmosAddr string) (string, error) {
+	_, bz, err := bech32.DecodeAndConvert(cosmosAddr)
+	if err != nil {
+		return "", err
+	}
+
+	convertedAddr, err := bech32.ConvertAndEncode("osmo", bz)
+	if err != nil {
+		panic(err)
+	}
+
+	return convertedAddr, nil
+}
+
+func GetAirdropAccountsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-airdrop-accounts [input-snapshot-file] [input-ions-file] [output-file]",
+		Short: "Get list of all accounts that are being airdropped to at genesis",
+		Long: `Get list of all accounts that are being airdropped to at genesis
+Both OSMO and ION recipients. If erroring, ensure to 'git lfs pull'
+
+Example:
+	osmosisd import-genesis-accounts-from-snapshot networks/cosmoshub-3/snapshot.json networks/osmosis-1/ions.json output_address.json
+`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			airdropAddrs := map[string]bool{}
+
+			// Read snapshot file
+			snapshot, err := GetOsmoSnapshot(args[0])
+			if err != nil {
+				return err
+			}
+
+			// Read ions file
+			ionAmts, err := GetIonSnapshot(args[1])
+			if err != nil {
+				return err
+			}
+
+			for _, acc := range snapshot.Accounts {
+				if !acc.OsmoBalance.Equal(sdk.ZeroInt()) {
+					osmoAddr, err := CosmosToOsmoAddress(acc.AtomAddress)
+					if err != nil {
+						return err
+					}
+
+					airdropAddrs[osmoAddr] = true
+				}
+			}
+
+			for addr := range ionAmts {
+				ionAddr, err := CosmosToOsmoAddress(addr)
+				if err != nil {
+					return err
+				}
+
+				airdropAddrs[ionAddr] = true
+			}
+
+			airdropAddrsJSON, err := json.Marshal(airdropAddrs)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile(args[2], airdropAddrsJSON, 0644)
+			return err
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file] [input-ions-file]",
@@ -223,29 +333,13 @@ Example:
 			}
 
 			// Read snapshot file
-			snapshotInput := args[0]
-			snapshotJSON, err := os.Open(snapshotInput)
-			if err != nil {
-				return err
-			}
-			defer snapshotJSON.Close()
-			byteValue, _ := ioutil.ReadAll(snapshotJSON)
-			snapshot := Snapshot{}
-			err = json.Unmarshal(byteValue, &snapshot)
+			snapshot, err := GetOsmoSnapshot(args[0])
 			if err != nil {
 				return err
 			}
 
 			// Read ions file
-			ionInput := args[1]
-			ionJSON, err := os.Open(ionInput)
-			if err != nil {
-				return err
-			}
-			defer ionJSON.Close()
-			byteValue2, _ := ioutil.ReadAll(ionJSON)
-			var ionAmts map[string]int64
-			err = json.Unmarshal(byteValue2, &ionAmts)
+			ionAmts, err := GetIonSnapshot(args[1])
 			if err != nil {
 				return err
 			}
@@ -267,17 +361,15 @@ Example:
 			}
 
 			for addr, amt := range ionAmts {
-				setCosmosBech32Prefixes()
-				address, err := sdk.AccAddressFromBech32(addr)
+				address, err := CosmosToOsmoAddress(addr)
 				if err != nil {
 					return err
 				}
-				appparams.SetAddressPrefixes()
 
-				if val, ok := nonAirdropAccs[address.String()]; ok {
-					nonAirdropAccs[address.String()] = val.Add(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
+				if val, ok := nonAirdropAccs[address]; ok {
+					nonAirdropAccs[address] = val.Add(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
 				} else {
-					nonAirdropAccs[address.String()] = sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
+					nonAirdropAccs[address] = sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
 				}
 			}
 
@@ -293,17 +385,11 @@ Example:
 
 			// for each account in the snapshot
 			for _, acc := range snapshot.Accounts {
-				// set atom bech32 prefixes
-				setCosmosBech32Prefixes()
-
-				// read address from snapshot
-				address, err := sdk.AccAddressFromBech32(acc.AtomAddress)
+				// convert cosmos address to osmo address
+				address, err := CosmosToOsmoAddress(acc.AtomAddress)
 				if err != nil {
 					return err
 				}
-
-				// set osmo bech32 prefixes
-				appparams.SetAddressPrefixes()
 
 				// skip accounts with 0 balance
 				if !acc.OsmoBalanceBase.IsPositive() {
@@ -318,13 +404,13 @@ Example:
 				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
 				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, liquidAmount))
 
-				if coins, ok := nonAirdropAccs[address.String()]; ok {
+				if coins, ok := nonAirdropAccs[address]; ok {
 					liquidCoins = liquidCoins.Add(coins...)
-					delete(nonAirdropAccs, address.String())
+					delete(nonAirdropAccs, address)
 				}
 
 				liquidBalances = append(liquidBalances, banktypes.Balance{
-					Address: address.String(),
+					Address: address,
 					Coins:   liquidCoins,
 				})
 
@@ -332,7 +418,7 @@ Example:
 				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
 
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
-					Address:                address.String(),
+					Address:                address,
 					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimableAmount)),
 					ActionCompleted:        []bool{false, false, false, false},
 				})
@@ -340,7 +426,11 @@ Example:
 				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
 
 				// Add the new account to the set of genesis accounts
-				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
+				sdkaddr, err := sdk.AccAddressFromBech32(address)
+				if err != nil {
+					return err
+				}
+				baseAccount := authtypes.NewBaseAccount(sdkaddr, nil, 0, 0)
 				if err := baseAccount.Validate(); err != nil {
 					return fmt.Errorf("failed to validate new genesis account: %w", err)
 				}

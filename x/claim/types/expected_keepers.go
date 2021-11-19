@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // BankKeeper defines the banking contract that must be fulfilled when
@@ -17,7 +17,10 @@ type BankKeeper interface {
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
-	SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI)
+	SetModuleAccount(ctx sdk.Context, macc authtypes.ModuleAccountI)
+	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
+	// Fetch the sequence of an account at a specified address.
+	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 }
 
 // DistrKeeper is the keeper of the distribution store

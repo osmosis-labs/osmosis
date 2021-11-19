@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -74,6 +75,34 @@ func (suite *KeeperTestSuite) TestHookBeforeAirdropStart() {
 	balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
 	// Now, it is the time for air drop, so claim module should send the balances to the user after swap.
 	suite.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(4)), balances.AmountOf(sdk.DefaultBondDenom))
+}
+
+func (suite *KeeperTestSuite) TestHookAfterAirdropEnd() {
+	suite.SetupTest()
+
+	// airdrop recipient address
+	addr1, _ := sdk.AccAddressFromBech32("osmo122fypjdzwscz998aytrrnmvavtaaarjjt6223p")
+
+	claimRecords := []types.ClaimRecord{
+		{
+			Address:                addr1.String(),
+			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
+			ActionCompleted:        []bool{false, false, false, false},
+		},
+	}
+	suite.app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	err := suite.app.ClaimKeeper.SetClaimRecords(suite.ctx, claimRecords)
+	suite.Require().NoError(err)
+
+	params, err := suite.app.ClaimKeeper.GetParams(suite.ctx)
+	suite.Require().NoError(err)
+	suite.ctx = suite.ctx.WithBlockTime(params.AirdropStartTime.Add(params.DurationUntilDecay).Add(params.DurationOfDecay))
+
+	suite.app.ClaimKeeper.EndAirdrop(suite.ctx)
+
+	suite.Require().NotPanics(func() {
+		suite.app.ClaimKeeper.AfterSwap(suite.ctx, addr1)
+	})
 }
 
 func (suite *KeeperTestSuite) TestDuplicatedActionNotWithdrawRepeatedly() {
@@ -341,5 +370,71 @@ func (suite *KeeperTestSuite) TestClaimOfDecayed() {
 		suite.Require().NoError(err)
 
 		test.fn()
+	}
+}
+
+func (suite *KeeperTestSuite) TestClawbackAirdrop() {
+	suite.SetupTest()
+
+	tests := []struct {
+		name           string
+		address        string
+		sequence       uint64
+		expectClawback bool
+	}{
+		{
+			name:           "airdrop address active",
+			address:        "osmo122fypjdzwscz998aytrrnmvavtaaarjjt6223p",
+			sequence:       1,
+			expectClawback: false,
+		},
+		{
+			name:           "airdrop address inactive",
+			address:        "osmo122g3jv9que3zkxy25a2wt0wlgh68mudwptyvzw",
+			sequence:       0,
+			expectClawback: true,
+		},
+		{
+			name:           "non airdrop address active",
+			address:        sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+			sequence:       1,
+			expectClawback: false,
+		},
+		{
+			name:           "non airdrop address inactive",
+			address:        sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+			sequence:       0,
+			expectClawback: false,
+		},
+	}
+
+	for _, tc := range tests {
+		addr, err := sdk.AccAddressFromBech32(tc.address)
+		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
+		acc := authtypes.NewBaseAccountWithAddress(addr)
+		err = acc.SetSequence(tc.sequence)
+		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
+		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		fmt.Println(acc)
+		suite.app.BankKeeper.AddCoins(suite.ctx, addr, sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 100), sdk.NewInt64Coin("uion", 100),
+		))
+	}
+
+	err := suite.app.ClaimKeeper.EndAirdrop(suite.ctx)
+	suite.Require().NoError(err, "err: %s", err)
+
+	for _, tc := range tests {
+		addr, err := sdk.AccAddressFromBech32(tc.address)
+		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
+		coins := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr)
+		if tc.expectClawback {
+			suite.Require().True(coins.IsEqual(sdk.NewCoins()),
+				"balance incorrect. test: %s", tc.name)
+		} else {
+			suite.Require().True(coins.IsEqual(sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 100), sdk.NewInt64Coin("uion", 100),
+			)), "balance incorrect. test: %s", tc.name)
+		}
 	}
 }
