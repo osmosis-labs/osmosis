@@ -238,7 +238,7 @@ func GetAirdropAccountsCmd() *cobra.Command {
 		Use:   "get-airdrop-accounts [input-snapshot-file] [input-ions-file] [output-file]",
 		Short: "Get list of all accounts that are being airdropped to at genesis",
 		Long: `Get list of all accounts that are being airdropped to at genesis
-Both OSMO and ION recipients. If erroring, ensure to `git lfs pull`
+Both OSMO and ION recipients. If erroring, ensure to 'git lfs pull'
 
 Example:
 	osmosisd import-genesis-accounts-from-snapshot networks/cosmoshub-3/snapshot.json networks/osmosis-1/ions.json output_address.json
