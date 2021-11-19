@@ -77,6 +77,34 @@ func (suite *KeeperTestSuite) TestHookBeforeAirdropStart() {
 	suite.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(4)), balances.AmountOf(sdk.DefaultBondDenom))
 }
 
+func (suite *KeeperTestSuite) TestHookAfterAirdropEnd() {
+	suite.SetupTest()
+
+	// airdrop recipient address
+	addr1, _ := sdk.AccAddressFromBech32("osmo122fypjdzwscz998aytrrnmvavtaaarjjt6223p")
+
+	claimRecords := []types.ClaimRecord{
+		{
+			Address:                addr1.String(),
+			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
+			ActionCompleted:        []bool{false, false, false, false},
+		},
+	}
+	suite.app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	err := suite.app.ClaimKeeper.SetClaimRecords(suite.ctx, claimRecords)
+	suite.Require().NoError(err)
+
+	params, err := suite.app.ClaimKeeper.GetParams(suite.ctx)
+	suite.Require().NoError(err)
+	suite.ctx = suite.ctx.WithBlockTime(params.AirdropStartTime.Add(params.DurationUntilDecay).Add(params.DurationOfDecay))
+
+	suite.app.ClaimKeeper.EndAirdrop(suite.ctx)
+
+	suite.Require().NotPanics(func() {
+		suite.app.ClaimKeeper.AfterSwap(suite.ctx, addr1)
+	})
+}
+
 func (suite *KeeperTestSuite) TestDuplicatedActionNotWithdrawRepeatedly() {
 	suite.SetupTest()
 
