@@ -8,9 +8,25 @@ import (
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
-func (k Keeper) GetAllIntermediaryAccounts() []types.SuperfluidIntermediaryAccount {
-	// TODO: implement
-	return []types.SuperfluidIntermediaryAccount{}
+func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIntermediaryAccount {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
+
+	accounts := []types.SuperfluidIntermediaryAccount{}
+
+	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		account := types.SuperfluidIntermediaryAccount{}
+		err := proto.Unmarshal(iterator.Value(), &account)
+		if err != nil {
+			panic(err)
+		}
+
+		accounts = append(accounts, account)
+	}
+	return accounts
 }
 
 func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) types.SuperfluidIntermediaryAccount {

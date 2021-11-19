@@ -380,7 +380,7 @@ func NewOsmosisApp(
 	incentivesKeeper := incentiveskeeper.NewKeeper(appCodec, keys[incentivestypes.StoreKey], app.GetSubspace(incentivestypes.ModuleName), app.AccountKeeper, app.BankKeeper, *lockupKeeper, epochsKeeper)
 	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
 		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, *lockupKeeper, gammKeeper)
+		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, *lockupKeeper, gammKeeper, incentivesKeeper)
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.EpochsKeeper,

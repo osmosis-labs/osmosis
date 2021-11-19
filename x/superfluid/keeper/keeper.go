@@ -20,12 +20,14 @@ type Keeper struct {
 	ak authkeeper.AccountKeeper
 	bk types.BankKeeper
 	sk types.StakingKeeper
+	dk types.DistrKeeper
 	lk types.LockupKeeper
 	gk types.GammKeeper
+	ik types.IncentivesKeeper
 }
 
 // NewKeeper returns an instance of Keeper
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, gk types.GammKeeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.DistrKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper) *Keeper {
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
@@ -33,8 +35,10 @@ func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes
 		ak:         ak,
 		bk:         bk,
 		sk:         sk,
+		dk:         dk,
 		lk:         lk,
 		gk:         gk,
+		ik:         ik,
 	}
 }
 
