@@ -40,6 +40,55 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 		return err
 	}
 	k.clearInitialClaimables(ctx)
+
+	err = k.ClawbackAirdrop(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// ClawbackAirdrop implements prop 32 by clawing back all the OSMO and IONs from airdrop
+// recipient accounts with a sequence number of 0
+func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
+	for _, bechAddr := range types.AirdropAddrs {
+		addr, err := sdk.AccAddressFromBech32(bechAddr)
+		if err != nil {
+			return err
+		}
+
+		acc := k.accountKeeper.GetAccount(ctx, addr)
+		// if account is nil, do nothing.
+		if acc == nil {
+			continue
+		}
+		seq, err := k.accountKeeper.GetSequence(ctx, addr)
+		if err != nil {
+			return err
+		}
+		// When sequence number is 0, _and_ from an airdrop account,
+		// clawback all the uosmo and uion to community pool.
+		// There is an edge case here, where if the address has otherwise been sent uosmo or uion
+		// but never made any tx, that excess sent would also get sent to the community pool.
+		// This is viewed as an edge case, that the text of Osmosis proposal 32 indicates should
+		// be done via sending these excess funds to the community pool.
+		//
+		// Proposal text to go off of: https://www.mintscan.io/osmosis/proposals/32
+		// ***Reminder***
+		// 'Unclaimed' tokens are defined as being in wallets which have a Sequence Number = 0,
+		// which means the address has NOT performed a single action during the 6 month airdrop claim window.
+		// ******CLAWBACK PROPOSED FRAMEWORK******
+		// TLDR -- Send ALL unclaimed ION & OSMO back to the community pool
+		// and prune those inactive wallets from current state.
+		if seq == 0 {
+			osmoBal := k.bankKeeper.GetBalance(ctx, addr, "uosmo")
+			ionBal := k.bankKeeper.GetBalance(ctx, addr, "uion")
+			err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(osmoBal, ionBal), addr)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

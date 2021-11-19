@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -342,5 +343,71 @@ func (suite *KeeperTestSuite) TestClaimOfDecayed() {
 		suite.Require().NoError(err)
 
 		test.fn()
+	}
+}
+
+func (suite *KeeperTestSuite) TestClawbackAirdrop() {
+	suite.SetupTest()
+
+	tests := []struct {
+		name           string
+		address        string
+		sequence       uint64
+		expectClawback bool
+	}{
+		{
+			name:           "airdrop address active",
+			address:        "osmo122fypjdzwscz998aytrrnmvavtaaarjjt6223p",
+			sequence:       1,
+			expectClawback: false,
+		},
+		{
+			name:           "airdrop address inactive",
+			address:        "osmo122g3jv9que3zkxy25a2wt0wlgh68mudwptyvzw",
+			sequence:       0,
+			expectClawback: true,
+		},
+		{
+			name:           "non airdrop address active",
+			address:        sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+			sequence:       1,
+			expectClawback: false,
+		},
+		{
+			name:           "non airdrop address inactive",
+			address:        sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+			sequence:       0,
+			expectClawback: false,
+		},
+	}
+
+	for _, tc := range tests {
+		addr, err := sdk.AccAddressFromBech32(tc.address)
+		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
+		acc := authtypes.NewBaseAccountWithAddress(addr)
+		err = acc.SetSequence(tc.sequence)
+		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
+		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		fmt.Println(acc)
+		suite.app.BankKeeper.AddCoins(suite.ctx, addr, sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 100), sdk.NewInt64Coin("uion", 100),
+		))
+	}
+
+	err := suite.app.ClaimKeeper.EndAirdrop(suite.ctx)
+	suite.Require().NoError(err, "err: %s", err)
+
+	for _, tc := range tests {
+		addr, err := sdk.AccAddressFromBech32(tc.address)
+		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
+		coins := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr)
+		if tc.expectClawback {
+			suite.Require().True(coins.IsEqual(sdk.NewCoins()),
+				"balance incorrect. test: %s", tc.name)
+		} else {
+			suite.Require().True(coins.IsEqual(sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 100), sdk.NewInt64Coin("uion", 100),
+			)), "balance incorrect. test: %s", tc.name)
+		}
 	}
 }
