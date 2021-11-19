@@ -13,7 +13,7 @@ This is what you'd use to get a node up and running, fast. It assumes that it is
 
 **Install go**
 ```bash
-wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.2
+wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.3
 ```
 
 Then exit and re-enter your shell.
@@ -22,7 +22,7 @@ Then exit and re-enter your shell.
 ```bash
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
-git checkout v3.1.0
+git checkout v4.2.0
 make install
 which osmosisd
 ```
