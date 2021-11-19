@@ -104,34 +104,6 @@ func (suite *KeeperTestSuite) TestQueryNumPools2() {
 	suite.Require().Equal(uint64(10), res.NumPools)
 }
 
-func (suite *KeeperTestSuite) TestQueryPoolParams() {
-	queryClient := suite.queryClient
-
-	// Pool not exist
-	_, err := queryClient.PoolParams(gocontext.Background(), &types.QueryPoolParamsRequest{PoolId: 1})
-	suite.Require().Error(err)
-
-	poolId1 := suite.preparePoolWithPoolParams(types.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(15, 2),
-	})
-
-	poolId2 := suite.preparePoolWithPoolParams(types.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 1),
-		ExitFee: sdk.NewDecWithPrec(15, 3),
-	})
-
-	params1, err := queryClient.PoolParams(gocontext.Background(), &types.QueryPoolParamsRequest{PoolId: poolId1})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewDecWithPrec(1, 2).String(), params1.Params.SwapFee.String())
-	suite.Require().Equal(sdk.NewDecWithPrec(15, 2).String(), params1.Params.ExitFee.String())
-
-	params2, err := queryClient.PoolParams(gocontext.Background(), &types.QueryPoolParamsRequest{PoolId: poolId2})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewDecWithPrec(1, 1).String(), params2.Params.SwapFee.String())
-	suite.Require().Equal(sdk.NewDecWithPrec(15, 3).String(), params2.Params.ExitFee.String())
-}
-
 func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	queryClient := suite.queryClient
 

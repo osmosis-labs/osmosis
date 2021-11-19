@@ -55,6 +55,7 @@ func NewKeeper(
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
+
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
 	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))

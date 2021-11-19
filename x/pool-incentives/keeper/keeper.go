@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	"github.com/tendermint/tendermint/libs/log"
