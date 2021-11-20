@@ -198,7 +198,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 					return err
 				}
 				// If recipient is vesting account, pay to account according to its vesting condition
-				err = k.bankKeeper.SendCoinsFromModuleToAccountOriginalVesting(
+				err = k.bankKeeper.SendCoinsFromModuleToAccount(
 					ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
 				if err != nil {
 					return err
