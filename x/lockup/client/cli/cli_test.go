@@ -76,7 +76,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator",
+		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -137,7 +138,8 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockingAcc", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockingAcc",
+		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -204,7 +206,8 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockPeriodLockAcc", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockPeriodLockAcc",
+		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
