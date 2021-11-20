@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -11,7 +12,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) LegacyLockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
 	suite.Require().NoError(err)
 	_, err = suite.app.LockupKeeper.LegacyLockTokens(suite.ctx, addr, coins, duration)
 	suite.Require().NoError(err)

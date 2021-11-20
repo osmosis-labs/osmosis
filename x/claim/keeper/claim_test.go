@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -416,9 +417,9 @@ func (suite *KeeperTestSuite) TestClawbackAirdrop() {
 		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 		fmt.Println(acc)
-		suite.app.BankKeeper.AddCoins(suite.ctx, addr, sdk.NewCoins(
-			sdk.NewInt64Coin("uosmo", 100), sdk.NewInt64Coin("uion", 100),
-		))
+		coins := sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 100), sdk.NewInt64Coin("uion", 100))
+		simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
 	}
 
 	err := suite.app.ClaimKeeper.EndAirdrop(suite.ctx)
