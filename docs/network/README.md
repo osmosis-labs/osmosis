@@ -202,6 +202,7 @@ wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.2
 
 After installed, open new terminal to properly load go
 
+
 Clone the osmosis repo, checkout and install v3.2.0_with_cache:
 
 ```bash
@@ -212,11 +213,13 @@ git checkout v3.2.0_with_cache
 make install
 ```
 
+
 You have now installed the Osmosis Daemon (osmosisd). Use osmosisd to initialize your node (replace the NODE_NAME with a name of your choosing):
 
 ```bash
 osmosisd init NODE_NAME --chain-id=osmosis-testnet-0
 ```
+
 
 We now need to open the config.toml to edit the seed list:
 
@@ -245,6 +248,7 @@ cp cosmovisor/cosmovisor $GOPATH/bin/cosmovisor
 cd $HOME
 ```
 
+
 Create the required directories:
 
 ```bash
@@ -253,6 +257,7 @@ mkdir -p ~/.osmosisd/cosmovisor/genesis
 mkdir -p ~/.osmosisd/cosmovisor/genesis/bin
 mkdir -p ~/.osmosisd/cosmovisor/upgrades
 ```
+
 
 Set the environment variables:
 
@@ -273,6 +278,7 @@ cd $HOME/.osmosisd/config
 wget https://github.com/osmosis-labs/networks/raw/unity/v4/osmosis-1/upgrades/v4/testnet/genesis.tar.bz2
 tar -xjf genesis.tar.bz2
 ```
+
 
 Copy the current osmosisd binary into the cosmovisor/genesis folder:
 
@@ -299,6 +305,7 @@ make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v4/bin
 cd $HOME
 ```
+
 
 Ensure the validator file is in the gensesis state:
 
@@ -333,6 +340,7 @@ Move this new file to the systemd directory:
 ```bash
 sudo mv cosmovisor.service /lib/systemd/system/cosmovisor.service
 ```
+
 
 Reload and start the service:
 
