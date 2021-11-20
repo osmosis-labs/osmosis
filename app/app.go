@@ -320,7 +320,7 @@ func NewOsmosisApp(
 	// this configures a no-op upgrade handler for the v4 upgrade,
 	// which improves the lockup module's store management.
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v4", func(_ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		"v4", func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 			// // Upgrade all of the lock storages
 			// locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
 			// if err != nil {
@@ -338,7 +338,7 @@ func NewOsmosisApp(
 			// // configure upgrade for gamm module's pool creation fee param add
 			// app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
-			// prop12(ctx, app)
+			prop12(ctx, app)
 			return vm, nil
 		})
 
@@ -352,7 +352,12 @@ func NewOsmosisApp(
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper)
+		appCodec,
+		keys[ibchost.StoreKey],
+		app.GetSubspace(ibchost.ModuleName),
+		app.StakingKeeper,
+		app.UpgradeKeeper,
+		scopedIBCKeeper)
 
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
