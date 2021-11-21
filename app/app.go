@@ -16,6 +16,7 @@ import (
 
 	ibcclient "github.com/cosmos/ibc-go/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
 
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
@@ -227,6 +228,9 @@ type OsmosisApp struct {
 
 	// simulation manager
 	sm *module.SimulationManager
+
+	// module migration manager
+	configurator module.Configurator
 }
 
 func init() {
@@ -346,10 +350,24 @@ func NewOsmosisApp(
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		"v5", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			// Set IBC updates from {inside SDK} to v1
+			// https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md#in-place-store-migrations
+			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
+
 			totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
 			app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
 			app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
-			return vm, nil
+
+			// Set all modules "old versions" to 1.
+			// Then the run migrations logic will handle running their upgrade logics
+			fromVM := make(map[string]uint64)
+			for moduleName := range app.mm.Modules {
+				fromVM[moduleName] = 1
+			}
+			// override versions for _new_ modules as to not skip InitGenesis
+			// fromVM[authz.ModuleName] = 0
+
+			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		})
 
 	// Create IBC Keeper
@@ -548,7 +566,8 @@ func NewOsmosisApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter()))
+	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.RegisterServices(app.configurator)
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -639,6 +658,9 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+
+	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
