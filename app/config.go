@@ -31,7 +31,7 @@ func DefaultConfig() network.Config {
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewAppConstructor(encCfg),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
-		TimeoutCommit:     2 * time.Second,
+		TimeoutCommit:     1 * time.Second,
 		ChainID:           "osmosis-code-test",
 		NumValidators:     1,
 		BondDenom:         sdk.DefaultBondDenom,

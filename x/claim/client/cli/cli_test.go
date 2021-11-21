@@ -35,11 +35,11 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-
 	s.T().Log("setting up integration test suite")
-	encCfg := app.MakeEncodingConfig()
 
-	genState := app.ModuleBasics.DefaultGenesis(encCfg.Marshaler)
+	s.cfg = app.DefaultConfig()
+
+	genState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
 	claimGenState := claimtypes.DefaultGenesis()
 	claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30))
 	claimGenState.ClaimRecords = []types.ClaimRecord{
@@ -54,10 +54,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			ActionCompleted:        []bool{false, false, false, false},
 		},
 	}
-	claimGenStateBz := encCfg.Marshaler.MustMarshalJSON(claimGenState)
+	claimGenStateBz := s.cfg.Codec.MustMarshalJSON(claimGenState)
 	genState[claimtypes.ModuleName] = claimGenStateBz
 
-	s.cfg = app.DefaultConfig()
+	s.cfg.GenesisState = genState
 	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
