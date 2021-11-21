@@ -3,20 +3,12 @@ package cli_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/x/claim/client/cli"
@@ -24,7 +16,6 @@ import (
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var addr1 sdk.AccAddress
@@ -66,34 +57,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	claimGenStateBz := encCfg.Marshaler.MustMarshalJSON(claimGenState)
 	genState[claimtypes.ModuleName] = claimGenStateBz
 
-	s.cfg = network.Config{
-		Codec:             encCfg.Marshaler,
-		TxConfig:          encCfg.TxConfig,
-		LegacyAmino:       encCfg.Amino,
-		InterfaceRegistry: encCfg.InterfaceRegistry,
-		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor: func(val network.Validator) servertypes.Application {
-			return app.NewOsmosisApp(
-				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-				encCfg,
-				simapp.EmptyAppOptions{},
-				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-			)
-		},
-		GenesisState:    genState,
-		TimeoutCommit:   2 * time.Second,
-		ChainID:         "osmosis-1",
-		NumValidators:   1,
-		BondDenom:       sdk.DefaultBondDenom,
-		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:   sdk.TokensFromConsensusPower(1000, sdk.NewInt(1)),
-		StakingTokens:   sdk.TokensFromConsensusPower(500, sdk.NewInt(1)),
-		BondedTokens:    sdk.TokensFromConsensusPower(100, sdk.NewInt(1)),
-		PruningStrategy: storetypes.PruningOptionNothing,
-		CleanupDir:      true,
-		SigningAlgo:     string(hd.Secp256k1Type),
-		KeyringOptions:  []keyring.Option{},
-	}
+	s.cfg = app.DefaultConfig()
 
 	s.network = network.New(s.T(), s.cfg)
 

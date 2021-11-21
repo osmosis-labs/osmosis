@@ -32,9 +32,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = app.DefaultConfig()
-
-	s.network = network.New(s.T(), s.cfg)
+	s.network = network.New(s.T(), app.DefaultConfig())
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -213,7 +211,7 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
 	_, err = banktestutil.MsgSendExec(
-		val.ClientCtx,
+		clientCtx,
 		val.Address,
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -224,10 +222,16 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 
 	// lock tokens for a second
 	txResp := sdk.TxResponse{}
-	out, err := lockuptestutil.MsgLockTokens(val.ClientCtx, newAddr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), "1s")
+	out, err := lockuptestutil.MsgLockTokens(clientCtx,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))),
+		"1s")
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	lockID := txResp.Logs[0].Events[0].Attributes[0].Value
+	// This is a hardcoded path in the events to get the lockID
+	// this is incredibly brittle...
+	// fmt.Println(txResp.Logs[0])
+	lockID := txResp.Logs[0].Events[2].Attributes[0].Value
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -252,6 +256,7 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 			false, &sdk.TxResponse{}, 0,
 		},
 	}
+	fmt.Println(testCases[0].args)
 
 	for _, tc := range testCases {
 		tc := tc
