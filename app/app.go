@@ -295,7 +295,7 @@ func NewOsmosisApp(
 		keys[banktypes.StoreKey],
 		app.AccountKeeper,
 		app.GetSubspace(banktypes.ModuleName),
-		app.ModuleAccountAddrs(),
+		app.BlockedAddrs(),
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(
