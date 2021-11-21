@@ -116,7 +116,7 @@ Example:
 			}
 
 			authGenesis := authtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["auth"], &authGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["auth"], &authGenesis)
 			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
 			if err != nil {
 				panic(err)
@@ -127,7 +127,7 @@ Example:
 			snapshotAccs := make(map[string]DerivedAccount)
 
 			bankGenesis := banktypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
 			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
@@ -140,7 +140,7 @@ Example:
 			}
 
 			stakingGenesis := stakingtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
 			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
@@ -181,7 +181,7 @@ Example:
 			}
 
 			lockupGenesis := lockuptypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
 			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
@@ -195,7 +195,7 @@ Example:
 			}
 
 			claimGenesis := claimtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["claim"], &claimGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
 			for _, record := range claimGenesis.ClaimRecords {
 				address := record.Address
 
@@ -223,7 +223,7 @@ Example:
 			}
 
 			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
 
 			// collect gamm pools
 			pools := make(map[string]gammtypes.PoolI)

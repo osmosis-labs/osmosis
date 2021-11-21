@@ -29,6 +29,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdParams(),
 		GetCmdLockableDurations(),
 		GetCmdIncentivizedPools(),
+		GetCmdExternalIncentiveGauges(),
 	)
 
 	return cmd
@@ -208,6 +209,42 @@ $ %s query pool-incentives incentivized-pools
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.IncentivizedPools(cmd.Context(), &types.QueryIncentivizedPoolsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdIncentivizedPools returns incentivized pools
+func GetCmdExternalIncentiveGauges() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "external-incentivized-gauges",
+		Short: "Query external incentivized gauges",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query incentivized gauges.
+
+Example:
+$ %s query pool-incentives external-incentivized-gauges
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ExternalIncentiveGauges(cmd.Context(), &types.QueryExternalIncentiveGaugesRequest{})
 			if err != nil {
 				return err
 			}

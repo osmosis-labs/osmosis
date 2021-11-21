@@ -76,7 +76,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -109,8 +109,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}
-
-			fmt.Println("help")
 
 			// Get bip39 mnemonic
 			var mnemonic string

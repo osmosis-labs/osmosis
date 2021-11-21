@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -36,7 +37,7 @@ func GenAndDeliverTxWithRandFees(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	txGen client.TxConfig,
-	msg sdk.Msg,
+	msg legacytx.LegacyMsg,
 	coinsSpentInMsg sdk.Coins,
 	ctx sdk.Context,
 	simAccount simtypes.Account,
@@ -54,6 +55,9 @@ func GenAndDeliverTxWithRandFees(
 		return simtypes.NoOpMsg(moduleName, msg.Type(), "message doesn't leave room for fees"), nil, err
 	}
 
+	// Only allow fees in "uosmo"
+	coins = sdk.NewCoins(sdk.NewCoin("uosmo", coins.AmountOf("uosmo")))
+
 	fees, err = simtypes.RandomFees(r, ctx, coins)
 	if err != nil {
 		return simtypes.NoOpMsg(moduleName, msg.Type(), "unable to generate fees"), nil, err
@@ -64,7 +68,7 @@ func GenAndDeliverTxWithRandFees(
 func GenAndDeliverTx(
 	app *baseapp.BaseApp,
 	txGen client.TxConfig,
-	msg sdk.Msg,
+	msg legacytx.LegacyMsg,
 	fees sdk.Coins,
 	ctx sdk.Context,
 	simAccount simtypes.Account,
@@ -91,6 +95,6 @@ func GenAndDeliverTx(
 		return simtypes.NoOpMsg(moduleName, msg.Type(), "unable to deliver tx"), nil, err
 	}
 
-	return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+	return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 
 }

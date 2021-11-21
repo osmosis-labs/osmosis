@@ -174,7 +174,7 @@ func (m *SmoothWeightChangeParams) GetTargetPoolWeights() []PoolAsset {
 
 // BalancerPoolParams defined the parameters that will be managed by the pool
 // governance in the future. This params are not managed by the chain
-// governanace. Instead they will be managed by the token holders of the pool.
+// governance. Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
 type BalancerPoolParams struct {
 	SwapFee                  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=swapFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swapFee" yaml:"swap_fee"`

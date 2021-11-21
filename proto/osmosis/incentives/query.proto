@@ -39,6 +39,11 @@ service Query {
   rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse) {
     option (google.api.http).get = "/osmosis/incentives/v1beta1/active_gauges";
   }
+  rpc ActiveGaugesPerDenom(ActiveGaugesPerDenomRequest)
+      returns (ActiveGaugesPerDenomResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/active_gauges_per_denom";
+  }
   // returns scheduled gauges
   rpc UpcomingGauges(UpcomingGaugesRequest) returns (UpcomingGaugesResponse) {
     option (google.api.http).get =
@@ -93,6 +98,17 @@ message ActiveGaugesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message ActiveGaugesResponse {
+  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message ActiveGaugesPerDenomRequest {
+  string denom = 1;
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+message ActiveGaugesPerDenomResponse {
   repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
