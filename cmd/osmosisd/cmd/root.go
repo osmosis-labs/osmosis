@@ -163,6 +163,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
+		AddGenesisAccountCmd(osmosis.DefaultNodeHome),
 		genutilcli.GenTxCmd(osmosis.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(osmosis.ModuleBasics),
 		ExportDeriveBalancesCmd(),
