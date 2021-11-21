@@ -337,8 +337,7 @@ func NewOsmosisApp(
 
 			// // configure upgrade for gamm module's pool creation fee param add
 			// app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
-
-			prop12(ctx, app)
+			// prop12(ctx, app)
 			return vm, nil
 		})
 
