@@ -63,4 +63,13 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.ctx), types.NewMsgBurn(addr2.String(), sdk.NewInt64Coin(denom, 15), addr1.String()))
 	suite.Require().NoError(err)
 	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom).IsEqual(sdk.NewInt64Coin(denom, 0)))
+
+	// Try setting admin to empty
+	_, err = msgServer.ChangeAdmin(sdk.WrapSDKContext(suite.ctx), types.NewMsgChangeAdmin(addr2.String(), denom, ""))
+	suite.Require().NoError(err)
+	queryRes, err = suite.queryClient.DenomAuthorityMetadata(suite.ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
+		Denom: res.GetNewTokenDenom(),
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal("", queryRes.AuthorityMetadata.Admin)
 }
