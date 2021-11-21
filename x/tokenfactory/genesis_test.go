@@ -5,8 +5,10 @@ import (
 
 	simapp "github.com/osmosis-labs/osmosis/app"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
+	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/x/tokenfactory/types"
 )
 
@@ -32,8 +34,8 @@ func TestGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	// tokenfactory.InitGenesis(ctx, *k, genesisState)
-	// got := tokenfactory.ExportGenesis(ctx, *k)
-	// require.NotNil(t, got)
-	// require.Equal(t, genesisState, got)
+	tokenfactory.InitGenesis(ctx, app.TokenFactoryKeeper, genesisState)
+	exportedGenesis := tokenfactory.ExportGenesis(ctx, app.TokenFactoryKeeper)
+	require.NotNil(t, exportedGenesis)
+	require.Equal(t, genesisState, *exportedGenesis)
 }

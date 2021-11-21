@@ -1,4 +1,4 @@
-// package keeper_test
+package keeper_test
 
 // import (
 // 	"context"
