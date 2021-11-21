@@ -5,17 +5,17 @@ heroText: Osmosis
 tagline: A decentralized exchange on Cosmos
 actions:
   - text: Get Started →
-    link: /network
+    link: /cli/install
     type: primary
   - text: Introduction
-    link: /guide/
+    link: /intro/
     type: secondary
 features:
-- title: Simplicity First
-  details: Minimal setup with markdown-centered project structure helps you focus on writing.
-- title: Vue-Powered
-  details: Enjoy the dev experience of Vue + webpack, use Vue components in markdown, and develop custom themes with Vue.
-- title: Performant
-  details: VuePress generates pre-rendered static HTML for each page, and runs as an SPA once a page is loaded.
+- title: Develop
+  details: Learn and contribute to the development of Osmosis.
+- title: Validate
+  details: Learn to run a full node or validator node.
+- title: Integrate
+  details: Add your token to Osmosis and enable IBC transfers.
 footer: MIT Licensed | Copyright © 2021 Osmosis Labs
 ---
