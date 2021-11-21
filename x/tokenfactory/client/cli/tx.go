@@ -26,6 +26,10 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		NewCreateDenomCmd(),
+		NewMintCmd(),
+		NewBurnCmd(),
+		NewForceTransferCmd(),
+		NewChangeAdminCmd(),
 	)
 
 	return cmd
