@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/osmotestutils"
 	"github.com/osmosis-labs/osmosis/x/gamm/client/cli"
 	gammtestutil "github.com/osmosis-labs/osmosis/x/gamm/client/testutil"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
@@ -78,7 +79,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		osmotestutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -324,7 +325,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				osmotestutils.DefaultFeeString(s.cfg),
 				fmt.Sprintf("--%s=%s", flags.FlagGas, fmt.Sprint(300000)),
 			}
 
@@ -357,7 +358,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		osmotestutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -495,7 +496,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		osmotestutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -559,7 +560,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		osmotestutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -667,7 +668,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		osmotestutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -1118,7 +1119,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		osmotestutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
