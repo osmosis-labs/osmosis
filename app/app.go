@@ -378,11 +378,21 @@ func NewOsmosisApp(
 			for moduleName := range app.mm.Modules {
 				fromVM[moduleName] = 1
 			}
-			// override versions for _new_ modules as to not skip InitGenesis
-			fromVM[authz.ModuleName] = 0
-			fromVM[txfees.ModuleName] = 0
+			// override versions for authz module as to not skip InitGenesis
+			// for txfees module, we will override txfees ourselves.
+			delete(fromVM, authz.ModuleName)
 
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+			newVM, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
+			if err != nil {
+				return nil, err
+			}
+
+			// Override txfees genesis here
+			txfees.InitGenesis(ctx, app.TxFeesKeeper, txfeestypes.GenesisState{
+				Basedenom: app.StakingKeeper.BondDenom(ctx),
+				Feetokens: []txfeestypes.FeeToken{},
+			})
+			return newVM, nil
 		})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
