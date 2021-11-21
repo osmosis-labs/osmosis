@@ -25,24 +25,28 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	cfg      network.Config
+	network  *network.Network
+	feeCoins sdk.Coins
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.network = network.New(s.T(), app.DefaultConfig())
+	s.cfg = app.DefaultConfig()
+	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	dayLockAmt, err := sdk.ParseCoinNormalized("200stake")
+	dayLockAmt, err := sdk.ParseCoinNormalized(fmt.Sprintf("200%s", s.network.Config.BondDenom))
 	s.Require().NoError(err)
-	secLockAmt, err := sdk.ParseCoinNormalized("11stake")
+	secLockAmt, err := sdk.ParseCoinNormalized(fmt.Sprintf("11%s", s.network.Config.BondDenom))
 	s.Require().NoError(err)
-	thirdLockAmt, err := sdk.ParseCoinNormalized("12stake")
+	thirdLockAmt, err := sdk.ParseCoinNormalized(fmt.Sprintf("12%s", s.network.Config.BondDenom))
 	s.Require().NoError(err)
+
+	s.feeCoins = sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)))
 
 	val := s.network.Validators[0]
 
@@ -86,7 +90,7 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
 	)
 	s.Require().NoError(err)
 
@@ -106,7 +110,7 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -173,7 +177,7 @@ func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -251,7 +255,7 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},

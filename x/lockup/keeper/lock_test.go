@@ -289,9 +289,10 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 
 	// try to add tokens to unavailable lock
 	cacheCtx, _ := suite.ctx.CacheContext()
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, addCoins)
+	err = simapp.FundAccount(suite.app.BankKeeper, cacheCtx, addr1, addCoins)
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, 1111, addCoins)
+	curBalance := suite.app.BankKeeper.GetAllBalances(cacheCtx, addr1)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, 1111, curBalance)
 	suite.Require().Error(err)
 
 	// try to add tokens with lack balance
