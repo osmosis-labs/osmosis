@@ -57,7 +57,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	claimGenStateBz := encCfg.Marshaler.MustMarshalJSON(claimGenState)
 	genState[claimtypes.ModuleName] = claimGenStateBz
 
-	s.network = network.New(s.T(), app.DefaultConfig())
+	s.cfg = app.DefaultConfig()
+	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
