@@ -35,13 +35,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = app.DefaultConfig()
 
-	encCfg := app.MakeEncodingConfig()
-
 	// modification to pay fee with test bond denom "stake"
-	genesisState := app.ModuleBasics.DefaultGenesis(encCfg.Marshaler)
+	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
 	gammGen := gammtypes.DefaultGenesis()
 	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
-	gammGenJson := encCfg.Marshaler.MustMarshalJSON(gammGen)
+	gammGenJson := s.cfg.Codec.MustMarshalJSON(gammGen)
 	genesisState[gammtypes.ModuleName] = gammGenJson
 	s.cfg.GenesisState = genesisState
 
@@ -101,7 +99,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "0.001"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
-			false, &sdk.TxResponse{}, 4,
+			true, &sdk.TxResponse{}, 4,
 		},
 		{
 			"two tokens pair pool",
@@ -189,7 +187,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "validdenom,invalidtime"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-			false, &sdk.TxResponse{}, 7,
+			true, &sdk.TxResponse{}, 7,
 		},
 		{
 			"not valid json",
@@ -335,7 +333,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				err = clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType)
+				s.Require().NoError(err, out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
