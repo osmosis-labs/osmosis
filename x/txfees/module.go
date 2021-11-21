@@ -29,6 +29,8 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
+const ModuleName = types.ModuleName
+
 // ----------------------------------------------------------------------------
 // AppModuleBasic
 // ----------------------------------------------------------------------------
@@ -144,6 +146,9 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	var genState types.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
+	if genState.Basedenom == "" {
+		panic("genState.Basedenom must be set for txfees")
+	}
 
 	InitGenesis(ctx, am.keeper, genState)
 
