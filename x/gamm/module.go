@@ -103,6 +103,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		ak:             accountKeeper,
+		bk:             bankKeeper,
 	}
 }
 
