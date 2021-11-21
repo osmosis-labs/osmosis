@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
@@ -60,7 +61,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	totalNumJoins := 10000
 
 	// mint some assets to the accounts
-	err := suite.app.BankKeeper.AddCoins(suite.ctx, defaultAddr, sdk.NewCoins(
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000000000000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000000000000000)),
@@ -69,7 +70,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.Require().NoError(err)
 
 	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, poolId, minShareOutAmount, defaultCoins)
-	suite.Assert().Equal(76608, int(firstJoinGas))
+	suite.Assert().Equal(65580, int(firstJoinGas))
 
 	for i := 1; i < startAveragingAt; i++ {
 		err := suite.app.GAMMKeeper.JoinPool(suite.ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
@@ -78,15 +79,15 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 
 	avgGas, maxGas := suite.measureAvgAndMaxJoinPoolGas(totalNumJoins, defaultAddr, poolIDFn, minShareOutAmountFn, maxCoinsFn)
 	fmt.Printf("test deets: total %d of pools joined, begin average at %d\n", totalNumJoins, startAveragingAt)
-	suite.Assert().Equal(71065, int(avgGas), "average gas / join pool")
-	suite.Assert().Equal(71164, int(maxGas), "max gas / join pool")
+	suite.Assert().Equal(67095, int(avgGas), "average gas / join pool")
+	suite.Assert().Equal(67194, int(maxGas), "max gas / join pool")
 }
 
 func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	suite.SetupTest()
 
 	// mint some usomo to account
-	err := suite.app.BankKeeper.AddCoins(suite.ctx, defaultAddr, sdk.NewCoins(
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)),
 	))
 	suite.Require().NoError(err)
@@ -95,9 +96,10 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	denomNumber := 1000
 
 	// create pools prior to testing JoinPool using distinct denom
-	err = suite.app.BankKeeper.AddCoins(suite.ctx, defaultAddr, sdk.NewCoins(
+	coins := sdk.NewCoins(
 		sdk.NewCoin("randToken1", sdk.NewInt(100)),
-	))
+	)
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, coins)
 	suite.Require().NoError(err)
 
 	defaultBalancerPoolParams := types.BalancerPoolParams{
@@ -107,10 +109,9 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	for i := 1; i <= denomNumber; i++ {
 		randToken := "randToken" + strconv.Itoa(i+1)
 		prevRandToken := "randToken" + strconv.Itoa(i)
+		coins := sdk.NewCoins(sdk.NewCoin(randToken, sdk.NewInt(100)))
 
-		err := suite.app.BankKeeper.AddCoins(suite.ctx, defaultAddr, sdk.NewCoins(
-			sdk.NewCoin(randToken, sdk.NewInt(100)),
-		))
+		err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, coins)
 		suite.Require().NoError(err)
 
 		poolAssets := []types.PoolAsset{

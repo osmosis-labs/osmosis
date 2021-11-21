@@ -1,3 +1,6 @@
+/*
+
+Preserved for historical purposes
 package cmd
 
 import (
@@ -245,3 +248,6 @@ Example:
 
 	return cmd
 }
+
+
+/*

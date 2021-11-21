@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
+	osmoapp "github.com/osmosis-labs/osmosis/app"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/x/gamm"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
@@ -16,7 +17,7 @@ import (
 )
 
 func TestGammInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	poolI, err := types.NewBalancerPool(1, types.BalancerPoolParams{
@@ -68,15 +69,15 @@ func TestGammInitGenesis(t *testing.T) {
 }
 
 func TestGammExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
+	err := simapp.FundAccount(app.BankKeeper, ctx, acc1, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
-	})
+	))
 	require.NoError(t, err)
 
 	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, types.BalancerPoolParams{
@@ -109,18 +110,18 @@ func TestGammExportGenesis(t *testing.T) {
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	am := gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
+	err := simapp.FundAccount(app.BankKeeper, ctx, acc1, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
-	})
+	))
 	require.NoError(t, err)
 
 	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, types.BalancerPoolParams{

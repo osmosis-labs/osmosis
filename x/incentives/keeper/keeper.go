@@ -13,7 +13,7 @@ import (
 )
 
 type Keeper struct {
-	cdc        codec.Marshaler
+	cdc        codec.Codec
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 	hooks      types.IncentiveHooks
@@ -23,7 +23,7 @@ type Keeper struct {
 	ek         types.EpochKeeper
 }
 
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
@@ -59,7 +59,7 @@ func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.D
 
 	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
 
-	store.Set(types.LockableDurationsKey, k.cdc.MustMarshalBinaryBare(&info))
+	store.Set(types.LockableDurationsKey, k.cdc.MustMarshal(&info))
 }
 
 func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
@@ -71,7 +71,7 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 		panic("lockable durations not set")
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(bz, &info)
+	k.cdc.MustUnmarshal(bz, &info)
 
 	return info.LockableDurations
 }
