@@ -41,7 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-* Upgraded Osmosis to Cosmos-sdk 0.44.2
+* Upgrade to Cosmos-sdk 0.44.3
+  * Includes Rosetta API
+* Upgrade to IBC-v2
+* Add [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
 * Store block height in epochs module for debugging
 * Allow zero-weight pool-incentive distribution records
 * Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
