@@ -1,5 +1,5 @@
-# Other Features
-## Liquidity Bootstrapping Pools
+# LBPs
+##  Liquidity Bootstrapping Pools
 
 Osmosis offers a convenient design for Liquidity Bootstrapping Pools (LBPs), a special type of AMM designed for token sales. New protocols can use Osmosis’ LBP feature to distribute tokens and achieve initial price discovery.
 

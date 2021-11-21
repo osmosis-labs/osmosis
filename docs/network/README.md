@@ -1,10 +1,12 @@
 # Network
+
 ## Quickstart
+Osmosis maintains different networks for different purposes. 
 
-## Joining Mainnet
+## Testnet
+Brief description
+[Join the testnet](join-testnet)
 
-## Joining Testnet
-
-## Relayers
-
-
+## Mainnet
+Bried Description
+[Join the mainnet](join-mainnet.md)

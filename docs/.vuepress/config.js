@@ -9,7 +9,6 @@ module.exports = {
    * Ref：https://v1.vuepress.vuejs.org/config/#description
    */
   description: description,
-
   /**
    * Extra tags to be injected to the page HTML `<head>`
    *
@@ -38,27 +37,74 @@ module.exports = {
     logoDark: 'OSMOLogoTitleLight.png',
     repo: '',
     editLinks: false,
-    docsDir: '',
+    docsDir: 'docs',
     editLinkText: '',
     lastUpdated: false,
-    nav: [
+    navbar: [
+      // NavbarItem
       {
         text: 'Home',
         link: '/',
       },
-
+      // NavbarGroup
+      {
+        text: 'Network',
+        children: ['/network', '/validators'],
+      },
     ],
-    sidebarDepth: 1,
+    sidebarDepth: 0,
     sidebar: [
-      '/intro/',
-      '/liquidity/',
-      '/staking/',
-      '/governance/',
-      '/other-features/',
-      '/osmo/',
-      '/network/',
-      '/validators/',
-      '/tutorials/',
+      {
+        text: 'About',
+        children: [
+          '/intro',
+          '/intro/terminology',
+          '/osmo',
+          '/governance',
+          '/other-features',
+        ],
+      },
+      {
+        text: 'Wallets',
+        children: [
+          '/wallets',
+        ],
+      },
+      {
+        text: 'Liquidity',
+        children: [
+          '/liquidity',
+          '/liquidity/liquidity-bootstraping',
+        ],
+      },
+      {
+        text: 'Command Line',
+        children: [
+          '/cli',
+          '/cli/install',
+        ],
+      },
+      {
+        text: 'Networks',
+        children: [
+          '/network',
+          '/network/join-testnet',
+          '/network/join-mainnet',
+        ],
+      },
+      {
+        text: 'Validating',
+        children: [
+          '/validators',
+        ],
+      },
+      {
+        text: 'Integrate',
+        children: [
+          '/integrate',
+          '/integrate/token-listings',
+        ],
+      },
     ],
   },
 
