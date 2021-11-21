@@ -9,7 +9,6 @@ module.exports = {
    * Ref：https://v1.vuepress.vuejs.org/config/#description
    */
   description: description,
-
   /**
    * Extra tags to be injected to the page HTML `<head>`
    *
@@ -38,15 +37,20 @@ module.exports = {
     logoDark: 'OSMOLogoTitleLight.png',
     repo: '',
     editLinks: false,
-    docsDir: '',
+    docsDir: 'docs',
     editLinkText: '',
     lastUpdated: false,
-    nav: [
+    navbar: [
+      // NavbarItem
       {
         text: 'Home',
         link: '/',
       },
-
+      // NavbarGroup
+      {
+        text: 'Network',
+        children: ['/network', '/validators'],
+      },
     ],
     sidebarDepth: 1,
     sidebar: [
