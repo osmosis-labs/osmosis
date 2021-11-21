@@ -1,10 +1,20 @@
 # Network
+
 ## Quickstart
+Osmosis maintains different networks for different purposes. 
 
-## Joining Mainnet
+### Block Explorers
+- [Mintscan](https://mintscan.io/osmosis)
+- [Big Dipper](https://osmosis.bigdipper.live)
+- [Ping.pub](https://ping.pub/osmosis)
 
-## Joining Testnet
 
-## Relayers
+## Mainnet
+
+[Join the mainnet](join-mainnet.md)
+
+## Testnet
+
+[Join the testnet](join-testnet)
 
 
