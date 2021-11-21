@@ -486,7 +486,7 @@ func NewOsmosisApp(
 	)
 	poolIncentivesHooks := app.PoolIncentivesKeeper.Hooks()
 
-	app.TokenFactoryKeeper = *tokenfactorykeeper.NewKeeper(appCodec, keys[tokenfactorytypes.StoreKey], app.BankKeeper)
+	app.TokenFactoryKeeper = *tokenfactorykeeper.NewKeeper(appCodec, keys[tokenfactorytypes.StoreKey], app.AccountKeeper, app.BankKeeper)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()

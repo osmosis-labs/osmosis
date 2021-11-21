@@ -11,14 +11,24 @@ func (k Keeper) mintTo(ctx sdk.Context, amount sdk.Coin, mintTo string) error {
 		return err
 	}
 
+	addr, err := sdk.AccAddressFromBech32(mintTo)
+	if err != nil {
+		return err
+	}
+
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName,
-		sdk.AccAddress(mintTo),
+		addr,
 		sdk.NewCoins(amount))
 }
 
 func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) error {
-	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx,
-		sdk.AccAddress(burnFrom),
+	addr, err := sdk.AccAddressFromBech32(burnFrom)
+	if err != nil {
+		return err
+	}
+
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx,
+		addr,
 		types.ModuleName,
 		sdk.NewCoins(amount))
 	if err != nil {
@@ -29,5 +39,15 @@ func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) erro
 }
 
 func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr string, toAddr string) error {
-	return k.bankKeeper.SendCoins(ctx, sdk.AccAddress(fromAddr), sdk.AccAddress(toAddr), sdk.NewCoins(amount))
+	fromSdkAddr, err := sdk.AccAddressFromBech32(fromAddr)
+	if err != nil {
+		return err
+	}
+
+	toSdkAddr, err := sdk.AccAddressFromBech32(toAddr)
+	if err != nil {
+		return err
+	}
+
+	return k.bankKeeper.SendCoins(ctx, fromSdkAddr, toSdkAddr, sdk.NewCoins(amount))
 }

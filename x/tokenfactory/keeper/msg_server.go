@@ -54,7 +54,10 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 		return nil, types.ErrUnauthorized
 	}
 
-	server.Keeper.mintTo(ctx, msg.Amount, msg.MintToAddress)
+	err = server.Keeper.mintTo(ctx, msg.Amount, msg.MintToAddress)
+	if err != nil {
+		return nil, err
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -79,7 +82,10 @@ func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.
 		return nil, types.ErrUnauthorized
 	}
 
-	server.Keeper.burnFrom(ctx, msg.Amount, msg.GetBurnFromAddress())
+	err = server.Keeper.burnFrom(ctx, msg.Amount, msg.GetBurnFromAddress())
+	if err != nil {
+		return nil, err
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -104,7 +110,10 @@ func (server msgServer) ForceTransfer(goCtx context.Context, msg *types.MsgForce
 		return nil, types.ErrUnauthorized
 	}
 
-	server.Keeper.forceTransfer(ctx, msg.Amount, msg.TransferFromAddress, msg.TransferToAddress)
+	err = server.Keeper.forceTransfer(ctx, msg.Amount, msg.TransferFromAddress, msg.TransferToAddress)
+	if err != nil {
+		return nil, err
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

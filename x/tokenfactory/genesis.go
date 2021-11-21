@@ -9,6 +9,8 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	k.CreateModuleAccount(ctx)
+
 	for _, genDenom := range genState.GetFactoryDenoms() {
 		creator, nonce, err := types.DeconstructDenom(genDenom.GetDenom())
 		if err != nil {

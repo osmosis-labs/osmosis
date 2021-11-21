@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/tokenfactory/types"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type (
@@ -16,20 +18,23 @@ type (
 		cdc      codec.Codec
 		storeKey sdk.StoreKey
 
-		bankKeeper types.BankKeeper
+		accountKeeper types.AccountKeeper
+		bankKeeper    types.BankKeeper
 	}
 )
 
 func NewKeeper(
 	cdc codec.Codec,
 	storeKey sdk.StoreKey,
+	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 ) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 
-		bankKeeper: bankKeeper,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
 	}
 }
 
@@ -56,3 +61,9 @@ func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) sdk.KVStore {
 // 	store := ctx.KVStore(k.storeKey)
 // 	return prefix.NewStore(store, types.GetAdminPrefix(admin))
 // }
+
+// CreateModuleAccount creates a module account with minting and burning capabilities
+func (k Keeper) CreateModuleAccount(ctx sdk.Context) {
+	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter, authtypes.Burner)
+	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+}
