@@ -35,6 +35,4 @@ TODO: Describe
 
 ## Future directions
 
-* Want to add in a system to add in general "tx fee credits" for different on-chain usages
-  * e.g. making 0 fee txs under certain usecases
-* If other chains would like to use this, we should brainstorm mechanisms for extending the metadata proto fields
+TODO: Describe
