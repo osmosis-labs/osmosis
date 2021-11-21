@@ -48,17 +48,59 @@ module.exports = {
       },
 
     ],
-    sidebarDepth: 1,
+    sidebarDepth: 0,
     sidebar: [
-      '/intro/',
-      '/liquidity/',
-      '/staking/',
-      '/governance/',
-      '/other-features/',
-      '/osmo/',
-      '/network/',
-      '/validators/',
-      '/tutorials/',
+      {
+        text: 'About',
+        children: [
+          '/intro',
+          '/intro/terminology',
+          '/osmo',
+          '/governance',
+          '/other-features',
+        ],
+      },
+      {
+        text: 'Wallets',
+        children: [
+          '/wallets',
+        ],
+      },
+      {
+        text: 'Liquidity',
+        children: [
+          '/liquidity',
+          '/liquidity/liquidity-bootstraping',
+        ],
+      },
+      {
+        text: 'Command Line',
+        children: [
+          '/cli',
+          '/cli/install',
+        ],
+      },
+      {
+        text: 'Networks',
+        children: [
+          '/network',
+          '/network/join-testnet',
+          '/network/join-mainnet',
+        ],
+      },
+      {
+        text: 'Validating',
+        children: [
+          '/validators',
+        ],
+      },
+      {
+        text: 'Integrate',
+        children: [
+          '/integrate',
+          '/integrate/token-listings',
+        ],
+      },
     ],
   },
 
