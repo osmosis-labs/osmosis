@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -148,51 +147,56 @@ func (suite *KeeperTestSuite) TestDelegationAutoWithdrawAndDelegateMore() {
 
 	pub1 := secp256k1.GenPrivKey().PubKey()
 	pub2 := secp256k1.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pub1.Address())
-	addr2 := sdk.AccAddress(pub2.Address())
-
+	addrs := []sdk.AccAddress{sdk.AccAddress(pub1.Address()), sdk.AccAddress(pub2.Address())}
 	claimRecords := []types.ClaimRecord{
 		{
-			Address:                addr1.String(),
+			Address:                addrs[0].String(),
 			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
 			ActionCompleted:        []bool{false, false, false, false},
 		},
 		{
-			Address:                addr2.String(),
+			Address:                addrs[1].String(),
 			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
 			ActionCompleted:        []bool{false, false, false, false},
 		},
 	}
 
-	suite.app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
-	suite.app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr2, nil, 0, 0))
-
+	// initialize accts
+	for i := 0; i < len(addrs); i++ {
+		suite.app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addrs[i], nil, 0, 0))
+	}
+	// initialize claim records
 	err := suite.app.ClaimKeeper.SetClaimRecords(suite.ctx, claimRecords)
 	suite.Require().NoError(err)
 
-	coins1, err := suite.app.ClaimKeeper.GetUserTotalClaimable(suite.ctx, addr1)
-	suite.Require().NoError(err)
-	suite.Require().Equal(coins1, claimRecords[0].InitialClaimableAmount)
-	coins2, err := suite.app.ClaimKeeper.GetUserTotalClaimable(suite.ctx, addr2)
-	suite.Require().NoError(err)
-	suite.Require().Equal(coins2, claimRecords[1].InitialClaimableAmount)
+	// test claim records set
+	for i := 0; i < len(addrs); i++ {
+		coins, err := suite.app.ClaimKeeper.GetUserTotalClaimable(suite.ctx, addrs[i])
+		suite.Require().NoError(err)
+		suite.Require().Equal(coins, claimRecords[i].InitialClaimableAmount)
+	}
 
-	validator, err := stakingtypes.NewValidator(sdk.ValAddress(addr1), pub1, stakingtypes.Description{})
+	// set addr[0] as a validator
+	validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[0]), pub1, stakingtypes.Description{})
 	suite.Require().NoError(err)
 	validator = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, true)
 	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
 
-	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.NewInt(1)))
-	delAmount := sdk.TokensFromConsensusPower(1, sdk.NewInt(1))
-	suite.NoError(err)
-	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, addr2, delAmount, stakingtypes.Unbonded, validator, true)
-	suite.NoError(err)
+	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
+	delAmount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addrs[1],
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, delAmount)))
+	suite.Require().NoError(err)
+	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], delAmount, stakingtypes.Unbonded, validator, true)
+	suite.Require().NoError(err)
 
 	// delegation should automatically call claim and withdraw balance
-	claimedCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
-	suite.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom).String(), claimRecords[1].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(int64(len(claimRecords[1].ActionCompleted)))).String())
+	actualClaimedCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, addrs[1])
+	actualClaimedCoin := actualClaimedCoins.AmountOf(sdk.DefaultBondDenom)
+	expectedClaimedCoin := claimRecords[1].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(int64(len(claimRecords[1].ActionCompleted))))
+	suite.Require().Equal(expectedClaimedCoin.String(), actualClaimedCoin.String())
 
-	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, addr2, claimedCoins.AmountOf(sdk.DefaultBondDenom), stakingtypes.Unbonded, validator, true)
+	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], actualClaimedCoin, stakingtypes.Unbonded, validator, true)
 	suite.NoError(err)
 }
 
@@ -416,7 +420,6 @@ func (suite *KeeperTestSuite) TestClawbackAirdrop() {
 		err = acc.SetSequence(tc.sequence)
 		suite.Require().NoError(err, "err: %s test: %s", err, tc.name)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		fmt.Println(acc)
 		coins := sdk.NewCoins(
 			sdk.NewInt64Coin("uosmo", 100), sdk.NewInt64Coin("uion", 100))
 		simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
