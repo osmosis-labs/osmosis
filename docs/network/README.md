@@ -1,20 +1,18 @@
-# Network
+# Network Resources
 
-## Quickstart
-Osmosis maintains different networks for different purposes. 
+## Osmosis Volume / Liquidity
+- [Info.osmosis.zone](https://info.osmosis.zone/)
 
-### Block Explorers
+## Block Explorers
 - [Mintscan](https://mintscan.io/osmosis)
 - [Big Dipper](https://osmosis.bigdipper.live)
 - [Ping.pub](https://ping.pub/osmosis)
 
-
-## Mainnet
-
-[Join the mainnet](join-mainnet.md)
+## Public REST (Swagger)
+- [Imperator.co](https://api-osmosis.imperator.co/swagger/)
 
 ## Testnet
+- [Join the testnet](join-testnet.md)
 
-[Join the testnet](join-testnet)
-
-
+## Mainnet
+- [Join the mainnet](join-mainnet.md)

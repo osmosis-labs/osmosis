@@ -5,11 +5,8 @@ heroText: Osmosis
 tagline: A decentralized exchange on Cosmos
 actions:
   - text: Get Started →
-    link: /cli/install
+    link: /intro
     type: primary
-  - text: Introduction
-    link: /intro/
-    type: secondary
 features:
 - title: Develop
   details: Learn and contribute to the development of Osmosis.
