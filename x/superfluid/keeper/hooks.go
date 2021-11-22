@@ -7,7 +7,6 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
@@ -17,22 +16,6 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
-		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			// TODO: should include unlocking asset as well
-			// TODO: should we enable all the locks for specific lp token
-			// or only locks that people want to participiate in superfluid staking within those locks?
-			totalAmt := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
-				Denom:         asset.Denom,
-				Duration:      time.Second,
-			})
-			k.SetSuperfluidAssetInfo(ctx, types.SuperfluidAssetInfo{
-				Denom:                      asset.Denom,
-				TotalStakedAmount:          totalAmt,
-				RiskAdjustedOsmoEquivalent: k.GetRiskAdjustedOsmoValue(ctx, asset, totalAmt),
-			})
-		}
-
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			priceMultiplier := gammtypes.InitPoolSharesSupply
 			twap := sdk.NewDecFromInt(priceMultiplier)
@@ -58,6 +41,12 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
 		}
 
+		// Move delegation rewards to perpetual gauge
+		k.moveIntermediaryDelegationRewardToGauges(ctx)
+
+		// Refresh intermediary accounts' delegation amounts
+		k.refreshIntermediaryDelegationAmounts(ctx)
+
 		// TODO:
 		// slashing
 		// 	Currently for double signs, we iterate over all unbondings and all redelegations. We handle slashing delegated tokens, via a “rebase” factor.
@@ -68,14 +57,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		// staking
 		// 	Iterate module accounts
-		// 	Need to decide between Module account per LP token & module account per (LP token, validator token pair)
-		// 	per LP token
-		// 	Then we have to iterate over every delegator. (Potentially millions of entries)
-		// 	per (LP token, validator addr pair)
-		// 	at 200 superfluid enabled LP tokens, 100 validators, this is 20k module accounts. Very quick to iterate over.
-		// 	Gauge rewards are once per denom
-		// 	Decided, one module account & one denom per (LP token, validator addr pair)
-		// 	Move delegation rewards to perpetual gauge per (LP token, validator addr pair)
 		// 	Update the module accounts’ delegation amount based on changed TWAP
 		// 	We will need add something to staking, so that we can do this, without triggering unbonding logic.
 		// 	We do this via keeper method, not via message
@@ -104,4 +85,18 @@ func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNu
 
 func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+}
+
+// lockup hooks
+func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+
+}
+
+func (h Hooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+	// undelegate automatically when start unlocking
+	h.k.SuperfluidUndelegate(ctx, lockID)
+}
+
+func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+
 }

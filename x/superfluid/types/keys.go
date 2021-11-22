@@ -20,9 +20,6 @@ var (
 	// KeyPrefixSuperfluidAsset defines prefix key for superfluid asset
 	KeyPrefixSuperfluidAsset = []byte{0x01}
 
-	// KeyPrefixSuperfluidAssetInfo defines prefix key for superfluid asset info
-	KeyPrefixSuperfluidAssetInfo = []byte{0x02}
-
 	// KeyPrefixTokenPriceTwap defines prefix key per epoch
 	KeyPrefixTokenPriceTwap = []byte{0x03}
 

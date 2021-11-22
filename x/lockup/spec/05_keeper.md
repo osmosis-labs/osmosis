@@ -56,7 +56,7 @@ type Keeper interface {
     GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []types.SyntheticLock
     GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock
     // CreateSyntheticLockup create synthetic lockup with lock id and denom suffix
-    CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, isUnlocking bool) error
+    CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration) error
     // DeleteSyntheticLockup delete synthetic lockup with lock id and suffix
     DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
     // DeleteAllSyntheticLocksByLockup deletes all the synthetic lockups by lockup id

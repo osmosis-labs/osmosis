@@ -12,10 +12,79 @@ import (
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
+func stakingSuffix(valAddr string) string {
+	return fmt.Sprintf("superbonding%s", valAddr)
+}
+
+func unstakingSuffix(valAddr string) string {
+	return fmt.Sprintf("superunbonding%s", valAddr)
+}
+
+func (k Keeper) refreshIntermediaryDelegationAmounts(ctx sdk.Context) {
+	accs := k.GetAllIntermediaryAccounts(ctx)
+	for _, acc := range accs {
+		mAddr := acc.GetAddress()
+		valAddress, err := sdk.ValAddressFromBech32(acc.ValAddr)
+		if err != nil {
+			panic(err)
+		}
+
+		validator, found := k.sk.GetValidator(ctx, valAddress)
+		if !found {
+			panic("validator not found")
+		}
+
+		// undelegate full amount from the validator
+		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
+		if !found {
+			continue
+		}
+
+		returnAmount, err := k.sk.Unbond(ctx, mAddr, valAddress, delegation.Shares)
+		if err != nil {
+			panic(err)
+		}
+
+		// burn undelegated tokens
+		burnCoins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, returnAmount)}
+		if validator.IsBonded() {
+			err = k.bk.BurnCoins(ctx, stakingtypes.BondedPoolName, burnCoins)
+		} else {
+			err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, burnCoins)
+		}
+
+		twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
+		if twap.EpochTwapPrice.IsZero() {
+			continue
+		}
+
+		// mint OSMO token based on TWAP of locked denom to denom module account
+		// Get total delegation from synthetic lockups
+		totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
+			Duration:      time.Hour * 24 * 14,
+		})
+		decAmt := twap.EpochTwapPrice.Mul(sdk.Dec(totalSuperfluidDelegation))
+		asset := k.GetSuperfluidAsset(ctx, acc.Denom)
+		amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
+
+		coins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, amt)}
+		k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+		k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+
+		// make delegation from module account to the validator
+		_, err = k.sk.Delegate(ctx, mAddr, amt, stakingtypes.Unbonded, validator, true)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr string) error {
-	// Register a synthetic lockup for superfluid staking with `superbonding{valAddr}` suffix
-	suffix := fmt.Sprintf("superbonding%s", valAddr)
-	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, false)
+	// Register a synthetic lockup for superfluid staking
+	suffix := stakingSuffix(valAddr)
+	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, 0)
 
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -43,40 +112,43 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 
 	mAddr := acc.GetAddress()
 	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
-	if !twap.EpochTwapPrice.IsZero() {
-		// mint OSMO token based on TWAP of locked denom to denom module account
-		decAmt := twap.EpochTwapPrice.Mul(sdk.Dec(lock.Coins.AmountOf(acc.Denom)))
-		amt := decAmt.RoundInt()
-		coins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, amt)}
-		k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
-		k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
-
-		// make delegation from module account to the validator
-		valAddress, err := sdk.ValAddressFromBech32(valAddr)
-		if err != nil {
-			return err
-		}
-		validator, found := k.sk.GetValidator(ctx, valAddress)
-		if !found {
-			return fmt.Errorf("validator not found")
-		}
-		_, err = k.sk.Delegate(ctx, mAddr, amt, stakingtypes.Unbonded, validator, true)
-		if err != nil {
-			return err
-		}
-
-		// create a perpetual gauge to send staking distribution rewards to
-		acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{}, ctx.BlockTime(), 1)
-		if err != nil {
-			return err
-		}
-
-		// connect intermediary account struct to its address
-		k.SetIntermediaryAccount(ctx, acc)
-
-		// create connection record between lock id and intermediary account
-		k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
+	if twap.EpochTwapPrice.IsZero() {
+		return fmt.Errorf("not able to do superfluid staking if asset TWAP is zero")
 	}
+	// mint OSMO token based on TWAP of locked denom to denom module account
+	decAmt := twap.EpochTwapPrice.Mul(sdk.Dec(lock.Coins.AmountOf(acc.Denom)))
+	asset := k.GetSuperfluidAsset(ctx, acc.Denom)
+	amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
+
+	coins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, amt)}
+	k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+
+	// make delegation from module account to the validator
+	valAddress, err := sdk.ValAddressFromBech32(valAddr)
+	if err != nil {
+		return err
+	}
+	validator, found := k.sk.GetValidator(ctx, valAddress)
+	if !found {
+		return fmt.Errorf("validator not found")
+	}
+	_, err = k.sk.Delegate(ctx, mAddr, amt, stakingtypes.Unbonded, validator, true)
+	if err != nil {
+		return err
+	}
+
+	// create a perpetual gauge to send staking distribution rewards to
+	acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{}, ctx.BlockTime(), 1)
+	if err != nil {
+		return err
+	}
+
+	// connect intermediary account struct to its address
+	k.SetIntermediaryAccount(ctx, acc)
+
+	// create connection record between lock id and intermediary account
+	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
 
 	return nil
 }
@@ -85,16 +157,14 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
 	// Remove previously created synthetic lockup
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
-	suffix := fmt.Sprintf("superbonding%s", intermediaryAcc.ValAddr)
+	suffix := stakingSuffix(intermediaryAcc.ValAddr)
 	err := k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
 	if err != nil {
 		return err
 	}
 
-	// unbonding synthetic suffix = `unbonding{valAddr}`
-	suffix = fmt.Sprintf("superunbonding%s", intermediaryAcc.ValAddr)
-	// TODO: synthetic lockup unbonding duration should be different from regular unbonding lockup, should set the duration here
-	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, true)
+	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
+	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, time.Hour*24*14) // 2 weeks unlock duration
 
 	// TODO: Unbonding amount should be modified for TWAP change or not?
 	return nil

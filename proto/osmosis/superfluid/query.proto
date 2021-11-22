@@ -20,10 +20,6 @@ service Query {
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_assets";
   }
-  // Returns superfluid asset info
-  rpc AssetInfo(AssetInfoRequest) returns (AssetInfoResponse) {
-    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_info/{denom}";
-  }
 }
 
 message AssetTypeRequest {
@@ -31,13 +27,6 @@ message AssetTypeRequest {
 };
 message AssetTypeResponse {
   SuperfluidAssetType asset_type = 1;
-};
-
-message AssetInfoRequest {
-  string denom = 1;
-};
-message AssetInfoResponse {
-  SuperfluidAssetInfo info = 1;
 };
 
 message AllAssetsRequest {};
