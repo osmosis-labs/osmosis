@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
@@ -40,12 +41,6 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		ValAddr: valAddr,
 	}
 
-	// connect intermediary account struct to its address
-	k.SetIntermediaryAccount(ctx, acc)
-
-	// create connection record between lock id and intermediary account
-	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
-
 	mAddr := acc.GetAddress()
 	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
 	if !twap.EpochTwapPrice.IsZero() {
@@ -69,7 +64,20 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		if err != nil {
 			return err
 		}
+
+		// create a perpetual gauge to send staking distribution rewards to
+		acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{}, ctx.BlockTime(), 1)
+		if err != nil {
+			return err
+		}
+
+		// connect intermediary account struct to its address
+		k.SetIntermediaryAccount(ctx, acc)
+
+		// create connection record between lock id and intermediary account
+		k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
 	}
+
 	return nil
 }
 
