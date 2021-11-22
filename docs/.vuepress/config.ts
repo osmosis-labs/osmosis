@@ -1,7 +1,5 @@
 const { description } = require('../package')
-
 import { defineUserConfig } from 'vuepress'
-
 import {MixThemeConfig} from 'vuepress-theme-mix/lib/node'
 
 export default defineUserConfig<MixThemeConfig>({
@@ -37,16 +35,20 @@ export default defineUserConfig<MixThemeConfig>({
       '/': {
         navbar: [
           {
+            text: 'Intro',
+            link: '/intro',
+          },
+          {
             text: 'Develop',
-            link: '/',
+            link: '/developing',
           },
           {
             text: 'Validate',
-            link: '/guide/',
+            link: '/validators/',
           },
           {
             text: 'Integrate',
-            link: '/guide/',
+            link: '/integrate/',
           },
           // {
           //   text: 'Reference',
@@ -76,7 +78,6 @@ export default defineUserConfig<MixThemeConfig>({
               link: '',
               children: [
                 '/intro/',
-                '/intro/wallets',
                 '/intro/osmo',
                 '/intro/terminology',
                 '/intro/governance',
@@ -84,20 +85,36 @@ export default defineUserConfig<MixThemeConfig>({
             },
             {
               type: 'group',
-              text: 'Liquidity',
+              text: 'Osmosis AMM App',
               link: '',
               children: [
-                '/liquidity',
-                '/liquidity/liquidity-bootstraping',
+                '/osmosis-app',
+                '/osmosis-app/add-liquidity',
+                '/osmosis-app/create-pool',
+                '/osmosis-app/liquidity-bootstraping',
               ],
             },
+            {
+              type: 'group',
+              text: 'Wallets',
+              link: '',
+              children: [
+                '/wallets/',
+              ],
+            },
+
+
+
+          ],
+
+          '/developing': [
             {
               type: 'group',
               text: 'Command Line',
               link: '',
               children: [
-                '/cli',
-                '/cli/install',
+                '/developing/cli',
+                '/developing/cli/install',
               ],
             },
             {
@@ -105,19 +122,26 @@ export default defineUserConfig<MixThemeConfig>({
               text: 'Networks',
               link: '',
               children: [
-                '/network',
-                '/network/join-testnet',
-                '/network/join-mainnet',
+                '/developing/network',
+                '/developing/network/join-testnet',
+                '/developing/network/join-mainnet',
               ],
             },
+          ],
+
+          '/validators': [
             {
               type: 'group',
-              text: 'Validating',
+              text: 'Validate',
               link: '',
               children: [
                 '/validators',
               ],
+              collapsible: true,
             },
+          ],
+
+          '/integrate': [
             {
               type: 'group',
               text: 'Integrate',
@@ -126,21 +150,24 @@ export default defineUserConfig<MixThemeConfig>({
                 '/integrate',
                 '/integrate/token-listings',
               ],
+              collapsible: true,
             },
+              ],
+
+          '/wallets/keplr': [
+            {
+              type: 'group',
+              text: 'Keplr',
+              link: '',
+              children: [
+                '/wallets/keplr/install-keplr',
+                '/wallets/keplr/create-keplr-wallet',
+                '/wallets/keplr/import-account',
+                '/wallets/keplr/import-ledger-account',
+              ],
+              collapsible: true,
+            }
           ],
-
-
-          // '/othernav-example': [
-          //   {
-          //     type: 'link-group',
-          //     text: 'Other nav',
-          //     link: '',
-          //     children: [
-          //     '/othernav',
-          //     '/othernav/othernav',
-          //     ],
-          //   },
-          // ],
         },
       }
     },
@@ -148,31 +175,6 @@ export default defineUserConfig<MixThemeConfig>({
     themePlugins: {
       git: true,
     },
-  },
-
-  themeConfigOLd: {
-    displayAllHeaders: true,
-    logo: 'OSMOLogoTitleDark.png',
-    logoDark: 'OSMOLogoTitleLight.png',
-    repo: '',
-    editLinks: false,
-    docsDir: 'docs',
-    editLinkText: '',
-    lastUpdated: false,
-    navbar: [
-      // NavbarItem
-      {
-        text: 'Home',
-        link: '/',
-      },
-      // NavbarGroup
-      {
-        text: 'Network',
-        children: ['/network', '/validators'],
-      },
-    ],
-    sidebarDepth: 0,
-
   },
 
   /**

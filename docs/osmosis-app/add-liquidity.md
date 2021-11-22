@@ -1,20 +1,5 @@
-# Liquidity Providing
-Creating pools in Osmosis is permissionless, meaning any user can create a pool with two or more supported assets.
-Go to Pools > Create a Pool. Select from your wallet the assets that will comprise the pool. Choose a weight for each asset.
 
-![Tux, the Linux mascot](../assets/creating-pool.png)
-
-Choose a quantity of each asset to deposit into the pool.
-
-![Tux, the Linux mascot](../assets/creating-pool2.png)
-
-Input a swap fee for the pool. (An explanation of swap fees can be found [here](https://osmosis.gitbook.io/o/liquidity-providing/fees).)
-
-![Tux, the Linux mascot](../assets/creating-pool3.png)
-
-Click Create a Pool and voilà! The pool is launched. The parameters chosen when creating the pool (token weights, swap fees) cannot be changed later.
-
-## Creating a Pool
+# Adding Liquidity to a Pool
 Select a pool from the list and click Add/Remove Liquidity
 
 Input a quantity of one of the assets. The quantity of the other asset(s) will auto-complete. (Pools require assets to be deposited in pre-determined weights.)
@@ -47,6 +32,10 @@ A bonded LP position can be eligible for multiple gauges. Qualifications for a g
 
 
 The rewards earned from liquidity mining are not subject to unbonding. Rewards are liquid and transferable immediately. Only the principal bonded shares are subject to the unbonding period.
+
+
+---- MOVE THIS SOMEWHERE ELSE ----
+
 
 ## Allocation Points
 
@@ -87,5 +76,4 @@ Swap fees are fees charged for making a swap in an LP pool. The fee is paid by t
 ### Exit Fees
 Osmosis LPs pay a small fee when withdrawing from the pool. Similar to swap fees, exit fees per pool are set by the pool creator.
 Exit fees are paid in LP tokens. Users withdraw their tokens, minus a percent for the exit fee. These LP shares are burned, resulting in pro-rata distribution to remaining LPs.
-
 

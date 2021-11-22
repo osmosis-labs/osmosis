@@ -4,12 +4,10 @@ heroImage: OSMOLogoSquare.png
 heroText: Osmosis
 tagline: A decentralized exchange on Cosmos
 actions:
-  - text: Get Started →
-    link: /cli/install
-    type: primary
-  - text: Introduction
+  - text: Read Documentation →
     link: /intro/
-    type: secondary
+    type: primary
+    
 features:
 - title: Develop
   details: Learn and contribute to the development of Osmosis.
