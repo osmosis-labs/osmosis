@@ -47,20 +47,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// Refresh intermediary accounts' delegation amounts
 		k.refreshIntermediaryDelegationAmounts(ctx)
 
-		// TODO:
-		// slashing
-		// 	Currently for double signs, we iterate over all unbondings and all redelegations. We handle slashing delegated tokens, via a “rebase” factor.
-		// 	Meaning, that if we have a 10% slash say, we just alter the conversion rate between “delegation pool shares” and “osmo” when withdrawing your stake.
-		// 	Now in our case, we currently don’t have a method for a “rebase” factor in synthetic lockups.
-		// 	Eugen: We can add this rebase factor to our Superfluid module, to be executed upon MsgUnbondStake or w/e its called
-		// 	Dev: I don’t think we need to worry about deferring iteration
-
-		// staking
-		// 	Iterate module accounts
-		// 	Update the module accounts’ delegation amount based on changed TWAP
-		// 	We will need add something to staking, so that we can do this, without triggering unbonding logic.
-		// 	We do this via keeper method, not via message
-		// 	Just needs to be added, and ensure no weird unforeseen edge cases
+		// Slash all module accounts' LP token based on slash amount
+		// TODO: k.slashLockupsForSlashedOnDelegation(ctx)
 	}
 }
 
