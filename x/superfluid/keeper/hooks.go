@@ -16,6 +16,9 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
+		// Slash all module accounts' LP token based on slash amount before twap update
+		k.slashLockupsForSlashedOnDelegation(ctx)
+
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			priceMultiplier := gammtypes.InitPoolSharesSupply
 			twap := sdk.NewDecFromInt(priceMultiplier)
@@ -47,8 +50,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// Refresh intermediary accounts' delegation amounts
 		k.refreshIntermediaryDelegationAmounts(ctx)
 
-		// Slash all module accounts' LP token based on slash amount
-		// TODO: k.slashLockupsForSlashedOnDelegation(ctx)
 	}
 }
 

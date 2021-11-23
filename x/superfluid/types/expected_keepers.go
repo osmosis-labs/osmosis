@@ -18,6 +18,7 @@ type LockupKeeper interface {
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
 	CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration) error
 	DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
+	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
 }
 
 // GammKeeper defines the expected interface needed for superfluid module

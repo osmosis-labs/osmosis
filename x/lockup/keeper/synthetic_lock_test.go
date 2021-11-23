@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
 
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", 0)
 	suite.Require().NoError(err)
 
 	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllSyntheticLocksByLockup
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].Coins, coins)
 
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", 0)
 	suite.Require().NoError(err)
 
 	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
@@ -211,10 +211,10 @@ func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks(
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].Coins, coins)
 
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", 0)
 	suite.Require().NoError(err)
 
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator2", true)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator2", time.Second)
 	suite.Require().NoError(err)
 
 	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")

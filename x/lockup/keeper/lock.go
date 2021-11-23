@@ -345,6 +345,22 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 	return nil
 }
 
+func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
+	lock.Coins = lock.Coins.Sub(coins)
+
+	err := k.setLock(ctx, *lock)
+	if err != nil {
+		return err
+	}
+
+	// modifications to accumulation store
+	for _, coin := range coins {
+		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+	}
+
+	return nil
+}
+
 // AddTokensToLock locks more tokens into a lockup
 // This also saves the lock to the store.
 func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
@@ -369,6 +385,32 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockI
 	}
 
 	k.hooks.OnTokenLocked(ctx, owner, lock.ID, coins, lock.Duration, lock.EndTime)
+	return lock, nil
+}
+
+// SlashTokensFromLockByID send slashed tokens to community pool
+func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, err
+	}
+
+	modAddr := k.ak.GetModuleAddress(types.ModuleName)
+	err = k.dk.FundCommunityPool(ctx, coins, modAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.removeTokensFromLock(ctx, lock, coins)
+	if err != nil {
+		return nil, err
+	}
+
+	if k.hooks == nil {
+		return lock, nil
+	}
+
+	k.hooks.OnTokenSlashed(ctx, lock.ID, coins)
 	return lock, nil
 }
 
