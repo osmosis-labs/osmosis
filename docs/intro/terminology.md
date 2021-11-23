@@ -1,4 +1,4 @@
-# Termonology 
+# Terminology 
 
 
 ## LP Tokens
