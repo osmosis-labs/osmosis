@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
@@ -60,19 +59,6 @@ func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, address sdk.AccAddres
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
 	prefixStore.Delete(address)
-}
-
-func (k Keeper) SetSyntheticLockupOwner(acc types.SuperfluidIntermediaryAccount, synthLock lockuptypes.SyntheticLock) {
-	// TODO: this might be not be useful since synthetic lockup is already supporting this
-	// addr := acc.GetAddress()
-	// set on superfluid storage | `{address}{lockid}{suffix}` => synthLock
-}
-
-func (k Keeper) GetOwnedSyntheticLockups(acc types.SuperfluidIntermediaryAccount) []lockuptypes.SyntheticLock {
-	// TODO: this might be not be useful since synthetic lockup is already supporting this
-	// addr := acc.GetAddress()
-	// TODO: read from iterator for `{address}` prefix
-	return []lockuptypes.SyntheticLock{}
 }
 
 func (k Keeper) GetIntermediaryAccountOSMODelegation(acc types.SuperfluidIntermediaryAccount) sdk.Int {

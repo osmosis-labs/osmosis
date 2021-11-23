@@ -50,6 +50,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// Refresh intermediary accounts' delegation amounts
 		k.refreshIntermediaryDelegationAmounts(ctx)
 
+		// TODO: Unbonding amount should be modified for TWAP change? @Dev @Sunny
 	}
 }
 
@@ -82,8 +83,14 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 }
 
 func (h Hooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
-	// undelegate automatically when start unlocking
-	h.k.SuperfluidUndelegate(ctx, lockID)
+	// undelegate automatically when start unlocking if superfluid staking is available
+	intermediaryAccAddr := h.k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	if !intermediaryAccAddr.Empty() {
+		err := h.k.SuperfluidUndelegate(ctx, lockID)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {

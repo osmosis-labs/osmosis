@@ -49,8 +49,14 @@ func (k Keeper) refreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		burnCoins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, returnAmount)}
 		if validator.IsBonded() {
 			err = k.bk.BurnCoins(ctx, stakingtypes.BondedPoolName, burnCoins)
+			if err != nil {
+				panic(err)
+			}
 		} else {
 			err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, burnCoins)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
@@ -156,6 +162,9 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
 	// Remove previously created synthetic lockup
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	if intermediaryAccAddr.Empty() {
+		return fmt.Errorf("lockID is not used for superfluid staking")
+	}
 	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	suffix := stakingSuffix(intermediaryAcc.ValAddr)
 	err := k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
@@ -164,9 +173,11 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
 	}
 
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
-	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, time.Hour*24*14) // 2 weeks unlock duration
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, time.Hour*24*14) // 2 weeks unlock duration
+	if err != nil {
+		return err
+	}
 
-	// TODO: Unbonding amount should be modified for TWAP change or not?
 	return nil
 }
 
@@ -179,15 +190,6 @@ func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr 
 	k.SuperfluidDelegate(ctx, lockID, newValAddr)
 	return nil
 }
-
-func (k Keeper) SuperfluidWithdraw(lockID uint64) {
-	// It looks like LP token will be automatically removed by lockup module
-	// TODO: If there's any local storage used by superfluid module for each lockID, just clean it up.
-	// TODO: automatically done or manually done?
-	// TODO: check synthetic suffix = `unbonding{valAddr}`, lockID is matured and removed already on lockup storage
-}
-
-// TODO: Implement hook for native lockup unbonding
 
 // TODO: Need to (eventually) override the existing staking messages and queries, for undelegating, delegating, rewards, and redelegating, to all be going through all superfluid module.
 // Want integrators to be able to use the same staking queries and messages
