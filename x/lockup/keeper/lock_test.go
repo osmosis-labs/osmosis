@@ -431,3 +431,5 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
 }
+
+// TODO: add test for SlashTokensFromLockByID
