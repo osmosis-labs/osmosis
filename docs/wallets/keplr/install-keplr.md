@@ -1,12 +1,20 @@
 # Install Keplr
 
-Go to this link and click the [Add] button
-[Add “Keplr”] window will show off.
+Go to [https://wallet.keplr.app/](https://wallet.keplr.app/) and click ** Install for Chrome **
+
+![](../assets/install-keplr-1.png)
+
+Click the "Add to Chrome" button
+![](../assets/install-keplr-2.png)
 
 Here you have to choose [Add Extension]
+![](../assets/install-keplr-3.png)
 
-At the end of the download, you can start to interact with your browser extension by clicking on it.
+The Wallet is now installed on the brower's extensions
+![](../assets/install-keplr-4.png)
 
-Now you have 4 options: import your account from a compatible* non-custodial wallet, import your Ledger account, create a new account via seed/mnemonic phrase or via [One-Click Login].
+## Next steps
 
-*[compatible] means a wallet that allows you to use the mnemonic/seed phrase to import your account to Keplr.
+- [Create New Account](create-keplr-wallet)
+- [Import Existing Account](import-account)
+- [Import Ledger Account](import-ledger-account)
