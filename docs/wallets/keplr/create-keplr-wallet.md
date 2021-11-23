@@ -2,6 +2,7 @@
 
 ## How to create a new Account via Manemonic/Seed Phrase
 If you are setting up Keplr for the first time: In the initial pop-up window, choose [Create New Account]
+![](../assets/create-1.png)
 
 If you have used Keplr before: In the extension click on the silhouette in the upper-right-hand corner, then the blue box [Add Account] & select [Create New Account]
 
@@ -16,7 +17,12 @@ If you are interested in knowing more about the HD wallet derivation path, you c
 
 Once you are sure that you have correctly transcribed the seed/mnemonic phrase, click on [Next].
 
+![](../assets/create-2.png)
+
+![](../assets/create-3.png)
 To confirm the creation of the new account, all you have to do is click on the words in the right order in which they appear in your seed/mnemonic phrase and press [Register].
+
+![](../assets/create-4.png)
 
 If you have just downloaded Keplr extension, it’s time to set your password! Choose carefully, if possible select a password you’re not using in any other application, and then click [Confirm].
 
