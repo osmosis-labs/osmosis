@@ -40,8 +40,8 @@ sed -i '' 's%2125267%100000002125267%g' $EXPORTED_GENESIS
 # Update total osmo supply, old 413150362339859, new 613M
 sed -i '' 's%413150362339859%613150362339859%g' $EXPORTED_GENESIS
 
-# Fix bonded tokens pool balance, old 37961850148775
-sed -i '' 's%37961850148775%137961850148775%g' $EXPORTED_GENESIS
+# Fix bonded_tokens_pool balance, old 57368900009013
+sed -i '' 's%57368900009013%157368900009013%g' $EXPORTED_GENESIS
 
 ### Fix gov params
 
