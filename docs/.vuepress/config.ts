@@ -35,16 +35,16 @@ export default defineUserConfig<MixThemeConfig>({
       '/': {
         navbar: [
           {
+            text: 'Home',
+            link: '/',
+          },
+          {
             text: 'Intro',
             link: '/intro',
           },
           {
             text: 'Develop',
             link: '/developing',
-          },
-          {
-            text: 'Develop',
-            link: '/test',
           },
           {
             text: 'Validate',
