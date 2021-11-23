@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* Remove docker github action (temporary)
 * Upgrade to Cosmos-sdk 0.44.3
   * Includes Rosetta API
 * Upgrade to IBC-v2
