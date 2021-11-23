@@ -19,3 +19,6 @@ If you have just downloaded Keplr extension, it’s time to set your password! C
 If you have used Keplr before, this step will be skipped as you have already set your password when creating/importing your first account.
 
 Select [Done].
+
+
+
