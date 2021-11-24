@@ -1,39 +1,8 @@
 # Joining Testnet
 
-## Install Dependencies
-
-Start by ensuring your system is up to date:
-
-```bash
-sudo apt update
-sudo apt upgrade
-```
-
-Install tools if not already installed (gcc, make, etc.):
-
-```bash
-sudo apt install git build-essential ufw curl jq snapd --yes
-```
-
-Install go:
-
-```bash
-wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.2
-```
-
-After installed, open new terminal to properly load go
-
 ## Install Osmosis Binary
 
-Clone the osmosis repo, checkout and install v3.2.0_with_cache:
-
-```bash
-cd $HOME
-git clone https://github.com/osmosis-labs/osmosis
-cd osmosis
-git checkout v3.2.0_with_cache
-make install
-```
+Make sure you have [installed the Osmosis Binary (CLI).](../cli/install)
 
 ## Initialize Osmosis Node
 
