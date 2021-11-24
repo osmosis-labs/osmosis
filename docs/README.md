@@ -49,19 +49,19 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 <div class="cards twoColumn">
   <a href="https://app.osmosis.zone/" class="card lg">
     <img src="/img/osmo_app.png">
-    <div class="title">
+    <div class="title" style="color:black;">
      Osmosis AMM 
     </div>
-    <div class="text">
+    <div class="text" style="color:black;">
       Automated Market Maker
     </div>
   </a>
   <a href="https://info.osmosis.zone/" class="card lg">
     <img src="/img/stats_app.png">
-    <div class="title">
+    <div class="title" style="color:black;">
       Osmosis Stats
     </div>
-    <div class="text">
+    <div class="text" style="color:black;">
      Pool & Token Statistics
     </div>
   </a>
@@ -73,19 +73,19 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 <div class="cards twoColumn pa2">
   <a href="https://discord.gg/x3eRgAWbhw" class="card lg">
     <img src="/img/discord.svg">
-    <div class="title">
+    <div class="title" style="color:black;">
      Discord
     </div>
-    <div class="text">
-      Chat with Osmos community on Discord
+    <div class="text" style="color:black;">
+      Chat with the Osmosis community on Discord
     </div>
   </a>
   <a href="https://github.com/osmosis-labs/osmosis" class="card lg">
     <img src="/img/github.svg">
-    <div class="title">
+    <div class="title" style="color:black;">
     Found an Issue? 
     </div>
-    <div class="text">
+    <div class="text" style="color:black;">
     Improve this page by suggesting on Github.
     </div>
   </a>

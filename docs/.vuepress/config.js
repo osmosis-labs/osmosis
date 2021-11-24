@@ -83,6 +83,7 @@ module.exports = {
     // overrideTheme: { light: [6, 18], dark: [18, 6] },
     // theme: 'default-prefers-color-scheme',
     logo: "/img/osmosis-logo-dark.svg",
+    logoDark: "/img/osmosis-logo-light.svg",
     lastUpdated: "Updated on",
     repo: "osmosis-labs/osmosis",
     editLinks: true,
@@ -198,7 +199,7 @@ module.exports = {
           title: 'Validate',
           link: '',
           children: [
-            '/validators',
+            '/validators/validating-mainnet',
           ],
           collapsible: true,
         },

@@ -18,6 +18,22 @@
       >
     </RouterLink>
 
+    <RouterLink :to="$localePath" class="home-link">
+      <img
+        v-if="$site.themeConfig.logoDark"
+        class="logoDark"
+        :src="$withBase($site.themeConfig.logoDark)"
+        :alt="$siteTitle"
+      />
+      <span
+        v-if="$siteTitle"
+        ref="siteName"
+        class="site-name"
+        :class="{ 'can-hide': $site.themeConfig.logoDark }"
+        >{{ $siteTitle }}</span
+      >
+    </RouterLink>
+
     <div
       class="links"
       :style="
@@ -126,9 +142,15 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
     vertical-align: top;
   }
 
-  .theme-dark .logo {
-    filter: brightness(149%);
+  .logoDark {
+    height: 3rem;
+    width: auto;
+    margin-right: 0.8rem;
+    vertical-align: top;
+    display: none;
   }
+
+
   .site-name {
     font-size: 1.3rem;
     font-weight: 700;
@@ -182,10 +204,88 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
   }
 }
 
-@media (max-width: $MQMobile) {
-  .theme-dark .navbar .logo {
-      filter: brightness(149%);
+.theme-dark .navbar {
+  padding: $navbar-vertical-padding $navbar-horizontal-padding;
+  line-height: 3rem;
+  width: 100%;
+  max-width: $layoutWidth;
+  margin: 0 auto;
+
+  a, span, img {
+    display: inline-block;
   }
+
+  .logo {
+    height: 3rem;
+    width: auto;
+    margin-right: 0.8rem;
+    vertical-align: top;
+    display: none;
+  }
+
+  .logoDark {
+    height: 3rem;
+    width: auto;
+    margin-right: 0.8rem;
+    vertical-align: top;
+  }
+
+  .site-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-color);
+    position: relative;
+    display: none;
+  }
+
+  .links {
+    padding-left: 1.5rem;
+    box-sizing: border-box;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    position: absolute;
+    right: $navbar-horizontal-padding;
+    top: $navbar-vertical-padding;
+    display: flex;
+
+    .search-box {
+      flex: 0 0 auto;
+      vertical-align: top;
+      margin-left: 1.5rem;
+      margin-right: 0 !important;
+      display: flex;
+      align-items: center;
+
+      input {
+        border: 0;
+        font-size: 1rem;
+        -webkit-transition: all 0.2s ease;
+        transition: all 0.2s ease;
+        height: 2.625rem;
+        width: 2.625rem;
+        border-radius: 1.3125rem;
+        font-size: 1rem;
+        padding: 0;
+        background: rgba($primaryColor, 0.08) url('/img/search.svg') 0.75rem center no-repeat;
+        background-size: 1.125rem;
+        color: transparent;
+
+        &:focus, &:active {
+          background-color: #fff;
+          box-shadow: 0px 0.125rem 0.375rem 0px rgba(0, 0, 0, 0.2);
+          padding-left: 2.25rem;
+          padding-right: 1rem;
+          width: 10rem;
+          color: $textColor;
+        }
+      }
+    }
+  }
+}
+
+
+@media (max-width: $MQMobile) {
+
   .navbar {
     padding-top: $mobile-navbar-vertical-padding;
     padding-bottom: $mobile-navbar-vertical-padding;
