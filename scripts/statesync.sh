@@ -11,15 +11,15 @@ go install ./...
 
 
 # MAKE HOME FOLDER AND GET GENESIS
-osmosisd init test 
-wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs  
+osmosisd init test
+wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
 
 INTERVAL=1500
 
 # GET TRUST HASH AND TRUST HEIGHT
 
 LATEST_HEIGHT=$(curl -s 162.55.132.230:2001/block | jq -r .result.block.header.height);
-BLOCK_HEIGHT=$(($LATEST_HEIGHT-$INTERVAL)) 
+BLOCK_HEIGHT=$(($LATEST_HEIGHT-$INTERVAL))
 TRUST_HASH=$(curl -s "162.55.132.230:2001/block?height=$BLOCK_HEIGHT" | jq -r .result.block_id.hash)
 
 

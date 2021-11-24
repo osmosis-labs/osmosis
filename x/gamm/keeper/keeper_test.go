@@ -9,6 +9,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/app"
@@ -46,16 +47,12 @@ var (
 func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolParams) uint64 {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-		err := suite.app.BankKeeper.AddCoins(
-			suite.ctx,
-			acc,
-			sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-				sdk.NewCoin("foo", sdk.NewInt(10000000)),
-				sdk.NewCoin("bar", sdk.NewInt(10000000)),
-				sdk.NewCoin("baz", sdk.NewInt(10000000)),
-			),
-		)
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, sdk.NewCoins(
+			sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+			sdk.NewCoin("foo", sdk.NewInt(10000000)),
+			sdk.NewCoin("bar", sdk.NewInt(10000000)),
+			sdk.NewCoin("baz", sdk.NewInt(10000000)),
+		))
 		if err != nil {
 			panic(err)
 		}

@@ -4,9 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+
 	"github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/mint/types"
@@ -44,11 +46,11 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	// When mint the 100K stake coin to the fee collector
 	fee = sdk.NewCoin("stake", sdk.NewInt(100000))
 	fees = sdk.NewCoins(fee)
-	err := suite.app.BankKeeper.AddCoins(
+
+	err := simapp.FundModuleAccount(suite.app.BankKeeper,
 		suite.ctx,
-		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),
-		fees,
-	)
+		authtypes.FeeCollectorName,
+		fees)
 	suite.NoError(err)
 
 	// check proportion for 20%
@@ -73,7 +75,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 
 	// Create record
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, gaugeCreator, coins)
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, gaugeCreator, coins)
 	suite.NoError(err)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,

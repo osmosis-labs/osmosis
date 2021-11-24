@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
-var data = `
+var asset_data = `
 ion, uion, 2 
 atom, ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2, 1
 akt, ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4, 3
@@ -32,7 +32,7 @@ xki, ibc/B547DC9B897E7C3AA5B824696110B8E3D2C31E3ED3F02FF363DCBAD82457E07E, 577
 `
 
 func whitelistInitial(ctx sdk.Context, app *OsmosisApp) {
-	r := csv.NewReader(strings.NewReader(data))
+	r := csv.NewReader(strings.NewReader(asset_data))
 	assets, err := r.ReadAll()
 	if err != nil {
 		panic(err)
