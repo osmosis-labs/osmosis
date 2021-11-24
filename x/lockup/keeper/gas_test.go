@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,8 +14,13 @@ var (
 )
 
 func (suite *KeeperTestSuite) measureLockGas(addr sdk.AccAddress, coins sdk.Coins, dur time.Duration) uint64 {
+	// fundAccount outside of gas measurement
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
+	suite.Require().NoError(err)
+	// start measuring gas
 	alreadySpent := suite.ctx.GasMeter().GasConsumed()
-	suite.LockTokens(addr, coins, dur)
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, dur)
+	suite.Require().NoError(err)
 	newSpent := suite.ctx.GasMeter().GasConsumed()
 	spentNow := newSpent - alreadySpent
 	return spentNow
@@ -50,15 +56,15 @@ func (suite *KeeperTestSuite) TestRepeatedLockTokensGas() {
 	totalNumLocks := 10000
 
 	firstLockGasAmount := suite.measureLockGas(defaultAddr, defaultCoins, time.Second)
-	suite.Assert().Equal(93703, int(firstLockGasAmount))
+	suite.Assert().Equal(70305, int(firstLockGasAmount))
 
 	for i := 1; i < startAveragingAt; i++ {
 		suite.LockTokens(defaultAddr, defaultCoins, time.Second)
 	}
 	avgGas, maxGas := suite.measureAvgAndMaxLockGas(totalNumLocks-startAveragingAt, defaultAddr, coinsFn, durFn)
 	fmt.Printf("test deets: total locks created %d, begin average at %d\n", totalNumLocks, startAveragingAt)
-	suite.Assert().Equal(75618, int(avgGas), "average gas / lock")
-	suite.Assert().Equal(75708, int(maxGas), "max gas / lock")
+	suite.Assert().Equal(59527, int(avgGas), "average gas / lock")
+	suite.Assert().Equal(59617, int(maxGas), "max gas / lock")
 }
 
 func (suite *KeeperTestSuite) TestRepeatedLockTokensDistinctDurationGas() {
@@ -70,6 +76,6 @@ func (suite *KeeperTestSuite) TestRepeatedLockTokensDistinctDurationGas() {
 
 	avgGas, maxGas := suite.measureAvgAndMaxLockGas(totalNumLocks, defaultAddr, coinsFn, durFn)
 	fmt.Printf("test deets: total locks created %d\n", totalNumLocks)
-	suite.Assert().EqualValues(122316, int(avgGas), "average gas / lock")
-	suite.Assert().EqualValues(242903, int(maxGas), "max gas / lock")
+	suite.Assert().EqualValues(106225, int(avgGas), "average gas / lock")
+	suite.Assert().EqualValues(226812, int(maxGas), "max gas / lock")
 }
