@@ -17,17 +17,6 @@ var (
 		ExitFee: defaultExitFee,
 	}
 	defaultFutureGovernor = ""
-
-	// pool assets
-	defaultFooAsset types.PoolAsset = types.PoolAsset{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
-	}
-	defaultBarAsset types.PoolAsset = types.PoolAsset{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
-	}
-	defaultPoolAssets []types.PoolAsset = []types.PoolAsset{defaultFooAsset, defaultBarAsset}
 )
 
 func (suite *KeeperTestSuite) TestCreatePool() {
@@ -104,7 +93,16 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 				suite.ctx, acc1, types.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(1, 2),
-				}, defaultPoolAssets, defaultFutureGovernor)
+				}, []types.PoolAsset{
+					{
+						Weight: sdk.NewInt(100),
+						Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+					}, {
+						Weight: sdk.NewInt(100),
+						Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+					},
+				},
+				defaultFutureGovernor)
 			suite.Require().Error(err, "can't create a pool with negative swap fee")
 		},
 	}, {
@@ -113,7 +111,13 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			_, err := keeper.CreatePool(suite.ctx, acc1, types.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(-1, 2),
-			}, defaultPoolAssets, defaultFutureGovernor)
+			}, []types.PoolAsset{{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+			}, {
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+			}}, defaultFutureGovernor)
 			suite.Require().Error(err, "can't create a pool with negative exit fee")
 		},
 	}, {
@@ -455,7 +459,13 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, types.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
-			}, defaultPoolAssets, defaultFutureGovernor)
+			}, []types.PoolAsset{{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+			}, {
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+			}}, defaultFutureGovernor)
 			suite.Require().NoError(err)
 
 			test.fn(poolId)
