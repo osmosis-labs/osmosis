@@ -45,7 +45,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 </div>
 
 ### Discover
-
+<p> </p>
 <div class="cards twoColumn">
   <a href="https://app.osmosis.zone/" class="card lg">
     <img src="/img/osmo_app.png">
@@ -66,3 +66,28 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
 </div>
+
+
+### Help & Support
+<p> </p>
+<div class="cards twoColumn pa2">
+  <a href="https://discord.gg/x3eRgAWbhw" class="card lg">
+    <img src="/img/discord.svg">
+    <div class="title">
+     Discord
+    </div>
+    <div class="text">
+      Chat with Osmos community on Discord
+    </div>
+  </a>
+  <a href="https://github.com/osmosis-labs/osmosis" class="card lg">
+    <img src="/img/github.svg">
+    <div class="title">
+    Found an Issue? 
+    </div>
+    <div class="text">
+    Improve this page by suggesting on Github.
+    </div>
+  </a>
+</div>
+
