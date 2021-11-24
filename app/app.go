@@ -152,6 +152,7 @@ var (
 		poolincentives.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
+		superfluid.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -263,6 +264,7 @@ func NewOsmosisApp(
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
 		epochstypes.StoreKey, poolincentivestypes.StoreKey, txfeestypes.StoreKey,
+		superfluidtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -499,6 +501,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -564,6 +567,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
 		transferModule,
 	)
 

@@ -433,3 +433,25 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 }
 
 // TODO: add test for SlashTokensFromLockByID
+func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
+	suite.SetupTest()
+
+	// initial check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr := sdk.AccAddress([]byte("addr1---------------"))
+
+	// 1 * time.Second: 10
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr, coins, time.Second)
+
+	// check accumulations
+	acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second,
+	})
+	suite.Require().Equal(int64(10), acc.Int64())
+}

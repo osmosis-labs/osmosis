@@ -46,7 +46,7 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyRefreshEpochIdentifier, &p.RefreshEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
-		paramtypes.NewParamSetPair(KeyRefreshEpochIdentifier, &p.RefreshEpochIdentifier, ValidateMinimumRiskFactor),
+		paramtypes.NewParamSetPair(KeyMinimumRiskFactor, &p.MinimumRiskFactor, ValidateMinimumRiskFactor),
 	}
 }
 

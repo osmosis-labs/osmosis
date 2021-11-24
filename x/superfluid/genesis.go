@@ -9,6 +9,8 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	k.SetParams(ctx, genState.Params)
+
 	// initialize superfluid assets
 	for _, asset := range genState.SuperfluidAssets {
 		k.SetSuperfluidAsset(ctx, asset)

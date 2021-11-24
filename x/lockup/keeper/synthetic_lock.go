@@ -86,7 +86,7 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix str
 	// There is no relationship between unbonding and bonding synthetic lockup, it's managed separately
 	// Accumulation store works without caring about unlocking synthetic or not
 
-	isUnlocking := (unlockDuration == 0)
+	isUnlocking := (unlockDuration != 0)
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return err
@@ -115,7 +115,8 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix str
 
 	// add to accumulation store
 	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(unlockDuration), coin.Amount)
+		// Note: we use native lock's duration on accumulation store
+		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	}
 	return nil
 }
