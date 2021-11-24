@@ -61,32 +61,6 @@ func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, address sdk.AccAddres
 	prefixStore.Delete(address)
 }
 
-func (k Keeper) GetIntermediaryAccountOSMODelegation(acc types.SuperfluidIntermediaryAccount) sdk.Int {
-	// addr := acc.GetAddress()
-	// k.sk.GetDelegation(addr, acc.ValAddr) * ...
-	return sdk.OneInt()
-}
-
-func (k Keeper) GetLPTokenAmount(acc types.SuperfluidIntermediaryAccount) sdk.Int {
-	// addr := acc.GetAddress()
-	// k.bk.GetBalance(addr)
-	return sdk.OneInt()
-}
-
-func (k Keeper) GetMintedOSMOAmount(acc types.SuperfluidIntermediaryAccount) sdk.Int {
-	// TODO: read from own superfluid storage
-	return sdk.OneInt()
-}
-
-func (k Keeper) SetMintedOSMOAmount(acc types.SuperfluidIntermediaryAccount, amount sdk.Int) {
-	// TODO: write on own superfluid storage
-}
-
-func (k Keeper) GetSlashedOSMOAmount(acc types.SuperfluidIntermediaryAccount) sdk.Int {
-	// Slashed amount = Minted OSMO amount - Delegation amount
-	return k.GetMintedOSMOAmount(acc).Sub(k.GetIntermediaryAccountOSMODelegation(acc))
-}
-
 func (k Keeper) SetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64, acc types.SuperfluidIntermediaryAccount) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)

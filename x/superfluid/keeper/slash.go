@@ -13,9 +13,7 @@ import (
 // burnBondedTokens
 // burnUnbondedTokens
 
-// TODO: Need to add hooks here, to ensure that instead of sending Osmo to community pool,
-// if the osmo is from the superfluid module, we instead burn the osmo, and send equivalent LP shares to community pool
-
+// Note: Based on sdk.staking.Slash function review, slashed tokens are burnt not sent to community pool
 func (k Keeper) slashLockupsForSlashedOnDelegation(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {

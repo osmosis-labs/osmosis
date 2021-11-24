@@ -21,13 +21,14 @@ type Keeper struct {
 	bk types.BankKeeper
 	sk types.StakingKeeper
 	dk types.DistrKeeper
+	ek types.EpochKeeper
 	lk types.LockupKeeper
 	gk types.GammKeeper
 	ik types.IncentivesKeeper
 }
 
 // NewKeeper returns an instance of Keeper
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.DistrKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.DistrKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -41,6 +42,7 @@ func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace paramtypes
 		bk:         bk,
 		sk:         sk,
 		dk:         dk,
+		ek:         ek,
 		lk:         lk,
 		gk:         gk,
 		ik:         ik,

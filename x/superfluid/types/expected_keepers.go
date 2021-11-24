@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
@@ -53,4 +54,8 @@ type DistrKeeper interface {
 type IncentivesKeeper interface {
 	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
+}
+
+type EpochKeeper interface {
+	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }

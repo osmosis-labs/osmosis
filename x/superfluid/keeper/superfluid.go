@@ -61,5 +61,5 @@ func (k Keeper) GetAllSuperfluidAssets(ctx sdk.Context) []types.SuperfluidAsset 
 func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.SuperfluidAsset, amount sdk.Int) sdk.Int {
 	// TODO: we need to figure out how to do this later.
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
-	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt().Quo(sdk.NewInt(100)))
+	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt())
 }
