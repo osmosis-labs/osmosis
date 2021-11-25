@@ -5,6 +5,7 @@ module.exports = {
       md.use(require("markdown-it-footnote"));
     },
   },
+  base: "/osmosis/",
   description:
     "Osmosis - The Cosmos Interchain AMM",
   plugins: [
