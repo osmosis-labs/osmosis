@@ -78,4 +78,17 @@ If you need further explanation for each of these command flags:
 - the min self delegation is the lowest amount of personal funds the validator is required to have in their own validator to stay bonded (in the example above, 500osmo)
 - the gas price is the amount of gas used to send this create-validator transaction
 
+## Track Validator Signing
 
+To track your validator's signing history, copy the validator public key:
+
+```bash
+osmosisd tendermint show-validator
+```
+
+Use your validators public key queried above:
+
+```bash
+osmosisd query slashing signing-info <validator-pubkey>\
+  --chain-id=osmosis-1
+```

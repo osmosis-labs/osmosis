@@ -14,6 +14,7 @@ module.exports = {
         componentsDir: "theme/components",
       },
     ],
+
     [
       "vuepress-plugin-mathjax",
       {
@@ -23,6 +24,7 @@ module.exports = {
         },
       },
     ],
+
   ],
   head: [
     [

@@ -297,6 +297,10 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
       height: 2.25rem;
     }
 
+    .logoDark {
+      height: 2.25rem;
+    }  
+
     .can-hide {
       display: none;
     }
