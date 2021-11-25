@@ -58,11 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [\#544](https://github.com/osmosis-labs/osmosis/pull/544) Update total liquidity tracking to be denom basis
 * [\#563](https://github.com/osmosis-labs/osmosis/pull/563) Allow zero-weight pool-incentive distribution records
 * [\#562](https://github.com/osmosis-labs/osmosis/pull/562) Store block height in epochs module for debugging
-* Upgrade to Cosmos-sdk 0.44.3
+* [\#538](https://github.com/osmosis-labs/osmosis/pull/538) Upgrade to Cosmos-sdk 0.44.3
   * Includes Rosetta API
-* Upgrade to IBC-v2
-* Add [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
-* Store block height in epochs module for debugging
+* [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to IBC-v2
+* [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Add [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
 
 ## [v4.0.0]
 
