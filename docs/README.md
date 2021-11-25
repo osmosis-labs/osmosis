@@ -1,3 +1,7 @@
+---
+title: Home
+---
+
 # Osmosis Docs
 
 Welcome to the official documentation for Osmosis, an advanced automated market maker (AMM) protocol that allows developers to build customized AMMs with sovereign liquidity pools. Built using the Cosmos SDK, Osmosis utilizes Inter-Blockchain Communication (IBC) to enable cross-chain transactions.
@@ -50,7 +54,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   <a href="https://app.osmosis.zone/" class="card lg">
     <img src="/img/osmo_app.png">
     <div class="title">
-     Osmosis AMM 
+     Osmosis DEX 
     </div>
     <div class="text">
       Automated Market Maker

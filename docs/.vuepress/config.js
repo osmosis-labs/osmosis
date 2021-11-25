@@ -121,6 +121,7 @@ module.exports = {
     ],
     sidebar: {
 
+
       "/overview/": [
         {
           title: "About",
@@ -164,16 +165,15 @@ module.exports = {
           ],
           collapsable: true,
         },
-
-            {
-              title: "osmosisd",
-              collapsable: true,
-              children: [
-                "/developing/osmosisd/",
-                "/developing/osmosisd/commands",
-                "/developing/osmosisd/subcommands",
-            ],
-            },
+        {
+          title: "osmosisd",
+          children: [
+            "/developing/osmosisd/",
+            "/developing/osmosisd/commands",
+            "/developing/osmosisd/subcommands",
+          ],
+          collapsable: true,
+        },
         {
           title: 'Networks',
           children: [
@@ -205,6 +205,7 @@ module.exports = {
         },
       ],
 
+
       '/validators': [
         {
           title: 'Validate',
@@ -216,22 +217,25 @@ module.exports = {
         },
       ],
 
+
       '/integrate': [
         {
           title: 'Integrate',
           children: [
-          //  '/integrate',
+          //'/integrate',
             '/integrate/token-listings',
           ],
           collapsible: true,
         },
       ],
+
+
       "/": [
         {
           title: "Overview",
           children: [
             "/history-and-changes",
-         //   "/migration-guide",
+          //"/migration-guide",
           ],
           collapsable: false,
         },
