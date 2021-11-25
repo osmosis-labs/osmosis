@@ -208,9 +208,9 @@ module.exports = {
       '/validators': [
         {
           title: 'Validate',
-          link: '',
           children: [
-            '/validators/validating-mainnet',
+            '/validators/',
+            '/validators/validating-testnet',
           ],
           collapsible: true,
         },

@@ -1,8 +1,8 @@
-# Validating On Mainnet
+# Validating On Testnet
 
 ## Synced Node
 
-Before creating a mainnet validator, ensure you have first followed the instructions on how to [join the mainnet](../developing/network/join-mainnet)
+Before creating a testnet validator, ensure you have first followed the instructions on how to [join the testnet](../developing/network/join-testnet)
 
 ## Initialize Wallet Keyring
 
@@ -29,7 +29,7 @@ osmosisd tendermint show-validator
 
 ## Create Validator Command
 
-Ensure you have a small amount of OSMO on the wallet address you are using on your keyring in order to successfully send a transaction. Once you have have a balance on the address on your keyring, you can now send the create-validator transaction.
+Ensure you have a small amount of OSMO on the wallet address you are using on your keyring in order to successfully send a transaction. Once you have have a balance on the address on your keyring, you can now send the create-validator transaction. If you need testnet OSMO, join the osmosis discord, ask for the validator role, and then utilize the faucet bot in the faucet channel.
 
 Here is the empty command:
 
@@ -58,7 +58,7 @@ osmosisd tx staking create-validator \
 --pubkey=osmovalconspub1zcjduepqrevtrgcntyz04w9yzwvpy2ddf2h5pyu2tczgf9dssmywty0tzqzs0gwu0r  \
 --moniker="Wosmongton" \
 --security-contact="wosmongton@osmosis.labs" \
---chain-id="osmosis-1" \
+--chain-id="osmosis-testnet-0" \
 --commission-rate="0.1" \
 --commission-max-rate="0.2" \
 --commission-max-change-rate="0.05" \
@@ -112,5 +112,5 @@ Use your validators public key queried above:
 
 ```bash
 osmosisd query slashing signing-info <validator-pubkey>\
-  --chain-id=osmosis-1
+  --chain-id=osmosis-testnet-0
 ```
