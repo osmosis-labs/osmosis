@@ -183,7 +183,6 @@ module.exports = {
             "/developing/modules/spec-evidence",
             "/developing/modules/spec-feegrant",
             "/developing/modules/spec-governance",
-            "/developing/modules/spec-market",
             "/developing/modules/spec-oracle",
             "/developing/modules/spec-slashing",
             "/developing/modules/spec-staking",
@@ -199,7 +198,7 @@ module.exports = {
           title: 'Validate',
           link: '',
           children: [
-            '/validators/validating-mainnet',
+            '/validators/',
           ],
           collapsible: true,
         },
