@@ -378,7 +378,14 @@ func NewOsmosisApp(
 			for moduleName := range app.mm.Modules {
 				fromVM[moduleName] = 1
 			}
-			// override versions for authz module as to not skip InitGenesis
+			// EXCEPT Auth needs to run _after_ staking (https://github.com/cosmos/cosmos-sdk/issues/10591),
+			// and it seems bank as well (https://github.com/provenance-io/provenance/blob/407c89a7d73854515894161e1526f9623a94c368/app/upgrades.go#L86-L122).
+			// So we do this by making auth run last.
+			// This is done by setting auth's consensus version to 2, running RunMigrations,
+			// then setting it back to 1, and then running migrations again.
+			fromVM[authtypes.ModuleName] = 2
+
+			// override versions for authz module as to not skip its InitGenesis
 			// for txfees module, we will override txfees ourselves.
 			delete(fromVM, authz.ModuleName)
 
@@ -392,7 +399,11 @@ func NewOsmosisApp(
 				Basedenom: app.StakingKeeper.BondDenom(ctx),
 				Feetokens: []txfeestypes.FeeToken{},
 			})
-			return newVM, nil
+
+			// now update auth version back to v1, to run auth migration last
+			newVM[authtypes.ModuleName] = 1
+
+			return app.mm.RunMigrations(ctx, app.configurator, newVM)
 		})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
