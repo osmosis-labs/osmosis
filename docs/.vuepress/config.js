@@ -1,6 +1,7 @@
 module.exports = {
   title: "Osmosis Docs",
   markdown: {
+    lineNumbers: true,
     extendMarkdown: (md) => {
       md.use(require("markdown-it-footnote"));
     },
@@ -24,6 +25,13 @@ module.exports = {
         },
       },
     ],
+
+    // https://github.com/znicholasbrown/vuepress-plugin-code-copy
+    ["vuepress-plugin-code-copy", {
+      color: "#de1dd1",
+      backgroundColor: "#3e3383",
+      }
+    ]
 
   ],
   head: [
@@ -80,6 +88,7 @@ module.exports = {
   ],
   themeConfig: {
     sidebarDepth: 3,
+    smoothScroll: true,
     // overrideTheme: 'dark',
     // prefersTheme: 'dark',
     // overrideTheme: { light: [6, 18], dark: [18, 6] },
