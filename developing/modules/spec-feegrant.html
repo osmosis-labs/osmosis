@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Fee grant | Osmosis Docs</title>
+    <meta name="generator" content="VuePress 1.8.2">
+    <link rel="stylesheet" type="text/css" href="https://cloud.typography.com/7420256/6416592/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:400,500,700&amp;display=swap">
+    <link rel="icon" type="image/png" href="/img/favicon.png">
+    <script>window.onload = function() {
+        requestAnimationFrame(function() {
+          if (location.hash) {
+            const element = document.getElementById(location.hash.slice(1))
+
+            if (element) {
+              element.scrollIntoView()
+            }
+          }
+        })
+      }</script>
+    <meta name="description" content="Osmosis - The Cosmos Interchain AMM">
+    
+    <link rel="preload" href="/assets/css/0.styles.86aa9331.css" as="style"><link rel="preload" href="/assets/js/app.200c8ff0.js" as="script"><link rel="preload" href="/assets/js/3.db963c3c.js" as="script"><link rel="preload" href="/assets/js/30.219f284d.js" as="script"><link rel="prefetch" href="/assets/js/10.0b6134ad.js"><link rel="prefetch" href="/assets/js/11.0fd44ca8.js"><link rel="prefetch" href="/assets/js/12.951d7009.js"><link rel="prefetch" href="/assets/js/13.40e5c23a.js"><link rel="prefetch" href="/assets/js/14.1770c2f9.js"><link rel="prefetch" href="/assets/js/15.b2498292.js"><link rel="prefetch" href="/assets/js/16.7a71158e.js"><link rel="prefetch" href="/assets/js/17.6ba26719.js"><link rel="prefetch" href="/assets/js/18.47a0b15e.js"><link rel="prefetch" href="/assets/js/19.a6d775f6.js"><link rel="prefetch" href="/assets/js/20.b2e205e7.js"><link rel="prefetch" href="/assets/js/21.83b27279.js"><link rel="prefetch" href="/assets/js/22.9ad0656a.js"><link rel="prefetch" href="/assets/js/23.89f41e8b.js"><link rel="prefetch" href="/assets/js/24.73532be1.js"><link rel="prefetch" href="/assets/js/25.3e17182a.js"><link rel="prefetch" href="/assets/js/26.bae0c894.js"><link rel="prefetch" href="/assets/js/27.78c99398.js"><link rel="prefetch" href="/assets/js/28.3ed177a7.js"><link rel="prefetch" href="/assets/js/29.354fb46f.js"><link rel="prefetch" href="/assets/js/31.72a45c93.js"><link rel="prefetch" href="/assets/js/32.582bc450.js"><link rel="prefetch" href="/assets/js/33.fe7c694c.js"><link rel="prefetch" href="/assets/js/34.0ffea4db.js"><link rel="prefetch" href="/assets/js/35.d310ff31.js"><link rel="prefetch" href="/assets/js/36.1d02238c.js"><link rel="prefetch" href="/assets/js/37.c7ebc36f.js"><link rel="prefetch" href="/assets/js/38.8cfba553.js"><link rel="prefetch" href="/assets/js/39.e895c6b0.js"><link rel="prefetch" href="/assets/js/4.e837f9cf.js"><link rel="prefetch" href="/assets/js/40.b29897ef.js"><link rel="prefetch" href="/assets/js/41.0e7c5a7d.js"><link rel="prefetch" href="/assets/js/42.81594988.js"><link rel="prefetch" href="/assets/js/43.24dc4c04.js"><link rel="prefetch" href="/assets/js/44.06e1af34.js"><link rel="prefetch" href="/assets/js/45.4c9ce754.js"><link rel="prefetch" href="/assets/js/46.6ec3102e.js"><link rel="prefetch" href="/assets/js/47.cede3aed.js"><link rel="prefetch" href="/assets/js/48.e00a4b82.js"><link rel="prefetch" href="/assets/js/49.572b3cb9.js"><link rel="prefetch" href="/assets/js/5.20fd0528.js"><link rel="prefetch" href="/assets/js/50.a1629c59.js"><link rel="prefetch" href="/assets/js/51.f6cbe070.js"><link rel="prefetch" href="/assets/js/52.d7d04024.js"><link rel="prefetch" href="/assets/js/53.166e436f.js"><link rel="prefetch" href="/assets/js/6.dec100c3.js"><link rel="prefetch" href="/assets/js/7.cb43f16c.js"><link rel="prefetch" href="/assets/js/8.8ccf9125.js"><link rel="prefetch" href="/assets/js/9.ce1beb0e.js"><link rel="prefetch" href="/assets/js/vendors~docsearch.6f0f340d.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.86aa9331.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"></div> <a href="/" class="home-link router-link-active"><img src="/img/osmosis-logo-dark.svg" alt="Osmosis Docs" class="logo"> <span class="site-name can-hide">Osmosis Docs</span></a> <a href="/" class="home-link router-link-active"><img src="/img/osmosis-logo-light.svg" alt="Osmosis Docs" class="logoDark"> <span class="site-name can-hide">Osmosis Docs</span></a> <div class="links"><nav class="nav-links can-hide"><div class="nav-item"><a href="/" class="nav-link">Home</a></div><div class="nav-item"><a href="/overview/" class="nav-link">Overview</a></div><div class="nav-item"><a href="/developing/" class="nav-link router-link-active">Develop</a></div><div class="nav-item"><a href="/validators/" class="nav-link">Validate</a></div><div class="nav-item"><a href="/integrate/" class="nav-link">Integrate</a></div><div class="nav-item"><a href="https://v2.vuepress.vuejs.org/" target="_blank" rel="noopener noreferrer" class="nav-link external"><div>Chat</div></a></div><div class="nav-item"><a href="https://github.com/osmosis-labs/osmosis" target="_blank" rel="noopener noreferrer" class="nav-link external"><div class="nav-icon"><img src="/img/github.svg"></div></a></div></nav> <form id="search-form" role="search" class="algolia-search-wrapper search-box"><input id="algolia-search-input" class="search-query"></form></div></header> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/" class="nav-link">Home</a></div><div class="nav-item"><a href="/overview/" class="nav-link">Overview</a></div><div class="nav-item"><a href="/developing/" class="nav-link router-link-active">Develop</a></div><div class="nav-item"><a href="/validators/" class="nav-link">Validate</a></div><div class="nav-item"><a href="/integrate/" class="nav-link">Integrate</a></div><div class="nav-item"><a href="https://v2.vuepress.vuejs.org/" target="_blank" rel="noopener noreferrer" class="nav-link external"><div>Chat</div></a></div><div class="nav-item"><a href="https://github.com/osmosis-labs/osmosis" target="_blank" rel="noopener noreferrer" class="nav-link external"><div class="nav-icon"><img src="/img/github.svg"></div></a></div></nav>  <ul class="sidebar-links"><li><section class="sidebar-group collapsable depth-0"><p class="sidebar-heading"><span>Developer Guide</span> <span class="arrow right"></span></p> <!----></section></li><li><section class="sidebar-group collapsable depth-0"><p class="sidebar-heading"><span>osmosisd</span> <span class="arrow right"></span></p> <!----></section></li><li><section class="sidebar-group collapsable depth-0"><p class="sidebar-heading"><span>Networks</span> <span class="arrow right"></span></p> <!----></section></li><li><section class="sidebar-group collapsable depth-0"><p class="sidebar-heading open"><span>Modules</span> <span class="arrow down"></span></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/developing/modules/spec-auth.html" class="sidebar-link">Auth</a></li><li><a href="/developing/modules/spec-authz.html" class="sidebar-link">AuthZ</a></li><li><a href="/developing/modules/spec-bank.html" class="sidebar-link">Bank</a></li><li><a href="/developing/modules/spec-capability.html" class="sidebar-link">Capability</a></li><li><a href="/developing/modules/spec-distribution.html" class="sidebar-link">Distribution</a></li><li><a href="/developing/modules/spec-evidence.html" class="sidebar-link">Evidence</a></li><li><a href="/developing/modules/spec-feegrant.html" aria-current="page" class="active sidebar-link">Fee grant</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#concepts" class="sidebar-link">Concepts</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#grant" class="sidebar-link">Grant</a></li><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#fee-allowance-types" class="sidebar-link">Fee allowance types</a></li><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#fee-account-flag" class="sidebar-link">Fee account flag</a></li><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#granted-fee-deductions" class="sidebar-link">Granted fee deductions</a></li><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#gas" class="sidebar-link">Gas</a></li></ul></li><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#state" class="sidebar-link">State</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#feeallowance" class="sidebar-link">FeeAllowance</a></li></ul></li><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#message-types" class="sidebar-link">Message Types</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#msggrantallowance" class="sidebar-link">MsgGrantAllowance</a></li><li class="sidebar-sub-header"><a href="/developing/modules/spec-feegrant.html#msgrevokeallowance" class="sidebar-link">MsgRevokeAllowance</a></li></ul></li></ul></li><li><a href="/developing/modules/spec-governance.html" class="sidebar-link">Governance</a></li><li><a href="/developing/modules/spec-oracle.html" class="sidebar-link">Pending Review</a></li><li><a href="/developing/modules/spec-slashing.html" class="sidebar-link">Slashing</a></li><li><a href="/developing/modules/spec-staking.html" class="sidebar-link">Staking</a></li><li><a href="/developing/modules/spec-treasury.html" class="sidebar-link">Treasury</a></li><li><a href="/developing/modules/spec-wasm.html" class="sidebar-link">Pending Review</a></li></ul></section></li></ul>  <div class="sidebar_footer"></div></aside> <main class="page"> <nav id="breadcrumb" class="breadcrumb-container" data-v-684968f4><a href="/" class="breadcrumb router-link-active" data-v-684968f4><span data-v-684968f4>Osmosis Docs</span></a><a href="/developing/" class="breadcrumb router-link-active" data-v-684968f4><span data-v-684968f4>Developer guide</span></a><a href="/developing/modules/spec-feegrant.html" aria-current="page" class="breadcrumb router-link-exact-active router-link-active" data-v-684968f4><span data-v-684968f4>Fee grant</span></a></nav> <div class="theme-default-content content__default"><h1 id="fee-grant"><a href="#fee-grant" class="header-anchor">#</a> Fee grant</h1> <div class="custom-block warning"><p class="custom-block-title">Note</p> <p>Osmosis's fee grant module inherits from the Cosmos SDK's <a href="https://docs.cosmos.network/master/modules/feegrant/" target="_blank" rel="noopener noreferrer"><code>feegrant</code><span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a> module. This document is a stub and explains mainly important Osmosis-specific notes about how it is used.</p></div> <p>This module allows an account, the granter, to permit another account, the grantee, to pay for fees from the granter's account balance. Grantees will not need to maintain their own balance for paying fees.</p> <h2 id="concepts"><a href="#concepts" class="header-anchor">#</a> Concepts</h2> <h3 id="grant"><a href="#grant" class="header-anchor">#</a> Grant</h3> <p><code>Grant</code> is stored in the KVStore to record a grant with full context.</p> <p>Every <code>grant</code> contains the following information:</p> <ul><li><p><code>granter</code>: The account address that gives permission to the grantee.</p></li> <li><p><code>grantee</code>: The beneficiary account address.</p></li> <li><p><code>allowance</code>: The <a href="#fee-allowance-types">type of fee allowance</a> given to the grantee. <code>Allowance</code> accepts an interface that implements <code>FeeAllowanceI</code> encoded as <code>Any</code> type, as shown in the following example:</p> <div class="language- extra-class"><pre class="language-text"><code>  // allowance can be any of basic and filtered fee allowance.
+  google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = &quot;FeeAllowanceI&quot;];
+}
+</code></pre></div><p>The following example shows <code>FeeAllowanceI</code>:</p> <div class="language- extra-class"><pre class="language-text"><code>type FeeAllowanceI interface {
+        // Accept can use fee payment requested as well as timestamp of the current block
+        // to determine whether or not to process this. This is checked in
+        // Keeper.UseGrantedFees and the return values should match how it is handled there.
+        //
+        // If it returns an error, the fee payment is rejected, otherwise it is accepted.
+        // The FeeAllowance implementation is expected to update it's internal state
+        // and will be saved again after an acceptance.
+        //
+        // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
+        // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
+        Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
+
+        // ValidateBasic should evaluate this FeeAllowance for internal consistency.
+        // Don't allow negative amounts, or negative periods for example.
+        ValidateBasic() error
+}
+</code></pre></div></li></ul> <p>Only one fee grant is allowed between a granter and a grantee. Self-grants are prohibited.</p> <h3 id="fee-allowance-types"><a href="#fee-allowance-types" class="header-anchor">#</a> Fee allowance types</h3> <ul><li><a href="#basicallowance"><code>BasicAllowance</code></a></li> <li><a href="#periodicallowance"><code>PeriodicAllowance</code></a></li></ul> <p><code>BasicAllowance</code> permits the grantee to pay fees by using funds from the  granter's account. If the threshold for either <code>spend_limit</code> or <code>expiration</code> is met, the grant is removed from the state.</p> <div class="language- extra-class"><pre class="language-text"><code>// BasicAllowance implements Allowance with a one-time grant of tokens
+// that optionally expires. The grantee can use up to SpendLimit to cover fees.
+message BasicAllowance {
+  option (cosmos_proto.implements_interface) = &quot;FeeAllowanceI&quot;;
+
+  // spend_limit specifies the maximum amount of tokens that can be spent
+  // by this allowance and will be updated as tokens are spent. If it is
+  // empty, there is no spend limit and any amount of coins can be spent.
+  repeated cosmos.base.v1beta1.Coin spend_limit = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = &quot;github.com/cosmos/cosmos-sdk/types.Coins&quot;];
+
+  // expiration specifies an optional time when this allowance expires
+  google.protobuf.Timestamp expiration = 2 [(gogoproto.stdtime) = true];
+}
+</code></pre></div><ul><li><p><code>spend_limit</code>: The amount of tokens from the granter's account that the grantee can spend. This value is optional. If it is blank, no spend limit is assigned, and the grantee can spend any amount of tokens from the granter's account before the expiration is met.</p></li> <li><p><code>expiration</code>: The date and time when the grant expires. This value is optional. If it is blank, the grant does not expire.</p></li></ul> <p>To restrict the grantee when values for <code>spend_limit</code> and <code>expiration</code> are blank, revoke the grant.</p> <p><code>PeriodicAllowance</code> is a repeating fee allowance for a specified period and for a specified maximum number of tokens that can spent within that period.</p> <details class="custom-block details"><summary>`PeriodicAllowance` code</summary> <div class="language- extra-class"><pre class="language-text"><code>// PeriodicAllowance extends Allowance to allow for both a maximum cap,
+// as well as a limit per time period.
+message PeriodicAllowance {
+  option (cosmos_proto.implements_interface) = &quot;FeeAllowanceI&quot;;
+
+  // basic specifies a struct of `BasicAllowance`
+  BasicAllowance basic = 1 [(gogoproto.nullable) = false];
+
+  // period specifies the time duration in which period_spend_limit coins can
+  // be spent before that allowance is reset
+  google.protobuf.Duration period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+
+  // period_spend_limit specifies the maximum number of coins that can be spent
+  // in the period
+  repeated cosmos.base.v1beta1.Coin period_spend_limit = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = &quot;github.com/cosmos/cosmos-sdk/types.Coins&quot;];
+
+  // period_can_spend is the number of coins left to be spent before the period_reset time
+  repeated cosmos.base.v1beta1.Coin period_can_spend = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = &quot;github.com/cosmos/cosmos-sdk/types.Coins&quot;];
+
+  // period_reset is the time at which this period resets and a new one begins,
+  // it is calculated from the start time of the first transaction after the
+  // last period ended
+  google.protobuf.Timestamp period_reset = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+// AllowedMsgAllowance creates allowance only for specified message types.
+message AllowedMsgAllowance {
+  option (gogoproto.goproto_getters)         = false;
+  option (cosmos_proto.implements_interface) = &quot;FeeAllowanceI&quot;;
+
+  // allowance can be any of basic and filtered fee allowance.
+  google.protobuf.Any allowance = 1 [(cosmos_proto.accepts_interface) = &quot;FeeAllowanceI&quot;];
+
+  // allowed_messages are the messages for which the grantee has the access.
+  repeated string allowed_messages = 2;
+}
+
+// Grant is stored in the KVStore to record a grant with full context
+message Grant {
+  // granter is the address of the user granting an allowance of their funds.
+  string              granter   = 1;
+
+  // grantee is the address of the user being granted an allowance of another user's funds.
+  string              grantee   = 2;
+</code></pre></div></details> <ul><li><p><code>basic</code>: The instance of <code>BasicAllowance</code>.  It is optional. If empty, the grant will have not have a <code>spend_limit</code> or <code>expiration</code>.</p></li> <li><p><code>period</code>: The duration that <code>PeriodicAllowance</code> is granted. After each period expires, <code>period_spend_limit</code> is reset.</p></li> <li><p><code>period_spend_limit</code>: The maximum number of tokens that the grantee is allowed to spend during the period.</p></li> <li><p><code>period_can_spend</code>: The number of tokens remaining to be spent before the period_reset time.</p></li> <li><p><code>period_reset</code>: The time when the period ends and a new period begins.</p></li></ul> <h3 id="fee-account-flag"><a href="#fee-account-flag" class="header-anchor">#</a> Fee account flag</h3> <p>To run transactions that use fee grant from the CLI, specify the <code>FeeAccount</code> flag followed by the granter's account address. When this flag is set, <code>clientCtx</code> appends the granter's account address.</p> <details class="custom-block details"><summary>`FeeAccount` code</summary> <div class="language- extra-class"><pre class="language-text"><code>if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeAccount) {
+  granter, _ := flagSet.GetString(flags.FlagFeeAccount)
+
+  if granter != &quot;&quot; {
+    granterAcc, err := sdk.AccAddressFromBech32(granter)
+    if err != nil {
+      return clientCtx, err
+    }
+
+    clientCtx = clientCtx.WithFeeGranterAddress(granterAcc)
+  }
+}
+</code></pre></div><div class="language- extra-class"><pre class="language-text"><code>package tx
+
+import (
+	&quot;bufio&quot;
+	&quot;errors&quot;
+	&quot;fmt&quot;
+	&quot;net/http&quot;
+	&quot;os&quot;
+
+	&quot;github.com/spf13/pflag&quot;
+
+	&quot;github.com/cosmos/cosmos-sdk/client&quot;
+	&quot;github.com/cosmos/cosmos-sdk/client/flags&quot;
+	&quot;github.com/cosmos/cosmos-sdk/client/input&quot;
+	&quot;github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1&quot;
+	cryptotypes &quot;github.com/cosmos/cosmos-sdk/crypto/types&quot;
+	sdk &quot;github.com/cosmos/cosmos-sdk/types&quot;
+	sdkerrors &quot;github.com/cosmos/cosmos-sdk/types/errors&quot;
+	&quot;github.com/cosmos/cosmos-sdk/types/rest&quot;
+	&quot;github.com/cosmos/cosmos-sdk/types/tx&quot;
+	&quot;github.com/cosmos/cosmos-sdk/types/tx/signing&quot;
+	authsigning &quot;github.com/cosmos/cosmos-sdk/x/auth/signing&quot;
+	authtx &quot;github.com/cosmos/cosmos-sdk/x/auth/tx&quot;
+)
+
+// GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
+// or sign it and broadcast it returning an error upon failure.
+func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
+	txf := NewFactoryCLI(clientCtx, flagSet)
+	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
+}
+
+// GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction
+// or sign it and broadcast it returning an error upon failure.
+func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+	if clientCtx.GenerateOnly {
+		return GenerateTx(clientCtx, txf, msgs...)
+	}
+
+	return BroadcastTx(clientCtx, txf, msgs...)
+}
+
+// GenerateTx will generate an unsigned transaction and print it to the writer
+// specified by ctx.Output. If simulation was requested, the gas will be
+// simulated and also printed to the same writer before the transaction is
+// printed.
+func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+	if txf.SimulateAndExecute() {
+		if clientCtx.Offline {
+			return errors.New(&quot;cannot estimate gas in offline mode&quot;)
+		}
+
+		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		if err != nil {
+			return err
+		}
+
+		txf = txf.WithGas(adjusted)
+		_, _ = fmt.Fprintf(os.Stderr, &quot;%s\n&quot;, GasEstimateResponse{GasEstimate: txf.Gas()})
+	}
+
+	tx, err := BuildUnsignedTx(txf, msgs...)
+	if err != nil {
+		return err
+	}
+
+	json, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+	if err != nil {
+		return err
+	}
+
+	return clientCtx.PrintString(fmt.Sprintf(&quot;%s\n&quot;, json))
+}
+
+// BroadcastTx attempts to generate, sign and broadcast a transaction with the
+// given set of messages. It will also simulate gas requirements if necessary.
+// It will return an error upon failure.
+func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+	txf, err := PrepareFactory(clientCtx, txf)
+	if err != nil {
+		return err
+	}
+
+	if txf.SimulateAndExecute() || clientCtx.Simulate {
+		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		if err != nil {
+			return err
+		}
+
+		txf = txf.WithGas(adjusted)
+		_, _ = fmt.Fprintf(os.Stderr, &quot;%s\n&quot;, GasEstimateResponse{GasEstimate: txf.Gas()})
+	}
+
+	if clientCtx.Simulate {
+		return nil
+	}
+
+	tx, err := BuildUnsignedTx(txf, msgs...)
+	if err != nil {
+		return err
+	}
+
+	if !clientCtx.SkipConfirm {
+		out, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+		if err != nil {
+			return err
+		}
+
+		_, _ = fmt.Fprintf(os.Stderr, &quot;%s\n\n&quot;, out)
+
+		buf := bufio.NewReader(os.Stdin)
+		ok, err := input.GetConfirmation(&quot;confirm transaction before signing and broadcasting&quot;, buf, os.Stderr)
+
+		if err != nil || !ok {
+			_, _ = fmt.Fprintf(os.Stderr, &quot;%s\n&quot;, &quot;cancelled transaction&quot;)
+			return err
+		}
+	}
+
+	tx.SetFeeGranter(clientCtx.GetFeeGranterAddress())
+	err = Sign(txf, clientCtx.GetFromName(), tx, true)
+	if err != nil {
+		return err
+	}
+
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(tx.GetTx())
+	if err != nil {
+		return err
+	}
+
+	// broadcast to a Tendermint node
+	res, err := clientCtx.BroadcastTx(txBytes)
+	if err != nil {
+		return err
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// WriteGeneratedTxResponse writes a generated unsigned transaction to the
+// provided http.ResponseWriter. It will simulate gas costs if requested by the
+// BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
+// Note that this function returns the legacy StdTx Amino JSON format for compatibility
+// with legacy clients.
+func WriteGeneratedTxResponse(
+	ctx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
+) {
+	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
+	if !ok {
+		return
+	}
+
+	gasSetting, err := flags.ParseGasSetting(br.Gas)
+	if rest.CheckBadRequestError(w, err) {
+		return
+	}
+
+	txf := Factory{fees: br.Fees, gasPrices: br.GasPrices}.
+		WithAccountNumber(br.AccountNumber).
+		WithSequence(br.Sequence).
+		WithGas(gasSetting.Gas).
+		WithGasAdjustment(gasAdj).
+		WithMemo(br.Memo).
+		WithChainID(br.ChainID).
+		WithSimulateAndExecute(br.Simulate).
+		WithTxConfig(ctx.TxConfig).
+		WithTimeoutHeight(br.TimeoutHeight)
+
+	if br.Simulate || gasSetting.Simulate {
+		if gasAdj &lt; 0 {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, sdkerrors.ErrorInvalidGasAdjustment.Error())
+			return
+		}
+
+		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
+		if rest.CheckInternalServerError(w, err) {
+			return
+		}
+
+		txf = txf.WithGas(adjusted)
+
+		if br.Simulate {
+			rest.WriteSimulationResponse(w, ctx.LegacyAmino, txf.Gas())
+			return
+		}
+	}
+
+	tx, err := BuildUnsignedTx(txf, msgs...)
+	if rest.CheckBadRequestError(w, err) {
+		return
+	}
+
+	stdTx, err := ConvertTxToStdTx(ctx.LegacyAmino, tx.GetTx())
+	if rest.CheckInternalServerError(w, err) {
+		return
+	}
+
+	output, err := ctx.LegacyAmino.MarshalJSON(stdTx)
+	if rest.CheckInternalServerError(w, err) {
+		return
+	}
+
+	w.Header().Set(&quot;Content-Type&quot;, &quot;application/json&quot;)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(output)
+}
+
+// BuildUnsignedTx builds a transaction to be signed given a set of messages. The
+// transaction is initially created via the provided factory's generator. Once
+// created, the fee, memo, and messages are set.
+func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
+	if txf.chainID == &quot;&quot; {
+		return nil, fmt.Errorf(&quot;chain ID required but not specified&quot;)
+	}
+
+	fees := txf.fees
+
+	if !txf.gasPrices.IsZero() {
+		if !fees.IsZero() {
+			return nil, errors.New(&quot;cannot provide both fees and gas prices&quot;)
+		}
+
+		glDec := sdk.NewDec(int64(txf.gas))
+
+		// Derive the fees based on the provided gas prices, where
+		// fee = ceil(gasPrice * gasLimit).
+		fees = make(sdk.Coins, len(txf.gasPrices))
+
+		for i, gp := range txf.gasPrices {
+			fee := gp.Amount.Mul(glDec)
+			fees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+		}
+	}
+
+	tx := txf.txConfig.NewTxBuilder()
+
+	if err := tx.SetMsgs(msgs...); err != nil {
+		return nil, err
+	}
+
+	tx.SetMemo(txf.memo)
+	tx.SetFeeAmount(fees)
+	tx.SetGasLimit(txf.gas)
+	tx.SetTimeoutHeight(txf.TimeoutHeight())
+
+	return tx, nil
+}
+
+// BuildSimTx creates an unsigned tx with an empty single signature and returns
+// the encoded transaction or an error if the unsigned transaction cannot be
+// built.
+func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
+	txb, err := BuildUnsignedTx(txf, msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create an empty signature literal as the ante handler will populate with a
+	// sentinel pubkey.
+	sig := signing.SignatureV2{
+		PubKey: &amp;secp256k1.PubKey{},
+		Data: &amp;signing.SingleSignatureData{
+			SignMode: txf.signMode,
+		},
+		Sequence: txf.Sequence(),
+	}
+	if err := txb.SetSignatures(sig); err != nil {
+		return nil, err
+	}
+
+	protoProvider, ok := txb.(authtx.ProtoTxProvider)
+	if !ok {
+		return nil, fmt.Errorf(&quot;cannot simulate amino tx&quot;)
+	}
+	simReq := tx.SimulateRequest{Tx: protoProvider.GetProtoTx()}
+
+	return simReq.Marshal()
+}
+
+// CalculateGas simulates the execution of a transaction and returns the
+// simulation response obtained by the query and the adjusted gas amount.
+func CalculateGas(
+	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
+) (tx.SimulateResponse, uint64, error) {
+	txBytes, err := BuildSimTx(txf, msgs...)
+	if err != nil {
+		return tx.SimulateResponse{}, 0, err
+	}
+
+	// TODO This should use the generated tx service Client.
+	// https://github.com/cosmos/cosmos-sdk/issues/7726
+	bz, _, err := queryFunc(&quot;/cosmos.tx.v1beta1.Service/Simulate&quot;, txBytes)
+	if err != nil {
+		return tx.SimulateResponse{}, 0, err
+	}
+
+	var simRes tx.SimulateResponse
+
+	if err := simRes.Unmarshal(bz); err != nil {
+		return tx.SimulateResponse{}, 0, err
+	}
+
+	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
+}
+
+// PrepareFactory ensures the account defined by ctx.GetFromAddress() exists and
+// if the account number and/or the account sequence number are zero (not set),
+// they will be queried for and set on the provided Factory. A new Factory with
+// the updated fields will be returned.
+func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
+	from := clientCtx.GetFromAddress()
+
+	if err := txf.accountRetriever.EnsureExists(clientCtx, from); err != nil {
+		return txf, err
+	}
+
+	initNum, initSeq := txf.accountNumber, txf.sequence
+	if initNum == 0 || initSeq == 0 {
+		num, seq, err := txf.accountRetriever.GetAccountNumberSequence(clientCtx, from)
+		if err != nil {
+			return txf, err
+		}
+
+		if initNum == 0 {
+			txf = txf.WithAccountNumber(num)
+		}
+
+		if initSeq == 0 {
+			txf = txf.WithSequence(seq)
+		}
+	}
+
+	return txf, nil
+}
+
+// SignWithPrivKey signs a given tx with the given private key, and returns the
+// corresponding SignatureV2 if the signing is successful.
+func SignWithPrivKey(
+	signMode signing.SignMode, signerData authsigning.SignerData,
+	txBuilder client.TxBuilder, priv cryptotypes.PrivKey, txConfig client.TxConfig,
+	accSeq uint64,
+) (signing.SignatureV2, error) {
+	var sigV2 signing.SignatureV2
+
+	// Generate the bytes to be signed.
+	signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	if err != nil {
+		return sigV2, err
+	}
+
+	// Sign those bytes
+	signature, err := priv.Sign(signBytes)
+	if err != nil {
+		return sigV2, err
+	}
+
+	// Construct the SignatureV2 struct
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: signature,
+	}
+
+	sigV2 = signing.SignatureV2{
+		PubKey:   priv.PubKey(),
+		Data:     &amp;sigData,
+		Sequence: accSeq,
+	}
+
+	return sigV2, nil
+}
+
+func checkMultipleSigners(mode signing.SignMode, tx authsigning.Tx) error {
+	if mode == signing.SignMode_SIGN_MODE_DIRECT &amp;&amp;
+		len(tx.GetSigners()) &gt; 1 {
+		return sdkerrors.Wrap(sdkerrors.ErrNotSupported, &quot;Signing in DIRECT mode is only supported for transactions with one signer only&quot;)
+	}
+	return nil
+}
+
+// Sign signs a given tx with a named key. The bytes signed over are canconical.
+// The resulting signature will be added to the transaction builder overwriting the previous
+// ones if overwrite=true (otherwise, the signature will be appended).
+// Signing a transaction with mutltiple signers in the DIRECT mode is not supprted and will
+// return an error.
+// An error is returned upon failure.
+func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
+	if txf.keybase == nil {
+		return errors.New(&quot;keybase must be set prior to signing a transaction&quot;)
+	}
+
+	signMode := txf.signMode
+	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+		// use the SignModeHandler's default mode if unspecified
+		signMode = txf.txConfig.SignModeHandler().DefaultMode()
+	}
+	if err := checkMultipleSigners(signMode, txBuilder.GetTx()); err != nil {
+		return err
+	}
+
+	key, err := txf.keybase.Key(name)
+	if err != nil {
+		return err
+	}
+	pubKey := key.GetPubKey()
+	signerData := authsigning.SignerData{
+		ChainID:       txf.chainID,
+		AccountNumber: txf.accountNumber,
+		Sequence:      txf.sequence,
+	}
+
+	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
+	// TxBuilder under the hood, and SignerInfos is needed to generated the
+	// sign bytes. This is the reason for setting SetSignatures here, with a
+	// nil signature.
+	//
+	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
+	// also doesn't affect its generated sign bytes, so for code's simplicity
+	// sake, we put it here.
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: nil,
+	}
+	sig := signing.SignatureV2{
+		PubKey:   pubKey,
+		Data:     &amp;sigData,
+		Sequence: txf.Sequence(),
+	}
+	var prevSignatures []signing.SignatureV2
+	if !overwriteSig {
+		prevSignatures, err = txBuilder.GetTx().GetSignaturesV2()
+		if err != nil {
+			return err
+		}
+	}
+	if err := txBuilder.SetSignatures(sig); err != nil {
+		return err
+	}
+
+	// Generate the bytes to be signed.
+	bytesToSign, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	if err != nil {
+		return err
+	}
+
+	// Sign those bytes
+	sigBytes, _, err := txf.keybase.Sign(name, bytesToSign)
+	if err != nil {
+		return err
+	}
+
+	// Construct the SignatureV2 struct
+	sigData = signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: sigBytes,
+	}
+	sig = signing.SignatureV2{
+		PubKey:   pubKey,
+		Data:     &amp;sigData,
+		Sequence: txf.Sequence(),
+	}
+
+	if overwriteSig {
+		return txBuilder.SetSignatures(sig)
+	}
+	prevSignatures = append(prevSignatures, sig)
+	return txBuilder.SetSignatures(prevSignatures...)
+}
+
+// GasEstimateResponse defines a response definition for tx gas estimation.
+type GasEstimateResponse struct {
+	GasEstimate uint64 `json:&quot;gas_estimate&quot; yaml:&quot;gas_estimate&quot;`
+}
+
+func (gr GasEstimateResponse) String() string {
+	return fmt.Sprintf(&quot;gas estimate: %d&quot;, gr.GasEstimate)
+}
+</code></pre></div><div class="language- extra-class"><pre class="language-text"><code>func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
+	if w.tx.AuthInfo.Fee == nil {
+		w.tx.AuthInfo.Fee = &amp;tx.Fee{}
+	}
+
+	w.tx.AuthInfo.Fee.Granter = feeGranter.String()
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+</code></pre></div><div class="language- extra-class"><pre class="language-text"><code>// Fee includes the amount of coins paid in fees and the maximum
+// gas to be used by the transaction. The ratio yields an effective &quot;gasprice&quot;,
+// which must be above some miminum to be accepted into the mempool.
+message Fee {
+  // amount is the amount of coins to be paid as a fee
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = &quot;github.com/cosmos/cosmos-sdk/types.Coins&quot;];
+
+  // gas_limit is the maximum gas that can be used in transaction processing
+  // before an out of gas error occurs
+  uint64 gas_limit = 2;
+
+  // if unset, the first signer is responsible for paying the fees. If set, the specified account must pay the fees.
+  // the payer must be a tx signer (and thus have signed this field in AuthInfo).
+  // setting this field does *not* change the ordering of required signers for the transaction.
+  string payer = 3;
+
+  // if set, the fee payer (either the first signer or the value of the payer field) requests that a fee grant be used
+  // to pay fees instead of the fee payer's own balance. If an appropriate fee grant does not exist or the chain does
+  // not support fee grants, this will fail
+  string granter = 4;
+}
+</code></pre></div></details> <p>The following example shows a CLI command with the <code>--fee-account</code> flag:</p> <div class="language- extra-class"><pre class="language-text"><code>./osmosisd tx gov submit-proposal --title=&quot;Test Proposal&quot; --description=&quot;My awesome proposal&quot; --type=&quot;Text&quot; --from validator-key --fee-account=osmo1fmcjjt6yc9wqup2r06urnrd928jhrde6gcld6n --chain-id=testnet --fees=&quot;10uOsmo&quot;
+</code></pre></div><h3 id="granted-fee-deductions"><a href="#granted-fee-deductions" class="header-anchor">#</a> Granted fee deductions</h3> <p>Fees are deducted from grants in the <code>auth</code> ante handler.</p> <h3 id="gas"><a href="#gas" class="header-anchor">#</a> Gas</h3> <p>To prevent DoS attacks, using a filtered <code>feegrant</code> incurs gas. To ensure that all the grantee's transactions conform to the filter set by the granter, the SDK iterates over the allowed messages in the filter and charges 10 gas per filtered message. Then, the SDK iterates over the messages sent by the grantee to ensure the messages adhere to the filter, which also charges 10 gas per message. If the SDK finds a message that does not conform to the filter, the SDK stops iterating, and the transaction fails.</p> <div class="custom-block warning"><p class="custom-block-title">Warning</p> <p>The gas is charged against the granted allowance. Ensure all your existing messages conform to the filter before you send transactions using your allowance.</p></div> <h2 id="state"><a href="#state" class="header-anchor">#</a> State</h2> <h3 id="feeallowance"><a href="#feeallowance" class="header-anchor">#</a> FeeAllowance</h3> <p>Fee allowances are identified by combining <code>Granter</code> (the account address that grants permission to another account to spend its available tokens on fees) with <code>Grantee</code> (the account address that receives permission to spend the granter's tokens on fees).</p> <p>The following example shows how a fee allowance is stored in the state:</p> <p>Grant: <code>0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes | granter_addr_len (1 byte) | granter_addr_bytes -&gt; ProtocolBuffer(Grant)</code></p> <div class="language- extra-class"><pre class="language-text"><code>// Grant is stored in the KVStore to record a grant with full context
+type Grant struct {
+	// granter is the address of the user granting an allowance of their funds.
+	Granter string `protobuf:&quot;bytes,1,opt,name=granter,proto3&quot; json:&quot;granter,omitempty&quot;`
+	// grantee is the address of the user being granted an allowance of another user's funds.
+	Grantee string `protobuf:&quot;bytes,2,opt,name=grantee,proto3&quot; json:&quot;grantee,omitempty&quot;`
+	// allowance can be any of basic and filtered fee allowance.
+	Allowance *types1.Any `protobuf:&quot;bytes,3,opt,name=allowance,proto3&quot; json:&quot;allowance,omitempty&quot;`
+}
+</code></pre></div><h2 id="message-types"><a href="#message-types" class="header-anchor">#</a> Message Types</h2> <h3 id="msggrantallowance"><a href="#msggrantallowance" class="header-anchor">#</a> MsgGrantAllowance</h3> <p>A fee allowance grant will be created with the MsgGrantAllowance message.</p> <div class="language-proto extra-class"><pre class="language-text"><code>// MsgGrantAllowance adds permission for Grantee to spend up to Allowance
+// of fees from the account of Granter.
+message MsgGrantAllowance {
+  // granter is the address of the user granting an allowance of their funds.
+  string              granter   = 1;
+
+  // grantee is the address of the user being granted an allowance of another user's funds.
+  string              grantee   = 2;
+
+  // allowance can be any of basic and filtered fee allowance.
+  google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = &quot;FeeAllowanceI&quot;];
+}
+</code></pre></div><h3 id="msgrevokeallowance"><a href="#msgrevokeallowance" class="header-anchor">#</a> MsgRevokeAllowance</h3> <p>A fee allowance grant will be revokeed with the MsgRevokeAllowance message.</p> <div class="language-proto extra-class"><pre class="language-text"><code>// MsgRevokeAllowance removes any existing Allowance from Granter to Grantee.
+message MsgRevokeAllowance {
+  // granter is the address of the user granting an allowance of their funds.
+  string granter = 1;
+
+  // grantee is the address of the user being granted an allowance of another user's funds.
+  string grantee = 2;
+}
+</code></pre></div></div> <footer class="page-edit"><div class="edit-link"><a href="https://github.com/osmosis-labs/osmosis/edit/main/docs/developing/modules/spec-feegrant.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub</a> <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></div> <div class="last-updated"><span class="prefix">Updated on:</span> <span class="time">11/25/2021, 7:12:26 PM</span></div></footer> <div class="page-nav"><div class="inner"><div class="prev"><a href="/developing/modules/spec-evidence.html">Evidence</a></div> <div class="next"><a href="/developing/modules/spec-governance.html">Governance</a></div></div></div>  <div class="footer-container"><div class="company"><div class="copyright">Osmosis Labs</div> <div class="subscribe"><div class="subscribe-title">Subscribe to get updates</div> <form action="TODO" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" novalidate="novalidate" class="validate"><input type="email" value name="EMAIL" id="mce-EMAIL" placeholder="Email address" required="required" class="email">
+        real people should not fill this in and expect good things - do not remove this or risk form bot
+        signups
+        <div aria-hidden="true" style="position: absolute; left: -5000px;"><input type="text" name="b_8eca8dc5c91c2e30d69b1463e_1447662093" tabindex="-1" value></div> <button type="submit">Submit</button></form></div></div> <div class="links-container"><ul class="learn"><li>Learn</li> <li><a href="White_paper.pdf" target="_blank">
+          White
+          Paper
+        </a></li> <li><a href="#" target="_blank">Medium</a></li> <li><a href="#" target="_blank">Forum</a></li></ul> <ul class="developers"><li>Tools</li> <li><a href="https://app.osmosis.zone" target="_blank">Osmosis App</a></li> <li><a href="https://www.mintscan.io/osmosis" target="_blank">Osmosis Explorer</a></li> <li><a href="https://info.osmosis.zone/" target="_blank">Stats</a></li></ul> <ul class="developers"><li>Osmo</li> <li><a href="#" target="_blank">What is Osmo?</a></li> <li><a href="#" target="_blank">Pools</a></li> <li><a href="#" target="_blank">Wallets</a></li></ul> <ul class="developers"><li>Foundation</li> <li><a href="#" target="_blank">Careers</a></li></ul> <ul class="developers"><li>Developers</li> <li><a href="https://github.com/osmosis-labs" target="_blank">Github</a></li> <li><a href="https://docs.osmosis.zone/" target="_blank">Documentation</a></li></ul> <ul class="developers"><li>Validators</li> <li><a href="#" target="_blank">Validator Guide</a></li> <li><a href target="_blank">Profiles</a></li> <li><a href target="_blank">Discord Channel</a></li></ul></div> <div class="sns-container"><div class="logos"><a href="#" rel="noopener" target="_blank"><img src="/img/discord.svg" alt="link to Osmosis discord room"></a> <a href="#" rel="noopener" target="_blank"><img src="/img/medium.svg" alt="link to Osmosis medium"></a> <a href="#" rel="noopener" target="_blank"><img src="/img/twitter.svg" alt="link to Osmosis twitter"></a> <a href rel="noopener" target="_blank"><img src="/img/icon_youtube.png" alt="link to Osmosis youtube"></a> <a href="#" rel="noopener" target="_blank"><img src="/img/icon_telegram.png" alt="link to Osmosis telegram room"></a></div> <a href="https://www.osmosis.zone" target="_blank" class="osmosiszone">osmosis.zone</a></div></div></main></div><div class="global-ui"><div class="darkmode-switch"><div class="item day active"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" class="icon"><path d="M512 256a42.666667 42.666667 0 0 0 42.666667-42.666667V128a42.666667 42.666667 0 0 0-85.333334 0v85.333333a42.666667 42.666667 0 0 0 42.666667 42.666667zM896 469.333333h-85.333333a42.666667 42.666667 0 0 0 0 85.333334h85.333333a42.666667 42.666667 0 0 0 0-85.333334zM256 512a42.666667 42.666667 0 0 0-42.666667-42.666667H128a42.666667 42.666667 0 0 0 0 85.333334h85.333333a42.666667 42.666667 0 0 0 42.666667-42.666667zM265.386667 213.333333a42.666667 42.666667 0 0 0-59.306667 62.72l61.44 59.306667a42.666667 42.666667 0 0 0 31.146667 11.946667 42.666667 42.666667 0 0 0 30.72-13.226667 42.666667 42.666667 0 0 0 0-60.16zM725.333333 347.306667a42.666667 42.666667 0 0 0 29.44-11.946667l61.44-59.306667A42.666667 42.666667 0 0 0 758.613333 213.333333l-61.44 60.586667a42.666667 42.666667 0 0 0 0 60.16 42.666667 42.666667 0 0 0 28.16 13.226667zM512 768a42.666667 42.666667 0 0 0-42.666667 42.666667v85.333333a42.666667 42.666667 0 0 0 85.333334 0v-85.333333a42.666667 42.666667 0 0 0-42.666667-42.666667zM756.48 688.64a42.666667 42.666667 0 0 0-59.306667 61.44L758.613333 810.666667a42.666667 42.666667 0 0 0 29.44 11.946666 42.666667 42.666667 0 0 0 30.72-12.8 42.666667 42.666667 0 0 0 0-60.586666zM267.52 688.64l-61.44 59.306667a42.666667 42.666667 0 0 0 0 60.586666 42.666667 42.666667 0 0 0 30.72 12.8 42.666667 42.666667 0 0 0 28.586667-10.666666l61.44-59.306667a42.666667 42.666667 0 0 0-59.306667-61.44zM512 341.333333a170.666667 170.666667 0 1 0 170.666667 170.666667 170.666667 170.666667 0 0 0-170.666667-170.666667z"></path></svg></div> <div class="item auto"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" class="icon"><path d="M460.864 539.072h103.936l-54.208-163.072-49.728 163.072z m411.136-176.704V149.504h-212.352L510.528 0l-149.12 149.504H149.12v212.928L0 511.872l149.12 149.504v212.928h212.352l149.12 149.504 149.12-149.504h212.352v-212.928l149.12-149.504-149.184-149.504zM614.464 693.12l-31.616-90.624H438.272l-31.616 90.624H320.768l144.576-407.68h90.368l144.576 407.68H614.464z m0 0"></path></svg></div> <div class="item night"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" class="icon"><path d="M935.538601 630.40178c-11.43005-11.432249-28.673759-14.738607-43.531086-8.353536-46.733115 20.10317-96.362866 30.296859-147.50719 30.296859-99.589478 0-193.221796-38.783705-263.640252-109.20316-108.636744-108.636744-139.609745-270.022125-78.9083-411.148441 6.388069-14.85233 3.078713-32.098837-8.353536-43.532285-11.432249-11.432249-28.675758-14.743604-43.532285-8.354536-52.637312 22.64025-100.017388 54.809439-140.82552 95.616372-85.346135 85.346135-132.346869 198.821199-132.346869 319.519766 0 120.699566 47.001733 234.172631 132.347868 319.518766s198.821199 132.349067 319.517567 132.349067c120.699566 0 234.172431-47.002932 319.520765-132.351066 40.808132-40.810131 72.977122-88.190207 95.615373-140.82552C950.282205 659.081735 946.971849 641.834029 935.538601 630.40178z" p-id="3638"></path></svg></div></div></div></div>
+    <script src="/assets/js/app.200c8ff0.js" defer></script><script src="/assets/js/3.db963c3c.js" defer></script><script src="/assets/js/30.219f284d.js" defer></script>
+  </body>
+</html>
