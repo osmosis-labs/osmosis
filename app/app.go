@@ -388,9 +388,10 @@ func NewOsmosisApp(
 			}
 
 			// Override txfees genesis here
+			feeTokens := whitelistInitial(ctx, app)
 			txfees.InitGenesis(ctx, app.TxFeesKeeper, txfeestypes.GenesisState{
 				Basedenom: app.StakingKeeper.BondDenom(ctx),
-				Feetokens: []txfeestypes.FeeToken{},
+				Feetokens: feeTokens,
 			})
 			return newVM, nil
 		})
