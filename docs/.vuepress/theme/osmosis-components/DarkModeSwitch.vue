@@ -156,16 +156,17 @@ export default {
   .item {
     padding: 4px;
     line-height: 1;
-    border: 1px solid $nightAccentColor;
+    border: 1px solid $accentColor;
     border-left: none;
 
     &:first-child {
-      border-left: 1px solid $nightAccentColor;
+      border-left: 1px solid $borderColor;
     }
 
     &.day {
       border-top-left-radius: 4px;
       border-bottom-left-radius: 4px;
+      background-color: $borderColor;
     }
 
     &.night {
@@ -176,18 +177,18 @@ export default {
     .icon {
       width: 16px;
       height: 16px;
-      fill: $nightAccentColor;
+      fill: $accentColor;
     }
 
     &.active {
-      background-color: $nightAccentColor;
+      background-color: $accentColor;
 
       &:hover {
         cursor: default;
       }
 
       .icon {
-        fill: var(--white);
+        fill: $borderColor;
       }
     }
   }

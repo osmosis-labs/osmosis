@@ -187,7 +187,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         border-radius: 1.3125rem;
         font-size: 1rem;
         padding: 0;
-        background: rgba($searchbarColor) url('/img/search.svg') 0.75rem center no-repeat;
+        background: rgba($borderColor) url('/img/search.svg') 0.75rem center no-repeat;
         background-size: 1.125rem;
         color: transparent;
 
@@ -202,108 +202,6 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
       }
     }
   }
-
-.darkmode-switch {
-  position: absolute;
-  top: $navbarHeight + 1rem;
-  right: 1rem;
-  height: 24px;
-  display: flex;
-
-  &:hover {
-    cursor: pointer;
-  }
-
-  .item {
-    padding: 4px;
-    line-height: 1;
-    border: 1px solid $accentColor;
-    border-left: none;
-
-    &:first-child {
-      border-left: 1px solid $accentColor;
-    }
-
-    &.day {
-      border-top-left-radius: 4px;
-      border-bottom-left-radius: 4px;
-    }
-
-    &.night {
-      border-top-right-radius: 4px;
-      border-bottom-right-radius: 4px;
-    }
-
-    .icon {
-      width: 16px;
-      height: 16px;
-      fill: $accentColor;
-    }
-
-    &.active {
-      background-color: $accentColor;
-
-      &:hover {
-        cursor: default;
-      }
-
-      .icon {
-        fill: var(--white);
-      }
-    }
-  }
-}
-
-.theme-dark .darkmode-switch {
-  position: absolute;
-  top: $navbarHeight + 1rem;
-  right: 1rem;
-  height: 24px;
-  display: flex;
-
-  &:hover {
-    cursor: pointer;
-  }
-
-  .item {
-    padding: 4px;
-    line-height: 1;
-    border: 1px solid $nightAccentColor;
-    border-left: none;
-
-    &:first-child {
-      border-left: 1px solid $nightAccentColor;
-    }
-
-    &.day {
-      border-top-left-radius: 4px;
-      border-bottom-left-radius: 4px;
-    }
-
-    &.night {
-      border-top-right-radius: 4px;
-      border-bottom-right-radius: 4px;
-    }
-
-    .icon {
-      width: 16px;
-      height: 16px;
-      fill: $nightAccentColor;
-    }
-
-    &.active {
-      background-color: $nightAccentColor;
-
-      &:hover {
-        cursor: default;
-      }
-
-      .icon {
-        fill: var(--white);
-      }
-    }
-  }
-}
 }
 
 .theme-dark .navbar {
@@ -368,7 +266,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         border-radius: 1.3125rem;
         font-size: 1rem;
         padding: 0;
-        background: rgba($searchbarColor) url('/img/search.svg') 0.75rem center no-repeat;
+        background: rgba($borderColor) url('/img/search.svg') 0.75rem center no-repeat;
         background-size: 1.125rem;
         color: transparent;
 
@@ -425,7 +323,58 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
             height: 2.25rem;
             width: 2.25rem;
             border-radius: 1.125rem;
-            background: rgba($primaryColor, 0.08) url('/img/search.svg') 0.625rem center no-repeat;
+            background: rgba($borderColor) url('/img/search.svg') 0.625rem center no-repeat;
+            left: 0;
+
+            &:active, &:focus {
+              padding-left: 2.25rem;
+              padding-right: 1rem;
+              width: calc(100vw - 6.5rem);
+              box-sizing: border-box;
+            }
+          }
+        }
+    }
+  }
+
+  .theme-dark .navbar {
+    padding-top: $mobile-navbar-vertical-padding;
+    padding-bottom: $mobile-navbar-vertical-padding;
+    padding-right: 2rem;
+    padding-left: 2rem;
+    line-height: 1;
+
+    .logo {
+      height: 2.25rem;
+    }
+
+    .logoDark {
+      height: 2.25rem;
+    }  
+
+    .can-hide {
+      display: none;
+    }
+
+    .site-name {
+      width: calc(100vw - 9.4rem);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .links {
+      position: absolute;
+      padding: 0;
+      right: 4.875rem;
+      top: $mobile-navbar-vertical-padding;
+        .search-box {
+          padding-top: 0;
+          input {
+            height: 2.25rem;
+            width: 2.25rem;
+            border-radius: 1.125rem;
+            background: rgba($borderColor) url('/img/search.svg') 0.625rem center no-repeat;
             left: 0;
 
             &:active, &:focus {
