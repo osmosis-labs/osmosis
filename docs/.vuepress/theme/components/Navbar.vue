@@ -212,7 +212,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
   margin: 0 auto;
 
   a, span, img {
-    display: inline-block;
+    display: inline;
   }
 
   .logo {
