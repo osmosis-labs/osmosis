@@ -28,7 +28,7 @@ module.exports = {
 
     // https://github.com/znicholasbrown/vuepress-plugin-code-copy
     ["vuepress-plugin-code-copy", {
-      color: "#de1dd1",
+      color: "#ffffff",
       backgroundColor: "#3e3383",
       }
     ]

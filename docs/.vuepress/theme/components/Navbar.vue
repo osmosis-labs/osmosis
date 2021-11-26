@@ -187,7 +187,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         border-radius: 1.3125rem;
         font-size: 1rem;
         padding: 0;
-        background: rgba($primaryColor, 0.08) url('/img/search.svg') 0.75rem center no-repeat;
+        background: rgba($searchbarColor) url('/img/search.svg') 0.75rem center no-repeat;
         background-size: 1.125rem;
         color: transparent;
 
@@ -202,6 +202,108 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
       }
     }
   }
+
+.darkmode-switch {
+  position: absolute;
+  top: $navbarHeight + 1rem;
+  right: 1rem;
+  height: 24px;
+  display: flex;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  .item {
+    padding: 4px;
+    line-height: 1;
+    border: 1px solid $accentColor;
+    border-left: none;
+
+    &:first-child {
+      border-left: 1px solid $accentColor;
+    }
+
+    &.day {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+    }
+
+    &.night {
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      fill: $accentColor;
+    }
+
+    &.active {
+      background-color: $accentColor;
+
+      &:hover {
+        cursor: default;
+      }
+
+      .icon {
+        fill: var(--white);
+      }
+    }
+  }
+}
+
+.theme-dark .darkmode-switch {
+  position: absolute;
+  top: $navbarHeight + 1rem;
+  right: 1rem;
+  height: 24px;
+  display: flex;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  .item {
+    padding: 4px;
+    line-height: 1;
+    border: 1px solid $nightAccentColor;
+    border-left: none;
+
+    &:first-child {
+      border-left: 1px solid $nightAccentColor;
+    }
+
+    &.day {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+    }
+
+    &.night {
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      fill: $nightAccentColor;
+    }
+
+    &.active {
+      background-color: $nightAccentColor;
+
+      &:hover {
+        cursor: default;
+      }
+
+      .icon {
+        fill: var(--white);
+      }
+    }
+  }
+}
 }
 
 .theme-dark .navbar {
@@ -266,7 +368,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         border-radius: 1.3125rem;
         font-size: 1rem;
         padding: 0;
-        background: rgba($primaryColor, 0.08) url('/img/search.svg') 0.75rem center no-repeat;
+        background: rgba($searchbarColor) url('/img/search.svg') 0.75rem center no-repeat;
         background-size: 1.125rem;
         color: transparent;
 
