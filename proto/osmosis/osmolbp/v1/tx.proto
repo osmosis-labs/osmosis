@@ -1,0 +1,75 @@
+syntax = "proto3";
+package osmosis.osmolbp.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/proto";
+option (gogoproto.goproto_getters_all) = false;
+
+service Msg {
+  // CreateLBP creates new liquidity bootstraping pool.
+  rpc CreateLBP(MsgCreateLBP) returns (MsgCreateLBPResponse);
+
+  // Stake a tokens in a pool to join the sale.
+  rpc Stake(MsgStake) returns (EmptyResponse);
+
+  // ExitLBP withdraws the purchased tokens from the pool and remained staked tokens.
+  rpc ExitLBP(MsgExitLBP) returns (EmptyResponse);
+}
+
+
+// Default response (empty)
+message EmptyResponse {}
+
+message MsgDeposit {
+  // TODO: add [(cosmos_proto.scalar) = "cosmos.AddressString"]
+
+  // sender is an account address making a deposit for setting up a pool.
+  string sender = 1 ;
+  repeated cosmos.base.v1beta1.Coin amount = 2
+    [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+message MsgCreateLBP {
+  // Pool creator
+  string creator = 1;
+  // token_in a denom used to buy LB tokens (`token_out`). May be referred as quote_currency.
+  string token_in = 2;
+  // token_out a token denom to be bootstraped. May be referred as base currency.
+  string token_out = 3;
+
+  // start time when the token emission starts.
+  google.protobuf.Timestamp start = 4 [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+  // duration time when the token emission ends.
+  google.protobuf.Duration duration = 5 [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+
+  // total number of `tokens_out` to be sold during the continous sale.
+  string total_sale = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message MsgCreateLBPResponse {
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message MsgStake {
+  // sender is an account address adding a stake
+  string sender = 1 ;
+  // pool_id is a valid ID of this module LBP
+  uint64 pool_id = 2 [(gogoproto.moretags) = "yaml:\"pool_id\""];
+  // number of pool.token_in staked by a user. Coins must be firstly deposited.
+  // TODO: add (cosmos_proto.scalar) = "cosmos.Int",
+  string amount = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message MsgExitLBP {
+  // sender is an account address exiting a pool
+  string sender = 1 ;
+  uint64 pool_id = 2 [(gogoproto.moretags) = "yaml:\"pool_id\""];
+}
+
+// TODO: add partial withdraw

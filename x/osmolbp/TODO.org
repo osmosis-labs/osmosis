@@ -1,0 +1,13 @@
+* Proto:
+
+NOW:
++ track total number of currently buying accounts (we already track the number of staked tokens)
+
+
+LBP
++ fee_rate, treasury address
++ should we add a circuit breaker in a pool (in case something bad happens)?
+
+* Functionality
+
++ Limit price when staking
