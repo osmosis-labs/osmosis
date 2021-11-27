@@ -1,0 +1,53 @@
+// Since: cosmos-sdk 0.43
+syntax = "proto3";
+package osmosis.osmolbp.v1;
+
+import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/proto";
+option (gogoproto.goproto_getters_all) = false;
+//option (gogoproto.goproto_stringer_all) = false;
+
+
+message LBP {
+  // token_out a token denom to be bootstraped. May be referred as base currency.
+  string token_out = 1;
+  // token_in a denom used to buy LB tokens (`token_out`). May be referred as quote_currency.
+  string token_in = 2;
+
+  // start time when the token emission starts.
+  google.protobuf.Timestamp start = 3 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  // end  time when the token emission ends.
+  google.protobuf.Timestamp end = 4 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+
+  // number of `tokens_out` to be emitted per second. 1 second = 1 round.
+  string rate = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // Running sum of sold coins (token_out)
+  string accumulator = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  // Round number when the accumulator was updated.
+  uint64 accumulator_r = 7 ;
+
+  // total number of currently staked coins (token_in)
+  string staked = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // total amount of earned coins (token_in)
+  string income = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+// UserPosition represents user account in a pool
+message UserPosition {
+  // lbp.accumulator value when the last ping was called and rewards calculated
+  string accumulator = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // total number of currently staked tokens
+  string staked = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // Amount of accumulated, not withdrawn purchased tokens (token_out)
+  string purchased = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // total amount of spent coins (token_in)
+  string spent = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
