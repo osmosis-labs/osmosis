@@ -6,6 +6,7 @@ module.exports = {
       md.use(require("markdown-it-footnote"));
     },
   },
+  base: "/osmosis/",
   description:
     "Osmosis - The Cosmos Interchain AMM",
   plugins: [
@@ -15,7 +16,6 @@ module.exports = {
         componentsDir: "theme/components",
       },
     ],
-
     [
       "vuepress-plugin-mathjax",
       {
@@ -25,14 +25,12 @@ module.exports = {
         },
       },
     ],
-
     // https://github.com/znicholasbrown/vuepress-plugin-code-copy
     ["vuepress-plugin-code-copy", {
       color: "#ffffff",
       backgroundColor: "#3e3383",
       }
     ]
-
   ],
   head: [
     [
@@ -120,8 +118,6 @@ module.exports = {
       },
     ],
     sidebar: {
-
-
       "/overview/": [
         {
           title: "About",
@@ -194,7 +190,6 @@ module.exports = {
             "/developing/modules/spec-evidence",
             "/developing/modules/spec-feegrant",
             "/developing/modules/spec-governance",
-            "/developing/modules/spec-market",
             "/developing/modules/spec-oracle",
             "/developing/modules/spec-slashing",
             "/developing/modules/spec-staking",
@@ -204,8 +199,6 @@ module.exports = {
           collapsable: true,
         },
       ],
-
-
       '/validators': [
         {
           title: 'Validate',
@@ -217,25 +210,20 @@ module.exports = {
         },
       ],
 
-
       '/integrate': [
         {
           title: 'Integrate',
           children: [
-          //'/integrate',
             '/integrate/token-listings',
           ],
           collapsible: true,
         },
       ],
-
-
       "/": [
         {
           title: "Overview",
           children: [
             "/history-and-changes",
-          //"/migration-guide",
           ],
           collapsable: false,
         },

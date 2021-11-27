@@ -352,28 +352,6 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
       height: 2.25rem;
     }  
 
-    .can-hide {
-      display: none;
-    }
-
-    .site-name {
-      width: calc(100vw - 9.4rem);
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .links {
-      position: absolute;
-      padding: 0;
-      right: 4.875rem;
-      top: $mobile-navbar-vertical-padding;
-        .search-box {
-          padding-top: 0;
-          input {
-            height: 2.25rem;
-            width: 2.25rem;
-            border-radius: 1.125rem;
             background: rgba($borderColor) url('/img/search.svg') 0.625rem center no-repeat;
             left: 0;
 

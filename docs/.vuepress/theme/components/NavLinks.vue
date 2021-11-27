@@ -142,6 +142,7 @@ export default {
     width: 2.625rem;
     border-radius: 1.3125rem;
     padding: 0;
+
     background: $borderColor;
     display: flex;
     align-items: center;

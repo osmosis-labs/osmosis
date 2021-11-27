@@ -15,7 +15,6 @@
         />
       </svg>
     </div>
-
     <div
       class="item night"
       :class="{ active: darkmode === 'on' }"
@@ -142,6 +141,7 @@ export default {
   }
 }
 
+
 .theme-dark .darkmode-switch {
   position: absolute;
   top: $navbarHeight + 1rem;
@@ -194,3 +194,4 @@ export default {
   }
 }
 </style>
+
