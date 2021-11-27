@@ -16,8 +16,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		if err != nil {
 			panic(err.Error())
 		}
-		k.CreateDenom(ctx, creator, nonce)
-		k.SetAuthorityMetadata(ctx, genDenom.GetDenom(), genDenom.GetAuthorityMetadata())
+		_, err = k.CreateDenom(ctx, creator, nonce)
+		if err != nil {
+			panic(err.Error())
+		}
+		err = k.SetAuthorityMetadata(ctx, genDenom.GetDenom(), genDenom.GetAuthorityMetadata())
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 }
 
