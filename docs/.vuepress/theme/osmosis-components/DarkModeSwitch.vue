@@ -16,21 +16,6 @@
       </svg>
     </div>
     <div
-      class="item auto"
-      :class="{ active: darkmode === 'auto' }"
-      @click="setDarkmode('auto')"
-    >
-      <svg
-        class="icon"
-        viewBox="0 0 1024 1024"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M460.864 539.072h103.936l-54.208-163.072-49.728 163.072z m411.136-176.704V149.504h-212.352L510.528 0l-149.12 149.504H149.12v212.928L0 511.872l149.12 149.504v212.928h212.352l149.12 149.504 149.12-149.504h212.352v-212.928l149.12-149.504-149.184-149.504zM614.464 693.12l-31.616-90.624H438.272l-31.616 90.624H320.768l144.576-407.68h90.368l144.576 407.68H614.464z m0 0"
-        />
-      </svg>
-    </div>
-    <div
       class="item night"
       :class="{ active: darkmode === 'on' }"
       @click="setDarkmode('on')"
@@ -155,4 +140,58 @@ export default {
     }
   }
 }
+
+
+.theme-dark .darkmode-switch {
+  position: absolute;
+  top: $navbarHeight + 1rem;
+  right: 1rem;
+  height: 24px;
+  display: flex;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  .item {
+    padding: 4px;
+    line-height: 1;
+    border: 1px solid $accentColor;
+    border-left: none;
+
+    &:first-child {
+      border-left: 1px solid $borderColor;
+    }
+
+    &.day {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+      background-color: $borderColor;
+    }
+
+    &.night {
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      fill: $accentColor;
+    }
+
+    &.active {
+      background-color: $accentColor;
+
+      &:hover {
+        cursor: default;
+      }
+
+      .icon {
+        fill: $borderColor;
+      }
+    }
+  }
+}
 </style>
+

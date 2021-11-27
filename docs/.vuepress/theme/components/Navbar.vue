@@ -187,7 +187,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         border-radius: 1.3125rem;
         font-size: 1rem;
         padding: 0;
-        background: rgba($primaryColor, 0.08) url('/img/search.svg') 0.75rem center no-repeat;
+        background: rgba($borderColor) url('/img/search.svg') 0.75rem center no-repeat;
         background-size: 1.125rem;
         color: transparent;
 
@@ -212,7 +212,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
   margin: 0 auto;
 
   a, span, img {
-    display: inline-block;
+    display: inline;
   }
 
   .logo {
@@ -266,7 +266,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         border-radius: 1.3125rem;
         font-size: 1rem;
         padding: 0;
-        background: rgba($primaryColor, 0.08) url('/img/search.svg') 0.75rem center no-repeat;
+        background: rgba($borderColor) url('/img/search.svg') 0.75rem center no-repeat;
         background-size: 1.125rem;
         color: transparent;
 
@@ -297,6 +297,10 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
       height: 2.25rem;
     }
 
+    .logoDark {
+      height: 2.25rem;
+    }  
+
     .can-hide {
       display: none;
     }
@@ -319,7 +323,36 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
             height: 2.25rem;
             width: 2.25rem;
             border-radius: 1.125rem;
-            background: rgba($primaryColor, 0.08) url('/img/search.svg') 0.625rem center no-repeat;
+            background: rgba($borderColor) url('/img/search.svg') 0.625rem center no-repeat;
+            left: 0;
+
+            &:active, &:focus {
+              padding-left: 2.25rem;
+              padding-right: 1rem;
+              width: calc(100vw - 6.5rem);
+              box-sizing: border-box;
+            }
+          }
+        }
+    }
+  }
+
+  .theme-dark .navbar {
+    padding-top: $mobile-navbar-vertical-padding;
+    padding-bottom: $mobile-navbar-vertical-padding;
+    padding-right: 2rem;
+    padding-left: 2rem;
+    line-height: 1;
+
+    .logo {
+      height: 2.25rem;
+    }
+
+    .logoDark {
+      height: 2.25rem;
+    }  
+
+            background: rgba($borderColor) url('/img/search.svg') 0.625rem center no-repeat;
             left: 0;
 
             &:active, &:focus {

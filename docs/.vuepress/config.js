@@ -1,6 +1,7 @@
 module.exports = {
   title: "Osmosis Docs",
   markdown: {
+    lineNumbers: true,
     extendMarkdown: (md) => {
       md.use(require("markdown-it-footnote"));
     },
@@ -24,6 +25,12 @@ module.exports = {
         },
       },
     ],
+    // https://github.com/znicholasbrown/vuepress-plugin-code-copy
+    ["vuepress-plugin-code-copy", {
+      color: "#ffffff",
+      backgroundColor: "#3e3383",
+      }
+    ]
   ],
   head: [
     [
@@ -79,6 +86,7 @@ module.exports = {
   ],
   themeConfig: {
     sidebarDepth: 3,
+    smoothScroll: true,
     // overrideTheme: 'dark',
     // prefersTheme: 'dark',
     // overrideTheme: { light: [6, 18], dark: [18, 6] },
@@ -110,7 +118,6 @@ module.exports = {
       },
     ],
     sidebar: {
-
       "/overview/": [
         {
           title: "About",
@@ -154,16 +161,15 @@ module.exports = {
           ],
           collapsable: true,
         },
-
-            {
-              title: "osmosisd",
-              collapsable: true,
-              children: [
-                "/developing/osmosisd/",
-                "/developing/osmosisd/commands",
-                "/developing/osmosisd/subcommands",
-            ],
-            },
+        {
+          title: "osmosisd",
+          children: [
+            "/developing/osmosisd/",
+            "/developing/osmosisd/commands",
+            "/developing/osmosisd/subcommands",
+          ],
+          collapsable: true,
+        },
         {
           title: 'Networks',
           children: [
@@ -193,13 +199,12 @@ module.exports = {
           collapsable: true,
         },
       ],
-
       '/validators': [
         {
           title: 'Validate',
-          link: '',
           children: [
             '/validators/',
+            '/validators/validating-testnet',
           ],
           collapsible: true,
         },
@@ -209,7 +214,6 @@ module.exports = {
         {
           title: 'Integrate',
           children: [
-          //  '/integrate',
             '/integrate/token-listings',
           ],
           collapsible: true,
@@ -220,7 +224,6 @@ module.exports = {
           title: "Overview",
           children: [
             "/history-and-changes",
-         //   "/migration-guide",
           ],
           collapsable: false,
         },

@@ -292,7 +292,7 @@ export default {
     margin: 1rem 0;
     font-size: 0.938rem;
     font-weight: 500;
-    color: $primaryColor;
+    color: $accentColor;
 
     &:hover {
       color: $textColor;

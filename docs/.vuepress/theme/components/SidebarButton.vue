@@ -17,7 +17,7 @@
   width: 2.25rem
   height: 2.25rem;
   border-radius: 1.125rem;
-  background: rgba(32,67,181,0.08)
+  background: $borderColor;
   position: absolute;
   padding: 0;
   text-align: center;
@@ -29,7 +29,7 @@
   &:before {
     content 'menu'
     display block
-    color $primaryColor
+    color $accentColor;
     font-family 'Material Icons'
     font-weight normal
     font-style normal
