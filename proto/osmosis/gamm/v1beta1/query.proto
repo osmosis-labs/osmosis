@@ -2,7 +2,7 @@ syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/gamm/v1beta1/pool.proto";
+import "osmosis/gamm/v1beta1/balancerPool.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -32,6 +32,7 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/params";
   }
+
   rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/total_shares";
@@ -90,7 +91,7 @@ message QueryPoolParamsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message QueryPoolParamsResponse {
-  PoolParams params = 1 [ (gogoproto.nullable) = false ];
+  oneof params { BalancerPoolParams balancerPoolParams = 1; }
 }
 
 //=============================== TotalShares

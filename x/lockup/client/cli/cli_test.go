@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/osmotestutils"
 	"github.com/osmosis-labs/osmosis/x/lockup/client/cli"
 	lockuptestutil "github.com/osmosis-labs/osmosis/x/lockup/client/testutil"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -25,26 +26,28 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	cfg      network.Config
+	network  *network.Network
+	feeCoins sdk.Coins
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	s.cfg = app.DefaultConfig()
-
 	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	dayLockAmt, err := sdk.ParseCoinNormalized("200stake")
+	dayLockAmt, err := sdk.ParseCoinNormalized(fmt.Sprintf("200%s", s.network.Config.BondDenom))
 	s.Require().NoError(err)
-	secLockAmt, err := sdk.ParseCoinNormalized("11stake")
+	secLockAmt, err := sdk.ParseCoinNormalized(fmt.Sprintf("11%s", s.network.Config.BondDenom))
 	s.Require().NoError(err)
-	thirdLockAmt, err := sdk.ParseCoinNormalized("12stake")
+	thirdLockAmt, err := sdk.ParseCoinNormalized(fmt.Sprintf("12%s", s.network.Config.BondDenom))
 	s.Require().NoError(err)
+
+	s.feeCoins = sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)))
 
 	val := s.network.Validators[0]
 
@@ -76,7 +79,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator",
+		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -87,7 +91,7 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
 	)
 	s.Require().NoError(err)
 
@@ -107,7 +111,7 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -125,7 +129,7 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -137,7 +141,8 @@ func (s *IntegrationTestSuite) TestNewLockTokensCmd() {
 func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockingAcc", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockingAcc",
+		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -148,7 +153,7 @@ func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		osmotestutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -173,7 +178,7 @@ func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -191,7 +196,7 @@ func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -204,27 +209,34 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockPeriodLockAcc", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("BeginUnlockPeriodLockAcc",
+		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
 	_, err = banktestutil.MsgSendExec(
-		val.ClientCtx,
+		clientCtx,
 		val.Address,
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		osmotestutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
 	// lock tokens for a second
 	txResp := sdk.TxResponse{}
-	out, err := lockuptestutil.MsgLockTokens(val.ClientCtx, newAddr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), "1s")
+	out, err := lockuptestutil.MsgLockTokens(clientCtx,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))),
+		"1s")
 	s.Require().NoError(err)
-	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	lockID := txResp.Logs[0].Events[0].Attributes[0].Value
+	s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	// This is a hardcoded path in the events to get the lockID
+	// this is incredibly brittle...
+	// fmt.Println(txResp.Logs[0])
+	lockID := txResp.Logs[0].Events[2].Attributes[0].Value
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -244,11 +256,12 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, s.feeCoins.String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
 	}
+	fmt.Println(testCases[0].args)
 
 	for _, tc := range testCases {
 		tc := tc
@@ -261,7 +274,7 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -299,7 +312,7 @@ func (s *IntegrationTestSuite) TestCmdAccountUnlockableCoins() {
 			s.Require().NoError(err)
 
 			var result types.AccountUnlockableCoinsResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(tc.coins.String(), result.Coins.String())
 		})
 	}
@@ -334,7 +347,7 @@ func (s *IntegrationTestSuite) TestCmdAccountUnlockingCoins() {
 			s.Require().NoError(err)
 
 			var result types.AccountUnlockingCoinsResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(tc.coins.String(), result.Coins.String())
 		})
 	}
@@ -368,7 +381,7 @@ func (s IntegrationTestSuite) TestCmdModuleBalance() {
 			s.Require().NoError(err)
 
 			var result types.ModuleBalanceResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(tc.coins.String(), result.Coins.String())
 		})
 	}
@@ -402,7 +415,7 @@ func (s IntegrationTestSuite) TestCmdModuleLockedAmount() {
 			s.Require().NoError(err)
 
 			var result types.ModuleLockedAmountResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(tc.coins.String(), result.Coins.String())
 		})
 	}
@@ -437,7 +450,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedCoins() {
 			s.Require().NoError(err)
 
 			var result types.ModuleLockedAmountResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(tc.coins.String(), result.Coins.String())
 		})
 	}
@@ -472,7 +485,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() {
 			s.Require().NoError(err)
 
 			var result types.AccountLockedPastTimeResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Len(result.Locks, 1)
 		})
 	}
@@ -507,7 +520,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeNotUnlockingOnly() {
 			s.Require().NoError(err)
 
 			var result types.AccountLockedPastTimeNotUnlockingOnlyResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Len(result.Locks, 0)
 		})
 	}
@@ -542,7 +555,7 @@ func (s IntegrationTestSuite) TestCmdAccountUnlockedBeforeTime() {
 			s.Require().NoError(err)
 
 			var result types.AccountUnlockedBeforeTimeResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Len(result.Locks, 0)
 		})
 	}
@@ -578,7 +591,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeDenom() {
 			s.Require().NoError(err)
 
 			var result types.AccountLockedPastTimeDenomResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Len(result.Locks, 1)
 		})
 	}
@@ -611,7 +624,7 @@ func (s IntegrationTestSuite) TestCmdLockedByID() {
 			s.Require().NoError(err)
 
 			var result types.LockedResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(result.Lock.ID, uint64(1))
 		})
 	}
@@ -645,7 +658,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerDuration() {
 			s.Require().NoError(err)
 
 			var result types.AccountLockedLongerDurationResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Len(result.Locks, 1)
 		})
 	}
@@ -679,7 +692,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationNotUnlockingOnly
 			s.Require().NoError(err)
 
 			var result types.AccountLockedLongerDurationNotUnlockingOnlyResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Len(result.Locks, 0)
 		})
 	}
@@ -714,7 +727,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationDenom() {
 			s.Require().NoError(err)
 
 			var result types.AccountLockedLongerDurationDenomResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Len(result.Locks, 1)
 		})
 	}

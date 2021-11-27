@@ -13,7 +13,7 @@ import (
 
 // Keeper provides a way to manage module storage
 type Keeper struct {
-	cdc      codec.Marshaler
+	cdc      codec.Codec
 	storeKey sdk.StoreKey
 
 	hooks types.LockupHooks
@@ -23,7 +23,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns an instance of Keeper
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, ak authkeeper.AccountKeeper, bk types.BankKeeper) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak authkeeper.AccountKeeper, bk types.BankKeeper) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,

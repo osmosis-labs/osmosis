@@ -24,7 +24,7 @@ var (
 
 func init() {
 	maxInt := big.NewInt(2)
-	maxInt = maxInt.Exp(maxInt, big.NewInt(255), nil)
+	maxInt = maxInt.Exp(maxInt, big.NewInt(256), nil)
 	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
 	if !ok {
 		panic("Failed to calculate the max value of sdk.Int")
@@ -49,7 +49,7 @@ func (k Keeper) Pool(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	switch pool := pool.(type) {
-	case *types.Pool:
+	case *types.BalancerPool:
 		any, err := codectypes.NewAnyWithValue(pool)
 		if err != nil {
 			return nil, err
@@ -85,7 +85,8 @@ func (k Keeper) Pools(
 			return err
 		}
 
-		pool, ok := poolI.(*types.Pool)
+		// TODO: pools query should not be balancer specific
+		pool, ok := poolI.(*types.BalancerPool)
 		if !ok {
 			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
 		}
@@ -134,8 +135,20 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	// TODO: add
+	balancerPool, ok := pool.(*types.BalancerPool)
+	if !ok {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &types.QueryPoolParamsResponse{
-		Params: pool.GetPoolParams(),
+		Params: &types.QueryPoolParamsResponse_BalancerPoolParams{
+			BalancerPoolParams: &types.BalancerPoolParams{
+				SwapFee:                  balancerPool.GetPoolExitFee(),
+				ExitFee:                  balancerPool.GetPoolExitFee(),
+				SmoothWeightChangeParams: balancerPool.PoolParams.SmoothWeightChangeParams,
+			},
+		},
 	}, nil
 }
 

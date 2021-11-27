@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/osmosis-labs/osmosis/app/params"
 	dbm "github.com/tendermint/tm-db"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -28,26 +29,30 @@ func DefaultConfig() network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor: func(val network.Validator) servertypes.Application {
-			return NewOsmosisApp(
-				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-				encCfg,
-				simapp.EmptyAppOptions{},
-				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-			)
-		},
-		GenesisState:    ModuleBasics.DefaultGenesis(encCfg.Marshaler),
-		TimeoutCommit:   2 * time.Second,
-		ChainID:         "osmosis-1",
-		NumValidators:   1,
-		BondDenom:       sdk.DefaultBondDenom,
-		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:   sdk.TokensFromConsensusPower(1000),
-		StakingTokens:   sdk.TokensFromConsensusPower(500),
-		BondedTokens:    sdk.TokensFromConsensusPower(100),
-		PruningStrategy: storetypes.PruningOptionNothing,
-		CleanupDir:      true,
-		SigningAlgo:     string(hd.Secp256k1Type),
-		KeyringOptions:  []keyring.Option{},
+		AppConstructor:    NewAppConstructor(encCfg),
+		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		TimeoutCommit:     1 * time.Second,
+		ChainID:           "osmosis-code-test",
+		NumValidators:     1,
+		BondDenom:         sdk.DefaultBondDenom,
+		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
+		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
+		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
+		PruningStrategy:   storetypes.PruningOptionNothing,
+		CleanupDir:        true,
+		SigningAlgo:       string(hd.Secp256k1Type),
+		KeyringOptions:    []keyring.Option{},
+	}
+}
+
+func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
+	return func(val network.Validator) servertypes.Application {
+		return NewOsmosisApp(
+			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			encodingCfg,
+			simapp.EmptyAppOptions{},
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
 	}
 }

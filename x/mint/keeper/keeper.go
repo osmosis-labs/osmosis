@@ -12,7 +12,7 @@ import (
 
 // Keeper of the mint store
 type Keeper struct {
-	cdc              codec.BinaryMarshaler
+	cdc              codec.BinaryCodec
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
 	accountKeeper    types.AccountKeeper
@@ -25,7 +25,7 @@ type Keeper struct {
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
@@ -55,6 +55,7 @@ func NewKeeper(
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
+
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
 	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
@@ -106,14 +107,14 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 		panic("stored minter should not have been nil")
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &minter)
+	k.cdc.MustUnmarshal(b, &minter)
 	return
 }
 
 // set the minter
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryBare(&minter)
+	b := k.cdc.MustMarshal(&minter)
 	store.Set(types.MinterKey, b)
 }
 
@@ -197,7 +198,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 					return err
 				}
 				// If recipient is vesting account, pay to account according to its vesting condition
-				err = k.bankKeeper.SendCoinsFromModuleToAccountOriginalVesting(
+				err = k.bankKeeper.SendCoinsFromModuleToAccount(
 					ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
 				if err != nil {
 					return err

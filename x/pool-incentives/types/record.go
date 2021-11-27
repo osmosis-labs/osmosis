@@ -1,7 +1,7 @@
 package types
 
 func (r DistrRecord) ValidateBasic() error {
-	if !r.Weight.IsPositive() {
+	if r.Weight.IsNegative() {
 		return ErrDistrRecordNotPositiveWeight
 	}
 	return nil

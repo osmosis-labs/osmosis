@@ -9,6 +9,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/app"
@@ -43,25 +44,21 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
-func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolParams) uint64 {
+func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolParams types.BalancerPoolParams) uint64 {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-		err := suite.app.BankKeeper.AddCoins(
-			suite.ctx,
-			acc,
-			sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-				sdk.NewCoin("foo", sdk.NewInt(10000000)),
-				sdk.NewCoin("bar", sdk.NewInt(10000000)),
-				sdk.NewCoin("baz", sdk.NewInt(10000000)),
-			),
-		)
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, sdk.NewCoins(
+			sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+			sdk.NewCoin("foo", sdk.NewInt(10000000)),
+			sdk.NewCoin("bar", sdk.NewInt(10000000)),
+			sdk.NewCoin("baz", sdk.NewInt(10000000)),
+		))
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, acc1, poolParams, []types.PoolAsset{
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, BalancerPoolParams, []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -80,7 +77,7 @@ func (suite *KeeperTestSuite) preparePoolWithPoolParams(poolParams types.PoolPar
 }
 
 func (suite *KeeperTestSuite) preparePool() uint64 {
-	poolId := suite.preparePoolWithPoolParams(types.PoolParams{
+	poolId := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})
