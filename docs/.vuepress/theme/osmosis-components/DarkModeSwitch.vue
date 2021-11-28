@@ -177,7 +177,6 @@ export default {
     .icon {
       width: 16px;
       height: 16px;
-      fill: $accentColor;
     }
 
     &.active {
