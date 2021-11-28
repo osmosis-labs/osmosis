@@ -119,12 +119,12 @@ export default {
     &.night {
       border-top-right-radius: 4px;
       border-bottom-right-radius: 4px;
+      fill: $accentColor;
     }
 
     .icon {
       width: 16px;
       height: 16px;
-      fill: $accentColor;
     }
 
     &.active {
@@ -167,6 +167,7 @@ export default {
       border-top-left-radius: 4px;
       border-bottom-left-radius: 4px;
       background-color: $borderColor;
+      fill: $accentColor;
     }
 
     &.night {
