@@ -161,7 +161,7 @@ export default {
     border-left: none;
 
     &:first-child {
-      border-left: 1px solid $borderColor;
+      border-left: 1px solid $accentColor;
     }
 
     &.day {

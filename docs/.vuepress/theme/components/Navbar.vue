@@ -402,7 +402,13 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
     padding-top: $mobile-navbar-vertical-padding;
     padding-right: 1.5rem;
     padding-left: 1.5rem;
+
+    a, span, img {
+      display: inline;
+    }
+
     .links {
+      position: absolute;
       right: 4.375rem;
       .search-box {
         input {
@@ -412,6 +418,28 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         }
       }
     }
+  }
+
+  .theme-dark .navbar {
+    padding-top: $mobile-navbar-vertical-padding;
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
+
+    a, span, img {
+      display: inline;
+    }
+
+    .links {
+      position: absolute;
+      right: 4.375rem;
+      .search-box {
+        input {
+          &:active, &:focus {
+            width: calc(100vw - 5.625rem);
+          }
+        }
+      }
+    }    
   }
 }
 </style>
