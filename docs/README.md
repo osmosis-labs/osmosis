@@ -77,19 +77,19 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 <div class="cards twoColumn pa2">
   <a href="https://discord.gg/x3eRgAWbhw" class="card lg">
     <img src="img/discord.svg">
-    <div class="title" style="color:black;">
+    <div class="title">
      Discord
     </div>
-    <div class="text" style="color:black;">
+    <div class="text">
       Chat with the Osmosis community on Discord
     </div>
   </a>
   <a href="https://github.com/osmosis-labs/osmosis" class="card lg">
     <img src="./.vuepress/public/img/github.svg">
-    <div class="title" style="color:black;">
+    <div class="title">
     Found an Issue? 
     </div>
-    <div class="text" style="color:black;">
+    <div class="text">
     Improve this page by suggesting on Github.
     </div>
   </a>
