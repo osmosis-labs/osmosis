@@ -85,7 +85,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
   <a href="https://github.com/osmosis-labs/osmosis" class="card lg">
-    <img src="img/github.svg">
+    <img src="./.vuepress/public/img/github.svg">
     <div class="title" style="color:black;">
     Found an Issue? 
     </div>

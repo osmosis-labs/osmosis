@@ -14,7 +14,7 @@ The guides on this page will explain the process of integrating with Osmosis.
     </div>
   </a>
   <a href="/overview/osmo.html#osmo" class="card">
-    <img src="img/github.svg"/>
+    <img src="../.vuepress/public/img/github.svg"/>
     <div class="title">
       Need Support? 
     </div>
