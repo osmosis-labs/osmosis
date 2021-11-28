@@ -9,11 +9,11 @@ Whereas most Cosmos zones have focused their incentive scheme on the delegators,
 
 ## Quickstart
 
-This is what you'd use to get a node up and running, fast. It assumes that it is starting on a blank ubuntu machine.  It eschews a systemd unit, allowing automation to be up to the user.  It assumes that installing Go is in-scope since Ubuntu's repositories aren't up to date and you'll be needing go to use osmosis.  It handles the Go environment variables because those are a common pain point.
+This is what you'd use to get a node up and running, fast. It assumes that it is starting on a blank ubuntu machine.  It eschews a systemd unit, allowing automation to be up to the user.  It assumes that installing Go is in-scope since Ubuntu's repositories aren't up to date and you'll be needing go to use osmosis.  It handles the Go environment variables because those are a common pain point.  
 
 **Install go**
 ```bash
-wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.2
+wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.17.3
 ```
 
 Then exit and re-enter your shell.
@@ -22,7 +22,7 @@ Then exit and re-enter your shell.
 ```bash
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
-git checkout v3.1.0
+git checkout v3.0.0
 make install
 which osmosisd
 ```
@@ -31,7 +31,7 @@ which osmosisd
 ```bash
 osmosisd init yourmonikerhere
 wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
-osmosisd start
+osmosisd start  --p2p.seeds 1b077d96ceeba7ef503fb048f343a538b2dcdf1b@136.243.218.244:26656,2308bed9e096a8b96d2aa343acc1147813c59ed2@3.225.38.25:26656,902bdfe51b6a97cc9369664a21c87ed61d471d2a@136.243.218.243:26656,085f62d67bbf9c501e8ac84d4533440a1eef6c45@95.217.196.54:26656,f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656,63aba59a7da5197c0fbcdc13e760d7561791dca8@162.55.132.230:2000
 ```
 
 More Nodes ==> More Network
