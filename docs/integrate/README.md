@@ -13,7 +13,7 @@ The guides on this page will explain the process of integrating with Osmosis.
       Learn about adding your token to Osmosis
     </div>
   </a>
-  <a href="/overview/osmo.html#osmo" class="card">
+  <a href="overview/osmo.html#osmo" class="card">
     <img src="../.vuepress/public/img/github.svg"/>
     <div class="title">
       Need Support? 

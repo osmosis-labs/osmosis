@@ -16,7 +16,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
       If this is your first time learning about Osmosis, start here.
     </div>
   </a>
-  <a href="/overview/osmo.html#osmo" class="card">
+  <a href="overview/osmo.html#osmo" class="card">
     <img src="img/osmosis.svg"/>
     <div class="title">
       What is Osmo?
@@ -26,7 +26,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
 
-  <a href="/developing/network/join-mainnet.html#joining-mainnet" class="card">
+  <a href="developing/network/join-mainnet.html#joining-mainnet" class="card">
     <img src="img/osmosis.svg"/>
     <div class="title">
       Run a Full Node
@@ -36,7 +36,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
 
-  <a href="/validators" class="card">
+  <a href="validators" class="card">
     <img src="img/osmosis.svg"/>
     <div class="title">
       Run a validator
