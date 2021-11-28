@@ -51,6 +51,7 @@
 @media (max-width: $MQMobile) {
   .sidebar-button {
     display: block;
+    color: $primaryColor;
   }
 }
 
@@ -58,6 +59,7 @@
   .sidebar-button {
     display: block;
     right: 1.5rem;
+    color: $primaryColor;
   }
 }
 </style>
