@@ -114,7 +114,7 @@ module.exports = {
       {
         text: "GitHub",
         link: "https://github.com/osmosis-labs/osmosis",
-        icon: "../.vuepress/public/img/github.svg",
+        icon: "/osmosis/img/github.svg",
       },
     ],
     sidebar: {
