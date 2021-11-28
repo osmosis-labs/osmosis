@@ -85,8 +85,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
 
 			seeds := []string{
-				"63aba59a7da5197c0fbcdc13e760d7561791dca8@162.55.132.230:2000",         // Notional
-				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656", // [ block pane ]
+				"63aba59a7da5197c0fbcdc13e760d7561791dca8@162.55.132.230:2000",               // Notional
+				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656",       // [ block pane ]
 				"6bcdbcfd5d2c6ba58460f10dbcfde58278212833@osmosis.artifact-staking.io:26656", // Artifact Staking
 			}
 
