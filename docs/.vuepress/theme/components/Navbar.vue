@@ -132,7 +132,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
   margin: 0 auto;
 
   a, span, img {
-    display: inline-block;
+    display: inline;
   }
 
   .logo {
@@ -293,6 +293,10 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
     padding-left: 2rem;
     line-height: 1;
 
+    a, span, img {
+      display: inline;
+    }
+
     .logo {
       height: 2.25rem;
     }
@@ -343,6 +347,10 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
     padding-right: 2rem;
     padding-left: 2rem;
     line-height: 1;
+
+    a, span, img {
+      display: inline;
+    }
 
     .logo {
       height: 2.25rem;

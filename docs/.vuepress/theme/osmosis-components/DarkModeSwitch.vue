@@ -136,7 +136,7 @@ export default {
       }
 
       .icon {
-        fill: $borderColor;
+        fill: var(--white);
       }
     }
   }
