@@ -187,7 +187,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         border-radius: 1.3125rem;
         font-size: 1rem;
         padding: 0;
-        background: rgba($borderColor) url('/img/search.svg') 0.75rem center no-repeat;
+        background: rgba($borderColor) url('img/search.svg') 0.75rem center no-repeat;
         background-size: 1.125rem;
         color: transparent;
 
@@ -266,7 +266,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
         border-radius: 1.3125rem;
         font-size: 1rem;
         padding: 0;
-        background: rgba($borderColor) url('/img/search.svg') 0.75rem center no-repeat;
+        background: rgba($borderColor) url('img/search.svg') 0.75rem center no-repeat;
         background-size: 1.125rem;
         color: transparent;
 
@@ -323,7 +323,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
             height: 2.25rem;
             width: 2.25rem;
             border-radius: 1.125rem;
-            background: rgba($borderColor) url('/img/search.svg') 0.625rem center no-repeat;
+            background: rgba($borderColor) url('img/search.svg') 0.625rem center no-repeat;
             left: 0;
 
             &:active, &:focus {
@@ -374,7 +374,7 @@ $sm-mobile-navbar-horizontal-padding = 1.5rem;
             height: 2.25rem;
             width: 2.25rem;
             border-radius: 1.125rem;
-            background: rgba($borderColor) url('/img/search.svg') 0.625rem center no-repeat;
+            background: rgba($borderColor) url('img/search.svg') 0.625rem center no-repeat;
             left: 0;
 
             &:active, &:focus {

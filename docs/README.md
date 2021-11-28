@@ -52,7 +52,6 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 <p> </p>
 <div class="cards twoColumn">
   <a href="https://app.osmosis.zone/" class="card lg">
-
     <img src="img/osmo_app.png">
     <div class="title">
      Osmosis DEX 
