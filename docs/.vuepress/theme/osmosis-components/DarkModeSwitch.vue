@@ -114,6 +114,7 @@ export default {
     &.day {
       border-top-left-radius: 4px;
       border-bottom-left-radius: 4px;
+      fill: $borderColor;
     }
 
     &.night {
@@ -135,7 +136,7 @@ export default {
       }
 
       .icon {
-        fill: var(--white);
+        fill: $borderColor;
       }
     }
   }

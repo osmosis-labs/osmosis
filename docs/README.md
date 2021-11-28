@@ -62,10 +62,10 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   </a>
   <a href="https://info.osmosis.zone/" class="card lg">
     <img src="img/stats_app.png">
-    <div class="title" style="color:black;">
+    <div class="title">
       Osmosis Stats
     </div>
-    <div class="text" style="color:black;">
+    <div class="text">
      Pool & Token Statistics
     </div>
   </a>
