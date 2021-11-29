@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/osmosis-labs/osmosis/app/params"
-	"github.com/osmosis-labs/osmosis/cmd/osmosisd/cmd"
+	"github.com/osmosis-labs/osmosis/v4/app/params"
+	"github.com/osmosis-labs/osmosis/v4/cmd/osmosisd/cmd"
 )
 
 func main() {
