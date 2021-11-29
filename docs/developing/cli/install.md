@@ -27,7 +27,7 @@ After installed, open new terminal to properly load go
 
 ## Install Osmosis Binary
 
-Clone the osmosis repo, checkout and install v4.2.0 (note, if you are making a testnet node, skip this step):
+Clone the osmosis repo, checkout and install v4.2.0:
 
 ```bash
 cd $HOME
@@ -36,4 +36,3 @@ cd osmosis
 git checkout v4.2.0
 make install
 ```
- 

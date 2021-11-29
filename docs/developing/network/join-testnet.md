@@ -87,24 +87,39 @@ cosmovisor version
 osmosisd version
 ```
 
-These two command should both output 3.1.0-23-g517562d
-
-Before we start cosmovisor, lets prep the upgrade to v4.0.0-rc1:
-
-```bash
-mkdir -p ~/.osmosisd/cosmovisor/upgrades/v4/bin
-cd $HOME/osmosis
-git checkout v4.0.0-rc1
-make build
-cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v4/bin
-cd $HOME
-```
-
+These two command should both output 4.2.0
 
 Reset private validator file to genesis state:
 
 ```bash
 osmosisd unsafe-reset-all
+```
+
+## Download Chain Data
+
+We must now download the latest chain data from a snapshot provider. In this example, I will use <a>https://mp20.net/srv/</a> and I will use the pruned chain data.
+
+Download liblz4-tool to handle the compressed file:
+
+```bash
+sudo apt-get install wget liblz4-tool aria2 -y
+```
+
+Before we download the chain data, we must first initialize the file name from MP20. Utilize MP20's snapshot linked above and you will see the file name (specifically the date and time). Replace the below with the timestamp listed for you:
+
+EXAMPLE: If the file link is <a>https://mp20.net/srv/osmosis-testnet-mp20-2021-11-28.tar.xz</a>, then
+
+FILENAME=osmosis-testnet-mp20-2021-11-28.tar.xz
+
+```bash
+FILENAME=osmosis-1-TYPE.DATE.TIME.tar.lz4
+```
+
+Download the chain data:
+
+```bash
+cd $HOME/.osmosisd/
+wget -O - https://mp20.net/srv/$FILENAME | xz -d -v | tar xf - |
 ```
 
 ## Set Up Osmosis Service
@@ -156,11 +171,6 @@ To see live logs of your service:
 
 ```bash
 journalctl -u cosmovisor -f
-```
+``` 
 
-The process should initialize and get to block 1122200, where it will automatically upgrade to v4.0.0-rc1
-
-
-At around block height 1128853, when reading the logs you will see many notifications of "slashing and jailing validator". This is due to fact that many validators did not participate in the testnet and therefore get jailed at the same time (approx 30,000 blocks after the upgrade). In my experience, this may cause your node to reset due to a memory error. As long as you set up the service above, it will automatically reset and eventually get passed this difficult block. 
-
-Guide as of 17 November 2021.
+Guide as of 28 November 2021.
