@@ -5,9 +5,9 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/x/gamm"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	simapp "github.com/osmosis-labs/osmosis/v3/app"
+	"github.com/osmosis-labs/osmosis/v3/x/gamm"
+	"github.com/osmosis-labs/osmosis/v3/x/gamm/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"

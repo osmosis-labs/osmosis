@@ -5,9 +5,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/x/mint/types"
+	simapp "github.com/osmosis-labs/osmosis/v3/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v3/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v3/x/mint/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
