@@ -1,4 +1,4 @@
-# Simulation
+# Txfees
 
 Osmosis's module description
 

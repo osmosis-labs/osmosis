@@ -1,4 +1,4 @@
-# gamm
+# Gamm
 This document introduces the [Queries](#queries) and [Transactions](#transactions) of the **G**eneralized **A**utomated **M**arket **M**aker (GAMM) module. The GAMM module provides the logic to create and interact with liquidity pools on the Osmosis DEX.
 
 
