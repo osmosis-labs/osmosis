@@ -19,7 +19,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/v3/app"
 	"github.com/osmosis-labs/osmosis/v3/app/params"
-	"github.com/osmosis-labs/osmosis/v3/v3/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v3/x/claim/types"
 	claimtypes "github.com/osmosis-labs/osmosis/v3/v3/x/claim/types"
 	"github.com/osmosis-labs/osmosis/v3/x/claim/client/cli"
 	"github.com/stretchr/testify/suite"
