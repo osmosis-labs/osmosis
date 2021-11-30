@@ -1,4 +1,4 @@
-# Pool Incentives Module
+# pool-incentives
 
 The incentives module provides users the functionality to create gauges, which
 distributes reward tokens to the qualified lockups. Each lockup has designated
