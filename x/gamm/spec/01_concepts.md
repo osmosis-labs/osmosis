@@ -28,7 +28,7 @@ During the process of swapping a specific asset, the token user is putting into 
 
 Given a tokenIn, the following calculations are done to calculate how much tokens are to be swapped and ommitted from the pool.
 
-- `tokenBalanceOut * [ 1 - { tokenBalanceIn / (tokenBalanceIn+(1-swapFee) * tokenAmountIn)}^(tokenWeightIn/tokenWeightOut)`
+- `tokenBalanceOut * [ 1 - { tokenBalanceIn / (tokenBalanceIn+(1-swapFee) * tokenAmountIn)}^(tokenWeightIn/tokenWeightOut)]`
 
 The whole process is also able vice versa, the case where user provides tokenOut. The calculation  for the amount of token that the user should be putting in is done through the following formula.
 
