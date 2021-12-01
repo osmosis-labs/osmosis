@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -128,6 +129,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 
 	coins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, amt)}
 	k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
 	k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
 
 	// make delegation from module account to the validator
@@ -145,7 +147,12 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	}
 
 	// create a perpetual gauge to send staking distribution rewards to
-	acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{}, ctx.BlockTime(), 1)
+	// TODO: should not create gauge if already exists
+	acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         acc.Denom + suffix,
+		Duration:      time.Hour * 24 * 14,
+	}, ctx.BlockTime(), 1)
 	if err != nil {
 		return err
 	}

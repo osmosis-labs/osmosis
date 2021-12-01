@@ -1,9 +1,13 @@
 package keeper_test
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
@@ -91,7 +95,19 @@ import (
 // assert.Equal(t, blockHeight2, ubd.Entries[0].CreationHeight)
 // assert.True(t, blockTime2.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 
+func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) lockuptypes.PeriodLock {
+	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	suite.Require().NoError(err)
+	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
+	suite.Require().NoError(err)
+	return lock
+}
+
 func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
+	suite.SetupTest()
+	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
+		time.Hour * 24 * 14,
+	})
 
 	// create a validator
 	valPub := secp256k1.GenPrivKey().PubKey()
@@ -99,7 +115,16 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 
 	validator, err := stakingtypes.NewValidator(valAddr, valPub, stakingtypes.NewDescription("moniker", "", "", "", ""))
 	suite.Require().NoError(err)
+
+	amount := sdk.NewInt(1000000)
+	issuedShares := amount.ToDec()
+	validator.Tokens = validator.Tokens.Add(amount)
+	validator.DelegatorShares = validator.DelegatorShares.Add(issuedShares)
+
+	suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
 	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
+	suite.app.StakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
 
 	// register a LP token as a superfluid asset
 	suite.app.SuperfluidKeeper.SetSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
@@ -107,10 +132,23 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
-	// TODO: set OSMO TWAP price for LP token
-	// TODO: create lockup of LP token
-	// TODO: call SuperfluidDelegate
-	// TODO: Check superfluid delegate result
+	// set OSMO TWAP price for LP token
+	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, "lptoken", sdk.NewDec(2))
+	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
+		Identifier:   params.RefreshEpochIdentifier,
+		CurrentEpoch: 2,
+	})
+
+	// create lockup of LP token
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
+	lock := suite.LockTokens(addr1, coins, time.Hour*24*14)
+
+	// call SuperfluidDelegate and check response
+	err = suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.ID, valAddr.String())
+	suite.Require().NoError(err)
+
 	// TODO: Check synthetic lockup creation
 	// TODO: Check intermediary account creation
 	// TODO: Check gauge creation
