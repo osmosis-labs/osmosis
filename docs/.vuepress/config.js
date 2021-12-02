@@ -133,9 +133,7 @@ module.exports = {
           title: "Osmosis AMM App",
           children: [
             '/overview/osmosis-app/',
-            '/overview/osmosis-app/add-liquidity',
-            '/overview/osmosis-app/create-pool',
-            '/overview/osmosis-app/liquidity-bootstraping',
+            '/overview/osmosis-app/learn-more',
           ],
           collapsable: true,
         },
