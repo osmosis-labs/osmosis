@@ -208,6 +208,7 @@ module.exports = {
         {
           title: 'Integrate',
           children: [
+            '/integrate/',
             '/integrate/token-listings',
           ],
           collapsible: true,
