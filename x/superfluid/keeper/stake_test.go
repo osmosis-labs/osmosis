@@ -8,6 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
@@ -149,9 +150,39 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 	err = suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.ID, valAddr.String())
 	suite.Require().NoError(err)
 
-	// TODO: Check synthetic lockup creation
-	// TODO: Check intermediary account creation
-	// TODO: Check gauge creation
+	// check synthetic lockup creation
+	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(valAddr.String()))
+	suite.Require().NoError(err)
+	suite.Require().Equal(synthLock.LockId, lock.ID)
+	suite.Require().Equal(synthLock.Suffix, keeper.StakingSuffix(valAddr.String()))
+	suite.Require().Equal(synthLock.EndTime, time.Time{})
+
+	// check intermediary account creation
+	expAcc := types.SuperfluidIntermediaryAccount{
+		Denom:   lock.Coins[0].Denom,
+		ValAddr: valAddr.String(),
+	}
+	gotAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, expAcc.GetAddress())
+	suite.Require().Equal(gotAcc.Denom, expAcc.Denom)
+	suite.Require().Equal(gotAcc.ValAddr, expAcc.ValAddr)
+	suite.Require().Equal(gotAcc.GaugeId, uint64(1))
+
+	// check gauge creation
+	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
+	suite.Require().NoError(err)
+	suite.Require().Equal(gauge.Id, gotAcc.GaugeId)
+	suite.Require().Equal(gauge.IsPerpetual, true)
+	suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         expAcc.Denom + keeper.StakingSuffix(valAddr.String()),
+		Duration:      time.Hour * 24 * 14,
+	})
+	suite.Require().Equal(gauge.Coins, sdk.Coins(nil))
+	suite.Require().Equal(gauge.StartTime, suite.ctx.BlockTime())
+	suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
+	suite.Require().Equal(gauge.FilledEpochs, uint64(0))
+	suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
+
 	// TODO: Check lockID connection with intermediary account
 	// TODO: Check delegation from intermediary account to validator
 	// TODO: add table driven test for all edge cases
