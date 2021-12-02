@@ -199,6 +199,7 @@ module.exports = {
           title: 'Validate',
           children: [
             '/validators/',
+            '/validators/validating-mainnet',
             '/validators/validating-testnet',
           ],
           collapsible: true,
