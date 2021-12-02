@@ -97,7 +97,7 @@ osmosisd unsafe-reset-all
 
 ## Download Chain Data
 
-We must now download the latest chain data from a snapshot provider. In this example, I will use <a>https://mp20.net/srv/</a> and I will use the pruned chain data.
+We must now download the latest chain data from a snapshot provider. In this example, I will use [the validator MP-20's latest testnet snapshot](https://mp20.net/snapshots/osmosis-testnet/) and I will use the pruned chain data.
 
 Download liblz4-tool to handle the compressed file:
 
@@ -105,21 +105,11 @@ Download liblz4-tool to handle the compressed file:
 sudo apt-get install wget liblz4-tool aria2 -y
 ```
 
-Before we download the chain data, we must first initialize the file name from MP20. Utilize MP20's snapshot linked above and you will see the file name (specifically the date and time). Replace the below with the timestamp listed for you:
-
-EXAMPLE: If the file link is <a>https://mp20.net/srv/osmosis-testnet-mp20-2021-11-28.tar.xz</a>, then
-
-FILENAME=osmosis-testnet-mp20-2021-11-28.tar.xz
-
-```bash
-FILENAME=osmosis-1-TYPE.DATE.TIME.tar.lz4
-```
-
-Download the chain data:
+Download, decompress, and replace the chain data:
 
 ```bash
 cd $HOME/.osmosisd/
-wget -O - https://mp20.net/srv/$FILENAME | xz -d -v | tar xf - |
+wget -O - https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest.tar.xz | xz -d -v | tar xf - |
 ```
 
 ## Set Up Osmosis Service
