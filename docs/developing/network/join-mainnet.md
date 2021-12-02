@@ -155,5 +155,3 @@ To see live logs of your service:
 ```bash
 journalctl -u cosmovisor -f
 ```
-
-Guide as of 17 November 2021.
