@@ -7,42 +7,42 @@ title: Home
 Welcome to the official documentation for Osmosis, an advanced automated market maker (AMM) protocol that allows developers to build customized AMMs with sovereign liquidity pools. Built using the Cosmos SDK, Osmosis utilizes Inter-Blockchain Communication (IBC) to enable cross-chain transactions.
 
 <div class="cards twoColumn">
-  <a href="overview/#what-is-osmosis" class="card">
+  <a href="overview/" class="card">
     <img src="img/osmosis.svg"/>
     <div class="title">
-      What is Osmosis?
+      Overview
     </div>
     <div class="text">
-      If this is your first time learning about Osmosis, start here.
+      For a basic introduction or to learn how to get started using the Osmosis Lab
     </div>
   </a>
-  <a href="overview/osmo.html#osmo" class="card">
+  <a href="developing/" class="card">
     <img src="img/osmosis.svg"/>
     <div class="title">
-      What is Osmo?
+      Develop
     </div>
     <div class="text">
-      Osmo is the native token. Learn more.
-    </div>
-  </a>
-
-  <a href="developing/network/join-mainnet.html#joining-mainnet" class="card">
-    <img src="img/osmosis.svg"/>
-    <div class="title">
-      Run a Full Node
-    </div>
-    <div class="text">
-      Run your own full Osmosis node.
+      Learn about the Osmosis Daemon, CLI, Modules, and create a node to join the testnet or mainnet 
     </div>
   </a>
 
-  <a href="validators" class="card">
+  <a href="validators/" class="card">
     <img src="img/osmosis.svg"/>
     <div class="title">
-      Run a validator
+      Validate
     </div>
     <div class="text">
-      Secure the network and earn Osmo.
+      Turn your node into a validator to earn OSMO and help secure the network
+    </div>
+  </a>
+
+  <a href="integrate/" class="card">
+    <img src="img/osmosis.svg"/>
+    <div class="title">
+      Integrate
+    </div>
+    <div class="text">
+      List your own token on osmosis
     </div>
   </a>
 
