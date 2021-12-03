@@ -151,9 +151,16 @@ module.exports = {
 
       '/developing': [
         {
-          title: 'Developer Guide',
+          title: 'Home',
           children: [
             '/developing/',
+          ],
+          collapsable: false,
+        },
+        {
+          title: 'Developer Guide',
+          children: [
+            '/developing/dev-guide',
             '/developing/cli/',
             '/developing/cli/install',
           ],
@@ -171,7 +178,6 @@ module.exports = {
         {
           title: 'Networks',
           children: [
-            '/developing/network/',
             '/developing/network/join-mainnet',
             '/developing/network/join-testnet',
           ],
@@ -194,24 +200,36 @@ module.exports = {
       ],
       '/validators': [
         {
-          title: 'Validate',
+          title: 'Home',
           children: [
             '/validators/',
+          ],
+          collapsable: false,
+        },
+        {
+          title: 'Validate',
+          children: [
             '/validators/validating-mainnet',
             '/validators/validating-testnet',
           ],
-          collapsible: true,
+          collapsable: true,
         },
       ],
 
       '/integrate': [
         {
-          title: 'Integrate',
+          title: 'Home',
           children: [
             '/integrate/',
+          ],
+          collapsable: false,
+        },
+        {
+          title: 'Integrate',
+          children: [
             '/integrate/token-listings',
           ],
-          collapsible: true,
+          collapsable: true,
         },
       ],
       "/": [

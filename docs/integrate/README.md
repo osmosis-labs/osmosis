@@ -1,6 +1,7 @@
 ---
 title: Integrate Home
 ---
+
 # Integrate
 
 The guides on this page will explain the process of integrating with Osmosis. 
