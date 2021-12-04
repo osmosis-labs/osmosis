@@ -16,10 +16,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/osmosis-labs/osmosis/v4/app"
-	"github.com/osmosis-labs/osmosis/v4/v4/x/gamm/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v4/v4/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v4/x/gamm/client/cli"
 	gammtestutil "github.com/osmosis-labs/osmosis/v4/x/gamm/client/testutil"
+	"github.com/osmosis-labs/osmosis/v4/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v4/x/gamm/types"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
