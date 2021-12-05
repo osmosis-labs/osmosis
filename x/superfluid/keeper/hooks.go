@@ -48,7 +48,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		k.moveIntermediaryDelegationRewardToGauges(ctx)
 
 		// Refresh intermediary accounts' delegation amounts
-		k.refreshIntermediaryDelegationAmounts(ctx)
+		k.RefreshIntermediaryDelegationAmounts(ctx)
 
 		// TODO: Unbonding amount should be modified for TWAP change? @Dev @Sunny
 	}

@@ -32,6 +32,7 @@ type GammKeeper interface {
 }
 
 type BankKeeper interface {
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
@@ -39,6 +40,7 @@ type BankKeeper interface {
 
 // StakingKeeper expected staking keeper
 type StakingKeeper interface {
+	BondDenom(ctx sdk.Context) string
 	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
 	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (newShares sdk.Dec, err error)
 	Unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec) (amount sdk.Int, err error)

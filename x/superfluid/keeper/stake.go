@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
@@ -21,7 +20,7 @@ func unstakingSuffix(valAddr string) string {
 	return fmt.Sprintf("superunbonding%s", valAddr)
 }
 
-func (k Keeper) refreshIntermediaryDelegationAmounts(ctx sdk.Context) {
+func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		mAddr := acc.GetAddress()
@@ -46,17 +45,21 @@ func (k Keeper) refreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			panic(err)
 		}
 
-		// burn undelegated tokens
-		burnCoins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, returnAmount)}
-		if validator.IsBonded() {
-			err = k.bk.BurnCoins(ctx, stakingtypes.BondedPoolName, burnCoins)
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, burnCoins)
-			if err != nil {
-				panic(err)
+		bondDenom := k.sk.BondDenom(ctx)
+
+		if returnAmount.IsPositive() {
+			// burn undelegated tokens
+			burnCoins := sdk.Coins{sdk.NewCoin(bondDenom, returnAmount)}
+			if validator.IsBonded() {
+				err = k.bk.BurnCoins(ctx, stakingtypes.BondedPoolName, burnCoins)
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, burnCoins)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 
@@ -72,11 +75,11 @@ func (k Keeper) refreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
 			Duration:      time.Hour * 24 * 14,
 		})
-		decAmt := twap.EpochTwapPrice.Mul(sdk.Dec(totalSuperfluidDelegation))
+		decAmt := twap.EpochTwapPrice.Mul(totalSuperfluidDelegation.ToDec())
 		asset := k.GetSuperfluidAsset(ctx, acc.Denom)
 		amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 
-		coins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, amt)}
+		coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
 		k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
 		k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
 
@@ -123,14 +126,21 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		return fmt.Errorf("not able to do superfluid staking if asset TWAP is zero")
 	}
 	// mint OSMO token based on TWAP of locked denom to denom module account
-	decAmt := twap.EpochTwapPrice.Mul(sdk.Dec(lock.Coins.AmountOf(acc.Denom)))
+	decAmt := twap.EpochTwapPrice.Mul(lock.Coins.AmountOf(acc.Denom).ToDec())
 	asset := k.GetSuperfluidAsset(ctx, acc.Denom)
 	amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 
-	coins := sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, amt)}
-	k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	bondDenom := k.sk.BondDenom(ctx)
+	coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
+	err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	if err != nil {
+		return err
+	}
 	k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
-	k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+	if err != nil {
+		return err
+	}
 
 	// make delegation from module account to the validator
 	valAddress, err := sdk.ValAddressFromBech32(valAddr)
