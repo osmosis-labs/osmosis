@@ -45,7 +45,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		// Move delegation rewards to perpetual gauge
-		k.moveIntermediaryDelegationRewardToGauges(ctx)
+		k.MoveIntermediaryDelegationRewardToGauges(ctx)
 
 		// Refresh intermediary accounts' delegation amounts
 		k.RefreshIntermediaryDelegationAmounts(ctx)

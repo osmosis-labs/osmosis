@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) moveIntermediaryDelegationRewardToGauges(ctx sdk.Context) {
+func (k Keeper) MoveIntermediaryDelegationRewardToGauges(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		addr := acc.GetAddress()
