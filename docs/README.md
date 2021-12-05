@@ -48,34 +48,21 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 
 </div>
 
-### Discover
+<br />
+
+
 <p> </p>
-<div class="cards twoColumn">
+<div class="cards threeColumn">
   <a href="https://app.osmosis.zone/" class="card lg">
     <img src="img/osmo_app.png">
     <div class="title">
      Osmosis DEX 
     </div>
     <div class="text">
-      Automated Market Maker
+      Launch the Osmosis Automated Market Maker
     </div>
   </a>
-  <a href="https://info.osmosis.zone/" class="card lg">
-    <img src="img/stats_app.png">
-    <div class="title">
-      Osmosis Stats
-    </div>
-    <div class="text">
-     Pool & Token Statistics
-    </div>
-  </a>
-</div>
-
-
-### Help & Support
-<p> </p>
-<div class="cards twoColumn pa2">
-  <a href="https://discord.gg/x3eRgAWbhw" class="card lg">
+<a href="https://discord.gg/x3eRgAWbhw" class="card lg">
     <img src="img/discord.svg">
     <div class="title">
      Discord
@@ -90,7 +77,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     Found an Issue? 
     </div>
     <div class="text">
-    Improve this page by suggesting on Github.
+    Improve this page by adding suggestions on Github.
     </div>
   </a>
 </div>
