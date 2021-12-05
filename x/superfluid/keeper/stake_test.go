@@ -29,6 +29,7 @@ func (suite *KeeperTestSuite) SetupValidator() sdk.ValAddress {
 
 	amount := sdk.NewInt(1000000)
 	issuedShares := amount.ToDec()
+	validator.Status = stakingtypes.Bonded
 	validator.Tokens = validator.Tokens.Add(amount)
 	validator.DelegatorShares = validator.DelegatorShares.Add(issuedShares)
 

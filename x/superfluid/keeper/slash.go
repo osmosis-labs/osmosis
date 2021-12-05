@@ -14,7 +14,7 @@ import (
 // burnUnbondedTokens
 
 // Note: Based on sdk.staking.Slash function review, slashed tokens are burnt not sent to community pool
-func (k Keeper) slashLockupsForSlashedOnDelegation(ctx sdk.Context) {
+func (k Keeper) SlashLockupsForSlashedOnDelegation(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		mAddr := acc.GetAddress()
@@ -49,11 +49,11 @@ func (k Keeper) slashLockupsForSlashedOnDelegation(ctx sdk.Context) {
 			Duration:      time.Hour * 24 * 14,
 		}
 		totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, queryCondition)
-		decAmt := twap.EpochTwapPrice.Mul(sdk.Dec(totalSuperfluidDelegation))
+		decAmt := twap.EpochTwapPrice.Mul(totalSuperfluidDelegation.ToDec())
 		asset := k.GetSuperfluidAsset(ctx, acc.Denom)
 		amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 
-		if !amt.Equal(delegatedTokens) {
+		if !amt.Equal(delegatedTokens) && amt.IsPositive() {
 			// (1 - amt/delegatedTokens) describes slash factor
 			slashFactor := sdk.OneDec().Sub(delegatedTokens.ToDec().Quo(amt.ToDec()))
 			locks := k.lk.GetLocksLongerThanDurationDenom(ctx, queryCondition.Denom, queryCondition.Duration)

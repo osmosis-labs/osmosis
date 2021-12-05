@@ -17,7 +17,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
 		// Slash all module accounts' LP token based on slash amount before twap update
-		k.slashLockupsForSlashedOnDelegation(ctx)
+		k.SlashLockupsForSlashedOnDelegation(ctx)
 
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			priceMultiplier := gammtypes.InitPoolSharesSupply
