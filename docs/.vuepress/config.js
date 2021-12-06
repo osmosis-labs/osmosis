@@ -145,6 +145,7 @@ module.exports = {
             '/overview/wallets/keplr/import-account',
             '/overview/wallets/keplr/import-ledger-account',
           ],
+          collapsable: true,
         },
       ],
 

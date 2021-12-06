@@ -50,10 +50,8 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 
 <br />
 
-
-<p> </p>
 <div class="cards threeColumn">
-  <a href="https://app.osmosis.zone/" class="card lg">
+  <a href="https://app.osmosis.zone/" class="card lg" target="_blank">
     <img src="img/osmo_app.png">
     <div class="title">
      Osmosis DEX 
@@ -62,7 +60,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
       Launch the Osmosis Automated Market Maker
     </div>
   </a>
-<a href="https://discord.gg/x3eRgAWbhw" class="card lg">
+<a href="https://discord.gg/x3eRgAWbhw" class="card lg" target="_blank">
     <img src="img/discord.svg">
     <div class="title">
      Discord
@@ -71,13 +69,69 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
       Chat with the Osmosis community on Discord
     </div>
   </a>
-  <a href="https://github.com/osmosis-labs/osmosis" class="card lg">
+  <a href="https://github.com/osmosis-labs/osmosis" class="card lg" target="_blank">
     <img src="./.vuepress/public/img/github.svg">
     <div class="title">
     Found an Issue? 
     </div>
     <div class="text">
     Improve this page by adding suggestions on Github.
+    </div>
+  </a>
+</div>
+
+<br />
+
+# Network Resources
+<br />
+<br />
+<div class="cards threeColumn">
+  <a href="https://mintscan.io/osmosis" class="card lg" target="_blank">
+    <img src="/osmosis/img/mintscan.png">
+    <div class="title">
+     Mintscan 
+    </div>
+    <div class="text">
+     Block Explorer
+    </div>
+  </a>
+  <a href="https://osmosis.bigdipper.live" class="card lg" target="_blank">
+    <img src="/osmosis/img/bigdipper.png">
+    <div class="title">
+     Big Dipper
+    </div>
+    <div class="text">
+     Block Explorer
+    </div>
+  </a>
+  <a href="https://ping.pub/osmosis" class="card lg" target="_blank">
+    <img src="/osmosis/img/ping.png">
+    <div class="title">
+     Ping.pub
+    </div>
+    <div class="text">
+     Block Explorer
+    </div>
+  </a>
+</div>
+<br />
+<div class="cards twoColumn">
+  <a href="https://info.osmosis.zone/" class="card lg" target="_blank">
+    <img src="/osmosis/img/stats_app.png">
+    <div class="title">
+      Osmosis Stats
+    </div>
+    <div class="text">
+     Pool & Token Statistics
+    </div>
+  </a>
+  <a href="https://api-osmosis.imperator.co/swagger" class="card lg" target="_blank">
+    <img src="/osmosis/img/swagger.png">
+    <div class="title">
+     Public REST
+    </div>
+    <div class="text">
+     Imperator.co
     </div>
   </a>
 </div>

@@ -22,7 +22,7 @@ Welcome to the validator documentation for Osmosis. Validators are nodes that pa
       Testnet Validator
     </div>
     <div class="text">
-      Set up a testnet validator to test upgrades, settings, and more
+      Turn your current node into a validator on the testnet
     </div>
   </a>
 
