@@ -19,20 +19,6 @@ func (k Keeper) HandleSetSuperfluidAssetsProposal(ctx sdk.Context, p *types.SetS
 	return nil
 }
 
-func (k Keeper) HandleAddSuperfluidAssetsProposal(ctx sdk.Context, p *types.AddSuperfluidAssetsProposal) error {
-	for _, asset := range p.SuperfluidAssets {
-		k.SetSuperfluidAsset(ctx, asset)
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				types.TypeEvtAddSuperfluidAsset,
-				sdk.NewAttribute(types.AttributeDenom, asset.Denom),
-				sdk.NewAttribute(types.AttributeSuperfluidAssetType, asset.AssetType.String()),
-			),
-		})
-	}
-	return nil
-}
-
 func (k Keeper) HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, p *types.RemoveSuperfluidAssetsProposal) error {
 	for _, denom := range p.SuperfluidAssetDenoms {
 		k.DeleteSuperfluidAsset(ctx, denom)
