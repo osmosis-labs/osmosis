@@ -119,7 +119,7 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211119062100-2f81f59f3aa1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211207223543-b411e5fa97d0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.14
 	github.com/tendermint/tm-db => github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417
