@@ -10,7 +10,7 @@ import (
 )
 
 var asset_data = `
-atom, ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2, 1
+atom,ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2,1
 `
 
 func whitelistInitial(ctx sdk.Context, app *OsmosisApp) []types.FeeToken {
