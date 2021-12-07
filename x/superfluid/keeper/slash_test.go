@@ -45,5 +45,5 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 	// check lock changes after slash
 	gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 	suite.Require().NoError(err)
-	suite.Require().True(gotLock.Coins.AmountOf("lptoken").LT(sdk.NewInt(1000000)))
+	suite.Require().True(gotLock.Coins.AmountOf("gamm/pool/1").LT(sdk.NewInt(1000000)))
 }

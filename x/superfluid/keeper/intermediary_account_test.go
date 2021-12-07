@@ -15,7 +15,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
 	acc := types.SuperfluidIntermediaryAccount{
-		Denom:   "lptoken",
+		Denom:   "gamm/pool/1",
 		ValAddr: valAddr.String(),
 		GaugeId: 1,
 	}
@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
 
 	// get account
 	gacc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, acc.GetAddress())
-	suite.Require().Equal(gacc.Denom, "lptoken")
+	suite.Require().Equal(gacc.Denom, "gamm/pool/1")
 	suite.Require().Equal(gacc.ValAddr, valAddr.String())
 	suite.Require().Equal(gacc.GaugeId, uint64(1))
 
@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
 	acc := types.SuperfluidIntermediaryAccount{
-		Denom:   "lptoken",
+		Denom:   "gamm/pool/1",
 		ValAddr: valAddr.String(),
 		GaugeId: 1,
 	}

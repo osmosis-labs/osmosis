@@ -15,12 +15,12 @@ func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 
 	// set asset
 	suite.app.SuperfluidKeeper.SetSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
-		Denom:     "lptoken",
+		Denom:     "gamm/pool/1",
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// get asset
-	res, err := suite.app.SuperfluidKeeper.AssetType(sdk.WrapSDKContext(suite.ctx), &types.AssetTypeRequest{Denom: "lptoken"})
+	res, err := suite.app.SuperfluidKeeper.AssetType(sdk.WrapSDKContext(suite.ctx), &types.AssetTypeRequest{Denom: "gamm/pool/1"})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.AssetType, types.SuperfluidAssetTypeLPShare)
 

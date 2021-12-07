@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestMoveIntermediaryDelegationRewardToGauges() {
 	suite.Require().Equal(gauge.IsPerpetual, true)
 	suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
-		Denom:         "lptoken" + keeper.StakingSuffix(valAddr.String()),
+		Denom:         "gamm/pool/1" + keeper.StakingSuffix(valAddr.String()),
 		Duration:      time.Hour * 24 * 14,
 	})
 	suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())

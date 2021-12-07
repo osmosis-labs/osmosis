@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		Description: "description",
 		Assets: []types.SuperfluidAsset{
 			{
-				Denom:     "lptoken",
+				Denom:     "gamm/pool/1",
 				AssetType: types.SuperfluidAssetTypeLPShare,
 			},
 			{
@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 	suite.Require().NoError(err)
 
 	// get asset
-	res, err := suite.app.SuperfluidKeeper.AssetType(sdk.WrapSDKContext(suite.ctx), &types.AssetTypeRequest{Denom: "lptoken"})
+	res, err := suite.app.SuperfluidKeeper.AssetType(sdk.WrapSDKContext(suite.ctx), &types.AssetTypeRequest{Denom: "gamm/pool/1"})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.AssetType, types.SuperfluidAssetTypeLPShare)
 

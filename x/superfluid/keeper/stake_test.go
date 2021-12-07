@@ -44,6 +44,9 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate() (sdk.ValAddress, lockupt
 	suite.SetupTest()
 	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
 		time.Hour * 24 * 14,
+		time.Hour,
+		time.Hour * 3,
+		time.Hour * 7,
 	})
 
 	// create a validator
@@ -51,12 +54,12 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate() (sdk.ValAddress, lockupt
 
 	// register a LP token as a superfluid asset
 	suite.app.SuperfluidKeeper.SetSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
-		Denom:     "lptoken",
+		Denom:     "gamm/pool/1",
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// set OSMO TWAP price for LP token
-	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, "lptoken", sdk.NewDec(2))
+	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, "gamm/pool/1", sdk.NewDec(2))
 	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
 		Identifier:   params.RefreshEpochIdentifier,
@@ -65,7 +68,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate() (sdk.ValAddress, lockupt
 
 	// create lockup of LP token
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 1000000)}
+	coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
 	lock := suite.LockTokens(addr1, coins, time.Hour*24*14)
 
 	// call SuperfluidDelegate and check response
@@ -220,7 +223,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	suite.Require().Equal(delegation.Shares, sdk.NewDec(1900000)) // 95% x 2 x 1000000
 
 	// twap price change before refresh
-	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "lptoken", sdk.NewDec(10))
+	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
 	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
 		Identifier:   params.RefreshEpochIdentifier,

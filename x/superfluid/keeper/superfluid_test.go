@@ -14,13 +14,13 @@ func (suite *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
 
 	// set asset
 	suite.app.SuperfluidKeeper.SetSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
-		Denom:     "lptoken",
+		Denom:     "gamm/pool/1",
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// get asset
-	asset := suite.app.SuperfluidKeeper.GetSuperfluidAsset(suite.ctx, "lptoken")
-	suite.Require().Equal(asset.Denom, "lptoken")
+	asset := suite.app.SuperfluidKeeper.GetSuperfluidAsset(suite.ctx, "gamm/pool/1")
+	suite.Require().Equal(asset.Denom, "gamm/pool/1")
 	suite.Require().Equal(asset.AssetType, types.SuperfluidAssetTypeLPShare)
 
 	// check assets
@@ -28,10 +28,10 @@ func (suite *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
 	suite.Require().Len(assets, 1)
 
 	// delete asset
-	suite.app.SuperfluidKeeper.DeleteSuperfluidAsset(suite.ctx, "lptoken")
+	suite.app.SuperfluidKeeper.DeleteSuperfluidAsset(suite.ctx, "gamm/pool/1")
 
 	// get asset
-	asset = suite.app.SuperfluidKeeper.GetSuperfluidAsset(suite.ctx, "lptoken")
+	asset = suite.app.SuperfluidKeeper.GetSuperfluidAsset(suite.ctx, "gamm/pool/1")
 	suite.Require().Equal(asset.Denom, "")
 	suite.Require().Equal(asset.AssetType, types.SuperfluidAssetTypeNative)
 
@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestGetRiskAdjustedOsmoValue() {
 
 	adjustedValue := suite.app.SuperfluidKeeper.GetRiskAdjustedOsmoValue(
 		suite.ctx,
-		types.SuperfluidAsset{Denom: "lptoken", AssetType: types.SuperfluidAssetTypeLPShare},
+		types.SuperfluidAsset{Denom: "gamm/pool/1", AssetType: types.SuperfluidAssetTypeLPShare},
 		sdk.NewInt(100),
 	)
 	suite.Require().Equal(adjustedValue, sdk.NewInt(95))
