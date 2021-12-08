@@ -20,11 +20,18 @@ sed -i '' 's%osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5%osmo1qye772qje88p7ggtzr
 # replace that accounts pubkey, obtained via auth. New pubkey obtained via new debug command
 sed -i '' 's%AqlNb1FM8veQrT4/apR5B3hww8VApc0LTtZnXhq7FqG0%A9zC0Sa0VCK/lVLi1Kv0C1c0MQp47d+yjFqb6dAUza0a%g' $EXPORTED_GENESIS
 
-# now time to replace the amounts
-# manually increase share amounts for 
-#          "delegator_address": "osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5",
-# before: 5000000000.000000000000000000 (5000 osmo)
-# after: 100005000000000.000000000000000000 (100M + 5k osmo = 100,005,000)
+# now time to replace the delegation share amounts for the self-bond
+# before:      5000000000.000000000000000000 (5000 osmo)
+# after: 1000005000000000.000000000000000000 (1 BN + 5k osmo = 1,000,005,000)
+# There are two spots for this, one is the delegator shares of the pool
+# in app_state[staking][delegations]{
+#    entry with delegator_address = osmo1qye772qje88p7ggtzrvl9nxvty6dkuuskkg52lm, and validator addr = osmovaloper1qye772qje88p7ggtzrvl9nxvty6dkuusvpqhac}
+DELEGATOR_INDEX=$(jq '.app_state["staking"]["delegations"] | map (.delegator_address=="osmo1qye772qje88p7ggtzrvl9nxvty6dkuuskkg52l") | index(true)' $EXPORTED_GENESIS)
+cat $EXPORTED_GENESIS | jq '.app_state["staking"]["delegations"]['"$DELEGATOR_INDEX"']["shares"]="1000005000000000.000000000000000000"' > tmp_genesis.json && mv tmp_genesis.json $EXPORTED_GENESIS
+# and in app_state.distribution.delegator_starting_infos
+DISTRIBUTION_START_INFO_INDEX=$(jq '.app_state.distribution.delegator_starting_infos | map (.delegator_address=="osmo1qye772qje88p7ggtzrvl9nxvty6dkuuskkg52l") | index(true)' $EXPORTED_GENESIS)
+cat $EXPORTED_GENESIS | jq '.app_state.distribution.delegator_starting_infos['"$DISTRIBUTION_START_INFO_INDEX"'].starting_info.stake="1000005000000000.000000000000000000"' > tmp_genesis.json && mv tmp_genesis.json $EXPORTED_GENESIS
+
 # there are two such locations
 
 # Then correspondingly up the total tokens bonded to the validator
