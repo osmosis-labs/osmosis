@@ -60,7 +60,7 @@ sed -i '' 's%"voting_period": "259200s"%"voting_period": "40s"%g' $EXPORTED_GENE
     #     {
     #       "current_epoch": "77",
     #       "current_epoch_ended": false,
-    #       "current_epoch_start_time": "2021-09-03T17:12:52.752325457Z",
+    #       "current_epoch_start_time": "2021-12-03T17:02:07.229632445Z",
     #       "duration": "86400s",
     #       "epoch_counting_started": true,
     #       "identifier": "day",
@@ -68,3 +68,4 @@ sed -i '' 's%"voting_period": "259200s"%"voting_period": "40s"%g' $EXPORTED_GENE
     #     },
 # replace that duration with jq
 cat $EXPORTED_GENESIS | jq '.app_state["epochs"]["epochs"][0]["duration"]="3600s"' > tmp_genesis.json && mv tmp_genesis.json $EXPORTED_GENESIS
+cat $EXPORTED_GENESIS | jq '.app_state["epochs"]["epochs"][0]["current_epoch_start_time"]="2021-12-08T17:02:07.229632445Z"' > tmp_genesis.json && mv tmp_genesis.json $EXPORTED_GENESIS
