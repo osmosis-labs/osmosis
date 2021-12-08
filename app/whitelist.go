@@ -10,7 +10,7 @@ import (
 )
 
 var asset_data = `
-ion,uion,2 
+ion,uion,2
 atom,ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2,1
 akt,ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,3
 xprt,ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293,15 
@@ -40,7 +40,10 @@ func whitelistInitial(ctx sdk.Context, app *OsmosisApp) []types.FeeToken {
 
 	feeTokens := make([]types.FeeToken, 0, len(assets))
 	for _, asset := range assets {
-		poolId, err := strconv.ParseUint(asset[2], 10, 64)
+		base10 := 10
+		bitLen := 64
+		poolIdStr := strings.TrimSpace(asset[2])
+		poolId, err := strconv.ParseUint(poolIdStr, base10, bitLen)
 		if err != nil {
 			panic(err)
 		}
