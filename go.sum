@@ -625,6 +625,8 @@ github.com/osmosis-labs/bech32-ibc v0.2.0-rc1 h1:hophiDQD/blq/ejT/frDu/B9etQnWkg
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc1/go.mod h1:0JCaioRNOVUiw7c3MngmKACnumaQ2sjPenXCnwxCttI=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211207235417-e8ae64cdef4d h1:ay16JIsDTP83yKxdsrFj+TZtstGTiBxKmOPEFzyB9W0=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211207235417-e8ae64cdef4d/go.mod h1:S/sIkCqPuuvRrByglANXeN1eb1aA4lmKSjSG5E8SWsU=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211208022638-829fbc5e0df6 h1:1arRVqksOu4Xj6lMGUQSwDLMJdt4jSU/fybDupwVSCw=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211208022638-829fbc5e0df6/go.mod h1:S/sIkCqPuuvRrByglANXeN1eb1aA4lmKSjSG5E8SWsU=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417 h1:otchJDd2SjFWfs7Tse3ULblGcVWqMJ50BE02XCaqXOo=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417/go.mod h1:dptYhIpJ2M5kUuenLr+Yyf3zQOv1SgBZcl8/BmWlMBw=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
