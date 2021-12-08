@@ -17,6 +17,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
 		// Slash all module accounts' LP token based on slash amount before twap update
+		k.SlashLockupsForSlashedOnUnbonding(ctx)
 		k.SlashLockupsForSlashedOnDelegation(ctx)
 
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
@@ -50,7 +51,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// Refresh intermediary accounts' delegation amounts
 		k.RefreshIntermediaryDelegationAmounts(ctx)
 
-		// TODO: Unbonding amount should be modified for TWAP change? @Dev @Sunny
+		// TODO: cleanup unbonded amount for 14 days period waiting
 	}
 }
 

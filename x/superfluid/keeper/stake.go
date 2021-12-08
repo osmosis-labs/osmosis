@@ -156,19 +156,21 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		return err
 	}
 
-	// create a perpetual gauge to send staking distribution rewards to
-	// TODO: should not create gauge if already exists
-	acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         acc.Denom + suffix,
-		Duration:      time.Hour * 24 * 14,
-	}, ctx.BlockTime(), 1)
-	if err != nil {
-		return err
-	}
+	// create a perpetual gauge to send staking distribution rewards to if not available yet
+	prevAcc := k.GetIntermediaryAccount(ctx, mAddr)
+	if prevAcc.Denom == "" { // when intermediary account is not created yet
+		acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         acc.Denom + suffix,
+			Duration:      time.Hour * 24 * 14,
+		}, ctx.BlockTime(), 1)
+		if err != nil {
+			return err
+		}
 
-	// connect intermediary account struct to its address
-	k.SetIntermediaryAccount(ctx, acc)
+		// connect intermediary account struct to its address
+		k.SetIntermediaryAccount(ctx, acc)
+	}
 
 	// create connection record between lock id and intermediary account
 	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
@@ -191,6 +193,32 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
 
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, time.Hour*24*14) // 2 weeks unlock duration
+	if err != nil {
+		return err
+	}
+
+	lock, err := k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, intermediaryAcc.Denom)
+	decAmt := twap.EpochTwapPrice.Mul(lock.Coins.AmountOf(intermediaryAcc.Denom).ToDec())
+	asset := k.GetSuperfluidAsset(ctx, intermediaryAcc.Denom)
+	amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
+
+	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
+	if err != nil {
+		return err
+	}
+
+	shares, err := k.sk.ValidateUnbondAmount(
+		ctx, intermediaryAcc.GetAddress(), valAddr, amt,
+	)
+
+	// Note: undelegated amount is automatically sent to intermediary account's free balance
+	// it is burnt on epoch interval
+	_, err = k.sk.Undelegate(ctx, intermediaryAcc.GetAddress(), valAddr, shares)
 	if err != nil {
 		return err
 	}

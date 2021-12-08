@@ -13,6 +13,14 @@ import (
 // burnBondedTokens
 // burnUnbondedTokens
 
+func (k Keeper) SlashLockupsForSlashedOnUnbonding(ctx sdk.Context) {
+	// TODO: slash unbonding delegations first as in native SDK's Slash function codebase
+	// On SlashUnbondingDelegation function call, it is equally slashing all the unbondings - that is unbonding
+	// The fastest way would be letting the staking module to emit SlashUnbondingDelegation event, and adding hook that
+	// slash lockups
+	// TODO: if we update slash to be hook based, we will need to update delegation entries as well not only unbonding entries
+}
+
 // Note: Based on sdk.staking.Slash function review, slashed tokens are burnt not sent to community pool
 func (k Keeper) SlashLockupsForSlashedOnDelegation(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
