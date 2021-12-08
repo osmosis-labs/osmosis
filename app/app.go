@@ -399,6 +399,7 @@ func NewOsmosisApp(
 			// override versions for authz module as to not skip its InitGenesis
 			// for txfees module, we will override txfees ourselves.
 			delete(fromVM, authz.ModuleName)
+			delete(fromVM, bech32ibctypes.ModuleName)
 
 			newVM, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
 			if err != nil {
