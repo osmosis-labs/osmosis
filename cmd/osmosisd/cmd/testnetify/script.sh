@@ -35,25 +35,25 @@ cat $EXPORTED_GENESIS | jq '.app_state.distribution.delegator_starting_infos['"$
 # there are two such locations
 
 # Then correspondingly up the total tokens bonded to the validator
-#           "tokens": "5979280136171", (add 100M to this)
-sed -i '' 's%5979280136171%105979280136171%g' $EXPORTED_GENESIS
-sed -i '' 's%"power": "5979280"%"power": "105979280"%g' $EXPORTED_GENESIS
+#           "tokens": "5743672759222", (add 1BN to this)
+sed -i '' 's%5743672759222%1005743672759222%g' $EXPORTED_GENESIS
+sed -i '' 's%"power": "5743672"%"power": "1005743672"%g' $EXPORTED_GENESIS
 # Update last_total_power (which is last total bonded across validators)
-sed -i '' 's%57368851%157368851%g' $EXPORTED_GENESIS
+sed -i '' 's%65600898%1065600898%g' $EXPORTED_GENESIS
 
-# edit operator address, old: 2125267 (2.1 osmo), new: 100000002125267 (100M + 2.1)
-sed -i '' 's%2125267%100000002125267%g' $EXPORTED_GENESIS
+# edit operator address, old: 2125267 (2.1 osmo), new: 1000000002125267 (1BN + 2.1)
+sed -i '' 's%"2125267"%"1000000002125267"%g' $EXPORTED_GENESIS
 
-# Update total osmo supply, old 413150362339859, new 613M
-sed -i '' 's%413150362339859%613150362339859%g' $EXPORTED_GENESIS
+# Update total osmo supply, old 429793936956313, new 2Billion + 429793936956313
+sed -i '' 's%429793936956313%2429793936956313%g' $EXPORTED_GENESIS
 
-# Fix bonded_tokens_pool balance, old 57368900009013
-sed -i '' 's%57368900009013%157368900009013%g' $EXPORTED_GENESIS
+# Fix bonded_tokens_pool balance, old 65600951578831
+sed -i '' 's%65600951578831%1065600951578831%g' $EXPORTED_GENESIS
 
 ### Fix gov params
 
 # deposit
-sed -i '' 's%"voting_period": "259200s"%"voting_period": "120s"%g' $EXPORTED_GENESIS
+sed -i '' 's%"voting_period": "259200s"%"voting_period": "40s"%g' $EXPORTED_GENESIS
 
 # epoch length
     #   "epochs": [
@@ -67,4 +67,4 @@ sed -i '' 's%"voting_period": "259200s"%"voting_period": "120s"%g' $EXPORTED_GEN
     #       "start_time": "2021-06-18T17:00:00Z"
     #     },
 # replace that duration with jq
-cat $EXPORTED_GENESIS | jq '.app_state["epochs"]["epochs"][0]["duration"]="1800s"' > tmp_genesis.json && mv tmp_genesis.json $EXPORTED_GENESIS
+cat $EXPORTED_GENESIS | jq '.app_state["epochs"]["epochs"][0]["duration"]="3600s"' > tmp_genesis.json && mv tmp_genesis.json $EXPORTED_GENESIS
