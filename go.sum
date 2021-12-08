@@ -162,8 +162,8 @@ github.com/coinbase/rosetta-sdk-go v0.6.10/go.mod h1:J/JFMsfcePrjJZkwQFLh+hJErkA
 github.com/confio/ics23/go v0.6.6 h1:pkOy18YxxJ/r0XFDCnrl4Bjv6h4LkBSpLS6F38mrKL8=
 github.com/confio/ics23/go v0.6.6/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
 github.com/containerd/console v1.0.2/go.mod h1:ytZPjGgY2oeTkAONYafi2kSj0aYggsf8acV1PGKCbzQ=
-github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 h1:NmTXa/uVnDyp0TY5MKi197+3HWcnYWfnHGyaFthlnGw=
 github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6/go.mod h1:GL3xCUCBDV3CZiTSEKksMWbLE66hEyuu9qyDOOqM47Y=
+github.com/containerd/continuity v0.1.0 h1:UFRRY5JemiAhPZrr/uE0n8fMTLcZsUvySPr1+D7pgr8=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
@@ -602,8 +602,8 @@ github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1y
 github.com/onsi/gomega v1.13.0 h1:7lLHu94wT9Ij0o6EWWclhu0aOh32VxhkwEJvzuWPeak=
 github.com/onsi/gomega v1.13.0/go.mod h1:lRk9szgn8TxENtWd0Tp4c3wjlRfMTMH27I+3Je41yGY=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
-github.com/opencontainers/go-digest v1.0.0-rc1 h1:WzifXhOVOEOuFYOJAW6aQqW0TooG2iki3E3Ii+WN7gQ=
 github.com/opencontainers/go-digest v1.0.0-rc1/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
+github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/image-spec v1.0.1 h1:JMemWkRwHx4Zj+fVxWoMCFm/8sYGGrUVojFA6h/TRcI=
 github.com/opencontainers/image-spec v1.0.1/go.mod h1:BtxoFyWECRxE4U/7sNtV5W15zMzWCbyJoFRP3s7yZA0=
 github.com/opencontainers/runc v0.1.1/go.mod h1:qT5XzbpPznkRYVz/mWwUaVBUv2rmF59PVA73FjuZG0U=
@@ -621,12 +621,10 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/osmosis-labs/bech32-ibc v0.0.0-20211129140933-05a182d246f3 h1:qPpkPrHrIro/9NiYGS+DJd2nUq2YK7oRmP/QXGKoC+c=
-github.com/osmosis-labs/bech32-ibc v0.0.0-20211129140933-05a182d246f3/go.mod h1:fwb95yj/poNCO8mfRfWQBclcEIX7hl27AqJc0DE2hRM=
-github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211119062100-2f81f59f3aa1 h1:CxrbRUTLEWeNDQrZXJFIciPOO8YAsp4forPZcCHuMnY=
-github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211119062100-2f81f59f3aa1/go.mod h1:S/sIkCqPuuvRrByglANXeN1eb1aA4lmKSjSG5E8SWsU=
-github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211207225141-220d415f6b2a h1:W5l3Ll86vWiZUCAYddZ+bScDw5JpzvrrTtUJHxbzmzc=
-github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211207225141-220d415f6b2a/go.mod h1:S/sIkCqPuuvRrByglANXeN1eb1aA4lmKSjSG5E8SWsU=
+github.com/osmosis-labs/bech32-ibc v0.2.0-rc1 h1:hophiDQD/blq/ejT/frDu/B9etQnWkgTjlOV7cXBONA=
+github.com/osmosis-labs/bech32-ibc v0.2.0-rc1/go.mod h1:0JCaioRNOVUiw7c3MngmKACnumaQ2sjPenXCnwxCttI=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211208040201-62dab27edc0a h1:8oUDJUZ19bvgnVaqXTaXPeSMVcoZCzyHvAP554TNqZE=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211208040201-62dab27edc0a/go.mod h1:S/sIkCqPuuvRrByglANXeN1eb1aA4lmKSjSG5E8SWsU=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417 h1:otchJDd2SjFWfs7Tse3ULblGcVWqMJ50BE02XCaqXOo=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417/go.mod h1:dptYhIpJ2M5kUuenLr+Yyf3zQOv1SgBZcl8/BmWlMBw=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
