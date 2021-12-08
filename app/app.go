@@ -167,7 +167,6 @@ var (
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
-		bech32ics20.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -398,9 +397,10 @@ func NewOsmosisApp(
 			// then setting it back to 1, and then running migrations again.
 			fromVM[authtypes.ModuleName] = 2
 
-			// override versions for authz module as to not skip its InitGenesis
+			// override versions for authz & bech32ibctypes module as to not skip their InitGenesis
 			// for txfees module, we will override txfees ourselves.
 			delete(fromVM, authz.ModuleName)
+			delete(fromVM, bech32ibctypes.ModuleName)
 
 			newVM, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
 			if err != nil {
