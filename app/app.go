@@ -166,7 +166,6 @@ var (
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
-		bech32ics20.AppModuleBasic{},
 	)
 
 	// module account permissions

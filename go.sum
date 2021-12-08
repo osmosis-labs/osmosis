@@ -623,6 +623,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/osmosis-labs/bech32-ibc v0.0.0-20211129140933-05a182d246f3 h1:qPpkPrHrIro/9NiYGS+DJd2nUq2YK7oRmP/QXGKoC+c=
 github.com/osmosis-labs/bech32-ibc v0.0.0-20211129140933-05a182d246f3/go.mod h1:fwb95yj/poNCO8mfRfWQBclcEIX7hl27AqJc0DE2hRM=
+github.com/osmosis-labs/bech32-ibc v0.2.0-rc1 h1:hophiDQD/blq/ejT/frDu/B9etQnWkgTjlOV7cXBONA=
+github.com/osmosis-labs/bech32-ibc v0.2.0-rc1/go.mod h1:0JCaioRNOVUiw7c3MngmKACnumaQ2sjPenXCnwxCttI=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211119062100-2f81f59f3aa1 h1:CxrbRUTLEWeNDQrZXJFIciPOO8YAsp4forPZcCHuMnY=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211119062100-2f81f59f3aa1/go.mod h1:S/sIkCqPuuvRrByglANXeN1eb1aA4lmKSjSG5E8SWsU=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211207225141-220d415f6b2a h1:W5l3Ll86vWiZUCAYddZ+bScDw5JpzvrrTtUJHxbzmzc=
