@@ -26,7 +26,7 @@ Use page down or arrow keys to get to the line that says seeds = "" and replace 
 seeds = "4eaed17781cd948149098d55f80a28232a365236@testmosis.blockpane.com:26656"
 ```
 
-Then pres Ctrl+O, then enter to save, then Ctrl+X to exit
+Then pres ```Ctrl+O```, then enter to save, then ```Ctrl+X``` to exit
 
 ## Set Up Cosmovisor
 
