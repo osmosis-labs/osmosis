@@ -119,9 +119,9 @@ type MsgCreateLBP struct {
 	TokenIn string `protobuf:"bytes,2,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`
 	// token_out a token denom to be bootstraped. May be referred as base currency.
 	TokenOut string `protobuf:"bytes,3,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`
-	// start time when the token emission starts.
+	// start time when the token sale starts.
 	Start time.Time `protobuf:"bytes,4,opt,name=start,proto3,stdtime" json:"start"`
-	// duration time when the token emission ends.
+	// duration time when the token sale ends.
 	Duration time.Duration `protobuf:"bytes,5,opt,name=duration,proto3,stdduration" json:"duration"`
 	// total number of `tokens_out` to be sold during the continous sale.
 	TotalSale github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=total_sale,json=totalSale,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"total_sale"`

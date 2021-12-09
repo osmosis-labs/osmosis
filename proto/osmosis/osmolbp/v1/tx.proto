@@ -43,9 +43,9 @@ message MsgCreateLBP {
   // token_out a token denom to be bootstraped. May be referred as base currency.
   string token_out = 3;
 
-  // start time when the token emission starts.
+  // start time when the token sale starts.
   google.protobuf.Timestamp start = 4 [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
-  // duration time when the token emission ends.
+  // duration time when the token sale ends.
   google.protobuf.Duration duration = 5 [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 
   // total number of `tokens_out` to be sold during the continous sale.
