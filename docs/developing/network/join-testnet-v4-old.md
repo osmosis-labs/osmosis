@@ -112,19 +112,6 @@ cd $HOME/.osmosisd/
 wget -O - https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest.tar.xz | xz -d -v | tar xf - |
 ```
 
-## Prep Cosmovisor for V5
-
-Lets now prep the upgrade to automatically update to v5.0.0-rc1 once we hit the upgrade height:
-
-```bash
-mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
-cd $HOME/osmosis
-git checkout v5.0.0-rc1
-make build
-cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v5/bin
-cd $HOME
-```
-
 ## Set Up Osmosis Service
 
 While we could start cosmovisor now with "cosmovisor start", lets set up a service to allow cosmovisor to run in the background as well as restart automatically if it runs into any problems:
