@@ -36,14 +36,14 @@ func (k Keeper) createLBP(msg *proto.MsgCreateLBP, now time.Time, store storetyp
 	}
 	id, idBz := k.nextPoolID(store)
 	p := proto.LBP{
-		TokenOut:     msg.TokenOut,
-		TokenIn:      msg.TokenIn,
-		Start:        msg.Start,
-		End:          msg.Start.Add(msg.Duration),
-		Rate:         msg.TotalSale.Quo(sdk.NewInt(int64(msg.Duration / proto.ROUND))),
-		Accumulator:  sdk.ZeroInt(),
-		AccumulatorR: 0,
-		Staked:       sdk.ZeroInt(),
+		TokenOut:       msg.TokenOut,
+		TokenIn:        msg.TokenIn,
+		Start:          msg.Start,
+		End:            msg.Start.Add(msg.Duration),
+		Rate:           msg.TotalSale.Quo(sdk.NewInt(int64(msg.Duration / proto.ROUND))),
+		AccumulatorOut: sdk.ZeroInt(),
+		Round:          0,
+		Staked:         sdk.ZeroInt(),
 	}
 	k.savePool(store, idBz, &p)
 	return id, nil
@@ -84,7 +84,7 @@ func (k Keeper) stake(ctx sdk.Context, msg *proto.MsgStake, store storetypes.KVS
 		return err
 	}
 	if !found {
-		v.Accumulator = p.Accumulator
+		v.Accumulator = p.AccumulatorOut
 		v.Staked = sdk.ZeroInt()
 	}
 
