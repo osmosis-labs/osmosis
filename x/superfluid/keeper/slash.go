@@ -7,18 +7,25 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-// TODO: in case we use hook for slash event, we can look at below methods
-// SlashUnbondingDelegation
-// SlashRedelegation
-// burnBondedTokens
-// burnUnbondedTokens
+func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddrStr string, valAddrStr string, slashFactor sdk.Dec) {
+	delAddr, err := sdk.AccAddressFromBech32(delAddrStr)
+	if err != nil {
+		panic(err)
+	}
+	acc := k.GetIntermediaryAccount(ctx, delAddr)
+	if acc.Denom != "" { // if delAddr is not intermediary account, pass
+		return
+	}
 
-func (k Keeper) SlashLockupsForSlashedOnUnbonding(ctx sdk.Context) {
-	// TODO: slash unbonding delegations first as in native SDK's Slash function codebase
-	// On SlashUnbondingDelegation function call, it is equally slashing all the unbondings - that is unbonding
-	// The fastest way would be letting the staking module to emit SlashUnbondingDelegation event, and adding hook that
-	// slash lockups
-	// TODO: if we update slash to be hook based, we will need to update delegation entries as well not only unbonding entries
+	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom+unstakingSuffix(acc.ValAddr), time.Hour*24*14)
+	for _, lock := range locks {
+		// Only single token lock is allowed here
+		slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
+		_, err = k.lk.SlashTokensFromLockByID(ctx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 // Note: Based on sdk.staking.Slash function review, slashed tokens are burnt not sent to community pool

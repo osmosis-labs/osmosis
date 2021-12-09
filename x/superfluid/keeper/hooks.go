@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
@@ -17,7 +18,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
 		// Slash all module accounts' LP token based on slash amount before twap update
-		k.SlashLockupsForSlashedOnUnbonding(ctx)
 		k.SlashLockupsForSlashedOnDelegation(ctx)
 
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
@@ -50,8 +50,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		// Refresh intermediary accounts' delegation amounts
 		k.RefreshIntermediaryDelegationAmounts(ctx)
-
-		// TODO: cleanup unbonded amount for 14 days period waiting
 	}
 }
 
@@ -100,4 +98,33 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 
 func (h Hooks) OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins) {
 
+}
+
+// staking hooks
+func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)   {}
+func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {}
+func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+}
+func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+}
+func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+}
+func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+}
+func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+}
+func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+}
+func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+}
+func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	// TODO: we could slash superfluid staking lockups instantly at the time of validator slash
+}
+func (h Hooks) BeforeSlashingUnbondingDelegation(ctx sdk.Context, unbondingDelegation stakingtypes.UnbondingDelegation,
+	infractionHeight int64, slashFactor sdk.Dec) {
+	h.k.SlashLockupsForUnbondingDelegationSlash(ctx, unbondingDelegation.DelegatorAddress, unbondingDelegation.ValidatorAddress, slashFactor)
+}
+
+func (h Hooks) BeforeSlashingRedelegation(ctx sdk.Context, srcValidator stakingtypes.Validator, redelegation stakingtypes.Redelegation,
+	infractionHeight int64, slashFactor sdk.Dec) {
 }

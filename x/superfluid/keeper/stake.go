@@ -24,6 +24,20 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		mAddr := acc.GetAddress()
+		bondDenom := k.sk.BondDenom(ctx)
+
+		balance := k.bk.GetBalance(ctx, mAddr, bondDenom)
+		if balance.Amount.IsPositive() { // if free balance is available on intermediary account burn it
+			err := k.bk.SendCoinsFromAccountToModule(ctx, mAddr, stakingtypes.NotBondedPoolName, sdk.Coins{balance})
+			if err != nil {
+				panic(err)
+			}
+			err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, sdk.Coins{balance})
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		valAddress, err := sdk.ValAddressFromBech32(acc.ValAddr)
 		if err != nil {
 			panic(err)
@@ -44,8 +58,6 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		if err != nil {
 			panic(err)
 		}
-
-		bondDenom := k.sk.BondDenom(ctx)
 
 		if returnAmount.IsPositive() {
 			// burn undelegated tokens

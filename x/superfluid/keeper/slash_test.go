@@ -47,3 +47,6 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 	suite.Require().NoError(err)
 	suite.Require().True(gotLock.Coins.AmountOf("gamm/pool/1").LT(sdk.NewInt(1000000)))
 }
+
+// TODO: add test for SlashLockupsForUnbondingDelegationSlash
+// func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {}

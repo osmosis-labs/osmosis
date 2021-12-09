@@ -239,4 +239,6 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	delegation, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
 	suite.Require().True(found)
 	suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
+
+	// TODO: add check for RefreshIntermediaryDelegationAmounts is removing unbonded amount
 }
