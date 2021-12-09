@@ -104,6 +104,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			appConfig.API.Enable = true
 			appConfig.StateSync.SnapshotInterval = 1500
 			appConfig.StateSync.SnapshotKeepRecent = 2
+			appConfig.MinGasPrices = "0uosmo"
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if chainID == "" {

@@ -39,29 +39,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-* [\#499](https://github.com/osmosis-labs/osmosis/pull/499) Spec out gamm module proto
-
 ## [v5.0.0]
-* [\#394](https://github.com/osmosis-labs/osmosis/pull/394) Allow whitelisted tx fee tokens based on conversion rate to OSMO
-* [\#464](https://github.com/osmosis-labs/osmosis/pull/464) Increase maximum outbound peers for validator nodes
-* [\#505](https://github.com/osmosis-labs/osmosis/pull/505) Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
-* [\#444](https://github.com/osmosis-labs/osmosis/pull/444) Add script for state sync
-* [\#515](https://github.com/osmosis-labs/osmosis/pull/515) Bump Osmosis-SDK: Add debug command for converting secp pubkeys
-* [\#510](https://github.com/osmosis-labs/osmosis/pull/510) Performance improvement for gauge distribution
-* [\#517](https://github.com/osmosis-labs/osmosis/pull/517) Linear time improvement for epoch time by 10%
-* [\#525](https://github.com/osmosis-labs/osmosis/pull/525) Update Notional Labs seed node in cmd/osmosisd/cmd/init.go
-* [\#522](https://github.com/osmosis-labs/osmosis/pull/522) Create pull request template
-* [\#521](https://github.com/osmosis-labs/osmosis/pull/521) Update peer ID of statesync-enabled node run by notional
-* [\#516](https://github.com/osmosis-labs/osmosis/pull/516) Add benchmark for gamm serialization
-* [\#540](https://github.com/osmosis-labs/osmosis/pull/540) Fix git lfs links
-* [\#544](https://github.com/osmosis-labs/osmosis/pull/544) Update total liquidity tracking to be denom basis
-* [\#563](https://github.com/osmosis-labs/osmosis/pull/563) Allow zero-weight pool-incentive distribution records
-* [\#562](https://github.com/osmosis-labs/osmosis/pull/562) Store block height in epochs module for debugging
-* [\#538](https://github.com/osmosis-labs/osmosis/pull/538) Upgrade to Cosmos-sdk 0.44.3
-  * Includes Rosetta API
+
+## Features
+
+* [\#637](https://github.com/osmosis-labs/osmosis/pull/637) Add [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/)
+* [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to Cosmos SDK v0.44.x
+  * Numerous large updates, such as making module accounts be 32 bytes, Rosetta support, etc.
+  * Adds & integrates the [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
+   See: [SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) For more details
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to IBC-v2
-* [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Add [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
+* [\#394](https://github.com/osmosis-labs/osmosis/pull/394) Allow whitelisted tx fee tokens based on conversion rate to OSMO
+
+## Minor improvements & Bug Fixes
+
+* {In the Osmosis-labs SDK fork}
+  * Increase default IAVL cache size to be in the hundred megabyte range
+  * Significantly improve CacheKVStore speed problems, reduced IBC upgrade time from 2hrs to 5min
+  * Add debug info to make it clear whats happening during upgrade
+* [\#563](https://github.com/osmosis-labs/osmosis/pull/563) Allow zero-weight pool-incentive distribution records
+* [\#562](https://github.com/osmosis-labs/osmosis/pull/562) Store block height in epochs module for easier debugging
+* [\#544](https://github.com/osmosis-labs/osmosis/pull/544) Update total liquidity tracking to be denom basis
+* [\#540](https://github.com/osmosis-labs/osmosis/pull/540) Fix git lfs links
+* [\#517](https://github.com/osmosis-labs/osmosis/pull/517) Linear time improvement for epoch time by 10%
+* [\#515](https://github.com/osmosis-labs/osmosis/pull/515) Add debug command for converting secp pubkeys
+* [\#510](https://github.com/osmosis-labs/osmosis/pull/510) Performance improvement for gauge distribution
+* [\#505](https://github.com/osmosis-labs/osmosis/pull/505) Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
+* [\#464](https://github.com/osmosis-labs/osmosis/pull/464) Increase maximum outbound peers for validator nodes
+* [\#444](https://github.com/osmosis-labs/osmosis/pull/444) Add script for state sync
 
 ## [v4.0.0]
 
