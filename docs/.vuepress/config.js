@@ -179,8 +179,8 @@ module.exports = {
         {
           title: 'Networks',
           children: [
-            '/developing/network/join-mainnet',
             '/developing/network/join-testnet',
+            '/developing/network/join-mainnet',
           ],
           collapsable: true,
         },
@@ -210,8 +210,8 @@ module.exports = {
         {
           title: 'Validate',
           children: [
-            '/validators/validating-mainnet',
             '/validators/validating-testnet',
+            '/validators/validating-mainnet',
           ],
           collapsable: true,
         },
