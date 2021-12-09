@@ -86,7 +86,7 @@ module.exports = {
   ],
   themeConfig: {
     sidebarDepth: 3,
-    smoothScroll: true,
+    smoothScroll: false,
     // overrideTheme: 'dark',
     // prefersTheme: 'dark',
     // overrideTheme: { light: [6, 18], dark: [18, 6] },
