@@ -54,6 +54,15 @@ func whitelistInitial(ctx sdk.Context, app *OsmosisApp) []types.FeeToken {
 			panic(err)
 		}
 
+		pool, poolExistsErr := app.GAMMKeeper.GetPool(ctx, poolId)
+		if poolExistsErr != nil {
+			continue
+		}
+		_, assetExistsErr := pool.GetPoolAsset(asset[1])
+		if assetExistsErr != nil {
+			continue
+		}
+
 		feeToken := types.FeeToken{
 			Denom:  asset[1],
 			PoolID: poolId,
