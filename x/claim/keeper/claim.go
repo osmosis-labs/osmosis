@@ -30,7 +30,18 @@ func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount)); err != nil {
+	mintCoins := sdk.NewCoins(amount)
+
+	existingModuleAcctBalance := k.bankKeeper.GetBalance(ctx,
+		k.accountKeeper.GetModuleAddress(types.ModuleName), amount.Denom)
+	if existingModuleAcctBalance.IsPositive() {
+		actual := existingModuleAcctBalance.Add(amount)
+		ctx.Logger().Info(fmt.Sprintf("WARNING! There is a bug in claims on InitGenesis, that you are subject to."+
+			" You likely expect the claims module account balance to be %d %s, but it will actually be %d %s due to this bug.",
+			amount.Amount.Int64(), amount.Denom, actual.Amount.Int64(), actual.Denom))
+	}
+
+	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoins); err != nil {
 		panic(err)
 	}
 
@@ -97,8 +108,8 @@ func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
 			}
 		}
 	}
-	ctx.Logger().Info("clawed back %d uion into community pool", totalClawback.AmountOf("uion").Int64())
-	ctx.Logger().Info("clawed back %d uosmo into community pool", totalClawback.AmountOf("uosmo").Int64())
+	ctx.Logger().Info(fmt.Sprintf("clawed back %d uion into community pool", totalClawback.AmountOf("uion").Int64()))
+	ctx.Logger().Info(fmt.Sprintf("clawed back %d uosmo into community pool", totalClawback.AmountOf("uosmo").Int64()))
 	return nil
 }
 
