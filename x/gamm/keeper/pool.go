@@ -94,7 +94,6 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolId uint64) (err error) 
 
   // first iterate through the share holders and burn them
   k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
-    fmt.Println("iterate on", addr, coin)
     if coin.Denom != shareDenom || coin.Amount.IsZero() {
       return
     }
@@ -125,7 +124,19 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolId uint64) (err error) 
     return false
   })
 
-  return err
+  if err != nil {
+    return err
+  }
+
+  // sanity check
+  if !pool.GetTotalShares().IsZero() {
+    panic("pool total share should be zero after cleanup")
+  }
+
+  pool.SetDestruction(ctx.BlockTime())
+  k.SetPool(ctx, pool)
+
+  return nil
 }
 
 // newBalancerPool is an internal function that creates a new Balancer Pool object with the provided

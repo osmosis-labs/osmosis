@@ -149,4 +149,9 @@ message BalancerPool {
     (gogoproto.moretags) = "yaml:\"total_weight\"",
     (gogoproto.nullable) = false
   ];
+
+  google.protobuf.Timestamp destructionTime = 8[
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"destruction_time\""
+  ];
 }

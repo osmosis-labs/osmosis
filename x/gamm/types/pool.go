@@ -39,6 +39,7 @@ type PoolI interface {
 	GetTokenWeight(denom string) (sdk.Int, error)
 	GetTokenBalance(denom string) (sdk.Int, error)
 	NumAssets() int
+  SetDestruction(blockTime time.Time) error
 	IsActive(curBlockTime time.Time) bool
 }
 
@@ -477,9 +478,26 @@ func (pa BalancerPool) NumAssets() int {
 	return len(pa.PoolAssets)
 }
 
+func (pa *BalancerPool) SetDestruction(blockTime time.Time) error {
+  if pa.DestructionTime != nil {
+    if !pa.DestructionTime.IsZero() {
+      return ErrAlreadyInvalidPool
+    }
+  }
+  pa.DestructionTime = &blockTime
+  return nil
+}
+
 func (pa BalancerPool) IsActive(curBlockTime time.Time) bool {
+  if pa.DestructionTime == nil {
+    return true
+  }
+  if pa.DestructionTime.IsZero() {
+    return true
+  }
+  if curBlockTime.Before(*pa.DestructionTime) {
+    return true
+  }
 
-	// Add frozen pool checking, etc...
-
-	return true
+	return false
 }

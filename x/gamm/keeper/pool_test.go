@@ -1,8 +1,10 @@
 package keeper_test
 
 import (
+  "time"
   "math/rand"
 
+  sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
@@ -124,4 +126,44 @@ func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
       "Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), coin.Amount.Int64())
     }
   }
+}
+
+func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
+  suite.ctx = suite.ctx.WithBlockTime(time.Unix(1000, 1000))
+	err := suite.app.BankKeeper.AddCoins(
+		suite.ctx,
+		acc1,
+		sdk.NewCoins(
+      sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
+			sdk.NewCoin("foo", sdk.NewInt(1000)),
+			sdk.NewCoin("bar", sdk.NewInt(1000)),
+			sdk.NewCoin("baz", sdk.NewInt(1000)),
+		),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultBalancerPoolParams, []types.PoolAsset{
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
+		},
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("bar", sdk.NewInt(1000)),
+		},
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("baz", sdk.NewInt(1000)),
+		},
+	}, "")
+	suite.NoError(err)
+
+  err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, poolId)
+  suite.NoError(err)
+
+  _, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, sdk.NewCoin("foo", sdk.NewInt(1)), "bar", sdk.NewInt(1))
+  suite.Error(err)
+  suite.Equal(err.Error(), sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool").Error())
 }
