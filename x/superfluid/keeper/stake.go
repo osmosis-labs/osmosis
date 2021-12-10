@@ -122,7 +122,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	}
 
 	// length check
-	if lock.Duration < time.Hour*24*14 { // if less than 2 weeks bonding, skip
+	if lock.Duration < time.Hour*24*21 { // if less than 2 weeks bonding, skip
 		return fmt.Errorf("lockup does not have enough lock duration")
 	}
 
@@ -204,7 +204,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
 	}
 
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, time.Hour*24*14) // 2 weeks unlock duration
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, time.Hour*24*21) // 2 weeks unlock duration
 	if err != nil {
 		return err
 	}

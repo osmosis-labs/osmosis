@@ -10,6 +10,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) lockuptypes.PeriodLock {
@@ -69,7 +70,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate() (sdk.ValAddress, lockupt
 	// create lockup of LP token
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
-	lock := suite.LockTokens(addr1, coins, time.Hour*24*14)
+	lock := suite.LockTokens(addr1, coins, time.Hour*24*21)
 
 	// call SuperfluidDelegate and check response
 	err := suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.ID, valAddr.String())
@@ -143,7 +144,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(synthLock.LockId, lock.ID)
 	suite.Require().Equal(synthLock.Suffix, keeper.UntakingSuffix(valAddr.String()))
-	suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(time.Hour*24*14))
+	suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(time.Hour*24*21))
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
@@ -164,7 +165,7 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(synthLock.LockId, lock.ID)
 	suite.Require().Equal(synthLock.Suffix, keeper.UntakingSuffix(valAddr.String()))
-	suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(time.Hour*24*14))
+	suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(time.Hour*24*21))
 
 	// check required changes for delegation
 	// check synthetic lockup creation
@@ -240,5 +241,22 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	suite.Require().True(found)
 	suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
 
-	// TODO: add check for RefreshIntermediaryDelegationAmounts is removing unbonded amount
+	// superfluid undelegate
+	err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)
+	suite.Require().NoError(err)
+
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Hour*24*21 + time.Second))
+	suite.app.EndBlocker(suite.ctx, abci.RequestEndBlock{Height: suite.ctx.BlockHeight()})
+
+	unbonded := suite.app.BankKeeper.GetBalance(suite.ctx, expAcc.GetAddress(), sdk.DefaultBondDenom)
+	suite.Require().True(unbonded.IsPositive())
+
+	// refresh intermediary account delegations
+	suite.NotPanics(func() {
+		suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
+	})
+
+	// check unbonded amount is removed after refresh operation
+	refreshed := suite.app.BankKeeper.GetBalance(suite.ctx, expAcc.GetAddress(), sdk.DefaultBondDenom)
+	suite.Require().True(refreshed.IsZero())
 }
