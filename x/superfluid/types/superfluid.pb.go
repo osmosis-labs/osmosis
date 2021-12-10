@@ -92,9 +92,7 @@ var xxx_messageInfo_SuperfluidAsset proto.InternalMessageInfo
 
 // SuperfluidIntermediaryAccount takes the role of intermediary between LP token and OSMO tokens for superfluid staking
 type SuperfluidIntermediaryAccount struct {
-	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	// TODO: if we have module account to hold validator address, single lockup
-	// will be associated to only a single validator, which is fine for minimum viable version
+	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	ValAddr string `protobuf:"bytes,2,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
 	// id of perpetual gauge to send rewards to for distribution
 	GaugeId uint64 `protobuf:"varint,3,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty"`

@@ -28,8 +28,6 @@ message SuperfluidAsset {
 // SuperfluidIntermediaryAccount takes the role of intermediary between LP token and OSMO tokens for superfluid staking
 message SuperfluidIntermediaryAccount {
   string denom = 1;
-  // TODO: if we have module account to hold validator address, single lockup
-  // will be associated to only a single validator, which is fine for minimum viable version
   string val_addr = 2;
   // id of perpetual gauge to send rewards to for distribution
   uint64 gauge_id = 3;

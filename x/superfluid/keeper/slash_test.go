@@ -48,5 +48,29 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 	suite.Require().True(gotLock.Coins.AmountOf("gamm/pool/1").LT(sdk.NewInt(1000000)))
 }
 
-// TODO: add test for SlashLockupsForUnbondingDelegationSlash
-// func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {}
+func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
+	valAddr, lock := suite.SetupSuperfluidDelegate()
+
+	expAcc := types.SuperfluidIntermediaryAccount{
+		Denom:   lock.Coins[0].Denom,
+		ValAddr: valAddr.String(),
+	}
+
+	// superfluid undelegate
+	err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)
+	suite.Require().NoError(err)
+
+	// slash unbonding lockups
+	suite.NotPanics(func() {
+		suite.app.SuperfluidKeeper.SlashLockupsForUnbondingDelegationSlash(
+			suite.ctx,
+			expAcc.GetAddress().String(),
+			expAcc.ValAddr,
+			sdk.NewDecWithPrec(5, 2))
+	})
+
+	// check check unbonding lockup changes
+	gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(950000).String())
+}

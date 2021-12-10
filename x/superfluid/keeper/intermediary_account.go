@@ -74,5 +74,3 @@ func (k Keeper) GetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId u
 
 	return prefixStore.Get(sdk.Uint64ToBigEndian(lockId))
 }
-
-// TODO: On TWAP change, set target OSMO mint amount to TWAP * LP

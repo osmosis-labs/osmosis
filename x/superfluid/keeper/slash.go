@@ -13,7 +13,7 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 		panic(err)
 	}
 	acc := k.GetIntermediaryAccount(ctx, delAddr)
-	if acc.Denom != "" { // if delAddr is not intermediary account, pass
+	if acc.Denom == "" { // if delAddr is not intermediary account, pass
 		return
 	}
 
@@ -43,7 +43,7 @@ func (k Keeper) SlashLockupsForSlashedOnDelegation(ctx sdk.Context) {
 			panic("validator not found")
 		}
 
-		// undelegate full amount from the validator
+		// get delegation from intermediary account to the validator
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
 		if !found {
 			continue
