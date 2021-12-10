@@ -20,8 +20,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 		// now we sanity check that the airdrop claim hasn't already happened yet.
 		// This logic is hacky, but done so due to v5 deployment timelines.
-		minBalanceOsmo := sdk.NewCoin(params.ClaimDenom, sdk.NewInt(1_000_000_000_000))
-		if !k.GetModuleAccountBalance(ctx).IsGTE(minBalanceOsmo) {
+		minBalanceOsmo := sdk.NewCoin(params.ClaimDenom, sdk.NewInt(1_000_000_000))
+		if k.GetModuleAccountBalance(ctx).IsGTE(minBalanceOsmo) {
 			// airdrop not already ended
 			err := k.EndAirdrop(ctx)
 			if err != nil {
