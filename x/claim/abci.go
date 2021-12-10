@@ -16,8 +16,12 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// End Airdrop
 	goneTime := ctx.BlockTime().Sub(params.AirdropStartTime)
 	if goneTime > params.DurationUntilDecay+params.DurationOfDecay {
-		// airdrop time passed
-		if !k.GetModuleAccountBalance(ctx).IsZero() {
+		// airdrop time has passed
+
+		// now we sanity check that the airdrop claim hasn't already happened yet.
+		// This logic is hacky, but done so due to v5 deployment timelines.
+		minBalanceOsmo := sdk.NewCoin(params.ClaimDenom, sdk.NewInt(1_000_000_000_000))
+		if !k.GetModuleAccountBalance(ctx).IsGTE(minBalanceOsmo) {
 			// airdrop not already ended
 			err := k.EndAirdrop(ctx)
 			if err != nil {

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -35,12 +37,15 @@ func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 }
 
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {
+	ctx.Logger().Info("Beginning EndAirdrop logic")
 	err := k.fundRemainingsToCommunity(ctx)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("Clearing claims module state entries")
 	k.clearInitialClaimables(ctx)
 
+	ctx.Logger().Info("Beginning prop32 clawback")
 	err = k.ClawbackAirdrop(ctx)
 	if err != nil {
 		return err
@@ -51,6 +56,7 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 // ClawbackAirdrop implements prop 32 by clawing back all the OSMO and IONs from airdrop
 // recipient accounts with a sequence number of 0
 func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
+	totalClawback := sdk.NewCoins()
 	for _, bechAddr := range types.AirdropAddrs {
 		addr, err := sdk.AccAddressFromBech32(bechAddr)
 		if err != nil {
@@ -83,12 +89,16 @@ func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
 		if seq == 0 {
 			osmoBal := k.bankKeeper.GetBalance(ctx, addr, "uosmo")
 			ionBal := k.bankKeeper.GetBalance(ctx, addr, "uion")
-			err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(osmoBal, ionBal), addr)
+			clawbackCoins := sdk.NewCoins(osmoBal, ionBal)
+			totalClawback.Add(clawbackCoins...)
+			err = k.distrKeeper.FundCommunityPool(ctx, clawbackCoins, addr)
 			if err != nil {
 				return err
 			}
 		}
 	}
+	ctx.Logger().Info("clawed back %d uion into community pool", totalClawback.AmountOf("uion").Int64())
+	ctx.Logger().Info("clawed back %d uosmo into community pool", totalClawback.AmountOf("uosmo").Int64())
 	return nil
 }
 
@@ -300,5 +310,7 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 func (k Keeper) fundRemainingsToCommunity(ctx sdk.Context) error {
 	moduleAccAddr := k.GetModuleAccountAddress(ctx)
 	amt := k.GetModuleAccountBalance(ctx)
+	ctx.Logger().Info(fmt.Sprintf(
+		"Sending %d %s to community pool, corresponding to the 'unclaimed airdrop'", amt.Amount.Int64(), amt.Denom))
 	return k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
 }
