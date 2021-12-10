@@ -114,12 +114,12 @@ wget -O - https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest
 
 ## Prep Cosmovisor for V5
 
-Lets now prep the upgrade to automatically update to v5.0.0-rc1 once we hit the upgrade height:
+Lets now prep the upgrade to automatically update to v5.0.0-rc2 once we hit the upgrade height:
 
 ```bash
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
 cd $HOME/osmosis
-git checkout v5.0.0-rc1
+git checkout v5.0.0-rc2
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v5/bin
 cd $HOME
