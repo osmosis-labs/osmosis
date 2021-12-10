@@ -79,64 +79,64 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	return nil
 }
 
-// CleanupBalancerPool destructs a pool and refund all the assets according to 
+// CleanupBalancerPool destructs a pool and refund all the assets according to
 // the shares held by the accounts. CleanupBalancerPool should be called not during
-// the chain execution time, as it iterates the entire account balances. 
+// the chain execution time, as it iterates the entire account balances.
 func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolId uint64) (err error) {
-  pool, err := k.GetPool(ctx, poolId)
-  if err != nil {
-    return err
-  }
+	pool, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
 
-  totalShares := pool.GetTotalShares().Amount
-  shareDenom := pool.GetTotalShares().Denom
-  poolAssets := pool.GetAllPoolAssets()
+	totalShares := pool.GetTotalShares().Amount
+	shareDenom := pool.GetTotalShares().Denom
+	poolAssets := pool.GetAllPoolAssets()
 
-  // first iterate through the share holders and burn them
-  k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
-    if coin.Denom != shareDenom || coin.Amount.IsZero() {
-      return
-    }
+	// first iterate through the share holders and burn them
+	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
+		if coin.Denom != shareDenom || coin.Amount.IsZero() {
+			return
+		}
 
-    shareAmount := coin.Amount
+		shareAmount := coin.Amount
 
-    // Burn the share tokens
-    err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{coin})
-    if err != nil {
-      return true
-    }
+		// Burn the share tokens
+		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{coin})
+		if err != nil {
+			return true
+		}
 
-    err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{coin})
-    if err != nil {
-      return true
-    }
+		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{coin})
+		if err != nil {
+			return true
+		}
 
-    // Refund assets
-    pool.SubTotalShares(shareAmount)
-    for _, asset := range poolAssets {
-      err = k.bankKeeper.SendCoins(
-        ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, asset.Token.Amount.Mul(shareAmount).Quo(totalShares)}})
-      if err != nil {
-        return true
-      }
-    }
+		// Refund assets
+		pool.SubTotalShares(shareAmount)
+		for _, asset := range poolAssets {
+			err = k.bankKeeper.SendCoins(
+				ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, asset.Token.Amount.Mul(shareAmount).Quo(totalShares)}})
+			if err != nil {
+				return true
+			}
+		}
 
-    return false
-  })
+		return false
+	})
 
-  if err != nil {
-    return err
-  }
+	if err != nil {
+		return err
+	}
 
-  // sanity check
-  if !pool.GetTotalShares().IsZero() {
-    panic("pool total share should be zero after cleanup")
-  }
+	// sanity check
+	if !pool.GetTotalShares().IsZero() {
+		panic("pool total share should be zero after cleanup")
+	}
 
-  pool.SetDestruction(ctx.BlockTime())
-  k.SetPool(ctx, pool)
+	pool.SetDestruction(ctx.BlockTime())
+	k.SetPool(ctx, pool)
 
-  return nil
+	return nil
 }
 
 // newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
