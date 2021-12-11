@@ -190,6 +190,7 @@ module.exports = {
             "/developing/modules/spec-claim",
             "/developing/modules/spec-epochs",
             "/developing/modules/spec-gamm",
+            "/developing/modules/spec-gov",
             "/developing/modules/spec-lockup",
             "/developing/modules/spec-mint",
             "/developing/modules/spec-pool-incentives",
