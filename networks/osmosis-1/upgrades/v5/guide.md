@@ -12,6 +12,17 @@ sudo swapon /swapfile
 
 In depth swap setup instructions: https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-20-04
 
+# GO Version
+Please note, Osmosis `v5.0.0` requires go version `1.17`, if you run `go version` and it says `1.16.x` you should uninstall go and update to `1.17`.
+The easiest way to do this is with these scriptshttps://github.com/canha/golang-tools-install-script
+
+To uninstall run:
+
+```curl https://raw.githubusercontent.com/canha/golang-tools-install-script/master/goinstall.sh | bash -s -- --remove```
+
+Followed this to reinstall the latest `1.17.x` version:
+
+```curl https://raw.githubusercontent.com/canha/golang-tools-install-script/master/goinstall.sh | bash```
 
 # Install and setup Cosmovisor
 
