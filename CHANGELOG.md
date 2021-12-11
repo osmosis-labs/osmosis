@@ -74,6 +74,8 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
   * Increase default IAVL cache size to be in the hundred megabyte range
   * Significantly improve CacheKVStore speed problems, reduced IBC upgrade time from 2hrs to 5min
   * Add debug info to make it clear whats happening during upgrade
+* (From a series of commits) Fixes to the claims module to only do the reclaim logic once, not every block.
+* (From a series of commits) More logging to the claims module.
 * [\#563](https://github.com/osmosis-labs/osmosis/pull/563) Allow zero-weight pool-incentive distribution records
 * [\#562](https://github.com/osmosis-labs/osmosis/pull/562) Store block height in epochs module for easier debugging
 * [\#544](https://github.com/osmosis-labs/osmosis/pull/544) Update total liquidity tracking to be denom basis, lowering create pool and join pool gas.
