@@ -77,6 +77,7 @@ mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
 git checkout v5.0.0
+go mod download github.com/avast/retry-go
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v5/bin
 ```
