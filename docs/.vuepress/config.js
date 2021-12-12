@@ -25,12 +25,16 @@ module.exports = {
         },
       },
     ],
-    // https://github.com/znicholasbrown/vuepress-plugin-code-copy
-    ["vuepress-plugin-code-copy", {
+  //  https://github.com/znicholasbrown/vuepress-plugin-code-copy
+  //  ["vuepress-plugin-code-copy", {
+  //    color: "#ffffff",
+  //    backgroundColor: "#3e3383",
+  //    }
+  //  ],
+    ["@maginapp/vuepress-plugin-copy-code", {
       color: "#ffffff",
-      backgroundColor: "#3e3383",
-      }
-    ]
+      align: { bottom: '7px', right: '12px' },
+    }],
   ],
   head: [
     [

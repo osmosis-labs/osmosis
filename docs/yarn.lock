@@ -911,6 +911,11 @@
     "@babel/helper-validator-identifier" "^7.15.7"
     to-fast-properties "^2.0.0"
 
+"@maginapp/vuepress-plugin-copy-code@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@maginapp/vuepress-plugin-copy-code/-/vuepress-plugin-copy-code-1.0.0.tgz#8d692544e3dd4297a504b4fa614dabba89c00096"
+  integrity sha512-ZmJpsPHK339Vi0GyNSjvqBqUS9iM+RkqxHXy54BGB4XN144zDWnbyIWKXnvEuY/rpOhkFQOlbgc+DoQeeWH/0Q==
+
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@mrmlnc/readdir-enhanced/-/readdir-enhanced-2.2.1.tgz#524af240d1a360527b730475ecfa1344aa540dde"
