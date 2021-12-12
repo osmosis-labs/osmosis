@@ -49,12 +49,12 @@ osmosisd tx incentives create-gauge LPToken 1000MyToken \
 
 I want to make incentives for atoms that have been locked up for at least 1 month.
 I want to reward 1000 MyToken to atom holders perpetually. (Meaning I add more tokens to this gauge myself every epoch)
-I want the reward to start disbursing immedietly.
+I want the reward to start disbursing immediately.
 
 MsgCreateGauge:
 - Distribution condition: denom "atom", 720 hours.
 - Rewards: 1000 MyTokens
-- Start time: empty(immedietly)
+- Start time: empty(immediately)
 - Total epochs: 1 (perpetual)
 
 ```bash

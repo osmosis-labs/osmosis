@@ -6,7 +6,7 @@ Make sure you have [installed the Osmosis Binary (CLI).](../cli/install)
 
 ## Initialize Osmosis Node
 
-Use osmosisd to initialize your node (replace the NODE_NAME with a name of your choosing):
+Use osmosisd to initialize your node (replace the ```NODE_NAME``` with a name of your choosing):
 
 ```bash
 osmosisd init NODE_NAME
@@ -118,7 +118,7 @@ wget https://dl2.quicksync.io/$FILENAME.checksum
 Compare the checksum with the onchain version:
 
 ```bash
-curl -s https://api-osmosis.cosmostation.io/v1/tx/hash/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.data.tx.body.memo'|sha512sum -c
+curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
 ```
 
 The output should state "checksum: OK"

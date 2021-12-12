@@ -6,7 +6,7 @@ Make sure you have [installed the Osmosis Binary (CLI).](../cli/install)
 
 ## Initialize Osmosis Node
 
-Use osmosisd to initialize your node (replace the NODE_NAME with a name of your choosing):
+Use osmosisd to initialize your node (replace the ```NODE_NAME``` with a name of your choosing):
 
 ```bash
 osmosisd init NODE_NAME --chain-id=osmosis-testnet-0
