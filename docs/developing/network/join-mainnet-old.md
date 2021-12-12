@@ -78,7 +78,32 @@ Download liblz4-tool to handle the compressed file:
 sudo apt-get install wget liblz4-tool aria2 -y
 ```
 
-Download the chain data and its corresponding checksum. Select the tab to the corresponding node type (default, pruned, or archive):
+Before we download the chain data, we must first initialize the file name from quicksync. Hover over the download button from page linked above and you will see the file name (specifically the date and time). Replace the below with the timestamp listed for you:
+
+EXAMPLE: If the download link is <a>https://get.quicksync.io/osmosis-1-pruned.20211119.0910.tar.lz4</a>, then
+
+FILENAME=osmosis-1-pruned.20211119.0910.tar.lz4
+
+```bash
+FILENAME=osmosis-1-TYPE.DATE.TIME.tar.lz4
+```
+
+Download the chain data its corresponding checksum:
+
+```bash
+cd $HOME/.osmosisd/
+wget -O - https://get.quicksync.io/$FILENAME | lz4 -d | tar -xvf -
+wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
+wget https://get.quicksync.io/$FILENAME.checksum
+```
+
+Compare the checksum with the onchain version:
+
+```bash
+curl -s https://api-osmosis.cosmostation.io/v1/tx/hash/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.data.tx.body.memo'|sha512sum -c
+```
+
+The output should state "checksum: OK"
 
 :::: tabs cache-lifetime="10" :options="{ useUrlFragment: false }"
 
@@ -115,13 +140,8 @@ wget https://dl2.quicksync.io/$FILENAME.checksum
 
 ::::
 
-Compare the checksum with the onchain version:
 
-```bash
-curl -s https://api-osmosis.cosmostation.io/v1/tx/hash/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.data.tx.body.memo'|sha512sum -c
-```
 
-The output should state "checksum: OK"
 
 ## Set Up Osmosis Service
 

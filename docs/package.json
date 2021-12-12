@@ -31,7 +31,9 @@
     "webpack": "^4.44.1"
   },
   "dependencies": {
+    "vue-tabs-component": "^1.5.0",
     "vuepress-plugin-code-copy": "^1.0.6",
+    "vuepress-plugin-tabs": "^0.3.0",
     "webpack": "^4.44.1"
   }
 }
