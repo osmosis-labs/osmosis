@@ -43,10 +43,10 @@ During the voting period, staked (bonded) tokens will be able to participate in 
 
 After the ```voting_period``` has passed, there are several scenarios that a proposal will be considered "Rejected", for example, if
 
-- No one votes (or everyone votes to ```abstain```);
-- Votes do not reach the ```quorum```;
-- Enough voters vote ```no_with_veto``` in comparison to total votes to meet the veto to total votes ratio specified in ```tally_params```;
-- More than ```threshold``` of non-abstaining voters vote ```no```.
+- No one votes (or everyone votes to ```abstain```)
+- Votes do not reach the ```quorum```
+- Enough vote ```no_with_veto``` when compared with total votes to meet the veto to total votes ratio specified in ```tally_params```
+- More than ```threshold``` of non-abstaining voters vote ```no```
 
 Otherwise, the proposal will be accepted and changes will be implemented according to the proposal.
 
@@ -390,7 +390,7 @@ The following tables show overall effects on different configurations of the gov
 <td>Value has to be less or equal to <code>1</code></td> 
 <td>Value has to be less or equal to <code>1</code></td> 
 <td>Value has to be less or equal to <code>1</code></td></tr> 
-<tr><td>Sample configuration</td> 
+<tr><td>Current configuration</td> 
 <td><code>0.2</code> (20%)</td> 
 <td><code>0.5</code> (50%)</td> 
 <td><code>0.334</code> (33.4%)</td></tr>

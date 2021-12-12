@@ -1,7 +1,7 @@
 
 # Install Osmosis
 
-This guide will explain how to install the osmosid binary into your system.
+This guide will explain how to install the osmosisd binary onto your system.
 
 
 On Ubuntu start by updating your system:
@@ -36,3 +36,7 @@ cd osmosis
 git checkout v4.2.0
 make install
 ```
+
+If you came from the testnet node instruction, [click here to return](../network/join-testnet)
+
+If you came from the mainnet node instruction, [click here to return](../network/join-mainnet)

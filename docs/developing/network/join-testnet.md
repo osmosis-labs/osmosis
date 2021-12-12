@@ -6,14 +6,13 @@ Make sure you have [installed the Osmosis Binary (CLI).](../cli/install)
 
 ## Initialize Osmosis Node
 
-You have now installed the Osmosis Daemon (osmosisd). Use osmosisd to initialize your node (replace the NODE_NAME with a name of your choosing):
+Use osmosisd to initialize your node (replace the NODE_NAME with a name of your choosing):
 
 ```bash
 osmosisd init NODE_NAME --chain-id=osmosis-testnet-0
 ```
 
-
-We now need to open the config.toml to edit the seed list:
+Open the config.toml to edit the seed list:
 
 ```bash
 cd $HOME/.osmosisd/config
@@ -26,11 +25,11 @@ Use page down or arrow keys to get to the line that says seeds = "" and replace 
 seeds = "4eaed17781cd948149098d55f80a28232a365236@testmosis.blockpane.com:26656"
 ```
 
-Then pres ```Ctrl+O```, then enter to save, then ```Ctrl+X``` to exit
+Then press ```Ctrl+O``` then enter to save, then ```Ctrl+X``` to exit
 
 ## Set Up Cosmovisor
 
-We will now set up cosmovisor to ensure the upgrade happens flawlessly. To install Cosmovisor:
+Set up cosmovisor to ensure future upgrades happen flawlessly. To install Cosmovisor:
 
 ```bash
 cd $HOME
@@ -42,7 +41,6 @@ cp cosmovisor/cosmovisor $GOPATH/bin/cosmovisor
 cd $HOME
 ```
 
-
 Create the required directories:
 
 ```bash
@@ -51,7 +49,6 @@ mkdir -p ~/.osmosisd/cosmovisor/genesis
 mkdir -p ~/.osmosisd/cosmovisor/genesis/bin
 mkdir -p ~/.osmosisd/cosmovisor/upgrades
 ```
-
 
 Set the environment variables:
 
@@ -72,7 +69,6 @@ cd $HOME/.osmosisd/config
 wget https://github.com/osmosis-labs/networks/raw/unity/v4/osmosis-1/upgrades/v4/testnet/genesis.tar.bz2
 tar -xjf genesis.tar.bz2
 ```
-
 
 Copy the current osmosisd binary into the cosmovisor/genesis folder:
 
@@ -97,7 +93,7 @@ osmosisd unsafe-reset-all
 
 ## Download Chain Data
 
-We must now download the latest chain data from a snapshot provider. In this example, I will use [the validator MP-20's latest testnet snapshot](https://mp20.net/snapshots/osmosis-testnet/) and I will use the pruned chain data.
+Download the latest chain data from a snapshot provider. In this example, I will use [the validator MP-20's latest testnet snapshot](https://mp20.net/snapshots/osmosis-testnet/) and I will use the pruned chain data.
 
 Download liblz4-tool to handle the compressed file:
 
@@ -114,7 +110,7 @@ wget -O - https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest
 
 ## Prep Cosmovisor for V5
 
-Lets now prep the upgrade to automatically update to v5.0.0-rc2 once we hit the upgrade height:
+Prepare cosmovisor to automatically update to v5.0.0-rc2 after reaching the upgrade height:
 
 ```bash
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
@@ -127,7 +123,7 @@ cd $HOME
 
 ## Set Up Osmosis Service
 
-While we could start cosmovisor now with "cosmovisor start", lets set up a service to allow cosmovisor to run in the background as well as restart automatically if it runs into any problems:
+Set up a service to allow cosmovisor to run in the background as well as restart automatically if it runs into any problems:
 
 ```bash
 echo "[Unit]
@@ -164,13 +160,13 @@ sudo systemctl daemon-reload
 sudo systemctl start cosmovisor
 ```
 
-Check the status of your service:
+Check the status of the service:
 
 ```bash
 sudo systemctl status cosmovisor
 ```
 
-To see live logs of your service:
+To see live logs of the service:
 
 ```bash
 journalctl -u cosmovisor -f

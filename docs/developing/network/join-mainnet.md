@@ -20,7 +20,7 @@ wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks
 
 ## Set Up Cosmovisor
 
-We will now set up cosmovisor to ensure any future upgrades happen flawlessly. To install Cosmovisor:
+Set up cosmovisor to ensure any future upgrades happen flawlessly. To install Cosmovisor:
 
 ```bash
 cd $HOME
@@ -70,7 +70,7 @@ These two command should both output 4.2.0
 
 ## Download Chain Data
 
-We must now download the latest chain data from a snapshot provider. In this example, I will use <a>https://quicksync.io/networks/osmosis.html</a> and I will use the pruned chain data. You may choose the default or archived based off your needs. 
+Download the latest chain data from a snapshot provider. In this example, I will use <a href="https://quicksync.io/networks/osmosis.html" target="_blank">https://quicksync.io/networks/osmosis.html</a> as well as the pruned chain data. You may choose the default or archived based on your needs. 
 
 Download liblz4-tool to handle the compressed file:
 
@@ -123,9 +123,22 @@ curl -s https://api-osmosis.cosmostation.io/v1/tx/hash/`curl -s https://dl2.quic
 
 The output should state "checksum: OK"
 
+## Prep Cosmovisor for V5
+
+Prepare cosmovisor to automatically update to v5.0.0 after reaching the upgrade height:
+
+```bash
+mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
+cd $HOME/osmosis
+git checkout v5.0.0
+make build
+cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v5/bin
+cd $HOME
+```
+
 ## Set Up Osmosis Service
 
-You are now ready to start the Osmosis Daemon through cosmovisor. Lets set up a service to allow cosmovisor to run in the background as well as restart automatically if it runs into any problems:
+Set up a service to allow cosmovisor to run in the background as well as restart automatically if it runs into any problems:
 
 ```bash
 echo "[Unit]
@@ -162,13 +175,13 @@ sudo systemctl daemon-reload
 sudo systemctl start cosmovisor
 ```
 
-Check the status of your service:
+Check the status of the service:
 
 ```bash
 sudo systemctl status cosmovisor
 ```
 
-To see live logs of your service:
+To see live logs of the service:
 
 ```bash
 journalctl -u cosmovisor -f
