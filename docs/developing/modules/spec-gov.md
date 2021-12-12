@@ -356,11 +356,11 @@ The following tables show overall effects on different configurations of the gov
 <td>string (time ns)</td></tr> 
 <tr><td>Higher</td> 
 <td>Larger window for calculating the downtime</td> 
-<td>Longer deposit period</td> 
+<td>More time to solicit funds to reach <code>min_deposit</code> </td> 
 <td>Longer voting period</td></tr> 
 <tr><td>Lower</td> 
 <td>Smaller window for calculating the downtime</td> 
-<td>Shorter deposit period</td> 
+<td>Less time to solicit funds to reach <code>min_deposit</code></td> 
 <td>Shorter voting period</td></tr> 
 <tr><td>Constraints</td> 
 <td>Value has to be a positive integer</td> 
