@@ -344,7 +344,7 @@ See the network parameters section for a detailed explanation of the above param
 
 ```gov``` **module: Network Parameter effects and current configuration**
 
-The following tables show overall effects on different configurations of the gov related network parameters:
+The following tables show overall effects on different configurations of the ```gov``` related network parameters:
 
 <table><thead><tr><th></th> 
 <th><code>min_deposit</code></th> 
