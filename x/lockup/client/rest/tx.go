@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v3/x/lockup/types"
 )
 
 func registerTxHandlers(clientCtx client.Context, r *mux.Router) {

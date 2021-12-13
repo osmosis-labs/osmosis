@@ -5,10 +5,10 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/x/incentives"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	simapp "github.com/osmosis-labs/osmosis/v3/app"
+	"github.com/osmosis-labs/osmosis/v3/x/incentives"
+	"github.com/osmosis-labs/osmosis/v3/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v3/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )

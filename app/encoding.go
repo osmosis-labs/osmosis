@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/osmosis-labs/osmosis/app/params"
+	"github.com/osmosis-labs/osmosis/v3/app/params"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for testing
