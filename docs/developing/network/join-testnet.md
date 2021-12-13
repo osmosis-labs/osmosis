@@ -115,6 +115,7 @@ Prepare cosmovisor to automatically update to v5.0.0-rc2 after reaching the upgr
 ```bash
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
 cd $HOME/osmosis
+git pull
 git checkout v5.0.0-rc2
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v5/bin

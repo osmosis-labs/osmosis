@@ -33,7 +33,10 @@ module.exports = {
   //  ],
     ["@maginapp/vuepress-plugin-copy-code", {
       color: "#ffffff",
+      backgroundColor: "#ffffff",
       align: { bottom: '7px', right: '12px' },
+      successText: " ",
+      duration: 350,
     }
     ],
     [ 'tabs' ],
