@@ -27,7 +27,10 @@ func DefaultGenesisState() *GenesisState {
 			time.Hour * 3,
 			time.Hour * 7,
 		},
-		DistrInfo: nil,
+		DistrInfo: &DistrInfo{
+			TotalWeight: sdk.ZeroInt(),
+			Records:     []DistrRecord{},
+		},
 	}
 }
 
