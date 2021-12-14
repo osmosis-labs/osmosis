@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -13,7 +14,8 @@ import (
 func (suite *KeeperTestSuite) TestCleanupPool() {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-		err := suite.app.BankKeeper.AddCoins(
+		err := simapp.FundAccount(
+			suite.app.BankKeeper,
 			suite.ctx,
 			acc,
 			sdk.NewCoins(
@@ -94,7 +96,8 @@ func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
 		coinOf[acc.String()] = coins
 		coins = append(coins, sdk.NewCoin("uosmo", sdk.NewInt(1000000000)))
 
-		err := suite.app.BankKeeper.AddCoins(
+		err := simapp.FundAccount(
+			suite.app.BankKeeper,
 			suite.ctx,
 			acc,
 			coins.Sort(),
@@ -130,7 +133,8 @@ func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
 
 func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
 	suite.ctx = suite.ctx.WithBlockTime(time.Unix(1000, 1000))
-	err := suite.app.BankKeeper.AddCoins(
+	err := simapp.FundAccount(
+		suite.app.BankKeeper,
 		suite.ctx,
 		acc1,
 		sdk.NewCoins(
