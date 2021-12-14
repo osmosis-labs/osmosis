@@ -1,3 +1,8 @@
+# osmosis-1 seed list
+
+## artifact-staking.io 
+6bcdbcfd5d2c6ba58460f10dbcfde58278212833@osmosis.artifact-staking.io:26656
+
 # osmosis-1 peer list
 
 ## Cosmostation
@@ -41,9 +46,6 @@ e437756a853061cc6f1639c2ac997d9f7e84be67@144.76.183.180:26656
 
 ## Witval
 3fea02d121cb24503d5fbc53216a527257a9ab55@143.198.145.208:26656
-
-## artifact-staking.io
-5afb72422051e4dd677add34072a6004760f1f9b@149.28.120.170:26656
 
 ## Figment
 7024d1ca024d5e33e7dc1dcb5ed08349768220b9@134.122.42.20:26656

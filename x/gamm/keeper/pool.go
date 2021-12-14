@@ -174,7 +174,7 @@ func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams types.Balanc
 // SetNextPoolNumber sets next pool number
 func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: poolNumber})
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
@@ -189,7 +189,7 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	} else {
 		val := gogotypes.UInt64Value{}
 
-		err := k.cdc.UnmarshalBinaryBare(bz, &val)
+		err := k.cdc.Unmarshal(bz, &val)
 		if err != nil {
 			panic(err)
 		}

@@ -64,7 +64,7 @@ func (s *IntegrationTestSuite) TestGetCmdGauges() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
@@ -98,7 +98,7 @@ func (s *IntegrationTestSuite) TestGetCmdToDistributeCoins() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
@@ -132,7 +132,7 @@ func (s *IntegrationTestSuite) TestGetCmdDistributedCoins() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
@@ -166,7 +166,7 @@ func (s *IntegrationTestSuite) TestGetCmdGaugeByID() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
@@ -200,7 +200,41 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGauges() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdActiveGaugesPerDenom() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query active gauges per denom",
+			false, &types.ActiveGaugesPerDenomResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdActiveGaugesPerDenom()
+			clientCtx := val.ClientCtx
+
+			args := []string{s.cfg.BondDenom}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
@@ -234,7 +268,7 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGauges() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
@@ -292,7 +326,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}

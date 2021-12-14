@@ -30,11 +30,12 @@ message EpochInfo {
         (gogoproto.moretags) = "yaml:\"current_epoch_start_time\""
     ];
     bool epoch_counting_started = 6;
-    bool current_epoch_ended = 7;
+    reserved 7;
+    int64 current_epoch_start_height = 8;
 }
 ```
 
-EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`, `current_epoch_start_time`,  `epoch_counting_started`, `current_epoch_ended`.
+EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`, `current_epoch_start_time`,  `epoch_counting_started`, `current_epoch_start_height`.
 
 1. `identifier` keeps epoch identification string.
 2. `start_time` keeps epoch counting start time, if block time passes `start_time`, `epoch_counting_started` is set.
@@ -42,4 +43,4 @@ EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`, `current
 4. `current_epoch` keeps current active epoch number.
 5. `current_epoch_start_time` keeps the start time of current epoch.
 6. `epoch_number` is counted only when `epoch_counting_started` flag is set.
-7. If `current_epoch_ended` is set, epoch number is increased on next block.
+7. `current_epoch_start_height` keeps the start block height of current epoch.

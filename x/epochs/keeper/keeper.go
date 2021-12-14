@@ -11,13 +11,13 @@ import (
 
 type (
 	Keeper struct {
-		cdc      codec.Marshaler
+		cdc      codec.Codec
 		storeKey sdk.StoreKey
 		hooks    types.EpochHooks
 	}
 )
 
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,

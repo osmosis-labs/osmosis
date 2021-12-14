@@ -9,6 +9,7 @@ import (
 
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+	types "github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
@@ -32,6 +33,7 @@ type GAMMKeeper interface {
 type IncentivesKeeper interface {
 	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
 	GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*incentivestypes.Gauge, error)
+	GetGauges(ctx sdk.Context) []types.Gauge
 
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 }

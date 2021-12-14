@@ -1,23 +1,25 @@
 package app
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
+	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
+	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
+
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -29,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -41,6 +44,8 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -62,13 +67,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer"
-	ibctransferkeeper "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
-	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -83,6 +81,15 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v2/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v2/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
+	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
+	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
+	"github.com/gorilla/mux"
 
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
@@ -108,9 +115,19 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
+
+	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
+	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
+	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
+	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
+	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
 )
 
 const appName = "OsmosisApp"
+const v5UpgradeName = "v5"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -130,21 +147,26 @@ var (
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
+			ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		gamm.AppModuleBasic{},
+		txfees.AppModuleBasic{},
 		incentives.AppModuleBasic{},
 		lockup.AppModuleBasic{},
 		poolincentives.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
+		bech32ibc.AppModuleBasic{},
+		bech32ics20.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -162,6 +184,7 @@ var (
 		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
+		txfeestypes.ModuleName:                   nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -178,7 +201,7 @@ var _ App = (*OsmosisApp)(nil)
 type OsmosisApp struct {
 	*baseapp.BaseApp
 	cdc               *codec.LegacyAmino
-	appCodec          codec.Marshaler
+	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
 
 	invCheckPeriod uint
@@ -203,12 +226,17 @@ type OsmosisApp struct {
 	IBCKeeper            *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	EvidenceKeeper       evidencekeeper.Keeper
 	TransferKeeper       ibctransferkeeper.Keeper
+	AuthzKeeper          authzkeeper.Keeper
 	ClaimKeeper          *claimkeeper.Keeper
 	GAMMKeeper           gammkeeper.Keeper
 	IncentivesKeeper     incentiveskeeper.Keeper
 	LockupKeeper         lockupkeeper.Keeper
 	EpochsKeeper         epochskeeper.Keeper
 	PoolIncentivesKeeper poolincentiveskeeper.Keeper
+	TxFeesKeeper         txfeeskeeper.Keeper
+
+	Bech32IBCKeeper   bech32ibckeeper.Keeper
+	Bech32ICS20Keeper bech32ics20keeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -219,6 +247,9 @@ type OsmosisApp struct {
 
 	// simulation manager
 	sm *module.SimulationManager
+
+	// module migration manager
+	configurator module.Configurator
 }
 
 func init() {
@@ -242,7 +273,7 @@ func NewOsmosisApp(
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetAppVersion(version.Version)
+	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	keys := sdk.NewKVStoreKeys(
@@ -251,7 +282,8 @@ func NewOsmosisApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
-		epochstypes.StoreKey, poolincentivestypes.StoreKey,
+		epochstypes.StoreKey, poolincentivestypes.StoreKey, authzkeeper.StoreKey, txfeestypes.StoreKey,
+		bech32ibctypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -276,13 +308,23 @@ func NewOsmosisApp(
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	app.CapabilityKeeper.Seal()
 
 	// add keepers
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
+		appCodec,
+		keys[banktypes.StoreKey],
+		app.AccountKeeper,
+		app.GetSubspace(banktypes.ModuleName),
+		app.BlockedAddrs(),
+	)
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		keys[authzkeeper.StoreKey],
+		appCodec,
+		app.BaseApp.MsgServiceRouter(),
 	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
@@ -298,43 +340,106 @@ func NewOsmosisApp(
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
+	app.UpgradeKeeper = upgradekeeper.NewKeeper(
+		skipUpgradeHeights,
+		keys[upgradetypes.StoreKey],
+		appCodec,
+		homePath,
+		app.BaseApp,
+	)
 
-	// this configures a no-op upgrade handler for the v2 upgrade,
+	// this configures a no-op upgrade handler for the v4 upgrade,
 	// which improves the lockup module's store management.
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v4", func(ctx sdk.Context, plan upgradetypes.Plan) {
-			// Upgrade all of the lock storages
-			locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
-			if err != nil {
-				panic(err)
-			}
-			// clear all lockup module locking / unlocking queue items
-			app.LockupKeeper.ClearAllLockRefKeys(ctx)
-			app.LockupKeeper.ClearAllAccumulationStores(ctx)
+		"v4", func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			// // Upgrade all of the lock storages
+			// locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
+			// if err != nil {
+			// 	panic(err)
+			// }
+			// // clear all lockup module locking / unlocking queue items
+			// app.LockupKeeper.ClearAllLockRefKeys(ctx)
+			// app.LockupKeeper.ClearAllAccumulationStores(ctx)
 
-			// reset all lock and references
-			if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
-				panic(err)
-			}
+			// // reset all lock and references
+			// if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
+			// 	panic(err)
+			// }
 
-			// configure upgrade for gamm module's pool creation fee param add
-			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
-
-			prop12(ctx, app)
-
+			// // configure upgrade for gamm module's pool creation fee param add
+			// app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
+			// // execute prop12. See implementation in
+			// prop12(ctx, app)
+			return vm, nil
 		})
 
-	app.UpgradeKeeper.SetUpgradeHandler("v5", func(ctx sdk.Context, plan upgradetypes.Plan) {
-		totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
-		app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
-		app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
-	})
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v5UpgradeName,
+		func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			// Set IBC updates from {inside SDK} to v1
+			// https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md#in-place-store-migrations
+			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
+
+			totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
+			app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
+			app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
+
+			// Set all modules "old versions" to 1.
+			// Then the run migrations logic will handle running their upgrade logics
+			fromVM := make(map[string]uint64)
+			for moduleName := range app.mm.Modules {
+				fromVM[moduleName] = 1
+			}
+			// EXCEPT Auth needs to run _after_ staking (https://github.com/cosmos/cosmos-sdk/issues/10591),
+			// and it seems bank as well (https://github.com/provenance-io/provenance/blob/407c89a7d73854515894161e1526f9623a94c368/app/upgrades.go#L86-L122).
+			// So we do this by making auth run last.
+			// This is done by setting auth's consensus version to 2, running RunMigrations,
+			// then setting it back to 1, and then running migrations again.
+			fromVM[authtypes.ModuleName] = 2
+
+			// override versions for authz module as to not skip its InitGenesis
+			// for txfees module, we will override txfees ourselves.
+			delete(fromVM, authz.ModuleName)
+
+			newVM, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
+			if err != nil {
+				return nil, err
+			}
+
+			// Override txfees genesis here
+			txfees.InitGenesis(ctx, app.TxFeesKeeper, txfeestypes.GenesisState{
+				Basedenom: app.StakingKeeper.BondDenom(ctx),
+				Feetokens: []txfeestypes.FeeToken{},
+			})
+
+			// now update auth version back to v1, to run auth migration last
+			newVM[authtypes.ModuleName] = 1
+
+			return app.mm.RunMigrations(ctx, app.configurator, newVM)
+		})
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	if upgradeInfo.Name == v5UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := store.StoreUpgrades{
+			Added: []string{authz.ModuleName, txfees.ModuleName, bech32ibctypes.ModuleName},
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), &stakingKeeper, scopedIBCKeeper,
-	)
+		appCodec,
+		keys[ibchost.StoreKey],
+		app.GetSubspace(ibchost.ModuleName),
+		app.StakingKeeper,
+		app.UpgradeKeeper,
+		scopedIBCKeeper)
 
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
@@ -348,6 +453,19 @@ func NewOsmosisApp(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
+
+	app.Bech32IBCKeeper = *bech32ibckeeper.NewKeeper(
+		app.IBCKeeper.ChannelKeeper, appCodec, keys[bech32ibctypes.StoreKey],
+		app.TransferKeeper,
+	)
+
+	app.Bech32ICS20Keeper = *bech32ics20keeper.NewKeeper(
+		app.IBCKeeper.ChannelKeeper,
+		app.BankKeeper, app.TransferKeeper,
+		app.Bech32IBCKeeper,
+		app.TransferKeeper,
+		appCodec,
+	)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -391,9 +509,11 @@ func NewOsmosisApp(
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(app.PoolIncentivesKeeper))
+		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(app.PoolIncentivesKeeper)).
+		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(app.Bech32IBCKeeper))
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
@@ -405,6 +525,12 @@ func NewOsmosisApp(
 			poolIncentivesHooks,
 			app.ClaimKeeper.Hooks(),
 		),
+	)
+
+	app.TxFeesKeeper = txfeeskeeper.NewKeeper(
+		appCodec,
+		keys[txfeestypes.StoreKey],
+		app.GAMMKeeper,
 	)
 
 	app.LockupKeeper = *lockupKeeper.SetHooks(
@@ -456,7 +582,7 @@ func NewOsmosisApp(
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
+		bech32ics20.NewAppModule(appCodec, app.Bech32ICS20Keeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
@@ -466,15 +592,18 @@ func NewOsmosisApp(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		claim.NewAppModule(appCodec, *app.ClaimKeeper),
 		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		txfees.NewAppModule(appCodec, app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		bech32ibc.NewAppModule(appCodec, app.Bech32IBCKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -490,6 +619,7 @@ func NewOsmosisApp(
 	app.mm.SetOrderEndBlockers(
 		lockuptypes.ModuleName,
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, claimtypes.ModuleName,
+		authz.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 		epochstypes.ModuleName,
 	)
@@ -502,18 +632,23 @@ func NewOsmosisApp(
 	app.mm.SetOrderInitGenesis(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
-		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		ibchost.ModuleName,
+		gammtypes.ModuleName,
+		txfeestypes.ModuleName,
+		genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		bech32ibctypes.ModuleName, // comes after ibctransfertypes
 		poolincentivestypes.ModuleName,
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
-		gammtypes.ModuleName,
+		authz.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter()))
+	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.RegisterServices(app.configurator)
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -523,6 +658,9 @@ func NewOsmosisApp(
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		txfees.NewAppModule(appCodec, app.TxFeesKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
@@ -531,7 +669,6 @@ func NewOsmosisApp(
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		incentives.NewAppModule(appCodec, app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, app.PoolIncentivesKeeper),
@@ -553,9 +690,12 @@ func NewOsmosisApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
-		ante.NewAnteHandler(
-			app.AccountKeeper, app.BankKeeper, ante.DefaultSigVerificationGasConsumer,
+		NewAnteHandler(
+			app.AccountKeeper, app.BankKeeper,
+			app.TxFeesKeeper, app.GAMMKeeper,
+			ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
+			app.IBCKeeper.ChannelKeeper,
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
@@ -564,16 +704,6 @@ func NewOsmosisApp(
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
 		}
-
-		// Initialize and seal the capability keeper so all persistent capabilities
-		// are loaded in-memory and prevent any further modules from creating scoped
-		// sub-keepers.
-		// This must be done during creation of baseapp rather than in InitChain so
-		// that in-memory capabilities get regenerated on app restart.
-		// Note that since this reads from the store, we can only perform it when
-		// `loadLatest` is set to true.
-		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-		app.CapabilityKeeper.InitializeAndSeal(ctx)
 	}
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
@@ -585,7 +715,7 @@ func NewOsmosisApp(
 // MakeCodecs constructs the *std.Codec and *codec.LegacyAmino instances used by
 // simapp. It is useful for tests and clients who do not want to construct the
 // full simapp
-func MakeCodecs() (codec.Marshaler, *codec.LegacyAmino) {
+func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	config := MakeEncodingConfig()
 	return config.Marshaler, config.Amino
 }
@@ -610,6 +740,9 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+
+	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -651,7 +784,7 @@ func (app *OsmosisApp) LegacyAmino() *codec.LegacyAmino {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *OsmosisApp) AppCodec() codec.Marshaler {
+func (app *OsmosisApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
@@ -748,7 +881,7 @@ func GetMaccPerms() map[string][]string {
 }
 
 // initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)

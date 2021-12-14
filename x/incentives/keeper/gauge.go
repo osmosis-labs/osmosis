@@ -93,8 +93,14 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, timeKey), gauge.Id); err != nil {
 			return err
 		}
+		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
+			return err
+		}
 	} else if gauge.IsActiveGauge(curTime) {
 		if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
+			return err
+		}
+		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 			return err
 		}
 	} else {
@@ -216,6 +222,22 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
 	case lockuptypes.ByTime:
 		return k.lk.GetLocksPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
+	default:
+	}
+	return []lockuptypes.PeriodLock{}
+}
+
+// getLocksToDistributionWithMaxDuration get locks that are associated to a condition
+// and if its by duration, then use the min Duration
+func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []lockuptypes.PeriodLock {
+	switch distrTo.LockQueryType {
+	case lockuptypes.ByDuration:
+		if distrTo.Duration > minDuration {
+			return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, minDuration)
+		}
+		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
+	case lockuptypes.ByTime:
+		panic("Gauge by time is present!?!? Should have been blocked in ValidateBasic")
 	default:
 	}
 	return []lockuptypes.PeriodLock{}
@@ -344,10 +366,10 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo computed. It also updates the gauge for the distribution.
+// locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, distrInfo *distributionInfo) (sdk.Coins, error) {
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
-	locks := k.GetLocksToDistribution(ctx, gauge.DistributeTo)
 	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
 
 	if lockSum.IsZero() {
@@ -398,9 +420,20 @@ func (k Keeper) distributeInternal(
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
 
+	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
+
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
-		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, &distrInfo)
+		// All gauges have a precondition of being ByDuration
+		if _, ok := locksByDenomCache[gauge.DistributeTo.Denom]; !ok {
+			locksByDenomCache[gauge.DistributeTo.Denom] = k.getLocksToDistributionWithMaxDuration(
+				ctx, gauge.DistributeTo, time.Millisecond)
+		}
+		// get this from memory instead of hitting iterators / underlying stores.
+		// due to many details of cacheKVStore, iteration will still cause expensive IAVL reads.
+		allLocks := locksByDenomCache[gauge.DistributeTo.Denom]
+		filteredLocks := FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
+		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -446,13 +479,8 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 }
 
 // GetGaugeFromIDs returns gauges from gauge ids reference
-func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
+func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
-	gaugeIDs := []uint64{}
-	err := json.Unmarshal(refValue, &gaugeIDs)
-	if err != nil {
-		return gauges, err
-	}
 	for _, gaugeID := range gaugeIDs {
 		gauge, err := k.GetGaugeByID(ctx, gaugeID)
 		if err != nil {

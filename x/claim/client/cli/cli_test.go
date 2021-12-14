@@ -3,20 +3,12 @@ package cli_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/x/claim/client/cli"
@@ -24,7 +16,6 @@ import (
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var addr1 sdk.AccAddress
@@ -44,11 +35,11 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-
 	s.T().Log("setting up integration test suite")
-	encCfg := app.MakeEncodingConfig()
 
-	genState := app.ModuleBasics.DefaultGenesis(encCfg.Marshaler)
+	s.cfg = app.DefaultConfig()
+
+	genState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
 	claimGenState := claimtypes.DefaultGenesis()
 	claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30))
 	claimGenState.ClaimRecords = []types.ClaimRecord{
@@ -63,38 +54,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			ActionCompleted:        []bool{false, false, false, false},
 		},
 	}
-	claimGenStateBz := encCfg.Marshaler.MustMarshalJSON(claimGenState)
+	claimGenStateBz := s.cfg.Codec.MustMarshalJSON(claimGenState)
 	genState[claimtypes.ModuleName] = claimGenStateBz
 
-	s.cfg = network.Config{
-		Codec:             encCfg.Marshaler,
-		TxConfig:          encCfg.TxConfig,
-		LegacyAmino:       encCfg.Amino,
-		InterfaceRegistry: encCfg.InterfaceRegistry,
-		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor: func(val network.Validator) servertypes.Application {
-			return app.NewOsmosisApp(
-				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-				encCfg,
-				simapp.EmptyAppOptions{},
-				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-			)
-		},
-		GenesisState:    genState,
-		TimeoutCommit:   2 * time.Second,
-		ChainID:         "osmosis-1",
-		NumValidators:   1,
-		BondDenom:       sdk.DefaultBondDenom,
-		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:   sdk.TokensFromConsensusPower(1000),
-		StakingTokens:   sdk.TokensFromConsensusPower(500),
-		BondedTokens:    sdk.TokensFromConsensusPower(100),
-		PruningStrategy: storetypes.PruningOptionNothing,
-		CleanupDir:      true,
-		SigningAlgo:     string(hd.Secp256k1Type),
-		KeyringOptions:  []keyring.Option{},
-	}
-
+	s.cfg.GenesisState = genState
 	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
@@ -174,7 +137,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimRecord() {
 			s.Require().NoError(err)
 
 			var result types.QueryClaimRecordResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 		})
 	}
 }
@@ -209,7 +172,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 			s.Require().NoError(err)
 
 			var result types.QueryClaimableForActionResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(result.Coins.String(), tc.coins.String())
 		})
 	}
