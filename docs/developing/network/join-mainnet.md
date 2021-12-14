@@ -50,8 +50,10 @@ echo "export DAEMON_HOME=$HOME/.osmosisd" >> ~/.profile
 echo "export DAEMON_ALLOW_DOWNLOAD_BINARIES=false" >> ~/.profile
 echo "export DAEMON_LOG_BUFFER_SIZE=512" >> ~/.profile
 echo "export DAEMON_RESTART_AFTER_UPGRADE=true" >> ~/.profile
+echo "export UNSAFE_SKIP_BACKUP=true" >> ~/.profile
 source ~/.profile
 ```
+You may leave out `UNSAFE_SKIP_BACKUP=true`, however the backup takes a decent amount of time and public snapshots of old states are available.
 
 Copy the current osmosisd binary into the cosmovisor/genesis folder:
 
@@ -151,6 +153,7 @@ Environment="DAEMON_HOME=${HOME}/.osmosisd"
 Environment="DAEMON_RESTART_AFTER_UPGRADE=true"
 Environment="DAEMON_ALLOW_DOWNLOAD_BINARIES=false"
 Environment="DAEMON_LOG_BUFFER_SIZE=512"
+Environment="UNSAFE_SKIP_BACKUP=true"
 User=$USER
 ExecStart=${HOME}/go/bin/cosmovisor start
 Restart=always
