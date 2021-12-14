@@ -29,7 +29,7 @@ func DefaultGenesisState() *GenesisState {
 		},
 		DistrInfo: &DistrInfo{
 			TotalWeight: sdk.ZeroInt(),
-			Records:     []DistrRecord{},
+			Records:     nil,
 		},
 	}
 }
