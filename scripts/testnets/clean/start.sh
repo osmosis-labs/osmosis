@@ -2,7 +2,7 @@
 
 #### Parameters
 export CHAIN_ID="osmosis-clean-testnet-X"
-export VERSION="v4.2.0"
+export VERSION="v5.0.0"
 
 #### Initial node setup
 sudo apt-get update
@@ -45,6 +45,8 @@ osmosisd add-genesis-account validator 2000000000000uosmo --keyring-backend=test
 osmosisd add-genesis-account faucet 2000000000000uosmo,2000000000uion,2000000000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 --keyring-backend=test
 osmosisd add-genesis-account clawback 2000000000uosmo,2000000000uion,2000000000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 --keyring-backend=test
 # osmosisd add-genesis-account keplr1 2000000000uosmo,2000000000uion,2000000000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 --keyring-backend=test
+
+osmosisd prepare-genesis mainnet $CHAIN_ID
 
 osmosisd gentx validator 1000000000000uosmo --chain-id=$CHAIN_ID --commission-rate=0.05 --commission-max-change-rate=0.01 --commission-max-rate=1.0 --keyring-backend=test
 osmosisd collect-gentxs
