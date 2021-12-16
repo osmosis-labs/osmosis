@@ -442,7 +442,7 @@ func NewOsmosisApp(
 		appCodec,
 		keys[ibchost.StoreKey],
 		app.GetSubspace(ibchost.ModuleName),
-		app.StakingKeeper,
+		&stakingKeeper,
 		app.UpgradeKeeper,
 		scopedIBCKeeper)
 
