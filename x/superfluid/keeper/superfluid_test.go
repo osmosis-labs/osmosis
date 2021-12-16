@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
 
 	// check assets
 	assets = suite.app.SuperfluidKeeper.GetAllSuperfluidAssets(suite.ctx)
-	suite.Require().Len(assets, 1)
+	suite.Require().Equal(assets, []types.SuperfluidAsset{asset})
 
 	// delete asset
 	suite.app.SuperfluidKeeper.DeleteSuperfluidAsset(suite.ctx, "gamm/pool/1")

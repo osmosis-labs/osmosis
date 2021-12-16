@@ -15,11 +15,19 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.LockTokens(addr1, coins, time.Second)
 
+	expectedLocks := []types.PeriodLock{
+		{
+			ID:       1,
+			Owner:    addr1.String(),
+			Duration: time.Second,
+			EndTime:  time.Time{},
+			Coins:    coins,
+		},
+	}
 	// check locks
 	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].Coins, coins)
+	suite.Require().Equal(locks, expectedLocks)
 
 	// check accumulation store is correctly updated
 	accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
@@ -31,15 +39,15 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 
 	// check queries for native denom before creating synthetic lockup
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stake", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stake", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	amount := suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stake", time.Second)
 	suite.Require().Equal(amount.String(), "10")
 
@@ -69,9 +77,9 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	accountLockedCoins := suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
 	suite.Require().Equal(accountLockedCoins.String(), "10stake")
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTime(suite.ctx, addr1, suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeNotUnlockingOnly(suite.ctx, addr1, suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
 
@@ -86,13 +94,12 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 		EndTime: time.Time{},
 	})
 
+	expectedSynthLocks := []types.SyntheticLock{*synthLock}
 	synthLocks := suite.app.LockupKeeper.GetAllSyntheticLockupsByLockup(suite.ctx, 1)
-	suite.Require().Len(synthLocks, 1)
-	suite.Require().Equal(*synthLock, synthLocks[0])
+	suite.Require().Equal(synthLocks, expectedSynthLocks)
 
 	synthLocks = suite.app.LockupKeeper.GetAllSyntheticLockups(suite.ctx)
-	suite.Require().Len(synthLocks, 1)
-	suite.Require().Equal(*synthLock, synthLocks[0])
+	suite.Require().Equal(synthLocks, expectedSynthLocks)
 
 	// check accumulation store is correctly updated for synthetic lockup
 	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
@@ -104,29 +111,29 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 
 	// check queries for native denom after creating synthetic lockup
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stake", suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stake", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stake", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stake", suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stake", time.Second)
 	suite.Require().Equal(amount.String(), "10")
 
 	// check queries for synthetic denom after creating synthetic lockup
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stakestakedtovalidator1", suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stakestakedtovalidator1", suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
 	suite.Require().Equal(amount.String(), "10")
 
@@ -142,9 +149,9 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	accountLockedCoins = suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
 	suite.Require().Equal(accountLockedCoins.String(), "10stake")
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTime(suite.ctx, addr1, suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeNotUnlockingOnly(suite.ctx, addr1, suite.ctx.BlockTime())
-	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks, expectedLocks)
 	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
 

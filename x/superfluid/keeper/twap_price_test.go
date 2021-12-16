@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestEpochOsmoEquivalentTWAPSetGetDeleteFlow() {
@@ -20,10 +21,17 @@ func (suite *KeeperTestSuite) TestEpochOsmoEquivalentTWAPSetGetDeleteFlow() {
 	suite.Require().Equal(twap, sdk.NewDec(2))
 
 	// check twaps
+	expectedTwaps := []types.EpochOsmoEquivalentTWAP{
+		{
+			Epoch:          1,
+			Denom:          "gamm/pool/1",
+			EpochTwapPrice: sdk.NewDec(2),
+		},
+	}
 	twaps = suite.app.SuperfluidKeeper.GetAllEpochOsmoEquivalentTWAPs(suite.ctx, 1)
-	suite.Require().Len(twaps, 1)
+	suite.Require().Equal(twaps, expectedTwaps)
 	twaps = suite.app.SuperfluidKeeper.GetAllOsmoEquivalentTWAPs(suite.ctx)
-	suite.Require().Len(twaps, 1)
+	suite.Require().Equal(twaps, expectedTwaps)
 
 	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
