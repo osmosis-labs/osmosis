@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestEpochOsmoEquivalentTWAPSetGetDeleteFlow() {
 	// check twaps
 	expectedTwaps := []types.EpochOsmoEquivalentTWAP{
 		{
-			Epoch:          1,
+			EpochNumber:    1,
 			Denom:          "gamm/pool/1",
 			EpochTwapPrice: sdk.NewDec(2),
 		},
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestEpochOsmoEquivalentTWAPSetGetDeleteFlow() {
 	// test last epoch price
 	twapT := suite.app.SuperfluidKeeper.GetLastEpochOsmoEquivalentTWAP(suite.ctx, "gamm/pool/1")
 	suite.Require().Equal(twapT.Denom, "gamm/pool/1")
-	suite.Require().Equal(twapT.Epoch, int64(1))
+	suite.Require().Equal(twapT.EpochNumber, int64(1))
 	suite.Require().Equal(twapT.EpochTwapPrice, sdk.NewDec(2))
 
 	// delete twap
@@ -61,6 +61,6 @@ func (suite *KeeperTestSuite) TestEpochOsmoEquivalentTWAPSetGetDeleteFlow() {
 	// test last epoch price
 	twapT = suite.app.SuperfluidKeeper.GetLastEpochOsmoEquivalentTWAP(suite.ctx, "gamm/pool/1")
 	suite.Require().Equal(twapT.Denom, "gamm/pool/1")
-	suite.Require().Equal(twapT.Epoch, int64(1))
+	suite.Require().Equal(twapT.EpochNumber, int64(1))
 	suite.Require().Equal(twapT.EpochTwapPrice, sdk.NewDec(0))
 }

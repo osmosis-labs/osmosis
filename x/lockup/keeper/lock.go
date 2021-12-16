@@ -345,6 +345,7 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 	return nil
 }
 
+// removeTokensFromLock is called by lockup slash function - called by superfluid module only
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
 	lock.Coins = lock.Coins.Sub(coins)
 
@@ -388,7 +389,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockI
 	return lock, nil
 }
 
-// SlashTokensFromLockByID send slashed tokens to community pool
+// SlashTokensFromLockByID send slashed tokens to community pool - called by superfluid module only
 func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {

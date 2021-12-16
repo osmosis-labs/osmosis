@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 )
 
-func (suite *KeeperTestSuite) TestMoveIntermediaryDelegationRewardToGauges() {
+func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 	valAddr, _ := suite.SetupSuperfluidDelegate()
 
 	validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
@@ -28,7 +28,7 @@ func (suite *KeeperTestSuite) TestMoveIntermediaryDelegationRewardToGauges() {
 	suite.app.DistrKeeper.IncrementValidatorPeriod(suite.ctx, validator)
 
 	// move intermediary account delegation rewards to gauges
-	suite.app.SuperfluidKeeper.MoveIntermediaryDelegationRewardToGauges(suite.ctx)
+	suite.app.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(suite.ctx)
 
 	// check gauge balance
 	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, uint64(1))
