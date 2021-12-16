@@ -326,7 +326,7 @@ func NewOsmosisApp(
 		appCodec,
 		app.BaseApp.MsgServiceRouter(),
 	)
-	app.StakingKeeper := stakingkeeper.NewKeeper(
+	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
 
