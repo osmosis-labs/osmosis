@@ -81,15 +81,12 @@ sudo apt-get install wget liblz4-tool aria2 -y
 ```
 
 Download the chain data and its corresponding checksum.
-- Select the tab to your preferred download method (aria2 is faster than wget but requires double the available space to download)
+
 - Select the tab to the desired node type (Default, Pruned, or Archive)
 - Select the tab to the region closest to you (Netherlands, Singapore, or San Francisco) and copy the commands
 
 
 <!-- #region -->
-::::::::: tabs :options="{ useUrlFragment: false }"
-:::::::: tab wget
-
 ::::::: tabs :options="{ useUrlFragment: false }"
 
 :::::: tab Default
@@ -237,160 +234,6 @@ The output should state "checksum: OK"
 ::::::
 
 :::::::
-::::::::
-
-
-:::::::: tab aria2c
-
-::::::: tabs :options="{ useUrlFragment: false }"
-
-:::::: tab Default
-::::: tabs :options="{ useUrlFragment: false }"
-
-:::: tab Netherlands
-``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "default" '.[] | select(.network=="default")|select (.mirror=="Netherlands")|.filename'`
-cd $HOME/.osmosisd/
-aria2c -x5 https://dl2.quicksync.io/$FILENAME
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://dl2.quicksync.io/$FILENAME.checksum
-```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
-::::
-
-:::: tab Singapore
-``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "default" '.[] | select(.network=="default")|select (.mirror=="Singapore")|.filename'`
-cd $HOME/.osmosisd/
-aria2c -x5 https://getsin.quicksync.io/$FILENAME
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://getsin.quicksync.io/$FILENAME.checksum
-```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://getsin.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
-::::
-
-:::: tab SanFrancisco
-``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "default" '.[] | select(.network=="default")|select (.mirror=="SanFrancisco")|.filename'`
-cd $HOME/.osmosisd/
-aria2c -x5 https://getsfo.quicksync.io/$FILENAME
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://getsfo.quicksync.io/$FILENAME.checksum
-```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://getsfo.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
-::::
-
-:::::
-::::::
-
-:::::: tab Pruned
-::::: tabs :options="{ useUrlFragment: false }"
-
-:::: tab Netherlands
-``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "pruned" '.[] | select(.network=="pruned")|select (.mirror=="Netherlands")|.filename'`
-cd $HOME/.osmosisd/
-aria2c -x5 https://dl2.quicksync.io/$FILENAME
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://dl2.quicksync.io/$FILENAME.checksum
-```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
-::::
-
-:::: tab Singapore
-``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "pruned" '.[] | select(.network=="pruned")|select (.mirror=="Singapore")|.filename'`
-cd $HOME/.osmosisd/
-aria2c -x5 https://getsin.quicksync.io/$FILENAME
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://getsin.quicksync.io/$FILENAME.checksum
-```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://getsin.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
-::::
-
-:::: tab SanFrancisco
-``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "pruned" '.[] | select(.network=="pruned")|select (.mirror=="SanFrancisco")|.filename'`
-cd $HOME/.osmosisd/
-aria2c -x5 https://getsfo.quicksync.io/$FILENAME
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://getsfo.quicksync.io/$FILENAME.checksum
-```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://getsfo.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
-::::
-
-:::::
-::::::
-
-:::::: tab Archive
-::::: tabs :options="{ useUrlFragment: false }"
-
-:::: tab Netherlands
-``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "archive" '.[] | select(.network=="archive")|select (.mirror=="Netherlands")|.filename'`
-cd $HOME/.osmosisd/
-aria2c -x5 https://dl2.quicksync.io/$FILENAME
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://dl2.quicksync.io/$FILENAME.checksum
-```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
-::::
-
-:::::
-::::::
-
-:::::::
-::::::::
-:::::::::
 
 <!-- #endregion -->
 
