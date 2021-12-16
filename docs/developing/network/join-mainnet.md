@@ -72,7 +72,7 @@ These two command should both output 4.2.0
 
 ## Download Chain Data
 
-Download the latest chain data from a snapshot provider. In this example, I will use <a href="https://quicksync.io/networks/osmosis.html" target="_blank">https://quicksync.io/networks/osmosis.html</a> as well as the pruned chain data. You may choose the default or archived based on your needs. 
+Download the latest chain data from a snapshot provider. In the following commands, I will use <a href="https://quicksync.io/networks/osmosis.html" target="_blank">https://quicksync.io/networks/osmosis.html</a> to download the chain data. You may choose the default, pruned, or archive based on your needs. 
 
 Download liblz4-tool to handle the compressed file:
 
@@ -82,8 +82,9 @@ sudo apt-get install wget liblz4-tool aria2 -y
 
 Download the chain data and its corresponding checksum.
 - Select the tab to your preferred download method (aria2 is faster than wget but requires double the available space to download)
-- Select the tab to the region closest to you
-- Select the tab to the desired node type (Default, Pruned, or Archive) and copy the commands
+- Select the tab to the desired node type (Default, Pruned, or Archive)
+- Select the tab to the region closest to you (Netherlands, Singapore, or San Francisco) and copy the commands
+
 
 <!-- #region -->
 ::::::::: tabs :options="{ useUrlFragment: false }"
