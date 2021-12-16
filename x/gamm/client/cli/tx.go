@@ -74,7 +74,7 @@ Where pool.json contains:
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildCreateBalancerPoolMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -331,7 +331,7 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	return cmd
 }
 
-func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 
 	pool, err := parseCreatePoolFlags(fs)
 	if err != nil {

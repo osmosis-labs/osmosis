@@ -24,7 +24,7 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 	suite.Require().Error(err)
 
 	for i := 0; i < 10; i++ {
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 			PoolId: poolId,
 		})
@@ -41,7 +41,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	queryClient := suite.queryClient
 
 	for i := 0; i < 10; i++ {
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 			PoolId: poolId,
 		})
@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestQueryNumPools1() {
 
 func (suite *KeeperTestSuite) TestQueryNumPools2() {
 	for i := 0; i < 10; i++ {
-		suite.preparePool()
+		suite.prepareBalancerPool()
 	}
 
 	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	_, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: 1})
 	suite.Require().Error(err)
 
-	poolId := suite.preparePool()
+	poolId := suite.prepareBalancerPool()
 
 	// Share Token would be minted as 100.000000000000000000 share token initially.
 	res, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	suite.Require().Equal(types.InitPoolSharesSupply.Add(types.OneShare.MulRaw(10)).String(), res.TotalShares.Amount.String())
 }
 
-func (suite *KeeperTestSuite) TestQueryTotalLiquidity() {
+func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) TestQueryTotalLiquidity() {
 	suite.Require().NoError(err)
 	suite.Require().Equal("", sdk.Coins(res.Liquidity).String())
 
-	_ = suite.preparePool()
+	_ = suite.prepareBalancerPool()
 
 	// create pool
 	res, err = queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
@@ -146,14 +146,14 @@ func (suite *KeeperTestSuite) TestQueryTotalLiquidity() {
 	suite.Require().Equal("5000000bar,5000000baz,5000000foo", sdk.Coins(res.Liquidity).String())
 }
 
-func (suite *KeeperTestSuite) TestQueryPoolAssets() {
+func (suite *KeeperTestSuite) TestQueryBalancerPoolPoolAssets() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
 	_, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: 1})
 	suite.Require().Error(err)
 
-	poolId := suite.preparePool()
+	poolId := suite.prepareBalancerPool()
 
 	res, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: poolId})
 	suite.Require().NoError(err)
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestQueryPoolAssets() {
 	suite.Require().Equal("5000000foo", PoolAssets[2].Token.String())
 }
 
-func (suite *KeeperTestSuite) TestQuerySpotPrice() {
+func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
@@ -195,7 +195,7 @@ func (suite *KeeperTestSuite) TestQuerySpotPrice() {
 	})
 	suite.Require().Error(err)
 
-	poolId := suite.preparePool()
+	poolId := suite.prepareBalancerPool()
 
 	// Invalid params
 	_, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{PoolId: poolId})

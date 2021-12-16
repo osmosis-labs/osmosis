@@ -34,7 +34,7 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool PoolI) {
 		pool.GetTotalWeight().String())
 }
 
-func TestPoolShareDenom(t *testing.T) {
+func TestBalancerPoolShareDenom(t *testing.T) {
 	var poolId uint64 = 10
 
 	pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
@@ -43,7 +43,7 @@ func TestPoolShareDenom(t *testing.T) {
 	require.Equal(t, "gamm/pool/10", pacc.GetTotalShares().Denom)
 }
 
-func TestPoolPoolParams(t *testing.T) {
+func TestBalancerPoolParams(t *testing.T) {
 	// Tests that creating a pool with the given pair of swapfee and exit fee
 	// errors or succeeds as intended. Furthermore, it checks that
 	// NewPool panics in the error case.
@@ -86,7 +86,7 @@ func TestPoolPoolParams(t *testing.T) {
 }
 
 // TODO: Refactor this into multiple tests
-func TestPoolUpdatePoolAssetBalance(t *testing.T) {
+func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 	var poolId uint64 = 10
 
 	initialAssets := []PoolAsset{
@@ -148,7 +148,7 @@ func TestPoolUpdatePoolAssetBalance(t *testing.T) {
 	require.Equal(t, sdk.NewInt(1).String(), PoolAsset.Token.Amount.String())
 }
 
-func TestPoolPoolAssetsWeightAndTokenBalance(t *testing.T) {
+func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	// TODO: Add more cases
 	// asset names should be i ascending order, starting from test1
 	tests := []struct {
@@ -272,7 +272,7 @@ func TestPoolPoolAssetsWeightAndTokenBalance(t *testing.T) {
 }
 
 // TODO: Figure out what parts of this test, if any, make sense.
-func TestGetPoolAssets(t *testing.T) {
+func TestGetBalancerPoolAssets(t *testing.T) {
 	// Adds []PoolAssets, one after another
 	// if the addition doesn't error, adds the weight of the pool assets to a running total,
 	// and ensures the pool's total weight is equal to the expected.
@@ -367,7 +367,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 	require.Equal(t, balancerPool.PoolParams.SmoothWeightChangeParams.StartTime, defaultCurBlockTime)
 }
 
-func TestPoolPokeTokenWeights(t *testing.T) {
+func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	// Set default date
 	defaultStartTime := time.Unix(1618703511, 0)
 	defaultStartTimeUnix := defaultStartTime.Unix()
@@ -580,7 +580,7 @@ func TestPoolPokeTokenWeights(t *testing.T) {
 
 }
 
-func TestPoolParamStartTime(t *testing.T) {
+func TestBalancerPoolParamStartTime(t *testing.T) {
 	var poolId uint64 = 10
 
 	type testCase struct {

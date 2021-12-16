@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
-func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
+func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	type param struct {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
+func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	type param struct {
 		tokenInDenom     string
 		tokenInMaxAmount sdk.Int
@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestActivePoolSwap() {
+func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 	type testCase struct {
 		blockTime  time.Time
 		expectPass bool

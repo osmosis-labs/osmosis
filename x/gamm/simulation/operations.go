@@ -60,7 +60,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreatePool,
-			SimulateMsgCreatePool(ak, bk, k),
+			SimulateMsgCreateBalancerPool(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgSwapExactAmountIn,
@@ -128,8 +128,8 @@ func Max(x, y int) int {
 	return y
 }
 
-// SimulateMsgCreatePool generates a MsgCreatePool with random values
-func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
+// SimulateMsgCreateBalancerPool generates a MsgCreatePool with random values
+func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -137,7 +137,7 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.Len() <= 1 {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgCreatePool, "Account doesn't have 2 different coin types"), nil, nil
+				types.ModuleName, types.TypeMsgCreateBalancerPool, "Account doesn't have 2 different coin types"), nil, nil
 		}
 
 		poolAssets := genPoolAssets(r, simAccount, simCoins)

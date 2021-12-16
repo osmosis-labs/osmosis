@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolPara
 	return poolId
 }
 
-func (suite *KeeperTestSuite) preparePool() uint64 {
+func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
 	poolId := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),

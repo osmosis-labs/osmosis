@@ -11,7 +11,7 @@ import (
 
 // constants
 const (
-	TypeMsgCreatePool              = "create_pool"
+	TypeMsgCreateBalancerPool      = "create_balancer_pool"
 	TypeMsgSwapExactAmountIn       = "swap_exact_amount_in"
 	TypeMsgSwapExactAmountOut      = "swap_exact_amount_out"
 	TypeMsgJoinPool                = "join_pool"
@@ -66,7 +66,7 @@ func ValidateFutureGovernor(governor string) error {
 var _ sdk.Msg = &MsgCreateBalancerPool{}
 
 func (msg MsgCreateBalancerPool) Route() string { return RouterKey }
-func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreatePool }
+func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
 func (msg MsgCreateBalancerPool) ValidateBasic() error {
 
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
