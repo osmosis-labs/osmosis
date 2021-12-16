@@ -31,6 +31,26 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		return nil, err
 	}
 
+	if len(msg.Coins) == 1 {
+		locks := server.keeper.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, msg.Coins[0].Denom, msg.Duration)
+		if len(locks) > 0 { // if existing lock with same duration and denom exists, just add there
+			_, err = server.keeper.AddTokensToLockByID(ctx, owner, locks[0].ID, msg.Coins)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
+
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtAddTokensToLock,
+					sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(locks[0].ID)),
+					sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
+					sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
+				),
+			})
+			return &types.MsgLockTokensResponse{}, nil
+		}
+	}
+
 	lock, err := server.keeper.LockTokens(ctx, owner, msg.Coins, msg.Duration)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())

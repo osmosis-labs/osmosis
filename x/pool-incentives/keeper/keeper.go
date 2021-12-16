@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -16,7 +17,7 @@ import (
 
 type Keeper struct {
 	storeKey sdk.StoreKey
-	cdc      codec.BinaryMarshaler
+	cdc      codec.BinaryCodec
 
 	paramSpace paramtypes.Subspace
 
@@ -29,7 +30,7 @@ type Keeper struct {
 	feeCollectorName  string // name of the FeeCollector ModuleAccount
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, communityPoolName string, feeCollectorName string) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, communityPoolName string, feeCollectorName string) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -127,7 +128,7 @@ func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.D
 
 	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
 
-	store.Set(types.LockableDurationsKey, k.cdc.MustMarshalBinaryBare(&info))
+	store.Set(types.LockableDurationsKey, k.cdc.MustMarshal(&info))
 }
 
 func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
@@ -139,7 +140,17 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 		panic("lockable durations not set")
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(bz, &info)
+	k.cdc.MustUnmarshal(bz, &info)
 
 	return info.LockableDurations
+}
+
+func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {
+	gauges := k.incentivesKeeper.GetGauges(ctx)
+	return gauges
+}
+
+func (k Keeper) ExportGenesis(ctx sdk.Context) interface{} {
+	fmt.Println("you have hit a very silly placeholder, smartly suggested by the IDE")
+	return nil
 }

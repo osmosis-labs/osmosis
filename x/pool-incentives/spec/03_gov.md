@@ -4,7 +4,7 @@ order: 3
 
 # Gov
 
-`Pool Incentives` module takes the uses the values set at genesis or values added by chain governance to distribute part of the inflation minted by the mint module to specified gauges.
+`Pool Incentives` module uses the values set at genesis or values added by chain governance to distribute part of the inflation minted by the mint module to specified gauges.
 
 ```go
 type DistrInfo struct {

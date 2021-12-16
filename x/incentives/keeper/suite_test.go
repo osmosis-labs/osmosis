@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -45,7 +46,7 @@ func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.
 	}
 
 	addr := sdk.AccAddress([]byte(fmt.Sprintf("addr%s%8d", prefix, addrNum)))
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, balance)
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, balance)
 	suite.Require().NoError(err)
 	return addr
 }
@@ -79,7 +80,8 @@ func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc) []ty
 }
 
 func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
+	suite.Require().NoError(err)
 	gaugeID, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch)
 	suite.Require().NoError(err)
 	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
@@ -89,15 +91,17 @@ func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress,
 
 func (suite *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64 {
 	addr := sdk.AccAddress([]byte("addrx---------------"))
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
-	err := suite.app.IncentivesKeeper.AddToGaugeRewards(suite.ctx, addr, coins, gaugeID)
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
+	suite.Require().NoError(err)
+	err = suite.app.IncentivesKeeper.AddToGaugeRewards(suite.ctx, addr, coins, gaugeID)
 	suite.Require().NoError(err)
 	return gaugeID
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
-	_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
+	suite.Require().NoError(err)
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }
 

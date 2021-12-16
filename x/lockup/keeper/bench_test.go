@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/app"
@@ -50,7 +51,7 @@ func benchmarkResetLogic(numLockups int, b *testing.B) {
 		for j := 0; j < numDenoms; j++ {
 			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
 		}
-		app.BankKeeper.SetBalances(ctx, addr, coins)
+		_ = simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
 		app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
 		addrs = append(addrs, addr)
 	}
@@ -72,7 +73,7 @@ func benchmarkResetLogic(numLockups int, b *testing.B) {
 	b.StartTimer()
 	b.ReportAllocs()
 	// distribute coins from gauges to lockup owners
-	app.LockupKeeper.ResetAllLocks(ctx, locks)
+	_ = app.LockupKeeper.ResetAllLocks(ctx, locks)
 }
 
 func BenchmarkResetLogicMedium(b *testing.B) {

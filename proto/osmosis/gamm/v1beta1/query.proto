@@ -2,7 +2,6 @@ syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
-
 import "osmosis/gamm/v1beta1/tx.proto";
 import "osmosis/gamm/v1beta1/pool.proto";
 

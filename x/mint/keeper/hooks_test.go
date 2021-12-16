@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
+	osmoapp "github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,7 @@ import (
 )
 
 func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -95,7 +96,7 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 }
 
 func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -166,7 +167,7 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 }
 
 func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	mintParams := app.MintKeeper.GetParams(ctx)
@@ -205,15 +206,16 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	require.Equal(t, lastHalvenPeriod, mintParams.MintingRewardsDistributionStartEpoch)
 }
 
-func setupGaugeForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Context) {
+func setupGaugeForLPIncentives(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context) {
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	app.BankKeeper.SetBalances(ctx, addr, coins)
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
+	require.NoError(t, err)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
+	_, err = app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 }

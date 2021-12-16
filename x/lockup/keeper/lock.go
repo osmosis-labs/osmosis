@@ -181,6 +181,11 @@ func (k Keeper) GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddre
 	return combineLocks(notUnlockings, unlockings)
 }
 
+// GetAccountLockedDurationNotUnlockingOnly Returns account locked with specific duration within not unlockings
+func (k Keeper) GetAccountLockedDurationNotUnlockingOnly(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.AccountLockIteratorDurationDenom(ctx, false, addr, denom, duration))
+}
+
 // GetAccountLockedLongerDuration Returns account locked with duration longer than specified
 func (k Keeper) GetAccountLockedLongerDuration(ctx sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock {
 	// it does not matter started unlocking or not for duration query
@@ -412,7 +417,7 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	for _, denom := range denoms {
 		curDurationMap := accumulationStoreEntries[denom]
 		durations := make([]time.Duration, 0, len(curDurationMap))
-		for duration, _ := range curDurationMap {
+		for duration := range curDurationMap {
 			durations = append(durations, duration)
 		}
 		sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })

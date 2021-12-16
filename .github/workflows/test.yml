@@ -11,14 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.3
+      - uses: actions/setup-go@v2.1.4
         with:
-          go-version: 1.15
+          go-version: 1.17
       - name: Display go version
         run: go version
       - name: Run all tests
         run: go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic `go list ./... | grep -v simapp`
       - name: Codecov
         uses: codecov/codecov-action@v1.5.2
-      - name: Run simulation
-        run: go test ./simapp

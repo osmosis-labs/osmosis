@@ -67,12 +67,11 @@ func (k Keeper) addGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) er
 
 // deleteGaugeRefByKey removes gauge ID from an array associated to provided key
 func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
-	var index = -1
 	store := ctx.KVStore(k.storeKey)
 	gaugeIDs := k.getGaugeRefs(ctx, key)
-	gaugeIDs, index = removeValue(gaugeIDs, gaugeID)
+	gaugeIDs, index := removeValue(gaugeIDs, gaugeID)
 	if index < 0 {
-		return fmt.Errorf("specific gauge with ID %d not found", gaugeID)
+		return fmt.Errorf("specific gauge with ID %d not found by reference %s", gaugeID, key)
 	}
 	if len(gaugeIDs) == 0 {
 		store.Delete(key)

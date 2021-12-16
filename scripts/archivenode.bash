@@ -1,4 +1,13 @@
 #!/bin/bash
+
+
+
+# Archive node script
+# NB:  you can also download archives at quicksync:
+# https://quicksync.io/networks/osmosis.html
+# 2nd NB:  may explode but works for me. - Jacob
+
+
 git checkout v1.0.1
 make install
 osmosisd init archive

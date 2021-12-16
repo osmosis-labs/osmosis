@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
+	osmoapp "github.com/osmosis-labs/osmosis/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -13,7 +14,7 @@ import (
 )
 
 func TestPerpetualGaugeNotExpireAfterDistribution(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := sdk.AccAddress([]byte("addr1---------------"))
@@ -22,13 +23,14 @@ func TestPerpetualGaugeNotExpireAfterDistribution(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	app.BankKeeper.SetBalances(ctx, addr, coins)
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
+	require.NoError(t, err)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
+	_, err = app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
@@ -44,7 +46,7 @@ func TestPerpetualGaugeNotExpireAfterDistribution(t *testing.T) {
 }
 
 func TestNonPerpetualGaugeExpireAfterDistribution(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := sdk.AccAddress([]byte("addr1---------------"))
@@ -53,13 +55,14 @@ func TestNonPerpetualGaugeExpireAfterDistribution(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	app.BankKeeper.SetBalances(ctx, addr, coins)
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
+	require.NoError(t, err)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	_, err := app.IncentivesKeeper.CreateGauge(ctx, false, addr, coins, distrTo, time.Now(), 1)
+	_, err = app.IncentivesKeeper.CreateGauge(ctx, false, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 
 	params := app.IncentivesKeeper.GetParams(ctx)

@@ -761,10 +761,7 @@ func (m *SmoothWeightChangeParams) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthBalancerPool
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthBalancerPool
 			}
 			if (iNdEx + skippy) > l {
@@ -918,10 +915,7 @@ func (m *BalancerPoolParams) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthBalancerPool
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthBalancerPool
 			}
 			if (iNdEx + skippy) > l {
@@ -1188,10 +1182,7 @@ func (m *BalancerPool) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthBalancerPool
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthBalancerPool
 			}
 			if (iNdEx + skippy) > l {

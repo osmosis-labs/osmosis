@@ -358,6 +358,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 		ExitFee:                  defaultExitFee,
 	}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
+
 	// Consistency check that SmoothWeightChangeParams params are set
 	require.NotNil(t, pacc.PoolParams.SmoothWeightChangeParams)
 	// Ensure that the start time got set

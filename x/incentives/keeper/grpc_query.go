@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 
@@ -46,7 +47,7 @@ func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.
 	valStore := prefix.NewStore(store, types.KeyPrefixGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := k.GetGaugeFromIDs(ctx, value)
+		newGauges, err := k.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
 			panic(err)
 		}
@@ -70,7 +71,7 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := k.GetGaugeFromIDs(ctx, value)
+		newGauges, err := k.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
 			panic(err)
 		}
@@ -86,6 +87,30 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 	return &types.ActiveGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
+// ActiveGaugesPerDenom returns active gauges for the specified denom
+func (k Keeper) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGaugesPerDenomRequest) (*types.ActiveGaugesPerDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	gauges := []types.Gauge{}
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		activeGauges := k.GetActiveGauges(ctx)
+		for _, gauge := range activeGauges {
+			if gauge.DistributeTo.Denom == req.Denom {
+				gauges = append(gauges, gauge)
+			}
+		}
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.ActiveGaugesPerDenomResponse{Data: gauges, Pagination: pageRes}, nil
+}
+
 // UpcomingGauges returns scheduled gauges
 func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesRequest) (*types.UpcomingGaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -94,7 +119,7 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := k.GetGaugeFromIDs(ctx, value)
+		newGauges, err := k.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
 			panic(err)
 		}
@@ -136,4 +161,22 @@ func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDur
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
+}
+
+// getGaugeFromIDJsonBytes returns gauges from gauge id json bytes
+func (k Keeper) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
+	gauges := []types.Gauge{}
+	gaugeIDs := []uint64{}
+	err := json.Unmarshal(refValue, &gaugeIDs)
+	if err != nil {
+		return gauges, err
+	}
+	for _, gaugeID := range gaugeIDs {
+		gauge, err := k.GetGaugeByID(ctx, gaugeID)
+		if err != nil {
+			return []types.Gauge{}, err
+		}
+		gauges = append(gauges, *gauge)
+	}
+	return gauges, nil
 }

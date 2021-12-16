@@ -26,7 +26,7 @@ var (
 
 func init() {
 	maxInt := big.NewInt(2)
-	maxInt = maxInt.Exp(maxInt, big.NewInt(255), nil)
+	maxInt = maxInt.Exp(maxInt, big.NewInt(256), nil)
 	_sdkIntMaxValue, ok := sdk.NewIntFromString(maxInt.Sub(maxInt, big.NewInt(1)).String())
 	if !ok {
 		panic("Failed to calculate the max value of sdk.Int")
@@ -117,7 +117,7 @@ func (k Keeper) NumPools(
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: k.GetNextPoolNumber(sdkCtx) - 1,
+		NumPools: k.GetNextPoolNumberAndIncrement(sdkCtx) - 1,
 	}, nil
 }
 

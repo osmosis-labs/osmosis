@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
@@ -17,6 +18,23 @@ var (
 		ExitFee: defaultExitFee,
 	}
 	defaultFutureGovernor = ""
+
+	// pool assets
+	defaultFooAsset types.PoolAsset = types.PoolAsset{
+		Weight: sdk.NewInt(100),
+		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+	}
+	defaultBarAsset types.PoolAsset = types.PoolAsset{
+		Weight: sdk.NewInt(100),
+		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+	}
+	defaultPoolAssets []types.PoolAsset = []types.PoolAsset{defaultFooAsset, defaultBarAsset}
+	defaultAcctFunds  sdk.Coins         = sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+		sdk.NewCoin("foo", sdk.NewInt(10000000)),
+		sdk.NewCoin("bar", sdk.NewInt(10000000)),
+		sdk.NewCoin("baz", sdk.NewInt(10000000)),
+	)
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
@@ -93,16 +111,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				suite.ctx, acc1, balancer.BalancerPoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(1, 2),
-				}, []types.PoolAsset{
-					{
-						Weight: sdk.NewInt(100),
-						Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
-					}, {
-						Weight: sdk.NewInt(100),
-						Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
-					},
-				},
-				defaultFutureGovernor)
+				}, defaultPoolAssets, defaultFutureGovernor)
 			suite.Require().Error(err, "can't create a pool with negative swap fee")
 		},
 	}, {
@@ -111,13 +120,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(-1, 2),
-			}, []types.PoolAsset{{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
-			}, {
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
-			}}, defaultFutureGovernor)
+			}, defaultPoolAssets, defaultFutureGovernor)
 			suite.Require().Error(err, "can't create a pool with negative exit fee")
 		},
 	}, {
@@ -256,16 +259,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
-				acc,
-				sdk.NewCoins(
-					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-					sdk.NewCoin("foo", sdk.NewInt(10000000)),
-					sdk.NewCoin("bar", sdk.NewInt(10000000)),
-					sdk.NewCoin("baz", sdk.NewInt(10000000)),
-				),
-			)
+			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, defaultAcctFunds)
 			if err != nil {
 				panic(err)
 			}
@@ -344,16 +338,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
-				acc,
-				sdk.NewCoins(
-					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-					sdk.NewCoin("foo", sdk.NewInt(10000000)),
-					sdk.NewCoin("bar", sdk.NewInt(10000000)),
-					sdk.NewCoin("baz", sdk.NewInt(10000000)),
-				),
-			)
+			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, defaultAcctFunds)
 			if err != nil {
 				panic(err)
 			}
@@ -453,16 +438,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
-				acc,
-				sdk.NewCoins(
-					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-					sdk.NewCoin("foo", sdk.NewInt(10000000)),
-					sdk.NewCoin("bar", sdk.NewInt(10000000)),
-					sdk.NewCoin("baz", sdk.NewInt(10000000)),
-				),
-			)
+			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, defaultAcctFunds)
 			if err != nil {
 				panic(err)
 			}
@@ -471,13 +447,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
-			}, []types.PoolAsset{{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
-			}, {
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
-			}}, defaultFutureGovernor)
+			}, defaultPoolAssets, defaultFutureGovernor)
 			suite.Require().NoError(err)
 
 			test.fn(poolId)
@@ -501,16 +471,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
-				acc,
-				sdk.NewCoins(
-					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-					sdk.NewCoin("foo", sdk.NewInt(10000000)),
-					sdk.NewCoin("bar", sdk.NewInt(10000000)),
-					sdk.NewCoin("baz", sdk.NewInt(10000000)),
-				),
-			)
+			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, defaultAcctFunds)
 			if err != nil {
 				panic(err)
 			}

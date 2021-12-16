@@ -2,10 +2,12 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	time "time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewGenesisState(params Params, lockableDurations []time.Duration, distrInfo *DistrInfo) *GenesisState {
@@ -25,13 +27,16 @@ func DefaultGenesisState() *GenesisState {
 			time.Hour * 3,
 			time.Hour * 7,
 		},
-		DistrInfo: nil,
+		DistrInfo: &DistrInfo{
+			TotalWeight: sdk.ZeroInt(),
+			Records:     nil,
+		},
 	}
 }
 
 // GetGenesisStateFromAppState returns x/pool-yield GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) *GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
@@ -47,6 +52,11 @@ func ValidateGenesis(data *GenesisState) error {
 	if err := data.Params.Validate(); err != nil {
 		return err
 	}
+
+	if data.DistrInfo.TotalWeight.LT(sdk.NewInt(0)) {
+		return errors.New("distrinfo weight should not be negative")
+	}
+
 	return validateLockableDurations(data.LockableDurations)
 }
 

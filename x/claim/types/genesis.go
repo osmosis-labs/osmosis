@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,7 +30,7 @@ func DefaultGenesis() *GenesisState {
 
 // GetGenesisStateFromAppState returns x/claims GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) *GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
@@ -51,5 +52,10 @@ func (gs GenesisState) Validate() error {
 	if !totalClaimable.IsEqual(sdk.NewCoins(gs.ModuleAccountBalance)) {
 		return ErrIncorrectModuleAccountBalance
 	}
+
+	if gs.Params.ClaimDenom != gs.ModuleAccountBalance.Denom {
+		return fmt.Errorf("denom for module and claim does not match")
+	}
+
 	return nil
 }

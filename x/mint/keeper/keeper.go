@@ -12,7 +12,7 @@ import (
 
 // Keeper of the mint store
 type Keeper struct {
-	cdc              codec.BinaryMarshaler
+	cdc              codec.BinaryCodec
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
 	accountKeeper    types.AccountKeeper
@@ -25,7 +25,7 @@ type Keeper struct {
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
@@ -55,9 +55,13 @@ func NewKeeper(
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
+
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
+	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // _____________________________________________________________________
@@ -103,14 +107,14 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 		panic("stored minter should not have been nil")
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &minter)
+	k.cdc.MustUnmarshal(b, &minter)
 	return
 }
 
 // set the minter
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryBare(&minter)
+	b := k.cdc.MustMarshal(&minter)
 	store.Set(types.MinterKey, b)
 }
 
@@ -168,24 +172,33 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	devRewardCoins := sdk.NewCoins(devRewardCoin)
 	// This is supposed to come from the developer vesting module address, not the mint module address
 	// we over-allocated to the mint module address earlier though, so we burn it right here.
-	k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins)
+	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins)
+	if err != nil {
+		return err
+	}
 	if len(params.WeightedDeveloperRewardsReceivers) == 0 {
 		// fund community pool when rewards address is empty
-		k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		if err != nil {
+			return err
+		}
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range params.WeightedDeveloperRewardsReceivers {
 			devRewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, devRewardCoin, w.Weight))
 			if w.Address == "" {
-				k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
+				err = k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
 					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+				if err != nil {
+					return err
+				}
 			} else {
 				devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
 				if err != nil {
 					return err
 				}
 				// If recipient is vesting account, pay to account according to its vesting condition
-				err = k.bankKeeper.SendCoinsFromModuleToAccountOriginalVesting(
+				err = k.bankKeeper.SendCoinsFromModuleToAccount(
 					ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
 				if err != nil {
 					return err
@@ -194,8 +207,12 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		}
 	}
 
-	communityPoolCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.CommunityPool))
-	k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+	// subtract from original provision to ensure no coins left over after the allocations
+	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(devRewardCoins)
+	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+	if err != nil {
+		return err
+	}
 
 	// call an hook after the minting and distribution of new coins
 	k.hooks.AfterDistributeMintedCoin(ctx, mintedCoin)
