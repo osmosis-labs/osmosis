@@ -9,7 +9,7 @@ The guides on this page will explain the process of integrating with Osmosis.
 
 <div class="cards twoColumn">
   <a href="token-listings.html" class="card">
-    <img src="/osmosis/img/osmosis.svg"/>
+    <img src="/osmosis/img/coin.svg" class="filter-blue"/>
     <div class="title">
      Token Listing Process
     </div>

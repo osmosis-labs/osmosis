@@ -8,7 +8,7 @@ Welcome to the validator documentation for Osmosis. Validators are nodes that pa
 
 <div class="cards twoColumn">
   <a href="/osmosis/validators/validating-testnet.html" class="card">
-    <img src="/osmosis/img/osmosis.svg"/>
+    <img src="/osmosis/img/check-double-solid.svg" class="filter-blue"/>
     <div class="title">
       Testnet Validator
     </div>
@@ -17,7 +17,7 @@ Welcome to the validator documentation for Osmosis. Validators are nodes that pa
     </div>
   </a>
   <a href="/osmosis/validators/validating-mainnet.html" class="card">
-    <img src="/osmosis/img/osmosis.svg"/>
+    <img src="/osmosis/img/check-to-slot-solid.svg" class="filter-blue"/>
     <div class="title">
       Mainnet Validator
     </div>

@@ -8,7 +8,7 @@ The guides on this page will explain the process of developing on Osmosis.
 
 <div class="cards twoColumn">
   <a href="dev-guide.html" class="card">
-    <img src="/osmosis/img/osmosis.svg"/>
+    <img src="/osmosis/img/book-solid.svg" class="filter-blue" width="28" height="28" />
     <div class="title">
      Developer Guide
     </div>
@@ -17,7 +17,7 @@ The guides on this page will explain the process of developing on Osmosis.
     </div>
   </a>
   <a href="osmosisd" class="card">
-    <img src="/osmosis/img/osmosis.svg"/>
+    <img src="/osmosis/img/terminal-solid.svg" class="filter-blue"/>
     <div class="title">
      Osmosis Daemon 
     </div>
@@ -27,7 +27,7 @@ The guides on this page will explain the process of developing on Osmosis.
   </a>
 
   <a href="network/join-testnet.html" class="card">
-    <img src="/osmosis/img/osmosis.svg"/>
+    <img src="/osmosis/img/flask-test.svg" class="filter-blue"/>
     <div class="title">
      Join Testnet
     </div>
@@ -36,7 +36,7 @@ The guides on this page will explain the process of developing on Osmosis.
     </div>
   </a>
   <a href="network/join-mainnet.html" class="card">
-    <img src="/osmosis/img/osmosis.svg"/>
+    <img src="/osmosis/img/link.svg" class="filter-blue"/>
     <div class="title">
      Join Mainnet 
     </div>
@@ -46,7 +46,7 @@ The guides on this page will explain the process of developing on Osmosis.
   </a>
 
   <a href="modules/spec-claim.html" class="card">
-    <img src="/osmosis/img/osmosis.svg"/>
+    <img src="/osmosis/img/lego.svg" class="filter-blue"/>
     <div class="title">
      Modules 
     </div>
