@@ -141,8 +141,14 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolId uint64) (err error) 
 		panic("pool total share should be zero after cleanup")
 	}
 
-	pool.SetDestruction(ctx.BlockTime())
-	k.SetPool(ctx, pool)
+	err = pool.SetDestruction(ctx.BlockTime())
+	if err != nil {
+		return err
+	}
+	err = k.SetPool(ctx, pool)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
