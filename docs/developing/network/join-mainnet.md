@@ -291,30 +291,23 @@ journalctl -u cosmovisor -f
 
 ## Update Cosmovisor to V6
 
-Follow this step if you are still running V5.
+If still running V5, follow this step.
 
-Unlike prior cosmovisor upgrades, V6 can be upgraded now instead of waiting for a specified block height. 
+Unlike prior cosmovisor upgrades, V6 can be upgraded immediately instead of waiting for a specified block height.
 
 NOTE: This command writes the V6 binary to the V5 folder in order to replace the old V5 binary. If you were to write the binary to a new V6 folder, it would not immediately auto change to use the V6 binary.
 
-To update cosmovisor to V6:
+To update osmosisd to V6 and replace cosmovisor osmosisd:
 
 ```bash
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
 cd $HOME/osmosis
 git pull
 git checkout v6.0.0
+make install
 make build
 systemctl stop cosmovisor.service
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v5/bin
 systemctl start cosmovisor.service
 cd $HOME
-```
-
-Osmosisd will still be at the older version, so to update that as well:
-
-```bash
-cd $HOME/osmosis
-git checkout v6.0.0
-make install
 ```
