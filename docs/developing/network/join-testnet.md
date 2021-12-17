@@ -59,8 +59,11 @@ echo "export DAEMON_HOME=$HOME/.osmosisd" >> ~/.profile
 echo "export DAEMON_ALLOW_DOWNLOAD_BINARIES=false" >> ~/.profile
 echo "export DAEMON_LOG_BUFFER_SIZE=512" >> ~/.profile
 echo "export DAEMON_RESTART_AFTER_UPGRADE=true" >> ~/.profile
+echo "export UNSAFE_SKIP_BACKUP=true" >> ~/.profile
 source ~/.profile
 ```
+
+You may leave out `UNSAFE_SKIP_BACKUP=true`, however the backup takes a decent amount of time and public snapshots of old states are available.
 
 Download and replace the genesis file:
 
@@ -108,6 +111,7 @@ cd $HOME/.osmosisd/
 wget -O - https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest.tar.xz | xz -d -v | tar xf - |
 ```
 
+
 ## Set Up Osmosis Service
 
 Set up a service to allow cosmovisor to run in the background as well as restart automatically if it runs into any problems:
@@ -122,6 +126,7 @@ Environment="DAEMON_HOME=${HOME}/.osmosisd"
 Environment="DAEMON_RESTART_AFTER_UPGRADE=true"
 Environment="DAEMON_ALLOW_DOWNLOAD_BINARIES=false"
 Environment="DAEMON_LOG_BUFFER_SIZE=512"
+Environment="UNSAFE_SKIP_BACKUP=true"
 User=$USER
 ExecStart=${HOME}/go/bin/cosmovisor start
 Restart=always
@@ -158,3 +163,33 @@ To see live logs of the service:
 ```bash
 journalctl -u cosmovisor -f
 ``` 
+
+## Update Cosmovisor to V6
+
+Follow this step if you are still running V5.
+
+Unlike prior cosmovisor upgrades, V6 can be upgraded now instead of waiting for a specified block height. 
+
+NOTE: This command writes the V6 binary to the V5 folder in order to replace the old V5 binary. If you were to write the binary to a new V6 folder, it would not immediately auto change to use the V6 binary.
+
+To update cosmovisor to V6:
+
+```bash
+mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
+cd $HOME/osmosis
+git pull
+git checkout v6.0.0
+make build
+systemctl stop cosmovisor.service
+cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v5/bin
+systemctl start cosmovisor.service
+cd $HOME
+```
+
+Osmosisd will still be at the older version, so to update that as well:
+
+```bash
+cd $HOME/osmosis
+git checkout v6.0.0
+make install
+```
