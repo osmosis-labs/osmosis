@@ -219,6 +219,12 @@ func (k Keeper) GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp t
 	return combineLocks(notUnlockings, unlockings)
 }
 
+func (k Keeper) GetLocksDenom(ctx sdk.Context, denom string) []types.PeriodLock {
+	unlockings := k.getLocksFromIterator(ctx, k.LockIteratorDenom(ctx, true, denom))
+	notUnlockings := k.getLocksFromIterator(ctx, k.LockIteratorDenom(ctx, false, denom))
+	return combineLocks(notUnlockings, unlockings)
+}
+
 // GetLockedDenom Returns the total amount of denom that are locked
 func (k Keeper) GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int {
 	totalAmtLocked := k.GetPeriodLocksAccumulation(ctx, types.QueryCondition{
@@ -559,4 +565,44 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
+}
+
+// ForceUnlock ignores unlock duration and immediately unlock and refund.
+// CONTRACT: should be used only at the chain upgrade script
+func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+
+	// send coins back to owner
+	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
+		return err
+	}
+
+	// remove lock from store object
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(lockStoreKey(lock.ID))
+
+	var keyprefix []byte
+	if lock.IsUnlocking() {
+		keyprefix = types.KeyPrefixUnlocking
+	} else {
+		keyprefix = types.KeyPrefixNotUnlocking
+	}
+
+	// delete lock refs from the unlocking queue
+	err = k.deleteLockRefs(ctx, keyprefix, lock)
+	if err != nil {
+		return err
+	}
+
+	// remove from accumulation store
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+	}
+
+	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	return nil
+
 }

@@ -171,3 +171,54 @@ func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
 	suite.Error(err)
 	suite.Equal(err.Error(), sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool").Error())
 }
+
+func (suite *KeeperTestSuite) TestCleanupPoolWithLockup() {
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(1000, 1000))
+	err := simapp.FundAccount(
+		suite.app.BankKeeper,
+		suite.ctx,
+		acc1,
+		sdk.NewCoins(
+			sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
+			sdk.NewCoin("foo", sdk.NewInt(1000)),
+			sdk.NewCoin("bar", sdk.NewInt(1000)),
+			sdk.NewCoin("baz", sdk.NewInt(1000)),
+		),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultBalancerPoolParams, []types.PoolAsset{
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
+		},
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("bar", sdk.NewInt(1000)),
+		},
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("baz", sdk.NewInt(1000)),
+		},
+	}, "")
+	suite.NoError(err)
+
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, acc1, sdk.Coins{sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply)}, time.Hour)
+	suite.NoError(err)
+
+	for _, lock := range suite.app.LockupKeeper.GetLocksDenom(suite.ctx, types.GetPoolShareDenom(poolId)) {
+		err = suite.app.LockupKeeper.ForceUnlock(suite.ctx, lock)
+		suite.NoError(err)
+	}
+
+	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, poolId)
+	suite.NoError(err)
+	for _, coin := range []string{"foo", "bar", "baz"} {
+		amt := suite.app.BankKeeper.GetBalance(suite.ctx, acc1, coin)
+		// the refund could have rounding error
+		suite.True(amt.Amount.Equal(sdk.NewInt(1000)) || amt.Amount.Equal(sdk.NewInt(1000).SubRaw(1)),
+			"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), sdk.NewInt(1000).Int64())
+	}
+}

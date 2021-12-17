@@ -82,6 +82,9 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 // CleanupBalancerPool destructs a pool and refund all the assets according to
 // the shares held by the accounts. CleanupBalancerPool should be called not during
 // the chain execution time, as it iterates the entire account balances.
+//
+// All locks on this pool share must be unlocked in prior. Execute LockupKeeper.ForceUnlock
+// on remaning locks before calling this function.
 func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolId uint64) (err error) {
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
@@ -100,6 +103,8 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolId uint64) (err error) 
 
 		shareAmount := coin.Amount
 
+		pool.SubTotalShares(shareAmount)
+
 		// Burn the share tokens
 		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{coin})
 		if err != nil {
@@ -112,10 +117,13 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolId uint64) (err error) 
 		}
 
 		// Refund assets
-		pool.SubTotalShares(shareAmount)
 		for _, asset := range poolAssets {
+			assetAmount := asset.Token.Amount.Mul(shareAmount).Quo(totalShares)
+			if assetAmount.IsZero() {
+				continue
+			}
 			err = k.bankKeeper.SendCoins(
-				ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, asset.Token.Amount.Mul(shareAmount).Quo(totalShares)}})
+				ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, assetAmount}})
 			if err != nil {
 				return true
 			}
