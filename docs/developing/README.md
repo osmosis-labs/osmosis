@@ -8,7 +8,7 @@ The guides on this page will explain the process of developing on Osmosis.
 
 <div class="cards twoColumn">
   <a href="dev-guide.html" class="card">
-    <img src="/osmosis/img/book-solid.svg" class="filter-blue" width="28" height="28" />
+    <img src="/osmosis/img/book-solid.svg" class="filter-blue"/>
     <div class="title">
      Developer Guide
     </div>
@@ -45,7 +45,7 @@ The guides on this page will explain the process of developing on Osmosis.
     </div>
   </a>
 
-  <a href="modules/spec-claim.html" class="card">
+  <a href="modules/" class="card">
     <img src="/osmosis/img/lego.svg" class="filter-blue"/>
     <div class="title">
      Modules 

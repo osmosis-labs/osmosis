@@ -196,6 +196,7 @@ module.exports = {
         {
           title: 'Modules',
           children: [
+            "/developing/modules/",
             "/developing/modules/spec-claim",
             "/developing/modules/spec-epochs",
             "/developing/modules/spec-gamm",
