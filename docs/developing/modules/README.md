@@ -27,8 +27,8 @@ title: Module Home
   </a>
 
 
-  <a href="" class="card">
-    <img src="" class="filter-blue" />
+  <a href="spec-gamm.html" class="card">
+    <img src="/osmosis/img/liquid.svg" class="filter-blue" />
     <div class="title">
       GAMM
     </div>
