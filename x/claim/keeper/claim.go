@@ -117,11 +117,11 @@ func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
 func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(types.ClaimRecordsStorePrefix))
+	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
 		store.Delete(key)
 	}
-	iterator.Close()
 }
 
 // SetClaimables set claimable amount from balances object

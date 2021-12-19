@@ -408,6 +408,7 @@ func NewOsmosisApp(
 			}
 
 			// Override txfees genesis here
+			ctx.Logger().Info("Setting txfees module genesis with actual v5 desired genesis")
 			txfees.InitGenesis(ctx, app.TxFeesKeeper, txfeestypes.GenesisState{
 				Basedenom: app.StakingKeeper.BondDenom(ctx),
 				Feetokens: []txfeestypes.FeeToken{},
@@ -416,6 +417,8 @@ func NewOsmosisApp(
 			// now update auth version back to v1, to run auth migration last
 			newVM[authtypes.ModuleName] = 1
 
+			ctx.Logger().Info("Now running migrations just for auth, to get auth migration to be last. " +
+				"(CC https://github.com/cosmos/cosmos-sdk/issues/10591)")
 			return app.mm.RunMigrations(ctx, app.configurator, newVM)
 		})
 
