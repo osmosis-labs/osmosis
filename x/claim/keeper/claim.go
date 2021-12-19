@@ -101,7 +101,7 @@ func (k Keeper) ClawbackAirdrop(ctx sdk.Context) error {
 			osmoBal := k.bankKeeper.GetBalance(ctx, addr, "uosmo")
 			ionBal := k.bankKeeper.GetBalance(ctx, addr, "uion")
 			clawbackCoins := sdk.NewCoins(osmoBal, ionBal)
-			totalClawback.Add(clawbackCoins...)
+			totalClawback = totalClawback.Add(clawbackCoins...)
 			err = k.distrKeeper.FundCommunityPool(ctx, clawbackCoins, addr)
 			if err != nil {
 				return err
