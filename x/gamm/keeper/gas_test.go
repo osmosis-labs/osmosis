@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) measureAvgAndMaxJoinPoolGas(
 // so we can easily track changes
 func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.SetupTest()
-	poolId := suite.preparePool()
+	poolId := suite.prepareBalancerPool()
 
 	poolIDFn := func(int) uint64 { return poolId }
 	minShareOutAmountFn := func(int) sdk.Int { return minShareOutAmount }

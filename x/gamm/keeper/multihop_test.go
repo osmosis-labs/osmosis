@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
-func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountIn() {
+func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() {
 	type param struct {
 		routes            []types.SwapAmountInRoute
 		tokenIn           sdk.Coin
@@ -43,8 +43,8 @@ func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountIn() {
 		suite.SetupTest()
 
 		// Prepare 2 pools
-		suite.preparePool()
-		suite.preparePool()
+		suite.prepareBalancerPool()
+		suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountOut() {
+func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut() {
 	type param struct {
 		routes           []types.SwapAmountOutRoute
 		tokenInMaxAmount sdk.Int
@@ -131,8 +131,8 @@ func (suite *KeeperTestSuite) TestSimpleMultihopSwapExactAmountOut() {
 		suite.SetupTest()
 
 		// Prepare 2 pools
-		suite.preparePool()
-		suite.preparePool()
+		suite.prepareBalancerPool()
+		suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 

@@ -46,7 +46,7 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
-func (suite *KeeperTestSuite) preparePoolWithPoolParams(BalancerPoolParams gammtypes.BalancerPoolParams) uint64 {
+func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolParams gammtypes.BalancerPoolParams) uint64 {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, sdk.NewCoins(
@@ -78,8 +78,8 @@ func (suite *KeeperTestSuite) preparePoolWithPoolParams(BalancerPoolParams gammt
 	return poolId
 }
 
-func (suite *KeeperTestSuite) preparePool() uint64 {
-	poolId := suite.preparePoolWithPoolParams(gammtypes.BalancerPoolParams{
+func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
+	poolId := suite.prepareBalancerPoolWithPoolParams(gammtypes.BalancerPoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})
@@ -97,7 +97,7 @@ func (suite *KeeperTestSuite) preparePool() uint64 {
 	return poolId
 }
 
-func (suite *KeeperTestSuite) TestCreatePoolGauges() {
+func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 	suite.SetupTest()
 
 	keeper := suite.app.PoolIncentivesKeeper
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestCreatePoolGauges() {
 	suite.Equal(3, len(lockableDurations))
 
 	for i := 0; i < 3; i++ {
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
 		suite.NoError(err)
 
