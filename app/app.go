@@ -409,9 +409,10 @@ func NewOsmosisApp(
 
 			// Override txfees genesis here
 			ctx.Logger().Info("Setting txfees module genesis with actual v5 desired genesis")
+			feeTokens := initialWhitelistedFeetokens(ctx, app)
 			txfees.InitGenesis(ctx, app.TxFeesKeeper, txfeestypes.GenesisState{
 				Basedenom: app.StakingKeeper.BondDenom(ctx),
-				Feetokens: []txfeestypes.FeeToken{},
+				Feetokens: feeTokens,
 			})
 
 			// now update auth version back to v1, to run auth migration last
