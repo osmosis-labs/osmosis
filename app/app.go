@@ -409,7 +409,7 @@ func NewOsmosisApp(
 
 			// Override txfees genesis here
 			ctx.Logger().Info("Setting txfees module genesis with actual v5 desired genesis")
-			feeTokens := whitelistInitial(ctx, app)
+			feeTokens := initialWhitelistedFeetokens(ctx, app)
 			txfees.InitGenesis(ctx, app.TxFeesKeeper, txfeestypes.GenesisState{
 				Basedenom: app.StakingKeeper.BondDenom(ctx),
 				Feetokens: feeTokens,
