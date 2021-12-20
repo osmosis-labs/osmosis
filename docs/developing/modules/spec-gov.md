@@ -9,23 +9,30 @@ The ```gov``` module enables on-chain governance which allows Osmosis token hold
 - Vote for an active proposal
 
 [comment]: <> (Add Proposal Process page)
+
+</br>
+</br>
+
 ## Overview
 
 ### Network parameters
 
 The network parameters for the gov module are:
 
-- ```deposit_params``` - Deposit related parameters
-  - ```min_deposit```: Minimum deposit (in uOSMO) for a proposal to enter voting period
-  - ```max_deposit_period```: Maximum period (in nanoseconds) for OSMO holders to deposit on a proposal.
+- **```deposit_params```** - Deposit related parameters
+  - **```min_deposit```**: Minimum deposit (in uOSMO) for a proposal to enter voting period
+  - **```max_deposit_period```**: Maximum period (in nanoseconds) for OSMO holders to deposit on a proposal.
 
-- ```voting_params``` - Voting related parameters
-  - ```voting_period```: The length of the voting period (in nanoseconds)
+- **```voting_params```** - Voting related parameters
+  - **```voting_period```**: The length of the voting period (in nanoseconds)
 
-- ```tally_params``` - Tally related parameters
-  - ```quorum```: The minimum percentage (in decimal form) of voting power that needs to be casted on a proposal for the result to be valid
-  - ```threshold```: Minimum proportion (in decimal form) of Yes votes (excluding Abstain votes) for the proposal to be accepted
-  - ```veto```: Minimum value of Veto votes to total votes ratio (in decimal form) for proposal to be vetoed.
+- **```tally_params```** - Tally related parameters
+  - **```quorum```**: The minimum percentage (in decimal form) of voting power that needs to be casted on a proposal for the result to be valid
+  - **```threshold```**: Minimum proportion (in decimal form) of Yes votes (excluding Abstain votes) for the proposal to be accepted
+  - **```veto```**: Minimum value of Veto votes to total votes ratio (in decimal form) for proposal to be vetoed.
+
+</br>
+</br>
 
 ### The Governance Procedure
 
@@ -50,34 +57,59 @@ After the ```voting_period``` has passed, there are several scenarios that a pro
 
 Otherwise, the proposal will be accepted and changes will be implemented according to the proposal.
 
+</br>
+</br>
+
 ## Transactions
 
 ### submit-proposal
 
-**Submit a proposal along with an initial deposit**
+Submit a proposal along with an initial deposit
 
-```tx gov submit-proposal```
+```
+tx gov submit-proposal [flags]
+```
 
-There are different types of proposal submission types, of them include text, param-change, community-pool-spend, software-upgrade, and cancel-software-upgrade. We will go over each of these submission types in detail now:
+There are different types of proposal submission types, of them include `text`, `param-change`, `community-pool-spend`, `software-upgrade`, and `cancel-software-upgrade`. We will go over each of these submission types in detail now:
 
-**Submit a text proposal**
+</br>
+</br>
 
-```tx gov submit-proposal --type="Text"```
+### submit-proposal (text)
 
-Users have the option to submit a proposal in text form. This differs from other proposal submission types in that after it passes, no logic is automatically executed. This is good for proposing changes to Osmosis that are not linked to a specific daemon parameter. An example of this are signaling proposals to match external incentives:
+Submit a proposal in text form
+
+```bash
+tx gov submit-proposal --title --description --type="Text" --from --chain-id
+```
+
+Text proposals differ from other proposal submission types in that after it passes, no logic is automatically executed. This is good for proposing changes to Osmosis that are not linked to a specific daemon parameter.
+
+#### Example
+
+Create a text signaling proposals to match external incentives for a `DOGE/OSMO` and `DOGE/ATOM` pair.
 
 ```bash
 osmosisd tx gov submit-proposal --title="Match External Incentives for DOGE/OSMO and DOGE/ATOM pairs" --description="Input description" --type="Text" --from=WALLET_NAME --chain-id=CHAIN_ID
 ```
 
-**Submit a parameter change proposal**
+</br>
+</br>
 
-```tx gov submit-proposal param-change [proposal-file]```
+### submit-proposal (param change)
 
-Users can submit a proposal to modify network parameters during run time. Here is an example proposal to change the parameter MaxValidators (maximum number of validator) in the staking module:
+Submit a proposal to modify network parameters during run time
+
+```
+tx gov submit-proposal param-change [proposal-file] --from --chain-id
+```
+
+#### Example
+
+Change the parameter MaxValidators (maximum number of validator) in the staking module:
  
 ```bash
-osmosisd tx gov submit-proposal param-change proposal.json --from=WALLET_NAME --chain-id=CHAIN_ID
+osmosisd tx gov submit-proposal param-change proposal.json --from WALLET_NAME --chain-id CHAIN_ID
 ```
 The proposal.json file would look as follows:
 
@@ -95,15 +127,25 @@ The proposal.json file would look as follows:
 }
 ```
 
-**Submit a community pool spend proposal**
+</br>
+</br>
 
-```tx gov submit-proposal community-pool-spend [proposal-file]```
+### submit-proposal (community pool spend)
 
-Users can submit a proposal and request funds from the community pool to support their projects or other usages. Here is an example of a proposal to use community funds to fund a DAO:
+Submit a proposal and request funds from the community pool to support projects or other activities
 
 ```bash
-osmosisd tx gov submit-proposal community-pool-spend proposal.json --from=WALLET_NAME --chain-id=CHAIN_ID
+tx gov submit-proposal community-pool-spend [proposal-file] --from --chain-id
 ```
+
+#### Example
+
+Submit a proposal to use community funds to fund a DAO:
+
+```
+osmosisd tx gov submit-proposal community-pool-spend proposal.json --from WALLET_NAME --chain-id CHAIN_ID
+```
+
 The proposal.json would look as follows:
 
 ```json
@@ -121,15 +163,25 @@ The proposal.json would look as follows:
 ```
 If passed, the requested community funds would be sent to the recipient address provided in the json file.
 
-**Submit a software upgrade proposal**
+</br>
+</br>
 
-```tx gov submit-proposal [proposal-file]```
+### submit-proposal (software upgrade)
 
-Users can submit an upgrade proposal and suggest a software upgrade at a specific block height. Here is an example used to update osmosis to V4:
+Submit an upgrade proposal and suggest a software upgrade at a specific block height
+
+```
+tx gov submit-proposal software-upgrade [proposal-file] --from --chain-id
+```
+
+#### Example
+
+Update osmosis to V4:
 
 ```bash
-osmosisd tx gov submit-proposal software-upgrade proposal.json --from=WALLET_NAME --chain-id=CHAIN_ID
+osmosisd tx gov submit-proposal software-upgrade proposal.json --from WALLET_NAME --chain-id CHAIN_ID
 ```
+
 The proposal.json would look as follows:
 
 ```json
@@ -141,25 +193,46 @@ The proposal.json would look as follows:
 },
 ```
 
-**Cancel the current software upgrade proposal**
+</br>
+</br>
 
-```tx gov submit-proposal cancel-software-upgrade --title="TITLE" --description="DESCRIPTION"```
+### submit-proposal (cancel upgrade)
 
-Users can submit a proposal to cancel the planned software upgrade before the upgrade height is reached. The software upgrade does not have to be specified, as this will cancel the currently active software upgrade proposal. If the above software upgrade proposal was active, to propose its cancellation, run the following:
+Cancel the planned software upgrade before the upgrade height is reached
+
+```
+tx gov submit-proposal cancel-software-upgrade --title="TITLE" --description="DESCRIPTION"
+```
+
+The software upgrade does not have to be specified, as this will cancel the currently active software upgrade proposal. 
+
+#### Example
+
+If the above software upgrade proposal in the previous example was active, to propose its cancellation, run the following:
 
 ```bash
 osmosisd tx gov submit-proposal cancel-software-upgrade --title="cancel v4" --description="cancel v4 upgrade" --from=WALLET_NAME --chain-id=CHAIN_ID
 ```
 
-**Update current pool incentives**
+</br>
+</br>
 
-```tx gov submit-proposal update-pool-incentives [proposal-file]```
+### submit-proposal (update pool incentives)
 
-Users can submit a proposal to update the weight of a specific pool in regards to its share of incentives. An example of a proposed incentive adjustment for a set of pools:
+Update the weight of a specified pool in regards to its share of incentives
+
+```
+tx gov submit-proposal update-pool-incentives [proposal-file] --from --chain-id
+```
+
+#### Example
+
+Update the pool incentives for `gauge_id` 0 and 1:
 
 ```bash
-osmosisd tx gov submit-proposal update-pool-incentives proposal.json --from=WALLET_NAME --chain-id=CHAIN_ID
+osmosisd tx gov submit-proposal update-pool-incentives proposal.json --from WALLET_NAME --chain-id CHAIN_ID
 ```
+
 The proposal.json would look as follows:
 
 ```json
@@ -180,37 +253,60 @@ The proposal.json would look as follows:
 }
 ```
 
+</br>
+</br>
+
 ### deposit
 
-**Deposit tokens for an active proposal**
+Deposit tokens for an active proposal
 
-```tx gov deposit [proposal-id] [deposit]```
+```
+tx gov deposit [proposal-id] [deposit] --from --chain-id
+``` 
 
-Users can submit a deposit transaction to fund and support an active proposal. For example, if proposal number 12 is in the deposit period and you would like to help bring it to a vote, you could deposit 500 OSMO to that proposal as follows:
+#### Example
+
+If proposal number 12 is in the deposit period and you would like to help bring it to a vote, you could deposit 500 OSMO to that proposal as follows:
 
 ```bash
-osmosisd tx gov deposit 12 500000000uosmo --from=WALLET_NAME --chain-id=CHAIN_ID
+osmosisd tx gov deposit 12 500000000uosmo --from WALLET_NAME --chain-id CHAIN_ID
 ```
+
+</br>
+</br>
 
 ### vote
 
-**Vote for an active proposal**
+Vote for an active proposal
 
-```tx gov vote [proposal-id] [option]```
+```
+tx gov vote [proposal-id] [option] --from --chain-id
+```
 
-Users can vote for an active proposal. Valid value of ```option``` field is ```yes```, ```no```, ```no_with_veto``` and ```abstain```. To vote yes for proposal 12:
+Valid value of ```option``` field is ```yes```, ```no```, ```no_with_veto``` and ```abstain```. 
+
+#### Example
+
+To vote yes for proposal 12:
 
 ```bash
-osmosisd tx gov vote 12 yes --from=WALLET_NAME --chain-id=CHAIN_ID
+osmosisd tx gov vote 12 yes --from WALLET_NAME --chain-id CHAIN_ID
 ```
+
+</br>
+</br>
 
 ## Queries
 
 ### proposals
 
-**Query all proposals**
+Query all proposals
 
-```query gov proposals [proposal-id]``` 
+```
+query gov proposals [proposal-id]
+``` 
+
+#### Example
 
 We can list all proposals in json format by:
 
@@ -266,22 +362,40 @@ An example of the output:
 
 In the above example, there is only one proposal with ```"proposal_id": "1"```, with the title: ```"Staking Param Change"``` that change the ```MaxValidators``` parameter of the ```staking``` module to ```150```. We can also see that the status of the proposal is ```"PROPOSAL_STATUS_PASSED"```, which means that this proposal has been passed. In reality, the output would be much longer with all proposals listed.
 
-**Query details of a single proposal**
+</br>
+</br>
 
-```query gov proposal [proposal-id]```
+### proposal
 
-Similarly, we can check the details of a specific proposal with a given ```proposal_id```. To check proposal 13 and list in json format:
+Query details of a single proposal
+
+```
+query gov proposal [proposal-id]
+```
+
+#### Example
+
+To check proposal 13 and list in json format:
 
 ```bash
 osmosisd query gov proposal 13 -o json | jq
 ```
+
+</br>
+</br>
+
+
 ### tally
 
-**Get the tally of a proposal vote**
+Get the tally of a proposal vote
 
-```query gov tally [proposal-id]```
+```
+query gov tally [proposal-id]
+```
 
-We can also query the tally of a proposal with a given ```proposal_id```. To check the tally of proposal 13 and output in json:
+#### Example
+
+To check the tally of proposal 13 and output in json:
 
 ```bash
 osmosisd query gov tally 13 -o json | jq
@@ -300,11 +414,18 @@ Which outputs:
 
 This shows how the community voted on a specific proposal.
 
+</br>
+</br>
+
 ### params
 
-**Query the current gov parameters**
+Query the current gov parameters
 
-```query gov params```
+```
+query gov params
+```
+
+#### Example
 
 To check the current gov parameters and output in json:
 
@@ -337,6 +458,9 @@ Which outputs:
 ```
 
 See the network parameters section for a detailed explanation of the above parameters.
+
+</br>
+</br>
 
 ## Appendix
 

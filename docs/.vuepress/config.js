@@ -197,15 +197,12 @@ module.exports = {
           title: 'Modules',
           children: [
             "/developing/modules/",
-            "/developing/modules/spec-claim",
             "/developing/modules/spec-epochs",
             "/developing/modules/spec-gamm",
             "/developing/modules/spec-gov",
             "/developing/modules/spec-lockup",
             "/developing/modules/spec-mint",
-            "/developing/modules/spec-pool-incentives",
-            "/developing/modules/spec-simulation",
-            "/developing/modules/spec-txfees"
+            "/developing/modules/spec-pool-incentives"
           ],
           collapsable: true,
         },

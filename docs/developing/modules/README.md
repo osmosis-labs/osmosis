@@ -5,35 +5,24 @@ title: Module Home
 # Modules
 
 <div class="cards twoColumn">
-  <a href="" class="card">
-    <img src="" class="filter-blue" />
-    <div class="title">
-      Claim
-    </div>
-    <div class="text">
-      Test
-    </div>
-  </a>
-
-
-  <a href="" class="card">
-    <img src="" class="filter-blue" />
+  <a href="spec-epochs.html" class="card">
+    <img src="/osmosis/img/time.svg" class="filter-blue" />
     <div class="title">
       Epochs
     </div>
     <div class="text">
-      Test
+      Allows other modules to be signaled once every period to run their desired function
     </div>
   </a>
 
 
   <a href="spec-gamm.html" class="card">
-    <img src="/osmosis/img/liquid.svg" class="filter-blue" />
+    <img src="/osmosis/img/handshake.svg" class="filter-blue" />
     <div class="title">
       GAMM
     </div>
     <div class="text">
-      Test
+      Provides the logic to create and interact with liquidity pools on Osmosis
     </div>
   </a>
 
@@ -82,28 +71,6 @@ title: Module Home
   </a>
 
 
-
-  <a href="" class="card">
-    <img src="" class="filter-blue" />
-    <div class="title">
-      Simulation
-    </div>
-    <div class="text">
-      Test
-    </div>
-  </a>
-
-
-  <a href="" class="card">
-    <img src="" class="filter-blue" />
-    <div class="title">
-      Txfees
-    </div>
-    <div class="text">
-      Test
-    </div>
-  </a>
-
   <a href="spec-gov.html" class="card">
     <img src="/osmosis/img/gov.svg" class="filter-blue" />
     <div class="title">
@@ -117,9 +84,7 @@ title: Module Home
 
 ## Module Flow
 
-(IBC-Transfer) IBC Received
+While module functions can be called in many different orders, here is a basic flow of module commands to bring assets onto Osmosis and then add/remove liquidity:
 
-(GAMM) Swap Exact Amount In
-
-(GAMM) Join Pool
+**(IBC-Transfer) IBC Received &#8594; (GAMM) Swap Exact Amount In &#8594; (GAMM) Join Pool &#8594; (lockup) Lock-tokens &#8594; (lockup) Begin-unlock-tokens &#8594; (GAMM) Exit Pool**
 

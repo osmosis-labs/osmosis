@@ -42,7 +42,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
       Integrate
     </div>
     <div class="text">
-      List your own token on osmosis
+      List your own token on Osmosis
     </div>
   </a>
 

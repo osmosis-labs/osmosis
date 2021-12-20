@@ -5,33 +5,44 @@ validators, incentivize providing pool liquidity, provide funds for Osmosis gove
 
 The module is also responsible for reducing the token creation and distribution by a set amount and a set period of time until it reaches its maximum supply (see ```reduction_factor``` and ```reduction_period_in_epochs```)
 
+
+</br>
+</br>
+
+
 ## Overview 
 
 ### Network Parameters
 
 Below are all the network parameters for the ```mint``` module:
 
-- ```mint_denom``` - Token type being minted
-- ```genesis_epoch_provisions``` - Amount of tokens generated at epoch to the distribution categories (see distribution_proportions)
-- ```epoch_identifier``` - Type of epoch that triggers token issuance (day, week, etc.)
-- ```reduction_period_in_epochs``` - How many epochs must occur before implementing the reduction factor
-- ```reduction_factor``` - What the total token issuance factor will reduce by after reduction period passes (if set to 66.66%, token issuance will reduce by 1/3)
-- ```distribution_proportions``` - Categories in which the specified proportion of newly released tokens are distributed to
-  - ```staking``` - Proportion of minted funds to incentivize staking OSMO
-  - ```pool_incentives``` - Proportion of minted funds to incentivize pools on Osmosis
-  - ```developer_rewards``` - Proportion of minted funds to pay developers for their past and future work
-  - ```community_pool``` - Proportion of minted funds to be set aside for the community pool
-- ```weighted_developer_rewards_receivers``` - Addresses that developer rewards will go to. The weight attached to an address is the percent of the developer rewards that the specific address will receive
-- ```minting_rewards_distribution_start_epoch``` - What epoch will start the rewards distribution to the aforementioned distribution categories
+- **```mint_denom```** - Token type being minted
+- **```genesis_epoch_provisions```** - Amount of tokens generated at epoch to the distribution categories (see distribution_proportions)
+- **```epoch_identifier```** - Type of epoch that triggers token issuance (day, week, etc.)
+- **```reduction_period_in_epochs```** - How many epochs must occur before implementing the reduction factor
+- **```reduction_factor```** - What the total token issuance factor will reduce by after reduction period passes (if set to 66.66%, token issuance will reduce by 1/3)
+- **```distribution_proportions```** - Categories in which the specified proportion of newly released tokens are distributed to
+  - **```staking```** - Proportion of minted funds to incentivize staking OSMO
+  - **```pool_incentives```** - Proportion of minted funds to incentivize pools on Osmosis
+  - **```developer_rewards```** - Proportion of minted funds to pay developers for their past and future work
+  - **```community_pool```** - Proportion of minted funds to be set aside for the community pool
+- **```weighted_developer_rewards_receivers```** - Addresses that developer rewards will go to. The weight attached to an address is the percent of the developer rewards that the specific address will receive
+- **```minting_rewards_distribution_start_epoch```** - What epoch will start the rewards distribution to the aforementioned distribution categories
 
+</br>
+</br>
 
 ## Queries
 
 ### params
 
-**Query all the current mint parameter values**
+Query all the current mint parameter values
 
-```query mint params``` 
+```
+query mint params
+``` 
+
+#### Example 
 
 List all current min parameters in json format by:
 
@@ -119,12 +130,18 @@ An example of the output:
   "minting_rewards_distribution_start_epoch": "1"
 }
 ```
+</br>
+</br>
 
 ### epoch-provisions
 
-**Query the current epoch provisions**
+Query the current epoch provisions
 
-```query mint epoch-provisions```
+```
+query mint epoch-provisions
+```
+
+#### Example
 
 List the current epoch provisions:
 
@@ -132,6 +149,9 @@ List the current epoch provisions:
 osmosisd query mint epoch-provisions
 ```
 As of this writing, this number will be equal to the ```genesis-epoch-provisions```. Once the ```reduction_period_in_epochs``` is reached, the ```reduction_factor``` will be initiated and reduce the amount of OSMO minted per epoch.
+
+</br>
+</br>
 
 ## Appendix
 
