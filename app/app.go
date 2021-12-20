@@ -18,7 +18,6 @@ import (
 
 	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
 
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -93,6 +92,8 @@ import (
 	"github.com/gorilla/mux"
 
 	appparams "github.com/osmosis-labs/osmosis/app/params"
+	v4 "github.com/osmosis-labs/osmosis/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/app/upgrades/v5"
 	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/x/claim"
 	claimkeeper "github.com/osmosis-labs/osmosis/x/claim/keeper"
@@ -128,7 +129,6 @@ import (
 )
 
 const appName = "OsmosisApp"
-const v5UpgradeName = "v5"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -351,84 +351,23 @@ func NewOsmosisApp(
 	// this configures a no-op upgrade handler for the v4 upgrade,
 	// which improves the lockup module's store management.
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v4", func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-			// // Upgrade all of the lock storages
-			// locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
-			// if err != nil {
-			// 	panic(err)
-			// }
-			// // clear all lockup module locking / unlocking queue items
-			// app.LockupKeeper.ClearAllLockRefKeys(ctx)
-			// app.LockupKeeper.ClearAllAccumulationStores(ctx)
-
-			// // reset all lock and references
-			// if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
-			// 	panic(err)
-			// }
-
-			// // configure upgrade for gamm module's pool creation fee param add
-			// app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
-			// // execute prop12. See implementation in
-			// prop12(ctx, app)
-			return vm, nil
-		})
+		v4.UpgradeName, v4.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			&app.BankKeeper, &app.DistrKeeper, &app.GAMMKeeper))
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v5UpgradeName,
-		func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-			// Set IBC updates from {inside SDK} to v1
-			// https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md#in-place-store-migrations
-			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
-
-			totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
-			app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
-			app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
-
-			// Set all modules "old versions" to 1.
-			// Then the run migrations logic will handle running their upgrade logics
-			fromVM := make(map[string]uint64)
-			for moduleName := range app.mm.Modules {
-				fromVM[moduleName] = 1
-			}
-			// EXCEPT Auth needs to run _after_ staking (https://github.com/cosmos/cosmos-sdk/issues/10591),
-			// and it seems bank as well (https://github.com/provenance-io/provenance/blob/407c89a7d73854515894161e1526f9623a94c368/app/upgrades.go#L86-L122).
-			// So we do this by making auth run last.
-			// This is done by setting auth's consensus version to 2, running RunMigrations,
-			// then setting it back to 1, and then running migrations again.
-			fromVM[authtypes.ModuleName] = 2
-
-			// override versions for authz & bech32ibctypes module as to not skip their InitGenesis
-			// for txfees module, we will override txfees ourselves.
-			delete(fromVM, authz.ModuleName)
-			delete(fromVM, bech32ibctypes.ModuleName)
-
-			newVM, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
-			if err != nil {
-				return nil, err
-			}
-
-			// Override txfees genesis here
-			ctx.Logger().Info("Setting txfees module genesis with actual v5 desired genesis")
-			feeTokens := initialWhitelistedFeetokens(ctx, app)
-			txfees.InitGenesis(ctx, app.TxFeesKeeper, txfeestypes.GenesisState{
-				Basedenom: app.StakingKeeper.BondDenom(ctx),
-				Feetokens: feeTokens,
-			})
-
-			// now update auth version back to v1, to run auth migration last
-			newVM[authtypes.ModuleName] = 1
-
-			ctx.Logger().Info("Now running migrations just for auth, to get auth migration to be last. " +
-				"(CC https://github.com/cosmos/cosmos-sdk/issues/10591)")
-			return app.mm.RunMigrations(ctx, app.configurator, newVM)
-		})
+		v5.UpgradeName,
+		v5.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			&app.IBCKeeper.ConnectionKeeper, &app.TxFeesKeeper,
+			&app.GAMMKeeper, &app.StakingKeeper))
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
 	}
 
-	if upgradeInfo.Name == v5UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == v5.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := store.StoreUpgrades{
 			Added: []string{authz.ModuleName, txfees.ModuleName, bech32ibctypes.ModuleName},
 		}
