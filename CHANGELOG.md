@@ -41,17 +41,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-* Remove docker github action (temporary)
-* Upgrade to Cosmos-sdk 0.44.3
-  * Includes Rosetta API
-* Upgrade to IBC-v2
-* Add [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
-* Store block height in epochs module for debugging
-* Allow zero-weight pool-incentive distribution records
-* Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
-* Update peer ID of statesync-enabled node run by notional
-* Created a pull request template
-* Update Notional Labs seed node in cmd/osmosisd/cmd/init.go
+## Features
+
+- [#623](https://github.com/osmosis-labs/osmosis/pull/623) Use gosec for staticly linting for common non-determinism issues in SDK applications.
+
+## Minor improvements & Bug Fixes
+
+- [#666](https://github.com/osmosis-labs/osmosis/pull/666) Fix the `--log-level` and `--log-format` commands on `osmosisd start`
+- [#655](https://github.com/osmosis-labs/osmosis/pull/655) Make the default genesis for pool-incentives work by default
+- [97ac2a8](https://github.com/osmosis-labs/osmosis/commit/97ac2a86303fc8966a4c169107e0945775107e67) Fix InitGenesis bug for gauges
+
+## [v6.0.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.0.0)
+
+This upgrade fixes a bug in the v5.0.0 upgrade's app.go, which prevents new IBC channels from being created.
+This binary is compatible with v5.0.0 until block height `2464000`, estimated to be at 4PM UTC Monday December 20th.
+
+- [Patch](https://github.com/osmosis-labs/osmosis/commit/907001b08686ed980e0afa3d97a9c5e2f095b79f#diff-a172cedcae47474b615c54d510a5d84a8dea3032e958587430b413538be3f333) - Revert back to passing in the correct staking keeper into the IBC keeper constructor.
+- [Height gating change](https://github.com/osmosis-labs/ibc-go/pull/1) - Height gate the change in IBC, to make the v6.0.0 binary compatible until upgrade height.
+
+## [v5.0.0](https://github.com/osmosis-labs/osmosis/releases/tag/v5.0.0) - Boron upgrade
+
+The Osmosis Boron release is made!
+
+Notable features include:
+
+* Upgrading from SDK v0.42 to [SDK v0.44](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/RELEASE_NOTES.md), bringing efficiency improvements, integrations and Rosetta support.
+* Bringing in the new modules [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/), [Authz](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec), [TxFees](https://github.com/osmosis-labs/osmosis/tree/main/x/txfees)
+* Upgrading to IBC v2, allowing for improved Ethereum Bridge and CosmWasm support
+* Implementing Osmosis chain governance's [Proposal 32](https://www.mintscan.io/osmosis/proposals/32)
+* Large suite of gas bugs fixed. (Including several that we have not seen on chain)
+* More queries exposed to aid node operators.
+* Blocking the OFAC banned Ethereum addresses.
+* Several (linear factor) epoch time improvements. (Most were present in v4.2.0)
+
+Upgrade instructions for node operators can be found [here](https://github.com/osmosis-labs/osmosis/blob/v5.x/networks/osmosis-1/upgrades/v5/guide.md)
+
+## Features
+
+* [\#637](https://github.com/osmosis-labs/osmosis/pull/637) Add [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/)
+* [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to Cosmos SDK v0.44.x
+  * Numerous large updates, such as making module accounts be 32 bytes, Rosetta support, etc.
+  * Adds & integrates the [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
+   See: [SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) For more details
+* [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to IBC-v2
+* [\#560](https://github.com/osmosis-labs/osmosis/pull/560) Implements Osmosis [prop32](https://www.mintscan.io/osmosis/proposals/32) -- clawing back the final 20% of unclaimed osmo and ion airdrop.
+* [\#394](https://github.com/osmosis-labs/osmosis/pull/394) Allow whitelisted tx fee tokens based on conversion rate to OSMO
+* [Commit db450f0](https://github.com/osmosis-labs/osmosis/commit/db450f0dce8c595211d920f9bca7ed0f3a136e43) Add blocking of OFAC banned Ethereum addresses
+
+## Minor improvements & Bug Fixes
+
+* {In the Osmosis-labs SDK fork}
+  * Increase default IAVL cache size to be in the hundred megabyte range
+  * Significantly improve CacheKVStore speed problems, reduced IBC upgrade time from 2hrs to 5min
+  * Add debug info to make it clear whats happening during upgrade
+* (From a series of commits) Fixes to the claims module to only do the reclaim logic once, not every block.
+* (From a series of commits) More logging to the claims module.
+* [\#563](https://github.com/osmosis-labs/osmosis/pull/563) Allow zero-weight pool-incentive distribution records
+* [\#562](https://github.com/osmosis-labs/osmosis/pull/562) Store block height in epochs module for easier debugging
+* [\#544](https://github.com/osmosis-labs/osmosis/pull/544) Update total liquidity tracking to be denom basis, lowering create pool and join pool gas.
+* [\#540](https://github.com/osmosis-labs/osmosis/pull/540) Fix git lfs links
+* [\#517](https://github.com/osmosis-labs/osmosis/pull/517) Linear time improvement for epoch time
+* [\#515](https://github.com/osmosis-labs/osmosis/pull/515) Add debug command for converting secp pubkeys
+* [\#510](https://github.com/osmosis-labs/osmosis/pull/510) Performance improvement for gauge distribution
+* [\#505](https://github.com/osmosis-labs/osmosis/pull/505) Fix bug in incentives epoch distribution events, used to use raw address, now uses bech32 addr
+* [\#464](https://github.com/osmosis-labs/osmosis/pull/464) Increase maximum outbound peers for validator nodes
+* [\#444](https://github.com/osmosis-labs/osmosis/pull/444) Add script for state sync
+* [\#409](https://github.com/osmosis-labs/osmosis/pull/409) Reduce epoch time growth rate for re-locking assets
+
 
 ## [v4.0.0]
 

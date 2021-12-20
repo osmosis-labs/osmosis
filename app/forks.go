@@ -9,6 +9,8 @@ func forks(ctx sdk.Context, app *OsmosisApp) {
 	case 712000:
 		fix_min_deposit_denom(ctx, app)
 		fix_min_commision_rate(ctx, app)
+	case 2464000:
+		ctx.Logger().Info("Applying emergency hard fork for v6, allows IBC to create new channels.")
 	default:
 		// do nothing
 		return
