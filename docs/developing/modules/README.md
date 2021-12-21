@@ -27,13 +27,13 @@ title: Module Home
   </a>
 
 
-  <a href="" class="card">
-    <img src="" class="filter-blue" />
+  <a href="spec-incentives.html" class="card">
+    <img src="/osmosis/img/incentives.svg" class="filter-blue" />
     <div class="title">
       Incentives
     </div>
     <div class="text">
-      Test
+      Creates gauges to provide incentives to users who lock specified tokens for a certain period of time
     </div>
   </a>
 
@@ -44,7 +44,7 @@ title: Module Home
       Lockup
     </div>
     <div class="text">
-      Bond LP shares for user-defined locking periods to earn rewards
+      Bonds LP shares for user-defined locking periods to earn rewards
     </div>
   </a>
 
@@ -86,5 +86,9 @@ title: Module Home
 
 While module functions can be called in many different orders, here is a basic flow of module commands to bring assets onto Osmosis and then add/remove liquidity:
 
-**(IBC-Transfer) IBC Received &#8594; (GAMM) Swap Exact Amount In &#8594; (GAMM) Join Pool &#8594; (lockup) Lock-tokens &#8594; (lockup) Begin-unlock-tokens &#8594; (GAMM) Exit Pool**
-
+1. (IBC-Transfer) IBC Received
+2. (GAMM) Swap Exact Amount In
+3. (GAMM) Join Pool
+4. (lockup) Lock-tokens
+5. (lockup) Begin-unlock-tokens
+6. (GAMM) Exit Pool

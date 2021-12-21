@@ -202,6 +202,7 @@ module.exports = {
             "/developing/modules/spec-gov",
             "/developing/modules/spec-lockup",
             "/developing/modules/spec-mint",
+            "/developing/modules/spec-incentives",
             "/developing/modules/spec-pool-incentives"
           ],
           collapsable: true,

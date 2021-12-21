@@ -94,17 +94,17 @@ Download the chain data and its corresponding checksum.
 
 :::: tab Netherlands
 ``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "default" '.[] | select(.network=="default")|select (.mirror=="Netherlands")|.filename'`
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-default")|select (.mirror=="Netherlands")|.url'`
 cd $HOME/.osmosisd/
-wget -O - https://dl2.quicksync.io/$FILENAME | lz4 -d | tar -xvf -
+wget -O - $URL | lz4 -d | tar -xvf -
 wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://dl2.quicksync.io/$FILENAME.checksum
+wget $URL.checksum
 ```
 
 Compare the checksum with the onchain version:
 
 ```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
+curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
 ```
 
 The output should state "checksum: OK"
@@ -112,17 +112,17 @@ The output should state "checksum: OK"
 
 :::: tab Singapore
 ``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "default" '.[] | select(.network=="default")|select (.mirror=="Singapore")|.filename'`
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-default")|select (.mirror=="Singapore")|.url'`
 cd $HOME/.osmosisd/
-wget -O - https://getsin.quicksync.io/$FILENAME | lz4 -d | tar -xvf -
+wget -O - $URL | lz4 -d | tar -xvf -
 wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://getsin.quicksync.io/$FILENAME.checksum
+wget $URL.checksum
 ```
 
 Compare the checksum with the onchain version:
 
 ```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://getsin.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
+curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
 ```
 
 The output should state "checksum: OK"
@@ -130,17 +130,17 @@ The output should state "checksum: OK"
 
 :::: tab SanFrancisco
 ``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "default" '.[] | select(.network=="default")|select (.mirror=="SanFrancisco")|.filename'`
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-default")|select (.mirror=="SanFrancisco")|.url'`
 cd $HOME/.osmosisd/
-wget -O - https://getsfo.quicksync.io/$FILENAME | lz4 -d | tar -xvf -
+wget -O - $URL | lz4 -d | tar -xvf -
 wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://getsfo.quicksync.io/$FILENAME.checksum
+wget $URL.checksum
 ```
 
 Compare the checksum with the onchain version:
 
 ```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://getsfo.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
+curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
 ```
 
 The output should state "checksum: OK"
@@ -154,17 +154,17 @@ The output should state "checksum: OK"
 
 :::: tab Netherlands
 ``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "pruned" '.[] | select(.network=="pruned")|select (.mirror=="Netherlands")|.filename'`
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-pruned")|select (.mirror=="Netherlands")|.url'`
 cd $HOME/.osmosisd/
-wget -O - https://dl2.quicksync.io/$FILENAME | lz4 -d | tar -xvf -
+wget -O - $URL | lz4 -d | tar -xvf -
 wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://dl2.quicksync.io/$FILENAME.checksum
+wget $URL.checksum
 ```
 
 Compare the checksum with the onchain version:
 
 ```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
+curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
 ```
 
 The output should state "checksum: OK"
@@ -172,17 +172,17 @@ The output should state "checksum: OK"
 
 :::: tab Singapore
 ``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "pruned" '.[] | select(.network=="pruned")|select (.mirror=="Singapore")|.filename'`
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-pruned")|select (.mirror=="Singapore")|.url'`
 cd $HOME/.osmosisd/
-wget -O - https://getsin.quicksync.io/$FILENAME | lz4 -d | tar -xvf -
+wget -O - $URL | lz4 -d | tar -xvf -
 wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://getsin.quicksync.io/$FILENAME.checksum
+wget $URL.checksum
 ```
 
 Compare the checksum with the onchain version:
 
 ```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://getsin.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
+curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
 ```
 
 The output should state "checksum: OK"
@@ -190,17 +190,17 @@ The output should state "checksum: OK"
 
 :::: tab SanFrancisco
 ``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "pruned" '.[] | select(.network=="pruned")|select (.mirror=="SanFrancisco")|.filename'`
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-pruned")|select (.mirror=="SanFrancisco")|.url'`
 cd $HOME/.osmosisd/
-wget -O - https://getsfo.quicksync.io/$FILENAME | lz4 -d | tar -xvf -
+wget -O - $URL | lz4 -d | tar -xvf -
 wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://getsfo.quicksync.io/$FILENAME.checksum
+wget $URL.checksum
 ```
 
 Compare the checksum with the onchain version:
 
 ```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://getsfo.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
+curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
 ```
 
 The output should state "checksum: OK"
@@ -214,17 +214,17 @@ The output should state "checksum: OK"
 
 :::: tab Netherlands
 ``` bash
-FILENAME=`curl https://quicksync.io/osmosis.json | jq -r --arg MODE "archive" '.[] | select(.network=="archive")|select (.mirror=="Netherlands")|.filename'`
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-archive")|select (.mirror=="Netherlands")|.url'`
 cd $HOME/.osmosisd/
-wget -O - https://dl2.quicksync.io/$FILENAME | lz4 -d | tar -xvf -
+wget -O - $URL | lz4 -d | tar -xvf -
 wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget https://dl2.quicksync.io/$FILENAME.checksum
+wget $URL.checksum
 ```
 
 Compare the checksum with the onchain version:
 
 ```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s https://dl2.quicksync.io/$FILENAME.hash`|jq -r '.tx.value.memo'|sha512sum -c
+curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
 ```
 
 The output should state "checksum: OK"
