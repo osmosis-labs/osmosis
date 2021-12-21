@@ -870,7 +870,6 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 
 				resp := types.QueryPoolResponse{}
 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				// s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
