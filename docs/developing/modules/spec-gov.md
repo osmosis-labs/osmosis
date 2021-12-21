@@ -42,17 +42,20 @@ Users submits a proposal with an initial deposit. The proposal will then become 
 
 **Phase 1 - Deposit period**
 
-During the deposit period, users can deposit and support an active proposal. Once the deposit of the proposal reaches the ```min_deposit```, it will enter the voting period. Otherwise, if the proposal is not successfully funded within ```max_deposit_period```, It will become inactive and all the deposits will be refunded.
+During the deposit period, users can deposit and support an active proposal. Once the deposit of the proposal reaches the ```min_deposit```, it will enter the voting period. Otherwise, if the proposal is not successfully funded within ```max_deposit_period```, It will become inactive and **all the deposits will be burned**.
 
 **Phase 2 - Voting period**
 
 During the voting period, staked (bonded) tokens will be able to participate in the voting process. Users can choose one of the following options: ```yes```, ```no```, ```no_with_veto``` and ```abstain```.
 
-After the ```voting_period``` has passed, there are several scenarios that a proposal will be considered "Rejected", for example, if
+After the ```voting_period``` has passed, the proposal will be considered "Rejected" and **the funds deposited in the deposit period will be burned if**:
 
-- No one votes (or everyone votes to ```abstain```)
 - Votes do not reach the ```quorum```
 - Enough vote ```no_with_veto``` when compared with total votes to meet the veto to total votes ratio specified in ```tally_params```
+
+The proposal will be considered "Rejected" and **the funds deposited in the deposit period will be returned if**
+
+- No one votes (or everyone votes to ```abstain```)
 - More than ```threshold``` of non-abstaining voters vote ```no```
 
 Otherwise, the proposal will be accepted and changes will be implemented according to the proposal.
