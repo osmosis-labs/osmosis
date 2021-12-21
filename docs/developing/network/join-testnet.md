@@ -108,7 +108,7 @@ Download, decompress, and replace the chain data:
 
 ```bash
 cd $HOME/.osmosisd/
-wget -O - https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest.tar.xz | xz -d -v | tar xf - |
+wget -O - https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest.tar.xz | xz -d -v | tar xvf -
 ```
 
 
