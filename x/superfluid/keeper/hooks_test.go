@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
@@ -10,7 +11,9 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
-	valAddr, lock := suite.SetupSuperfluidDelegate()
+	suite.SetupTest()
+	valAddr := suite.SetupValidator(stakingtypes.Bonded)
+	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
 
 	expAcc := types.SuperfluidIntermediaryAccount{
 		Denom:   lock.Coins[0].Denom,

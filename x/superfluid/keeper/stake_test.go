@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 	return lock
 }
 
-func (suite *KeeperTestSuite) SetupValidator() sdk.ValAddress {
+func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
 
@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) SetupValidator() sdk.ValAddress {
 
 	amount := sdk.NewInt(1000000)
 	issuedShares := amount.ToDec()
-	validator.Status = stakingtypes.Bonded
+	validator.Status = bondStatus
 	validator.Tokens = validator.Tokens.Add(amount)
 	validator.DelegatorShares = validator.DelegatorShares.Add(issuedShares)
 
@@ -41,8 +41,7 @@ func (suite *KeeperTestSuite) SetupValidator() sdk.ValAddress {
 	return valAddr
 }
 
-func (suite *KeeperTestSuite) SetupSuperfluidDelegate() (sdk.ValAddress, lockuptypes.PeriodLock) {
-	suite.SetupTest()
+func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, denom string) lockuptypes.PeriodLock {
 	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
 		time.Hour * 24 * 14,
 		time.Hour,
@@ -50,17 +49,14 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate() (sdk.ValAddress, lockupt
 		time.Hour * 7,
 	})
 
-	// create a validator
-	valAddr := suite.SetupValidator()
-
 	// register a LP token as a superfluid asset
 	suite.app.SuperfluidKeeper.SetSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
-		Denom:     "gamm/pool/1",
+		Denom:     denom,
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// set OSMO TWAP price for LP token
-	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, "gamm/pool/1", sdk.NewDec(2))
+	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, denom, sdk.NewDec(2))
 	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
 		Identifier:   params.RefreshEpochIdentifier,
@@ -69,18 +65,20 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate() (sdk.ValAddress, lockupt
 
 	// create lockup of LP token
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
+	coins := sdk.Coins{sdk.NewInt64Coin(denom, 1000000)}
 	lock := suite.LockTokens(addr1, coins, time.Hour*24*21)
 
 	// call SuperfluidDelegate and check response
 	err := suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.ID, valAddr.String())
 	suite.Require().NoError(err)
 
-	return valAddr, lock
+	return lock
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
-	valAddr, lock := suite.SetupSuperfluidDelegate()
+	suite.SetupTest()
+	valAddr := suite.SetupValidator(stakingtypes.Bonded)
+	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
 
 	// check synthetic lockup creation
 	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(valAddr.String()))
@@ -129,7 +127,9 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 
 func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 	// setup superflid delegation
-	valAddr, lock := suite.SetupSuperfluidDelegate()
+	suite.SetupTest()
+	valAddr := suite.SetupValidator(stakingtypes.Bonded)
+	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
 
 	// superfluid undelegate
 	err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)
@@ -149,8 +149,10 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 	// setup superflid delegation
-	valAddr, lock := suite.SetupSuperfluidDelegate()
-	valAddr2 := suite.SetupValidator()
+	suite.SetupTest()
+	valAddr := suite.SetupValidator(stakingtypes.Bonded)
+	valAddr2 := suite.SetupValidator(stakingtypes.Bonded)
+	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
 
 	// superfluid redelegate
 	err := suite.app.SuperfluidKeeper.SuperfluidRedelegate(suite.ctx, lock.ID, valAddr2.String())
@@ -211,7 +213,9 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 }
 
 func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
-	valAddr, lock := suite.SetupSuperfluidDelegate()
+	suite.SetupTest()
+	valAddr := suite.SetupValidator(stakingtypes.Bonded)
+	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
 
 	expAcc := types.SuperfluidIntermediaryAccount{
 		Denom:   lock.Coins[0].Denom,

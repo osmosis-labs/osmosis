@@ -2,11 +2,14 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
-	valAddr, lock := suite.SetupSuperfluidDelegate()
+	suite.SetupTest()
+	valAddr := suite.SetupValidator(stakingtypes.Bonded)
+	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
 
 	expAcc := types.SuperfluidIntermediaryAccount{
 		Denom:   lock.Coins[0].Denom,
@@ -49,7 +52,9 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 }
 
 func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
-	valAddr, lock := suite.SetupSuperfluidDelegate()
+	suite.SetupTest()
+	valAddr := suite.SetupValidator(stakingtypes.Bonded)
+	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
 
 	expAcc := types.SuperfluidIntermediaryAccount{
 		Denom:   lock.Coins[0].Denom,
