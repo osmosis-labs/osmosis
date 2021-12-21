@@ -20,13 +20,9 @@ type PoolI interface {
 	GetPoolSwapFee() sdk.Dec
 	GetPoolExitFee() sdk.Dec
 	GetTotalWeight() sdk.Int
-	// might be not needed
 	GetTotalShares() sdk.Coin
-	// might be not needed
 	AddTotalShares(amt sdk.Int)
-	// might be not needed
 	SubTotalShares(amt sdk.Int)
-	// might be not needed
 	GetPoolAsset(denom string) (PoolAsset, error)
 	// UpdatePoolAssetBalance updates the balances for
 	// the token with denomination coin.denom
