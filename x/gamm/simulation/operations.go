@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -99,7 +100,7 @@ func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types
 	return assets
 }
 
-func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.BalancerPoolParams {
+func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) balancer.BalancerPoolParams {
 	// swapFeeInt := int64(r.Intn(1e5))
 	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -107,7 +108,7 @@ func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.Poo
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
 	// TODO: Randomly generate LBP params
-	return types.BalancerPoolParams{
+	return balancer.BalancerPoolParams{
 		// SwapFee:                  swapFee,
 		SwapFee: sdk.ZeroDec(),
 		ExitFee: exitFee,
@@ -137,11 +138,11 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.Len() <= 1 {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgCreateBalancerPool, "Account doesn't have 2 different coin types"), nil, nil
+				types.ModuleName, balancer.TypeMsgCreateBalancerPool, "Account doesn't have 2 different coin types"), nil, nil
 		}
 
 		poolAssets := genPoolAssets(r, simAccount, simCoins)
-		PoolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
+		poolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
 
 		// Commented out as genFuturePoolGovernor() panics on empty denom slice.
 		// TODO: fix and provide proper denom types.
@@ -159,19 +160,18 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(denoms[0], 1)},
 		})
 
-		// futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, denoms)
-		msg := types.MsgCreateBalancerPool{
+		msg := &balancer.MsgCreateBalancerPool{
 			Sender:             simAccount.Address.String(),
-			FuturePoolGovernor: "",
+			PoolParams:         &poolParams,
 			PoolAssets:         poolAssets,
-			PoolParams:         PoolParams,
+			FuturePoolGovernor: "",
 		}
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)
+			r, app, txGen, msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
 
