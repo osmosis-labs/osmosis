@@ -9,20 +9,20 @@ import (
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, lockID uint64, suffix string, endTime time.Time) error {
+func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, underlyingLockID uint64, suffix string, endTime time.Time) error {
 	synthLock := &types.SyntheticLock{
-		LockId:  lockID,
-		Suffix:  suffix,
-		EndTime: endTime,
+		UnderlyingLockId: underlyingLockID,
+		Suffix:           suffix,
+		EndTime:          endTime,
 	}
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(synthLock)
 	if err != nil {
 		return err
 	}
-	store.Set(syntheticLockStoreKey(lockID, suffix), bz)
+	store.Set(syntheticLockStoreKey(underlyingLockID, suffix), bz)
 	if !endTime.Equal(time.Time{}) {
-		store.Set(syntheticLockTimeStoreKey(lockID, suffix, endTime), bz)
+		store.Set(syntheticLockTimeStoreKey(underlyingLockID, suffix, endTime), bz)
 	}
 	return nil
 }
@@ -173,7 +173,7 @@ func (k Keeper) DeleteAllMaturedSyntheticLocks(ctx sdk.Context) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.DeleteSyntheticLockup(ctx, synthLock.LockId, synthLock.Suffix)
+		err = k.DeleteSyntheticLockup(ctx, synthLock.UnderlyingLockId, synthLock.Suffix)
 		if err != nil {
 			panic(err)
 		}

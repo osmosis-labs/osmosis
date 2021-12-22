@@ -523,7 +523,7 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 			ctx.Logger().Info(msg)
 		}
 
-		lock, err := k.GetLockByID(ctx, synthLock.LockId)
+		lock, err := k.GetLockByID(ctx, synthLock.UnderlyingLockId)
 		if err != nil {
 			return err
 		}
@@ -579,7 +579,7 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 }
 
 func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
-	err := k.setSyntheticLockupObject(ctx, synthLock.LockId, synthLock.Suffix, synthLock.EndTime)
+	err := k.setSyntheticLockupObject(ctx, synthLock.UnderlyingLockId, synthLock.Suffix, synthLock.EndTime)
 	if err != nil {
 		return err
 	}

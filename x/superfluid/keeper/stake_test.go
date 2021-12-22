@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 	// check synthetic lockup creation
 	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(valAddr.String()))
 	suite.Require().NoError(err)
-	suite.Require().Equal(synthLock.LockId, lock.ID)
+	suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
 	suite.Require().Equal(synthLock.Suffix, keeper.StakingSuffix(valAddr.String()))
 	suite.Require().Equal(synthLock.EndTime, time.Time{})
 
@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 	// check unbonding synthetic lockup creation
 	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.UntakingSuffix(valAddr.String()))
 	suite.Require().NoError(err)
-	suite.Require().Equal(synthLock.LockId, lock.ID)
+	suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
 	suite.Require().Equal(synthLock.Suffix, keeper.UntakingSuffix(valAddr.String()))
 	suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(time.Hour*24*21))
 }
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 	// check unbonding synthetic lockup creation
 	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.UntakingSuffix(valAddr.String()))
 	suite.Require().NoError(err)
-	suite.Require().Equal(synthLock.LockId, lock.ID)
+	suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
 	suite.Require().Equal(synthLock.Suffix, keeper.UntakingSuffix(valAddr.String()))
 	suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(time.Hour*24*21))
 
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 	// check synthetic lockup creation
 	synthLock2, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(valAddr2.String()))
 	suite.Require().NoError(err)
-	suite.Require().Equal(synthLock2.LockId, lock.ID)
+	suite.Require().Equal(synthLock2.UnderlyingLockId, lock.ID)
 	suite.Require().Equal(synthLock2.Suffix, keeper.StakingSuffix(valAddr2.String()))
 	suite.Require().Equal(synthLock2.EndTime, time.Time{})
 
