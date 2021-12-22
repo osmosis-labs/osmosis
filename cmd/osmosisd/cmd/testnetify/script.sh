@@ -4,6 +4,19 @@ export EXPORTED_GENESIS=testnet_genesis.json
 
 # Replace Sentinel addrs/pubkeys
 
+# priv_validator_key.json file for what we replace to
+#	{
+#		"address": "8B78E478777427CC3906B8234CB72BCEA2C78E83",
+#		"pub_key": {
+#			"type": "tendermint/PubKeyEd25519",
+#			"value": "2OpBuqaXvXQ+lSxAoT1S7Jfyr56KiakTzvuFiuJK+X4="
+#		},
+#		"priv_key": {
+#			"type": "tendermint/PrivKeyEd25519",
+#			"value": "3OLLoEfdT+ZrLqpRCvytpXrhgKfeEBBoeaoXe1p3/mjY6kG6ppe9dD6VLEChPVLsl/KvnoqJqRPO+4WK4kr5fg=="
+#		}
+#	}
+
 # replace validator cons pubkey
 sed -i '' 's%b77zCh/VsRgVvfGXuW4dB+Dhg4PrMWWBC5G2K/qFgiU=%2OpBuqaXvXQ+lSxAoT1S7Jfyr56KiakTzvuFiuJK+X4=%g' $EXPORTED_GENESIS
 # This is a PITA to get:
@@ -14,6 +27,7 @@ sed -i '' 's%osmovalcons1z6skn9g6s7py0klztr7acutr3anqd52k9x5p70%osmovalcons13duw
 # replace validator hex addr
 sed -i '' 's%16A169951A878247DBE258FDDC71638F6606D156%8B78E478777427CC3906B8234CB72BCEA2C78E83%g' $EXPORTED_GENESIS
 # replace operator address
+# mnemonic: kitchen comic flower drip sick prize account cheese truth income weekend nominee segment punch call satisfy captain earth ethics wasp clump tunnel orchard advance
 sed -i '' 's%osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n%osmovaloper1qye772qje88p7ggtzrvl9nxvty6dkuusvpqhac%g' $EXPORTED_GENESIS
 # replace the actual account
 sed -i '' 's%osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5%osmo1qye772qje88p7ggtzrvl9nxvty6dkuuskkg52l%g' $EXPORTED_GENESIS
@@ -31,8 +45,6 @@ cat $EXPORTED_GENESIS | jq '.app_state["staking"]["delegations"]['"$DELEGATOR_IN
 # and in app_state.distribution.delegator_starting_infos
 DISTRIBUTION_START_INFO_INDEX=$(jq '.app_state.distribution.delegator_starting_infos | map (.delegator_address=="osmo1qye772qje88p7ggtzrvl9nxvty6dkuuskkg52l") | index(true)' $EXPORTED_GENESIS)
 cat $EXPORTED_GENESIS | jq '.app_state.distribution.delegator_starting_infos['"$DISTRIBUTION_START_INFO_INDEX"'].starting_info.stake="1000005000000000.000000000000000000"' > tmp_genesis.json && mv tmp_genesis.json $EXPORTED_GENESIS
-
-# there are two such locations
 
 # Then correspondingly up the total tokens bonded to the validator
 #           "tokens": "5743672759222", (add 1BN to this)
