@@ -10,65 +10,111 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
-func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
-	suite.SetupTest()
-	valAddr := suite.SetupValidator(stakingtypes.Bonded)
-	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
-
-	expAcc := types.SuperfluidIntermediaryAccount{
-		Denom:   lock.Coins[0].Denom,
-		ValAddr: valAddr.String(),
+func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
+	coins := sdk.Coins{}
+	poolAssets := []gammtypes.PoolAsset{}
+	for _, denom := range denoms {
+		coins = coins.Add(sdk.NewInt64Coin(denom, 10000000000))
+		poolAssets = append(poolAssets, gammtypes.PoolAsset{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin(denom, sdk.NewInt(10000)),
+		})
 	}
 
-	// check delegation from intermediary account to validator
-	delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
-	suite.Require().True(found)
-	suite.Require().Equal(delegation.Shares, sdk.NewDec(1900000)) // 95% x 2 x 1000000
-
-	// twap price change before refresh
-	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, acc1, sdk.Coins{
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-		sdk.NewInt64Coin("foo", 100000),
-		sdk.NewInt64Coin("bar", 100000),
-	})
+	err := suite.app.BankKeeper.SetBalances(suite.ctx, acc1, coins)
 	suite.Require().NoError(err)
+
 	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(
 		suite.ctx, acc1, gammtypes.BalancerPoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, []gammtypes.PoolAsset{
-			{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
-			}, {
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(10000)),
-			},
-		},
-		"")
+		}, poolAssets, "")
 	suite.Require().NoError(err)
-	suite.Require().Equal(poolId, uint64(1))
 
-	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
-		Identifier:   params.RefreshEpochIdentifier,
-		CurrentEpoch: 3,
-	})
+	return poolId
+}
 
-	// run epoch actions
-	suite.NotPanics(func() {
-		params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-		suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 3)
-	})
+func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
+	type superfluidDelegation struct {
+		valIndex int64
+		lpDenom  string
+	}
+	testCases := []struct {
+		name             string
+		validatorStats   []stakingtypes.BondStatus
+		superDelegations []superfluidDelegation
+	}{
+		{
+			"happy path with single validator and delegator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+		},
+	}
 
-	// check delegation changes
-	delegation, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
-	suite.Require().True(found)
-	suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
+	for _, tc := range testCases {
+		tc := tc
 
-	// check lptoken twap value set
-	newEpochTwap := suite.app.SuperfluidKeeper.GetEpochOsmoEquivalentTWAP(suite.ctx, 3, "gamm/pool/1")
-	suite.Require().Equal(newEpochTwap, sdk.NewDec(10000))
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+			suite.Require().Equal(poolId, uint64(1))
+
+			// setup validators
+			valAddrs := []sdk.ValAddress{}
+			for _, status := range tc.validatorStats {
+				valAddr := suite.SetupValidator(status)
+				valAddrs = append(valAddrs, valAddr)
+			}
+
+			intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
+
+			// setup superfluid delegations
+			for _, del := range tc.superDelegations {
+				valAddr := valAddrs[del.valIndex]
+				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
+				expAcc := types.SuperfluidIntermediaryAccount{
+					Denom:   lock.Coins[0].Denom,
+					ValAddr: valAddr.String(),
+				}
+
+				// check delegation from intermediary account to validator
+				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
+				suite.Require().True(found)
+				suite.Require().Equal(delegation.Shares, sdk.NewDec(1900000)) // 95% x 2 x 1000000
+
+				intermediaryAccs = append(intermediaryAccs, expAcc)
+			}
+
+			// twap price change before refresh
+			suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
+
+			// set epoch info
+			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
+				Identifier:   params.RefreshEpochIdentifier,
+				CurrentEpoch: 3,
+			})
+
+			// run epoch actions
+			suite.NotPanics(func() {
+				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+				suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 3)
+			})
+
+			// check lptoken twap value set
+			newEpochTwap := suite.app.SuperfluidKeeper.GetEpochOsmoEquivalentTWAP(suite.ctx, 3, "gamm/pool/1")
+			suite.Require().Equal(newEpochTwap, sdk.NewDec(10000))
+
+			// check delegation changes
+			for _, acc := range intermediaryAccs {
+				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
+				suite.Require().NoError(err)
+				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAddress(), valAddr)
+				suite.Require().True(found)
+				suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
+			}
+		})
+	}
 }
