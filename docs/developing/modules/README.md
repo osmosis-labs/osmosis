@@ -60,10 +60,10 @@ title: Module Home
   </a>
 
 
-  <a href="" class="card">
-    <img src="" class="filter-blue" />
+  <a href="spec-pool-incentives.html" class="card">
+    <img src="/osmosis/img/pool.svg" class="filter-blue" />
     <div class="title">
-      Pool-incentives
+      Pool-Incentives
     </div>
     <div class="text">
       Test

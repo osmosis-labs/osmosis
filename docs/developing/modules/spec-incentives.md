@@ -9,19 +9,19 @@ The ```incentives``` module provides users the functionality to create gauges, w
 
 ## Overview 
 
-The purpose of incentives module is to provide incentives to the users who lock specific token for specific period of time.
+The purpose of incentives module is to provide incentives to users who lock certain tokens for specified periods of time.
 
-Locked tokens can be of any denom, including LP tokens, IBC tokens, and native tokens. The incentive amount is entered from the provider directly via a specific message type. Rewards for a given pool of locked up tokens are pooled into a gauge until the disbursement time. At the disbursement time, they are distributed pro-rata to members of the pool.
+Locked tokens can be of any denomination, including LP tokens (gamm/pool/x), IBC tokens (tokens sent through IBC such as ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2), and native tokens (such as ATOM or LUNA). The incentive amount is entered by the gauge creator. Rewards for a given pool of locked up tokens are pooled into a gauge until the disbursement time. At the disbursement time, they are distributed pro-rata (proportionally) to members of the pool.
 
-Anyone can create gauge and add rewards to the gauge, there is no way to take it out other than distribution.
+Anyone can create a gauge and add rewards to the gauge. There is no way to withdrawal gauge rewards other than distribution.
 
-There are two kinds of gauges, perpetual and non-perpetual ones.
+There are two kinds of gauges: **`perpetual`** and **`non-perpetual`**:
 
-Non perpetual ones get removed from active queue after the the distribution period finish but perpetual ones persist.
-- For non perpetual ones, they distribute the tokens equally per epoch during the gauge is in the active period.
-- For perpetual ones, it distribute all the tokens at a single time and somewhere else put the tokens regularly to distribute the tokens, it's mainly used to distribute minted OSMO tokens to LP token stakers.
+- **`Non-perpetual`** gauges distribute their tokens equally per epoch while the gauge is in the active period. These gauges get removed from the active queue after the distribution period finishes
 
- 
+- **`Perpetual gauges`** distribute all their tokens at a single time and only distribute their tokens again once the gauge is refilled (this is mainly used to distribute minted OSMO tokens to LP token stakers). Perpetual gauges persist and will re-disburse tokens when refilled (there is no "active" period)
+
+
 
 </br>
 </br>
@@ -30,7 +30,7 @@ Non perpetual ones get removed from active queue after the the distribution peri
 
 ### create-gauge
 
-Create a gauge to distribute rewards to users based on 
+Create a gauge to distribute rewards to users
 
 ```
 osmosisd tx incentives create-gauge [lockup_denom] [reward] [flags]

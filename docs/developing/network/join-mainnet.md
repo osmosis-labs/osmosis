@@ -80,7 +80,7 @@ Download liblz4-tool to handle the compressed file:
 sudo apt-get install wget liblz4-tool aria2 -y
 ```
 
-Download the chain data and its corresponding checksum.
+Download the chain data:
 
 - Select the tab to the desired node type (Default, Pruned, or Archive)
 - Select the tab to the region closest to you (Netherlands, Singapore, or San Francisco) and copy the commands
@@ -97,17 +97,7 @@ Download the chain data and its corresponding checksum.
 URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-default")|select (.mirror=="Netherlands")|.url'`
 cd $HOME/.osmosisd/
 wget -O - $URL | lz4 -d | tar -xvf -
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget $URL.checksum
 ```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
 ::::
 
 :::: tab Singapore
@@ -115,17 +105,7 @@ The output should state "checksum: OK"
 URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-default")|select (.mirror=="Singapore")|.url'`
 cd $HOME/.osmosisd/
 wget -O - $URL | lz4 -d | tar -xvf -
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget $URL.checksum
 ```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
 ::::
 
 :::: tab SanFrancisco
@@ -133,17 +113,7 @@ The output should state "checksum: OK"
 URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-default")|select (.mirror=="SanFrancisco")|.url'`
 cd $HOME/.osmosisd/
 wget -O - $URL | lz4 -d | tar -xvf -
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget $URL.checksum
 ```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
 ::::
 
 :::::
@@ -157,17 +127,7 @@ The output should state "checksum: OK"
 URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-pruned")|select (.mirror=="Netherlands")|.url'`
 cd $HOME/.osmosisd/
 wget -O - $URL | lz4 -d | tar -xvf -
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget $URL.checksum
 ```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
 ::::
 
 :::: tab Singapore
@@ -175,17 +135,7 @@ The output should state "checksum: OK"
 URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-pruned")|select (.mirror=="Singapore")|.url'`
 cd $HOME/.osmosisd/
 wget -O - $URL | lz4 -d | tar -xvf -
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget $URL.checksum
 ```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
 ::::
 
 :::: tab SanFrancisco
@@ -193,17 +143,7 @@ The output should state "checksum: OK"
 URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-pruned")|select (.mirror=="SanFrancisco")|.url'`
 cd $HOME/.osmosisd/
 wget -O - $URL | lz4 -d | tar -xvf -
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget $URL.checksum
 ```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
 ::::
 
 :::::
@@ -217,17 +157,7 @@ The output should state "checksum: OK"
 URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmosis-1-archive")|select (.mirror=="Netherlands")|.url'`
 cd $HOME/.osmosisd/
 wget -O - $URL | lz4 -d | tar -xvf -
-wget https://raw.githubusercontent.com/chainlayer/quicksync-playbooks/master/roles/quicksync/files/checksum.sh
-wget $URL.checksum
 ```
-
-Compare the checksum with the onchain version:
-
-```bash
-curl -s https://lcd-cosmos.cosmostation.io/txs/`curl -s $URL.hash`|jq -r '.tx.value.memo'|sha512sum -c
-```
-
-The output should state "checksum: OK"
 ::::
 
 :::::

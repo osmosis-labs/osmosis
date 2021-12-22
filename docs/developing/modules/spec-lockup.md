@@ -499,6 +499,10 @@ In summary, this shows wallet `osmo16r39ghhwqjcwxa8q3yswlz8jhzldygy66vlm82` bond
 
 Query the balance of all LP shares (bonded and unbonded)
 
+```
+osmosisd query lockup module-balance
+```
+
 #### Example
 
 ```bash
@@ -552,6 +556,9 @@ coins:
 
 Query the balance of all bonded LP shares
 
+```
+osmosisd query lockup module-locked-amount
+```
 
 #### Example
 
@@ -610,7 +617,7 @@ NOTE: This command seems to only work on gRPC and on CLI returns an EOF error.
 
 Output all locks into a json file
 
-```bash
+```
 osmosisd query lockup output-all-locks [max lock ID]
 ```
 
@@ -622,7 +629,7 @@ This example command outputs locks 1-1000 and saves to a json file:
 osmosisd query lockup output-all-locks 1000
 ```
 
-NOTE: This command will likely write null values for all lock IDs. Investigating issue.
+NOTE: If a lockup has been completed, the lockup status will show as "0" (or successful) and no further information will be available. To get further information on a completed lock, run the lock-by-id query.
 
 
 
@@ -635,8 +642,10 @@ NOTE: This command will likely write null values for all lock IDs. Investigating
 Query locked amount for a specific denom in the duration provided
 
 ```
-osmosisd query lockup total-locked-of-denom gamm/pool/2 --min-duration "1209600s"
+osmosisd query lockup total-locked-of-denom [denom] --min-duration
 ```
+
+#### Example
 
 This example command outputs the amount of `gamm/pool/2` LP shares that locked in the `2 week` bonding period:
 
