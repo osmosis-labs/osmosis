@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
@@ -66,7 +65,7 @@ func (suite *KeeperTestSuite) TestCleanupPool() {
 	}
 	suite.True(totalAmount.Equal(types.OneShare.MulRaw(300)))
 
-	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, poolId)
+	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, []uint64{poolId}, []string{})
 	suite.NoError(err)
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 		for _, denom := range []string{"foo", "bar", "baz"} {
@@ -119,7 +118,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
 		suite.NoError(err)
 	}
 
-	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, poolId)
+	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, []uint64{poolId}, []string{})
 	suite.NoError(err)
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 		for _, coin := range coinOf[acc.String()] {
@@ -164,12 +163,11 @@ func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
 	}, "")
 	suite.NoError(err)
 
-	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, poolId)
+	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, []uint64{poolId}, []string{})
 	suite.NoError(err)
 
 	_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, sdk.NewCoin("foo", sdk.NewInt(1)), "bar", sdk.NewInt(1))
 	suite.Error(err)
-	suite.Equal(err.Error(), sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool").Error())
 }
 
 func (suite *KeeperTestSuite) TestCleanupPoolWithLockup() {
@@ -213,7 +211,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolWithLockup() {
 		suite.NoError(err)
 	}
 
-	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, poolId)
+	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, []uint64{poolId}, []string{})
 	suite.NoError(err)
 	for _, coin := range []string{"foo", "bar", "baz"} {
 		amt := suite.app.BankKeeper.GetBalance(suite.ctx, acc1, coin)
