@@ -70,7 +70,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
   <a href="https://github.com/osmosis-labs/osmosis" class="card lg" target="_blank">
-    <img src="./.vuepress/public/img/github.svg">
+    <img src="img/github.svg">
     <div class="title">
     Found an Issue? 
     </div>
@@ -87,7 +87,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 <br />
 <div class="cards threeColumn">
   <a href="https://mintscan.io/osmosis" class="card lg" target="_blank">
-    <img src="/osmosis/img/mintscan.png">
+    <img src="img/mintscan.png">
     <div class="title">
      Mintscan 
     </div>
@@ -96,7 +96,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
   <a href="https://osmosis.bigdipper.live" class="card lg" target="_blank">
-    <img src="/osmosis/img/bigdipper.png">
+    <img src="img/bigdipper.png">
     <div class="title">
      Big Dipper
     </div>
@@ -105,7 +105,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
   <a href="https://ping.pub/osmosis" class="card lg" target="_blank">
-    <img src="/osmosis/img/ping.png">
+    <img src="img/ping.png">
     <div class="title">
      Ping.pub
     </div>
@@ -117,7 +117,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 <br />
 <div class="cards twoColumn">
   <a href="https://info.osmosis.zone/" class="card lg" target="_blank">
-    <img src="/osmosis/img/stats_app.png">
+    <img src="img/stats_app.png">
     <div class="title">
       Osmosis Stats
     </div>
@@ -126,7 +126,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
   <a href="https://api-osmosis.imperator.co/swagger" class="card lg" target="_blank">
-    <img src="/osmosis/img/swagger.png">
+    <img src="img/swagger.png">
     <div class="title">
      Public REST
     </div>

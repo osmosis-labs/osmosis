@@ -6,7 +6,7 @@ title: Module Home
 
 <div class="cards twoColumn">
   <a href="spec-epochs.html" class="card">
-    <img src="/osmosis/img/time.svg" class="filter-blue" />
+    <img src="/img/time.svg" class="filter-blue" />
     <div class="title">
       Epochs
     </div>
@@ -17,7 +17,7 @@ title: Module Home
 
 
   <a href="spec-gamm.html" class="card">
-    <img src="/osmosis/img/handshake.svg" class="filter-blue" />
+    <img src="/img/handshake.svg" class="filter-blue" />
     <div class="title">
       GAMM
     </div>
@@ -28,7 +28,7 @@ title: Module Home
 
 
   <a href="spec-incentives.html" class="card">
-    <img src="/osmosis/img/incentives.svg" class="filter-blue" />
+    <img src="/img/incentives.svg" class="filter-blue" />
     <div class="title">
       Incentives
     </div>
@@ -39,7 +39,7 @@ title: Module Home
 
 
   <a href="spec-lockup.html" class="card">
-    <img src="/osmosis/img/lock-bold.svg" class="filter-blue" />
+    <img src="/img/lock-bold.svg" class="filter-blue" />
     <div class="title">
       Lockup
     </div>
@@ -50,7 +50,7 @@ title: Module Home
 
 
   <a href="spec-mint.html" class="card">
-    <img src="/osmosis/img/mint.svg" class="filter-blue" />
+    <img src="/img/mint.svg" class="filter-blue" />
     <div class="title">
       Mint
     </div>
@@ -61,7 +61,7 @@ title: Module Home
 
 
   <a href="spec-pool-incentives.html" class="card">
-    <img src="/osmosis/img/pool.svg" class="filter-blue" />
+    <img src="/img/pool.svg" class="filter-blue" />
     <div class="title">
       Pool-Incentives
     </div>
@@ -72,7 +72,7 @@ title: Module Home
 
 
   <a href="spec-gov.html" class="card">
-    <img src="/osmosis/img/gov.svg" class="filter-blue" />
+    <img src="/img/gov.svg" class="filter-blue" />
     <div class="title">
       Gov
     </div>

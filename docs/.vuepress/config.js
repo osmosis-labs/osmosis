@@ -123,7 +123,7 @@ module.exports = {
       {
         text: "GitHub",
         link: "https://github.com/osmosis-labs/osmosis",
-        icon: "/osmosis/img/github.svg",
+        icon: "/img/github.svg",
       },
     ],
     sidebar: {

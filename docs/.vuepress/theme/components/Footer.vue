@@ -105,19 +105,19 @@
       <div class="logos">
         <a href="#" rel="noopener" target="_blank">
           <img
-            src="/osmosis/img/discord.svg"
+            src="/img/discord.svg"
             alt="link to Osmosis discord room"
           />
         </a>
         <a href="#" rel="noopener" target="_blank">
           <img
-            src="/osmosis/img/medium.svg"
+            src="/img/medium.svg"
             alt="link to Osmosis medium"
           />
         </a>
         <a href="#" rel="noopener" target="_blank">
           <img
-            src="/osmosis/img/twitter.svg"
+            src="/img/twitter.svg"
             alt="link to Osmosis twitter"
           />
         </a>
@@ -127,13 +127,13 @@
           target="_blank"
         >
           <img
-            src="/osmosis/img/icon_youtube.png"
+            src="/img/icon_youtube.png"
             alt="link to Osmosis youtube"
           />
         </a>
         <a href="#" rel="noopener" target="_blank">
           <img
-            src="/osmosis/img/icon_telegram.png"
+            src="/img/icon_telegram.png"
             alt="link to Osmosis telegram room"
           />
         </a>

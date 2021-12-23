@@ -9,7 +9,7 @@ The guides on this page will explain the process of integrating with Osmosis.
 
 <div class="cards twoColumn">
   <a href="token-listings.html" class="card">
-    <img src="/osmosis/img/coin.svg" class="filter-blue"/>
+    <img src="/img/coin.svg" class="filter-blue"/>
     <div class="title">
      Token Listing Process
     </div>
@@ -18,7 +18,7 @@ The guides on this page will explain the process of integrating with Osmosis.
     </div>
   </a>
   <a href="overview/osmo.html#osmo" class="card">
-    <img src="../.vuepress/public/img/github.svg"/>
+    <img src="/img/github.svg"/>
     <div class="title">
       Need Support? 
     </div>

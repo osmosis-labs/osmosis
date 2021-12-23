@@ -4,7 +4,7 @@
 
     <blockquote>{{ getMsg() }}</blockquote>
     <div>
-      <img src="/osmosis/img/404page.png" />
+      <img src="/img/404page.png" />
     </div>
 
     <RouterLink to="/">

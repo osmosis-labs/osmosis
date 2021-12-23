@@ -156,7 +156,7 @@ export default {
       display: inline-block;
       width: 12px;
       height: 12px;
-      background: url('/osmosis/img/bullet_osmo_gray.svg');
+      background: url('/img/bullet_osmo_gray.svg');
       background-size: 12px 12px;
       margin-right: 0.625rem;
       vertical-align: middle;
@@ -169,7 +169,7 @@ export default {
         display: inline-block;
         width: 12px;
         height: 12px;
-        background: url('/osmosis/img/bullet_osmo.svg');
+        background: url('/img/bullet_osmo.svg');
         background-size: 12px 12px;
         margin-right: 0.625rem;
       }
@@ -182,7 +182,7 @@ export default {
       display: inline-block;
       width: 12px;
       height: 12px;
-      background: url('/osmosis/img/external.svg');
+      background: url('/img/external.svg');
       background-size: 12px 12px;
       margin-right: 0.625rem;
     }

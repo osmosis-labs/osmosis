@@ -15,7 +15,7 @@ If the liquidity provider begins the unbonding process for their 2 week bonded L
 
 <br/>
 <p style="text-align:center;">
-<img src="/osmosis/img/bonding.png" height="300"/>
+<img src="/img/bonding.png" height="300"/>
 </p>
 
 </br>
