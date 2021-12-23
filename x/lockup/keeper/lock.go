@@ -569,6 +569,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 // ForceUnlock ignores unlock duration and immediately unlock and refund.
 // CONTRACT: should be used only at the chain upgrade script
+// TODO: Revisit for Superfluid Staking
 func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
