@@ -28,7 +28,7 @@ func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus)
 	validator, err := stakingtypes.NewValidator(valAddr, valPub, stakingtypes.NewDescription("moniker", "", "", "", ""))
 	suite.Require().NoError(err)
 
-	amount := sdk.NewInt(1000000)
+	amount := sdk.TokensFromConsensusPower(1)
 	issuedShares := amount.ToDec()
 	validator.Status = bondStatus
 	validator.Tokens = validator.Tokens.Add(amount)
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, de
 	})
 
 	// set OSMO TWAP price for LP token
-	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, denom, sdk.NewDec(2))
+	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, denom, sdk.NewDec(20))
 	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
 		Identifier:   params.RefreshEpochIdentifier,
@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 	// check delegation from intermediary account to validator
 	delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
 	suite.Require().True(found)
-	suite.Require().Equal(delegation.Shares, sdk.NewDec(1900000)) // 95% x 2 x 1000000
+	suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 2 x 1000000
 
 	// TODO: add table driven test for all edge cases
 }
@@ -225,14 +225,14 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	// check delegation from intermediary account to validator
 	delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
 	suite.Require().True(found)
-	suite.Require().Equal(delegation.Shares, sdk.NewDec(1900000)) // 95% x 2 x 1000000
+	suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
 
 	// twap price change before refresh
 	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
 	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
 		Identifier:   params.RefreshEpochIdentifier,
-		CurrentEpoch: 3,
+		CurrentEpoch: 2,
 	})
 
 	// refresh intermediary account delegations
@@ -244,6 +244,12 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	delegation, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
 	suite.Require().True(found)
 	suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
+
+	// start new epoch
+	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
+		Identifier:   params.RefreshEpochIdentifier,
+		CurrentEpoch: 3,
+	})
 
 	// superfluid undelegate
 	err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)

@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -82,30 +81,29 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				// check delegation from intermediary account to validator
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
 				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, sdk.NewDec(1900000)) // 95% x 2 x 1000000
+				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
 
 				intermediaryAccs = append(intermediaryAccs, expAcc)
 			}
 
-			// twap price change before refresh
+			// gamm swap operation before refresh
 			suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
+			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-			// set epoch info
-			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
-				Identifier:   params.RefreshEpochIdentifier,
-				CurrentEpoch: 3,
-			})
+			err := suite.app.BankKeeper.SetBalances(suite.ctx, acc1, sdk.Coins{sdk.NewInt64Coin("foo", 1000000)})
+			suite.Require().NoError(err)
+			_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, 1, "foo", sdk.NewInt(1000000), sdk.NewInt64Coin(appparams.BaseCoinUnit, 2500))
+			suite.Require().NoError(err)
 
 			// run epoch actions
 			suite.NotPanics(func() {
 				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-				suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 3)
+				suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 2)
 			})
 
 			// check lptoken twap value set
-			newEpochTwap := suite.app.SuperfluidKeeper.GetEpochOsmoEquivalentTWAP(suite.ctx, 3, "gamm/pool/1")
-			suite.Require().Equal(newEpochTwap, sdk.NewDec(10000))
+			newEpochTwap := suite.app.SuperfluidKeeper.GetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1")
+			suite.Require().Equal(newEpochTwap, sdk.NewDec(7500))
 
 			// check delegation changes
 			for _, acc := range intermediaryAccs {
@@ -113,7 +111,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().NoError(err)
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAddress(), valAddr)
 				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
+				suite.Require().Equal(delegation.Shares, sdk.NewDec(7125000000)) // 95% x 7500 x 1000000
 			}
 		})
 	}

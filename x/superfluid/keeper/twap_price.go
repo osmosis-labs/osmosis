@@ -54,6 +54,17 @@ func (k Keeper) GetLastEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) ty
 	}
 }
 
+func (k Keeper) GetCurrentEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) types.EpochOsmoEquivalentTWAP {
+	params := k.GetParams(ctx)
+	epochInfo := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
+
+	return types.EpochOsmoEquivalentTWAP{
+		EpochNumber:    epochInfo.CurrentEpoch,
+		Denom:          denom,
+		EpochTwapPrice: k.GetEpochOsmoEquivalentTWAP(ctx, epochInfo.CurrentEpoch, denom),
+	}
+}
+
 func (k Keeper) GetAllEpochOsmoEquivalentTWAPs(ctx sdk.Context, epoch int64) []types.EpochOsmoEquivalentTWAP {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))

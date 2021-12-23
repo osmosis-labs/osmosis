@@ -63,4 +63,6 @@ func (suite *KeeperTestSuite) TestEpochOsmoEquivalentTWAPSetGetDeleteFlow() {
 	suite.Require().Equal(twapT.Denom, "gamm/pool/1")
 	suite.Require().Equal(twapT.EpochNumber, int64(1))
 	suite.Require().Equal(twapT.EpochTwapPrice, sdk.NewDec(0))
+
+	// TODO: add test for GetCurrentEpochOsmoEquivalentTWAP
 }

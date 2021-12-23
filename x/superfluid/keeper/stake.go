@@ -75,7 +75,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			}
 		}
 
-		twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
+		twap := k.GetCurrentEpochOsmoEquivalentTWAP(ctx, acc.Denom)
 		if twap.EpochTwapPrice.IsZero() {
 			continue
 		}
