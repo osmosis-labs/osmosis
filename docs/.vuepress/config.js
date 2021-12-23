@@ -92,6 +92,13 @@ module.exports = {
         })
       }`,
     ],
+    [
+      "meta",
+      {
+        property:"og:image",
+        content:"/img/osmosis-title.png",
+      },
+    ],
   ],
   themeConfig: {
     sidebarDepth: 3,
