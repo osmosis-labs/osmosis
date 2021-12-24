@@ -38,9 +38,9 @@ func (k Keeper) createLBP(msg *proto.MsgCreateLBP, now time.Time, store storetyp
 	p := proto.LBP{
 		TokenOut:       msg.TokenOut,
 		TokenIn:        msg.TokenIn,
-		Start:          msg.Start,
-		End:            msg.Start.Add(msg.Duration),
-		Rate:           msg.TotalSale.Quo(sdk.NewInt(int64(msg.Duration / proto.ROUND))),
+		StartTime:      msg.StartTime,
+		EndTime:        msg.StartTime.Add(msg.Duration),
+		Rate:           msg.InitialDeposit.Amount.Quo(sdk.NewInt(int64(msg.Duration / proto.ROUND))),
 		AccumulatorOut: sdk.ZeroInt(),
 		Round:          0,
 		Staked:         sdk.ZeroInt(),
@@ -50,13 +50,13 @@ func (k Keeper) createLBP(msg *proto.MsgCreateLBP, now time.Time, store storetyp
 
 }
 
-func (k Keeper) Stake(goCtx context.Context, msg *proto.MsgStake) (*proto.EmptyResponse, error) {
+func (k Keeper) Deposit(goCtx context.Context, msg *proto.MsgDeposit) (*proto.EmptyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	if err := k.stake(ctx, msg, store); err != nil {
+	if err := k.deposit(ctx, msg, store); err != nil {
 		return nil, err
 	}
-	err := ctx.EventManager().EmitTypedEvent(&proto.EventStake{
+	err := ctx.EventManager().EmitTypedEvent(&proto.EventDeposit{
 		Sender: msg.Sender,
 		PoolId: msg.PoolId,
 		Amount: msg.Amount.String(),
@@ -64,7 +64,7 @@ func (k Keeper) Stake(goCtx context.Context, msg *proto.MsgStake) (*proto.EmptyR
 	return &proto.EmptyResponse{}, err
 }
 
-func (k Keeper) stake(ctx sdk.Context, msg *proto.MsgStake, store storetypes.KVStore) error {
+func (k Keeper) deposit(ctx sdk.Context, msg *proto.MsgDeposit, store storetypes.KVStore) error {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return err
@@ -73,8 +73,12 @@ func (k Keeper) stake(ctx sdk.Context, msg *proto.MsgStake, store storetypes.KVS
 	if err != nil {
 		return err
 	}
-	coins := []sdk.Coin{{Denom: p.TokenIn, Amount: msg.Amount}}
-	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, osmolbp.ModuleName, coins)
+
+	if msg.Amount.Denom != p.TokenIn {
+		return errors.Wrap(errors.ErrInvalidCoins, "deposit denom must be the same as token in denom")
+	}
+
+	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, osmolbp.ModuleName, sdk.NewCoins(msg.Amount))
 	if err != nil {
 		return errors.Wrap(err, "user doesn't have enough tokens to stake")
 	}
@@ -88,20 +92,20 @@ func (k Keeper) stake(ctx sdk.Context, msg *proto.MsgStake, store storetypes.KVS
 		v.Staked = sdk.ZeroInt()
 	}
 
-	stakeInPool(&p, &v, msg.Amount, ctx.BlockTime())
+	stakeInPool(&p, &v, msg.Amount.Amount, ctx.BlockTime())
 
 	k.savePool(store, poolIdBz, &p)
 	k.saveUserVault(store, poolIdBz, sender, &v)
 	return nil
 }
 
-func (k Keeper) ExitLBP(goCtx context.Context, msg *proto.MsgExitLBP) (*proto.EmptyResponse, error) {
+func (k Keeper) Withdraw(goCtx context.Context, msg *proto.MsgWithdraw) (*proto.EmptyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	if err := k.exitLBP(ctx, msg, store); err != nil {
+	if err := k.withdraw(ctx, msg, store); err != nil {
 		return nil, err
 	}
-	err := ctx.EventManager().EmitTypedEvent(&proto.EventExit{
+	err := ctx.EventManager().EmitTypedEvent(&proto.EventWithdraw{
 		Sender: msg.Sender,
 		PoolId: msg.PoolId,
 		// TODO: Purchased: ,
@@ -109,7 +113,7 @@ func (k Keeper) ExitLBP(goCtx context.Context, msg *proto.MsgExitLBP) (*proto.Em
 	return &proto.EmptyResponse{}, err
 }
 
-func (k Keeper) exitLBP(ctx sdk.Context, msg *proto.MsgExitLBP, store storetypes.KVStore) error {
+func (k Keeper) withdraw(ctx sdk.Context, msg *proto.MsgWithdraw, store storetypes.KVStore) error {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return err

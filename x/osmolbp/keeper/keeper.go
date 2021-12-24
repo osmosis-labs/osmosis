@@ -13,12 +13,12 @@ import (
 
 type Keeper struct {
 	storeKey storetypes.StoreKey
-	cdc      codec.BinaryMarshaler // .BinaryCodec
+	cdc      codec.BinaryCodec
 	bank     BankKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryMarshaler, bank BankKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, bank BankKeeper) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,

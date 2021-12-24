@@ -15,15 +15,15 @@ message EventCreateLBP {
   string token_out = 4;
 }
 
-message EventStake {
-	string sender = 1;
-	uint64 pool_id = 2;
-	string amount = 3;
+message EventDeposit {
+  string sender = 1;
+  uint64 pool_id = 2;
+  string amount = 3;
 }
 
-message EventExit {
-	string sender = 1;
-	uint64 pool_id = 2;
+message EventWithdraw {
+  string sender = 1;
+  uint64 pool_id = 2;
   // amount of purchased tokens
-	string purchased = 3;
+  string purchased = 3;
 }
