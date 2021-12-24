@@ -105,30 +105,89 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 }
 
 func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
-	suite.SetupTest()
-	valAddr := suite.SetupValidator(stakingtypes.Bonded)
-	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
-
-	expAcc := types.SuperfluidIntermediaryAccount{
-		Denom:   lock.Coins[0].Denom,
-		ValAddr: valAddr.String(),
+	type superfluidDelegation struct {
+		valIndex int64
+		lpDenom  string
+	}
+	testCases := []struct {
+		name                  string
+		validatorStats        []stakingtypes.BondStatus
+		superDelegations      []superfluidDelegation
+		superUnbondingLockIds []uint64
+		slashedValIndexes     []int64
+		expSlashedLockIndexes []int64
+	}{
+		{
+			"happy path with single validator and delegator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]uint64{1},
+			[]int64{0},
+			[]int64{0},
+		},
 	}
 
-	// superfluid undelegate
-	err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)
-	suite.Require().NoError(err)
+	for _, tc := range testCases {
+		tc := tc
 
-	// slash unbonding lockups
-	suite.NotPanics(func() {
-		suite.app.SuperfluidKeeper.SlashLockupsForUnbondingDelegationSlash(
-			suite.ctx,
-			expAcc.GetAddress().String(),
-			expAcc.ValAddr,
-			sdk.NewDecWithPrec(5, 2))
-	})
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
 
-	// check check unbonding lockup changes
-	gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
-	suite.Require().NoError(err)
-	suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(950000).String())
+			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+			suite.Require().Equal(poolId, uint64(1))
+
+			// setup validators
+			valAddrs := []sdk.ValAddress{}
+			for _, status := range tc.validatorStats {
+				valAddr := suite.SetupValidator(status)
+				valAddrs = append(valAddrs, valAddr)
+			}
+
+			intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
+			locks := []lockuptypes.PeriodLock{}
+
+			// setup superfluid delegations
+			for _, del := range tc.superDelegations {
+				valAddr := valAddrs[del.valIndex]
+				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
+				expAcc := types.SuperfluidIntermediaryAccount{
+					Denom:   lock.Coins[0].Denom,
+					ValAddr: valAddr.String(),
+				}
+
+				// check delegation from intermediary account to validator
+				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
+				suite.Require().True(found)
+				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
+
+				// save accounts and locks for future use
+				intermediaryAccs = append(intermediaryAccs, expAcc)
+				locks = append(locks, lock)
+			}
+
+			for _, lockId := range tc.superUnbondingLockIds {
+				// superfluid undelegate
+				err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
+				suite.Require().NoError(err)
+			}
+
+			// slash unbonding lockups for all intermediary accounts
+			for _, acc := range intermediaryAccs {
+				suite.NotPanics(func() {
+					suite.app.SuperfluidKeeper.SlashLockupsForUnbondingDelegationSlash(
+						suite.ctx,
+						acc.GetAddress().String(),
+						acc.ValAddr,
+						sdk.NewDecWithPrec(5, 2))
+				})
+			}
+
+			// check check unbonding lockup changes
+			for _, lockId := range tc.superUnbondingLockIds {
+				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(950000).String())
+			}
+		})
+	}
 }
