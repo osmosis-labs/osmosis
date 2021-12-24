@@ -15,14 +15,14 @@ import (
 // if now == start + ROUND return 1...
 // if now > end return round the round at end.
 func currentRound(p *proto.LBP, now time.Time) uint64 {
-	if now.Before(p.Start) {
+	if now.Before(p.StartTime) {
 		return 0
 	}
-	if !p.End.After(now) { // end <= now
-		now = p.End
+	if !p.EndTime.After(now) { // end <= now
+		now = p.EndTime
 		// NOTE: add adjustment if round
 	}
-	return uint64(now.Sub(p.End) / proto.ROUND)
+	return uint64(now.Sub(p.EndTime) / proto.ROUND)
 }
 
 // pingPool updates the accumulators based on the current round

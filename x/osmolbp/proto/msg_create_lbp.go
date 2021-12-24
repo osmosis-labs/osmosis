@@ -30,15 +30,18 @@ func (msg *MsgCreateLBP) validate() []string {
 	if msg.TokenOut == "" {
 		errmsgs = append(errmsgs, "`token_out` must be not empty")
 	}
-	if msg.TotalSale.GTE(sdk.NewInt(d)) {
-		errmsgs = append(errmsgs, "`total_sale` must be positive and must be bigger then duration in seconds")
+	if msg.InitialDeposit.Denom != msg.TokenOut {
+		errmsgs = append(errmsgs, "`initial_deposit` denom must be the same as `token_out`")
+	}
+	if msg.InitialDeposit.Amount.GT(sdk.NewInt(d)) {
+		errmsgs = append(errmsgs, "`initial_deposit` amount must be positive and must be bigger than duration in seconds")
 	}
 	return errmsgs
 }
 
 func (msg *MsgCreateLBP) Validate(now time.Time) error {
 	errmsgs := msg.validate()
-	if msg.Start.Before(now) {
+	if msg.StartTime.Before(now) {
 		errmsgs = append(errmsgs, fmt.Sprint("`start` must be after ", now))
 	}
 
@@ -48,19 +51,4 @@ func (msg *MsgCreateLBP) Validate(now time.Time) error {
 func (msg *MsgCreateLBP) GetSigners() []sdk.AccAddress {
 	a, _ := sdk.AccAddressFromBech32(msg.Creator)
 	return []sdk.AccAddress{a}
-}
-
-// TODO: remove when updating to SDK v0.44+
-// Deprecated methods
-
-func (msg *MsgCreateLBP) GetSignBytes() []byte {
-	panic("not implemented")
-}
-
-func (msg *MsgCreateLBP) Route() string {
-	panic("not implemented")
-}
-
-func (msg *MsgCreateLBP) Type() string {
-	panic("not implemented")
 }

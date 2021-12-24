@@ -6,8 +6,8 @@ package proto
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-sdk/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -73,65 +73,28 @@ func (m *EmptyResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EmptyResponse proto.InternalMessageInfo
 
-type MsgDeposit struct {
-	// sender is an account address making a deposit for setting up a pool.
-	Sender string                                   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-}
-
-func (m *MsgDeposit) Reset()         { *m = MsgDeposit{} }
-func (m *MsgDeposit) String() string { return proto.CompactTextString(m) }
-func (*MsgDeposit) ProtoMessage()    {}
-func (*MsgDeposit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1d242e74c0fb1a3a, []int{1}
-}
-func (m *MsgDeposit) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgDeposit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgDeposit.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgDeposit) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDeposit.Merge(m, src)
-}
-func (m *MsgDeposit) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgDeposit) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDeposit.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgDeposit proto.InternalMessageInfo
-
 type MsgCreateLBP struct {
 	// Pool creator
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	// token_in a denom used to buy LB tokens (`token_out`). May be referred as quote_currency.
+	// token_in a denom used to buy LB tokens (`token_out`). May be referred as
+	// quote_currency.
 	TokenIn string `protobuf:"bytes,2,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`
-	// token_out a token denom to be bootstraped. May be referred as base currency.
+	// token_out a token denom to be bootstraped. May be referred as base
+	// currency.
 	TokenOut string `protobuf:"bytes,3,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`
 	// start time when the token sale starts.
-	Start time.Time `protobuf:"bytes,4,opt,name=start,proto3,stdtime" json:"start"`
-	// duration time when the token sale ends.
+	StartTime time.Time `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
+	// duration time that the sale takes place over
 	Duration time.Duration `protobuf:"bytes,5,opt,name=duration,proto3,stdduration" json:"duration"`
 	// total number of `tokens_out` to be sold during the continous sale.
-	TotalSale github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=total_sale,json=totalSale,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"total_sale"`
+	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,6,opt,name=initial_deposit,json=initialDeposit,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"initial_deposit"`
 }
 
 func (m *MsgCreateLBP) Reset()         { *m = MsgCreateLBP{} }
 func (m *MsgCreateLBP) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateLBP) ProtoMessage()    {}
 func (*MsgCreateLBP) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1d242e74c0fb1a3a, []int{2}
+	return fileDescriptor_1d242e74c0fb1a3a, []int{1}
 }
 func (m *MsgCreateLBP) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -161,14 +124,14 @@ func (m *MsgCreateLBP) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgCreateLBP proto.InternalMessageInfo
 
 type MsgCreateLBPResponse struct {
-	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
 
 func (m *MsgCreateLBPResponse) Reset()         { *m = MsgCreateLBPResponse{} }
 func (m *MsgCreateLBPResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateLBPResponse) ProtoMessage()    {}
 func (*MsgCreateLBPResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1d242e74c0fb1a3a, []int{3}
+	return fileDescriptor_1d242e74c0fb1a3a, []int{2}
 }
 func (m *MsgCreateLBPResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -197,28 +160,28 @@ func (m *MsgCreateLBPResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateLBPResponse proto.InternalMessageInfo
 
-type MsgStake struct {
-	// sender is an account address adding a stake
+type MsgDeposit struct {
+	// sender is an account address adding a deposit
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// pool_id is a valid ID of this module LBP
 	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 	// number of pool.token_in staked by a user. Coins must be firstly deposited.
 	// TODO: add (cosmos_proto.scalar) = "cosmos.Int",
-	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
+	Amount github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
 }
 
-func (m *MsgStake) Reset()         { *m = MsgStake{} }
-func (m *MsgStake) String() string { return proto.CompactTextString(m) }
-func (*MsgStake) ProtoMessage()    {}
-func (*MsgStake) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1d242e74c0fb1a3a, []int{4}
+func (m *MsgDeposit) Reset()         { *m = MsgDeposit{} }
+func (m *MsgDeposit) String() string { return proto.CompactTextString(m) }
+func (*MsgDeposit) ProtoMessage()    {}
+func (*MsgDeposit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1d242e74c0fb1a3a, []int{3}
 }
-func (m *MsgStake) XXX_Unmarshal(b []byte) error {
+func (m *MsgDeposit) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgStake) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDeposit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgStake.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDeposit.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -228,36 +191,36 @@ func (m *MsgStake) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *MsgStake) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgStake.Merge(m, src)
+func (m *MsgDeposit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDeposit.Merge(m, src)
 }
-func (m *MsgStake) XXX_Size() int {
+func (m *MsgDeposit) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgStake) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgStake.DiscardUnknown(m)
+func (m *MsgDeposit) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDeposit.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgStake proto.InternalMessageInfo
+var xxx_messageInfo_MsgDeposit proto.InternalMessageInfo
 
-type MsgExitLBP struct {
+type MsgWithdraw struct {
 	// sender is an account address exiting a pool
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
 
-func (m *MsgExitLBP) Reset()         { *m = MsgExitLBP{} }
-func (m *MsgExitLBP) String() string { return proto.CompactTextString(m) }
-func (*MsgExitLBP) ProtoMessage()    {}
-func (*MsgExitLBP) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1d242e74c0fb1a3a, []int{5}
+func (m *MsgWithdraw) Reset()         { *m = MsgWithdraw{} }
+func (m *MsgWithdraw) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdraw) ProtoMessage()    {}
+func (*MsgWithdraw) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1d242e74c0fb1a3a, []int{4}
 }
-func (m *MsgExitLBP) XXX_Unmarshal(b []byte) error {
+func (m *MsgWithdraw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgExitLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgWithdraw) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgExitLBP.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgWithdraw.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -267,69 +230,66 @@ func (m *MsgExitLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *MsgExitLBP) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExitLBP.Merge(m, src)
+func (m *MsgWithdraw) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdraw.Merge(m, src)
 }
-func (m *MsgExitLBP) XXX_Size() int {
+func (m *MsgWithdraw) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgExitLBP) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExitLBP.DiscardUnknown(m)
+func (m *MsgWithdraw) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdraw.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgExitLBP proto.InternalMessageInfo
+var xxx_messageInfo_MsgWithdraw proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*EmptyResponse)(nil), "osmosis.osmolbp.v1.EmptyResponse")
-	proto.RegisterType((*MsgDeposit)(nil), "osmosis.osmolbp.v1.MsgDeposit")
 	proto.RegisterType((*MsgCreateLBP)(nil), "osmosis.osmolbp.v1.MsgCreateLBP")
 	proto.RegisterType((*MsgCreateLBPResponse)(nil), "osmosis.osmolbp.v1.MsgCreateLBPResponse")
-	proto.RegisterType((*MsgStake)(nil), "osmosis.osmolbp.v1.MsgStake")
-	proto.RegisterType((*MsgExitLBP)(nil), "osmosis.osmolbp.v1.MsgExitLBP")
+	proto.RegisterType((*MsgDeposit)(nil), "osmosis.osmolbp.v1.MsgDeposit")
+	proto.RegisterType((*MsgWithdraw)(nil), "osmosis.osmolbp.v1.MsgWithdraw")
 }
 
 func init() { proto.RegisterFile("osmosis/osmolbp/v1/tx.proto", fileDescriptor_1d242e74c0fb1a3a) }
 
 var fileDescriptor_1d242e74c0fb1a3a = []byte{
-	// 603 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x4f, 0x6f, 0xd3, 0x30,
-	0x1c, 0x6d, 0xd6, 0xad, 0x6b, 0x3d, 0xfe, 0x48, 0xd6, 0x84, 0xd2, 0x0e, 0x25, 0x25, 0x07, 0x54,
-	0x09, 0xcd, 0xa6, 0xe3, 0xb6, 0x0b, 0x52, 0xb6, 0x21, 0x26, 0x2d, 0x02, 0x32, 0x24, 0x24, 0x2e,
-	0x95, 0xd3, 0x9a, 0x10, 0x2d, 0x89, 0xa3, 0xda, 0x99, 0xb6, 0x8f, 0xc0, 0x6d, 0x37, 0xf8, 0x0c,
-	0x88, 0x0f, 0xd2, 0xe3, 0x8e, 0x88, 0x43, 0x07, 0xed, 0x37, 0xe0, 0xc0, 0x19, 0xc5, 0x76, 0x4a,
-	0x61, 0x54, 0x0c, 0xc4, 0xc9, 0x79, 0x7a, 0xbf, 0xf7, 0xf2, 0xf3, 0xfb, 0xfd, 0x12, 0xb0, 0xc1,
-	0x78, 0xc2, 0x78, 0xc4, 0x71, 0x71, 0xc6, 0x41, 0x86, 0x8f, 0xbb, 0x58, 0x9c, 0xa0, 0x6c, 0xc8,
-	0x04, 0x83, 0x50, 0x93, 0x48, 0x93, 0xe8, 0xb8, 0xdb, 0x5a, 0x0f, 0x59, 0xc8, 0x24, 0x8d, 0x8b,
-	0x27, 0x55, 0xd9, 0xb2, 0x42, 0xc6, 0xc2, 0x98, 0x62, 0x89, 0x82, 0xfc, 0x15, 0x1e, 0xe4, 0x43,
-	0x22, 0x22, 0x96, 0x6a, 0xde, 0xfe, 0x95, 0x17, 0x51, 0x42, 0xb9, 0x20, 0x49, 0x56, 0x1a, 0xf4,
-	0xe5, 0xbb, 0x70, 0x40, 0x38, 0xc5, 0xc7, 0xdd, 0x80, 0x0a, 0xd2, 0xc5, 0x7d, 0x16, 0x95, 0x06,
-	0x4d, 0xc5, 0xf7, 0xd4, 0x9b, 0x15, 0x50, 0x94, 0x73, 0x13, 0x5c, 0xdf, 0x4b, 0x32, 0x71, 0xea,
-	0x53, 0x9e, 0xb1, 0x94, 0x53, 0xe7, 0x8d, 0x01, 0x80, 0xc7, 0xc3, 0x5d, 0x9a, 0x31, 0x1e, 0x09,
-	0x78, 0x0b, 0xd4, 0x38, 0x4d, 0x07, 0x74, 0x68, 0x1a, 0x6d, 0xa3, 0xd3, 0xf0, 0x35, 0x82, 0x7d,
-	0x50, 0x23, 0x09, 0xcb, 0x53, 0x61, 0x2e, 0xb5, 0xab, 0x9d, 0xb5, 0xad, 0x26, 0xd2, 0xb6, 0x45,
-	0x0f, 0x48, 0xf7, 0x80, 0x76, 0x58, 0x94, 0xba, 0xf7, 0x47, 0x63, 0xbb, 0xf2, 0xfe, 0xc2, 0xee,
-	0x84, 0x91, 0x78, 0x9d, 0x07, 0xa8, 0xcf, 0x12, 0xdd, 0x83, 0x3e, 0x36, 0xf9, 0xe0, 0x08, 0x8b,
-	0xd3, 0x8c, 0x72, 0x29, 0xe0, 0xbe, 0xb6, 0x76, 0x3e, 0x2c, 0x81, 0x6b, 0x1e, 0x0f, 0x77, 0x86,
-	0x94, 0x08, 0x7a, 0xe0, 0x3e, 0x85, 0x26, 0x58, 0xed, 0x17, 0x80, 0x95, 0xed, 0x94, 0x10, 0x36,
-	0x41, 0x5d, 0xb0, 0x23, 0x9a, 0xf6, 0xa2, 0xd4, 0x5c, 0x52, 0x94, 0xc4, 0xfb, 0x29, 0xdc, 0x00,
-	0x0d, 0x45, 0xb1, 0x5c, 0x98, 0x55, 0xc9, 0xa9, 0xda, 0x27, 0xb9, 0x80, 0xdb, 0x60, 0x85, 0x0b,
-	0x32, 0x14, 0xe6, 0x72, 0xdb, 0xe8, 0xac, 0x6d, 0xb5, 0x90, 0xca, 0x1a, 0x95, 0x59, 0xa3, 0xe7,
-	0x65, 0xd6, 0x6e, 0xbd, 0xb8, 0xc7, 0xd9, 0x85, 0x6d, 0xf8, 0x4a, 0x02, 0x1f, 0x82, 0x7a, 0x39,
-	0x29, 0x73, 0x45, 0xca, 0x9b, 0x97, 0xe4, 0xbb, 0xba, 0x40, 0xa9, 0xdf, 0x15, 0xea, 0x99, 0x08,
-	0x7a, 0x00, 0x08, 0x26, 0x48, 0xdc, 0xe3, 0x24, 0xa6, 0x66, 0xad, 0x68, 0xcd, 0x45, 0x45, 0xdd,
-	0xa7, 0xb1, 0x7d, 0xf7, 0x0a, 0x69, 0xed, 0xa7, 0xc2, 0x6f, 0x48, 0x87, 0x43, 0x12, 0x53, 0x67,
-	0x07, 0xac, 0xcf, 0xa7, 0x55, 0x8e, 0x14, 0xde, 0x03, 0xab, 0x19, 0x63, 0x71, 0x2f, 0x1a, 0xc8,
-	0x68, 0x96, 0x5d, 0xf8, 0x75, 0x6c, 0xdf, 0x38, 0x25, 0x49, 0xbc, 0xed, 0x68, 0xc2, 0xf1, 0x6b,
-	0xc5, 0xd3, 0xfe, 0xc0, 0x79, 0x6b, 0x80, 0xba, 0xc7, 0xc3, 0x43, 0x41, 0x8e, 0xe8, 0xc2, 0xe9,
-	0xff, 0x8d, 0x23, 0x7c, 0x34, 0x5b, 0x95, 0xea, 0x3f, 0xdd, 0xb0, 0xdc, 0x86, 0x67, 0x72, 0x31,
-	0xf7, 0x4e, 0x22, 0x51, 0xac, 0xc2, 0xff, 0x68, 0x6d, 0xeb, 0x9b, 0x01, 0xaa, 0x1e, 0x0f, 0xe1,
-	0x0b, 0xd0, 0xf8, 0xb1, 0x64, 0x6d, 0x74, 0xf9, 0xcb, 0x45, 0xf3, 0xc1, 0xb6, 0x3a, 0x7f, 0xaa,
-	0x98, 0x45, 0xff, 0x18, 0xac, 0xa8, 0x24, 0x6f, 0x2f, 0x90, 0x48, 0xb6, 0x75, 0xe7, 0x77, 0xec,
-	0x4f, 0xdf, 0x25, 0x3c, 0x00, 0xab, 0xe5, 0xd5, 0xad, 0x05, 0x5e, 0x9a, 0xbf, 0x82, 0x9b, 0xeb,
-	0x8d, 0xbe, 0x58, 0x95, 0xd1, 0xc4, 0x32, 0xce, 0x27, 0x96, 0xf1, 0x79, 0x62, 0x19, 0x67, 0x53,
-	0xab, 0x72, 0x3e, 0xb5, 0x2a, 0x1f, 0xa7, 0x56, 0xe5, 0x25, 0x9e, 0x9b, 0x8c, 0xb6, 0xda, 0x8c,
-	0x49, 0xc0, 0x4b, 0x80, 0x4f, 0x66, 0x7f, 0x3c, 0xb5, 0xe8, 0x35, 0x79, 0x3c, 0xf8, 0x1e, 0x00,
-	0x00, 0xff, 0xff, 0x4b, 0x25, 0x86, 0x48, 0x11, 0x05, 0x00, 0x00,
+	// 562 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0x4f, 0x6f, 0xd3, 0x30,
+	0x18, 0xc6, 0x9b, 0x6e, 0xf4, 0x8f, 0x07, 0x9b, 0x64, 0x4d, 0x28, 0xed, 0xa4, 0xa4, 0xe4, 0x42,
+	0x25, 0xb4, 0x58, 0x1d, 0x37, 0x2e, 0x48, 0xed, 0x10, 0x9a, 0xb4, 0x02, 0x8a, 0x90, 0x86, 0xb8,
+	0x54, 0x4e, 0x63, 0x32, 0x6b, 0x49, 0x1c, 0xc5, 0x4e, 0x59, 0xbf, 0xc5, 0x8e, 0x88, 0x4f, 0xc3,
+	0xb1, 0xc7, 0x1d, 0x11, 0x87, 0x02, 0xed, 0x37, 0xe0, 0xcc, 0x01, 0x25, 0xb6, 0x4b, 0x61, 0x4c,
+	0x03, 0x89, 0x93, 0xf3, 0xe8, 0x79, 0xdf, 0x5f, 0xf2, 0x3e, 0xb6, 0x03, 0xf6, 0x18, 0x8f, 0x19,
+	0xa7, 0x1c, 0x15, 0x6b, 0xe4, 0xa7, 0x68, 0xd2, 0x43, 0xe2, 0xdc, 0x4d, 0x33, 0x26, 0x18, 0x84,
+	0xca, 0x74, 0x95, 0xe9, 0x4e, 0x7a, 0xed, 0xdd, 0x90, 0x85, 0xac, 0xb4, 0x51, 0xf1, 0x24, 0x2b,
+	0xdb, 0x56, 0xc8, 0x58, 0x18, 0x11, 0x54, 0x2a, 0x3f, 0x7f, 0x83, 0x82, 0x3c, 0xc3, 0x82, 0xb2,
+	0x44, 0xf9, 0xf6, 0xef, 0xbe, 0xa0, 0x31, 0xe1, 0x02, 0xc7, 0xa9, 0x06, 0x8c, 0xcb, 0x77, 0x21,
+	0x1f, 0x73, 0x82, 0x26, 0x3d, 0x9f, 0x08, 0xdc, 0x43, 0x63, 0x46, 0x35, 0xa0, 0x25, 0xfd, 0x91,
+	0x7c, 0xb3, 0x14, 0xd2, 0x72, 0x76, 0xc0, 0x9d, 0x27, 0x71, 0x2a, 0xa6, 0x1e, 0xe1, 0x29, 0x4b,
+	0x38, 0x71, 0x3e, 0x54, 0xc1, 0xed, 0x21, 0x0f, 0x07, 0x19, 0xc1, 0x82, 0x1c, 0xf7, 0x5f, 0x40,
+	0x13, 0xd4, 0xc7, 0x85, 0x60, 0x99, 0x69, 0x74, 0x8c, 0x6e, 0xd3, 0xd3, 0x12, 0xb6, 0x40, 0x43,
+	0xb0, 0x33, 0x92, 0x8c, 0x68, 0x62, 0x56, 0xa5, 0x55, 0xea, 0xa3, 0x04, 0xee, 0x81, 0xa6, 0xb4,
+	0x58, 0x2e, 0xcc, 0x8d, 0xd2, 0x93, 0xb5, 0xcf, 0x73, 0x01, 0x07, 0x00, 0x70, 0x81, 0x33, 0x31,
+	0x2a, 0xe6, 0x30, 0x37, 0x3b, 0x46, 0x77, 0xeb, 0xa0, 0xed, 0xca, 0x21, 0x5d, 0x3d, 0xa4, 0xfb,
+	0x52, 0x0f, 0xd9, 0x6f, 0xcc, 0xe6, 0x76, 0xe5, 0xe2, 0xb3, 0x6d, 0x78, 0xcd, 0xb2, 0xaf, 0x70,
+	0xe0, 0x63, 0xd0, 0xd0, 0x31, 0x99, 0xb7, 0x4a, 0x44, 0xeb, 0x0a, 0xe2, 0x50, 0x15, 0x48, 0xc2,
+	0xbb, 0x82, 0xb0, 0x6a, 0x82, 0xaf, 0xc0, 0x0e, 0x4d, 0xa8, 0xa0, 0x38, 0x1a, 0x05, 0x24, 0x65,
+	0x9c, 0x0a, 0xb3, 0x56, 0x7c, 0x68, 0x1f, 0x15, 0xc5, 0x9f, 0xe6, 0xf6, 0xfd, 0x90, 0x8a, 0xd3,
+	0xdc, 0x77, 0xc7, 0x2c, 0x56, 0x99, 0xa9, 0x65, 0x9f, 0x07, 0x67, 0x48, 0x4c, 0x53, 0xc2, 0xdd,
+	0x01, 0xa3, 0x89, 0xb7, 0xad, 0x38, 0x87, 0x12, 0xe3, 0x0c, 0xc0, 0xee, 0x7a, 0x82, 0x3a, 0x5a,
+	0xf8, 0x00, 0xd4, 0x53, 0xc6, 0xa2, 0x11, 0x0d, 0xca, 0x24, 0x37, 0xfb, 0xf0, 0xdb, 0xdc, 0xde,
+	0x9e, 0xe2, 0x38, 0x7a, 0xe4, 0x28, 0xc3, 0xf1, 0x6a, 0xc5, 0xd3, 0x51, 0xe0, 0xbc, 0x37, 0x00,
+	0x18, 0xf2, 0x50, 0x31, 0xe1, 0x5d, 0x50, 0xe3, 0x24, 0x09, 0x88, 0xde, 0x04, 0xa5, 0xd6, 0x99,
+	0xd5, 0x9b, 0x98, 0xf0, 0x29, 0xa8, 0xe1, 0x98, 0xe5, 0x89, 0xda, 0x92, 0x7f, 0x9f, 0x54, 0xb5,
+	0x3b, 0x1e, 0xd8, 0x1a, 0xf2, 0xf0, 0x84, 0x8a, 0xd3, 0x20, 0xc3, 0x6f, 0xff, 0xcb, 0xc7, 0x1d,
+	0x7c, 0x37, 0xc0, 0xc6, 0x90, 0x87, 0xf0, 0x04, 0x34, 0x7f, 0x1e, 0xbe, 0x8e, 0x7b, 0xf5, 0x16,
+	0xb9, 0xeb, 0xe1, 0xb6, 0xbb, 0x37, 0x55, 0xac, 0xe2, 0x3f, 0x06, 0x75, 0x9d, 0xa6, 0x75, 0x4d,
+	0x93, 0xf2, 0xdb, 0xf7, 0xfe, 0xe4, 0xff, 0x72, 0x4f, 0xe0, 0x33, 0xd0, 0x58, 0xcd, 0x6f, 0x5f,
+	0x83, 0xd3, 0x05, 0x7f, 0xc1, 0xeb, 0x0f, 0x67, 0x5f, 0xad, 0xca, 0x6c, 0x61, 0x19, 0x97, 0x0b,
+	0xcb, 0xf8, 0xb2, 0xb0, 0x8c, 0x8b, 0xa5, 0x55, 0xb9, 0x5c, 0x5a, 0x95, 0x8f, 0x4b, 0xab, 0xf2,
+	0x1a, 0xad, 0xed, 0x90, 0x42, 0xed, 0x47, 0xd8, 0xe7, 0x5a, 0xa0, 0xf3, 0xd5, 0x3f, 0x48, 0x9e,
+	0xfe, 0x5a, 0xb9, 0x3c, 0xfc, 0x11, 0x00, 0x00, 0xff, 0xff, 0x00, 0xb6, 0x2a, 0xba, 0xa3, 0x04,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -346,10 +306,11 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// CreateLBP creates new liquidity bootstraping pool.
 	CreateLBP(ctx context.Context, in *MsgCreateLBP, opts ...grpc.CallOption) (*MsgCreateLBPResponse, error)
-	// Stake a tokens in a pool to join the sale.
-	Stake(ctx context.Context, in *MsgStake, opts ...grpc.CallOption) (*EmptyResponse, error)
-	// ExitLBP withdraws the purchased tokens from the pool and remained staked tokens.
-	ExitLBP(ctx context.Context, in *MsgExitLBP, opts ...grpc.CallOption) (*EmptyResponse, error)
+	// Deposit tokens in a pool to join the sale.
+	Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*EmptyResponse, error)
+	// ExitLBP withdraws the purchased tokens from the pool and remained staked
+	// tokens.
+	Withdraw(ctx context.Context, in *MsgWithdraw, opts ...grpc.CallOption) (*EmptyResponse, error)
 }
 
 type msgClient struct {
@@ -369,18 +330,18 @@ func (c *msgClient) CreateLBP(ctx context.Context, in *MsgCreateLBP, opts ...grp
 	return out, nil
 }
 
-func (c *msgClient) Stake(ctx context.Context, in *MsgStake, opts ...grpc.CallOption) (*EmptyResponse, error) {
+func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*EmptyResponse, error) {
 	out := new(EmptyResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.osmolbp.v1.Msg/Stake", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/osmosis.osmolbp.v1.Msg/Deposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) ExitLBP(ctx context.Context, in *MsgExitLBP, opts ...grpc.CallOption) (*EmptyResponse, error) {
+func (c *msgClient) Withdraw(ctx context.Context, in *MsgWithdraw, opts ...grpc.CallOption) (*EmptyResponse, error) {
 	out := new(EmptyResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.osmolbp.v1.Msg/ExitLBP", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/osmosis.osmolbp.v1.Msg/Withdraw", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -391,10 +352,11 @@ func (c *msgClient) ExitLBP(ctx context.Context, in *MsgExitLBP, opts ...grpc.Ca
 type MsgServer interface {
 	// CreateLBP creates new liquidity bootstraping pool.
 	CreateLBP(context.Context, *MsgCreateLBP) (*MsgCreateLBPResponse, error)
-	// Stake a tokens in a pool to join the sale.
-	Stake(context.Context, *MsgStake) (*EmptyResponse, error)
-	// ExitLBP withdraws the purchased tokens from the pool and remained staked tokens.
-	ExitLBP(context.Context, *MsgExitLBP) (*EmptyResponse, error)
+	// Deposit tokens in a pool to join the sale.
+	Deposit(context.Context, *MsgDeposit) (*EmptyResponse, error)
+	// ExitLBP withdraws the purchased tokens from the pool and remained staked
+	// tokens.
+	Withdraw(context.Context, *MsgWithdraw) (*EmptyResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -404,11 +366,11 @@ type UnimplementedMsgServer struct {
 func (*UnimplementedMsgServer) CreateLBP(ctx context.Context, req *MsgCreateLBP) (*MsgCreateLBPResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateLBP not implemented")
 }
-func (*UnimplementedMsgServer) Stake(ctx context.Context, req *MsgStake) (*EmptyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Stake not implemented")
+func (*UnimplementedMsgServer) Deposit(ctx context.Context, req *MsgDeposit) (*EmptyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
 }
-func (*UnimplementedMsgServer) ExitLBP(ctx context.Context, req *MsgExitLBP) (*EmptyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExitLBP not implemented")
+func (*UnimplementedMsgServer) Withdraw(ctx context.Context, req *MsgWithdraw) (*EmptyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -433,38 +395,38 @@ func _Msg_CreateLBP_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Stake_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgStake)
+func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDeposit)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Stake(ctx, in)
+		return srv.(MsgServer).Deposit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.osmolbp.v1.Msg/Stake",
+		FullMethod: "/osmosis.osmolbp.v1.Msg/Deposit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Stake(ctx, req.(*MsgStake))
+		return srv.(MsgServer).Deposit(ctx, req.(*MsgDeposit))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ExitLBP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExitLBP)
+func _Msg_Withdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdraw)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).ExitLBP(ctx, in)
+		return srv.(MsgServer).Withdraw(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.osmolbp.v1.Msg/ExitLBP",
+		FullMethod: "/osmosis.osmolbp.v1.Msg/Withdraw",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ExitLBP(ctx, req.(*MsgExitLBP))
+		return srv.(MsgServer).Withdraw(ctx, req.(*MsgWithdraw))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -478,12 +440,12 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateLBP_Handler,
 		},
 		{
-			MethodName: "Stake",
-			Handler:    _Msg_Stake_Handler,
+			MethodName: "Deposit",
+			Handler:    _Msg_Deposit_Handler,
 		},
 		{
-			MethodName: "ExitLBP",
-			Handler:    _Msg_ExitLBP_Handler,
+			MethodName: "Withdraw",
+			Handler:    _Msg_Withdraw_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -513,50 +475,6 @@ func (m *EmptyResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgDeposit) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgDeposit) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgDeposit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Amount) > 0 {
-		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.Sender) > 0 {
-		i -= len(m.Sender)
-		copy(dAtA[i:], m.Sender)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgCreateLBP) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -578,9 +496,9 @@ func (m *MsgCreateLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size := m.TotalSale.Size()
+		size := m.InitialDeposit.Size()
 		i -= size
-		if _, err := m.TotalSale.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.InitialDeposit.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
@@ -595,7 +513,7 @@ func (m *MsgCreateLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i = encodeVarintTx(dAtA, i, uint64(n1))
 	i--
 	dAtA[i] = 0x2a
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Start, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Start):])
+	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -650,12 +568,12 @@ func (m *MsgCreateLBPResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.PoolId != 0 {
 		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgStake) Marshal() (dAtA []byte, err error) {
+func (m *MsgDeposit) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -665,12 +583,12 @@ func (m *MsgStake) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgStake) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDeposit) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgStake) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDeposit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -700,7 +618,7 @@ func (m *MsgStake) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgExitLBP) Marshal() (dAtA []byte, err error) {
+func (m *MsgWithdraw) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -710,12 +628,12 @@ func (m *MsgExitLBP) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgExitLBP) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgWithdraw) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgExitLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgWithdraw) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -755,25 +673,6 @@ func (m *EmptyResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgDeposit) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Sender)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if len(m.Amount) > 0 {
-		for _, e := range m.Amount {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *MsgCreateLBP) Size() (n int) {
 	if m == nil {
 		return 0
@@ -792,11 +691,11 @@ func (m *MsgCreateLBP) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.Start)
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
 	n += 1 + l + sovTx(uint64(l))
 	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
 	n += 1 + l + sovTx(uint64(l))
-	l = m.TotalSale.Size()
+	l = m.InitialDeposit.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -813,7 +712,7 @@ func (m *MsgCreateLBPResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgStake) Size() (n int) {
+func (m *MsgDeposit) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -831,7 +730,7 @@ func (m *MsgStake) Size() (n int) {
 	return n
 }
 
-func (m *MsgExitLBP) Size() (n int) {
+func (m *MsgWithdraw) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -882,122 +781,6 @@ func (m *EmptyResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: EmptyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgDeposit) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDeposit: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDeposit: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Sender = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = append(m.Amount, types.Coin{})
-			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1146,7 +929,7 @@ func (m *MsgCreateLBP) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Start", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1173,7 +956,7 @@ func (m *MsgCreateLBP) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.Start, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1212,7 +995,7 @@ func (m *MsgCreateLBP) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TotalSale", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field InitialDeposit", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1240,7 +1023,7 @@ func (m *MsgCreateLBP) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TotalSale.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.InitialDeposit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1294,7 +1077,7 @@ func (m *MsgCreateLBPResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgCreateLBPResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 2:
+		case 1:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
 			}
@@ -1334,7 +1117,7 @@ func (m *MsgCreateLBPResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgStake) Unmarshal(dAtA []byte) error {
+func (m *MsgDeposit) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1357,10 +1140,10 @@ func (m *MsgStake) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgStake: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDeposit: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgStake: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDeposit: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1469,7 +1252,7 @@ func (m *MsgStake) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgExitLBP) Unmarshal(dAtA []byte) error {
+func (m *MsgWithdraw) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1492,10 +1275,10 @@ func (m *MsgExitLBP) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExitLBP: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgWithdraw: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExitLBP: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgWithdraw: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

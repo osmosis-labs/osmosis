@@ -19,11 +19,11 @@ message LBP {
   string token_in = 2;
 
   // start time when the token emission starts.
-  google.protobuf.Timestamp start = 3
+  google.protobuf.Timestamp start_time = 3
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
   // end time when the token emission ends. Can't be bigger than start +
   // 139years (to avoid round overflow)
-  google.protobuf.Timestamp end = 4
+  google.protobuf.Timestamp end_time = 4
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
 
   // number of `tokens_out` to be sold per second. 1 second = 1 round.
@@ -62,8 +62,8 @@ message LBP {
     (gogoproto.nullable) = false
   ];
 
-  string name = 20 [ (gogoproto.nullable) = false ];
-  string url = 21 [ (gogoproto.nullable) = false ];
+  // string name = 20 [ (gogoproto.nullable) = false ];
+  // string url = 21 [ (gogoproto.nullable) = false ];
 }
 
 // UserPosition represents user account in a pool

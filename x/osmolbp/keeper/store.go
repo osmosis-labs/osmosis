@@ -22,7 +22,7 @@ var (
 
 func (k *Keeper) savePool(modulestore storetypes.KVStore, id []byte, p *proto.LBP) {
 	store := k.lbpStore(modulestore)
-	store.Set(id, k.cdc.MustMarshalBinaryBare(p))
+	store.Set(id, k.cdc.MustMarshal(p))
 }
 
 // returns pool, pool bytes id, error
@@ -35,7 +35,7 @@ func (k *Keeper) getPool(modulestore storetypes.KVStore, id uint64) (proto.LBP, 
 	if bz == nil {
 		return p, idBz, errors.Wrap(errors.ErrKeyNotFound, "pool doesn't exist")
 	}
-	err := k.cdc.UnmarshalBinaryBare(bz, &p)
+	err := k.cdc.Unmarshal(bz, &p)
 	return p, idBz, err
 }
 
@@ -47,14 +47,14 @@ func (k *Keeper) getUserVault(modulestore storetypes.KVStore, poolId []byte, add
 	if bz == nil {
 		return v, false, nil
 	}
-	err := k.cdc.UnmarshalBinaryBare(bz, &v)
+	err := k.cdc.Unmarshal(bz, &v)
 	return v, true, err
 }
 
 // returns pool, found (bool), error
 func (k *Keeper) saveUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress, v *proto.UserPosition) {
 	store := k.userVaultStore(modulestore, poolId)
-	store.Set(addr, k.cdc.MustMarshalBinaryBare(v))
+	store.Set(addr, k.cdc.MustMarshal(v))
 }
 
 // returns pool, found (bool), error
