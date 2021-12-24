@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
@@ -76,53 +77,86 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, de
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
-	suite.SetupTest()
-	valAddr := suite.SetupValidator(stakingtypes.Bonded)
-	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
-
-	// check synthetic lockup creation
-	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(valAddr.String()))
-	suite.Require().NoError(err)
-	suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
-	suite.Require().Equal(synthLock.Suffix, keeper.StakingSuffix(valAddr.String()))
-	suite.Require().Equal(synthLock.EndTime, time.Time{})
-
-	// check intermediary account creation
-	expAcc := types.SuperfluidIntermediaryAccount{
-		Denom:   lock.Coins[0].Denom,
-		ValAddr: valAddr.String(),
+	type superfluidDelegation struct {
+		valIndex int64
+		lpDenom  string
 	}
-	gotAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, expAcc.GetAddress())
-	suite.Require().Equal(gotAcc.Denom, expAcc.Denom)
-	suite.Require().Equal(gotAcc.ValAddr, expAcc.ValAddr)
-	suite.Require().Equal(gotAcc.GaugeId, uint64(1))
+	testCases := []struct {
+		name             string
+		validatorStats   []stakingtypes.BondStatus
+		superDelegations []superfluidDelegation
+	}{
+		{
+			"happy path with single validator and delegator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+		},
+	}
 
-	// check gauge creation
-	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
-	suite.Require().NoError(err)
-	suite.Require().Equal(gauge.Id, gotAcc.GaugeId)
-	suite.Require().Equal(gauge.IsPerpetual, true)
-	suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         expAcc.Denom + keeper.StakingSuffix(valAddr.String()),
-		Duration:      time.Hour * 24 * 14,
-	})
-	suite.Require().Equal(gauge.Coins, sdk.Coins(nil))
-	suite.Require().Equal(gauge.StartTime, suite.ctx.BlockTime())
-	suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
-	suite.Require().Equal(gauge.FilledEpochs, uint64(0))
-	suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
 
-	// Check lockID connection with intermediary account
-	intAcc := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lock.ID)
-	suite.Require().Equal(intAcc.String(), expAcc.GetAddress().String())
+			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+			suite.Require().Equal(poolId, uint64(1))
 
-	// check delegation from intermediary account to validator
-	delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
-	suite.Require().True(found)
-	suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 2 x 1000000
+			// setup validators
+			valAddrs := []sdk.ValAddress{}
+			for _, status := range tc.validatorStats {
+				valAddr := suite.SetupValidator(status)
+				valAddrs = append(valAddrs, valAddr)
+			}
 
-	// TODO: add table driven test for all edge cases
+			// setup superfluid delegations
+			for _, del := range tc.superDelegations {
+				valAddr := valAddrs[del.valIndex]
+				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
+
+				// check synthetic lockup creation
+				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(valAddr.String()))
+				suite.Require().NoError(err)
+				suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
+				suite.Require().Equal(synthLock.Suffix, keeper.StakingSuffix(valAddr.String()))
+				suite.Require().Equal(synthLock.EndTime, time.Time{})
+
+				// check intermediary account creation
+				expAcc := types.SuperfluidIntermediaryAccount{
+					Denom:   lock.Coins[0].Denom,
+					ValAddr: valAddr.String(),
+				}
+				gotAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, expAcc.GetAddress())
+				suite.Require().Equal(gotAcc.Denom, expAcc.Denom)
+				suite.Require().Equal(gotAcc.ValAddr, expAcc.ValAddr)
+				suite.Require().GreaterOrEqual(gotAcc.GaugeId, uint64(1))
+
+				// check gauge creation
+				gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(gauge.Id, gotAcc.GaugeId)
+				suite.Require().Equal(gauge.IsPerpetual, true)
+				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         expAcc.Denom + keeper.StakingSuffix(valAddr.String()),
+					Duration:      time.Hour * 24 * 14,
+				})
+				suite.Require().Equal(gauge.Coins, sdk.Coins(nil))
+				suite.Require().Equal(gauge.StartTime, suite.ctx.BlockTime())
+				suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
+				suite.Require().Equal(gauge.FilledEpochs, uint64(0))
+				suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
+
+				// Check lockID connection with intermediary account
+				intAcc := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lock.ID)
+				suite.Require().Equal(intAcc.String(), expAcc.GetAddress().String())
+
+				// check delegation from intermediary account to validator
+				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
+				suite.Require().True(found)
+				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 2 x 1000000
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
