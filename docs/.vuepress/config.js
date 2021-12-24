@@ -118,6 +118,7 @@ module.exports = {
     algolia: {
       apiKey: "PENDING", //TODO GET KEY
       indexName: "osmosis-project",
+      // If Algolia did not provided you any `appId`, use `BH4D9OD16A` or remove this option
     },
     nav: [
 

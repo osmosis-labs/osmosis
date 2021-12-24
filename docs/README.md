@@ -8,7 +8,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 
 <div class="cards twoColumn">
   <a href="overview/" class="card">
-    <img src="img/book-open-reader-solid.svg" class="filter-blue"/>
+    <img src="img/book-open-reader-solid.svg" class="filter-icon"/>
     <div class="title">
       Overview
     </div>
@@ -17,7 +17,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
   <a href="developing/" class="card">
-    <img src="img/code-solid.svg" class="filter-blue"/>
+    <img src="img/code-solid.svg" class="filter-icon"/>
     <div class="title">
       Develop
     </div>
@@ -27,7 +27,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   </a>
 
   <a href="validators/" class="card">
-    <img src="img/circle-check-solid.svg" class="filter-blue"/>
+    <img src="img/circle-check-solid.svg" class="filter-icon"/>
     <div class="title">
       Validate
     </div>
@@ -37,7 +37,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   </a>
 
   <a href="integrate/" class="card">
-    <img src="img/code-pull-request-solid.svg" class="filter-blue"/>
+    <img src="img/code-pull-request-solid.svg" class="filter-icon"/>
     <div class="title">
       Integrate
     </div>
