@@ -52,7 +52,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
 
 <div class="cards threeColumn">
   <a href="https://app.osmosis.zone/" class="card lg" target="_blank">
-    <img src="img/osmo_app.png">
+    <img src="img/osmologo.svg">
     <div class="title">
      Osmosis DEX 
     </div>
@@ -115,7 +115,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   </a>
 </div>
 <br />
-<div class="cards twoColumn">
+<div class="cards threeColumn">
   <a href="https://info.osmosis.zone/" class="card lg" target="_blank">
     <img src="img/stats_app.png">
     <div class="title">
@@ -128,10 +128,19 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   <a href="https://api-osmosis.imperator.co/swagger" class="card lg" target="_blank">
     <img src="img/swagger.png">
     <div class="title">
-     Public REST
+     REST
     </div>
     <div class="text">
-     Imperator.co
+     Hosted by Imperator.co (1317)
+    </div>
+  </a>
+  <a href="https://rpc-osmosis.keplr.app/" class="card lg" target="_blank">
+    <img src="img/tender-rpc.png">
+    <div class="title">
+     Tendermint RPC
+    </div>
+    <div class="text">
+     Hosted by Keplr (26657)
     </div>
   </a>
 </div>

@@ -34,10 +34,7 @@
       <ul class="learn">
         <li>Learn</li>
         <li>
-          <a href="White_paper.pdf" target="_blank">
-            White
-            Paper
-          </a>
+          <a href="White_paper.pdf" target="_blank">White Paper</a>
         </li>
         <!-- <li>
           <a href="https://docsend.com/view/9mvr5qq" target="_blank">Decks</a>
@@ -103,35 +100,31 @@
     </div>
     <div class="sns-container">
       <div class="logos">
-        <a href="#" rel="noopener" target="_blank">
+        <a href="https://discord.gg/3gSAbqV3Qp" rel="noopener" target="_blank">
           <img
             src="/img/discord.svg"
             alt="link to Osmosis discord room"
           />
         </a>
-        <a href="#" rel="noopener" target="_blank">
+        <a href="https://medium.com/@Osmosis" rel="noopener" target="_blank">
           <img
             src="/img/medium.svg"
             alt="link to Osmosis medium"
           />
         </a>
-        <a href="#" rel="noopener" target="_blank">
+        <a href="https://twitter.com/osmosiszone" rel="noopener" target="_blank">
           <img
             src="/img/twitter.svg"
             alt="link to Osmosis twitter"
           />
         </a>
-        <a
-          href=""
-          rel="noopener"
-          target="_blank"
-        >
+        <a href="https://www.youtube.com/channel/UC3ScmmLC4WUJAkINyf_p2Rw" rel="noopener" target="_blank">
           <img
             src="/img/icon_youtube.png"
             alt="link to Osmosis youtube"
           />
         </a>
-        <a href="#" rel="noopener" target="_blank">
+        <a href="" rel="noopener" target="_blank">
           <img
             src="/img/icon_telegram.png"
             alt="link to Osmosis telegram room"

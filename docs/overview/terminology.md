@@ -1,16 +1,15 @@
 # Glossary 
 
 
-se this glossary to learn about terms specific to the Osmosis Protocol.
+Use this glossary to learn about terms used in Osmosis and the Cosmos ecosystem.
 
 ## Active set
 
-The top 130 validators that participate in consensus and receive rewards.
+The top 100 validators that participate in consensus and receive rewards.
 
 ## Air drops
 
-Additional rewards given to delegators through certain validators, separate from staking rewards. Airdrops come from protocols in the Osmosis ecosystem to increase visibility. To claim an airdrop, visit the webpage of the protocol giving out the airdrop.
-
+A transfer of free cryptocurrency from a crypto project into users’ wallets in order to increase interest and incentivize the use of a new token.
 
 ## Arbitrage
 
@@ -24,23 +23,22 @@ An unchangeable ledger of transactions copied among a network of independent com
 
 Groups of information stored on a blockchain. Each block contains transactions that are grouped, verified, and signed by validators.
 
-
 ## Bonded validator
 
-A validator in the active set participating in consensus. Bonded validators earn rewards.
+A validator in the [active set](/overview/terminology.html#active-set) participating in consensus. Bonded validators earn rewards.
 
 ## Bonding
 
-When a user delegates or bonds Osmo to a validator to receive staking rewards. Validators never have ownership of a delegator's Osmo, even when bonded. Delegating, bonding, and staking generally refer to the same process.
+When a user delegates OSMO to a validator to receive staking rewards and in turn obtain voting power. Validators never have ownership of a delegator's OSMO. Delegating, bonding, and staking generally refer to the same process.
 
 ## Burn
 
-The destruction of coins.
+The permanent destruction of coins from the total supply.
 
 
 ## Commission
 
-The percentage of staking rewards a validator will keep before distributing the rest of the rewards to delegators. Commission is a validator’s income. Validators set their own commission rates.
+The percentage of staking rewards a validator will keep before distributing the rest of the rewards to delegators. Commission is a validator’s income. Validators set their own commission rates. As of this writing, commission must be greater than or equal to 5% 
 
 ## Community pool
 
@@ -48,7 +46,7 @@ A special fund designated for funding community projects. Any community member c
 
 ## Consensus
 
-A system used by validators or miners to agree that each block of transactions in a blockchain is correct. The Osmosis blockchain uses the Tendermint consensus. Validators earn rewards for participating in consensus. Visit the [Tendermint official documentation site](https://docs.tendermint.com/) for more information.
+A system used by validators or miners to agree that each block of transactions in a blockchain is correct. The Osmosis blockchain uses Tendermint consensus engine. Validators earn rewards for participating in consensus. Visit the [Tendermint official documentation site](https://docs.tendermint.com/) for more information.
 
 ## Cosmos-SDK
 
@@ -56,11 +54,11 @@ The open-source framework the Osmosis blockchain is built on. For more informati
 
 ## dApp
 
-An application built on a decentralized platform.
+An application built on a decentralized platform (short for decentralized application).
 
 ## DDoS
 
-Distributed denial of service attack. When an attacker floods a network with traffic or requests in order to disrupt service.
+Distributed Denial of Service attack. When an attacker floods a network with traffic or requests in order to disrupt service.
 
 ## DeFi
 
@@ -68,16 +66,16 @@ Decentralized finance. A movement away from traditional finance and toward syste
 
 ## Delegate
 
-When users or delegators add their Osmo to a validator's stake in exchange for rewards. Delegated Osmo is bonded to a validator. Validators never have ownership of a delegator's Osmo. Delegating, bonding, and staking generally refer to the same process.
+When a user bonds OSMO to a validator to receive staking rewards and in turn obtain voting power. Validators never have ownership of the bonded OSMO. Delegating, bonding, and staking generally refer to the same process.
 
 
 ## Delegator
 
-A user who delegates, bonds, or stakes Osmo to a validator to earn rewards.
+A user who delegates, bonds, or stakes OSMO to a validator to earn rewards.
 
 ## Fees
 
-- **Gas**: Compute fees added on to all transactions to avoid spamming. Validators set minimum gas prices and reject transactions that have implied gas prices below this threshold.
+- **Gas**: Computed fees added on to all transactions to avoid spamming. Validators set minimum gas prices and reject transactions that have implied gas prices below this threshold.
 
 
 ## Full node
@@ -86,7 +84,7 @@ A computer connected to the Osmosis mainnet able to validate transactions and in
 
 ## Governance
 
-Governance is the democratic process that allows users and validators to make changes to the Osmosis protocol. Community members submit, vote, and implement proposals. One staked Osmo is equal to one vote.
+Governance is the democratic process that allows users and validators to make changes to the Osmosis protocol. Community members submit, vote, and implement proposals.
 
 ## Governance proposal
 
@@ -94,7 +92,7 @@ A written submission for a change or addition to the Osmosis protocol. Topics of
 
 ## Inactive set
 
-Validators that are not in the active set. These validators do not participate in consensus and do not earn rewards.
+Validators that are not in the [active set](/overview/terminology.html#active-set). These validators do not participate in consensus and do not earn rewards.
 
 ## IBC
 
@@ -105,12 +103,14 @@ IBC facilitates cross-chain applications for token transfers, swaps, multi-chain
 ## Impermanent Loss
 
 Liquidity providers earn through fees and special pool rewards. However, they are also risking a scenario in which they would have been better off holding the assets rather than supplying them. This outcome is called impermanent loss.
-Impermanent loss is the difference in net worth between HODLing and LPing. Liquidity mining helps to offset impermanent loss for LPs.
-When the price of the assets in the pool change at different rates, LPs end up owning larger amounts of the asset that increased less in price (or decreased more in price). For example, if the price of OSMO moons relative to ATOM, LPs in the OSMO-ATOM pool end up with larger portions of the less valuable asset (ATOM).
+Impermanent loss is the net difference between holding the asset verses providing liquidity. Liquidity provider (LP) rewards helps to offset impermanent loss for LPs.
+When the price of the assets in the pool change at different rates, LPs end up owning larger amounts of the asset that increased less in price (or decreased more in price). For example, if the price of OSMO goes up relative to ATOM, LPs in the OSMO-ATOM pool end up with larger portions of the less valuable asset (ATOM).
 
 Impermanent loss is mitigated in part by the transaction fees earned by LPs. When the profits made from swap fees outweigh an LP’s impermanent loss, the pool is self-sustainable.
+
 To further offset impermanent loss, particularly in the early stages of a protocol when volatility is high, AMMs utilize liquidity mining rewards. Liquidity rewards bootstrap the ecosystem as usage and fee revenues are still ramping up.
-Osmosis also has many new features and innovations in development to decrease impermanent loss as well.
+
+Osmosis has many new features and innovations in development to decrease impermanent loss.
 
 
 ## Jailed

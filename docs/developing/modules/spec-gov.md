@@ -204,7 +204,7 @@ The proposal.json would look as follows:
 Cancel the planned software upgrade before the upgrade height is reached
 
 ```
-tx gov submit-proposal cancel-software-upgrade --title="TITLE" --description="DESCRIPTION"
+tx gov submit-proposal cancel-software-upgrade --title= --description
 ```
 
 The software upgrade does not have to be specified, as this will cancel the currently active software upgrade proposal. 
@@ -222,7 +222,7 @@ osmosisd tx gov submit-proposal cancel-software-upgrade --title="cancel v4" --de
 
 ### submit-proposal (update pool incentives)
 
-Update the weight of a specified pool in regards to its share of incentives
+Update the weight of specified pool gauges in regards to their share of incentives
 
 ```
 tx gov submit-proposal update-pool-incentives [proposal-file] --from --chain-id
@@ -242,7 +242,6 @@ The proposal.json would look as follows:
 {
   "title": "Pool Incentive Adjustment",
   "description": "Adjust pool incentives",
-  "recipient": "osmo1r9pjvsuahxwkxg8cnhacd6alkmxq330fl9pqqt",
   "records": [
     {
       "gauge_id": "0",

@@ -3,14 +3,14 @@
 This document covers tips and guidelines to help you to understand how Osmosis works and efficiently navigate the codebase of Osmosis Core, the official Golang reference implementation of the Osmosis node software.
 
 ::: tip Recommendation
-The Osmosis Core is built using the [Cosmos SDK]( https://cosmos.network/sdk), which provides a robust framework for constructing blockchains that run atop the [Tendermint](https://tendermint.com/) Consensus Protocol.
+Osmosis Core is built using the [Cosmos SDK]( https://cosmos.network/sdk), which provides a robust framework for constructing blockchains that run atop the [Tendermint](https://tendermint.com/) Consensus Protocol.
 
 It is highly recommended that you review these projects before diving into the Osmosis developer documentation, as they assume familiarity with concepts such as ABCI, Validators, Keepers, Message Handlers, etc.
 :::
 
 ## How to use the docs
 
-As a developer, you will likely find the **Module Specifications** section the most informative. Each specification starts out with a short description of the module's main function within the architecture of the system, and how it contributes in implementing Osmosis's features.
+As a developer, you will likely find the [Module](./modules/) section the most informative. Each specification starts out with a short description of the module's main function within the architecture of the system, and how it contributes in implementing Osmosis's features.
 
 Beyond the introduction, each module will lay out a more detailed description of its main process and algorithms, alongside any concepts you may need to know. It is recommended that you start here to understand a module, as it is usually cross-referenced with more specific sections deeper in the spec such as specific state variables, message handlers and functions that may be of interest.
 
