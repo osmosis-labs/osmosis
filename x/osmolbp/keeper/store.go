@@ -26,7 +26,7 @@ func (k *Keeper) savePool(modulestore storetypes.KVStore, id []byte, p *proto.LB
 }
 
 // returns pool, pool bytes id, error
-func (k *Keeper) getPool(modulestore storetypes.KVStore, id uint64) (proto.LBP, []byte, error) {
+func (k *Keeper) getLBP(modulestore storetypes.KVStore, id uint64) (proto.LBP, []byte, error) {
 	store := k.lbpStore(modulestore)
 	idBz := make([]byte, 8)
 	binary.BigEndian.PutUint64(idBz, id)
@@ -39,7 +39,7 @@ func (k *Keeper) getPool(modulestore storetypes.KVStore, id uint64) (proto.LBP, 
 	return p, idBz, err
 }
 
-// returns pool, found (bool), error
+// returns user position, found (bool), error
 func (k *Keeper) getUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress) (proto.UserPosition, bool, error) {
 	store := k.userVaultStore(modulestore, poolId)
 	bz := store.Get(addr)

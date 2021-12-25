@@ -35,7 +35,12 @@ func (k Keeper) createLBP(msg *proto.MsgCreateLBP, now time.Time, store storetyp
 		return 0, err
 	}
 	id, idBz := k.nextPoolID(store)
+
+	lbpAddr := osmolbp.NewLbpAddress(id)
+
 	p := proto.LBP{
+		Id:             id,
+		Address:        lbpAddr.String(),
 		TokenOut:       msg.TokenOut,
 		TokenIn:        msg.TokenIn,
 		StartTime:      msg.StartTime,
@@ -69,33 +74,33 @@ func (k Keeper) deposit(ctx sdk.Context, msg *proto.MsgDeposit, store storetypes
 	if err != nil {
 		return err
 	}
-	p, poolIdBz, err := k.getPool(store, msg.PoolId)
+	lbp, lbpIdBz, err := k.getLBP(store, msg.PoolId)
 	if err != nil {
 		return err
 	}
 
-	if msg.Amount.Denom != p.TokenIn {
+	if msg.Amount.Denom != lbp.TokenIn {
 		return errors.Wrap(errors.ErrInvalidCoins, "deposit denom must be the same as token in denom")
 	}
 
-	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, osmolbp.ModuleName, sdk.NewCoins(msg.Amount))
+	err = k.bank.SendCoins(ctx, sender, lbp.GetAddress(), sdk.NewCoins(msg.Amount))
 	if err != nil {
 		return errors.Wrap(err, "user doesn't have enough tokens to stake")
 	}
 
-	v, found, err := k.getUserVault(store, poolIdBz, sender)
+	v, found, err := k.getUserVault(store, lbpIdBz, sender)
 	if err != nil {
 		return err
 	}
 	if !found {
-		v.Accumulator = p.AccumulatorOut
+		v.Accumulator = lbp.AccumulatorOut
 		v.Staked = sdk.ZeroInt()
 	}
 
-	stakeInPool(&p, &v, msg.Amount.Amount, ctx.BlockTime())
+	stakeInPool(&lbp, &v, msg.Amount.Amount, ctx.BlockTime())
 
-	k.savePool(store, poolIdBz, &p)
-	k.saveUserVault(store, poolIdBz, sender, &v)
+	k.savePool(store, lbpIdBz, &lbp)
+	k.saveUserVault(store, lbpIdBz, sender, &v)
 	return nil
 }
 
@@ -118,7 +123,7 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *proto.MsgWithdraw, store storetyp
 	if err != nil {
 		return err
 	}
-	p, poolIdBz, err := k.getPool(store, msg.PoolId)
+	p, poolIdBz, err := k.getLBP(store, msg.PoolId)
 	if err != nil {
 		return err
 	}
