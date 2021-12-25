@@ -17,7 +17,7 @@ type Keeper struct {
 	bank     BankKeeper
 }
 
-// NewKeeper constructs a message authorization Keeper
+// NewKeeper constructs a new osmolbp Keeper
 func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, bank BankKeeper) Keeper {
 	return Keeper{
 		storeKey: storeKey,
