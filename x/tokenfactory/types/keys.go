@@ -21,6 +21,9 @@ const (
 	MemStoreKey = "mem_tokenfactory"
 )
 
+// KeySeparator is used to combine parts of the keys in the store
+const KeySeparator = "|"
+
 var (
 	DenomAuthorityMetadataKey = "authoritymetadata"
 	DenomsPrefixKey           = "denoms"
@@ -29,17 +32,17 @@ var (
 )
 
 func GetDenomPrefixStore(denom string) []byte {
-	return []byte(strings.Join([]string{DenomsPrefixKey, denom, ""}, "|"))
+	return []byte(strings.Join([]string{DenomsPrefixKey, denom, ""}, KeySeparator))
 }
 
 func GetCreatorPrefix(creator string) []byte {
-	return []byte(strings.Join([]string{CreatorPrefixKey, creator, ""}, "|"))
+	return []byte(strings.Join([]string{CreatorPrefixKey, creator, ""}, KeySeparator))
 }
 
 func GetCreatorsPrefix() []byte {
-	return []byte(strings.Join([]string{CreatorPrefixKey, ""}, "|"))
+	return []byte(strings.Join([]string{CreatorPrefixKey, ""}, KeySeparator))
 }
 
 // func GetAdminPrefix(admin string) []byte {
-// 	return []byte(strings.Join([]string{admin, "admin", ""}, "|"))
+// 	return []byte(strings.Join([]string{admin, "admin", ""}, KeySeparator))
 // }
