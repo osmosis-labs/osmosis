@@ -195,7 +195,7 @@ func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
+// WeightedOperations returns simulator module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return nil // TODO
 }
