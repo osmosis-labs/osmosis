@@ -12,7 +12,7 @@ const (
 )
 
 func GetTokenDenom(creator, nonce string) (string, error) {
-	denom := strings.Join([]string{"factory", creator, nonce}, "/")
+	denom := strings.Join([]string{ModuleDenomPrefix, creator, nonce}, "/")
 	return denom, sdk.ValidateDenom(denom)
 }
 
