@@ -2,8 +2,9 @@ syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/gamm/v1beta1/balancerPool.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
+import "osmosis/gamm/v1beta1/pool.proto";
+
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
@@ -90,9 +91,7 @@ message QueryNumPoolsResponse {
 message QueryPoolParamsRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryPoolParamsResponse {
-  oneof params { BalancerPoolParams balancerPoolParams = 1; }
-}
+message QueryPoolParamsResponse { google.protobuf.Any params = 1; }
 
 //=============================== TotalShares
 message QueryTotalSharesRequest {

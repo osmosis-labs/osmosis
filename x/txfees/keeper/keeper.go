@@ -14,7 +14,7 @@ import (
 
 type (
 	Keeper struct {
-		cdc      codec.Marshaler
+		cdc      codec.Codec
 		storeKey sdk.StoreKey
 
 		spotPriceCalculator types.SpotPriceCalculator
@@ -22,7 +22,7 @@ type (
 )
 
 func NewKeeper(
-	cdc codec.Marshaler,
+	cdc codec.Codec,
 	storeKey sdk.StoreKey,
 	spotPriceCalculator types.SpotPriceCalculator,
 ) Keeper {

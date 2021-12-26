@@ -9,6 +9,7 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -81,10 +82,10 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 
 // newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
 // parameters, initial assets, and future governor.
-func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams types.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
+func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
 	poolId := k.GetNextPoolNumberAndIncrement(ctx)
 
-	pool, err := types.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
+	pool, err := balancer.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +95,7 @@ func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams types.Balanc
 		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
 	}
 
-	err = k.SetPool(ctx, pool)
+	err = k.SetPool(ctx, &pool)
 	if err != nil {
 		return nil, err
 	}
@@ -108,13 +109,13 @@ func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams types.Balanc
 	))
 	k.accountKeeper.SetAccount(ctx, acc)
 
-	return pool, nil
+	return &pool, nil
 }
 
 // SetNextPoolNumber sets next pool number
 func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: poolNumber})
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
@@ -129,7 +130,7 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	} else {
 		val := gogotypes.UInt64Value{}
 
-		err := k.cdc.UnmarshalBinaryBare(bz, &val)
+		err := k.cdc.Unmarshal(bz, &val)
 		if err != nil {
 			panic(err)
 		}
