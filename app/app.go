@@ -18,7 +18,6 @@ import (
 
 	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
 
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -93,6 +92,8 @@ import (
 	"github.com/gorilla/mux"
 
 	appparams "github.com/osmosis-labs/osmosis/app/params"
+	v4 "github.com/osmosis-labs/osmosis/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/app/upgrades/v5"
 	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/x/claim"
 	claimkeeper "github.com/osmosis-labs/osmosis/x/claim/keeper"
@@ -128,7 +129,6 @@ import (
 )
 
 const appName = "OsmosisApp"
-const v5UpgradeName = "v5"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -348,6 +348,7 @@ func NewOsmosisApp(
 		app.BaseApp,
 	)
 
+<<<<<<< HEAD
 	// this configures a no-op upgrade handler for the v4 upgrade,
 	// which improves the lockup module's store management.
 	app.UpgradeKeeper.SetUpgradeHandler(
@@ -437,6 +438,8 @@ func NewOsmosisApp(
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 
+=======
+>>>>>>> 8dcbaf53... Move fork and upgrade logic into sub-directory structure (#680)
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
@@ -480,6 +483,8 @@ func NewOsmosisApp(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.ClaimKeeper = claimkeeper.NewKeeper(appCodec, keys[claimtypes.StoreKey], app.AccountKeeper, app.BankKeeper, stakingKeeper, app.DistrKeeper)
+
+	app.setupUpgrades()
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -732,7 +737,7 @@ func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	forks(ctx, app)
+	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
@@ -897,6 +902,37 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+}
+
+// RegisterTendermintService implements the Application.RegisterTendermintService method.
+func (app *OsmosisApp) setupUpgrades() {
+	// this configures a no-op upgrade handler for the v4 upgrade,
+	// which improves the lockup module's store management.
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v4.UpgradeName, v4.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			&app.BankKeeper, &app.DistrKeeper, &app.GAMMKeeper))
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v5.UpgradeName,
+		v5.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			&app.IBCKeeper.ConnectionKeeper, &app.TxFeesKeeper,
+			&app.GAMMKeeper, &app.StakingKeeper))
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	if upgradeInfo.Name == v5.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := store.StoreUpgrades{
+			Added: []string{authz.ModuleName, txfees.ModuleName, bech32ibctypes.ModuleName},
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
