@@ -1,4 +1,4 @@
-package app
+package v5
 
 import (
 	"encoding/csv"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
@@ -37,7 +38,7 @@ med,ibc/3BCCC93AD5DF58D11A6F8A05FA8BC801CBA0BA61A981F57E91B8B598BF8061CB,586
 boot,ibc/FE2CD1E6828EC0FAB8AF39BAC45BC25B965BA67CCBC50C13A14BD610B0D1E2C4,597
 `
 
-func initialWhitelistedFeetokens(ctx sdk.Context, app *OsmosisApp) []types.FeeToken {
+func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []types.FeeToken {
 	r := csv.NewReader(strings.NewReader(feetoken_whitelist_data))
 	assets, err := r.ReadAll()
 	if err != nil {
@@ -54,7 +55,7 @@ func initialWhitelistedFeetokens(ctx sdk.Context, app *OsmosisApp) []types.FeeTo
 			panic(err)
 		}
 
-		pool, poolExistsErr := app.GAMMKeeper.GetPool(ctx, poolId)
+		pool, poolExistsErr := gamm.GetPool(ctx, poolId)
 		if poolExistsErr != nil {
 			continue
 		}
