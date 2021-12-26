@@ -1,5 +1,5 @@
 ---
-title: Module Home
+title: Modules
 ---
 
 # Modules

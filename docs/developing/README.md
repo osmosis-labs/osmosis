@@ -2,15 +2,15 @@
 title: Developer Home
 ---
 
-# Develop
+# Chain Development
 
 The guides on this page will explain the process of developing on Osmosis.
 
 <div class="cards twoColumn">
-  <a href="dev-guide.html" class="card">
+  <a href="chain-dev-guide.html" class="card">
     <img src="/img/book-solid.svg" class="filter-icon"/>
     <div class="title">
-     Developer Guide
+     Chain Developer Guide
     </div>
     <div class="text">
       Basic developer overview, CLI guide, and install osmosis
@@ -54,4 +54,22 @@ The guides on this page will explain the process of developing on Osmosis.
       Osmosis modules and their respective CLI commands
     </div>
   </a>
+ </div>
+
+
+# Web Development
+
+The guides on this page will explain the process of developing on the Osmosis front-end interface.
+
+<div class="cards twoColumn">
+  <a href="web-dev-guide.html" class="card">
+    <img src="/img/book-solid.svg" class="filter-icon"/>
+    <div class="title">
+    Web Developer Guide
+    </div>
+    <div class="text">
+      Running Osmosis front-end on a development environment
+    </div>
+  </a>
+ 
  </div>
