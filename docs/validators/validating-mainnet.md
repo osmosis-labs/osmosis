@@ -85,16 +85,16 @@ If you need further explanation for each of these command flags:
 To see the current validator active set:
 
 ```bash
-osmosisd query staking validators -o json | jq -r '.validators[] | \
-[.operator_address, .status, (.tokens|tonumber / pow(10; 6)), \
+osmosisd query staking validators -o json | jq -r '.validators[] | 
+[.operator_address, .status, (.tokens|tonumber / pow(10; 6)), 
 .commission.update_time[0:19], .description.moniker] | @csv' | column -t -s","
 ```
 
 You can search for your specific moniker by adding grep MONIKER at the end:
 
 ```bash
-osmosisd query staking validators -o json | jq -r '.validators[] | \
-[.operator_address, .status, (.tokens|tonumber / pow(10; 6)), \
+osmosisd query staking validators -o json | jq -r '.validators[] | 
+[.operator_address, .status, (.tokens|tonumber / pow(10; 6)), 
 .commission.update_time[0:19], .description.moniker] | @csv' | column -t -s"," | grep Wosmongton
 ```
 
