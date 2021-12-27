@@ -286,7 +286,6 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 				suite.Require().Equal(synthLock.Suffix, keeper.UntakingSuffix(valAddrs[srd.oldValIndex].String()))
 				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(time.Hour*24*21))
 
-				// check required changes for delegation
 				// check synthetic lockup creation
 				synthLock2, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.StakingSuffix(valAddrs[srd.newValIndex].String()))
 				suite.Require().NoError(err)
@@ -335,60 +334,118 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 }
 
 func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
-	suite.SetupTest()
-	valAddr := suite.SetupValidator(stakingtypes.Bonded)
-	lock := suite.SetupSuperfluidDelegate(valAddr, "gamm/pool/1")
-
-	expAcc := types.SuperfluidIntermediaryAccount{
-		Denom:   lock.Coins[0].Denom,
-		ValAddr: valAddr.String(),
+	type superfluidDelegation struct {
+		valIndex int64
+		lpDenom  string
 	}
 
-	// check delegation from intermediary account to validator
-	delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
-	suite.Require().True(found)
-	suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
+	testCases := []struct {
+		name             string
+		validatorStats   []stakingtypes.BondStatus
+		superDelegations []superfluidDelegation
+		checkAccIndexes  []int64
+	}{
+		{
+			"happy path with single validator and delegator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]int64{0},
+		},
+	}
 
-	// twap price change before refresh
-	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
-	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
-		Identifier:   params.RefreshEpochIdentifier,
-		CurrentEpoch: 2,
-	})
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
 
-	// refresh intermediary account delegations
-	suite.NotPanics(func() {
-		suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
-	})
+			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+			suite.Require().Equal(poolId, uint64(1))
 
-	// check delegation changes
-	delegation, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
-	suite.Require().True(found)
-	suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
+			// setup validators
+			valAddrs := []sdk.ValAddress{}
+			for _, status := range tc.validatorStats {
+				valAddr := suite.SetupValidator(status)
+				valAddrs = append(valAddrs, valAddr)
+			}
 
-	// start new epoch
-	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
-		Identifier:   params.RefreshEpochIdentifier,
-		CurrentEpoch: 3,
-	})
+			// setup superfluid delegations
+			intAccs := []types.SuperfluidIntermediaryAccount{}
+			locks := []lockuptypes.PeriodLock{}
+			for _, del := range tc.superDelegations {
+				valAddr := valAddrs[del.valIndex]
+				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
+				locks = append(locks, lock)
+				intAccs = append(intAccs, types.SuperfluidIntermediaryAccount{
+					Denom:   lock.Coins[0].Denom,
+					ValAddr: valAddr.String(),
+				})
+			}
 
-	// superfluid undelegate
-	err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)
-	suite.Require().NoError(err)
+			for _, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intAccs[intAccIndex]
+				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
+				suite.Require().NoError(err)
 
-	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Hour*24*21 + time.Second))
-	suite.app.EndBlocker(suite.ctx, abci.RequestEndBlock{Height: suite.ctx.BlockHeight()})
+				// check delegation from intermediary account to validator
+				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
+				suite.Require().True(found)
+				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
 
-	unbonded := suite.app.BankKeeper.GetBalance(suite.ctx, expAcc.GetAddress(), sdk.DefaultBondDenom)
-	suite.Require().True(unbonded.IsPositive())
+				// twap price change before refresh
+				suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
+				suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
+					Identifier:   params.RefreshEpochIdentifier,
+					CurrentEpoch: 2,
+				})
 
-	// refresh intermediary account delegations
-	suite.NotPanics(func() {
-		suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
-	})
+				// refresh intermediary account delegations
+				suite.NotPanics(func() {
+					suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
+				})
 
-	// check unbonded amount is removed after refresh operation
-	refreshed := suite.app.BankKeeper.GetBalance(suite.ctx, expAcc.GetAddress(), sdk.DefaultBondDenom)
-	suite.Require().True(refreshed.IsZero())
+				// check delegation changes
+				delegation, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
+				suite.Require().True(found)
+				suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
+
+			}
+
+			// start new epoch
+			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
+				Identifier:   params.RefreshEpochIdentifier,
+				CurrentEpoch: 3,
+			})
+
+			// unbond all lockups
+			for _, lock := range locks {
+				// superfluid undelegate
+				err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)
+				suite.Require().NoError(err)
+			}
+
+			// check intermediary account changes after unbonding operations
+			for _, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intAccs[intAccIndex]
+				suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Hour*24*21 + time.Second))
+				suite.app.EndBlocker(suite.ctx, abci.RequestEndBlock{Height: suite.ctx.BlockHeight()})
+
+				unbonded := suite.app.BankKeeper.GetBalance(suite.ctx, expAcc.GetAddress(), sdk.DefaultBondDenom)
+				suite.Require().True(unbonded.IsPositive())
+			}
+
+			// refresh intermediary account delegations
+			suite.NotPanics(func() {
+				suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
+			})
+
+			// check changes after refresh operation
+			for _, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intAccs[intAccIndex]
+				// check unbonded amount is removed after refresh operation
+				refreshed := suite.app.BankKeeper.GetBalance(suite.ctx, expAcc.GetAddress(), sdk.DefaultBondDenom)
+				suite.Require().True(refreshed.IsZero())
+			}
+		})
+	}
 }
