@@ -57,7 +57,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -167,7 +166,7 @@ type OsmosisApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
-	keepers keepers.AppKeepers
+	Keepers keepers.AppKeepers
 
 	// the module manager
 	mm *module.Manager
@@ -213,19 +212,19 @@ func NewOsmosisApp(
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
-		keepers:           keepers.NewBlankKeepers(),
+		Keepers:           keepers.NewBlankKeepers(),
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
 	}
 
-	keepers.InitSpecialKeepers(&app.keepers,
+	keepers.InitSpecialKeepers(&app.Keepers,
 		app.BaseApp, encodingConfig, cdc, skipUpgradeHeights, homePath, invCheckPeriod)
 
 	app.setupUpgrades()
 
-	keepers.InitNormalKeepers(&app.keepers, app.BaseApp, encodingConfig, cdc, app.BlockedAddrs())
-	keepers.SetupHooks(&app.keepers)
+	keepers.InitNormalKeepers(&app.Keepers, app.BaseApp, encodingConfig, cdc, app.BlockedAddrs())
+	keepers.SetupHooks(&app.Keepers)
 
 	/****  Module Options ****/
 
@@ -237,13 +236,13 @@ func NewOsmosisApp(
 	// must be passed by reference here.
 	app.mm = module.NewManager(
 		genutil.NewAppModule(
-			app.keepers.AccountKeeper, app.keepers.StakingKeeper, app.BaseApp.DeliverTx,
+			app.Keepers.AccountKeeper, app.Keepers.StakingKeeper, app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
 		),
-		auth.NewAppModule(appCodec, *app.keepers.AccountKeeper, nil),
-		vesting.NewAppModule(*app.keepers.AccountKeeper, app.keepers.BankKeeper),
+		auth.NewAppModule(appCodec, *app.Keepers.AccountKeeper, nil),
+		vesting.NewAppModule(*app.Keepers.AccountKeeper, app.Keepers.BankKeeper),
 		// TODO: This is where I left off in changes
-		bech32ics20.NewAppModule(appCodec, app.Bech32ICS20Keeper),
+		bech32ics20.NewAppModule(appCodec, *app.Keepers.Bech32ICS20Keeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
@@ -559,24 +558,23 @@ func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 func (app *OsmosisApp) setupUpgrades() {
 	// this configures a no-op upgrade handler for the v4 upgrade,
 	// which improves the lockup module's store management.
-	app.UpgradeKeeper.SetUpgradeHandler(
+	app.Keepers.UpgradeKeeper.SetUpgradeHandler(
 		v4.UpgradeName, v4.CreateUpgradeHandler(
 			app.mm, app.configurator,
-			&app.BankKeeper, &app.DistrKeeper, &app.GAMMKeeper))
+			&app.Keepers))
 
-	app.UpgradeKeeper.SetUpgradeHandler(
+	app.Keepers.UpgradeKeeper.SetUpgradeHandler(
 		v5.UpgradeName,
 		v5.CreateUpgradeHandler(
 			app.mm, app.configurator,
-			&app.IBCKeeper.ConnectionKeeper, &app.TxFeesKeeper,
-			&app.GAMMKeeper, &app.StakingKeeper))
+			&app.Keepers))
 
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	upgradeInfo, err := app.Keepers.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
 	}
 
-	if upgradeInfo.Name == v5.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == v5.UpgradeName && !app.Keepers.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := store.StoreUpgrades{
 			Added: []string{authz.ModuleName, txfees.ModuleName, bech32ibctypes.ModuleName},
 		}
@@ -605,25 +603,4 @@ func GetMaccPerms() map[string][]string {
 		dupMaccPerms[k] = v
 	}
 	return dupMaccPerms
-}
-
-// initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
-
-	paramsKeeper.Subspace(authtypes.ModuleName)
-	paramsKeeper.Subspace(banktypes.ModuleName)
-	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
-	paramsKeeper.Subspace(distrtypes.ModuleName)
-	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
-	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(incentivestypes.ModuleName)
-	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
-	paramsKeeper.Subspace(gammtypes.ModuleName)
-
-	return paramsKeeper
 }

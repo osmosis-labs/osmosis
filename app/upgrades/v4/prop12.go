@@ -10,7 +10,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 )
 
-func Prop12(ctx sdk.Context, bank *bankkeeper.Keeper, distr *distrkeeper.Keeper) {
+func Prop12(ctx sdk.Context, bank *bankkeeper.BaseKeeper, distr *distrkeeper.Keeper) {
 	payments := GetProp12Payments()
 
 	var total = int64(0)

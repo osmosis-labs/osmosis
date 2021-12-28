@@ -50,22 +50,22 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				var bal = int64(1000000000000)
 				coin := sdk.NewInt64Coin("uosmo", bal)
 				coins := sdk.NewCoins(coin)
-				err := suite.app.BankKeeper.MintCoins(suite.ctx, "mint", coins)
+				err := suite.app.Keepers.BankKeeper.MintCoins(suite.ctx, "mint", coins)
 				suite.Require().NoError(err)
-				err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, "mint", "distribution", coins)
+				err = suite.app.Keepers.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, "mint", "distribution", coins)
 				suite.Require().NoError(err)
-				feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+				feePool := suite.app.Keepers.DistrKeeper.GetFeePool(suite.ctx)
 				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(coin))
-				suite.app.DistrKeeper.SetFeePool(suite.ctx, feePool)
+				suite.app.Keepers.DistrKeeper.SetFeePool(suite.ctx, feePool)
 
 			},
 			func() {
 				// run upgrade
 				suite.ctx = suite.ctx.WithBlockHeight(dummyUpgradeHeight - 1)
 				plan := upgradetypes.Plan{Name: "v4", Height: dummyUpgradeHeight}
-				err := suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+				err := suite.app.Keepers.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 				suite.Require().NoError(err)
-				plan, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
+				plan, exists := suite.app.Keepers.UpgradeKeeper.GetUpgradePlan(suite.ctx)
 				suite.Require().True(exists)
 
 				suite.ctx = suite.ctx.WithBlockHeight(dummyUpgradeHeight)
@@ -86,7 +86,7 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 					suite.Require().NoError(err)
 					coin := sdk.NewInt64Coin("uosmo", amount)
 
-					accBal := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "uosmo")
+					accBal := suite.app.Keepers.BankKeeper.GetBalance(suite.ctx, addr, "uosmo")
 					suite.Require().Equal(coin, accBal)
 
 					total += amount
@@ -98,16 +98,16 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				expectedBal := 1000000000000 - total
 
 				// check that distribution module account balance has been reduced correctly
-				distAddr := suite.app.AccountKeeper.GetModuleAddress("distribution")
-				distBal := suite.app.BankKeeper.GetBalance(suite.ctx, distAddr, "uosmo")
+				distAddr := suite.app.Keepers.AccountKeeper.GetModuleAddress("distribution")
+				distBal := suite.app.Keepers.BankKeeper.GetBalance(suite.ctx, distAddr, "uosmo")
 				suite.Require().Equal(distBal, sdk.NewInt64Coin("uosmo", expectedBal))
 
 				// check that feepool.communitypool has been reduced correctly
-				feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+				feePool := suite.app.Keepers.DistrKeeper.GetFeePool(suite.ctx)
 				suite.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", expectedBal)))
 
 				// Check that gamm Minimum Fee has been set correctly
-				gammParams := suite.app.GAMMKeeper.GetParams(suite.ctx)
+				gammParams := suite.app.Keepers.GAMMKeeper.GetParams(suite.ctx)
 				expectedCreationFee := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.OneInt()))
 				suite.Require().Equal(gammParams.PoolCreationFee, expectedCreationFee)
 			},
