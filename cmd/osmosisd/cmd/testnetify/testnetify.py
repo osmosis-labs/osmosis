@@ -49,9 +49,7 @@ def sed_inplace(filename, pattern, repl):
     pattern_compiled = re.compile(pattern)
 
     # For portability, NamedTemporaryFile() defaults to mode "w+b" (i.e., binary
-    # writing with updating). This is usually a good thing. In this case,
-    # however, binary writing imposes non-trivial encoding constraints trivially
-    # resolved by switching to text writing. Let's do that.
+    # writing with updating)
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
         with open(filename) as src_file:
             for line in src_file:
@@ -76,18 +74,23 @@ def sed_inplace(filename, pattern, repl):
 #sed_inplace("testnet_genesis.json", "b77zCh/VsRgVvfGXuW4dB+Dhg4PrMWWBC5G2K/qFgiU=", val_pubkey)
 
 #replace validator osmovalcons
+print("Replacing osmovalcons1z6skn9g6s7py0klztr7acutr3anqd52k9x5p70 with " final_address)
 sed_inplace("testnet_genesis.json", "osmovalcons1z6skn9g6s7py0klztr7acutr3anqd52k9x5p70", final_address)
 
 #replace validator hex address
+print("Replacing 16A169951A878247DBE258FDDC71638F6606D156 with " address)
 sed_inplace("testnet_genesis.json", "16A169951A878247DBE258FDDC71638F6606D156", address)
 
 #replace validator osmovaloper
+print("Replacing osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n with " bech32_val)
 sed_inplace("testnet_genesis.json", "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n", bech32_val)
 
 #replace actual account
+print("Replacing osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5 with " op_address)
 sed_inplace("testnet_genesis.json", "osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5", op_address)
 
 #replace actual account pubkey
+print("Replacing AqlNb1FM8veQrT4/apR5B3hww8VApc0LTtZnXhq7FqG0 with " op_pubkey)
 sed_inplace("testnet_genesis.json", "AqlNb1FM8veQrT4/apR5B3hww8VApc0LTtZnXhq7FqG0", op_pubkey)
 
 
@@ -135,7 +138,9 @@ app_state_del_list = read_test_gen['app_state']['staking']['delegations']
 del_index = [i for i, elem in enumerate(app_state_del_list) if op_address in elem['delegator_address']][0]
 #first val list update share (add 1 BN)
 current_share = int(float(app_state_del_list[del_index]['shares']))
+print("Current self delegation is " current_share)
 new_share = str(current_share + 1000000000000000)+".000000000000000000"
+print("New self delegation is " new_share)
 app_state_del_list[del_index]['shares'] = new_share
 
 #second location
@@ -143,7 +148,9 @@ app_state_dist_list = read_test_gen['app_state']['distribution']['delegator_star
 dist_index = [i for i, elem in enumerate(app_state_dist_list) if op_address in elem['delegator_address']][0]
 #second val list update stake (add 1 BN)
 current_stake = int(float(app_state_dist_list[dist_index]['starting_info']['stake']))
+print("Current stake is " current_stake)
 new_stake = str(current_stake + 1000000000000000)+".000000000000000000"
+print("New stake is " new_stake)
 app_state_dist_list[dist_index]['starting_info']['stake'] = new_stake
 
 
@@ -161,13 +168,17 @@ val_power_list = read_test_gen['validators']
 val_power_index = [i for i, elem in enumerate(val_power_list) if 'Sentinel' in elem['name']][0]
 #change val power (add 1 BN)
 current_power = int(val_power_list[val_power_index]['power'])
+print("Current validator power is " current_power)
 new_power = str(current_power + 1000000000)
+print("New validator power is " new_power)
 val_power_list[val_power_index]['power'] = new_power
 #get index of val power in app state (osmovaloper) (bech32_val)
 last_val_power_list = read_test_gen['app_state']['staking']['last_validator_powers']
 last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if bech32_val in elem['address']][0]
 val_power = int(read_test_gen['app_state']['staking']['last_validator_powers'][last_val_power_index]['power'])
+print("Current validator power in second location is " val_power)
 new_val_power = str(val_power + 1000000000)
+print("New validator power in second location is " new_val_power)
 read_test_gen['app_state']['staking']['last_validator_powers'][last_val_power_index]['power'] = new_val_power
 
 
@@ -179,7 +190,9 @@ read_test_gen['app_state']['staking']['last_validator_powers'][last_val_power_in
 
 #update last_total_power (last total bonded across all validators, add 1BN)
 last_total_power = int(read_test_gen['app_state']['staking']['last_total_power'])
+print("Current last total power is " last_total_power)
 new_last_total_power = str(last_total_power + 1000000000)
+print("New last total power is " new_last_total_power)
 read_test_gen['app_state']['staking']['last_total_power'] = new_last_total_power
 
 
@@ -200,7 +213,9 @@ op_wallet = read_test_gen['app_state']['bank']['balances'][op_amount_index]['coi
 op_uosmo_index = [i for i, elem in enumerate(op_wallet) if 'uosmo' in elem['denom']][0]
 #update uosmo amount
 op_uosmo = int(op_wallet[op_uosmo_index]['amount'])
+print("Current operator address uosmo balance is " op_uosmo)
 new_op_uosmo = str(op_uosmo + 1000000000000000)
+print("New operator address uosmo balance is " new_op_uosmo)
 op_wallet[op_uosmo_index]['amount'] = new_op_uosmo
 
 
@@ -218,9 +233,11 @@ osmo_index = [i for i, elem in enumerate(supply) if 'uosmo' in elem['denom']][0]
 
 #get osmo supply value
 osmo_supply = supply[osmo_index]['amount']
+print("Current OSMO supply is " osmo_supply)
 
 #update osmo supply to new total osmo value (add 2 Billion OSMO)
 osmo_supply_new = int(osmo_supply) + 2000000000000000
+print("New OSMO supply is " osmo_supply_new)
 supply[osmo_index]['amount'] = str(osmo_supply_new)
 
 
@@ -242,8 +259,11 @@ module_acct_index = [i for i, elem in enumerate(bank_bal_list) if 'osmo1fl48vsnm
 module_denom_list = bank_bal_list[module_acct_index]['coins']
 osmo_bal_index = [i for i, elem in enumerate(module_denom_list) if 'uosmo' in elem['denom']][0]
 osmo_bal = bank_bal_list[module_acct_index]['coins'][osmo_bal_index]['amount']
+print("Current bonded tokens pool module account balance is " osmo_bal)
 #increase by 1BN 
-bank_bal_list[module_acct_index]['coins'][osmo_bal_index]['amount'] = int(osmo_bal) + 1000000000000000
+new_osmo_bal = int(osmo_bal) + 1000000000000000
+print("New bonded tokens pool module account balance is " new_osmo_bal)
+bank_bal_list[module_acct_index]['coins'][osmo_bal_index]['amount'] = new_osmo_bal
 
 
 
@@ -256,10 +276,14 @@ bank_bal_list[module_acct_index]['coins'][osmo_bal_index]['amount'] = int(osmo_b
 #change epoch duration to 3600s
 epochs_list = read_test_gen['app_state']['epochs']['epochs'][0]
 duration_current = epochs_list['duration']
-epochs_list['duration'] = '3600s'
+print("Current epoch durtaion is " duration_current)
+new_duration = '3600s'
+print("New epoch duration is " new_duration)
+epochs_list['duration'] = new_duration
 
 #change current_epoch_start_time
 start_time_current = epochs_list['current_epoch_start_time']
+print("Current epoch start time is " start_time_current)
 today = date.today()
 date_format = today.strftime("%Y-%m-%d")
 
@@ -267,10 +291,6 @@ date_format = today.strftime("%Y-%m-%d")
 
 
 
-
-
-#osmo supply: osmo_supply
-#new osmo supply: new_osmo_supply
 
 
 
