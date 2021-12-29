@@ -14,8 +14,7 @@ Query the currently running epochInfos
 ```
 osmosisd query epochs epoch-infos
 ```
-
-#### Example
+::: details Example
 
 An example output:
 
@@ -36,9 +35,7 @@ epochs:
   identifier: week
   start_time: "2021-06-18T17:00:00Z"
 ```
-
-</br>
-</br>
+:::
 
 ### current-epoch
 
@@ -48,7 +45,7 @@ Query the current epoch by the specified identifier
 osmosisd query epochs current-epoch [identifier]
 ```
 
-#### Example
+::: details Example
 
 Query the current `day` epoch:
 
@@ -61,3 +58,4 @@ Which in this example outputs:
 ```sh
 current_epoch: "183"
 ```
+:::

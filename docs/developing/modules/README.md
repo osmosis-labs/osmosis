@@ -66,7 +66,7 @@ title: Modules
       Pool-Incentives
     </div>
     <div class="text">
-      Test
+      Creates individual gauges for every lock duration that exists in a pool
     </div>
   </a>
 
