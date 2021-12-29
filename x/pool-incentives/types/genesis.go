@@ -27,13 +27,16 @@ func DefaultGenesisState() *GenesisState {
 			time.Hour * 3,
 			time.Hour * 7,
 		},
-		DistrInfo: nil,
+		DistrInfo: &DistrInfo{
+			TotalWeight: sdk.ZeroInt(),
+			Records:     nil,
+		},
 	}
 }
 
 // GetGenesisStateFromAppState returns x/pool-yield GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) *GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {

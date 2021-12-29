@@ -28,7 +28,7 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	lockableDurations := suite.app.PoolIncentivesKeeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	poolId := suite.preparePool()
+	poolId := suite.prepareBalancerPool()
 	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
 	suite.NoError(err)
 
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestDistrInfo2() {
 	keeper := suite.app.PoolIncentivesKeeper
 	queryClient := suite.queryClient
 
-	poolId := suite.preparePool()
+	poolId := suite.prepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
@@ -160,8 +160,8 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	keeper := suite.app.PoolIncentivesKeeper
 	queryClient := suite.queryClient
 
-	poolId := suite.preparePool()
-	poolId2 := suite.preparePool()
+	poolId := suite.prepareBalancerPool()
+	poolId2 := suite.prepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)

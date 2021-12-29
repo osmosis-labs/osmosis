@@ -8,11 +8,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/app"
+	balancertypes "github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
@@ -49,17 +51,14 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-		err := suite.app.BankKeeper.AddCoins(
-			suite.ctx,
-			acc,
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc,
 			sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000000)),
 				sdk.NewCoin("uosmo", sdk.NewInt(100000000000000000)), // Needed for pool creation fee
 				sdk.NewCoin("uion", sdk.NewInt(10000000)),
 				sdk.NewCoin("foo", sdk.NewInt(10000000)),
 				sdk.NewCoin("bar", sdk.NewInt(10000000)),
-			),
-		)
+			))
 		if err != nil {
 			panic(err)
 		}
@@ -101,7 +100,7 @@ func (suite *KeeperTestSuite) preparePool(assets []gammtypes.PoolAsset) uint64 {
 	suite.Require().Len(assets, 2)
 
 	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1,
-		gammtypes.BalancerPoolParams{
+		balancertypes.BalancerPoolParams{
 			SwapFee: sdk.NewDec(0),
 			ExitFee: sdk.NewDec(0),
 		}, assets, "")
