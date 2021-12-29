@@ -298,9 +298,10 @@ func NewOsmosisApp(
 	}
 
 	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
+	app.setupUpgradeStoreLoaders()
 	app.InitNormalKeepers()
 	app.SetupHooks()
-	app.setupUpgrades()
+	app.setupUpgradeHandlers()
 
 	/****  Module Options ****/
 
@@ -626,22 +627,7 @@ func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 
-// RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *OsmosisApp) setupUpgrades() {
-	// this configures a no-op upgrade handler for the v4 upgrade,
-	// which improves the lockup module's store management.
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v4.UpgradeName, v4.CreateUpgradeHandler(
-			app.mm, app.configurator,
-			*app.BankKeeper, app.DistrKeeper, app.GAMMKeeper))
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v5.UpgradeName,
-		v5.CreateUpgradeHandler(
-			app.mm, app.configurator,
-			&app.IBCKeeper.ConnectionKeeper, app.TxFeesKeeper,
-			app.GAMMKeeper, app.StakingKeeper))
-
+func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
@@ -655,6 +641,22 @@ func (app *OsmosisApp) setupUpgrades() {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
+}
+
+func (app *OsmosisApp) setupUpgradeHandlers() {
+	// this configures a no-op upgrade handler for the v4 upgrade,
+	// which improves the lockup module's store management.
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v4.UpgradeName, v4.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			*app.BankKeeper, app.DistrKeeper, app.GAMMKeeper))
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v5.UpgradeName,
+		v5.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			&app.IBCKeeper.ConnectionKeeper, app.TxFeesKeeper,
+			app.GAMMKeeper, app.StakingKeeper))
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
