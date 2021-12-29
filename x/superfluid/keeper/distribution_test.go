@@ -34,10 +34,6 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		lpDenom  string
 		rewarded bool
 	}
-	type superfluidDelegation struct {
-		valIndex int64
-		lpDenom  string
-	}
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
@@ -82,16 +78,10 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			suite.SetupTest()
 
 			// setup validators
-			valAddrs := []sdk.ValAddress{}
-			for _, status := range tc.validatorStats {
-				valAddr := suite.SetupValidator(status)
-				valAddrs = append(valAddrs, valAddr)
-			}
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			// setup superfluid delegations
-			for _, del := range tc.superDelegations {
-				suite.SetupSuperfluidDelegate(valAddrs[del.valIndex], del.lpDenom)
-			}
+			suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {

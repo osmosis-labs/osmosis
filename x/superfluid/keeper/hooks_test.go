@@ -5,7 +5,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
@@ -35,10 +34,6 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
-	type superfluidDelegation struct {
-		valIndex int64
-		lpDenom  string
-	}
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
@@ -61,30 +56,9 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.Require().Equal(poolId, uint64(1))
 
 			// setup validators
-			valAddrs := []sdk.ValAddress{}
-			for _, status := range tc.validatorStats {
-				valAddr := suite.SetupValidator(status)
-				valAddrs = append(valAddrs, valAddr)
-			}
-
-			intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
-
-			// setup superfluid delegations
-			for _, del := range tc.superDelegations {
-				valAddr := valAddrs[del.valIndex]
-				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
-				expAcc := types.SuperfluidIntermediaryAccount{
-					Denom:   lock.Coins[0].Denom,
-					ValAddr: valAddr.String(),
-				}
-
-				// check delegation from intermediary account to validator
-				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
-				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
-
-				intermediaryAccs = append(intermediaryAccs, expAcc)
-			}
+			valAddrs := suite.SetupValidators(tc.validatorStats)
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			// gamm swap operation before refresh
 			suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))

@@ -9,10 +9,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
-	type superfluidDelegation struct {
-		valIndex int64
-		lpDenom  string
-	}
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -39,11 +35,7 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 			suite.Require().Equal(poolId, uint64(1))
 
 			// setup validators
-			valAddrs := []sdk.ValAddress{}
-			for _, status := range tc.validatorStats {
-				valAddr := suite.SetupValidator(status)
-				valAddrs = append(valAddrs, valAddr)
-			}
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
 			locks := []lockuptypes.PeriodLock{}
@@ -105,10 +97,6 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 }
 
 func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
-	type superfluidDelegation struct {
-		valIndex int64
-		lpDenom  string
-	}
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -137,33 +125,10 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			suite.Require().Equal(poolId, uint64(1))
 
 			// setup validators
-			valAddrs := []sdk.ValAddress{}
-			for _, status := range tc.validatorStats {
-				valAddr := suite.SetupValidator(status)
-				valAddrs = append(valAddrs, valAddr)
-			}
-
-			intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
-			locks := []lockuptypes.PeriodLock{}
-
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 			// setup superfluid delegations
-			for _, del := range tc.superDelegations {
-				valAddr := valAddrs[del.valIndex]
-				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
-				expAcc := types.SuperfluidIntermediaryAccount{
-					Denom:   lock.Coins[0].Denom,
-					ValAddr: valAddr.String(),
-				}
-
-				// check delegation from intermediary account to validator
-				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
-				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
-
-				// save accounts and locks for future use
-				intermediaryAccs = append(intermediaryAccs, expAcc)
-				locks = append(locks, lock)
-			}
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
 				// superfluid undelegate

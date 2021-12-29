@@ -14,6 +14,16 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+type superfluidDelegation struct {
+	valIndex int64
+	lpDenom  string
+}
+type superfluidRedelegation struct {
+	lockId      uint64
+	oldValIndex int64
+	newValIndex int64
+}
+
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) lockuptypes.PeriodLock {
 	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
 	suite.Require().NoError(err)
@@ -40,6 +50,47 @@ func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus)
 	suite.app.StakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
 	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
 	return valAddr
+}
+
+func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
+	valAddrs := []sdk.ValAddress{}
+	for _, status := range bondStatuses {
+		valAddr := suite.SetupValidator(status)
+		valAddrs = append(valAddrs, valAddr)
+	}
+	return valAddrs
+}
+
+func (suite *KeeperTestSuite) SetupSuperfluidDelegations(valAddrs []sdk.ValAddress, superDelegations []superfluidDelegation) ([]types.SuperfluidIntermediaryAccount, []lockuptypes.PeriodLock) {
+	intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
+	locks := []lockuptypes.PeriodLock{}
+
+	// setup superfluid delegations
+	for _, del := range superDelegations {
+		valAddr := valAddrs[del.valIndex]
+		lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
+		expAcc := types.SuperfluidIntermediaryAccount{
+			Denom:   lock.Coins[0].Denom,
+			ValAddr: valAddr.String(),
+		}
+
+		// save accounts and locks for future use
+		intermediaryAccs = append(intermediaryAccs, expAcc)
+		locks = append(locks, lock)
+	}
+	return intermediaryAccs, locks
+}
+
+func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAccs []types.SuperfluidIntermediaryAccount) {
+	for _, acc := range intermediaryAccs {
+		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
+		suite.Require().NoError(err)
+
+		// check delegation from intermediary account to validator
+		delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAddress(), valAddr)
+		suite.Require().True(found)
+		suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
+	}
 }
 
 func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, denom string) lockuptypes.PeriodLock {
@@ -77,10 +128,6 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, de
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
-	type superfluidDelegation struct {
-		valIndex int64
-		lpDenom  string
-	}
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
@@ -102,11 +149,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 			suite.Require().Equal(poolId, uint64(1))
 
 			// setup validators
-			valAddrs := []sdk.ValAddress{}
-			for _, status := range tc.validatorStats {
-				valAddr := suite.SetupValidator(status)
-				valAddrs = append(valAddrs, valAddr)
-			}
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			// setup superfluid delegations
 			for _, del := range tc.superDelegations {
@@ -160,10 +203,6 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
-	type superfluidDelegation struct {
-		valIndex int64
-		lpDenom  string
-	}
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -187,17 +226,11 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			suite.Require().Equal(poolId, uint64(1))
 
 			// setup validators
-			valAddrs := []sdk.ValAddress{}
-			for _, status := range tc.validatorStats {
-				valAddr := suite.SetupValidator(status)
-				valAddrs = append(valAddrs, valAddr)
-			}
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			// setup superfluid delegations
-			for _, del := range tc.superDelegations {
-				valAddr := valAddrs[del.valIndex]
-				suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
-			}
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
 				// superfluid undelegate
@@ -225,15 +258,6 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
-	type superfluidDelegation struct {
-		valIndex int64
-		lpDenom  string
-	}
-	type superfluidRedelegation struct {
-		lockId      uint64
-		oldValIndex int64
-		newValIndex int64
-	}
 	testCases := []struct {
 		name               string
 		validatorStats     []stakingtypes.BondStatus
@@ -257,17 +281,11 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 			suite.Require().Equal(poolId, uint64(1))
 
 			// setup validators
-			valAddrs := []sdk.ValAddress{}
-			for _, status := range tc.validatorStats {
-				valAddr := suite.SetupValidator(status)
-				valAddrs = append(valAddrs, valAddr)
-			}
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			// setup superfluid delegations
-			for _, del := range tc.superDelegations {
-				valAddr := valAddrs[del.valIndex]
-				suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
-			}
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			// execute redelegation and check changes on store
 			for _, srd := range tc.superRedelegations {
@@ -334,11 +352,6 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 }
 
 func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
-	type superfluidDelegation struct {
-		valIndex int64
-		lpDenom  string
-	}
-
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
@@ -363,27 +376,13 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			suite.Require().Equal(poolId, uint64(1))
 
 			// setup validators
-			valAddrs := []sdk.ValAddress{}
-			for _, status := range tc.validatorStats {
-				valAddr := suite.SetupValidator(status)
-				valAddrs = append(valAddrs, valAddr)
-			}
-
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 			// setup superfluid delegations
-			intAccs := []types.SuperfluidIntermediaryAccount{}
-			locks := []lockuptypes.PeriodLock{}
-			for _, del := range tc.superDelegations {
-				valAddr := valAddrs[del.valIndex]
-				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
-				locks = append(locks, lock)
-				intAccs = append(intAccs, types.SuperfluidIntermediaryAccount{
-					Denom:   lock.Coins[0].Denom,
-					ValAddr: valAddr.String(),
-				})
-			}
+			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, intAccIndex := range tc.checkAccIndexes {
-				expAcc := intAccs[intAccIndex]
+				expAcc := intermediaryAccs[intAccIndex]
 				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
 				suite.Require().NoError(err)
 
@@ -426,7 +425,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 
 			// check intermediary account changes after unbonding operations
 			for _, intAccIndex := range tc.checkAccIndexes {
-				expAcc := intAccs[intAccIndex]
+				expAcc := intermediaryAccs[intAccIndex]
 				suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Hour*24*21 + time.Second))
 				suite.app.EndBlocker(suite.ctx, abci.RequestEndBlock{Height: suite.ctx.BlockHeight()})
 
@@ -441,7 +440,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 
 			// check changes after refresh operation
 			for _, intAccIndex := range tc.checkAccIndexes {
-				expAcc := intAccs[intAccIndex]
+				expAcc := intermediaryAccs[intAccIndex]
 				// check unbonded amount is removed after refresh operation
 				refreshed := suite.app.BankKeeper.GetBalance(suite.ctx, expAcc.GetAddress(), sdk.DefaultBondDenom)
 				suite.Require().True(refreshed.IsZero())
