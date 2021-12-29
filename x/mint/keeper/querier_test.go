@@ -17,7 +17,7 @@ import (
 func TestNewQuerier(t *testing.T) {
 	app, ctx := createTestApp(true)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
-	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
+	querier := keep.NewQuerier(*app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -37,7 +37,7 @@ func TestNewQuerier(t *testing.T) {
 func TestQueryParams(t *testing.T) {
 	app, ctx := createTestApp(true)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
-	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
+	querier := keep.NewQuerier(*app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var params types.Params
 
@@ -51,7 +51,7 @@ func TestQueryParams(t *testing.T) {
 func TestQueryEpochProvisions(t *testing.T) {
 	app, ctx := createTestApp(true)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
-	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
+	querier := keep.NewQuerier(*app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var epochProvisions sdk.Dec
 

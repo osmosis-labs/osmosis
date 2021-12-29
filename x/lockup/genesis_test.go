@@ -49,7 +49,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	lockup.InitGenesis(ctx, app.LockupKeeper, genesis)
+	lockup.InitGenesis(ctx, *app.LockupKeeper, genesis)
 
 	coins := app.LockupKeeper.GetAccountLockedCoins(ctx, acc1)
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 25000000).String())
@@ -70,7 +70,7 @@ func TestExportGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	lockup.InitGenesis(ctx, app.LockupKeeper, genesis)
+	lockup.InitGenesis(ctx, *app.LockupKeeper, genesis)
 
 	err := simapp.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
@@ -80,7 +80,7 @@ func TestExportGenesis(t *testing.T) {
 	coins := app.LockupKeeper.GetAccountLockedCoins(ctx, acc2)
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 10000000).String())
 
-	genesisExported := lockup.ExportGenesis(ctx, app.LockupKeeper)
+	genesisExported := lockup.ExportGenesis(ctx, *app.LockupKeeper)
 	require.Equal(t, genesisExported.LastLockId, uint64(11))
 	require.Equal(t, genesisExported.Locks, []types.PeriodLock{
 		{
@@ -121,7 +121,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
+	am := lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 
 	err := simapp.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
@@ -133,7 +133,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		app := osmoapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
+		am := lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }
