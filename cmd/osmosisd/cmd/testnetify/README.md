@@ -74,4 +74,6 @@ osmosisd start --x-crisis-skip-assert-invariants
 Once the second peer initializes, the chain will no longer be halted 
 (this is necessary due to a tendermint bug). The second peer can then be shut off if desired. If the first peer ever shuts down, the second peer must be started in order to kickstart the chain again.
 
+As a last note, sometimes getting testnet nodes spun up for the first time can be finicky. If you are stuck getting the second node to connect to the first node, sometimes doing a `unsafe-reset-all` on both nodes fixes the issue. Also, try adding the second node as a persistent peer to the first node. These two methods have fixed nodes that do not want to cooperate. Lastly, if your node keeps killing the daemon, please ensure you have a swap file set up. 
+
 Enjoy your state exported testnet!
