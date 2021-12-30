@@ -6,7 +6,10 @@ This guide will explain how to install the osmosisd binary onto your system.
 
 On Ubuntu start by updating your system:
 ```bash
-sudo apt update && sudo apt upgrade
+sudo apt update
+```
+```bash
+sudo apt upgrade --yes
 ```
 
 ## Install build requirements

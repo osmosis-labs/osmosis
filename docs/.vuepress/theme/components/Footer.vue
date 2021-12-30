@@ -33,17 +33,17 @@
     <div class="links-container">
       <ul class="learn">
         <li>Learn</li>
-        <li>
+        <!-- <li>
           <a href="White_paper.pdf" target="_blank">White Paper</a>
-        </li>
+        </li> -->
         <!-- <li>
           <a href="https://docsend.com/view/9mvr5qq" target="_blank">Decks</a>
         </li> -->
         <li>
-          <a href="#" target="_blank">Medium</a>
+          <a href="https://medium.com/@Osmosis" target="_blank">Medium</a>
         </li>
         <li>
-          <a href="#" target="_blank">Forum</a>
+          <a href="https://commonwealth.im/osmosis/" target="_blank">Commonwealth</a>
         </li>
       </ul>
       <ul class="developers">
@@ -61,19 +61,19 @@
       <ul class="developers">
         <li>Osmo</li>
         <li>
-          <a href="#" target="_blank">What is Osmo?</a>
+          <a href="https://docs.osmosis.zone/overview/osmo.html#purpose" target="_blank">What is Osmo?</a>
         </li>
         <li>
-          <a href="#" target="_blank">Pools</a>
+          <a href="https://docs.osmosis.zone/overview/osmosis-app/#bonding-lp-tokens" target="_blank">Pools</a>
         </li>
         <li>
-          <a href="#" target="_blank">Wallets</a>
+          <a href="https://docs.osmosis.zone/overview/wallets/keplr/" target="_blank">Wallets</a>
         </li>
       </ul>
       <ul class="developers">
         <li>Foundation</li>
         <li>
-          <a href="#" target="_blank">Careers</a>
+          <a href="https://angel.co/company/osmosis-labs/jobs" target="_blank">Careers</a>
         </li>
       </ul>
       <ul class="developers">
@@ -81,20 +81,20 @@
         <li>
           <a href="https://github.com/osmosis-labs" target="_blank">Github</a>
         </li>
-        <li>
+        <!-- <li>
           <a href="https://docs.osmosis.zone/" target="_blank">Documentation</a>
-        </li>
+        </li> -->
       </ul>
       <ul class="developers">
         <li>Validators</li>
         <li>
-          <a href="#" target="_blank">Validator Guide</a>
+          <a href="https://docs.osmosis.zone/validators/" target="_blank">Validator Guide</a>
         </li>
-        <li>
+        <!-- <li>
           <a href="" target="_blank">Profiles</a>
-        </li>
+        </li> -->
         <li>
-          <a href="" target="_blank">Discord Channel</a>
+          <a href="https://discord.gg/3gSAbqV3Qp" target="_blank">Discord Channel</a>
         </li>
       </ul>
     </div>
