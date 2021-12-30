@@ -1,6 +1,6 @@
 {
   "name": "osmosis-docs",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Official Osmosis Documentation website",
   "main": "index.js",
   "authors": {

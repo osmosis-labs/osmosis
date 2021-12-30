@@ -8,7 +8,7 @@ Osmosis Core is built using the [Cosmos SDK]( https://cosmos.network/sdk), which
 It is highly recommended that you review these projects before diving into the Osmosis developer documentation, as they assume familiarity with concepts such as ABCI, Validators, Keepers, Message Handlers, etc.
 :::
 
-## How to use the docs
+## How to Use the Docs
 
 As a developer, you will likely find the [Module](./modules/) section the most informative. Each specification starts out with a short description of the module's main function within the architecture of the system, and how it contributes in implementing Osmosis's features.
 
@@ -18,7 +18,7 @@ The current function documentation is not an exhaustive reference, but has been 
 
 At the end, the specification lists out various module parameters alongside their default values with a brief explanation of their purpose, and associated events / tags and errors emitted by the module.
 
-## Module architecture
+## Module Architecture
 
 The node software is organized into the following individual modules that implement different parts of the Osmosis protocol.
 They are listed in the order in which they are initialized during genesis:
@@ -55,7 +55,7 @@ They are listed in the order in which they are initialized during genesis:
 
 Many of the modules in Osmosis Core are inherited from Cosmos SDK and are configured to work with Osmosis through customization in either genesis parameters or by augmenting their functionality with additional code.
 
-## Block lifecycle
+## Block Lifecycle
 
 The following processes get executed during each block transition:
 
@@ -97,4 +97,3 @@ The following processes get executed during each block transition:
 
 9. Staking
    - The new set of active validators is determined from the top 130 Osmo stakers. Validators that lose their spot within the set start the unbonding process.
-

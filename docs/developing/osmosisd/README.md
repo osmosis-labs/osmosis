@@ -1,4 +1,4 @@
-# Using osmosisd
+# Using Osmosisd
 
 The following information explains the functions you can use from `osmosisd`, the command line interface that connects a running `osmosisd` process. Use it to access Osmosis. For more general information at the command line, run `osmosisd --help`. For more information about a specific `osmosisd` command, append the `-h` or `--help` flag after the command, such as `osmosisd query --help`.
 
@@ -16,7 +16,7 @@ If you don't want to run your own full node, you can connect to someone else's f
 
 To connect to the full-node, you need an address in the `https://<host>:<port>` format, for example `https://77.87.106.33:26657`. This address has to be communicated by the full-node operator you choose to trust. You will use this address in the following section.
 
-## Configuring osmosisd
+## Configuring Osmosisd
 
 `osmosisd` enables you to interact with the node that runs on the Osmosis network, whether you run it yourself or not. To configure `osmosisd`, edit the the `config.toml` file in the `~/.osmosis/config/` directory.
 
@@ -113,7 +113,7 @@ The `gasPrice` is the price of each unit of `gas`. Each validator sets a `min-ga
 
 The transaction `fees` are the product of `gas` and `gasPrice`. As a user, you have to input 2 out of 3. The higher the `gasPrice`/`fees`, the higher the chance that your transaction will get included in a block.
 
-### Setting Fees
+### Setting fees
 
 Each transaction may either supply fees or gas prices, but not both. Most users will typically provide fees as this is the final cost you will end up incurring for the transaction being included in the ledger, where as gas prices will be dynamically calculated depending on the validator.
 
@@ -141,7 +141,7 @@ osmosisd tx send ... --gas-prices=0.15uusd
 
 Taxes in Osmosis must be included in the fee amount. Users can make transactions with existing methods without the `--fees` flag but with gas prices flag. This will automatically calculate the tax and return fees in addition to the existing gas fees.
 
-### Automatic Fee Estimation
+### Automatic fee estimation
 
 You may want to cap the maximum gas that can be consumed by the transaction via the `--gas` flag. If you pass `--gas=auto`, the gas will be automatically estimated before executing the transaction.
 

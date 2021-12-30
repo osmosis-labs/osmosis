@@ -180,20 +180,19 @@ module.exports = {
           title: 'Chain Developer Guide',
           children: [
             '/developing/chain-dev-guide',
-            '/developing/cli/',
             '/developing/cli/install',
+            '/developing/osmosisd/',
           ],
           collapsable: true,
         },
-        {
-          title: "osmosisd",
-          children: [
-            "/developing/osmosisd/",
-            "/developing/osmosisd/commands",
-            "/developing/osmosisd/subcommands",
-          ],
-          collapsable: true,
-        },
+        // {
+        //   title: "osmosisd",
+        //   children: [
+        //     "/developing/osmosisd/commands",
+        //     "/developing/osmosisd/subcommands",
+        //   ],
+        //   collapsable: true,
+        // },
         {
           title: 'Networks',
           children: [

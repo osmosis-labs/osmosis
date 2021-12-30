@@ -16,13 +16,13 @@ The guides on this page will explain the process of developing on Osmosis.
       Basic developer overview, CLI guide, and install osmosis
     </div>
   </a>
-  <a href="osmosisd" class="card">
+  <a href="cli/install" class="card">
     <img src="/img/terminal-solid.svg" class="filter-icon"/>
     <div class="title">
      Osmosis Daemon 
     </div>
     <div class="text">
-      Useful commands and subcommands for osmosisd
+      Install osmosisd to join the network
     </div>
   </a>
 

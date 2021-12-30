@@ -2,7 +2,7 @@
   <div class="footer-container">
     <div class="company">
       <div class="copyright">Osmosis Labs</div>
-      <div class="subscribe">
+      <!-- <div class="subscribe">
         <div class="subscribe-title">Subscribe to get updates</div>
         <form
           action="TODO"
@@ -28,7 +28,7 @@
           </div>
           <button type="submit">Submit</button>
         </form>
-      </div>
+      </div> -->
     </div>
     <div class="links-container">
       <ul class="learn">
@@ -351,7 +351,8 @@ export default {
     margin-top: 0;
     position: absolute;
     left: 2.5rem;
-    top: 17.5rem;
+    top: 10.37rem;
   }
 }
 </style>
+<!-- top: 17.5rem; -->
