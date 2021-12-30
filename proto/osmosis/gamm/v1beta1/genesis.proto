@@ -13,6 +13,16 @@ message Params {
     (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
     (gogoproto.nullable) = false
   ];
+  string default_pool_swap_fee = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"default_pool_swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+  string default_pool_exit_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"default_pool_exit_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";

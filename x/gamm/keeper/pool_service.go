@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/pkg/errors"
 
 	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
@@ -32,6 +33,15 @@ func (k Keeper) CreateBalancerPool(
 
 	// send pool creation fee to community pool
 	params := k.GetParams(ctx)
+
+	if !BalancerPoolParams.SwapFee.Equal(params.DefaultPoolSwapFee) {
+		return 0, errors.Wrapf(types.ErrInvalidSwapFee, "swap fee should be %s", params.DefaultPoolSwapFee)
+	}
+
+	if !BalancerPoolParams.ExitFee.Equal(params.DefaultPoolExitFee) {
+		return 0, errors.Wrapf(types.ErrInvalidExitFee, "exit fee should be %s", params.DefaultPoolExitFee)
+	}
+
 	err := k.distrKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender)
 	if err != nil {
 		return 0, err
