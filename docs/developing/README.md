@@ -54,6 +54,16 @@ The guides on this page will explain the process of developing on Osmosis.
       Osmosis modules and their respective CLI commands
     </div>
   </a>
+
+  <a href="assets/asset-info" class="card">
+    <img src="/img/asset.svg" class="filter-icon"/>
+    <div class="title">
+     Assets 
+    </div>
+    <div class="text">
+     Currently supported assets on Osmosis with their corresponding channels and IBC denoms
+    </div>
+  </a>
  </div>
 
 

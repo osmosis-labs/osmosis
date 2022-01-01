@@ -128,7 +128,7 @@ module.exports = {
       { text: 'Develop', link: '/developing/',},
       { text: 'Validate', link: '/validators/',},
       { text: 'Integrate', link: '/integrate/',},
-      { text: 'Chat', link: 'https://v2.vuepress.vuejs.org/',},
+      // { text: 'Chat', link: 'https://v2.vuepress.vuejs.org/',},
       {
         text: "GitHub",
         link: "https://github.com/osmosis-labs/osmosis",
@@ -214,6 +214,13 @@ module.exports = {
             "/developing/modules/spec-pool-incentives"
           ],
           collapsable: true,
+        },
+        {
+        title: 'Asset Info',
+        children: [
+          "/developing/assets/asset-info",
+        ],
+        collapsable: true,
         },
         {
           title: 'Web Developer Guide',
