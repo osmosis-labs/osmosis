@@ -122,7 +122,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211209072213-711e78b4f6b4
 	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.14
+	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint v0.34.12-0.20220101202240-543e3bc31d9a
 	github.com/tendermint/tm-db => github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
