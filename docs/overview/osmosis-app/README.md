@@ -42,7 +42,7 @@ Once the transaction is completed a series if confirmations notifications will  
 
 ## Swapping Tokens
 
-Trading tokens is as easy as clicking on the Trade link and then selecting the pair you would like to trade.  Check out the [glossary](/overview/terminology.html) to learn about terms such as [slipage](/overview/terminology.html#slippage). 
+Trading tokens is as easy as clicking on the Trade link and then selecting the pair you would like to trade.  Check out the [glossary](/overview/terminology.html) to learn about terms such as [slippage](/overview/terminology.html#slippage). 
 ![](../../assets/swap.png)
 
 
