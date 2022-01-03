@@ -15,7 +15,7 @@ set -ux
 
 # MAKE HOME FOLDER AND GET GENESIS
 osmosisd init test 
-wget -O /sstwo/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
+wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
 
 INTERVAL=1500
 
