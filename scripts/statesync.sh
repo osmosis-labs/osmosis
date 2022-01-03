@@ -40,7 +40,7 @@ export OSMOSISD_STATESYNC_TRUST_HASH=$TRUST_HASH
 # THIS WILL FAIL BECAUSE THE APP VERSION IS CORRECTLY SET IN OSMOSIS
 osmosisd start 
 
-# THIS WILL FIX THE APP VERSION
+# THIS WILL FIX THE APP VERSION, contributed by callum and claimens
 git clone https://github.com/tendermint/tendermint
 cd tendermint
 git checkout remotes/origin/callum/app-version
