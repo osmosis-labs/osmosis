@@ -190,28 +190,28 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	return nil
 }
 
-func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
+func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAddress, error) {
 	// Remove previously created synthetic lockup
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if intermediaryAccAddr.Empty() {
-		return fmt.Errorf("lockID is not used for superfluid staking")
+		return nil, fmt.Errorf("lockID is not used for superfluid staking")
 	}
 	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	suffix := stakingSuffix(intermediaryAcc.ValAddr)
 	err := k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, time.Hour*24*21) // 2 weeks unlock duration
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, intermediaryAcc.Denom)
@@ -221,7 +221,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
 
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	shares, err := k.sk.ValidateUnbondAmount(
@@ -232,16 +232,20 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) error {
 	// it is burnt on epoch interval
 	_, err = k.sk.Undelegate(ctx, intermediaryAcc.GetAddress(), valAddr, shares)
 	if err != nil {
-		return err
+		return valAddr, err
 	}
 
-	return nil
+	return valAddr, nil
 }
 
 func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr string) error {
-	err := k.SuperfluidUndelegate(ctx, lockID)
+	valAddr, err := k.SuperfluidUndelegate(ctx, lockID)
 	if err != nil {
 		return err
+	}
+
+	if valAddr.String() == newValAddr {
+		return fmt.Errorf("redelegation to the same validator is not allowed")
 	}
 
 	k.SuperfluidDelegate(ctx, lockID, newValAddr)

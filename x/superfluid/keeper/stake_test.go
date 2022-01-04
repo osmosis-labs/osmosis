@@ -240,12 +240,42 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		validatorStats        []stakingtypes.BondStatus
 		superDelegations      []superfluidDelegation
 		superUnbondingLockIds []uint64
+		expSuperUnbondingErr  []bool
 	}{
 		{
-			"happy path with single validator and delegator",
+			"with single validator and single superfluid delegation and single undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
 			[]uint64{1},
+			[]bool{false},
+		},
+		{
+			"with single validator and multiple superfluid delegations and single undelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]uint64{1},
+			[]bool{false},
+		},
+		{
+			"with single validator and multiple superfluid delegations and multiple undelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]uint64{1, 2},
+			[]bool{false, false},
+		},
+		{
+			"with multiple validators and multiple superfluid delegations and multiple undelegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]uint64{1, 2},
+			[]bool{false, false},
+		},
+		{
+			"undelegating not available lock id",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]uint64{2},
+			[]bool{true},
 		},
 	}
 
@@ -264,9 +294,13 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
-			for _, lockId := range tc.superUnbondingLockIds {
+			for index, lockId := range tc.superUnbondingLockIds {
 				// superfluid undelegate
-				err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
+				_, err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
+				if tc.expSuperUnbondingErr[index] {
+					suite.Require().Error(err)
+					continue
+				}
 				suite.Require().NoError(err)
 
 				// get intermediary account
@@ -291,16 +325,46 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 	testCases := []struct {
-		name               string
-		validatorStats     []stakingtypes.BondStatus
-		superDelegations   []superfluidDelegation
-		superRedelegations []superfluidRedelegation
+		name                    string
+		validatorStats          []stakingtypes.BondStatus
+		superDelegations        []superfluidDelegation
+		superRedelegations      []superfluidRedelegation
+		expSuperRedelegationErr []bool
 	}{
 		{
-			"happy path with single validator and delegator",
+			"with single validator and single superfluid delegation with single redelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
-			[]superfluidRedelegation{{1, 0, 1}},
+			[]superfluidRedelegation{{1, 0, 1}}, // lock1 => val0 -> val1
+			[]bool{false},
+		},
+		{
+			"with multiple superfluid delegations with single redelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]superfluidRedelegation{{1, 0, 1}}, // lock1 => val0 -> val1
+			[]bool{false},
+		},
+		{
+			"with multiple superfluid delegations with multiple redelegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]superfluidRedelegation{{1, 0, 1}, {2, 0, 1}}, // lock1 => val0 -> val1, lock2 => val0 -> val1
+			[]bool{false, false},
+		},
+		{
+			"not available lock id redelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidRedelegation{{2, 0, 1}}, // lock1 => val0 -> val1
+			[]bool{true},
+		},
+		{
+			"redelegation for same validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidRedelegation{{1, 0, 0}}, // lock1 => val0 -> val0
+			[]bool{true},
 		},
 	}
 
@@ -320,9 +384,13 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			// execute redelegation and check changes on store
-			for _, srd := range tc.superRedelegations {
+			for index, srd := range tc.superRedelegations {
 				// superfluid redelegate
 				err := suite.app.SuperfluidKeeper.SuperfluidRedelegate(suite.ctx, srd.lockId, valAddrs[srd.newValIndex].String())
+				if tc.expSuperRedelegationErr[index] {
+					suite.Require().Error(err)
+					continue
+				}
 				suite.Require().NoError(err)
 
 				// check previous validator bonding synthetic lockup deletion
@@ -451,7 +519,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			// unbond all lockups
 			for _, lock := range locks {
 				// superfluid undelegate
-				err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)
+				_, err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.ID)
 				suite.Require().NoError(err)
 			}
 

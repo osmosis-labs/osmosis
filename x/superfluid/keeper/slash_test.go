@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 
 			for _, lockId := range tc.superUnbondingLockIds {
 				// superfluid undelegate
-				err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
+				_, err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
 				suite.Require().NoError(err)
 			}
 

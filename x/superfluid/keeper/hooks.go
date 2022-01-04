@@ -85,7 +85,7 @@ func (h Hooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uin
 	// undelegate automatically when start unlocking if superfluid staking is available
 	intermediaryAccAddr := h.k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if !intermediaryAccAddr.Empty() {
-		err := h.k.SuperfluidUndelegate(ctx, lockID)
+		_, err := h.k.SuperfluidUndelegate(ctx, lockID)
 		if err != nil {
 			panic(err)
 		}
