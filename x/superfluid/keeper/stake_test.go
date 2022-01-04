@@ -140,14 +140,28 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, de
 
 func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 	testCases := []struct {
-		name             string
-		validatorStats   []stakingtypes.BondStatus
-		superDelegations []superfluidDelegation
+		name               string
+		validatorStats     []stakingtypes.BondStatus
+		superDelegations   []superfluidDelegation
+		expInterDelegation []sdk.Dec
 	}{
 		{
-			"happy path with single validator and delegator",
+			"with single validator and single superfluid delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]sdk.Dec{sdk.NewDec(19000000)}, // 95% x 2 x 1000000
+		},
+		{
+			"with single validator and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]sdk.Dec{sdk.NewDec(38000000)}, // 95% x 2 x 1000000 x 2
+		},
+		{
+			"with multiples validator and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]sdk.Dec{sdk.NewDec(19000000), sdk.NewDec(19000000)}, // 95% x 2 x 1000000
 		},
 	}
 
@@ -161,11 +175,12 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
+			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
 
 			// setup superfluid delegations
-			for _, del := range tc.superDelegations {
+			for index, del := range tc.superDelegations {
+				lock := locks[index]
 				valAddr := valAddrs[del.valIndex]
-				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
 
 				// check synthetic lockup creation
 				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(valAddr.String()))
@@ -174,15 +189,25 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				suite.Require().Equal(synthLock.Suffix, keeper.StakingSuffix(valAddr.String()))
 				suite.Require().Equal(synthLock.EndTime, time.Time{})
 
-				// check intermediary account creation
 				expAcc := types.SuperfluidIntermediaryAccount{
 					Denom:   lock.Coins[0].Denom,
 					ValAddr: valAddr.String(),
 				}
+
+				// Check lockID connection with intermediary account
+				intAcc := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lock.ID)
+				suite.Require().Equal(intAcc.String(), expAcc.GetAddress().String())
+			}
+
+			for index, expAcc := range intermediaryAccs {
+				// check intermediary account creation
 				gotAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, expAcc.GetAddress())
 				suite.Require().Equal(gotAcc.Denom, expAcc.Denom)
 				suite.Require().Equal(gotAcc.ValAddr, expAcc.ValAddr)
 				suite.Require().GreaterOrEqual(gotAcc.GaugeId, uint64(1))
+
+				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
+				suite.Require().NoError(err)
 
 				// check gauge creation
 				gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
@@ -200,14 +225,10 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				suite.Require().Equal(gauge.FilledEpochs, uint64(0))
 				suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
 
-				// Check lockID connection with intermediary account
-				intAcc := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lock.ID)
-				suite.Require().Equal(intAcc.String(), expAcc.GetAddress().String())
-
 				// check delegation from intermediary account to validator
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
 				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 2 x 1000000
+				suite.Require().Equal(delegation.Shares, tc.expInterDelegation[index])
 			}
 		})
 	}
