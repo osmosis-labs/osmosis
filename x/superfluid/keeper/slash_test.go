@@ -112,16 +112,24 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 		validatorStats        []stakingtypes.BondStatus
 		superDelegations      []superfluidDelegation
 		superUnbondingLockIds []uint64
-		slashedValIndexes     []int64
-		expSlashedLockIndexes []int64
 	}{
 		{
-			"happy path with single validator and delegator",
+			"happy path with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
 			[]uint64{1},
-			[]int64{0},
-			[]int64{0},
+		},
+		{
+			"with single validator and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]uint64{1, 2},
+		},
+		{
+			"with multiple validators and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]uint64{1, 2},
 		},
 	}
 

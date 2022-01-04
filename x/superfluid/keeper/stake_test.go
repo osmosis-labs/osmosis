@@ -62,6 +62,7 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 }
 
 func (suite *KeeperTestSuite) SetupSuperfluidDelegations(valAddrs []sdk.ValAddress, superDelegations []superfluidDelegation) ([]types.SuperfluidIntermediaryAccount, []lockuptypes.PeriodLock) {
+	flagIntermediaryAcc := make(map[string]bool)
 	intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
 	locks := []lockuptypes.PeriodLock{}
 
@@ -74,8 +75,12 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegations(valAddrs []sdk.ValAddre
 			ValAddr: valAddr.String(),
 		}
 
-		// save accounts and locks for future use
-		intermediaryAccs = append(intermediaryAccs, expAcc)
+		// save accounts for future use
+		if flagIntermediaryAcc[expAcc.String()] == false {
+			flagIntermediaryAcc[expAcc.String()] = true
+			intermediaryAccs = append(intermediaryAccs, expAcc)
+		}
+		// save locks for future use
 		locks = append(locks, lock)
 	}
 	return intermediaryAccs, locks
@@ -89,13 +94,13 @@ func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAc
 		// check delegation from intermediary account to validator
 		delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAddress(), valAddr)
 		suite.Require().True(found)
-		suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
+		suite.Require().True(delegation.Shares.GTE(sdk.NewDec(19000000)))
 
 		// check delegated tokens
 		validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
 		suite.Require().True(found)
 		delegatedTokens := validator.TokensFromShares(delegation.Shares).TruncateInt()
-		suite.Require().Equal(delegatedTokens, sdk.NewInt(19000000))
+		suite.Require().True(delegatedTokens.GTE(sdk.NewInt(19000000)))
 	}
 }
 
