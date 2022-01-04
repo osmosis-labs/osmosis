@@ -17,11 +17,32 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 		expSlashedLockIndexes []int64
 	}{
 		{
-			"happy path with single validator and delegator",
+			"with single validator and single superfluid delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
 			[]int64{0},
 			[]int64{0},
+		},
+		{
+			"with single validator and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]int64{0},
+			[]int64{0, 1},
+		},
+		{
+			"with multiple validators and multiple superfluid delegations with single validator slash",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]int64{0},
+			[]int64{0},
+		},
+		{
+			"with multiple validators and multiple superfluid delegations with two validators slash",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]int64{0, 1},
+			[]int64{0, 1},
 		},
 	}
 
@@ -49,17 +70,6 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 					Denom:   lock.Coins[0].Denom,
 					ValAddr: valAddr.String(),
 				}
-
-				// check delegation from intermediary account to validator
-				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
-				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
-
-				// check delegated tokens
-				validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
-				suite.Require().True(found)
-				delegatedTokens := validator.TokensFromShares(delegation.Shares).TruncateInt()
-				suite.Require().Equal(delegatedTokens, sdk.NewInt(19000000))
 
 				// save accounts and locks for future use
 				intermediaryAccs = append(intermediaryAccs, expAcc)

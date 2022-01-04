@@ -90,6 +90,12 @@ func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAc
 		delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAddress(), valAddr)
 		suite.Require().True(found)
 		suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
+
+		// check delegated tokens
+		validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
+		suite.Require().True(found)
+		delegatedTokens := validator.TokensFromShares(delegation.Shares).TruncateInt()
+		suite.Require().Equal(delegatedTokens, sdk.NewInt(19000000))
 	}
 }
 
