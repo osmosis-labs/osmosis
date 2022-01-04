@@ -110,9 +110,15 @@ To track your validator's signing history, copy the validator public key:
 osmosisd tendermint show-validator
 ```
 
-Use your validators public key queried above:
+Use your validators public key queried above as the validator-pubkey below:
+
 
 ```bash
-osmosisd query slashing signing-info <validator-pubkey>\
-  --chain-id=osmosis-1
+osmosisd query slashing signing-info [validator-pubkey]
+```
+
+Example:
+
+```bash
+osmosisd query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"HlixoxNZBPq4pBOYEimtSq9Ak4peBISVsIbI5ZHrEAU="}'
 ```
