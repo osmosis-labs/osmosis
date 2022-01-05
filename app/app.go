@@ -430,7 +430,7 @@ func NewOsmosisApp(
 	app.SetAnteHandler(
 		NewAnteHandler(
 			app.AccountKeeper, app.BankKeeper,
-			*app.TxFeesKeeper, app.GAMMKeeper,
+			app.TxFeesKeeper, app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
 			app.IBCKeeper.ChannelKeeper,
