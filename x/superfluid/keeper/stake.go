@@ -235,6 +235,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 		return valAddr, err
 	}
 
+	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
 	return valAddr, nil
 }
 

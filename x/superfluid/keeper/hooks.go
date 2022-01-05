@@ -28,21 +28,26 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
 				pool, err := k.gk.GetPool(ctx, poolId)
 				if err != nil {
-					panic(err)
+					k.Logger(ctx).Error(err.Error())
+					k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, sdk.NewDec(0))
+					continue
 				}
+
 				// get OSMO amount
 				osmoPoolAsset, err := pool.GetPoolAsset(appparams.BaseCoinUnit)
 				if err != nil {
-					panic(err)
+					k.Logger(ctx).Error(err.Error())
+					k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, sdk.NewDec(0))
+					continue
 				}
 
 				twap = osmoPoolAsset.Token.Amount.Mul(priceMultiplier).ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
+				k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
 			} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 				// TODO: should get twap price from gamm module and use the price
 				// which pool should it use to calculate native token price?
-				panic("unsupported superfluid asset type")
+				k.Logger(ctx).Error("unsupported superfluid asset type")
 			}
-			k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
 		}
 
 		// Move delegation rewards to perpetual gauge
@@ -87,6 +92,9 @@ func (h Hooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uin
 	if !intermediaryAccAddr.Empty() {
 		_, err := h.k.SuperfluidUndelegate(ctx, lockID)
 		if err != nil {
+			h.k.Logger(ctx).Error(err.Error())
+			// TODO: should we panic here or not?
+			// If not panic, there could be the case user get infinite amount of rewards without actual lockup
 			panic(err)
 		}
 	}

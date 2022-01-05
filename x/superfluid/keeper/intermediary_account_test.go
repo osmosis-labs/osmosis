@@ -64,4 +64,11 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	// get account
 	addr = suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, 1)
 	suite.Require().Equal(addr.String(), acc.GetAddress().String())
+
+	// delete account
+	suite.app.SuperfluidKeeper.DeleteLockIdIntermediaryAccountConnection(suite.ctx, 1)
+
+	// get account
+	addr = suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, 1)
+	suite.Require().Equal(addr.String(), "")
 }

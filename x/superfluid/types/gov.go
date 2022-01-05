@@ -5,18 +5,17 @@ import (
 	"strings"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 const (
 	ProposalTypeSetSuperfluidAssets    = "SetSuperfluidAssets"
-	ProposalTypeAddSuperfluidAssets    = "AddSuperfluidAssets"
 	ProposalTypeRemoveSuperfluidAssets = "RemoveSuperfluidAssets"
 )
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeSetSuperfluidAssets)
 	govtypes.RegisterProposalTypeCodec(&SetSuperfluidAssetsProposal{}, "osmosis/SetSuperfluidAssetsProposal")
-	govtypes.RegisterProposalType(ProposalTypeAddSuperfluidAssets)
 	govtypes.RegisterProposalType(ProposalTypeRemoveSuperfluidAssets)
 	govtypes.RegisterProposalTypeCodec(&RemoveSuperfluidAssetsProposal{}, "osmosis/RemoveSuperfluidAssetsProposal")
 }
@@ -46,6 +45,17 @@ func (p *SetSuperfluidAssetsProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
 		return err
+	}
+
+	for _, asset := range p.Assets {
+		switch asset.AssetType {
+		case SuperfluidAssetTypeLPShare:
+			if err = gammtypes.ValidatePoolShareDenom(asset.Denom); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unsupported superfluid asset type")
+		}
 	}
 
 	return nil

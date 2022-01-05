@@ -50,7 +50,7 @@ type StakingKeeper interface {
 	GetUnbondingDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd types.UnbondingDelegation, found bool)
 }
 
-// StakingKeeper expected distribution keeper
+// DistrKeeper expected distribution keeper
 type DistrKeeper interface {
 	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
 }

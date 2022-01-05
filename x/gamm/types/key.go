@@ -36,6 +36,15 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 	return uint64(number)
 }
 
+func ValidatePoolShareDenom(denom string) error {
+	numberStr := strings.TrimLeft(denom, "gamm/pool/")
+	_, err := strconv.Atoi(numberStr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetDenomPrefix(denom string) []byte {
 	return append(KeyTotalLiquidity, []byte(denom)...)
 }

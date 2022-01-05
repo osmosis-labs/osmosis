@@ -300,6 +300,11 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for index, lockId := range tc.superUnbondingLockIds {
+				// get intermediary account
+				accAddr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lockId)
+				intermediaryAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, accAddr)
+				valAddr := intermediaryAcc.ValAddr
+
 				// superfluid undelegate
 				_, err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
 				if tc.expSuperUnbondingErr[index] {
@@ -308,10 +313,9 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				}
 				suite.Require().NoError(err)
 
-				// get intermediary account
-				accAddr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lockId)
-				intermediaryAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, accAddr)
-				valAddr := intermediaryAcc.ValAddr
+				// check lockId and intermediary account connection deletion
+				addr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lockId)
+				suite.Require().Equal(addr.String(), "")
 
 				// check bonding synthetic lockup deletion
 				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.StakingSuffix(valAddr))

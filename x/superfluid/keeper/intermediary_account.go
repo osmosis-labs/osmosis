@@ -32,8 +32,12 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
 
-	bz := prefixStore.Get(address)
 	acc := types.SuperfluidIntermediaryAccount{}
+	if address == nil {
+		return acc
+	}
+
+	bz := prefixStore.Get(address)
 	if bz == nil {
 		return acc
 	}
@@ -73,4 +77,10 @@ func (k Keeper) GetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId u
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
 	return prefixStore.Get(sdk.Uint64ToBigEndian(lockId))
+}
+
+func (k Keeper) DeleteLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
+	prefixStore.Delete(sdk.Uint64ToBigEndian(lockId))
 }
