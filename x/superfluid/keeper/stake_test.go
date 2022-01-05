@@ -24,6 +24,11 @@ type superfluidRedelegation struct {
 	newValIndex int64
 }
 
+type assetTwap struct {
+	denom string
+	price sdk.Dec
+}
+
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) lockuptypes.PeriodLock {
 	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
 	suite.Require().NoError(err)
@@ -456,13 +461,43 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
 		superDelegations []superfluidDelegation
+		newTwaps         []assetTwap
 		checkAccIndexes  []int64
 	}{
 		{
-			"happy path with single validator and delegator",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			"with single validator and single delegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 			[]int64{0},
+		},
+		{
+			"with single validator and multiple delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+			[]int64{0},
+		},
+		{
+			"with multiple validator and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+			[]int64{0, 1},
+		},
+		{
+			"with single validator and multiple denom superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/2"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
+			[]int64{0, 1},
+		},
+		{
+			"with multiple validators and multiple denom superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/2"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
+			[]int64{0, 1},
 		},
 	}
 
@@ -480,6 +515,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			// setup superfluid delegations
 			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+			intermediaryDels := []sdk.Dec{}
 
 			for _, intAccIndex := range tc.checkAccIndexes {
 				expAcc := intermediaryAccs[intAccIndex]
@@ -489,25 +525,32 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				// check delegation from intermediary account to validator
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
 				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, sdk.NewDec(19000000)) // 95% x 20 x 1000000
+				intermediaryDels = append(intermediaryDels, delegation.Shares)
+			}
 
-				// twap price change before refresh
-				suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
+			// twap price change before refresh
+			for _, twap := range tc.newTwaps {
+				suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, twap.denom, twap.price)
 				suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
 					Identifier:   params.RefreshEpochIdentifier,
 					CurrentEpoch: 2,
 				})
+			}
 
-				// refresh intermediary account delegations
-				suite.NotPanics(func() {
-					suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
-				})
+			// refresh intermediary account delegations
+			suite.NotPanics(func() {
+				suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
+			})
+
+			for index, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intermediaryAccs[intAccIndex]
+				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
+				suite.Require().NoError(err)
 
 				// check delegation changes
-				delegation, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
+				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
 				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, sdk.NewDec(9500000)) // 95% x 10 x 1000000
-
+				suite.Require().Equal(delegation.Shares, intermediaryDels[index].Quo(sdk.NewDec(2)))
 			}
 
 			// start new epoch
