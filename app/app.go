@@ -309,8 +309,9 @@ func NewOsmosisApp(
 	// we prefer to be more strict in what arguments the modules expect.
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
-	// NOTE: Any module instantiated in the module manager that is later modified
-	// must be passed by reference here.
+	// NOTE: All module / keeper changes should happen prior to this module.NewManager line being called.
+	// However in the event any changes do need to happen after this call, ensure that that keeper
+	// is only passed in its keeper form (not de-ref'd anywhere)
 	app.mm = module.NewManager(
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
