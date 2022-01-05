@@ -41,17 +41,17 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	encodingConfig := simapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := pool_incentives.NewAppModule(appCodec, app.PoolIncentivesKeeper)
+	am := pool_incentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper)
 
 	genesis := testGenesis
-	pool_incentives.InitGenesis(ctx, app.PoolIncentivesKeeper, &genesis)
+	pool_incentives.InitGenesis(ctx, *app.PoolIncentivesKeeper, &genesis)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
 		app := simapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := pool_incentives.NewAppModule(appCodec, app.PoolIncentivesKeeper)
+		am := pool_incentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }
@@ -61,7 +61,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	pool_incentives.InitGenesis(ctx, app.PoolIncentivesKeeper, &genesis)
+	pool_incentives.InitGenesis(ctx, *app.PoolIncentivesKeeper, &genesis)
 
 	params := app.PoolIncentivesKeeper.GetParams(ctx)
 	require.Equal(t, params, genesis.Params)
@@ -78,7 +78,7 @@ func TestExportGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	pool_incentives.InitGenesis(ctx, app.PoolIncentivesKeeper, &genesis)
+	pool_incentives.InitGenesis(ctx, *app.PoolIncentivesKeeper, &genesis)
 
 	durations := []time.Duration{
 		time.Second,
@@ -90,7 +90,7 @@ func TestExportGenesis(t *testing.T) {
 	savedDurations := app.PoolIncentivesKeeper.GetLockableDurations(ctx)
 	require.Equal(t, savedDurations, durations)
 
-	genesisExported := pool_incentives.ExportGenesis(ctx, app.PoolIncentivesKeeper)
+	genesisExported := pool_incentives.ExportGenesis(ctx, *app.PoolIncentivesKeeper)
 	require.Equal(t, genesisExported.Params, genesis.Params)
 	require.Equal(t, genesisExported.LockableDurations, durations)
 	require.Equal(t, genesisExported.DistrInfo, genesis.DistrInfo)

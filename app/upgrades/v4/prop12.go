@@ -10,7 +10,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 )
 
-func Prop12(ctx sdk.Context, bank *bankkeeper.Keeper, distr *distrkeeper.Keeper) {
+func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) {
 	payments := GetProp12Payments()
 
 	var total = int64(0)
@@ -25,7 +25,7 @@ func Prop12(ctx sdk.Context, bank *bankkeeper.Keeper, distr *distrkeeper.Keeper)
 			panic(err)
 		}
 		coins := sdk.NewCoins(sdk.NewInt64Coin("uosmo", amount))
-		if err := (*bank).SendCoinsFromModuleToAccount(ctx, "distribution", addr, coins); err != nil {
+		if err := bank.SendCoinsFromModuleToAccount(ctx, "distribution", addr, coins); err != nil {
 			panic(err)
 		}
 		total += amount

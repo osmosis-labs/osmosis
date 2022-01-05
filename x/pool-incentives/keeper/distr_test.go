@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, *suite.app.DistrKeeper)
 
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
 	suite.Equal("40000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, *suite.app.DistrKeeper)
 
 	feePool = suite.app.DistrKeeper.GetFeePool(suite.ctx)
 	suite.Equal("80000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, *suite.app.DistrKeeper)
 
 	suite.Equal("40000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
 
@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, *suite.app.DistrKeeper)
 
 	// It has very small margin of error.
 	suite.Equal("60000stake", suite.app.BankKeeper.GetBalance(suite.ctx, suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, *suite.app.DistrKeeper)
 
 	// check community pool balance increase
 	feePoolNew := suite.app.DistrKeeper.GetFeePool(suite.ctx)
@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, *suite.app.DistrKeeper)
 
 	// check community pool balance increase
 	feePoolNew = suite.app.DistrKeeper.GetFeePool(suite.ctx)
