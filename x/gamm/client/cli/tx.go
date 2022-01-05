@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -375,12 +376,14 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		})
 	}
 
-	msg := &types.MsgCreateBalancerPool{
-		Sender: clientCtx.GetFromAddress().String(),
-		PoolParams: types.BalancerPoolParams{
-			SwapFee: swapFee,
-			ExitFee: exitFee,
-		},
+	poolParams := &balancer.BalancerPoolParams{
+		SwapFee: swapFee,
+		ExitFee: exitFee,
+	}
+
+	msg := &balancer.MsgCreateBalancerPool{
+		Sender:             clientCtx.GetFromAddress().String(),
+		PoolParams:         poolParams,
 		PoolAssets:         poolAssets,
 		FuturePoolGovernor: pool.FutureGovernor,
 	}
@@ -410,7 +413,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 			})
 		}
 
-		smoothWeightParams := types.SmoothWeightChangeParams{
+		smoothWeightParams := balancer.SmoothWeightChangeParams{
 			Duration:           duration,
 			InitialPoolWeights: poolAssets,
 			TargetPoolWeights:  targetPoolAssets,

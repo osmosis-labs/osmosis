@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -17,7 +18,6 @@ import (
 
 	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
 
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -92,6 +92,8 @@ import (
 	"github.com/gorilla/mux"
 
 	appparams "github.com/osmosis-labs/osmosis/app/params"
+	v4 "github.com/osmosis-labs/osmosis/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/app/upgrades/v5"
 	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/x/claim"
 	claimkeeper "github.com/osmosis-labs/osmosis/x/claim/keeper"
@@ -130,7 +132,6 @@ import (
 )
 
 const appName = "OsmosisApp"
-const v5UpgradeName = "v5"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -169,7 +170,6 @@ var (
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
-		bech32ics20.AppModuleBasic{},
 		tokenfactory.AppModuleBasic{},
 	)
 
@@ -355,96 +355,12 @@ func NewOsmosisApp(
 		app.BaseApp,
 	)
 
-	// this configures a no-op upgrade handler for the v4 upgrade,
-	// which improves the lockup module's store management.
-	app.UpgradeKeeper.SetUpgradeHandler(
-		"v4", func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-			// // Upgrade all of the lock storages
-			// locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
-			// if err != nil {
-			// 	panic(err)
-			// }
-			// // clear all lockup module locking / unlocking queue items
-			// app.LockupKeeper.ClearAllLockRefKeys(ctx)
-			// app.LockupKeeper.ClearAllAccumulationStores(ctx)
-
-			// // reset all lock and references
-			// if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
-			// 	panic(err)
-			// }
-
-			// // configure upgrade for gamm module's pool creation fee param add
-			// app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
-			// // execute prop12. See implementation in
-			// prop12(ctx, app)
-			return vm, nil
-		})
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v5UpgradeName,
-		func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-			// Set IBC updates from {inside SDK} to v1
-			// https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md#in-place-store-migrations
-			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
-
-			totalLiquidity := app.GAMMKeeper.GetLegacyTotalLiquidity(ctx)
-			app.GAMMKeeper.DeleteLegacyTotalLiquidity(ctx)
-			app.GAMMKeeper.SetTotalLiquidity(ctx, totalLiquidity)
-
-			// Set all modules "old versions" to 1.
-			// Then the run migrations logic will handle running their upgrade logics
-			fromVM := make(map[string]uint64)
-			for moduleName := range app.mm.Modules {
-				fromVM[moduleName] = 1
-			}
-			// EXCEPT Auth needs to run _after_ staking (https://github.com/cosmos/cosmos-sdk/issues/10591),
-			// and it seems bank as well (https://github.com/provenance-io/provenance/blob/407c89a7d73854515894161e1526f9623a94c368/app/upgrades.go#L86-L122).
-			// So we do this by making auth run last.
-			// This is done by setting auth's consensus version to 2, running RunMigrations,
-			// then setting it back to 1, and then running migrations again.
-			fromVM[authtypes.ModuleName] = 2
-
-			// override versions for authz module as to not skip its InitGenesis
-			// for txfees module, we will override txfees ourselves.
-			delete(fromVM, authz.ModuleName)
-
-			newVM, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
-			if err != nil {
-				return nil, err
-			}
-
-			// Override txfees genesis here
-			txfees.InitGenesis(ctx, app.TxFeesKeeper, txfeestypes.GenesisState{
-				Basedenom: app.StakingKeeper.BondDenom(ctx),
-				Feetokens: []txfeestypes.FeeToken{},
-			})
-
-			// now update auth version back to v1, to run auth migration last
-			newVM[authtypes.ModuleName] = 1
-
-			return app.mm.RunMigrations(ctx, app.configurator, newVM)
-		})
-
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
-	}
-
-	if upgradeInfo.Name == v5UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := store.StoreUpgrades{
-			Added: []string{authz.ModuleName, txfees.ModuleName, bech32ibctypes.ModuleName},
-		}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
-
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
 		keys[ibchost.StoreKey],
 		app.GetSubspace(ibchost.ModuleName),
-		app.StakingKeeper,
+		&stakingKeeper,
 		app.UpgradeKeeper,
 		scopedIBCKeeper)
 
@@ -482,6 +398,8 @@ func NewOsmosisApp(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.ClaimKeeper = claimkeeper.NewKeeper(appCodec, keys[claimtypes.StoreKey], app.AccountKeeper, app.BankKeeper, stakingKeeper, app.DistrKeeper)
+
+	app.setupUpgrades()
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -621,9 +539,11 @@ func NewOsmosisApp(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
+		// Upgrades should be run _very_ first
+		upgradetypes.ModuleName,
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
 		epochstypes.ModuleName,
-		upgradetypes.ModuleName, minttypes.ModuleName, poolincentivestypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		minttypes.ModuleName, poolincentivestypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, capabilitytypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
@@ -737,7 +657,7 @@ func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	forks(ctx, app)
+	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
@@ -779,6 +699,39 @@ func (app *OsmosisApp) BlockedAddrs() map[string]bool {
 	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
+	}
+
+	// We block all OFAC-blocked ETH addresses from receiving tokens as well
+	// The list is sourced from: https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
+	ofacRawEthAddrs := []string{
+		"0x7F367cC41522cE07553e823bf3be79A889DEbe1B",
+		"0xd882cfc20f52f2599d84b8e8d58c7fb62cfe344b",
+		"0x901bb9583b24d97e995513c6778dc6888ab6870e",
+		"0xa7e5d5a720f06526557c513402f2e6b5fa20b008",
+		"0x8576acc5c05d6ce88f4e49bf65bdf0c62f91353c",
+		"0x1da5821544e25c636c1417ba96ade4cf6d2f9b5a",
+		"0x7Db418b5D567A4e0E8c59Ad71BE1FcE48f3E6107",
+		"0x72a5843cc08275C8171E582972Aa4fDa8C397B2A",
+		"0x7F19720A857F834887FC9A7bC0a0fBe7Fc7f8102",
+		"0x9f4cda013e354b8fc285bf4b9a60460cee7f7ea9",
+		"0x3cbded43efdaf0fc77b9c55f6fc9988fcc9b757d",
+		"0x2f389ce8bd8ff92de3402ffce4691d17fc4f6535",
+		"0x19aa5fe80d33a56d56c78e82ea5e50e5d80b4dff",
+		"0xe7aa314c77f4233c18c6cc84384a9247c0cf367b",
+		"0x308ed4b7b49797e1a98d3818bff6fe5385410370",
+		"0x2f389ce8bd8ff92de3402ffce4691d17fc4f6535",
+		"0x19aa5fe80d33a56d56c78e82ea5e50e5d80b4dff",
+		"0x67d40EE1A85bf4a4Bb7Ffae16De985e8427B6b45",
+		"0x6f1ca141a28907f78ebaa64fb83a9088b02a8352",
+		"0x6acdfba02d390b97ac2b2d42a63e85293bcc160e",
+		"0x48549a34ae37b12f6a30566245176994e17c6b4a",
+		"0x5512d943ed1f7c8a43f3435c85f7ab68b30121b0",
+		"0xc455f7fd3e0e12afd51fba5c106909934d8a0e4a",
+		"0xfec8a60023265364d066a1212fde3930f6ae8da7",
+	}
+	for _, addr := range ofacRawEthAddrs {
+		blockedAddrs[addr] = true
+		blockedAddrs[strings.ToLower(addr)] = true
 	}
 
 	return blockedAddrs
@@ -869,6 +822,37 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+}
+
+// RegisterTendermintService implements the Application.RegisterTendermintService method.
+func (app *OsmosisApp) setupUpgrades() {
+	// this configures a no-op upgrade handler for the v4 upgrade,
+	// which improves the lockup module's store management.
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v4.UpgradeName, v4.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			&app.BankKeeper, &app.DistrKeeper, &app.GAMMKeeper))
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v5.UpgradeName,
+		v5.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			&app.IBCKeeper.ConnectionKeeper, &app.TxFeesKeeper,
+			&app.GAMMKeeper, &app.StakingKeeper))
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	if upgradeInfo.Name == v5.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := store.StoreUpgrades{
+			Added: []string{authz.ModuleName, txfees.ModuleName, bech32ibctypes.ModuleName},
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

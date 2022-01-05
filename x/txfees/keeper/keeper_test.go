@@ -14,6 +14,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/app"
+	balancertypes "github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
@@ -99,7 +100,7 @@ func (suite *KeeperTestSuite) preparePool(assets []gammtypes.PoolAsset) uint64 {
 	suite.Require().Len(assets, 2)
 
 	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1,
-		gammtypes.BalancerPoolParams{
+		balancertypes.BalancerPoolParams{
 			SwapFee: sdk.NewDec(0),
 			ExitFee: sdk.NewDec(0),
 		}, assets, "")
