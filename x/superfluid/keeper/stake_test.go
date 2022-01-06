@@ -168,6 +168,8 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
 			[]sdk.Dec{sdk.NewDec(19000000), sdk.NewDec(19000000)}, // 95% x 2 x 1000000
 		},
+
+		// TODO: try delegating twice
 	}
 
 	for _, tc := range testCases {
@@ -375,6 +377,7 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 			[]superfluidRedelegation{{1, 0, 0}}, // lock1 => val0 -> val0
 			[]bool{true},
 		},
+		// TODO: try redelegating twice
 	}
 
 	for _, tc := range testCases {
@@ -505,6 +508,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		},
 		// TODO: add case for dust price
 		// TODO: add case for zero price
+		// TODO: try undelegating twice
 	}
 
 	for _, tc := range testCases {

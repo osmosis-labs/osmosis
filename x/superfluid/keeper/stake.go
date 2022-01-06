@@ -122,17 +122,17 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		return err
 	}
 	if lock.Coins.Len() != 1 {
-		return fmt.Errorf("multiple coins lock is not supported")
+		return types.ErrMultipleCoinsLockupNotSupported
 	}
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking
 	if lock.IsUnlocking() {
-		return fmt.Errorf("unbonding lockup is not allowed to participate in superfluid staking")
+		return types.ErrUnbondingLockupNotSupported
 	}
 
 	// length check
 	if lock.Duration < time.Hour*24*21 { // if less than 2 weeks bonding, skip
-		return fmt.Errorf("lockup does not have enough lock duration")
+		return types.ErrNotEnoughLockupDuration
 	}
 
 	// create intermediary account that converts LP token to OSMO
@@ -144,7 +144,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	mAddr := acc.GetAddress()
 	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
 	if twap.EpochTwapPrice.IsZero() {
-		return fmt.Errorf("not able to do superfluid staking if asset TWAP is zero")
+		return types.ErrZeroPriceAssetNotAllowed
 	}
 	// mint OSMO token based on TWAP of locked denom to denom module account
 	decAmt := twap.EpochTwapPrice.Mul(lock.Coins.AmountOf(acc.Denom).ToDec())
@@ -170,7 +170,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	}
 	validator, found := k.sk.GetValidator(ctx, valAddress)
 	if !found {
-		return fmt.Errorf("validator not found")
+		return stakingtypes.ErrNoValidatorFound
 	}
 	_, err = k.sk.Delegate(ctx, mAddr, amt, stakingtypes.Unbonded, validator, true)
 	if err != nil {
@@ -203,7 +203,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 	// Remove previously created synthetic lockup
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if intermediaryAccAddr.Empty() {
-		return nil, fmt.Errorf("lockID is not used for superfluid staking")
+		return nil, types.ErrNotSuperfluidUsedLockup
 	}
 	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	suffix := stakingSuffix(intermediaryAcc.ValAddr)
@@ -255,7 +255,7 @@ func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr 
 	}
 
 	if valAddr.String() == newValAddr {
-		return fmt.Errorf("redelegation to the same validator is not allowed")
+		return types.ErrSameValidatorRedelegation
 	}
 
 	k.SuperfluidDelegate(ctx, lockID, newValAddr)
