@@ -23,7 +23,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-const FlagSelectPoolIds = "breakdown_by_pool_ids"
+const FlagSelectPoolIds = "breakdown-by-pool-ids"
 
 type DeriveSnapshot struct {
 	NumberAccounts uint64                    `json:"num_accounts"`
@@ -307,7 +307,7 @@ Example:
 					account.LiquidBalances.Add(account.Bonded...), pools, selectBondedPoolIDs)
 				account.LiquidBalances = underlyingCoins(account.LiquidBalances, pools)
 				account.Bonded = underlyingCoins(account.Bonded, pools)
-				account.TotalBalances = account.TotalBalances.
+				account.TotalBalances = sdk.NewCoins().
 					Add(account.LiquidBalances...).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
@@ -335,7 +335,7 @@ Example:
 	}
 
 	cmd.Flags().String(FlagSelectPoolIds, "",
-		"Output a special breakdown for amount LP'd to the provided pools. Usage --breakdown_by_pool_ids=1,2,605")
+		"Output a special breakdown for amount LP'd to the provided pools. Usage --breakdown-by-pool-ids=1,2,605")
 
 	return cmd
 }
