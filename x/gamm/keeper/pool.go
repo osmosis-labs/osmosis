@@ -92,11 +92,12 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 }
 
 // CleanupBalancerPool destructs a pool and refund all the assets according to
-// the shares held by the accounts. CleanupBalancerPool should be called not during
+// the shares held by the accounts. CleanupBalancerPool should not be called during
 // the chain execution time, as it iterates the entire account balances.
+// TODO: once SDK v0.46.0, use https://github.com/cosmos/cosmos-sdk/pull/9611
 //
-// All locks on this pool share must be unlocked in prior. Execute LockupKeeper.ForceUnlock
-// on remaning locks before calling this function.
+// All locks on this pool share must be unlocked prior to execution. Use LockupKeeper.ForceUnlock
+// on remaining locks before calling this function.
 func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
 	pools := make(map[string]types.PoolI)
 	totalShares := make(map[string]sdk.Int)
