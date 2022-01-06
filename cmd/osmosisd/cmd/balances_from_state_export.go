@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -21,6 +22,8 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
+
+const FlagSelectPoolIds = "breakdown_by_pool_ids"
 
 type DeriveSnapshot struct {
 	NumberAccounts uint64                    `json:"num_accounts"`
@@ -161,9 +164,18 @@ Example:
 			}
 			snapshotOutput := args[1]
 
-			// TODO: Get this from a CLI flag
-			var selectBondedPoolIDs []uint64
-			selectBondedPoolIDs = []uint64{1}
+			// Get select bonded pool IDs from flag if its provided
+			selectPoolIdsStr, err := cmd.Flags().GetString(FlagSelectPoolIds)
+			if err != nil {
+				return err
+			}
+			selectBondedPoolIDs := []uint64{}
+			if selectPoolIdsStr != "" {
+				selectBondedPoolIDs, err = parseUint64SliceFromString(selectPoolIdsStr, ",")
+				if err != nil {
+					return err
+				}
+			}
 
 			authGenesis := authtypes.GenesisState{}
 			clientCtx.JSONCodec.MustUnmarshalJSON(genState["auth"], &authGenesis)
@@ -322,7 +334,25 @@ Example:
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(FlagSelectPoolIds, "",
+		"Output a special breakdown for amount LP'd to the provided pools. Usage --breakdown_by_pool_ids=1,2,605")
 
 	return cmd
+}
+
+// TODO: move somewhere common, make more commands use it
+func parseUint64SliceFromString(s string, seperator string) ([]uint64, error) {
+	var ids []uint64
+	for _, s := range strings.Split(s, seperator) {
+		s = strings.TrimSpace(s)
+		base := 10
+		bitlen := 64
+
+		parsed, err := strconv.ParseUint(s, base, bitlen)
+		if err != nil {
+			return []uint64{}, err
+		}
+		ids = append(ids, parsed)
+	}
+	return ids, nil
 }

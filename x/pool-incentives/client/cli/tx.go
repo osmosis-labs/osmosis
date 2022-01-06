@@ -45,6 +45,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
+			// TODO: Make a parse uint64 slice function
 			var gaugeIds []uint64
 			for _, gaugeIdStr := range strings.Split(args[0], ",") {
 				gaugeIdStr = strings.TrimSpace(gaugeIdStr)
