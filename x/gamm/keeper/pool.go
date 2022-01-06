@@ -147,12 +147,13 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedM
 
 		// Refund assets
 		for _, asset := range pool.GetAllPoolAssets() {
-			assetAmount := asset.Token.Amount.Mul(coin.Amount).Quo(totalShares[coin.Denom])
-			if assetAmount.IsZero() {
+			// lpShareEquivalentTokens = (amount in pool) * (your shares) / (total shares)
+			lpShareEquivalentTokens := asset.Token.Amount.Mul(coin.Amount).Quo(totalShares[coin.Denom])
+			if lpShareEquivalentTokens.IsZero() {
 				continue
 			}
 			err = k.bankKeeper.SendCoins(
-				ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, assetAmount}})
+				ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, lpShareEquivalentTokens}})
 			if err != nil {
 				return true
 			}
