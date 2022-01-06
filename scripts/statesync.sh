@@ -1,17 +1,20 @@
 
 #!/bin/bash
 # microtick and bitcanna contributed significantly here.
+# rocksdb doesn't work yet
 
 # PRINT EVERY COMMAND
-set -uxe
+set -ux
 
-export GOPATH=~/go
-export PATH=$PATH:~/go/bin
-go install ./...
+# uncomment the three lines below to build osmosis
+
+# export GOPATH=~/go
+# export PATH=$PATH:~/go/bin
+# go install -./...
 
 
 # MAKE HOME FOLDER AND GET GENESIS
-osmosisd init test
+osmosisd init test 
 wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
 
 INTERVAL=1500
@@ -33,7 +36,16 @@ export OSMOSISD_STATESYNC_ENABLE=true
 export OSMOSISD_STATESYNC_RPC_SERVERS="162.55.132.230:2001,162.55.132.230:2001"
 export OSMOSISD_STATESYNC_TRUST_HEIGHT=$BLOCK_HEIGHT
 export OSMOSISD_STATESYNC_TRUST_HASH=$TRUST_HASH
-export OSMOSISD_P2P_PERSISTENT_PEERS="63aba59a7da5197c0fbcdc13e760d7561791dca8@162.55.132.230:2000"
 
-osmosisd unsafe-reset-all
-osmosisd start
+# THIS WILL FAIL BECAUSE THE APP VERSION IS CORRECTLY SET IN OSMOSIS
+osmosisd start 
+
+# THIS WILL FIX THE APP VERSION, contributed by callum and claimens
+git clone https://github.com/tendermint/tendermint
+cd tendermint
+git checkout remotes/origin/callum/app-version
+go install ./...
+tendermint set-app-version 1 --home ~/.osmosisd
+
+# THERE, NOW IT'S SYNCED AND YOU CAN PLAY
+osmosisd start 

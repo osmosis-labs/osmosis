@@ -19,7 +19,7 @@ import (
 // https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
 func NewAnteHandler(
 	ak ante.AccountKeeper, bankKeeper authtypes.BankKeeper,
-	txFeesKeeper txfeeskeeper.Keeper, spotPriceCalculator txfeestypes.SpotPriceCalculator,
+	txFeesKeeper *txfeeskeeper.Keeper, spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
 	channelKeeper channelkeeper.Keeper,
@@ -30,7 +30,7 @@ func NewAnteHandler(
 		NewMempoolMaxGasPerTxDecorator(),
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
-		txfeeskeeper.NewMempoolFeeDecorator(txFeesKeeper),
+		txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper),
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),

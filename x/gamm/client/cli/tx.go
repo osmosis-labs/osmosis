@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -74,7 +75,7 @@ Where pool.json contains:
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreatePoolMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildCreateBalancerPoolMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -331,7 +332,7 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 	return cmd
 }
 
-func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 
 	pool, err := parseCreatePoolFlags(fs)
 	if err != nil {
@@ -375,12 +376,14 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		})
 	}
 
-	msg := &types.MsgCreateBalancerPool{
-		Sender: clientCtx.GetFromAddress().String(),
-		PoolParams: types.BalancerPoolParams{
-			SwapFee: swapFee,
-			ExitFee: exitFee,
-		},
+	poolParams := &balancer.BalancerPoolParams{
+		SwapFee: swapFee,
+		ExitFee: exitFee,
+	}
+
+	msg := &balancer.MsgCreateBalancerPool{
+		Sender:             clientCtx.GetFromAddress().String(),
+		PoolParams:         poolParams,
 		PoolAssets:         poolAssets,
 		FuturePoolGovernor: pool.FutureGovernor,
 	}
@@ -410,7 +413,7 @@ func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 			})
 		}
 
-		smoothWeightParams := types.SmoothWeightChangeParams{
+		smoothWeightParams := balancer.SmoothWeightChangeParams{
 			Duration:           duration,
 			InitialPoolWeights: poolAssets,
 			TargetPoolWeights:  targetPoolAssets,

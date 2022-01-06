@@ -4,12 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 // NewHandler returns a handler for "gamm" type messages.
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	msgServer := keeper.NewMsgServerImpl(k)
+	msgBalancerServer := keeper.NewBalancerMsgServerImpl(k)
 
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
@@ -23,8 +25,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.ExitPool(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgCreateBalancerPool:
-			res, err := msgServer.CreateBalancerPool(sdk.WrapSDKContext(ctx), msg)
+		case *balancer.MsgCreateBalancerPool:
+			res, err := msgBalancerServer.CreateBalancerPool(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgSwapExactAmountIn:

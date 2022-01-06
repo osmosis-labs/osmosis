@@ -6,10 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 )
 
-func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
+func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	type param struct {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
+func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	type param struct {
 		tokenInDenom     string
 		tokenInMaxAmount sdk.Int
@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestActivePoolSwap() {
+func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 	type testCase struct {
 		blockTime  time.Time
 		expectPass bool
@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestActivePoolSwap() {
 				panic(err)
 			}
 
-			poolId := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
+			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.BalancerPoolParams{
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})
