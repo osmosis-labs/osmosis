@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,9 +22,12 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 	for _, lock := range locks {
 		// Only single token lock is allowed here
 		slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
-		_, err = k.lk.SlashTokensFromLockByID(ctx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
+		cacheCtx, write := ctx.CacheContext()
+		_, err = k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
 		if err != nil {
-			panic(err)
+			k.Logger(ctx).Error(err.Error())
+		} else {
+			write()
 		}
 	}
 }
@@ -40,7 +44,8 @@ func (k Keeper) SlashLockupsForSlashedOnDelegation(ctx sdk.Context) {
 
 		validator, found := k.sk.GetValidator(ctx, valAddress)
 		if !found {
-			panic("validator not found")
+			k.Logger(ctx).Error(fmt.Sprintf("validator not found or %s", acc.ValAddr))
+			continue
 		}
 
 		// get delegation from intermediary account to the validator
@@ -75,9 +80,12 @@ func (k Keeper) SlashLockupsForSlashedOnDelegation(ctx sdk.Context) {
 			for _, lock := range locks {
 				// Only single token lock is allowed here
 				slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
-				_, err = k.lk.SlashTokensFromLockByID(ctx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
+				cacheCtx, write := ctx.CacheContext()
+				_, err = k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
 				if err != nil {
-					panic(err)
+					k.Logger(ctx).Error(err.Error())
+				} else {
+					write()
 				}
 			}
 		}

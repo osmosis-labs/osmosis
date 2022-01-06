@@ -503,6 +503,8 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
 			[]int64{0, 1},
 		},
+		// TODO: add case for dust price
+		// TODO: add case for zero price
 	}
 
 	for _, tc := range testCases {

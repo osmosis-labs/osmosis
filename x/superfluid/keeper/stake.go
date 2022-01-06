@@ -45,7 +45,8 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 
 		validator, found := k.sk.GetValidator(ctx, valAddress)
 		if !found {
-			panic("validator not found")
+			k.Logger(ctx).Error(fmt.Sprintf("validator not found or %s", acc.ValAddr))
+			continue
 		}
 
 		// undelegate full amount from the validator
@@ -91,14 +92,22 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		asset := k.GetSuperfluidAsset(ctx, acc.Denom)
 		amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 
+		if amt.IsZero() {
+			continue
+		}
+
 		coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
 		k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
 		k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
 
 		// make delegation from module account to the validator
-		_, err = k.sk.Delegate(ctx, mAddr, amt, stakingtypes.Unbonded, validator, true)
+		cacheCtx, write := ctx.CacheContext()
+		_, err = k.sk.Delegate(cacheCtx, mAddr, amt, stakingtypes.Unbonded, validator, true)
 		if err != nil {
-			panic(err)
+			// this could happen when validator is fully slashed
+			k.Logger(ctx).Error(err.Error())
+		} else {
+			write()
 		}
 	}
 }
