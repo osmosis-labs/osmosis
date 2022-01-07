@@ -1,4 +1,4 @@
 package keeper
 
 var StakingSuffix = stakingSuffix
-var UntakingSuffix = unstakingSuffix
+var UnstakingSuffix = unstakingSuffix

@@ -113,6 +113,11 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 }
 
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr string) error {
+	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	if !intermediaryAccAddr.Empty() {
+		return types.ErrAlreadyUsedSuperfluidLockup
+	}
+
 	// Register a synthetic lockup for superfluid staking
 	suffix := stakingSuffix(valAddr)
 	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, 0)
@@ -237,11 +242,15 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 		ctx, intermediaryAcc.GetAddress(), valAddr, amt,
 	)
 
-	// Note: undelegated amount is automatically sent to intermediary account's free balance
-	// it is burnt on epoch interval
-	_, err = k.sk.Undelegate(ctx, intermediaryAcc.GetAddress(), valAddr, shares)
 	if err != nil {
-		return valAddr, err
+		k.Logger(ctx).Error(err.Error())
+	} else if shares.IsPositive() {
+		// Note: undelegated amount is automatically sent to intermediary account's free balance
+		// it is burnt on epoch interval
+		_, err = k.sk.Undelegate(ctx, intermediaryAcc.GetAddress(), valAddr, shares)
+		if err != nil {
+			return valAddr, err
+		}
 	}
 
 	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
@@ -249,6 +258,10 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 }
 
 func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr string) error {
+	// TODO: prevent too many times redelegation as in Cosmos SDK?
+	// TODO: preventing circular redelegation is fine?
+	// Currently if unbonding lockup is available from a specific validator, not able redelegate or undelegate again
+
 	valAddr, err := k.SuperfluidUndelegate(ctx, lockID)
 	if err != nil {
 		return err

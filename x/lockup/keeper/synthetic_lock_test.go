@@ -155,6 +155,11 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
 
+	// try creating synthetic lockup with same lock and suffix
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", time.Second)
+	suite.Require().Error(err)
+
+	// delete synthetic lockup
 	err = suite.app.LockupKeeper.DeleteSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
 	suite.Require().NoError(err)
 

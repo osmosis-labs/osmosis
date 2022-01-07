@@ -12,4 +12,5 @@ var (
 	ErrZeroPriceAssetNotAllowed        = sdkerrors.Register(ModuleName, 4, "not able to do superfluid staking if asset TWAP is zero")
 	ErrNotSuperfluidUsedLockup         = sdkerrors.Register(ModuleName, 5, "lockup is not used for superfluid staking")
 	ErrSameValidatorRedelegation       = sdkerrors.Register(ModuleName, 6, "redelegation to the same validator is not allowed")
+	ErrAlreadyUsedSuperfluidLockup     = sdkerrors.Register(ModuleName, 7, "lockup is already being used for superfluid staking")
 )
