@@ -56,6 +56,7 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 )
@@ -260,7 +261,8 @@ func (app *OsmosisApp) InitNormalKeepers() {
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(*app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*app.PoolIncentivesKeeper)).
-		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IBCKeeper))
+		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IBCKeeper)).
+		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper))
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey],
