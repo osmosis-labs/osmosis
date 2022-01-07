@@ -94,13 +94,7 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.MinGasPrices = "0uosmo"
 
-	customAppConfig := CustomAppConfig{
-		Config: *srvCfg,
-	}
-
-	customAppTemplate := serverconfig.DefaultConfigTemplate
-
-	return customAppTemplate, customAppConfig
+	return serverconfig.DefaultConfigTemplate, CustomAppConfig{Config: *srvCfg}
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
