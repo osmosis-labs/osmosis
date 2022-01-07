@@ -37,6 +37,9 @@ func DeconstructDenom(denom string) (creator string, nonce string, err error) {
 		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "Invalid creator address (%s)", err)
 	}
 
+	// This is to for if there is a denom with a slash in its nonce. For example,
+	// when we did the split, we'd turn factory/sunnyaddr/atomderivative/sikka into ["factory", "sunnyaddr", "atomderivative", "sikka"]
+	// So we have to join [2:] with a "/" as the delimiter to get back the correct nonce which should be "atomderivative/sikka"
 	nonce = strings.Join(strParts[2:], "/")
 
 	return creator, nonce, nil

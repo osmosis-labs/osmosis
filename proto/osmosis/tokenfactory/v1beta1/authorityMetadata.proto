@@ -9,5 +9,6 @@ option go_package = "github.com/osmosis-labs/osmosis/x/tokenfactory/types";
 message DenomAuthorityMetadata {
   option (gogoproto.equal) = true;
 
+  // Can be empty for no admin, or a valid osmosis address
   string Admin = 1 [ (gogoproto.moretags) = "yaml:\"admin\"" ];
 }
