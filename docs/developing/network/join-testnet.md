@@ -101,16 +101,16 @@ Download the latest chain data from a snapshot provider. In this example, I will
 Download liblz4-tool to handle the compressed file:
 
 ```bash
-sudo apt-get install wget liblz4-tool aria2 -y
+sudo apt-get install wget liblz4-tool aria2 pixz -y
 ```
 
 Download, decompress, and replace the chain data:
 
 ```bash
 cd $HOME/.osmosisd/
-wget -O - https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest.tar.xz | xz -d -v | tar xvf -
+wget https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest.tar.xz
+tar -I'pixz' -xvf osmosis-testnet-mp20-latest.tar.xz --strip-components=4
 ```
-
 
 ## Set Up Osmosis Service
 
