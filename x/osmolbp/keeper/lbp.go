@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/x/osmolbp/proto"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 )
 
 // Returns the round number since lbp `start`.
@@ -14,7 +14,7 @@ import (
 // If now == start return 0.
 // if now == start + ROUND return 1...
 // if now > end return round the round at end.
-func currentRound(p *proto.LBP, now time.Time) uint64 {
+func currentRound(p *api.LBP, now time.Time) uint64 {
 	if now.Before(p.StartTime) {
 		return 0
 	}
@@ -22,11 +22,11 @@ func currentRound(p *proto.LBP, now time.Time) uint64 {
 		now = p.EndTime
 		// NOTE: add adjustment if round
 	}
-	return uint64(now.Sub(p.EndTime) / proto.ROUND)
+	return uint64(now.Sub(p.EndTime) / api.ROUND)
 }
 
 // pingPool updates the accumulators based on the current round
-func pingPool(p *proto.LBP, round uint64) {
+func pingPool(p *api.LBP, round uint64) {
 	// check if we started or we already pinged in the same round
 	// note: we don't update the accumulated values based on the updates in the current round.
 	if p.Round == round || round <= 0 {
@@ -52,7 +52,7 @@ func pingPool(p *proto.LBP, round uint64) {
 }
 
 // pingUser updates user purchase based on the pool accumulator in the current round.
-func pingUser(u *proto.UserPosition, round uint64, accumulator sdk.Int) {
+func pingUser(u *api.UserPosition, round uint64, accumulator sdk.Int) {
 	// return if we didn't started or we already updated based on the current accumulator
 	if round <= 0 || u.Accumulator.GTE(accumulator) {
 		return
@@ -64,7 +64,7 @@ func pingUser(u *proto.UserPosition, round uint64, accumulator sdk.Int) {
 	// TODO: need to decrease the user stake and move it to the pool treasury!
 }
 
-func stakeInPool(p *proto.LBP, u *proto.UserPosition, amount sdk.Int, now time.Time) {
+func stakeInPool(p *api.LBP, u *api.UserPosition, amount sdk.Int, now time.Time) {
 	round := currentRound(p, now)
 	// TODO: maybe we should return error?
 	if round >= p.EndRound {
@@ -80,7 +80,7 @@ func stakeInPool(p *proto.LBP, u *proto.UserPosition, amount sdk.Int, now time.T
 	p.IncomeRate.Add(amount.Quo(remainingRounds))
 }
 
-func unstakeFromPool(p *proto.LBP, u *proto.UserPosition, amount sdk.Int, now time.Time) error {
+func unstakeFromPool(p *api.LBP, u *api.UserPosition, amount sdk.Int, now time.Time) error {
 	round := currentRound(p, now)
 	pingPool(p, round)
 	pingUser(u, round, p.AccumulatorOut)

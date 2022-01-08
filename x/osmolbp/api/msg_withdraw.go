@@ -1,4 +1,4 @@
-package proto
+package api
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

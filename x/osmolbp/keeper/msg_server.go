@@ -7,40 +7,41 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/osmosis-labs/osmosis/x/osmolbp"
-	"github.com/osmosis-labs/osmosis/x/osmolbp/proto"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 )
 
-var _ proto.MsgServer = Keeper{}
+var _ api.MsgServer = Keeper{}
 
-func (k Keeper) CreateLBP(goCtx context.Context, msg *proto.MsgCreateLBP) (*proto.MsgCreateLBPResponse, error) {
+func (k Keeper) CreateLBP(goCtx context.Context, msg *api.MsgCreateLBP) (*api.MsgCreateLBPResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	id, err := k.createLBP(msg, ctx.BlockTime(), store)
 	if err != nil {
 		return nil, err
 	}
-	err = ctx.EventManager().EmitTypedEvent(&proto.EventCreateLBP{
+	err = ctx.EventManager().EmitTypedEvent(&api.EventCreateLBP{
 		Id:       id,
 		Creator:  msg.Creator,
 		TokenIn:  msg.TokenIn,
 		TokenOut: msg.TokenOut,
 	})
-	return &proto.MsgCreateLBPResponse{PoolId: id}, err
+	return &api.MsgCreateLBPResponse{PoolId: id}, err
 }
 
-func (k Keeper) createLBP(msg *proto.MsgCreateLBP, now time.Time, store storetypes.KVStore) (uint64, error) {
+func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes.KVStore) (uint64, error) {
 	if err := msg.Validate(now); err != nil {
 		return 0, err
 	}
 	id, idBz := k.nextPoolID(store)
-	p := proto.LBP{
+	p := api.LBP{
 		TokenOut:       msg.TokenOut,
 		TokenIn:        msg.TokenIn,
 		StartTime:      msg.StartTime,
 		EndTime:        msg.StartTime.Add(msg.Duration),
-		Rate:           msg.InitialDeposit.Amount.Quo(sdk.NewInt(int64(msg.Duration / proto.ROUND))),
+		Rate:           msg.InitialDeposit.Amount.Quo(sdk.NewInt(int64(msg.Duration / api.ROUND))),
 		AccumulatorOut: sdk.ZeroInt(),
 		Round:          0,
 		Staked:         sdk.ZeroInt(),
@@ -50,21 +51,21 @@ func (k Keeper) createLBP(msg *proto.MsgCreateLBP, now time.Time, store storetyp
 
 }
 
-func (k Keeper) Deposit(goCtx context.Context, msg *proto.MsgDeposit) (*proto.EmptyResponse, error) {
+func (k Keeper) Subscribe(goCtx context.Context, msg *api.MsgSubscribe) (*emptypb.Empty, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	if err := k.deposit(ctx, msg, store); err != nil {
 		return nil, err
 	}
-	err := ctx.EventManager().EmitTypedEvent(&proto.EventDeposit{
+	err := ctx.EventManager().EmitTypedEvent(&api.EventDeposit{
 		Sender: msg.Sender,
 		PoolId: msg.PoolId,
 		Amount: msg.Amount.String(),
 	})
-	return &proto.EmptyResponse{}, err
+	return &emptypb.Empty{}, err
 }
 
-func (k Keeper) deposit(ctx sdk.Context, msg *proto.MsgDeposit, store storetypes.KVStore) error {
+func (k Keeper) deposit(ctx sdk.Context, msg *api.MsgSubscribe, store storetypes.KVStore) error {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return err
@@ -99,21 +100,21 @@ func (k Keeper) deposit(ctx sdk.Context, msg *proto.MsgDeposit, store storetypes
 	return nil
 }
 
-func (k Keeper) Withdraw(goCtx context.Context, msg *proto.MsgWithdraw) (*proto.EmptyResponse, error) {
+func (k Keeper) Withdraw(goCtx context.Context, msg *api.MsgWithdraw) (*emptypb.Empty, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	if err := k.withdraw(ctx, msg, store); err != nil {
 		return nil, err
 	}
-	err := ctx.EventManager().EmitTypedEvent(&proto.EventWithdraw{
+	err := ctx.EventManager().EmitTypedEvent(&api.EventWithdraw{
 		Sender: msg.Sender,
 		PoolId: msg.PoolId,
 		// TODO: Purchased: ,
 	})
-	return &proto.EmptyResponse{}, err
+	return &emptypb.Empty{}, err
 }
 
-func (k Keeper) withdraw(ctx sdk.Context, msg *proto.MsgWithdraw, store storetypes.KVStore) error {
+func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes.KVStore) error {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return err

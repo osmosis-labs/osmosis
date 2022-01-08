@@ -9,15 +9,15 @@ import "google/protobuf/empty.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/proto";
+option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/api";
 option (gogoproto.goproto_getters_all) = false;
 
 service Msg {
   // CreateLBP creates new liquidity bootstraping pool.
   rpc CreateLBP(MsgCreateLBP) returns (MsgCreateLBPResponse);
 
-  // Deposit tokens in a pool to join the sale.
-  rpc Deposit(MsgDeposit) returns (google.protobuf.Empty);
+  // Subscribe to a token sale
+  rpc Subscribe(MsgSubscribe) returns (google.protobuf.Empty);
 
   // ExitLBP withdraws the purchased tokens from the pool and remained staked
   // tokens.
@@ -52,7 +52,7 @@ message MsgCreateLBPResponse {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
-message MsgDeposit {
+message MsgSubscribe {
   // sender is an account address adding a deposit
   string sender = 1;
   // pool_id is a valid ID of this module LBP

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/x/osmolbp/proto"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 )
 
 var (
@@ -20,18 +20,18 @@ var (
 	poolRes byte = 100 // poolId -> reserves  (token_out balances)
 )
 
-func (k *Keeper) savePool(modulestore storetypes.KVStore, id []byte, p *proto.LBP) {
+func (k *Keeper) savePool(modulestore storetypes.KVStore, id []byte, p *api.LBP) {
 	store := k.lbpStore(modulestore)
 	store.Set(id, k.cdc.MustMarshal(p))
 }
 
 // returns pool, pool bytes id, error
-func (k *Keeper) getPool(modulestore storetypes.KVStore, id uint64) (proto.LBP, []byte, error) {
+func (k *Keeper) getPool(modulestore storetypes.KVStore, id uint64) (api.LBP, []byte, error) {
 	store := k.lbpStore(modulestore)
 	idBz := make([]byte, 8)
 	binary.BigEndian.PutUint64(idBz, id)
 	bz := store.Get(idBz)
-	var p proto.LBP
+	var p api.LBP
 	if bz == nil {
 		return p, idBz, errors.Wrap(errors.ErrKeyNotFound, "pool doesn't exist")
 	}
@@ -40,10 +40,10 @@ func (k *Keeper) getPool(modulestore storetypes.KVStore, id uint64) (proto.LBP, 
 }
 
 // returns pool, found (bool), error
-func (k *Keeper) getUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress) (proto.UserPosition, bool, error) {
+func (k *Keeper) getUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress) (api.UserPosition, bool, error) {
 	store := k.userVaultStore(modulestore, poolId)
 	bz := store.Get(addr)
-	var v proto.UserPosition
+	var v api.UserPosition
 	if bz == nil {
 		return v, false, nil
 	}
@@ -52,7 +52,7 @@ func (k *Keeper) getUserVault(modulestore storetypes.KVStore, poolId []byte, add
 }
 
 // returns pool, found (bool), error
-func (k *Keeper) saveUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress, v *proto.UserPosition) {
+func (k *Keeper) saveUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress, v *api.UserPosition) {
 	store := k.userVaultStore(modulestore, poolId)
 	store.Set(addr, k.cdc.MustMarshal(v))
 }

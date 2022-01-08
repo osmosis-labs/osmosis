@@ -5,7 +5,7 @@ package osmosis.osmolbp.v1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/proto";
+option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/api";
 option (gogoproto.goproto_getters_all) = false;
 
 message EventCreateLBP {
