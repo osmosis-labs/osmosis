@@ -18,7 +18,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 	chainStartTime := ctx.BlockTime()
 	chainStartHeight := ctx.BlockHeight()
 
-	genesis := epochs.ExportGenesis(ctx, app.EpochsKeeper)
+	genesis := epochs.ExportGenesis(ctx, *app.EpochsKeeper)
 	require.Len(t, genesis.Epochs, 2)
 
 	require.Equal(t, genesis.Epochs[0].Identifier, "day")
@@ -91,7 +91,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 		},
 	}
 
-	epochs.InitGenesis(ctx, app.EpochsKeeper, genesisState)
+	epochs.InitGenesis(ctx, *app.EpochsKeeper, genesisState)
 	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.Identifier, "monthly")
 	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())

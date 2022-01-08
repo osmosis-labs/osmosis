@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin)
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, *suite.app.DistrKeeper)
 
 	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
 	feeCollector := suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 	err = mintKeeper.DistributeMintedCoin(suite.ctx, mintCoin)
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, suite.app.DistrKeeper)
+	distribution.BeginBlocker(suite.ctx, abci.RequestBeginBlock{}, *suite.app.DistrKeeper)
 
 	feePool = suite.app.DistrKeeper.GetFeePool(suite.ctx)
 	suite.Equal(

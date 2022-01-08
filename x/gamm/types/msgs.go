@@ -11,7 +11,6 @@ import (
 
 // constants
 const (
-	TypeMsgCreatePool              = "create_pool"
 	TypeMsgSwapExactAmountIn       = "swap_exact_amount_in"
 	TypeMsgSwapExactAmountOut      = "swap_exact_amount_out"
 	TypeMsgJoinPool                = "join_pool"
@@ -61,45 +60,6 @@ func ValidateFutureGovernor(governor string) error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 	}
 	return nil
-}
-
-var _ sdk.Msg = &MsgCreateBalancerPool{}
-
-func (msg MsgCreateBalancerPool) Route() string { return RouterKey }
-func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreatePool }
-func (msg MsgCreateBalancerPool) ValidateBasic() error {
-
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
-	}
-
-	err = ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
-	if err != nil {
-		return err
-	}
-
-	err = msg.PoolParams.Validate(msg.PoolAssets)
-	if err != nil {
-		return err
-	}
-
-	// validation for future owner
-	if err = ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
-		return err
-	}
-
-	return nil
-}
-func (msg MsgCreateBalancerPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
 }
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}

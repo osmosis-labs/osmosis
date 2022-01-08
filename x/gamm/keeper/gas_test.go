@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	balanacertypes "github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -52,7 +53,7 @@ func (suite *KeeperTestSuite) measureAvgAndMaxJoinPoolGas(
 // so we can easily track changes
 func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.SetupTest()
-	poolId := suite.preparePool()
+	poolId := suite.prepareBalancerPool()
 
 	poolIDFn := func(int) uint64 { return poolId }
 	minShareOutAmountFn := func(int) sdk.Int { return minShareOutAmount }
@@ -70,7 +71,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.Require().NoError(err)
 
 	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, poolId, minShareOutAmount, defaultCoins)
-	suite.Assert().Equal(65580, int(firstJoinGas))
+	suite.Assert().Equal(65679, int(firstJoinGas))
 
 	for i := 1; i < startAveragingAt; i++ {
 		err := suite.app.GAMMKeeper.JoinPool(suite.ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
@@ -79,8 +80,8 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 
 	avgGas, maxGas := suite.measureAvgAndMaxJoinPoolGas(totalNumJoins, defaultAddr, poolIDFn, minShareOutAmountFn, maxCoinsFn)
 	fmt.Printf("test deets: total %d of pools joined, begin average at %d\n", totalNumJoins, startAveragingAt)
-	suite.Assert().Equal(67095, int(avgGas), "average gas / join pool")
-	suite.Assert().Equal(67194, int(maxGas), "max gas / join pool")
+	suite.Assert().Equal(67194, int(avgGas), "average gas / join pool")
+	suite.Assert().Equal(67293, int(maxGas), "max gas / join pool")
 }
 
 func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
@@ -102,7 +103,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, coins)
 	suite.Require().NoError(err)
 
-	defaultBalancerPoolParams := types.BalancerPoolParams{
+	defaultBalancerPoolParams := balanacertypes.BalancerPoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	}
