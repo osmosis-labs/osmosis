@@ -4,6 +4,7 @@ package osmosis.osmolbp.v1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
@@ -16,25 +17,12 @@ service Msg {
   rpc CreateLBP(MsgCreateLBP) returns (MsgCreateLBPResponse);
 
   // Deposit tokens in a pool to join the sale.
-  rpc Deposit(MsgDeposit) returns (EmptyResponse);
+  rpc Deposit(MsgDeposit) returns (google.protobuf.Empty);
 
   // ExitLBP withdraws the purchased tokens from the pool and remained staked
   // tokens.
-  rpc Withdraw(MsgWithdraw) returns (EmptyResponse);
+  rpc Withdraw(MsgWithdraw) returns (google.protobuf.Empty);
 }
-
-// Default response (empty)
-message EmptyResponse {}
-
-// message MsgDeposit {
-//   // TODO: add [(cosmos_proto.scalar) = "cosmos.AddressString"]
-
-//   // sender is an account address making a deposit for setting up a pool.
-//   string sender = 1 ;
-//   repeated cosmos.base.v1beta1.Coin amount = 2
-//     [(gogoproto.nullable) = false, (gogoproto.castrepeated) =
-//     "github.com/cosmos/cosmos-sdk/types.Coins"];
-// }
 
 message MsgCreateLBP {
   // Pool creator
