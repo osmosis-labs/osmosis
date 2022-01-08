@@ -37,10 +37,12 @@ message LBP {
   ];
 
   // Round number when the pool was last time updated.
-  uint64 Round = 8;
+  uint64 round = 8;
 
   // Last round of the LBP;
-  uint64 EndRound = 9;
+  uint64 end_round = 9;
+
+  //// old [start]
 
   // Running sum of sold coins per unit of staked coins (token_out)
   string accumulator_out = 10 [
@@ -66,7 +68,7 @@ message LBP {
     (gogoproto.nullable) = false
   ];
 
-  // accounting attributes
+  //// old [end]
 
   string out_remaining = 20 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -78,6 +80,7 @@ message LBP {
     (gogoproto.nullable) = false
   ];
 
+  // out token per share
   string out_per_share = 22 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
@@ -114,20 +117,36 @@ message UserPosition {
     (gogoproto.nullable) = false
   ];
 
+  // total amount of spent coins (token_in)
+  string spent = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // new
+
+  string shares = 10 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
   // total number of currently staked tokens
   string staked = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
-  // Amount of accumulated, not withdrawn purchased tokens (token_out)
-  string purchased = 3 [
+  string spent_in_without_shares = 12 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  // last token/share ratio
+  string rate = 13 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
-  // total amount of spent coins (token_in)
-  string spent = 4 [
+  // Amount of accumulated, not withdrawn purchased tokens (token_out)
+  string purchased = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];

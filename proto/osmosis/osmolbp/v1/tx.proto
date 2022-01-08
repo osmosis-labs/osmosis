@@ -57,10 +57,9 @@ message MsgSubscribe {
   string sender = 1;
   // pool_id is a valid ID of this module LBP
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  // number of pool.token_in staked by a user. Coins must be firstly deposited.
-  // TODO: add (cosmos_proto.scalar) = "cosmos.Int",
+  // number of pool.token_in staked by a user.
   string amount = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 }

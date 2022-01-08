@@ -18,8 +18,12 @@ func (msg *MsgCreateLBP) ValidateBasic() error {
 func (msg *MsgCreateLBP) validate() []string {
 	var errmsgs []string
 	var d = int64(msg.Duration / ROUND)
-	if d > 1 {
-		errmsgs = append(errmsgs, "`duration` must be at least 1 second")
+	if d < 10 {
+		errmsgs = append(errmsgs, "`duration` must be at least 10 rounds")
+	}
+	const maxDuration = ROUND * 24 * 3600 * 356 * 10
+	if d > int64(maxDuration) {
+		errmsgs = append(errmsgs, "`duration` must not be bigger than "+maxDuration.String())
 	}
 	if msg.TokenIn == msg.TokenOut {
 		errmsgs = append(errmsgs, "`token_in` must be different than `token_out`")

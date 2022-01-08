@@ -39,27 +39,40 @@ func (k *Keeper) getPool(modulestore storetypes.KVStore, id uint64) (api.LBP, []
 	return p, idBz, err
 }
 
-// returns pool, found (bool), error
-func (k *Keeper) getUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress) (api.UserPosition, bool, error) {
-	store := k.userVaultStore(modulestore, poolId)
-	bz := store.Get(addr)
+// gets or creates (when create == true) user position object
+// returns pool, error
+// return errors.NotFound whene the object is not there and create == false
+func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, poolId []byte, user sdk.AccAddress, create bool) (api.UserPosition, error) {
+	store := k.userPositionStore(modulestore, poolId)
+	bz := store.Get(user)
 	var v api.UserPosition
 	if bz == nil {
-		return v, false, nil
+		if create == false {
+			return v, errors.ErrNotFound.Wrap("user position for given LBP is not found")
+		}
+		return api.UserPosition{
+			Accumulator:          sdk.ZeroInt(),
+			Spent:                sdk.ZeroInt(),
+			Shares:               sdk.ZeroInt(),
+			Staked:               sdk.ZeroInt(),
+			SpentInWithoutShares: sdk.ZeroInt(),
+			Rate:                 sdk.ZeroInt(),
+			Purchased:            sdk.ZeroInt(),
+		}, nil
 	}
 	err := k.cdc.Unmarshal(bz, &v)
-	return v, true, err
+	return v, err
 }
 
 // returns pool, found (bool), error
 func (k *Keeper) saveUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress, v *api.UserPosition) {
-	store := k.userVaultStore(modulestore, poolId)
+	store := k.userPositionStore(modulestore, poolId)
 	store.Set(addr, k.cdc.MustMarshal(v))
 }
 
 // returns pool, found (bool), error
 func (k *Keeper) delUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress) {
-	store := k.userVaultStore(modulestore, poolId)
+	store := k.userPositionStore(modulestore, poolId)
 	store.Delete(addr)
 }
 
@@ -67,7 +80,7 @@ func (k Keeper) lbpStore(moduleStore storetypes.KVStore) prefix.Store {
 	return prefix.NewStore(moduleStore, lbpStoreKey)
 }
 
-func (k Keeper) userVaultStore(moduleStore storetypes.KVStore, poolId []byte) prefix.Store {
+func (k Keeper) userPositionStore(moduleStore storetypes.KVStore, poolId []byte) prefix.Store {
 	p := make([]byte, 1+len(poolId))
 	p[0] = vaultStoreKey
 	copy(p[1:], poolId)

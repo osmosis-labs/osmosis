@@ -11,3 +11,5 @@ LBP
 * Functionality
 
 + Limit price when staking
+
++ LBP stop "button"?
