@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/server"
-	appcfg "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -99,13 +98,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			//Override default settings in app.toml
-			appConfig := appcfg.DefaultConfig()
-			appConfig.API.Enable = true
-			appConfig.StateSync.SnapshotInterval = 1500
-			appConfig.StateSync.SnapshotKeepRecent = 2
-			appConfig.MinGasPrices = "0uosmo"
-
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
@@ -166,7 +158,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
-			appcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "app.toml"), appConfig)
 
 			return displayInfo(toPrint)
 		},
