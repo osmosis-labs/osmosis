@@ -504,7 +504,8 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
 		superDelegations []superfluidDelegation
-		newTwaps         []assetTwap
+		roundOneTwaps    []assetTwap
+		roundTwoTwaps    []assetTwap
 		checkAccIndexes  []int64
 	}{
 		{
@@ -512,6 +513,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+			[]assetTwap{},
 			[]int64{0},
 		},
 		{
@@ -519,6 +521,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+			[]assetTwap{},
 			[]int64{0},
 		},
 		{
@@ -526,6 +529,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+			[]assetTwap{},
 			[]int64{0, 1},
 		},
 		{
@@ -533,6 +537,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/2"}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
+			[]assetTwap{},
 			[]int64{0, 1},
 		},
 		{
@@ -540,6 +545,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/2"}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
+			[]assetTwap{},
 			[]int64{0, 1},
 		},
 		{
@@ -547,6 +553,15 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
+			[]assetTwap{},
+			[]int64{0},
+		},
+		{
+			"refresh case from zero to non-zero",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 			[]int64{0},
 		},
 		{
@@ -554,6 +569,15 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
+			[]assetTwap{},
+			[]int64{0},
+		},
+		{
+			"refresh case from dust to non-dust",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 			[]int64{0},
 		},
 	}
@@ -587,14 +611,15 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 
 			// twap price change before refresh
 			twapByDenom := make(map[string]sdk.Dec)
-			for _, twap := range tc.newTwaps {
+			for _, twap := range tc.roundOneTwaps {
 				twapByDenom[twap.denom] = twap.price
 				suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, twap.denom, twap.price)
-				suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
-					Identifier:   params.RefreshEpochIdentifier,
-					CurrentEpoch: 2,
-				})
 			}
+
+			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
+				Identifier:   params.RefreshEpochIdentifier,
+				CurrentEpoch: 2,
+			})
 
 			// refresh intermediary account delegations
 			suite.NotPanics(func() {
@@ -644,6 +669,34 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				Identifier:   params.RefreshEpochIdentifier,
 				CurrentEpoch: 3,
 			})
+
+			// if roundTwo twaps exists, execute round two twaps and finish tests
+			if len(tc.roundTwoTwaps) > 0 {
+				twap2ByDenom := make(map[string]sdk.Dec)
+				for _, twap := range tc.roundTwoTwaps {
+					twap2ByDenom[twap.denom] = twap.price
+					suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 3, twap.denom, twap.price)
+				}
+				// refresh intermediary account delegations
+				suite.NotPanics(func() {
+					suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
+				})
+
+				for index, intAccIndex := range tc.checkAccIndexes {
+					expAcc := intermediaryAccs[intAccIndex]
+					valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
+					suite.Require().NoError(err)
+
+					targetDelegation := intermediaryDels[index].Mul(twap2ByDenom[expAcc.Denom]).Quo(originTwap)
+
+					// check delegation changes
+					delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAddress(), valAddr)
+
+					suite.Require().True(found)
+					suite.Require().Equal(delegation.Shares, targetDelegation)
+				}
+				return
+			}
 
 			// unbond all lockups
 			for _, lock := range locks {

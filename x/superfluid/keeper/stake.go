@@ -53,27 +53,25 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 
 		// undelegate full amount from the validator
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
-		if !found {
-			continue
-		}
 
-		returnAmount, err := k.sk.Unbond(ctx, mAddr, valAddress, delegation.Shares)
-		if err != nil {
-			panic(err)
-		}
-
-		if returnAmount.IsPositive() {
-			// burn undelegated tokens
-			burnCoins := sdk.Coins{sdk.NewCoin(bondDenom, returnAmount)}
-			if validator.IsBonded() {
-				err = k.bk.BurnCoins(ctx, stakingtypes.BondedPoolName, burnCoins)
-				if err != nil {
-					panic(err)
-				}
-			} else {
-				err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, burnCoins)
-				if err != nil {
-					panic(err)
+		if found {
+			returnAmount, err := k.sk.Unbond(ctx, mAddr, valAddress, delegation.Shares)
+			if err != nil {
+				panic(err)
+			}
+			if returnAmount.IsPositive() {
+				// burn undelegated tokens
+				burnCoins := sdk.Coins{sdk.NewCoin(bondDenom, returnAmount)}
+				if validator.IsBonded() {
+					err = k.bk.BurnCoins(ctx, stakingtypes.BondedPoolName, burnCoins)
+					if err != nil {
+						panic(err)
+					}
+				} else {
+					err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, burnCoins)
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 		}
@@ -99,8 +97,14 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		}
 
 		coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
-		k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
-		k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+		err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+		if err != nil {
+			panic(err)
+		}
+		err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+		if err != nil {
+			panic(err)
+		}
 
 		// make delegation from module account to the validator
 		cacheCtx, write := ctx.CacheContext()
