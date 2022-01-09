@@ -64,5 +64,15 @@ func (suite *KeeperTestSuite) TestEpochOsmoEquivalentTWAPSetGetDeleteFlow() {
 	suite.Require().Equal(twapT.EpochNumber, int64(1))
 	suite.Require().Equal(twapT.EpochTwapPrice, sdk.NewDec(0))
 
-	// TODO: add test for GetCurrentEpochOsmoEquivalentTWAP
+	// test current epoch price
+	twapT = suite.app.SuperfluidKeeper.GetCurrentEpochOsmoEquivalentTWAP(suite.ctx, "gamm/pool/1")
+	suite.Require().Equal(twapT.Denom, "gamm/pool/1")
+	suite.Require().Equal(twapT.EpochNumber, int64(2))
+	suite.Require().Equal(twapT.EpochTwapPrice, sdk.NewDec(0))
+
+	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(20))
+	twapT = suite.app.SuperfluidKeeper.GetCurrentEpochOsmoEquivalentTWAP(suite.ctx, "gamm/pool/1")
+	suite.Require().Equal(twapT.Denom, "gamm/pool/1")
+	suite.Require().Equal(twapT.EpochNumber, int64(2))
+	suite.Require().Equal(twapT.EpochTwapPrice, sdk.NewDec(20))
 }

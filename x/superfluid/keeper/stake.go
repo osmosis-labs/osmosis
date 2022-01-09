@@ -12,6 +12,8 @@ import (
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
+const SuperfluidUnbondDuration = time.Hour * 24 * 21
+
 func stakingSuffix(valAddr string) string {
 	return fmt.Sprintf("superbonding%s", valAddr)
 }
@@ -118,9 +120,20 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		return types.ErrAlreadyUsedSuperfluidLockup
 	}
 
+	// check unbonding synthetic lockup already exists on this validator
+	// in this case automatic superfluid undelegation should fail and it is the source of chain halt
+	suffix := unstakingSuffix(valAddr)
+	_, err := k.lk.GetSyntheticLockup(ctx, lockID, suffix)
+	if err == nil {
+		return types.ErrUnbondingSyntheticLockupExists
+	}
+
 	// Register a synthetic lockup for superfluid staking
-	suffix := stakingSuffix(valAddr)
-	k.lk.CreateSyntheticLockup(ctx, lockID, suffix, 0)
+	suffix = stakingSuffix(valAddr)
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, 0)
+	if err != nil {
+		return err
+	}
 
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -136,7 +149,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	}
 
 	// length check
-	if lock.Duration < time.Hour*24*21 { // if less than 2 weeks bonding, skip
+	if lock.Duration < SuperfluidUnbondDuration { // if less than bonding, skip
 		return types.ErrNotEnoughLockupDuration
 	}
 
@@ -218,7 +231,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 	}
 
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, time.Hour*24*21) // 2 weeks unlock duration
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, SuperfluidUnbondDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -258,9 +271,8 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 }
 
 func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr string) error {
-	// TODO: prevent too many times redelegation as in Cosmos SDK?
-	// TODO: preventing circular redelegation is fine?
-	// Currently if unbonding lockup is available from a specific validator, not able redelegate or undelegate again
+	// Note: we prevent circular redelegations since when unbonding lockup is available from a specific validator,
+	// not able to redelegate or undelegate again, especially the case for automatic undelegation when native lockup unlock
 
 	valAddr, err := k.SuperfluidUndelegate(ctx, lockID)
 	if err != nil {
@@ -271,8 +283,7 @@ func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr 
 		return types.ErrSameValidatorRedelegation
 	}
 
-	k.SuperfluidDelegate(ctx, lockID, newValAddr)
-	return nil
+	return k.SuperfluidDelegate(ctx, lockID, newValAddr)
 }
 
 // TODO: Need to (eventually) override the existing staking messages and queries, for undelegating, delegating, rewards, and redelegating, to all be going through all superfluid module.

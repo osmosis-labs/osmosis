@@ -7,6 +7,37 @@ import (
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
+func (suite *KeeperTestSuite) TestSyntheticLockupCreation() {
+	suite.SetupTest()
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// check locks
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 1)
+	suite.Require().Equal(locks[0].Coins, coins)
+
+	// create not unbonding synthetic lockup
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "suffix1", 0)
+	suite.Require().NoError(err)
+
+	// try creating same suffix synthetic lockup for a single lockup
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "suffix1", time.Second)
+	suite.Require().Error(err)
+
+	// create unbonding synthetic lockup
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "suffix2", time.Second)
+	suite.Require().NoError(err)
+
+	// try creating unbonding synthetic lockup that is long than native lockup unbonding duration
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "suffix3", time.Second*2)
+	suite.Require().Error(err)
+}
+
 func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	suite.SetupTest()
 

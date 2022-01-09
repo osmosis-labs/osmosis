@@ -93,8 +93,7 @@ func (h Hooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uin
 		_, err := h.k.SuperfluidUndelegate(ctx, lockID)
 		if err != nil {
 			h.k.Logger(ctx).Error(err.Error())
-			// TODO: should we panic here or not?
-			// If not panic, there could be the case user get infinite amount of rewards without actual lockup
+			// TODO: If not panic, there could be the case user get infinite amount of rewards without actual lockup
 			panic(err)
 		}
 	}

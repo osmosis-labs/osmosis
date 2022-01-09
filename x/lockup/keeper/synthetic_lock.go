@@ -99,6 +99,9 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix str
 
 	lock.Coins = syntheticCoins(lock.Coins, suffix)
 	if isUnlocking { // end time is set automatically if it's unlocking lockup
+		if unlockDuration > lock.Duration {
+			return types.ErrSyntheticDurationLongerThanNative
+		}
 		lock.EndTime = ctx.BlockTime().Add(unlockDuration)
 	} else {
 		lock.EndTime = time.Time{}

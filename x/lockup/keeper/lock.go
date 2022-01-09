@@ -675,6 +675,16 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
+	if k.hooks == nil {
+		return nil
+	}
+
+	lockOwner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		panic(err)
+	}
+	k.hooks.OnStartUnlock(ctx, lockOwner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+
 	return nil
 }
 
