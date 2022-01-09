@@ -13,20 +13,18 @@ import (
 )
 
 var (
-	poolSeqStoreKey = []byte{0} // pool id sequence
-	lbpStoreKey     = []byte{1} // lbp objects
-	vaultStoreKey   = byte(2)   // user-pool objects
-
-	poolRes byte = 100 // poolId -> reserves  (token_out balances)
+	lbpSeqStoreKey = []byte{0} // lbp id sequence
+	lbpStoreKey    = []byte{1} // lbp objects
+	userStoreKey   = byte(2)   // userPosition objects
 )
 
-func (k *Keeper) savePool(modulestore storetypes.KVStore, id []byte, p *api.LBP) {
+func (k *Keeper) saveLBP(modulestore storetypes.KVStore, id []byte, p *api.LBP) {
 	store := k.lbpStore(modulestore)
 	store.Set(id, k.cdc.MustMarshal(p))
 }
 
 // returns pool, pool bytes id, error
-func (k *Keeper) getPool(modulestore storetypes.KVStore, id uint64) (api.LBP, []byte, error) {
+func (k *Keeper) getLBP(modulestore storetypes.KVStore, id uint64) (api.LBP, []byte, error) {
 	store := k.lbpStore(modulestore)
 	idBz := make([]byte, 8)
 	binary.BigEndian.PutUint64(idBz, id)
@@ -65,13 +63,13 @@ func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, poolId []byte, 
 }
 
 // returns pool, found (bool), error
-func (k *Keeper) saveUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress, v *api.UserPosition) {
+func (k *Keeper) saveUserPosition(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress, v *api.UserPosition) {
 	store := k.userPositionStore(modulestore, poolId)
 	store.Set(addr, k.cdc.MustMarshal(v))
 }
 
 // returns pool, found (bool), error
-func (k *Keeper) delUserVault(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress) {
+func (k *Keeper) delUserPosition(modulestore storetypes.KVStore, poolId []byte, addr sdk.AccAddress) {
 	store := k.userPositionStore(modulestore, poolId)
 	store.Delete(addr)
 }
@@ -82,20 +80,10 @@ func (k Keeper) lbpStore(moduleStore storetypes.KVStore) prefix.Store {
 
 func (k Keeper) userPositionStore(moduleStore storetypes.KVStore, poolId []byte) prefix.Store {
 	p := make([]byte, 1+len(poolId))
-	p[0] = vaultStoreKey
+	p[0] = userStoreKey
 	copy(p[1:], poolId)
 	return prefix.NewStore(moduleStore, p)
 }
-
-//  TODO: can remove this
-// func (k Keeper) depositStore(ctx sdk.Context, addr sdk.AccAddress) prefix.Store {
-// 	a := mustLengthPrefix(addr)
-// 	p := make([]byte, 1+len(a))
-// 	p[0] = deposits
-// 	copy(p[1:], addr)
-// 	store := ctx.KVStore(k.storeKey)
-// 	return prefix.NewStore(store, p)
-// }
 
 // MustLengthPrefix is LengthPrefix with panic on error.
 // TODO: use address.MustLengthPrefix when moving to SDK 0.44+

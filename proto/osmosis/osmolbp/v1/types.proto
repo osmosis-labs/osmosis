@@ -56,12 +56,6 @@ message LBP {
     (gogoproto.nullable) = false
   ];
 
-  // total number of currently staked coins (token_in)
-  string staked = 12 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-
   // total amount of earned coins (token_in)
   string income = 13 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -86,7 +80,8 @@ message LBP {
     (gogoproto.nullable) = false
   ];
 
-  string in_remaining = 25 [
+  // total number of currently staked coins (token_in)
+  string staked = 25 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];

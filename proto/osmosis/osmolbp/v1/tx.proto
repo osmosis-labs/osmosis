@@ -19,9 +19,12 @@ service Msg {
   // Subscribe to a token sale
   rpc Subscribe(MsgSubscribe) returns (google.protobuf.Empty);
 
-  // ExitLBP withdraws the purchased tokens from the pool and remained staked
-  // tokens.
+  // Withdraw sends back `amount` of unspent in_tokens back to the user
   rpc Withdraw(MsgWithdraw) returns (google.protobuf.Empty);
+
+  // ExitLBP the purchased tokens from the pool and remained staked
+  // tokens. Returns error if the LBP is still active.
+  rpc ExitLBP(MsgExitLBP) returns (MsgExitLBPResponse);
 }
 
 message MsgCreateLBP {
@@ -68,6 +71,26 @@ message MsgWithdraw {
   // sender is an account address exiting a pool
   string sender = 1;
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  // amount of in_tokens to withdraw, must be at most the amount of not spent
+  // tokens, unless set to null - then all remaining balance will be withdrawn
+  string amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = true
+  ];
+}
+
+message MsgExitLBP {
+  // sender is an account address exiting a pool
+  string sender = 1;
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message MsgExitLBPResponse {
+  // Amount of "out" tokens (purchased tokens) withdrawn to the user.
+  string amount_out = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // TODO: add partial withdraw

@@ -2,12 +2,12 @@ package api
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (msg *MsgSubscribe) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
+		return errors.ErrInvalidRequest.Wrapf("Invalid sender address (%s)", err)
 	}
 	return nil
 }

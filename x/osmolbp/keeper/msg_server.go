@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -48,13 +47,12 @@ func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes
 
 		Rate:           msg.InitialDeposit.Amount.Quo(sdk.NewInt(int64(msg.Duration / api.ROUND))),
 		AccumulatorOut: sdk.ZeroInt(),
-		Staked:         sdk.ZeroInt(),
 
 		OutRemaining:   sdk.ZeroInt(),
 		OutDistributed: sdk.ZeroInt(),
 		OutPerShare:    sdk.ZeroInt(),
 
-		InRemaining:     sdk.ZeroInt(),
+		Staked:          sdk.ZeroInt(),
 		InPaidUnclaimed: sdk.ZeroInt(),
 		InPaid:          sdk.ZeroInt(),
 
@@ -62,7 +60,7 @@ func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes
 		Round:    0,
 		EndRound: uint64(end.Sub(msg.StartTime) / api.ROUND),
 	}
-	k.savePool(store, idBz, &p)
+	k.saveLBP(store, idBz, &p)
 	// TODO:
 	// + send initial deposit from sender to the pool
 	// + use ADR-28 addresses?
@@ -75,7 +73,7 @@ func (k Keeper) Subscribe(goCtx context.Context, msg *api.MsgSubscribe) (*emptyp
 	if err := k.subscribe(ctx, msg, store); err != nil {
 		return nil, err
 	}
-	err := ctx.EventManager().EmitTypedEvent(&api.EventDeposit{
+	err := ctx.EventManager().EmitTypedEvent(&api.EventSubscribe{
 		Sender: msg.Sender,
 		PoolId: msg.PoolId,
 		Amount: msg.Amount.String(),
@@ -91,7 +89,7 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	if !msg.Amount.IsPositive() {
 		return errors.ErrInvalidRequest.Wrap("amount of tokens must be positive")
 	}
-	p, poolIdBz, err := k.getPool(store, msg.PoolId)
+	p, poolIdBz, err := k.getLBP(store, msg.PoolId)
 	if err != nil {
 		return err
 	}
@@ -101,15 +99,16 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a LBP")
 	}
 
-	v, err := k.getUserPosition(store, poolIdBz, sender, true)
+	u, err := k.getUserPosition(store, poolIdBz, sender, true)
 	if err != nil {
 		return err
 	}
 
-	subscribe(&p, &v, msg.Amount, ctx.BlockTime())
+	subscribe(&p, &u, msg.Amount) // , ctx.BlockTime())
 
-	k.savePool(store, poolIdBz, &p)
-	k.saveUserVault(store, poolIdBz, sender, &v)
+	k.saveLBP(store, poolIdBz, &p)
+	k.saveUserPosition(store, poolIdBz, sender, &u)
+	// TODO: event
 	return nil
 }
 
@@ -122,33 +121,49 @@ func (k Keeper) Withdraw(goCtx context.Context, msg *api.MsgWithdraw) (*emptypb.
 	err := ctx.EventManager().EmitTypedEvent(&api.EventWithdraw{
 		Sender: msg.Sender,
 		PoolId: msg.PoolId,
-		// TODO: Purchased: ,
+		Amount: msg.Amount.String(),
 	})
 	return &emptypb.Empty{}, err
 }
 
 func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes.KVStore) error {
-	// TODO: user should only withdraw when the sale ends
+	if err := msg.Validate(); err != nil {
+		return err
+	}
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return err
 	}
-	p, poolIdBz, err := k.getPool(store, msg.PoolId)
+	p, poolIdBz, err := k.getLBP(store, msg.PoolId)
 	if err != nil {
 		return err
 	}
-	v, err := k.getUserPosition(store, poolIdBz, sender, false)
+	u, err := k.getUserPosition(store, poolIdBz, sender, false)
+	if err != nil {
+		return err
+	}
+	err = withdraw(&p, &u, msg.Amount, ctx.BlockTime())
 	if err != nil {
 		return err
 	}
 
-	// TODO: check if v.Staked makes sense, maybe we should first ping and evaulate
-	fmt.Println(v)
-	// if err = unstakeFromPool(&p, &v, v.Staked, ctx.BlockTime()); err != nil {
-	// 	return err
-	// }
-
-	k.savePool(store, poolIdBz, &p)
+	k.saveLBP(store, poolIdBz, &p)
+	k.saveUserPosition(store, poolIdBz, sender, &u)
 
 	return nil
+}
+
+func (k Keeper) ExitLBP(goCtx context.Context, msg *api.MsgExitLBP) (*api.MsgExitLBPResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	// store := ctx.KVStore(k.storeKey)
+	// if err := k.withdraw(ctx, msg, store); err != nil {
+	// 	return nil, err
+	// }
+	err := ctx.EventManager().EmitTypedEvent(&api.EventWithdraw{
+		Sender: msg.Sender,
+		PoolId: msg.PoolId,
+		// TODO Amount: msg.Amount.String(),
+	})
+	// TODO: fill response
+	return &api.MsgExitLBPResponse{}, err
 }
