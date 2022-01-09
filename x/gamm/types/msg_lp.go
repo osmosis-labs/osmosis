@@ -7,7 +7,8 @@ const (
 	RemoveLiquidity
 )
 
-// SwapMsg defines a simple interface for getting the token denoms on a swap message route.
+// LiquidityChangeMsg defines a simple interface for determining if an LP msg
+// is removing or adding liquidity.
 type LiquidityChangeMsg interface {
 	LiquidityChangeType() LiquidityChangeType
 }

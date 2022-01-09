@@ -53,18 +53,20 @@ func NewAnteHandler(
 	)
 }
 
+// TODO: Abstract this function better. We likely need a parse `osmosis-mempool` config section.
 func parseArbGasFromConfig(appOpts servertypes.AppOptions) sdk.Dec {
 	arbMinFeeInterface := appOpts.Get("osmosis-mempool.arbitrage-min-gas-fee")
 	arbMinFee := txfeeskeeper.DefaultArbMinGasFee
 	if arbMinFeeInterface != nil {
 		arbMinFeeStr, ok := arbMinFeeInterface.(string)
 		if !ok {
-			panic("Invalidly configured osmosis-mempool.arbitrage-min-gas-fee")
+			panic("invalidly configured osmosis-mempool.arbitrage-min-gas-fee")
 		}
 		var err error
+		// pre-pend 0 to allow the config to start with a decimal, e.g. ".01"
 		arbMinFee, err = sdk.NewDecFromStr("0" + arbMinFeeStr)
 		if err != nil {
-			panic(fmt.Errorf("Invalidly configured osmosis-mempool.arbitrage-min-gas-fee, err= %v", err))
+			panic(fmt.Errorf("invalidly configured osmosis-mempool.arbitrage-min-gas-fee, err= %v", err))
 		}
 	}
 	return arbMinFee
