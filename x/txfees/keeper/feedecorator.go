@@ -8,6 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
+var DefaultArbMinGasFee sdk.Dec = sdk.NewDecWithPrec(1, 2) // .01uosmo/gas
+
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).
 // If fee is too low, decorator returns error and tx is rejected from mempool.
@@ -22,8 +24,12 @@ type MempoolFeeDecorator struct {
 func NewMempoolFeeDecorator(txFeesKeeper Keeper) MempoolFeeDecorator {
 	return MempoolFeeDecorator{
 		TxFeesKeeper:       txFeesKeeper,
-		ConfigArbMinGasFee: sdk.NewDecWithPrec(1, 2), // .01uosmo/gas
+		ConfigArbMinGasFee: DefaultArbMinGasFee.Clone(),
 	}
+}
+
+func (mfd *MempoolFeeDecorator) SetArbMinGasFee(dec sdk.Dec) {
+	mfd.ConfigArbMinGasFee = dec
 }
 
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -62,8 +68,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// So we ensure that the provided fees meet a minimum threshold for the validator,
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minGasPrices := ctx.MinGasPrices()
-		minBaseGasPrice := minGasPrices.AmountOf(baseDenom)
+		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, tx)
 		if !(minBaseGasPrice.IsZero()) {
 			if len(feeCoins) != 1 {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")

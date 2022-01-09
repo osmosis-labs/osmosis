@@ -82,8 +82,14 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
 
+	type OsmosisMempoolConfig struct {
+		ArbitrageMinGasPrice string `mapstructure:"arbitrage-min-gas-fee"`
+	}
+
 	type CustomAppConfig struct {
 		serverconfig.Config
+
+		OsmosisMempoolConfig OsmosisMempoolConfig `mapstructure:"osmosis-mempool"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -94,7 +100,22 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.MinGasPrices = "0uosmo"
 
-	return serverconfig.DefaultConfigTemplate, CustomAppConfig{Config: *srvCfg}
+	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.01"}
+
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg}
+
+	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
+###############################################################################
+###                      Osmosis Mempool Configuration                      ###
+###############################################################################
+
+[osmosis-mempool]
+# This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
+# Default value of ".01" then means that a tx with 1 million gas costs (.01 uosmo/gas) * 1_000_000 gas = .01 osmo
+arbitrage-min-gas-fee = ".01"
+`
+
+	return OsmosisAppTemplate, OsmosisAppCfg
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
