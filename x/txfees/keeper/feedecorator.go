@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
@@ -14,12 +15,14 @@ import (
 // If fee is high enough or not CheckTx, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator
 type MempoolFeeDecorator struct {
-	TxFeesKeeper Keeper
+	TxFeesKeeper       Keeper
+	ConfigArbMinGasFee sdk.Dec
 }
 
 func NewMempoolFeeDecorator(txFeesKeeper Keeper) MempoolFeeDecorator {
 	return MempoolFeeDecorator{
-		TxFeesKeeper: txFeesKeeper,
+		TxFeesKeeper:       txFeesKeeper,
+		ConfigArbMinGasFee: sdk.NewDecWithPrec(1, 2), // .01uosmo/gas
 	}
 }
 
@@ -95,4 +98,13 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	}
 
 	return nil
+}
+
+func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.Tx) sdk.Dec {
+	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
+
+	if txfee_filters.IsArbTxLoose(tx) {
+		return sdk.MaxDec(cfgMinGasPrice, mfd.ConfigArbMinGasFee)
+	}
+	return cfgMinGasPrice
 }
