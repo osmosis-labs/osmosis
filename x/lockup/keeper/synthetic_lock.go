@@ -183,6 +183,7 @@ func (k Keeper) DeleteAllMaturedSyntheticLocks(ctx sdk.Context) {
 		}
 		err = k.DeleteSyntheticLockup(ctx, synthLock.UnderlyingLockId, synthLock.Suffix)
 		if err != nil {
+			// TODO: When underlying lock is deleted for a reason while synthetic lockup exists, panic could happen
 			panic(err)
 		}
 	}
