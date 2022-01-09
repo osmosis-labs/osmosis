@@ -18,14 +18,14 @@ var multiplayer = sdk.NewInt(2 << 61)
 // if now == start + ROUND return 1...
 // if now > end return round the round at end.
 // distribution happens at the beginning of each round
-func currentRound(p *api.LBP, now time.Time) uint64 {
-	if now.Before(p.StartTime) {
+func currentRound(start, end, now time.Time) uint64 {
+	if now.Before(start) {
 		return 0
 	}
-	if !p.EndTime.After(now) { // end <= now
-		now = p.EndTime
+	if !end.After(now) { // !(end>now) => end<=now
+		now = end
 	}
-	return uint64(now.Sub(p.StartTime) / api.ROUND)
+	return uint64(now.Sub(start) / api.ROUND)
 }
 
 func lbpRemainigBalance(p *api.LBP, userShares sdk.Int) sdk.Int {
@@ -55,7 +55,8 @@ func lbpHasEnded(p *api.LBP, round uint64) bool {
 	return p.EndRound >= round
 }
 
-func subscribe(p *api.LBP, u *api.UserPosition, amount sdk.Int) {
+func subscribe(p *api.LBP, u *api.UserPosition, amount sdk.Int, now time.Time) {
+	pingLBP(p, now)
 	triggerUserPurchase(p, u)
 	remaining := lbpRemainigBalance(p, u.Shares)
 	u.SpentInWithoutShares = u.SpentInWithoutShares.Add(u.Staked).Sub(remaining)
@@ -67,21 +68,8 @@ func subscribe(p *api.LBP, u *api.UserPosition, amount sdk.Int) {
 	u.Staked = lbpRemainigBalance(p, u.Shares)
 }
 
-// TODO: maybe we can merge it with pingUser?
-func triggerUserPurchase(p *api.LBP, u *api.UserPosition) {
-	purchased := pingUser(u, p.OutPerShare)
-	if purchased.IsPositive() {
-		u.Purchased = u.Purchased.Add(purchased)
-	}
-	if u.Shares.IsPositive() {
-		if lbpRemainigBalance(p, u.Shares).IsZero() {
-			p.Shares = p.Shares.Sub(u.Shares)
-			u.Shares = sdk.ZeroInt()
-		}
-	}
-}
-
 func withdraw(p *api.LBP, u *api.UserPosition, amount *sdk.Int, now time.Time) error {
+	pingLBP(p, now)
 	triggerUserPurchase(p, u)
 	remaining := lbpRemainigBalance(p, u.Shares)
 	if amount == nil {
@@ -99,23 +87,53 @@ func withdraw(p *api.LBP, u *api.UserPosition, amount *sdk.Int, now time.Time) e
 	return nil
 }
 
-// pingUser updates purchase rate and returns amount of tokens user purchased since the last time.
-// `rate` is the current LBP per share distribution rate
-func pingUser(u *api.UserPosition, ratePerShare sdk.Int) sdk.Int {
-	out := sdk.ZeroInt()
-	if !ratePerShare.IsZero() {
-		diff := ratePerShare.Sub(u.Rate)
-		out = diff.Mul(u.Shares).Quo(multiplayer)
-	}
-	u.Rate = ratePerShare
-	return out
-}
-
 // TODO: rename to: finalize LBP - will send paid tokens to the LBP treasury
-// This p.InPaidUnclaimed should be merged with p.InPaid
 func distributeUnclaimedTokens(p *api.LBP, u *api.UserPosition) {
 	// TODO:
 	// 1. only after sale ends
 	// 2. send tokens to the treasury / owner
 	// 3. merge
+}
+
+func pingLBP(p *api.LBP, now time.Time) {
+	round := currentRound(p.StartTime, p.EndTime, now)
+	// Need to use round for the end check to assure we have the final distribution
+	if now.Before(p.StartTime) || round >= p.EndRound {
+		return
+	}
+
+	diff := int64(round - p.Round)
+	if p.Shares.IsZero() || diff == 0 {
+		p.Round = round
+		return
+	}
+	remainingRounds := int64(p.EndRound - p.Round)
+
+	sold := p.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
+	if sold.IsPositive() {
+		p.OutSold = p.OutSold.Add(sold)
+		p.OutRemaining = p.OutRemaining.Sub(sold)
+
+		perShareDiff := sold.Mul(multiplayer).Quo(p.Shares)
+		p.OutPerShare = p.OutPerShare.Add(perShareDiff)
+	}
+	income := p.Staked.MulRaw(diff).QuoRaw(remainingRounds)
+	p.Income = p.Income.Add(income)
+	p.Staked = p.Staked.Sub(income)
+	p.Round = round
+}
+
+func triggerUserPurchase(p *api.LBP, u *api.UserPosition) {
+	if !p.OutPerShare.IsZero() && !u.Shares.IsZero() {
+		diff := p.OutPerShare.Sub(u.OutPerShare)
+		purchased := diff.Mul(u.Shares).Quo(multiplayer)
+		u.Purchased = u.Purchased.Add(purchased)
+	}
+	u.OutPerShare = p.OutPerShare
+	if u.Shares.IsPositive() {
+		if lbpRemainigBalance(p, u.Shares).IsZero() {
+			p.Shares = p.Shares.Sub(u.Shares)
+			u.Shares = sdk.ZeroInt()
+		}
+	}
 }

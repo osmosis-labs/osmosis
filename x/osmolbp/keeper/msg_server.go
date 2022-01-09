@@ -40,6 +40,8 @@ func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes
 	id, idBz := k.nextPoolID(store)
 	end := msg.StartTime.Add(msg.Duration)
 	p := api.LBP{
+		Treasury:  msg.Treasury,
+		Id:        id,
 		TokenOut:  msg.TokenOut,
 		TokenIn:   msg.TokenIn,
 		StartTime: msg.StartTime,
@@ -48,17 +50,16 @@ func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes
 		Rate:           msg.InitialDeposit.Amount.Quo(sdk.NewInt(int64(msg.Duration / api.ROUND))),
 		AccumulatorOut: sdk.ZeroInt(),
 
-		OutRemaining:   sdk.ZeroInt(),
-		OutDistributed: sdk.ZeroInt(),
-		OutPerShare:    sdk.ZeroInt(),
+		OutRemaining: msg.InitialDeposit.Amount,
+		OutSold:      sdk.ZeroInt(),
+		OutPerShare:  sdk.ZeroInt(),
 
-		Staked:          sdk.ZeroInt(),
-		InPaidUnclaimed: sdk.ZeroInt(),
-		InPaid:          sdk.ZeroInt(),
+		Staked: sdk.ZeroInt(),
+		Income: sdk.ZeroInt(),
 
 		Shares:   sdk.ZeroInt(),
 		Round:    0,
-		EndRound: uint64(end.Sub(msg.StartTime) / api.ROUND),
+		EndRound: currentRound(msg.StartTime, end, end),
 	}
 	k.saveLBP(store, idBz, &p)
 	// TODO:
@@ -104,7 +105,7 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 		return err
 	}
 
-	subscribe(&p, &u, msg.Amount) // , ctx.BlockTime())
+	subscribe(&p, &u, msg.Amount, ctx.BlockTime())
 
 	k.saveLBP(store, poolIdBz, &p)
 	k.saveUserPosition(store, poolIdBz, sender, &u)
@@ -142,19 +143,25 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 	if err != nil {
 		return err
 	}
+	// withdraw updates msg.Amount
 	err = withdraw(&p, &u, msg.Amount, ctx.BlockTime())
+	if err != nil {
+		return err
+	}
+	coin := sdk.NewCoin(p.TokenIn, *msg.Amount)
+	err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, sender, sdk.NewCoins(coin))
 	if err != nil {
 		return err
 	}
 
 	k.saveLBP(store, poolIdBz, &p)
 	k.saveUserPosition(store, poolIdBz, sender, &u)
-
 	return nil
 }
 
 func (k Keeper) ExitLBP(goCtx context.Context, msg *api.MsgExitLBP) (*api.MsgExitLBPResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	// TODO: finish
 	// store := ctx.KVStore(k.storeKey)
 	// if err := k.withdraw(ctx, msg, store); err != nil {
 	// 	return nil, err

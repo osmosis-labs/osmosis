@@ -45,10 +45,15 @@ message MsgCreateLBP {
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 
   // total number of `tokens_out` to be sold during the continous sale.
+  // tokens are deposited from the treasury account.
   string initial_deposit = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable) = false
   ];
+
+  // Treasury is the account which provides the tokens to sale and receives
+  // earned money.
+  string treasury = 7;
 }
 
 message MsgCreateLBPResponse {

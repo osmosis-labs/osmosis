@@ -32,7 +32,6 @@ func TestCurrentRound(t *testing.T) {
 	}
 	assert := assert.New(t)
 	for i, tc := range tcs {
-		p := api.LBP{StartTime: tc.start, EndTime: tc.end}
-		assert.Equal(tc.expected, currentRound(&p, tc.now), "tc: %d", i)
+		assert.Equal(tc.expected, currentRound(tc.start, tc.end, tc.now), "tc: %d", i)
 	}
 }

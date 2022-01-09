@@ -54,7 +54,7 @@ func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, poolId []byte, 
 			Shares:               sdk.ZeroInt(),
 			Staked:               sdk.ZeroInt(),
 			SpentInWithoutShares: sdk.ZeroInt(),
-			Rate:                 sdk.ZeroInt(),
+			OutPerShare:          sdk.ZeroInt(),
 			Purchased:            sdk.ZeroInt(),
 		}, nil
 	}
