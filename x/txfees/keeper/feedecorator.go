@@ -8,7 +8,10 @@ import (
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
-var DefaultArbMinGasFee sdk.Dec = sdk.NewDecWithPrec(1, 2) // .01uosmo/gas
+// DefaultArbMinGasFee if its not set in a config somewhere.
+// currently 0 uosmo/gas to preserve functionality with old node software
+// TODO: Bump after next minor version. (in 6.2+)
+var DefaultArbMinGasFee sdk.Dec = sdk.ZeroDec()
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).

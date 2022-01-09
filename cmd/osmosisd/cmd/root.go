@@ -111,8 +111,8 @@ func initAppConfig() (string, interface{}) {
 
 [osmosis-mempool]
 # This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
-# Default value of ".01" then means that a tx with 1 million gas costs (.01 uosmo/gas) * 1_000_000 gas = .01 osmo
-arbitrage-min-gas-fee = ".01"
+# Default value of ".005" then means that a tx with 1 million gas costs (.005 uosmo/gas) * 1_000_000 gas = .005 osmo
+arbitrage-min-gas-fee = ".005"
 `
 
 	return OsmosisAppTemplate, OsmosisAppCfg
