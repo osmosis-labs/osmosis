@@ -5,11 +5,24 @@ NOW:
 
 
 LBP
-+ fee_rate, treasury address
++ treasury address
 + should we add a circuit breaker in a pool (in case something bad happens)?
 
 * Functionality
 
-+ Limit price when staking
+Permssions:
++ who can create an LBP?
++ fee - shall there be a bond or a fee?
 
+
+Check:
++ user can only withdraw his purchased tokens only when the LBP finished
++ seller can finalize and withdraw the income only when the LBP finished
++ maybe rename MsgExit?
++ how should we charge for the initial deposit (the LBP tokens_ou)?
+
+
+TODO:
++ Limit price when staking
 + LBP stop "button"?
++ ~multiplayer~ should be LBP parameter

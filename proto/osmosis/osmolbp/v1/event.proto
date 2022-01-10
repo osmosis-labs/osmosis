@@ -34,3 +34,9 @@ message EventExit {
   // amount of purchased tokens
   string purchased = 3;
 }
+
+message EventFinalizeLBP {
+  uint64 pool_id = 1;
+  // amount of earned tokens_in
+  string income = 3;
+}

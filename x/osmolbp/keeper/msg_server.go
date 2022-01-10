@@ -22,8 +22,6 @@ func (k Keeper) CreateLBP(goCtx context.Context, msg *api.MsgCreateLBP) (*api.Ms
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Add a fee?
-
 	err = ctx.EventManager().EmitTypedEvent(&api.EventCreateLBP{
 		Id:       id,
 		Creator:  msg.Creator,
@@ -193,7 +191,10 @@ func (k Keeper) FinalizeLBP(goCtx context.Context, msg *api.MsgFinalizeLBP) (*ap
 	if err != nil {
 		return nil, err
 	}
-	// TODO: event
+	err = ctx.EventManager().EmitTypedEvent(&api.EventFinalizeLBP{
+		PoolId: msg.PoolId,
+		Income: income.String(),
+	})
 	return &api.MsgFinalizeLBPResponse{Income: income}, err
 }
 
