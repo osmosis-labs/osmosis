@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Minor improvements & Bug Fixes
 
+- [#722](https://github.com/osmosis-labs/osmosis/issues/722) reuse code for parsing integer slices from string
 - [#704](https://github.com/osmosis-labs/osmosis/pull/704) fix rocksdb 
 - [#666](https://github.com/osmosis-labs/osmosis/pull/666) Fix the `--log-level` and `--log-format` commands on `osmosisd start`
 - [#655](https://github.com/osmosis-labs/osmosis/pull/655) Make the default genesis for pool-incentives work by default
