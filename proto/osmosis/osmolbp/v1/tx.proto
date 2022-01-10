@@ -25,6 +25,11 @@ service Msg {
   // ExitLBP the purchased tokens from the pool and remained staked
   // tokens. Returns error if the LBP is still active.
   rpc ExitLBP(MsgExitLBP) returns (MsgExitLBPResponse);
+
+  // FinalizeLBP sends income (earned tokens_in) to the LBP treasury.
+  // Returns error if called before the LBP finishes. Anyone can call this
+  // method.
+  rpc FinalizeLBP(MsgFinalizeLBP) returns (MsgFinalizeLBPResponse);
 }
 
 message MsgCreateLBP {
@@ -93,6 +98,20 @@ message MsgExitLBP {
 message MsgExitLBPResponse {
   // Purchased amount of "out" tokens withdrawn to the user.
   string purchased = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgFinalizeLBP {
+  // sender is an account address exiting a pool
+  string sender = 1;
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message MsgFinalizeLBPResponse {
+  // Income amount of token_in sent to the treasury.
+  string income = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];

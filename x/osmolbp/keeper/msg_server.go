@@ -185,3 +185,44 @@ func (k Keeper) exitLBP(ctx sdk.Context, msg *api.MsgExitLBP, store storetypes.K
 	k.delUserPosition(store, poolIdBz, sender)
 	return u.Purchased, nil
 }
+
+func (k Keeper) FinalizeLBP(goCtx context.Context, msg *api.MsgFinalizeLBP) (*api.MsgFinalizeLBPResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := ctx.KVStore(k.storeKey)
+	income, err := k.finalizeLBP(ctx, msg, store)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: event
+	return &api.MsgFinalizeLBPResponse{Income: income}, err
+}
+
+// returns LBP income
+func (k Keeper) finalizeLBP(ctx sdk.Context, msg *api.MsgFinalizeLBP, store storetypes.KVStore) (sdk.Int, error) {
+	p, poolIdBz, err := k.getLBP(store, msg.PoolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	if err := msg.Validate(ctx.BlockTime(), p.EndTime); err != nil {
+		return sdk.Int{}, err
+	}
+	if p.Income.IsZero() {
+		return sdk.Int{}, errors.ErrInvalidRequest.Wrap("LBP already finalized")
+	}
+
+	treasury, err := sdk.AccAddressFromBech32(p.Treasury)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	pingLBP(&p, ctx.BlockTime())
+	coin := sdk.NewCoin(p.TokenOut, p.Income)
+	err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, treasury, sdk.NewCoins(coin))
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	income := p.Income
+	p.Income = sdk.ZeroInt()
+	k.saveLBP(store, poolIdBz, &p)
+	return income, nil
+}
