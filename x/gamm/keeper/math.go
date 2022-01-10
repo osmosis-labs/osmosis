@@ -54,7 +54,7 @@ func calcSpotPriceWithSwapFee(
 	return spotPrice.Mul(scale)
 }
 
-func calcTokenGivenToken(
+func solveConstantFunctionInvariant(
 	tokenBalanceFixed,
 	tokenWeightFixed,
 	tokenBalanceUnknown,
@@ -80,7 +80,7 @@ func calcOutGivenIn(
 ) sdk.Dec {
 	// deduct swapfee on the in asset
 	tokenAmountIn = tokenAmountIn.Mul(sdk.OneDec().Sub(swapFee))
-	tokenAmountOut := calcTokenGivenToken(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, tokenAmountIn)
+	tokenAmountOut := solveConstantFunctionInvariant(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, tokenAmountIn)
 	return tokenAmountOut
 }
 
@@ -94,8 +94,7 @@ func calcInGivenOut(
 	swapFee sdk.Dec,
 ) sdk.Dec {
 	// provide negative tokenOutAmount as it decreases pool liquidity
-	tokenAmountOut = tokenAmountOut.Neg()
-	tokenAmountIn := calcTokenGivenToken(tokenBalanceOut, tokenWeightOut, tokenBalanceIn, tokenWeightIn, tokenAmountOut).Neg()
+	tokenAmountIn := solveConstantFunctionInvariant(tokenBalanceOut, tokenWeightOut, tokenBalanceIn, tokenWeightIn, tokenAmountOut.Neg()).Neg()
 	// deduct swapfee on the in asset
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
 	return tokenAmountInBeforeFee
@@ -113,23 +112,19 @@ func weightDelta(
 }
 
 func feeRatio(
-	tokenWeight,
-	totalWeight,
+	normalizedWeight,
 	swapFee sdk.Dec,
 ) sdk.Dec {
-	normalizedWeight := tokenWeight.Quo(totalWeight)
 	zar := (sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee)
 	return sdk.OneDec().Sub(zar)
 }
 
 func tokenDiffGivenPoolDiff(
+	normalizedWeight,
 	tokenBalance,
-	tokenWeight,
 	poolSupply,
-	totalWeight,
 	poolAmount sdk.Dec,
 ) sdk.Dec {
-	normalizedWeight := tokenWeight.Quo(totalWeight)
 	newPoolSupply := poolSupply.Add(poolAmount)
 
 	poolSupplyDelta := weightDelta(
@@ -143,47 +138,12 @@ func tokenDiffGivenPoolDiff(
 	return newTokenBalance.Sub(tokenBalance)
 }
 
-//tAi
-func calcSingleInGivenPoolOut(
-	tokenBalanceIn,
-	tokenWeightIn,
-	poolSupply,
-	totalWeight,
-	poolAmountOut,
-	swapFee sdk.Dec,
-) sdk.Dec {
-	tokenAmountIn := tokenDiffGivenPoolDiff(tokenBalanceIn, tokenWeightIn, poolSupply, totalWeight, poolAmountOut)
-	tokenAmountInBeforeFee := tokenAmountIn.Quo(feeRatio(tokenWeightIn, totalWeight, swapFee))
-	return tokenAmountInBeforeFee
-}
-
-// tAo
-func calcSingleOutGivenPoolIn(
-	tokenBalanceOut,
-	tokenWeightOut,
-	poolSupply,
-	totalWeight,
-	poolAmountIn,
-	swapFee sdk.Dec,
-	exitFee sdk.Dec,
-) sdk.Dec {
-	// charge exit fee on the pool token side
-	// pAiAfterExitFee = pAi*(1-exitFee)
-	poolAmountInAfterExitFee := poolAmountIn.Mul(sdk.OneDec().Sub(exitFee))
-	tokenAmountOut := tokenDiffGivenPoolDiff(tokenBalanceOut, tokenWeightOut, poolSupply, totalWeight, poolAmountInAfterExitFee.Neg()).Neg()
-	tokenAmountOutAfterFee := tokenAmountOut.Mul(feeRatio(tokenWeightOut, totalWeight, swapFee))
-	return tokenAmountOutAfterFee
-}
-
 func poolDiffGivenTokenDiff(
+	normalizedWeight,
 	tokenBalance,
-	tokenWeight,
 	poolSupply,
-	totalWeight,
 	tokenAmount sdk.Dec,
 ) sdk.Dec {
-	normalizedWeight := tokenWeight.Quo(totalWeight)
-
 	newTokenBalance := tokenBalance.Add(tokenAmount)
 
 	tokenDelta := weightDelta(
@@ -193,33 +153,61 @@ func poolDiffGivenTokenDiff(
 	return newPoolSupply.Sub(poolSupply)
 }
 
+//tAi
+func calcSingleInGivenPoolOut(
+	tokenBalanceIn,
+	normalizedTokenWeightIn,
+	poolSupply,
+	poolAmountOut,
+	swapFee sdk.Dec,
+) sdk.Dec {
+	tokenAmountIn := tokenDiffGivenPoolDiff(normalizedTokenWeightIn, tokenBalanceIn, poolSupply, poolAmountOut)
+	tokenAmountInBeforeFee := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, swapFee))
+	return tokenAmountInBeforeFee
+}
+
 // pAo
 func calcPoolOutGivenSingleIn(
 	tokenBalanceIn,
-	tokenWeightIn,
+	normalizedTokenWeightIn,
 	poolSupply,
-	totalWeight,
 	tokenAmountIn,
 	swapFee sdk.Dec,
 ) sdk.Dec {
-	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(tokenWeightIn, totalWeight, swapFee))
-	poolAmountOut := poolDiffGivenTokenDiff(tokenBalanceIn, tokenWeightIn, poolSupply, totalWeight, tokenAmountInAfterFee)
+	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(normalizedTokenWeightIn, swapFee))
+	poolAmountOut := poolDiffGivenTokenDiff(normalizedTokenWeightIn, tokenBalanceIn, poolSupply, tokenAmountInAfterFee)
 	return poolAmountOut
+}
+
+// tAo
+func calcSingleOutGivenPoolIn(
+	tokenBalanceOut,
+	normalizedTokenWeightOut,
+	poolSupply,
+	poolAmountIn,
+	swapFee sdk.Dec,
+	exitFee sdk.Dec,
+) sdk.Dec {
+	// charge exit fee on the pool token side
+	// pAiAfterExitFee = pAi*(1-exitFee)
+	poolAmountInAfterExitFee := poolAmountIn.Mul(sdk.OneDec().Sub(exitFee))
+	tokenAmountOut := tokenDiffGivenPoolDiff(normalizedTokenWeightOut, tokenBalanceOut, poolSupply, poolAmountInAfterExitFee.Neg()).Neg()
+	tokenAmountOutAfterFee := tokenAmountOut.Mul(feeRatio(normalizedTokenWeightOut, swapFee))
+	return tokenAmountOutAfterFee
 }
 
 // pAi
 func calcPoolInGivenSingleOut(
 	tokenBalanceOut,
-	tokenWeightOut,
+	normalizedTokenWeightOut,
 	poolSupply,
-	totalWeight,
 	tokenAmountOut,
 	swapFee sdk.Dec,
 	exitFee sdk.Dec,
 ) sdk.Dec {
-	tokenAmountOutBeforeFee := tokenAmountOut.Quo(feeRatio(tokenWeightOut, totalWeight, swapFee))
+	tokenAmountOutBeforeFee := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, swapFee))
 
-	poolAmountIn := poolDiffGivenTokenDiff(tokenBalanceOut, tokenWeightOut, poolSupply, totalWeight, tokenAmountOutBeforeFee.Neg()).Neg()
+	poolAmountIn := poolDiffGivenTokenDiff(normalizedTokenWeightOut, tokenBalanceOut, poolSupply, tokenAmountOutBeforeFee.Neg()).Neg()
 
 	// charge exit fee on the pool token side
 	// pAi = pAiAfterExitFee/(1-exitFee)
