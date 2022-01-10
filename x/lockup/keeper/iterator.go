@@ -44,7 +44,6 @@ func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration 
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
-	// duration is inclusive, longer means > (greater)
 	// inclusive on longer side, means >= (longer or equal)
 	return store.Iterator(key, storetypes.PrefixEndBytes(prefix))
 }
@@ -53,7 +52,7 @@ func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
-	// inclusive on longer side, shorter means < (lower or equal)
+	// inclusive on longer side, shorter means < (lower)
 	return store.Iterator(prefix, key)
 }
 

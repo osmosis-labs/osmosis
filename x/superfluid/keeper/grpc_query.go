@@ -26,12 +26,3 @@ func (k Keeper) AllAssets(goCtx context.Context, req *types.AllAssetsRequest) (*
 		Assets: assets,
 	}, nil
 }
-
-// AssetInfo Returns superfluid asset info
-func (k Keeper) AssetInfo(goCtx context.Context, req *types.AssetInfoRequest) (*types.AssetInfoResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	assetInfo := k.GetSuperfluidAssetInfo(ctx, req.Denom)
-	return &types.AssetInfoResponse{
-		Info: &assetInfo,
-	}, nil
-}

@@ -14,8 +14,6 @@ func NewSuperfluidProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.SetSuperfluidAssetsProposal:
 			return handleSetSuperfluidAssetsProposal(ctx, k, c)
-		case *types.AddSuperfluidAssetsProposal:
-			return handleAddSuperfluidAssetsProposal(ctx, k, c)
 		case *types.RemoveSuperfluidAssetsProposal:
 			return handleRemoveSuperfluidAssetsProposal(ctx, k, c)
 
@@ -27,10 +25,6 @@ func NewSuperfluidProposalHandler(k keeper.Keeper) govtypes.Handler {
 
 func handleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetSuperfluidAssetsProposal) error {
 	return k.HandleSetSuperfluidAssetsProposal(ctx, p)
-}
-
-func handleAddSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.AddSuperfluidAssetsProposal) error {
-	return k.HandleAddSuperfluidAssetsProposal(ctx, p)
 }
 
 func handleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveSuperfluidAssetsProposal) error {

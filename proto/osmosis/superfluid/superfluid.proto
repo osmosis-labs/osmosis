@@ -25,17 +25,10 @@ message SuperfluidAsset {
   SuperfluidAssetType asset_type = 2;
 }
 
-// SuperfluidAssetInfo stores the information of superfluid asset - real time changes
-message SuperfluidAssetInfo {
+// SuperfluidIntermediaryAccount takes the role of intermediary between LP token and OSMO tokens for superfluid staking
+message SuperfluidIntermediaryAccount {
   string denom = 1;
-  string total_staked_amount = 2 [ 
-    (gogoproto.moretags) = "yaml:\"total_staked_amount\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-  string risk_adjusted_osmo_equivalent = 3 [
-    (gogoproto.moretags) = "yaml:\"risk_adjusted_osmo_equivalent\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
+  string val_addr = 2;
+  // id of perpetual gauge to send rewards to for distribution
+  uint64 gauge_id = 3;
 }

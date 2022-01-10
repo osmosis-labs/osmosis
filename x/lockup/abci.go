@@ -19,6 +19,14 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	if ctx.BlockHeight() < MinBlockHeightToBeginAutoWithdrawing {
 		return []abci.ValidatorUpdate{}
 	}
+
+	// delete synthetic locks matured before lockup deletion
+	k.DeleteAllMaturedSyntheticLocks(ctx)
+
+	// withdraw and delete locks
 	k.WithdrawAllMaturedLocks(ctx)
 	return []abci.ValidatorUpdate{}
 }
+
+// TODO: add invariant that no native lockup existent synthetic lockup exists by calling GetAllSyntheticLockups
+// TODO: if superfluid does not delete synthetic lockup before native lockup deletion, it won't be able to be deleted
