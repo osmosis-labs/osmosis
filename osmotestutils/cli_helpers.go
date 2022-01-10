@@ -15,13 +15,13 @@ func DefaultFeeString(cfg network.Config) string {
 	return fmt.Sprintf("--%s=%s", flags.FlagFees, feeCoins.String())
 }
 
-var (
+const (
 	base   = 10
 	bitlen = 64
 )
 
 func ParseUint64SliceFromString(s string, seperator string) ([]uint64, error) {
-	var ids []uint64
+	var parsedInts []uint64
 	for _, s := range strings.Split(s, seperator) {
 		s = strings.TrimSpace(s)
 
@@ -29,21 +29,21 @@ func ParseUint64SliceFromString(s string, seperator string) ([]uint64, error) {
 		if err != nil {
 			return []uint64{}, err
 		}
-		ids = append(ids, parsed)
+		parsedInts = append(parsedInts, parsed)
 	}
-	return ids, nil
+	return parsedInts, nil
 }
 
 func ParseSdkIntFromString(s string, seperator string) ([]sdk.Int, error) {
-	var weights []sdk.Int
+	var parsedInts []sdk.Int
 	for _, weightStr := range strings.Split(s, seperator) {
 		weightStr = strings.TrimSpace(weightStr)
 
 		parsed, err := strconv.ParseUint(weightStr, base, bitlen)
 		if err != nil {
-			return weights, err
+			return parsedInts, err
 		}
-		weights = append(weights, sdk.NewIntFromUint64(parsed))
+		parsedInts = append(parsedInts, sdk.NewIntFromUint64(parsed))
 	}
-	return weights, nil
+	return parsedInts, nil
 }
