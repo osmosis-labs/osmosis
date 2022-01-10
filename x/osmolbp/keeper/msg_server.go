@@ -47,9 +47,6 @@ func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes
 		StartTime: msg.StartTime,
 		EndTime:   end,
 
-		Rate:           msg.InitialDeposit.Amount.Quo(sdk.NewInt(int64(msg.Duration / api.ROUND))),
-		AccumulatorOut: sdk.ZeroInt(),
-
 		OutRemaining: msg.InitialDeposit.Amount,
 		OutSold:      sdk.ZeroInt(),
 		OutPerShare:  sdk.ZeroInt(),
@@ -83,32 +80,23 @@ func (k Keeper) Subscribe(goCtx context.Context, msg *api.MsgSubscribe) (*emptyp
 }
 
 func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetypes.KVStore) error {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return err
-	}
 	if !msg.Amount.IsPositive() {
 		return errors.ErrInvalidRequest.Wrap("amount of tokens must be positive")
 	}
-	p, poolIdBz, err := k.getLBP(store, msg.PoolId)
+	sender, p, poolIdBz, u, err := k.getUserAndLBP(store, msg.PoolId, msg.Sender, false)
 	if err != nil {
 		return err
 	}
+
 	coin := sdk.NewCoin(p.TokenIn, msg.Amount)
 	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, osmolbp.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
 		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a LBP")
 	}
+	subscribe(p, u, msg.Amount, ctx.BlockTime())
 
-	u, err := k.getUserPosition(store, poolIdBz, sender, true)
-	if err != nil {
-		return err
-	}
-
-	subscribe(&p, &u, msg.Amount, ctx.BlockTime())
-
-	k.saveLBP(store, poolIdBz, &p)
-	k.saveUserPosition(store, poolIdBz, sender, &u)
+	k.saveLBP(store, poolIdBz, p)
+	k.saveUserPosition(store, poolIdBz, sender, u)
 	// TODO: event
 	return nil
 }
@@ -131,20 +119,12 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 	if err := msg.Validate(); err != nil {
 		return err
 	}
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return err
-	}
-	p, poolIdBz, err := k.getLBP(store, msg.PoolId)
-	if err != nil {
-		return err
-	}
-	u, err := k.getUserPosition(store, poolIdBz, sender, false)
+	sender, p, poolIdBz, u, err := k.getUserAndLBP(store, msg.PoolId, msg.Sender, false)
 	if err != nil {
 		return err
 	}
 	// withdraw updates msg.Amount
-	err = withdraw(&p, &u, msg.Amount, ctx.BlockTime())
+	err = withdraw(p, u, msg.Amount, ctx.BlockTime())
 	if err != nil {
 		return err
 	}
@@ -154,23 +134,54 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 		return err
 	}
 
-	k.saveLBP(store, poolIdBz, &p)
-	k.saveUserPosition(store, poolIdBz, sender, &u)
+	k.saveLBP(store, poolIdBz, p)
+	k.saveUserPosition(store, poolIdBz, sender, u)
 	return nil
 }
 
 func (k Keeper) ExitLBP(goCtx context.Context, msg *api.MsgExitLBP) (*api.MsgExitLBPResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// TODO: finish
-	// store := ctx.KVStore(k.storeKey)
-	// if err := k.withdraw(ctx, msg, store); err != nil {
-	// 	return nil, err
-	// }
-	err := ctx.EventManager().EmitTypedEvent(&api.EventWithdraw{
-		Sender: msg.Sender,
-		PoolId: msg.PoolId,
-		// TODO Amount: msg.Amount.String(),
+	store := ctx.KVStore(k.storeKey)
+	purchased, err := k.exitLBP(ctx, msg, store)
+	if err != nil {
+		return nil, err
+	}
+	err = ctx.EventManager().EmitTypedEvent(&api.EventExit{
+		Sender:    msg.Sender,
+		PoolId:    msg.PoolId,
+		Purchased: purchased.String(),
 	})
-	// TODO: fill response
-	return &api.MsgExitLBPResponse{}, err
+	return &api.MsgExitLBPResponse{Purchased: purchased}, err
+}
+
+// returns amount of tokens purchased
+func (k Keeper) exitLBP(ctx sdk.Context, msg *api.MsgExitLBP, store storetypes.KVStore) (sdk.Int, error) {
+	sender, p, poolIdBz, u, err := k.getUserAndLBP(store, msg.PoolId, msg.Sender, false)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	if err := msg.Validate(ctx.BlockTime(), p.EndTime); err != nil {
+		return sdk.Int{}, err
+	}
+
+	pingLBP(p, ctx.BlockTime())
+	triggerUserPurchase(p, u)
+	coin := sdk.NewCoin(p.TokenOut, u.Purchased)
+	err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, sender, sdk.NewCoins(coin))
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	// TODO: make double check with p.OutSold?
+
+	if u.Shares.IsPositive() || u.Staked.IsPositive() {
+		ctx.Logger().Error("user has outstanding token_in balance", "user", msg.Sender, "balance", u.Staked)
+		coin = sdk.NewCoin(p.TokenIn, u.Staked)
+		err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, sender, sdk.NewCoins(coin))
+		if err != nil {
+			return sdk.Int{}, err
+		}
+	}
+
+	k.delUserPosition(store, poolIdBz, sender)
+	return u.Purchased, nil
 }

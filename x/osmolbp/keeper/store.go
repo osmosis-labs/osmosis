@@ -49,13 +49,11 @@ func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, poolId []byte, 
 			return v, errors.ErrNotFound.Wrap("user position for given LBP is not found")
 		}
 		return api.UserPosition{
-			Accumulator:          sdk.ZeroInt(),
-			Spent:                sdk.ZeroInt(),
-			Shares:               sdk.ZeroInt(),
-			Staked:               sdk.ZeroInt(),
-			SpentInWithoutShares: sdk.ZeroInt(),
-			OutPerShare:          sdk.ZeroInt(),
-			Purchased:            sdk.ZeroInt(),
+			Shares:      sdk.ZeroInt(),
+			Staked:      sdk.ZeroInt(),
+			OutPerShare: sdk.ZeroInt(),
+			Spent:       sdk.ZeroInt(),
+			Purchased:   sdk.ZeroInt(),
 		}, nil
 	}
 	err := k.cdc.Unmarshal(bz, &v)
@@ -110,4 +108,19 @@ func lengthPrefix(bz []byte) ([]byte, error) {
 	}
 
 	return append([]byte{byte(bzLen)}, bz...), nil
+}
+
+// user: bech32 user address
+func (k Keeper) getUserAndLBP(modulestore storetypes.KVStore, poolId uint64, user string, create bool) (sdk.AccAddress, *api.LBP, []byte, *api.UserPosition, error) {
+	userAddr, err := sdk.AccAddressFromBech32(user)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	p, poolIdBz, err := k.getLBP(modulestore, poolId)
+	if err != nil {
+		return userAddr, &p, poolIdBz, nil, err
+	}
+	u, err := k.getUserPosition(modulestore, poolIdBz, userAddr, create)
+	return userAddr, &p, poolIdBz, &u, err
 }

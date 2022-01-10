@@ -18,14 +18,14 @@ var multiplayer = sdk.NewInt(2 << 61)
 // if now == start + ROUND return 1...
 // if now > end return round the round at end.
 // distribution happens at the beginning of each round
-func currentRound(start, end, now time.Time) uint64 {
+func currentRound(start, end, now time.Time) int64 {
 	if now.Before(start) {
 		return 0
 	}
 	if !end.After(now) { // !(end>now) => end<=now
 		now = end
 	}
-	return uint64(now.Sub(start) / api.ROUND)
+	return int64(now.Sub(start) / api.ROUND)
 }
 
 func lbpRemainigBalance(p *api.LBP, userShares sdk.Int) sdk.Int {
@@ -51,7 +51,7 @@ func computeSharesAmount(p *api.LBP, amountIn sdk.Int, roundUp bool) sdk.Int {
 	return shares
 }
 
-func lbpHasEnded(p *api.LBP, round uint64) bool {
+func lbpHasEnded(p *api.LBP, round int64) bool {
 	return p.EndRound >= round
 }
 
@@ -59,7 +59,7 @@ func subscribe(p *api.LBP, u *api.UserPosition, amount sdk.Int, now time.Time) {
 	pingLBP(p, now)
 	triggerUserPurchase(p, u)
 	remaining := lbpRemainigBalance(p, u.Shares)
-	u.SpentInWithoutShares = u.SpentInWithoutShares.Add(u.Staked).Sub(remaining)
+	u.Spent = u.Spent.Add(u.Staked).Sub(remaining)
 	shares := computeSharesAmount(p, amount, false)
 	u.Shares = u.Shares.Add(shares)
 	p.Shares = p.Shares.Add(shares)
@@ -79,20 +79,12 @@ func withdraw(p *api.LBP, u *api.UserPosition, amount *sdk.Int, now time.Time) e
 	}
 
 	shares := computeSharesAmount(p, *amount, true)
-	u.SpentInWithoutShares = u.SpentInWithoutShares.Add(u.Staked).Sub(remaining)
+	u.Spent = u.Spent.Add(u.Staked).Sub(remaining)
 	u.Shares = u.Shares.Sub(shares)
 	p.Shares = p.Shares.Sub(shares)
 	p.Staked = p.Staked.Sub(*amount)
 
 	return nil
-}
-
-// TODO: rename to: finalize LBP - will send paid tokens to the LBP treasury
-func distributeUnclaimedTokens(p *api.LBP, u *api.UserPosition) {
-	// TODO:
-	// 1. only after sale ends
-	// 2. send tokens to the treasury / owner
-	// 3. merge
 }
 
 func pingLBP(p *api.LBP, now time.Time) {
@@ -102,12 +94,12 @@ func pingLBP(p *api.LBP, now time.Time) {
 		return
 	}
 
-	diff := int64(round - p.Round)
+	diff := round - p.Round
 	if p.Shares.IsZero() || diff == 0 {
 		p.Round = round
 		return
 	}
-	remainingRounds := int64(p.EndRound - p.Round)
+	remainingRounds := p.EndRound - p.Round
 
 	sold := p.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
 	if sold.IsPositive() {

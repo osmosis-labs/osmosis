@@ -91,11 +91,9 @@ message MsgExitLBP {
 }
 
 message MsgExitLBPResponse {
-  // Amount of "out" tokens (purchased tokens) withdrawn to the user.
-  string amount_out = 1 [
+  // Purchased amount of "out" tokens withdrawn to the user.
+  string purchased = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 }
-
-// TODO: add partial withdraw

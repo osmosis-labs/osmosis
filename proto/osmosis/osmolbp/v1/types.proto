@@ -31,62 +31,40 @@ message LBP {
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
 
   // Round number when the pool was last time updated.
-  uint64 round = 8;
+  int64 round = 7;
 
   // Last round of the LBP;
-  uint64 end_round = 9;
+  int64 end_round = 8;
 
-  //// old [start]
-
-  // number of `tokens_out` to be sold per second. 1 second = 1 round.
-  string rate = 7 [
+  string out_remaining = 10 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
-  // Running sum of sold coins per unit of staked coins (token_out)
-  string accumulator_out = 10 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-
-  // Rate of receiving coins (token_in) per round
-  string income_rate = 11 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-
-  //// old [end]
-
-  string out_remaining = 20 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-
-  string out_sold = 21 [
+  string out_sold = 11 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
   // out token per share
-  string out_per_share = 22 [
+  string out_per_share = 12 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
   // total amount of currently staked coins (token_in) but not spent coins.
-  string staked = 25 [
+  string staked = 13 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
   // total amount of earned coins (token_in)
-  string income = 13 [
+  string income = 14 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
   // total amount of shares
-  string shares = 30 [
+  string shares = 15 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
@@ -97,21 +75,8 @@ message LBP {
 
 // UserPosition represents user account in a pool
 message UserPosition {
-  // lbp.accumulator value when the last ping was called and rewards calculated
-  string accumulator = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
 
-  // total amount of spent coins (token_in)
-  string spent = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-
-  // new
-
-  string shares = 10 [
+  string shares = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
@@ -121,18 +86,20 @@ message UserPosition {
     (gogoproto.nullable) = false
   ];
 
-  string spent_in_without_shares = 12 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
   // last token/share ratio
-  string out_per_share = 13 [
+  string out_per_share = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
-  // Amount of accumulated, not withdrawn purchased tokens (token_out)
-  string purchased = 3 [
+  // amount of token_in spent
+  string spent = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // Amount of accumulated, not withdrawn, purchased tokens (token_out)
+  string purchased = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
