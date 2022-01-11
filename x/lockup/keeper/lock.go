@@ -542,6 +542,8 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
+	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+
 	// remove lock from store object
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(lock.ID))
@@ -557,6 +559,15 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
 	}
 
-	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
+}
+
+func (k Keeper) GetUnlockingsBetweenTimeDenom(ctx sdk.Context, denom string, beginTime time.Time, endTime time.Time) []types.PeriodLock {
+	return k.getLocksFromIterator(ctx, k.LockIteratorBetweenTimeDenom(ctx, true, denom, beginTime, endTime))
+}
+
+func (k Keeper) GetLocksValidAfterTimeDenomDuration(ctx sdk.Context, denom string, timestamp time.Time, duration time.Duration) []types.PeriodLock {
+	unlockings := k.getLocksFromIterator(ctx, k.LockIteratorAfterTimeDenom(ctx, true, denom, timestamp))
+	notUnlockings := k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, false, denom, duration))
+	return combineLocks(notUnlockings, unlockings)
 }

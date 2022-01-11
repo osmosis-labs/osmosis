@@ -65,6 +65,15 @@ func TestNonPerpetualGaugeExpireAfterDistribution(t *testing.T) {
 	_, err = app.IncentivesKeeper.CreateGauge(ctx, false, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 
+	// lock with balance
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins = sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 10)}
+	lock := lockuptypes.NewPeriodLock(1, addr1, time.Second, time.Time{}, coins)
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
+	require.NoError(t, err)
+	err = app.LockupKeeper.Lock(ctx, lock)
+	require.NoError(t, err)
+
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, 1)

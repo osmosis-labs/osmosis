@@ -49,6 +49,52 @@ func TestIncentivesExportGenesis(t *testing.T) {
 		DistributedCoins:  sdk.Coins(nil),
 		StartTime:         startTime.UTC(),
 	})
+
+	denom := "stake"
+	duration := time.Hour
+	currentReward := types.CurrentReward{
+		Period:             4,
+		LastProcessedEpoch: 7,
+		Coin:               sdk.NewCoin("stake", sdk.NewInt(10)),
+		Denom:              denom,
+		LockDuration:       duration,
+	}
+	app.IncentivesKeeper.SetCurrentReward(ctx, currentReward, denom, duration)
+
+	cumulativeRewardRatio := sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000))
+
+	app.IncentivesKeeper.SetHistoricalReward(ctx, cumulativeRewardRatio, denom, duration, 1, 1)
+	app.IncentivesKeeper.SetHistoricalReward(ctx, cumulativeRewardRatio, denom, duration, 2, 3)
+	app.IncentivesKeeper.SetHistoricalReward(ctx, cumulativeRewardRatio, denom, duration, 3, 5)
+
+	periodLockReward := types.PeriodLockReward{
+		LockId: 1,
+		Period: map[string]uint64{"gamm/pool/1/1h0s": 1},
+	}
+	app.IncentivesKeeper.SetPeriodLockReward(ctx, periodLockReward)
+	genesis = incentives.ExportGenesis(ctx, app.IncentivesKeeper)
+
+	historicalReward1 := types.HistoricalReward{
+		CumulativeRewardRatio: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000)),
+		Period:                1,
+		LastEligibleEpoch:     1,
+	}
+	historicalReward2 := types.HistoricalReward{
+		CumulativeRewardRatio: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000)),
+		Period:                2,
+		LastEligibleEpoch:     3,
+	}
+	historicalReward3 := types.HistoricalReward{
+		CumulativeRewardRatio: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom, 1000)),
+		Period:                3,
+		LastEligibleEpoch:     5,
+	}
+
+	require.Equal(t, genesis.GenesisReward[0].CurrentReward, currentReward)
+	require.Equal(t, genesis.GenesisReward[0].HistoricalReward[0], historicalReward1)
+	require.Equal(t, genesis.GenesisReward[0].HistoricalReward[1], historicalReward2)
+	require.Equal(t, genesis.GenesisReward[0].HistoricalReward[2], historicalReward3)
+	require.Equal(t, genesis.PeriodLockReward[0], periodLockReward)
 }
 
 func TestIncentivesInitGenesis(t *testing.T) {

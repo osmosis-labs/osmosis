@@ -54,6 +54,14 @@ func (k Keeper) ActiveGaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixActiveGauges)
 }
 
+// HistoricalRewardBeforeEpochIterator returns iterator before epochNumber
+func (k Keeper) HistoricalRewardBeforeEpochIterator(ctx sdk.Context, prefix []byte, epochNumber int64) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	epochKey := sdk.Uint64ToBigEndian(uint64(epochNumber))
+	key := combineKeys(prefix, epochKey)
+	return store.ReverseIterator(prefix, storetypes.InclusiveEndBytes(key))
+}
+
 // FinishedGaugesIterator returns iterator for finished gauges
 func (k Keeper) FinishedGaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixFinishedGauges)

@@ -34,3 +34,24 @@ func (gauge Gauge) IsActiveGauge(curTime time.Time) bool {
 func (gauge Gauge) IsFinishedGauge(curTime time.Time) bool {
 	return !gauge.IsUpcomingGauge(curTime) && !gauge.IsActiveGauge(curTime)
 }
+
+func NewHistoricalReward(cumulativeRewardRatio sdk.DecCoins) HistoricalReward {
+	return HistoricalReward{
+		CumulativeRewardRatio: cumulativeRewardRatio,
+	}
+}
+
+func NewCurrentReward(period uint64, isNewEpoch bool, count uint32, rewards sdk.Coins) CurrentReward {
+	return CurrentReward{
+		Period:  period,
+		Rewards: rewards,
+	}
+}
+
+func NewPeriodLockReward(lockId uint64, period map[string]uint64, rewards sdk.Coins) PeriodLockReward {
+	return PeriodLockReward{
+		LockId:  lockId,
+		Period:  period,
+		Rewards: rewards,
+	}
+}

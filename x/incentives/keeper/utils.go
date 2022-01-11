@@ -1,11 +1,14 @@
 package keeper
 
 import (
+	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 )
+
+var ErrHistoricalRewardNotExists = errors.New("historical rewards not found")
 
 func findIndex(IDs []uint64, ID uint64) int {
 	for index, id := range IDs {

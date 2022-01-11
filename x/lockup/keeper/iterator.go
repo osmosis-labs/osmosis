@@ -163,3 +163,15 @@ func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bo
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
 }
+
+func (k Keeper) LockIteratorBetweenTimeDenom(ctx sdk.Context, isUnlocking bool, denom string, starttime time.Time, endtime time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	startTimePrefix := getTimeKey(starttime)
+	endTimePrefix := getTimeKey(endtime)
+
+	store := ctx.KVStore(k.storeKey)
+
+	return store.Iterator(
+		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom), startTimePrefix),
+		combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom), endTimePrefix))
+}

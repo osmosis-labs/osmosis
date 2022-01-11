@@ -43,6 +43,18 @@ var (
 	// KeyIndexSeparator defines key for merging bytes
 	KeyIndexSeparator = []byte{0x07}
 
+	// KeyCurrentReward defines key for storing current reward
+	KeyCurrentReward = []byte{0x08}
+
+	// KeyHistoricalReward defines key for storing historical reward
+	KeyHistoricalReward = []byte{0x9}
+
+	// KeyHistoricalReward defines key for storing historical reward
+	KeyHistoricalRewardRef = []byte{0x10}
+
+	// KeyPeriodLockReward defines key for storing period lock reward
+	KeyPeriodLockReward = []byte{0x11}
+
 	// LockableDurationsKey defines key for storing valid durations for giving incentives
 	LockableDurationsKey = []byte("lockable_durations")
 )

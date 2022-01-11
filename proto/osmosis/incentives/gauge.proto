@@ -42,3 +42,44 @@ message LockableDurationsInfo {
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
 }
+
+message HistoricalReward {
+  // Reward per share for each denom
+  repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
+  uint64 period = 2;
+  uint64 last_eligible_epoch = 3;
+}
+
+message CurrentReward {
+  uint64 period = 1;
+  int64 last_processed_epoch = 2;
+
+  // total coin locked per denom + lockDuration
+  cosmos.base.v1beta1.Coin coin = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  repeated cosmos.base.v1beta1.Coin rewards = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  string denom = 5;
+  google.protobuf.Duration lock_duration = 6 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+}
+
+message PeriodLockReward {
+  option (gogoproto.stable_marshaler) = true;
+  uint64 lock_id = 1;
+  map<string, uint64> period = 2;
+  repeated cosmos.base.v1beta1.Coin rewards = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}

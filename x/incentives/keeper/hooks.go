@@ -1,8 +1,11 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
@@ -24,18 +27,22 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// distribute due to epoch event
 		ctx.EventManager().IncreaseCapacity(2e6)
 		gauges = k.GetActiveGauges(ctx)
-		_, err := k.Distribute(ctx, gauges)
-		if err != nil {
-			panic(err)
-		}
 		for _, gauge := range gauges {
-			// filled epoch is increased in this step and we compare with +1
-			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
+			err := k.F1Distribute(ctx, &gauge)
+			if err != nil {
+				panic(err)
+			}
+			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs {
+				// increment period if gauge is finished because f1Distribution will not be invoked for that gauge ever again
+				if err := k.updateReward(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration, epochNumber); err != nil {
+					panic(err)
+				}
 				if err := k.FinishDistribution(ctx, gauge); err != nil {
 					panic(err)
 				}
 			}
 		}
+		k.hooks.AfterEpochDistribution(ctx)
 	}
 }
 
@@ -60,4 +67,68 @@ func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNu
 
 func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+}
+
+var _ lockuptypes.LockupHooks = Hooks{}
+
+func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+	lockRef, err := h.k.lk.GetLockByID(ctx, lockID)
+	if err != nil || lockRef == nil {
+		return
+	}
+	prevLock := *lockRef
+
+	// coin of amount 0 needs to be tracked but sdk.Coins.Sub sanitize coin of amount 0.
+	prevLockCoins := []sdk.Coin{}
+	for _, lockedCoin := range prevLock.Coins {
+		prevLockCoins = append(prevLockCoins, sdk.NewCoin(lockedCoin.Denom, lockedCoin.Amount.Sub(amount.AmountOf(lockedCoin.Denom))))
+	}
+
+	prevLock.Coins = prevLockCoins
+
+	lockReward, err := h.k.GetPeriodLockReward(ctx, lockID)
+	if err != nil {
+		panic(err)
+	}
+
+	err = h.k.UpdateRewardForAllLockDuration(ctx, amount, lockDuration)
+	if err != nil {
+		panic(err)
+	}
+	err = h.k.UpdatePeriodLockReward(ctx, prevLock, lockReward)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+	lock, err := h.k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		panic(err)
+	}
+	lockReward, err := h.k.GetPeriodLockReward(ctx, lockID)
+	if err != nil {
+		panic(err)
+	}
+
+	if lock.Coins.IsAnyGT(amount) {
+		err = h.k.UpdateRewardForAllLockDuration(ctx, amount, lockDuration)
+		if err != nil {
+			panic(err)
+		}
+		err = h.k.UpdatePeriodLockReward(ctx, *lock, lockReward)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		owner, err := sdk.AccAddressFromBech32(lock.Owner)
+		if err != nil {
+			panic(err)
+		}
+		_, err = h.k.ClaimLockReward(ctx, *lock, owner)
+		if err != nil {
+			panic(err)
+		}
+		h.k.deletePeriodLockReward(ctx, lockID)
+	}
 }
