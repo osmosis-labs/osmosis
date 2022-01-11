@@ -42,3 +42,35 @@ type MsgAddToGauge struct {
 - Check if `Gauge` with specified `msg.GaugeID` is available
 - Modify the `Gauge` record by adding `msg.Rewards`
 - Transfer the tokens from the `Owner` to incentives `ModuleAccount`.
+
+## Claim Lock Reward
+
+`MsgClaimLockReward` can be submitted by any account to claim accumulated rewards for a lock.
+
+```go
+type MsgClaimLockReward struct {
+  Owner string
+  ID    uint64
+}
+```
+
+**State modifications:**
+
+- Validate `Owner` has any rewards to claim
+- Check if `PeriodLock` with specified `msg.ID` is available
+- Transfer rewards to `Owner`
+
+## Claim Lock Reward All
+
+`MsgClaimLockRewardAll` can be submitted by any account to claim accumulated rewards for all locks.
+
+```go
+type MsgClaimLockRewardAll struct {
+  Owner string
+}
+```
+
+**State modifications:**
+
+- Validate `Owner` has any rewards to claim
+- Transfer rewards to `Owner`

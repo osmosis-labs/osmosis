@@ -28,6 +28,8 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewCreateGaugeCmd(),
 		NewAddToGaugeCmd(),
+		NewClaimLockRewardCmd(),
+		NewClaimLockRewardAllCmd(),
 	)
 
 	return cmd
@@ -147,6 +149,64 @@ func NewAddToGaugeCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(FlagSetCreateGauge())
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewClaimLockRewardCmd  claims reward accumulated in user's lock
+func NewClaimLockRewardCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "claim-lock-reward [lock_id]",
+		Short: "claim lock reward accumulated in period lock by ID",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			id, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgClaimLockReward(
+				clientCtx.GetFromAddress(),
+				uint64(id),
+			)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewClaimLockRewardAllCmd claims all reward accumulated from user's account
+func NewClaimLockRewardAllCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "claim-lock-reward-all",
+		Short: "claims all reward accumulated from user's account",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			msg := types.NewMsgClaimLockRewardAll(
+				clientCtx.GetFromAddress(),
+			)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

@@ -12,6 +12,9 @@ option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 service Msg {
   rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);
   rpc AddToGauge(MsgAddToGauge) returns (MsgAddToGaugeResponse);
+  rpc ClaimLockReward(MsgClaimLockReward) returns (MsgClaimLockRewardResponse);
+  rpc ClaimLockRewardAll(MsgClaimLockRewardAll)
+      returns (MsgClaimLockRewardResponseAll);
 }
 
 message MsgCreateGauge {
@@ -44,3 +47,14 @@ message MsgAddToGauge {
   ];
 }
 message MsgAddToGaugeResponse {}
+
+message MsgClaimLockReward {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 ID = 2;
+}
+message MsgClaimLockRewardResponse {}
+
+message MsgClaimLockRewardAll {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+}
+message MsgClaimLockRewardResponseAll {} 

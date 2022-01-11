@@ -56,11 +56,34 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/rewards_est/{owner}";
   }
+   // returns current estimate of accumulated rewards
+  // from both current and historical rewards
+  rpc Rewards(RewardsRequest) returns (RewardsResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/rewards/{owner}";
+  }
   // returns lockable durations that are valid to give incentives
   rpc LockableDurations(QueryLockableDurationsRequest)
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/lockable_durations";
+  }
+
+  // returns CurrentReward in this epoch
+  rpc CurrentReward(CurrentRewardRequest) returns (CurrentRewardResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/current_reward";
+  }
+  // returns HistoricalReward with given period
+  rpc HistoricalReward(HistoricalRewardRequest)
+      returns (HistoricalRewardResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/historical_reward";
+  }
+  // returns PeriodLockReward with given lockID
+  rpc PeriodLockReward(PeriodLockRewardRequest)
+      returns (PeriodLockRewardResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/period_lock_reward";
   }
 }
 
@@ -136,11 +159,70 @@ message RewardsEstResponse {
   ];
 }
 
+message RewardsRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  repeated uint64 lock_ids = 2;
+}
+message RewardsResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
 message QueryLockableDurationsRequest {}
 message QueryLockableDurationsResponse {
   repeated google.protobuf.Duration lockable_durations = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}
+
+message CurrentRewardRequest {
+  string denom = 1;
+  google.protobuf.Duration lockable_durations = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}
+message CurrentRewardResponse {
+  uint64 period = 1;
+  int64 last_processed_epoch = 2;
+  cosmos.base.v1beta1.Coin coin = 3 [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin reward = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message HistoricalRewardRequest {
+  string denom = 1;
+  google.protobuf.Duration lockable_durations = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+  int64 period = 3;
+}
+message HistoricalRewardResponse {
+  repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
+  uint64 period = 2;
+  uint64 last_eligible_epoch = 3;
+}
+
+message PeriodLockRewardRequest { uint64 id = 1; }
+message PeriodLockRewardResponse {
+  // stable_marshaler is added to ensure hashmaps to be deterministic
+  option (gogoproto.stable_marshaler) = true;
+  uint64 ID = 1;
+  map<string, uint64> period = 2;
+  repeated cosmos.base.v1beta1.Coin rewards = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

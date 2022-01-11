@@ -27,5 +27,13 @@ service Query {
   rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {}
   // returns lockable durations that are valid to give incentives
   rpc LockableDurations(QueryLockableDurationsRequest) returns (QueryLockableDurationsResponse) {}
+  // returns current estimate of accumulated rewards
+  rpc Rewards(RewardsRequest) returns (RewardsResponse) {}
+  // returns current rewards
+  rpc CurrentReward(CurrentRewardRequest) returns (CurrentRewardResponse) {}
+  // returns historical rewards
+  rpc HistoricalReward(HistoricalRewardRequest) returns (HistoricalRewardResponse) {}
+  // returns period lock rewards
+  rpc PeriodLockReward(PeriodLockRewardRequest) returns (PeriodLockRewardResponse) {}
 }
 ```

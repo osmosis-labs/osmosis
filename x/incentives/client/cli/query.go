@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -32,6 +33,10 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdActiveGaugesPerDenom(),
 		GetCmdUpcomingGauges(),
 		GetCmdRewardsEst(),
+		GetCmdRewards(),
+		GetCurrentReward(),
+		GetHistoricalReward(),
+		GetPeriodLockReward(),
 	)
 
 	return cmd
@@ -381,6 +386,196 @@ $ %s query incentives rewards-estimation
 	cmd.Flags().String(FlagOwner, "", "Owner to receive rewards, optionally used when lock-ids flag is NOT set")
 	cmd.Flags().String(FlagLockIds, "", "the lock ids to receive rewards, when it is empty, all lock ids of the owner are used")
 	cmd.Flags().Int64(FlagEndEpoch, 0, "the end epoch number to participate in rewards calculation")
+
+	return cmd
+}
+
+// GetCmdRewards returns current estimate of accumulated rewards
+func GetCmdRewards() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rewards [owner-addr]",
+		Short: "Query rewards estimation by combining both current and historical rewards",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query rewards estimation.
+Example:
+$ %s query incentives rewards [owner-addr] 
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			owner := args[0]
+
+			lockIdsCombined, err := cmd.Flags().GetString(FlagLockIds)
+			if err != nil {
+				return err
+			}
+
+			var lockIds []uint64
+			if lockIdsCombined != "" {
+				lockIdStrs := strings.Split(lockIdsCombined, ",")
+				for _, lockIdStr := range lockIdStrs {
+					lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
+					if err != nil {
+						return err
+					}
+					lockIds = append(lockIds, lockId)
+				}
+			}
+
+			res, err := queryClient.Rewards(cmd.Context(), &types.RewardsRequest{
+				Owner:   owner,
+				LockIds: lockIds,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(FlagLockIds, "", "the lock ids to receive rewards, when it is empty, all lock ids of the owner are used")
+
+	return cmd
+}
+
+func GetCurrentReward() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "current-reward [denom] [lockable-duration]",
+		Short: "Query current reward",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query current reward.
+Example:
+$ %s query incentives current-reward [denom] [lockable-duration]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			denom := args[0]
+
+			duration, err := time.ParseDuration(args[1])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.CurrentReward(cmd.Context(), &types.CurrentRewardRequest{
+				Denom:             denom,
+				LockableDurations: duration,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetHistoricalReward() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "historical-reward [denom] [lockable-duration] [period]",
+		Short: "Query historical reward",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query historical reward.
+Example:
+$ %s query incentives historical-reward [denom] [lockable-duration] [period]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			denom := args[0]
+
+			duration, err := time.ParseDuration(args[1])
+			if err != nil {
+				return err
+			}
+
+			period, err := strconv.ParseInt(args[2], 10, 64)
+
+			res, err := queryClient.HistoricalReward(cmd.Context(), &types.HistoricalRewardRequest{
+				Denom:             denom,
+				LockableDurations: duration,
+				Period:            period,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetPeriodLockReward() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "period-lock-reward [id]",
+		Short: "Query period lock reward",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query period lock reward.
+Example:
+$ %s query incentives period-lock-reward [id]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.PeriodLockReward(cmd.Context(), &types.PeriodLockRewardRequest{
+				Id: id,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

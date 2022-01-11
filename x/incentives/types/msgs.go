@@ -10,8 +10,10 @@ import (
 
 // constants
 const (
-	TypeMsgCreateGauge = "create_gauge"
-	TypeMsgAddToGauge  = "add_to_gauge"
+	TypeMsgCreateGauge        = "create_gauge"
+	TypeMsgAddToGauge         = "add_to_gauge"
+	TypeMsgClaimLockReward    = "claim_lock_reward"
+	TypeMsgClaimLockRewardAll = "claim_lock_reward_all"
 )
 
 var _ sdk.Msg = &MsgCreateGauge{}
@@ -91,6 +93,53 @@ func (m MsgAddToGauge) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 func (m MsgAddToGauge) GetSigners() []sdk.AccAddress {
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
+}
+
+func NewMsgClaimLockReward(owner sdk.AccAddress, lockId uint64) *MsgClaimLockReward {
+	return &MsgClaimLockReward{
+		Owner: owner.String(),
+		ID:    lockId,
+	}
+}
+
+func (m MsgClaimLockReward) Route() string { return RouterKey }
+func (m MsgClaimLockReward) Type() string  { return TypeMsgClaimLockReward }
+func (m MsgClaimLockReward) ValidateBasic() error {
+	if m.Owner == "" {
+		return errors.New("owner should be set")
+	}
+
+	return nil
+}
+func (m MsgClaimLockReward) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgClaimLockReward) GetSigners() []sdk.AccAddress {
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
+}
+
+func NewMsgClaimLockRewardAll(owner sdk.AccAddress) *MsgClaimLockRewardAll {
+	return &MsgClaimLockRewardAll{
+		Owner: owner.String(),
+	}
+}
+
+func (m MsgClaimLockRewardAll) Route() string { return RouterKey }
+func (m MsgClaimLockRewardAll) Type() string  { return TypeMsgClaimLockRewardAll }
+func (m MsgClaimLockRewardAll) ValidateBasic() error {
+	if m.Owner == "" {
+		return errors.New("owner should be set")
+	}
+
+	return nil
+}
+func (m MsgClaimLockRewardAll) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgClaimLockRewardAll) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }

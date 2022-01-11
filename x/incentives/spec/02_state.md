@@ -36,6 +36,23 @@ message Gauge {
 }
 ```
 
+message HistoricalReward {
+  repeated cosmos.base.v1beta1.DecCoin cummulative_reward_ratio = 1; // accumulated rewards per share
+}
+
+message CurrentReward {
+  uint64 period = 1; // current period number
+  int64 last_processed_epoch = 2; // last processed epoch number
+  cosmos.base.v1beta1.Coin coin = 3; // total stake
+  repeated cosmos.base.v1beta1.Coin rewards = 4; // current rewards
+}
+
+message PeriodLockReward {
+  uint64 ID = 1; // lock id
+  map<string, uint64> period = 2; // last withdrawn period
+  repeated cosmos.base.v1beta1.Coin rewards = 3; // withdrawn reward
+}
+
 ### Gauge queues
 
 #### Upcoming queue
