@@ -29,7 +29,8 @@ func (msg MsgSwapExactAmountIn) TokenInDenom() string {
 	return msg.TokenIn.Denom
 }
 func (msg MsgSwapExactAmountIn) TokenOutDenom() string {
-	return msg.Routes[0].GetTokenOutDenom()
+	lastRouteIndex := len(msg.Routes) - 1
+	return msg.Routes[lastRouteIndex].GetTokenOutDenom()
 }
 func (msg MsgSwapExactAmountIn) TokenDenomsOnPath() []string {
 	denoms := make([]string, 0, len(msg.Routes)+1)
