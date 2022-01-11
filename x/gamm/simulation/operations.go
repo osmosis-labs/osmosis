@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
@@ -42,7 +43,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak stakingTypes.AccountKeeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
 	bk stakingTypes.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
@@ -60,7 +61,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreatePool,
-			SimulateMsgCreatePool(ak, bk, k),
+			SimulateMsgCreateBalancerPool(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgSwapExactAmountIn,
@@ -99,7 +100,7 @@ func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types
 	return assets
 }
 
-func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.BalancerPoolParams {
+func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) balancer.BalancerPoolParams {
 	// swapFeeInt := int64(r.Intn(1e5))
 	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -107,7 +108,7 @@ func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.Poo
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
 	// TODO: Randomly generate LBP params
-	return types.BalancerPoolParams{
+	return balancer.BalancerPoolParams{
 		// SwapFee:                  swapFee,
 		SwapFee: sdk.ZeroDec(),
 		ExitFee: exitFee,
@@ -128,8 +129,8 @@ func Max(x, y int) int {
 	return y
 }
 
-// SimulateMsgCreatePool generates a MsgCreatePool with random values
-func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
+// SimulateMsgCreateBalancerPool generates a MsgCreatePool with random values
+func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -137,11 +138,11 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.Len() <= 1 {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgCreatePool, "Account doesn't have 2 different coin types"), nil, nil
+				types.ModuleName, balancer.TypeMsgCreateBalancerPool, "Account doesn't have 2 different coin types"), nil, nil
 		}
 
 		poolAssets := genPoolAssets(r, simAccount, simCoins)
-		PoolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
+		poolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
 
 		// Commented out as genFuturePoolGovernor() panics on empty denom slice.
 		// TODO: fix and provide proper denom types.
@@ -159,23 +160,23 @@ func SimulateMsgCreatePool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(denoms[0], 1)},
 		})
 
-		// futurePoolGovernor := genFuturePoolGovernor(r, simAccount.Address, denoms)
-		msg := types.MsgCreateBalancerPool{
+		msg := &balancer.MsgCreateBalancerPool{
 			Sender:             simAccount.Address.String(),
-			FuturePoolGovernor: "",
+			PoolParams:         &poolParams,
 			PoolAssets:         poolAssets,
-			PoolParams:         PoolParams,
+			FuturePoolGovernor: "",
 		}
 
 		spentCoins := types.PoolAssetsCoins(poolAssets)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)
+			r, app, txGen, msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
 
 // SimulateMsgSwapExactAmountIn generates a MsgSwapExactAmountIn with random values
+// TODO: Change to use expected keepers
 func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

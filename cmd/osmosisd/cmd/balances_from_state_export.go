@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,28 +23,33 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
+const FlagSelectPoolIds = "breakdown-by-pool-ids"
+
 type DeriveSnapshot struct {
 	NumberAccounts uint64                    `json:"num_accounts"`
 	Accounts       map[string]DerivedAccount `json:"accounts"`
 }
 
 // DerivedAccount provide fields of snapshot per account
+// It is the simplified struct we are presenting in this 'balances from state export' snapshot for people.
 type DerivedAccount struct {
-	Address          string    `json:"address"`
-	Balances         sdk.Coins `json:"balance"`
-	Staked           sdk.Int   `json:"staked"`
-	Unstaked         sdk.Int   `json:"unstaked"`
-	Bonded           sdk.Coins `json:"bonded"`
-	UnclaimedAirdrop sdk.Coins `json:"unclaimed_airdrop"`
-	TotalBalances    sdk.Coins `json:"total_balances"`
+	// TODO: Consider removing this, since duplicated
+	Address             string               `json:"address"`
+	LiquidBalances      sdk.Coins            `json:"liquid_balance"`
+	Staked              sdk.Int              `json:"staked"`
+	UnbondingStake      sdk.Int              `json:"unbonding_stake"`
+	Bonded              sdk.Coins            `json:"bonded"`
+	BondedBySelectPools map[uint64]sdk.Coins `json:"bonded_by_select_pools"`
+	UnclaimedAirdrop    sdk.Coins            `json:"unclaimed_airdrop"`
+	TotalBalances       sdk.Coins            `json:"total_balances"`
 }
 
 func newDerivedAccount(address string) DerivedAccount {
 	return DerivedAccount{
 		Address:          address,
-		Balances:         sdk.Coins{},
+		LiquidBalances:   sdk.Coins{},
 		Staked:           sdk.ZeroInt(),
-		Unstaked:         sdk.ZeroInt(),
+		UnbondingStake:   sdk.ZeroInt(),
 		Bonded:           sdk.Coins{},
 		UnclaimedAirdrop: sdk.Coins{},
 	}
@@ -73,6 +79,68 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 	return balances
 }
 
+// pools is a map from LP share string -> pool.
+// TODO: Make a separate type for this
+func underlyingCoinsForSelectPools(
+	originCoins sdk.Coins,
+	pools map[string]gammtypes.PoolI,
+	selectPoolIDs []uint64) map[uint64]sdk.Coins {
+
+	balancesByPool := make(map[uint64]sdk.Coins)
+
+	for _, coin := range originCoins {
+		isLpShare := pools[coin.Denom] != nil
+		if !isLpShare {
+			continue
+		}
+		pool := pools[coin.Denom]
+		coinPoolID := pool.GetId()
+
+		isSelectPoolID := false
+		// check if poolID in select pool IDs
+		// TODO: Later change selectPoolIDs to be a hashmap for convenience
+		for _, selectID := range selectPoolIDs {
+			if selectID == coinPoolID {
+				isSelectPoolID = true
+				break
+			}
+		}
+
+		if !isSelectPoolID {
+			continue
+		}
+
+		// at this point, we've determined this is an LP share for a pool we care about
+		balancesByPool[coinPoolID] = underlyingCoins(sdk.Coins{coin}, pools)
+	}
+
+	return balancesByPool
+}
+
+func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, error) {
+	genState := make(map[string]json.RawMessage)
+
+	genesisFile, err := os.Open(genesisFilePath)
+	if err != nil {
+		return genState, err
+	}
+	defer genesisFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(genesisFile)
+
+	var doc tmtypes.GenesisDoc
+	err = tmjson.Unmarshal(byteValue, &doc)
+	if err != nil {
+		return genState, err
+	}
+
+	err = json.Unmarshal(doc.AppState, &genState)
+	if err != nil {
+		panic(err)
+	}
+	return genState, nil
+}
+
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -85,49 +153,43 @@ Example:
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-
 			config.SetRoot(clientCtx.HomeDir)
 
 			genesisFile := args[0]
+			genState, err := getGenStateFromPath(genesisFile)
+			if err != nil {
+				return err
+			}
 			snapshotOutput := args[1]
 
-			// Read genesis file
-			genesisJson, err := os.Open(genesisFile)
+			// Get select bonded pool IDs from flag if its provided
+			selectPoolIdsStr, err := cmd.Flags().GetString(FlagSelectPoolIds)
 			if err != nil {
 				return err
 			}
-			defer genesisJson.Close()
-
-			byteValue, _ := ioutil.ReadAll(genesisJson)
-
-			var doc tmtypes.GenesisDoc
-			err = tmjson.Unmarshal(byteValue, &doc)
-			if err != nil {
-				return err
-			}
-
-			genState := make(map[string]json.RawMessage)
-			err = json.Unmarshal(doc.AppState, &genState)
-			if err != nil {
-				panic(err)
+			selectBondedPoolIDs := []uint64{}
+			if selectPoolIdsStr != "" {
+				selectBondedPoolIDs, err = parseUint64SliceFromString(selectPoolIdsStr, ",")
+				if err != nil {
+					return err
+				}
 			}
 
 			authGenesis := authtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["auth"], &authGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["auth"], &authGenesis)
 			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
 			if err != nil {
 				panic(err)
 			}
 			accounts = authtypes.SanitizeGenesisAccounts(accounts)
 
-			// Produce the map of address to total atom balance, both staked and unstaked
+			// Produce the map of address to total atom balance, both staked and UnbondingStake
 			snapshotAccs := make(map[string]DerivedAccount)
 
 			bankGenesis := banktypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
 			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
@@ -135,12 +197,12 @@ Example:
 					acc = newDerivedAccount(address)
 				}
 
-				acc.Balances = balance.Coins
+				acc.LiquidBalances = balance.Coins
 				snapshotAccs[address] = acc
 			}
 
 			stakingGenesis := stakingtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
 			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
@@ -153,7 +215,7 @@ Example:
 					unbondingOsmos = unbondingOsmos.Add(entry.Balance)
 				}
 
-				acc.Unstaked = acc.Unstaked.Add(unbondingOsmos)
+				acc.UnbondingStake = acc.UnbondingStake.Add(unbondingOsmos)
 
 				snapshotAccs[address] = acc
 			}
@@ -181,7 +243,7 @@ Example:
 			}
 
 			lockupGenesis := lockuptypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
 			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
@@ -195,7 +257,7 @@ Example:
 			}
 
 			claimGenesis := claimtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["claim"], &claimGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
 			for _, record := range claimGenesis.ClaimRecords {
 				address := record.Address
 
@@ -223,7 +285,7 @@ Example:
 			}
 
 			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
 
 			// collect gamm pools
 			pools := make(map[string]gammtypes.PoolI)
@@ -238,12 +300,17 @@ Example:
 
 			// convert balances to underlying coins and sum up balances to total balance
 			for addr, account := range snapshotAccs {
-				account.Balances = underlyingCoins(account.Balances, pools)
+				// All pool shares are in liquid balances OR bonded balances (locked),
+				// therefore underlyingCoinsForSelectPools on liquidBalances + bondedBalances
+				// will include everything that is in one of those two pools.
+				account.BondedBySelectPools = underlyingCoinsForSelectPools(
+					account.LiquidBalances.Add(account.Bonded...), pools, selectBondedPoolIDs)
+				account.LiquidBalances = underlyingCoins(account.LiquidBalances, pools)
 				account.Bonded = underlyingCoins(account.Bonded, pools)
-				account.TotalBalances = account.TotalBalances.
-					Add(account.Balances...).
+				account.TotalBalances = sdk.NewCoins().
+					Add(account.LiquidBalances...).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
-					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Unstaked)).
+					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
 					Add(account.Bonded...).
 					Add(account.UnclaimedAirdrop...)
 				snapshotAccs[addr] = account
@@ -267,7 +334,25 @@ Example:
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(FlagSelectPoolIds, "",
+		"Output a special breakdown for amount LP'd to the provided pools. Usage --breakdown-by-pool-ids=1,2,605")
 
 	return cmd
+}
+
+// TODO: move somewhere common, make more commands use it
+func parseUint64SliceFromString(s string, seperator string) ([]uint64, error) {
+	var ids []uint64
+	for _, s := range strings.Split(s, seperator) {
+		s = strings.TrimSpace(s)
+		base := 10
+		bitlen := 64
+
+		parsed, err := strconv.ParseUint(s, base, bitlen)
+		if err != nil {
+			return []uint64{}, err
+		}
+		ids = append(ids, parsed)
+	}
+	return ids, nil
 }

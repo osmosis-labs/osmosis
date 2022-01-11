@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
+	osmoapp "github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/x/lockup"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/stretchr/testify/assert"
@@ -44,11 +45,11 @@ var testGenesis = types.GenesisState{
 }
 
 func TestInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	lockup.InitGenesis(ctx, app.LockupKeeper, genesis)
+	lockup.InitGenesis(ctx, *app.LockupKeeper, genesis)
 
 	coins := app.LockupKeeper.GetAccountLockedCoins(ctx, acc1)
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 25000000).String())
@@ -65,13 +66,13 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	lockup.InitGenesis(ctx, app.LockupKeeper, genesis)
+	lockup.InitGenesis(ctx, *app.LockupKeeper, genesis)
 
-	err := app.BankKeeper.SetBalance(ctx, acc2, sdk.NewInt64Coin("foo", 5000000))
+	err := simapp.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
 	_, err = app.LockupKeeper.LockTokens(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
 	require.NoError(t, err)
@@ -79,7 +80,7 @@ func TestExportGenesis(t *testing.T) {
 	coins := app.LockupKeeper.GetAccountLockedCoins(ctx, acc2)
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 10000000).String())
 
-	genesisExported := lockup.ExportGenesis(ctx, app.LockupKeeper)
+	genesisExported := lockup.ExportGenesis(ctx, *app.LockupKeeper)
 	require.Equal(t, genesisExported.LastLockId, uint64(11))
 	require.Equal(t, genesisExported.Locks, []types.PeriodLock{
 		{
@@ -114,25 +115,25 @@ func TestExportGenesis(t *testing.T) {
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
+	am := lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 
-	err := app.BankKeeper.SetBalance(ctx, acc2, sdk.NewInt64Coin("foo", 5000000))
+	err := simapp.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
 	_, err = app.LockupKeeper.LockTokens(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
 	require.NoError(t, err)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
-		app := simapp.Setup(false)
+		app := osmoapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := lockup.NewAppModule(appCodec, app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
+		am := lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }

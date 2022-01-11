@@ -22,14 +22,20 @@ func TestGenesisStateMarshalUnmarshal(t *testing.T) {
 			state: &types.GenesisState{
 				Params:            types.DefaultParams(),
 				LockableDurations: []time.Duration(nil),
-				DistrInfo:         nil,
+				DistrInfo: &types.DistrInfo{
+					TotalWeight: sdk.ZeroInt(),
+					Records:     nil,
+				},
 			},
 		},
 		{ // empty array distribution info
 			state: &types.GenesisState{
 				Params:            types.DefaultParams(),
 				LockableDurations: []time.Duration(nil),
-				DistrInfo:         &types.DistrInfo{},
+				DistrInfo: &types.DistrInfo{
+					TotalWeight: sdk.ZeroInt(),
+					Records:     nil,
+				},
 			},
 		},
 		{ // one record distribution info
@@ -51,7 +57,10 @@ func TestGenesisStateMarshalUnmarshal(t *testing.T) {
 			state: &types.GenesisState{
 				Params:            types.Params{},
 				LockableDurations: []time.Duration(nil),
-				DistrInfo:         nil,
+				DistrInfo: &types.DistrInfo{
+					TotalWeight: sdk.ZeroInt(),
+					Records:     nil,
+				},
 			},
 		},
 	}

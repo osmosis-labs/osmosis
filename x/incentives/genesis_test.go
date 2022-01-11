@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
+	osmoapp "github.com/osmosis-labs/osmosis/app"
 	"github.com/osmosis-labs/osmosis/x/incentives"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -14,10 +15,10 @@ import (
 )
 
 func TestIncentivesExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	genesis := incentives.ExportGenesis(ctx, app.IncentivesKeeper)
+	genesis := incentives.ExportGenesis(ctx, *app.IncentivesKeeper)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
 	require.Len(t, genesis.Gauges, 0)
 
@@ -29,12 +30,12 @@ func TestIncentivesExportGenesis(t *testing.T) {
 		Duration:      time.Second,
 	}
 	startTime := time.Now()
-	err := app.BankKeeper.SetBalances(ctx, addr, coins)
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
 	require.NoError(t, err)
 	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1)
 	require.NoError(t, err)
 
-	genesis = incentives.ExportGenesis(ctx, app.IncentivesKeeper)
+	genesis = incentives.ExportGenesis(ctx, *app.IncentivesKeeper)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
 	require.Len(t, genesis.Gauges, 1)
 
@@ -51,7 +52,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 }
 
 func TestIncentivesInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	validateGenesis := types.DefaultGenesis().Params.Validate()
@@ -74,7 +75,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 		DistributedCoins:  sdk.Coins(nil),
 		StartTime:         startTime.UTC(),
 	}
-	incentives.InitGenesis(ctx, app.IncentivesKeeper, types.GenesisState{
+	incentives.InitGenesis(ctx, *app.IncentivesKeeper, types.GenesisState{
 		Params: types.Params{
 			DistrEpochIdentifier: "week",
 		},

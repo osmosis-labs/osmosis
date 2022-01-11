@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -81,7 +82,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		for j := 0; j < numDenoms; j++ {
 			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
 		}
-		_ = app.BankKeeper.SetBalances(ctx, addr, coins)
+		_ = simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
 		app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
 		addrs = append(addrs, addr)
 	}

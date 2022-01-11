@@ -3,12 +3,13 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 )
 
-func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
+func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	type param struct {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
@@ -79,7 +80,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
@@ -103,7 +104,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
+func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	type param struct {
 		tokenInDenom     string
 		tokenInMaxAmount sdk.Int
@@ -174,7 +175,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.preparePool()
+		poolId := suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
@@ -198,7 +199,7 @@ func (suite *KeeperTestSuite) TestSimpleSwapExactAmountOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestActivePoolSwap() {
+func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 	type testCase struct {
 		blockTime  time.Time
 		expectPass bool
@@ -214,21 +215,17 @@ func (suite *KeeperTestSuite) TestActivePoolSwap() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := suite.app.BankKeeper.AddCoins(
-				suite.ctx,
-				acc,
-				sdk.NewCoins(
-					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-					sdk.NewCoin("foo", sdk.NewInt(10000000)),
-					sdk.NewCoin("bar", sdk.NewInt(10000000)),
-					sdk.NewCoin("baz", sdk.NewInt(10000000)),
-				),
-			)
+			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+				sdk.NewCoin("foo", sdk.NewInt(10000000)),
+				sdk.NewCoin("bar", sdk.NewInt(10000000)),
+				sdk.NewCoin("baz", sdk.NewInt(10000000)),
+			))
 			if err != nil {
 				panic(err)
 			}
 
-			poolId := suite.prepareBalancerPoolWithPoolParams(types.BalancerPoolParams{
+			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.BalancerPoolParams{
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})
