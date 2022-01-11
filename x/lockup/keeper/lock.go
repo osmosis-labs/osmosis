@@ -219,6 +219,10 @@ func (k Keeper) GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp t
 	return combineLocks(notUnlockings, unlockings)
 }
 
+func (k Keeper) GetLocksDenom(ctx sdk.Context, denom string) []types.PeriodLock {
+	return k.GetLocksLongerThanDurationDenom(ctx, denom, time.Duration(0))
+}
+
 // GetLockedDenom Returns the total amount of denom that are locked
 func (k Keeper) GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int {
 	totalAmtLocked := k.GetPeriodLocksAccumulation(ctx, types.QueryCondition{
@@ -532,6 +536,11 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
+	return k.unlock(ctx, lock)
+}
+
+func (k Keeper) unlock(ctx sdk.Context, lock types.PeriodLock) error {
+
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
 		return err
@@ -559,4 +568,17 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
+}
+
+// ForceUnlock ignores unlock duration and immediately unlock and refund.
+// CONTRACT: should be used only at the chain upgrade script
+// TODO: Revisit for Superfluid Staking
+func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
+	if !lock.IsUnlocking() {
+		err := k.BeginUnlock(ctx, lock)
+		if err != nil {
+			return err
+		}
+	}
+	return k.unlock(ctx, lock)
 }

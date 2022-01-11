@@ -54,6 +54,7 @@ type BankKeeper interface {
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	IterateAllBalances(ctx sdk.Context, callback func(addr sdk.AccAddress, coin sdk.Coin) (stop bool))
 }
 
 // DistrKeeper defines the contract needed to be fulfilled for distribution keeper
