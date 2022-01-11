@@ -9,6 +9,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -30,7 +31,10 @@ type assetTwap struct {
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) lockuptypes.PeriodLock {
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+	suite.Require().NoError(err)
+	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, coins)
+	suite.Require().NoError(err)
 	suite.Require().NoError(err)
 	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
 	suite.Require().NoError(err)
@@ -44,7 +48,7 @@ func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus)
 	validator, err := stakingtypes.NewValidator(valAddr, valPub, stakingtypes.NewDescription("moniker", "", "", "", ""))
 	suite.Require().NoError(err)
 
-	amount := sdk.TokensFromConsensusPower(1)
+	amount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
 	issuedShares := amount.ToDec()
 	validator.Status = bondStatus
 	validator.Tokens = validator.Tokens.Add(amount)

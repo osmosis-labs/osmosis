@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 				consAddr, err := validator.GetConsAddr()
 				suite.Require().NoError(err)
 				// slash by slash factor
-				power := sdk.TokensToConsensusPower(validator.Tokens)
+				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
 				suite.app.StakingKeeper.Slash(suite.ctx, consAddr, 80, power, slashFactor)
 			}
 

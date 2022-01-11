@@ -4,7 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
+	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -21,11 +23,13 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	}
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, acc1, coins)
+	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+	suite.Require().NoError(err)
+	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, acc1, coins)
 	suite.Require().NoError(err)
 
 	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(
-		suite.ctx, acc1, gammtypes.BalancerPoolParams{
+		suite.ctx, acc1, balancer.BalancerPoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, poolAssets, "")
@@ -65,7 +69,10 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
 			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-			err := suite.app.BankKeeper.SetBalances(suite.ctx, acc1, sdk.Coins{sdk.NewInt64Coin("foo", 1000000)})
+			coins := sdk.Coins{sdk.NewInt64Coin("foo", 1000000)}
+			err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+			suite.Require().NoError(err)
+			err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, acc1, coins)
 			suite.Require().NoError(err)
 			_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, 1, "foo", sdk.NewInt(1000000), sdk.NewInt64Coin(appparams.BaseCoinUnit, 2500))
 			suite.Require().NoError(err)
