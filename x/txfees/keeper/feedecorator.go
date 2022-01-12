@@ -4,8 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
+
+// DefaultArbMinGasFee if its not set in a config somewhere.
+// currently 0 uosmo/gas to preserve functionality with old node software
+// TODO: Bump after next minor version. (in 6.2+)
+var DefaultArbMinGasFee sdk.Dec = sdk.ZeroDec()
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).
@@ -14,13 +20,19 @@ import (
 // If fee is high enough or not CheckTx, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator
 type MempoolFeeDecorator struct {
-	TxFeesKeeper Keeper
+	TxFeesKeeper       Keeper
+	ConfigArbMinGasFee sdk.Dec
 }
 
 func NewMempoolFeeDecorator(txFeesKeeper Keeper) MempoolFeeDecorator {
 	return MempoolFeeDecorator{
-		TxFeesKeeper: txFeesKeeper,
+		TxFeesKeeper:       txFeesKeeper,
+		ConfigArbMinGasFee: DefaultArbMinGasFee.Clone(),
 	}
+}
+
+func (mfd *MempoolFeeDecorator) SetArbMinGasFee(dec sdk.Dec) {
+	mfd.ConfigArbMinGasFee = dec
 }
 
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -59,8 +71,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// So we ensure that the provided fees meet a minimum threshold for the validator,
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minGasPrices := ctx.MinGasPrices()
-		minBaseGasPrice := minGasPrices.AmountOf(baseDenom)
+		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, tx)
 		if !(minBaseGasPrice.IsZero()) {
 			if len(feeCoins) != 1 {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
@@ -95,4 +106,13 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	}
 
 	return nil
+}
+
+func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.Tx) sdk.Dec {
+	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
+
+	if txfee_filters.IsArbTxLoose(tx) {
+		return sdk.MaxDec(cfgMinGasPrice, mfd.ConfigArbMinGasFee)
+	}
+	return cfgMinGasPrice
 }
