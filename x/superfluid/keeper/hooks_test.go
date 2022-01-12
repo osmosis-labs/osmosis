@@ -202,3 +202,6 @@ func (suite *KeeperTestSuite) TestOnStartUnlock() {
 		})
 	}
 }
+
+// TODO: add test for BeforeSlashingUnbondingDelegation via native slash function
+// TODO: add test for BeforeValidatorSlashed after implementation

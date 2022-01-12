@@ -303,7 +303,8 @@ func (app *OsmosisApp) SetupHooks() {
 
 	app.LockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
-		// insert lockup hooks receivers here
+			// insert lockup hooks receivers here
+			app.SuperfluidKeeper.Hooks(),
 		),
 	)
 
