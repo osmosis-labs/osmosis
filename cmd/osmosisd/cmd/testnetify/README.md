@@ -22,6 +22,7 @@ cp $HOME/testnet_genesis.json $HOME/testnet_genesis_bk.json
 NOTE: There are three values in the python script you can change.
 1. The operator address (op_address) and its corresponding public key (op_pubkey). I provided the mnemonic for the provided address (osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj), but you may change the address and corresponding pubkey if desired
 2. The chain-id (new_chain_id)
+3. The config.toml file location (at the very end of the script, change the path if its somewhere other than $HOME/.osmosisd/config)
 
 Mnemonic for provided address:
 **bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort**
