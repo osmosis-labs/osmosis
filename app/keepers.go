@@ -220,7 +220,6 @@ func (app *OsmosisApp) InitNormalKeepers() {
 	app.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appCodec, keys[incentivestypes.StoreKey],
 		app.GetSubspace(incentivestypes.ModuleName),
-		*app.AccountKeeper,
 		app.BankKeeper, app.LockupKeeper, app.EpochsKeeper)
 
 	mintKeeper := mintkeeper.NewKeeper(
