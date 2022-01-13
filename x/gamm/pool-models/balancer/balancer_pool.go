@@ -53,6 +53,18 @@ func NewBalancerPool(poolId uint64, balancerPoolParams BalancerPoolParams, asset
 	return *pool, nil
 }
 
+func (pa BalancerPool) SolveConstantFunctionInvariant(balanceA, weightA, balanceB, weightB, amountA sdk.Dec) sdk.Dec {
+	return solveConstantFunctionInvariant(balanceA, weightA, balanceB, weightB, amountA)
+}
+
+func (pa BalancerPool) SolveTokenFromShare(balance, weight, totalShares, shareAmount sdk.Dec) sdk.Dec {
+	return solveTokenFromShare(balance, weight, totalShares, shareAmount)
+}
+
+func (pa BalancerPool) SolveShareFromToken(balance, weight, totalShares, tokenAmount sdk.Dec) sdk.Dec {
+	return solveShareFromToken(balance, weight, totalShares, tokenAmount)
+}
+
 // GetAddress returns the address of a pool.
 // If the pool address is not bech32 valid, it returns an empty address.
 func (pa BalancerPool) GetAddress() sdk.AccAddress {

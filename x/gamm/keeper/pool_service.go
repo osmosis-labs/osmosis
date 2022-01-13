@@ -191,14 +191,14 @@ func (k Keeper) JoinSwapExternAmountIn(
 		return sdk.Int{}, err
 	}
 
-	normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
-	shareOutAmount = calcPoolOutGivenSingleIn(
-		PoolAsset.Token.Amount.ToDec(),
-		normalizedWeight,
-		pool.GetTotalShares().Amount.ToDec(),
-		tokenIn.Amount.ToDec(),
-		pool.GetPoolSwapFee(),
-	).TruncateInt()
+	shareOutAmountDec, err := types.CalcPoolOutGivenSingleIn(
+		pool,
+		tokenIn,
+	)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	shareOutAmount = shareOutAmountDec.TruncateInt()
 
 	if shareOutAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
@@ -259,14 +259,16 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
-	normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
-	tokenInAmount = calcSingleInGivenPoolOut(
-		PoolAsset.Token.Amount.ToDec(),
-		normalizedWeight,
-		pool.GetTotalShares().Amount.ToDec(),
-		shareOutAmount.ToDec(),
-		pool.GetPoolSwapFee(),
-	).TruncateInt()
+	tokenInAmountDec, err := types.CalcSingleInGivenPoolOut(
+		pool,
+		shareOutAmount,
+		tokenInDenom,
+	)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	tokenInAmount = tokenInAmountDec.TruncateInt()
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -411,15 +413,16 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
-	normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
-	tokenOutAmount = calcSingleOutGivenPoolIn(
-		PoolAsset.Token.Amount.ToDec(),
-		normalizedWeight,
-		pool.GetTotalShares().Amount.ToDec(),
-		shareInAmount.ToDec(),
-		pool.GetPoolSwapFee(),
-		pool.GetPoolExitFee(),
-	).TruncateInt()
+	tokenOutAmountDec, err := types.CalcSingleOutGivenPoolIn(
+		pool,
+		shareInAmount,
+		tokenOutDenom,
+	)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	tokenOutAmount = tokenOutAmountDec.TruncateInt()
 
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -496,15 +499,15 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, err
 	}
 
-	normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
-	shareInAmount = calcPoolInGivenSingleOut(
-		PoolAsset.Token.Amount.ToDec(),
-		normalizedWeight,
-		pool.GetTotalShares().Amount.ToDec(),
-		tokenOut.Amount.ToDec(),
-		pool.GetPoolSwapFee(),
-		pool.GetPoolExitFee(),
-	).TruncateInt()
+	shareInAmountDec, err := types.CalcPoolInGivenSingleOut(
+		pool,
+		tokenOut,
+	)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	shareInAmount = shareInAmountDec.TruncateInt()
 
 	if shareInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")

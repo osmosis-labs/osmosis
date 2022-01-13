@@ -107,3 +107,15 @@ func PoolAssetsCoins(assets []PoolAsset) sdk.Coins {
 	}
 	return coins
 }
+
+type NormalizedPoolAsset struct {
+	Token  sdk.Coin `json:"token" yaml:"token"`
+	Weight sdk.Dec  `json:"weight" yaml:"weight"`
+}
+
+func (asset PoolAsset) Normalize(totalWeight sdk.Int) NormalizedPoolAsset {
+	return NormalizedPoolAsset{
+		Token:  asset.Token,
+		Weight: asset.Weight.ToDec().Quo(totalWeight.ToDec()),
+	}
+}
