@@ -58,6 +58,18 @@ func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus)
 	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
 	suite.app.StakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
 	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
+
+	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
+	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
+	err = suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+	suite.Require().NoError(err)
+	if bondStatus == stakingtypes.Bonded {
+		err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, stakingtypes.BondedPoolName, coins)
+		suite.Require().NoError(err)
+	} else {
+		err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, stakingtypes.NotBondedPoolName, coins)
+		suite.Require().NoError(err)
+	}
 	return valAddr
 }
 

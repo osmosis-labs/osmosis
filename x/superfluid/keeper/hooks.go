@@ -18,7 +18,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
 		// Slash all module accounts' LP token based on slash amount before twap update
-		k.SlashLockupsForSlashedOnDelegation(ctx)
 
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			priceMultiplier := gammtypes.InitPoolSharesSupply
@@ -125,7 +124,7 @@ func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, 
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
-	// TODO: we could slash superfluid staking lockups instantly at the time of validator slash
+	h.k.SlashLockupsForValidatorSlash(ctx, valAddr, fraction)
 }
 func (h Hooks) BeforeSlashingUnbondingDelegation(ctx sdk.Context, unbondingDelegation stakingtypes.UnbondingDelegation,
 	infractionHeight int64, slashFactor sdk.Dec) {

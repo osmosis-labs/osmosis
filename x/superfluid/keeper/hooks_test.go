@@ -203,5 +203,94 @@ func (suite *KeeperTestSuite) TestOnStartUnlock() {
 	}
 }
 
-// TODO: add test for BeforeSlashingUnbondingDelegation via native slash function
-// TODO: add test for BeforeValidatorSlashed after implementation
+func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
+	testCases := []struct {
+		name                  string
+		validatorStats        []stakingtypes.BondStatus
+		superDelegations      []superfluidDelegation
+		superUnbondingLockIds []uint64
+		slashedValIndexes     []int64
+		expSlashedLockIds     []uint64
+		expUnslashedLockIds   []uint64
+	}{
+		{
+			"happy path with single validator and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]uint64{1},
+			[]int64{0},
+			[]uint64{1},
+			[]uint64{},
+		},
+		{
+			"with single validator and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]uint64{1, 2},
+			[]int64{0},
+			[]uint64{1, 2},
+			[]uint64{},
+		},
+		{
+			"with multiple validators and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]uint64{1, 2},
+			[]int64{0},
+			[]uint64{1},
+			[]uint64{2},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+			suite.Require().Equal(poolId, uint64(1))
+
+			slashFactor := sdk.NewDecWithPrec(5, 2)
+
+			// setup validators
+			valAddrs := suite.SetupValidators(tc.validatorStats)
+			// setup superfluid delegations
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+
+			for _, lockId := range tc.superUnbondingLockIds {
+				// superfluid undelegate
+				_, err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
+				suite.Require().NoError(err)
+			}
+
+			// slash unbonding lockups for all intermediary accounts
+			for _, valIndex := range tc.slashedValIndexes {
+				validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddrs[valIndex])
+				suite.Require().True(found)
+				suite.ctx = suite.ctx.WithBlockHeight(100)
+				consAddr, err := validator.GetConsAddr()
+				suite.Require().NoError(err)
+				// slash by slash factor
+				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
+				suite.app.StakingKeeper.Slash(suite.ctx, consAddr, 80, power, slashFactor)
+				// Note: this calls BeforeSlashingUnbondingDelegation hook
+			}
+
+			// check slashed lockups
+			for _, lockId := range tc.expSlashedLockIds {
+				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(950000).String())
+			}
+
+			// check unslashed lockups
+			for _, lockId := range tc.expUnslashedLockIds {
+				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(1000000).String())
+			}
+		})
+	}
+}

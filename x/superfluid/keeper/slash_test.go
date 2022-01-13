@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
+func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -86,12 +86,8 @@ func (suite *KeeperTestSuite) TestSlashLockupsForSlashedOnDelegation() {
 				// slash by slash factor
 				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
 				suite.app.StakingKeeper.Slash(suite.ctx, consAddr, 80, power, slashFactor)
+				// Note: this calls BeforeValidatorSlashed hook
 			}
-
-			// refresh intermediary account delegations
-			suite.NotPanics(func() {
-				suite.app.SuperfluidKeeper.SlashLockupsForSlashedOnDelegation(suite.ctx)
-			})
 
 			// check lock changes after validator & lockups slashing
 			for _, lockIndex := range tc.expSlashedLockIndexes {
