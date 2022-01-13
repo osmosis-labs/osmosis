@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
@@ -18,12 +17,12 @@ type Keeper struct {
 
 	hooks types.LockupHooks
 
-	ak authkeeper.AccountKeeper
+	ak types.AccountKeeper
 	bk types.BankKeeper
 }
 
 // NewKeeper returns an instance of Keeper
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak authkeeper.AccountKeeper, bk types.BankKeeper) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
