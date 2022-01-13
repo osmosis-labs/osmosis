@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -17,13 +16,12 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 	hooks      types.IncentiveHooks
-	ak         authkeeper.AccountKeeper
 	bk         types.BankKeeper
 	lk         types.LockupKeeper
 	ek         types.EpochKeeper
 }
 
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
@@ -32,7 +30,6 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Sub
 		cdc:        cdc,
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
-		ak:         ak,
 		bk:         bk,
 		lk:         lk,
 		ek:         ek,

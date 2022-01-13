@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
@@ -18,7 +17,7 @@ type Keeper struct {
 
 	hooks types.LockupHooks
 
-	ak authkeeper.AccountKeeper
+	ak types.AccountKeeper
 	bk types.BankKeeper
 	dk types.DistrKeeper
 }
