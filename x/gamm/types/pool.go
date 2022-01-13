@@ -106,13 +106,17 @@ func CalcSpotPrice(
 	pool PoolI,
 	tokenIn, tokenOut string,
 ) (sdk.Dec, error) {
-	assetIn, assetOut, err := getPoolInOutAssets(pool, tokenIn, tokenOut)
+	assetIn, err := pool.GetPoolAsset(tokenIn)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	assetOut, err := pool.GetPoolAsset(tokenOut)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	number := assetIn.Token.Amount.ToDec().Quo(assetIn.Weight)
-	denom := assetOut.Token.Amount.ToDec().Quo(assetOut.Weight)
+	number := assetIn.Token.Amount.ToDec().Quo(assetIn.Weight.ToDec())
+	denom := assetOut.Token.Amount.ToDec().Quo(assetOut.Weight.ToDec())
 	ratio := number.Quo(denom)
 
 	return ratio, nil
@@ -140,7 +144,7 @@ func CalcSpotPriceWithSwapFee(
 	return spotPrice.Mul(scale), nil
 }
 
-func getPoolInOutAssets(pool PoolI, tokenIn, tokenOut string) (NormalizedPoolAsset, NormalizedPoolAsset, error) {
+func getPoolInOutAssetsNormalized(pool PoolI, tokenIn, tokenOut string) (NormalizedPoolAsset, NormalizedPoolAsset, error) {
 	assetIn, err := pool.GetPoolAsset(tokenIn)
 	if err != nil {
 		return NormalizedPoolAsset{}, NormalizedPoolAsset{}, err
@@ -151,7 +155,6 @@ func getPoolInOutAssets(pool PoolI, tokenIn, tokenOut string) (NormalizedPoolAss
 	}
 	totalWeight := pool.GetTotalWeight()
 	return assetIn.Normalize(totalWeight), assetOut.Normalize(totalWeight), nil
-
 }
 
 func CalcOutGivenIn(
@@ -159,7 +162,7 @@ func CalcOutGivenIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 ) (sdk.Dec, error) {
-	assetIn, assetOut, err := getPoolInOutAssets(pool, tokenIn.Denom, tokenOutDenom)
+	assetIn, assetOut, err := getPoolInOutAssetsNormalized(pool, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -178,7 +181,7 @@ func CalcInGivenOut(
 	tokenOut sdk.Coin,
 	tokenInDenom string,
 ) (sdk.Dec, error) {
-	assetIn, assetOut, err := getPoolInOutAssets(pool, tokenInDenom, tokenOut.Denom)
+	assetIn, assetOut, err := getPoolInOutAssetsNormalized(pool, tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -187,8 +190,8 @@ func CalcInGivenOut(
 		assetOut.Weight,
 		assetIn.Token.Amount.ToDec(),
 		assetIn.Weight,
-		tokenOut.Amount.ToDec(),
-	)
+		tokenOut.Amount.ToDec().Neg(),
+	).Neg()
 	fmt.Printf("%+v, %+v, %s\n", assetIn, assetOut, tokenInAmountFeeDeducted)
 	return addSwapFee(pool, tokenInAmountFeeDeducted), nil
 }
@@ -209,7 +212,7 @@ func CalcSingleInGivenPoolOut(
 		pool.GetTotalShares().Amount.ToDec(),
 		shareOutAmount.ToDec(),
 	)
-	return addSwapFee(pool, tokenInAmountFeeDeducted), nil
+	return addSwapFeeWeightProportional(pool, tokenInAmountFeeDeducted, normalized.Weight), nil
 }
 
 func CalcSingleOutGivenPoolIn(
@@ -229,9 +232,9 @@ func CalcSingleOutGivenPoolIn(
 		normalized.Token.Amount.ToDec(),
 		normalized.Weight,
 		pool.GetTotalShares().Amount.ToDec(),
-		shareInAmountExitFeeDeducted,
-	)
-	tokenOutAmountFeeDeducted := subSwapFee(pool, tokenOutAmount)
+		shareInAmountExitFeeDeducted.Neg(),
+	).Neg()
+	tokenOutAmountFeeDeducted := subSwapFeeWeightProportional(pool, tokenOutAmount, normalized.Weight)
 	fmt.Println(tokenOutAmountFeeDeducted)
 	return tokenOutAmountFeeDeducted, nil
 }
@@ -246,13 +249,13 @@ func CalcPoolInGivenSingleOut(
 	}
 	normalized := asset.Normalize(pool.GetTotalWeight())
 
-	tokenOutAmount := addSwapFee(pool, tokenOutFeeDeducted.Amount.ToDec())
+	tokenOutAmount := addSwapFeeWeightProportional(pool, tokenOutFeeDeducted.Amount.ToDec(), normalized.Weight)
 	shareInAmountFeeDeducted := pool.SolveShareFromToken(
 		normalized.Token.Amount.ToDec(),
 		normalized.Weight,
 		pool.GetTotalShares().Amount.ToDec(),
-		tokenOutAmount,
-	)
+		tokenOutAmount.Neg(),
+	).Neg()
 	return addExitFee(pool, shareInAmountFeeDeducted), nil
 }
 
@@ -266,7 +269,7 @@ func CalcPoolOutGivenSingleIn(
 	}
 	normalized := asset.Normalize(pool.GetTotalWeight())
 
-	tokenInAmountFeeDeducted := subSwapFee(pool, tokenIn.Amount.ToDec())
+	tokenInAmountFeeDeducted := subSwapFeeWeightProportional(pool, tokenIn.Amount.ToDec(), normalized.Weight)
 	shareOutAmount := pool.SolveShareFromToken(
 		normalized.Token.Amount.ToDec(),
 		normalized.Weight,

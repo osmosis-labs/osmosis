@@ -1,0 +1,2226 @@
+{Token:100denomin Weight:0.250000000000000000}, {Token:200denomout Weight:0.750000000000000000}, 264.132908511606736700
+{"address":"osmo14x024vdljh5ul7dx3f3z59wpgvvswlrxnc3t33x7mlt3ar65m76s74zqk6","id":0,"pool_params":{"swapFee":"0.150000000000000000","exitFee":"0.000000000000000000"},"future_pool_governor":"","total_weight":"10737418240.000000000000000000","total_shares":{"denom":"gamm/pool/0","amount":"300"},"pool_assets":[{"token":{"denom":"denomin","amount":"99"},"weight":"2147483648"},{"token":{"denom":"denomout","amount":"200"},"weight":"8589934592"}]}, {Token:200denomout Weight:0.800000000000000000}, 40.000000000000000000
+31.775349722088872472
+{"address":"osmo1mw0ac6rwlp5r8wapwk3zs6g29h8fcscxqakdzw9emkne6c8wjp9q0t3v8t","id":1,"pool_params":{"swapFee":"0.000000000000000000","exitFee":"0.000000000000000000"},"future_pool_governor":"","total_weight":"644245094400.000000000000000000","total_shares":{"denom":"gamm/pool/1","amount":"110000033333298888900"},"pool_assets":[{"token":{"denom":"bar","amount":"5000001"},"weight":"214748364800"},{"token":{"denom":"baz","amount":"5000001"},"weight":"322122547200"},{"token":{"denom":"foo","amount":"8857822"},"weight":"107374182400"}]}, {Token:8857822foo Weight:0.166666666666666667}, 10000000000000000000.000000000000000000
+3857811.494851681268620422
+{"address":"osmo1500hy75krs9e8t50aav6fahk8sxhajn9ctp40qwvvn8tcprkk6wszun4a5","id":2,"pool_params":{"swapFee":"0.000000000000000000","exitFee":"0.000000000000000000"},"future_pool_governor":"","total_weight":"644245094400.000000000000000000","total_shares":{"denom":"gamm/pool/2","amount":"110000033333298888900"},"pool_assets":[{"token":{"denom":"bar","amount":"5000001"},"weight":"214748364800"},{"token":{"denom":"baz","amount":"5000001"},"weight":"322122547200"},{"token":{"denom":"foo","amount":"8857822"},"weight":"107374182400"}]}, {Token:8857822foo Weight:0.166666666666666667}, 10000000000000000000.000000000000000000
+3857811.494851681268620422
+{"address":"osmo1c9gj5nwxhuh2gz7wwg4r8e8tw8v7ggy9lh2hu7kkdgh0t450754qh9cpvd","id":3,"pool_params":{"swapFee":"0.000000000000000000","exitFee":"0.000000000000000000"},"future_pool_governor":"","total_weight":"644245094400.000000000000000000","total_shares":{"denom":"gamm/pool/3","amount":"110000033333298888900"},"pool_assets":[{"token":{"denom":"bar","amount":"5000001"},"weight":"214748364800"},{"token":{"denom":"baz","amount":"5000001"},"weight":"322122547200"},{"token":{"denom":"foo","amount":"8857822"},"weight":"107374182400"}]}, {Token:8857822foo Weight:0.166666666666666667}, 10000000000000000000.000000000000000000
+3857811.494851681268620422
+{"address":"osmo1mw0ac6rwlp5r8wapwk3zs6g29h8fcscxqakdzw9emkne6c8wjp9q0t3v8t","id":1,"pool_params":{"swapFee":"0.000000000000000000","exitFee":"0.000000000000000000"},"future_pool_governor":"","total_weight":"644245094400.000000000000000000","total_shares":{"denom":"gamm/pool/1","amount":"110000033333298888900"},"pool_assets":[{"token":{"denom":"bar","amount":"5000001"},"weight":"214748364800"},{"token":{"denom":"baz","amount":"5000001"},"weight":"322122547200"},{"token":{"denom":"foo","amount":"8857822"},"weight":"107374182400"}]}, {Token:8857822foo Weight:0.166666666666666667}, 10000000000000000000.000000000000000000
+3857811.494851681268620422
+{"address":"osmo1500hy75krs9e8t50aav6fahk8sxhajn9ctp40qwvvn8tcprkk6wszun4a5","id":2,"pool_params":{"swapFee":"0.000000000000000000","exitFee":"0.000000000000000000"},"future_pool_governor":"","total_weight":"644245094400.000000000000000000","total_shares":{"denom":"gamm/pool/2","amount":"110000033333298888900"},"pool_assets":[{"token":{"denom":"bar","amount":"5000001"},"weight":"214748364800"},{"token":{"denom":"baz","amount":"5000001"},"weight":"322122547200"},{"token":{"denom":"foo","amount":"8857822"},"weight":"107374182400"}]}, {Token:8857822foo Weight:0.166666666666666667}, 10000000000000000000.000000000000000000
+3857811.494851681268620422
+{"address":"osmo1c9gj5nwxhuh2gz7wwg4r8e8tw8v7ggy9lh2hu7kkdgh0t450754qh9cpvd","id":3,"pool_params":{"swapFee":"0.000000000000000000","exitFee":"0.000000000000000000"},"future_pool_governor":"","total_weight":"644245094400.000000000000000000","total_shares":{"denom":"gamm/pool/3","amount":"110000033333298888900"},"pool_assets":[{"token":{"denom":"bar","amount":"5000001"},"weight":"214748364800"},{"token":{"denom":"baz","amount":"5000001"},"weight":"322122547200"},{"token":{"denom":"foo","amount":"8857822"},"weight":"107374182400"}]}, {Token:8857822foo Weight:0.166666666666666667}, 10000000000000000000.000000000000000000
+3857811.494851681268620422
+{Token:4999996bar Weight:0.333333333333333333}, {Token:5000010foo Weight:0.166666666666666667}, 4.999993500002000000
+{Token:4999996bar Weight:0.333333333333333333}, {Token:5000010foo Weight:0.166666666666666667}, 4.999993500002000000
+{Token:4999996bar Weight:0.333333333333333333}, {Token:5000010foo Weight:0.166666666666666667}, 4.999993500002000000
+{Token:4999996bar Weight:0.333333333333333333}, {Token:5000010foo Weight:0.166666666666666667}, 4.999993500002000000
+{Token:4999996bar Weight:0.333333333333333333}, {Token:5000010foo Weight:0.166666666666666667}, 4.999993500002000000
+{Token:4999996bar Weight:0.333333333333333333}, {Token:5000010foo Weight:0.166666666666666667}, 4.999993500002000000
+{Token:5000000bar Weight:0.333333333333333333}, {Token:5000000baz Weight:0.500000000000000000}, 153839.512535043380000000
+{Token:5000000foo Weight:0.166666666666666667}, {Token:5000000bar Weight:0.333333333333333333}, 322483.656107453655000000
+{Token:5000000foo Weight:0.166666666666666667}, {Token:5000000bar Weight:0.333333333333333333}, 322483.656107453655000000
+{Token:5000000bar Weight:0.333333333333333333}, {Token:5000000baz Weight:0.500000000000000000}, 153839.512535043380000000
+{Token:5000000foo Weight:0.166666666666666667}, {Token:5000000bar Weight:0.333333333333333333}, 206164.098292378170000000
+{Token:5000000foo Weight:0.166666666666666667}, {Token:5000000baz Weight:0.500000000000000000}, 1084570.453314689455000000
+{Token:5000000foo Weight:0.166666666666666667}, {Token:5000000baz Weight:0.500000000000000000}, 1084570.453314689455000000
+test deets: total 10000 of pools joined, begin average at 1000
+--- FAIL: TestKeeperTestSuite (1.59s)
+    --- FAIL: TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountIn (0.01s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				multihop_test.go:46
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountIn
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				multihop_test.go:46
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountIn
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				multihop_test.go:46
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountIn
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				multihop_test.go:47
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountIn
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				multihop_test.go:47
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountIn
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				multihop_test.go:47
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountIn
+    --- FAIL: TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountOut (0.01s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				multihop_test.go:134
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountOut
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				multihop_test.go:134
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountOut
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				multihop_test.go:134
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountOut
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				multihop_test.go:135
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountOut
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				multihop_test.go:135
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountOut
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				multihop_test.go:135
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleMultihopSwapExactAmountOut
+    --- FAIL: TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn (0.02s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:83
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountIn
+    --- FAIL: TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut (0.02s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				swap_test.go:178
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestBalancerPoolSimpleSwapExactAmountOut
+    --- FAIL: TestKeeperTestSuite/TestJoinPoolGas (0.61s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				gas_test.go:56
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestJoinPoolGas
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				gas_test.go:56
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestJoinPoolGas
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				gas_test.go:56
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestJoinPoolGas
+    --- FAIL: TestKeeperTestSuite/TestQueryBalancerPoolPoolAssets (0.00s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:156
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolPoolAssets
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:156
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolPoolAssets
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:156
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolPoolAssets
+    --- FAIL: TestKeeperTestSuite/TestQueryBalancerPoolSpotPrice (0.00s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:198
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolSpotPrice
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:198
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolSpotPrice
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:198
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolSpotPrice
+        grpc_query_test.go:214: 
+            	Error Trace:	grpc_query_test.go:214
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolSpotPrice
+        grpc_query_test.go:222: 
+            	Error Trace:	grpc_query_test.go:222
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolSpotPrice
+        grpc_query_test.go:230: 
+            	Error Trace:	grpc_query_test.go:230
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolSpotPrice
+    --- FAIL: TestKeeperTestSuite/TestQueryBalancerPoolTotalLiquidity (0.00s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:141
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolTotalLiquidity
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:141
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolTotalLiquidity
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:141
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryBalancerPoolTotalLiquidity
+    --- FAIL: TestKeeperTestSuite/TestQueryNumPools2 (0.01s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:99
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryNumPools2
+    --- FAIL: TestKeeperTestSuite/TestQueryPool (0.01s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:27
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPool
+    --- FAIL: TestKeeperTestSuite/TestQueryPools (0.01s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:44
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryPools
+    --- FAIL: TestKeeperTestSuite/TestQueryTotalShares (0.00s)
+        keeper_test.go:88: 
+            	Error Trace:	keeper_test.go:88
+            	            				grpc_query_test.go:114
+            	Error:      	Not equal: 
+            	            	expected: "2.000000000000000000"
+            	            	actual  : "1.999999999999999994"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-2.000000000000000000
+            	            	+1.999999999999999994
+            	Test:       	TestKeeperTestSuite/TestQueryTotalShares
+        keeper_test.go:91: 
+            	Error Trace:	keeper_test.go:91
+            	            				grpc_query_test.go:114
+            	Error:      	Not equal: 
+            	            	expected: "1.500000000000000000"
+            	            	actual  : "1.500000000000000002"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-1.500000000000000000
+            	            	+1.500000000000000002
+            	Test:       	TestKeeperTestSuite/TestQueryTotalShares
+        keeper_test.go:94: 
+            	Error Trace:	keeper_test.go:94
+            	            				grpc_query_test.go:114
+            	Error:      	Not equal: 
+            	            	expected: "0.333333333333333333"
+            	            	actual  : "0.333333333333333334"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1 +1 @@
+            	            	-0.333333333333333333
+            	            	+0.333333333333333334
+            	Test:       	TestKeeperTestSuite/TestQueryTotalShares
+FAIL
+FAIL	github.com/osmosis-labs/osmosis/x/gamm/keeper	2.165s
+FAIL

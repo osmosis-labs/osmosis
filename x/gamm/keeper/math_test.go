@@ -94,8 +94,8 @@ func TestCalcOutGivenIn(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(100)),
-		"expected value & actual value's difference should less than precision*10: %s, %s",
+		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(10000)),
+		"expected value & actual value's difference should less than precision*10000: %s, %s",
 		expectedDec.String(),
 		s.String(),
 	)
@@ -113,7 +113,7 @@ func TestCalcInGivenOut(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(100)),
+		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(10)),
 		"expected value & actual value's difference should less than precision*10: %s, %s",
 		expectedDec.String(),
 		s.String(),
@@ -121,7 +121,7 @@ func TestCalcInGivenOut(t *testing.T) {
 }
 
 func TestCalcPoolOutGivenSingleIn(t *testing.T) {
-	pool := testPool(t, 100, 2, 9999, 8, "0.15")
+	pool := testPool(t, 100, 2, 99, 8, "0.15")
 	pool.AddTotalShares(sdk.NewInt(300))
 
 	s, err := types.CalcPoolOutGivenSingleIn(pool, sdk.Coin{denomIn, sdk.NewInt(40)})
@@ -132,8 +132,8 @@ func TestCalcPoolOutGivenSingleIn(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(100)),
-		"expected value & actual value's difference should less than precision*10: %s, %s",
+		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(10000)),
+		"expected value & actual value's difference should less than precision*10000: %s, %s",
 		expectedDec.String(),
 		s.String(),
 	)
@@ -169,7 +169,7 @@ func TestCalcSingleInGivenPoolOut(t *testing.T) {
 */
 
 func TestCalcSingleOutGivenPoolIn(t *testing.T) {
-	pool := testPool(t, 9999, 2, 200, 8, "0.15")
+	pool := testPool(t, 99, 2, 200, 8, "0.15")
 	pool.AddTotalShares(sdk.NewInt(300))
 
 	s, err := types.CalcSingleOutGivenPoolIn(pool, sdk.NewInt(40), denomOut)
@@ -180,15 +180,15 @@ func TestCalcSingleOutGivenPoolIn(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(100)),
-		"expected value & actual value's difference should less than precision*10: %s, %s",
+		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(10000)),
+		"expected value & actual value's difference should less than precision*10000: %s, %s",
 		expectedDec.String(),
 		s.String(),
 	)
 }
 
 func TestCalcPoolInGivenSingleOut(t *testing.T) {
-	pool := testPool(t, 9999, 2, 200, 8, "0.15")
+	pool := testPool(t, 99, 2, 200, 8, "0.15")
 	pool.AddTotalShares(sdk.NewInt(300))
 
 	s, err := types.CalcPoolInGivenSingleOut(pool, sdk.Coin{denomOut, sdk.NewInt(70)})
@@ -199,8 +199,8 @@ func TestCalcPoolInGivenSingleOut(t *testing.T) {
 
 	require.True(
 		t,
-		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(100)),
-		"expected value & actual value's difference should less than precision*10: %s, %s",
+		expectedDec.Sub(s).Abs().LTE(osmomath.PowPrecision().MulInt64(10000)),
+		"expected value & actual value's difference should less than precision*10000: %s, %s",
 		expectedDec.String(),
 		s.String(),
 	)
