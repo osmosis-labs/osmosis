@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"testing"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -17,37 +16,37 @@ const (
 	denomOut = "denomout"
 )
 
-func testPool(t *testing.T, tokenBalaceInRaw, tokenWeightInRaw, tokenBalanceOutRaw, tokenWeightOutRaw int64, swapFeeStr string) types.PoolI {
-	// TODO: Change test to be table driven
-	tokenBalanceIn := sdk.NewInt(tokenBalaceInRaw)
-	tokenWeightIn := sdk.NewInt(tokenWeightInRaw)
-	tokenBalanceOut := sdk.NewInt(tokenBalanceOutRaw)
-	tokenWeightOut := sdk.NewInt(tokenWeightOutRaw)
+func poolAsset(denom string, balance int64, weight int64) types.PoolAsset {
+	return types.PoolAsset{
+		Token:  sdk.NewInt64Coin(denom, balance),
+		Weight: sdk.NewInt(weight),
+	}
+}
+
+func normalizedPoolAsset(denom string, balance int64, normalizedWeightStr string) types.NormalizedPoolAsset {
+	normalizedWeight, err := sdk.NewDecFromStr(normalizedWeightStr)
+	if err != nil {
+		panic(err)
+	}
+	return types.NormalizedPoolAsset{
+		Token:  sdk.NewInt64Coin(denom, balance),
+		Weight: normalizedWeight,
+	}
+}
+
+func swapFee(swapFeeStr string) sdk.Dec {
 	swapFee, err := sdk.NewDecFromStr(swapFeeStr)
-	require.NoError(t, err)
-
-	pool, err := balancer.NewBalancerPool(
-		0,
-		balancer.BalancerPoolParams{
-			SwapFee: swapFee,
-			ExitFee: sdk.ZeroDec(),
-		},
-		[]types.PoolAsset{
-			{Token: sdk.NewCoin(denomIn, tokenBalanceIn), Weight: tokenWeightIn},
-			{Token: sdk.NewCoin(denomOut, tokenBalanceOut), Weight: tokenWeightOut},
-		},
-		"", time.Time{},
-	)
-	require.NoError(t, err)
-
-	return &pool
+	if err != nil {
+		panic(err)
+	}
+	return swapFee
 }
 
 func TestCalcSpotPrice(t *testing.T) {
-	pool := testPool(t, 100, 1, 200, 3, "0")
-
-	actual_spot_price, err := types.CalcSpotPrice(pool, denomIn, denomOut)
-	require.NoError(t, err)
+	actual_spot_price := types.CalcSpotPrice(
+		poolAsset(denomIn, 100, 1),
+		poolAsset(denomOut, 200, 3),
+	)
 	// s = (100/.1) / (200 / .3) = (1000) / (2000 / 3) = 1.5
 	expected_spot_price, err := sdk.NewDecFromStr("1.5")
 	require.NoError(t, err)
@@ -65,10 +64,14 @@ func TestCalcSpotPrice(t *testing.T) {
 
 // TODO: Create test vectors with balancer contract
 func TestCalcSpotPriceWithSwapFee(t *testing.T) {
-	pool := testPool(t, 100, 1, 200, 3, "0.01")
-
-	s, err := types.CalcSpotPriceWithSwapFee(pool, denomIn, denomOut)
+	swapFee, err := sdk.NewDecFromStr("0.01")
 	require.NoError(t, err)
+
+	s := types.CalcSpotPriceWithSwapFee(
+		poolAsset(denomIn, 100, 1),
+		poolAsset(denomOut, 200, 3),
+		swapFee,
+	)
 
 	expectedDec, err := sdk.NewDecFromStr("1.51515151")
 	require.NoError(t, err)
@@ -84,10 +87,13 @@ func TestCalcSpotPriceWithSwapFee(t *testing.T) {
 }
 
 func TestCalcOutGivenIn(t *testing.T) {
-	pool := testPool(t, 100, 1, 200, 3, "0.01")
-
-	s, err := types.CalcOutGivenIn(pool, sdk.Coin{denomIn, sdk.NewInt(40)}, denomOut)
-	require.NoError(t, err)
+	s := types.CalcOutGivenIn(
+		balancer.BalancerSwap{},
+		normalizedPoolAsset(denomIn, 100, "0.25"),
+		normalizedPoolAsset(denomOut, 200, "0.75"),
+		sdk.NewInt(40),
+		swapFee("0.01"),
+	)
 
 	expectedDec, err := sdk.NewDecFromStr("21.0487006")
 	require.NoError(t, err)
@@ -103,10 +109,13 @@ func TestCalcOutGivenIn(t *testing.T) {
 }
 
 func TestCalcInGivenOut(t *testing.T) {
-	pool := testPool(t, 100, 1, 200, 3, "0.01")
-
-	s, err := types.CalcInGivenOut(pool, sdk.Coin{denomOut, sdk.NewInt(70)}, denomIn)
-	require.NoError(t, err)
+	s := types.CalcInGivenOut(
+		balancer.BalancerSwap{},
+		normalizedPoolAsset(denomIn, 100, "0.25"),
+		normalizedPoolAsset(denomOut, 200, "0.75"),
+		sdk.NewInt(70),
+		swapFee("0.01"),
+	)
 
 	expectedDec, err := sdk.NewDecFromStr("266.8009177")
 	require.NoError(t, err)
@@ -121,11 +130,13 @@ func TestCalcInGivenOut(t *testing.T) {
 }
 
 func TestCalcPoolOutGivenSingleIn(t *testing.T) {
-	pool := testPool(t, 100, 2, 99, 8, "0.15")
-	pool.AddTotalShares(sdk.NewInt(300))
-
-	s, err := types.CalcPoolOutGivenSingleIn(pool, sdk.Coin{denomIn, sdk.NewInt(40)})
-	require.NoError(t, err)
+	s := types.CalcPoolOutGivenSingleIn(
+		balancer.BalancerSwap{},
+		normalizedPoolAsset(denomIn, 100, "0.2"),
+		sdk.NewInt(300),
+		sdk.NewInt(40),
+		swapFee("0.15"),
+	)
 
 	expectedDec, err := sdk.NewDecFromStr("18.6519592")
 	require.NoError(t, err)
@@ -169,11 +180,14 @@ func TestCalcSingleInGivenPoolOut(t *testing.T) {
 */
 
 func TestCalcSingleOutGivenPoolIn(t *testing.T) {
-	pool := testPool(t, 99, 2, 200, 8, "0.15")
-	pool.AddTotalShares(sdk.NewInt(300))
-
-	s, err := types.CalcSingleOutGivenPoolIn(pool, sdk.NewInt(40), denomOut)
-	require.NoError(t, err)
+	s := types.CalcSingleOutGivenPoolIn(
+		balancer.BalancerSwap{},
+		normalizedPoolAsset(denomOut, 200, "0.8"),
+		sdk.NewInt(300),
+		sdk.NewInt(40),
+		swapFee("0.15"),
+		sdk.ZeroDec(),
+	)
 
 	expectedDec, err := sdk.NewDecFromStr("31.77534976")
 	require.NoError(t, err)
@@ -188,11 +202,14 @@ func TestCalcSingleOutGivenPoolIn(t *testing.T) {
 }
 
 func TestCalcPoolInGivenSingleOut(t *testing.T) {
-	pool := testPool(t, 99, 2, 200, 8, "0.15")
-	pool.AddTotalShares(sdk.NewInt(300))
-
-	s, err := types.CalcPoolInGivenSingleOut(pool, sdk.Coin{denomOut, sdk.NewInt(70)})
-	require.NoError(t, err)
+	s := types.CalcPoolInGivenSingleOut(
+		balancer.BalancerSwap{},
+		normalizedPoolAsset(denomOut, 200, "0.8"),
+		sdk.NewInt(300),
+		sdk.NewInt(70),
+		swapFee("0.15"),
+		sdk.ZeroDec(),
+	)
 
 	expectedDec, err := sdk.NewDecFromStr("90.29092777")
 	require.NoError(t, err)

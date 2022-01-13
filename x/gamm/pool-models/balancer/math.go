@@ -4,9 +4,15 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
-func solveConstantFunctionInvariant(
+var _ types.SwapI = BalancerSwap{}
+
+type BalancerSwap struct{}
+
+func (BalancerSwap) SolveConstantFunctionInvariant(
 	tokenBalanceFixed,
 	tokenWeightFixed,
 	tokenBalanceUnknown,
@@ -31,7 +37,7 @@ func weightDelta(
 	return osmomath.Pow(deltaRatio, normalizedWeight)
 }
 
-func solveTokenFromShare(
+func (BalancerSwap) SolveTokenFromShare(
 	tokenBalance,
 	tokenWeight,
 	poolSupply,
@@ -50,7 +56,7 @@ func solveTokenFromShare(
 	return newTokenBalance.Sub(tokenBalance)
 }
 
-func solveShareFromToken(
+func (BalancerSwap) SolveShareFromToken(
 	tokenBalance,
 	tokenWeight,
 	poolSupply,

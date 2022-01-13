@@ -53,17 +53,7 @@ func NewBalancerPool(poolId uint64, balancerPoolParams BalancerPoolParams, asset
 	return *pool, nil
 }
 
-func (pa BalancerPool) SolveConstantFunctionInvariant(balanceA, weightA, balanceB, weightB, amountA sdk.Dec) sdk.Dec {
-	return solveConstantFunctionInvariant(balanceA, weightA, balanceB, weightB, amountA)
-}
-
-func (pa BalancerPool) SolveTokenFromShare(balance, weight, totalShares, shareAmount sdk.Dec) sdk.Dec {
-	return solveTokenFromShare(balance, weight, totalShares, shareAmount)
-}
-
-func (pa BalancerPool) SolveShareFromToken(balance, weight, totalShares, tokenAmount sdk.Dec) sdk.Dec {
-	return solveShareFromToken(balance, weight, totalShares, tokenAmount)
-}
+func (BalancerPool) Swap() types.SwapI { return BalancerSwap{} }
 
 // GetAddress returns the address of a pool.
 // If the pool address is not bech32 valid, it returns an empty address.
@@ -230,42 +220,41 @@ func (pa BalancerPool) getPoolAssetAndIndex(denom string) (int, types.PoolAsset,
 	return i, pa.PoolAssets[i], nil
 }
 
-func (pa *BalancerPool) UpdatePoolAssetBalance(coin sdk.Coin) error {
-	// Check that PoolAsset exists.
-	assetIndex, existingAsset, err := pa.getPoolAssetAndIndex(coin.Denom)
-	if err != nil {
-		return err
-	}
-
-	if coin.Amount.LTE(sdk.ZeroInt()) {
-		return fmt.Errorf("can't set the pool's balance of a token to be zero or negative")
-	}
-
-	// Update the supply of the asset
-	existingAsset.Token = coin
-	pa.PoolAssets[assetIndex] = existingAsset
-	return nil
-}
-
-func (pa *BalancerPool) UpdatePoolAssetBalances(coins sdk.Coins) error {
+func (pa *BalancerPool) updatePoolAssetBalance(coins sdk.Coins, add bool) error {
 	// Ensures that there are no duplicate denoms, all denom's are valid,
 	// and amount is > 0
-	err := coins.Validate()
+	err := sdk.Coins(coins).Validate()
 	if err != nil {
 		return fmt.Errorf("provided coins are invalid, %v", err)
 	}
 
+	// TODO: We may be able to make this log(|coins|) faster in how it
+	// looks up denom -> Coin by doing a multi-search,
+	// but as we don't anticipate |coins| to be large, we omit this.
 	for _, coin := range coins {
-		// TODO: We may be able to make this log(|coins|) faster in how it
-		// looks up denom -> Coin by doing a multi-search,
-		// but as we don't anticipate |coins| to be large, we omit this.
-		err = pa.UpdatePoolAssetBalance(coin)
+		// Check that PoolAsset exists.
+		assetIndex, existingAsset, err := pa.getPoolAssetAndIndex(coin.Denom)
 		if err != nil {
 			return err
 		}
-	}
 
+		// Update the supply of the asset
+		if add {
+			existingAsset.Token = existingAsset.Token.Add(coin)
+		} else {
+			existingAsset.Token = existingAsset.Token.Sub(coin)
+		}
+		pa.PoolAssets[assetIndex] = existingAsset
+	}
 	return nil
+}
+
+func (pa *BalancerPool) AddPoolAssetBalance(coins ...sdk.Coin) error {
+	return pa.updatePoolAssetBalance(coins, true)
+}
+
+func (pa *BalancerPool) SubPoolAssetBalance(coins ...sdk.Coin) error {
+	return pa.updatePoolAssetBalance(coins, false)
 }
 
 func (pa BalancerPool) GetPoolAssets(denoms ...string) ([]types.PoolAsset, error) {
@@ -372,28 +361,6 @@ func (pa *BalancerPool) PokeTokenWeights(blockTime time.Time) {
 		updatedWeights := addPoolAssetWeights(params.InitialPoolWeights, scaledDiff)
 		pa.updateAllWeights(updatedWeights)
 	}
-}
-
-func (pa BalancerPool) GetTokenWeight(denom string) (sdk.Int, error) {
-	PoolAsset, err := pa.GetPoolAsset(denom)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	return PoolAsset.Weight, nil
-}
-
-func (pa BalancerPool) GetTokenBalance(denom string) (sdk.Int, error) {
-	PoolAsset, err := pa.GetPoolAsset(denom)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	return PoolAsset.Token.Amount, nil
-}
-
-func (pa BalancerPool) NumAssets() int {
-	return len(pa.PoolAssets)
 }
 
 func (pa BalancerPool) IsActive(curBlockTime time.Time) bool {

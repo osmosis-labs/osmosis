@@ -128,16 +128,16 @@ func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 	}})
 	require.Error(t, err)
 
-	err = pacc.UpdatePoolAssetBalance(
+	err = pacc.AddPoolAssetBalance(
 		sdk.NewCoin("test1", sdk.NewInt(0)))
 	require.Error(t, err)
 
-	err = pacc.UpdatePoolAssetBalance(
+	err = pacc.AddPoolAssetBalance(
 		sdk.Coin{Denom: "test1", Amount: sdk.NewInt(-1)},
 	)
 	require.Error(t, err)
 
-	err = pacc.UpdatePoolAssetBalance(
+	err = pacc.AddPoolAssetBalance(
 		sdk.NewCoin("test1", sdk.NewInt(1)))
 	require.NoError(t, err)
 
@@ -145,7 +145,7 @@ func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 
 	PoolAsset, err := pacc.GetPoolAsset("test1")
 	require.NoError(t, err)
-	require.Equal(t, sdk.NewInt(1).String(), PoolAsset.Token.Amount.String())
+	require.Equal(t, sdk.NewInt(50001).String(), PoolAsset.Token.Amount.String())
 }
 
 func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {

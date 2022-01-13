@@ -109,13 +109,13 @@ func (k Keeper) JoinPool(
 		return err
 	}
 
-	totalSharesAmount := pool.GetTotalShares().Amount
-	// shareRatio is the desired number of shares, divided by the total number of
-	// shares currently in the pool. It is intended to be used in scenarios where you want
-	// (tokens per share) * number of shares out = # tokens * (# shares out / cur total shares)
-	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
-	if shareRatio.LTE(sdk.ZeroDec()) {
-		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+	coins, err := types.CalcJoin(
+		pool.GetAllPoolAssets(),
+		pool.GetTotalShares().Amount,
+		shareOutAmount,
+	)
+	if err != nil {
+		return err
 	}
 
 	// Assume that the tokenInMaxAmounts is validated.
@@ -124,26 +124,13 @@ func (k Keeper) JoinPool(
 		tokenInMaxMap[max.Denom] = max.Amount
 	}
 
-	PoolAssets := pool.GetAllPoolAssets()
-	newPoolCoins := make([]sdk.Coin, 0, len(PoolAssets))
-	// Transfer the PoolAssets tokens to the pool's module account from the user account.
-	var coins sdk.Coins
-	for _, PoolAsset := range PoolAssets {
-		tokenInAmount := shareRatio.MulInt(PoolAsset.Token.Amount).TruncateInt()
-		if tokenInAmount.LTE(sdk.ZeroInt()) {
-			return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+	for _, tokenIn := range coins {
+		if tokenInMaxAmount, ok := tokenInMaxMap[tokenIn.Denom]; ok && tokenIn.Amount.GT(tokenInMaxAmount) {
+			return sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", tokenIn.Denom)
 		}
-
-		if tokenInMaxAmount, ok := tokenInMaxMap[PoolAsset.Token.Denom]; ok && tokenInAmount.GT(tokenInMaxAmount) {
-			return sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", PoolAsset.Token.Denom)
-		}
-
-		newPoolCoins = append(newPoolCoins,
-			sdk.NewCoin(PoolAsset.Token.Denom, PoolAsset.Token.Amount.Add(tokenInAmount)))
-		coins = append(coins, sdk.NewCoin(PoolAsset.Token.Denom, tokenInAmount))
 	}
 
-	err = pool.UpdatePoolAssetBalances(newPoolCoins)
+	err = pool.AddPoolAssetBalance(coins...)
 	if err != nil {
 		return err
 	}
@@ -191,14 +178,13 @@ func (k Keeper) JoinSwapExternAmountIn(
 		return sdk.Int{}, err
 	}
 
-	shareOutAmountDec, err := types.CalcPoolOutGivenSingleIn(
-		pool,
-		tokenIn,
-	)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-	shareOutAmount = shareOutAmountDec.TruncateInt()
+	shareOutAmount = types.CalcPoolOutGivenSingleIn(
+		pool.Swap(),
+		PoolAsset.Normalize(pool.GetTotalWeight()),
+		pool.GetTotalShares().Amount,
+		tokenIn.Amount,
+		pool.GetPoolSwapFee(),
+	).TruncateInt()
 
 	if shareOutAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
@@ -208,8 +194,7 @@ func (k Keeper) JoinSwapExternAmountIn(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
 	}
 
-	updatedTokenAmount := PoolAsset.Token.Add(tokenIn)
-	err = pool.UpdatePoolAssetBalance(updatedTokenAmount)
+	err = pool.AddPoolAssetBalance(tokenIn)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -259,16 +244,13 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
-	tokenInAmountDec, err := types.CalcSingleInGivenPoolOut(
-		pool,
+	tokenInAmount = types.CalcSingleInGivenPoolOut(
+		pool.Swap(),
+		PoolAsset.Normalize(pool.GetTotalWeight()),
+		pool.GetTotalShares().Amount,
 		shareOutAmount,
-		tokenInDenom,
-	)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	tokenInAmount = tokenInAmountDec.TruncateInt()
+		pool.GetPoolSwapFee(),
+	).TruncateInt()
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -278,13 +260,14 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", PoolAsset.Token.Denom)
 	}
 
-	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Add(tokenInAmount)
-	err = pool.UpdatePoolAssetBalance(PoolAsset.Token)
+	tokenIn := sdk.NewCoin(tokenInDenom, tokenInAmount)
+
+	err = pool.AddPoolAssetBalance(tokenIn)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)})
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{tokenIn})
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -299,7 +282,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
-	coinsAdded := sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}
+	coinsAdded := sdk.Coins{tokenIn}
 	k.createAddLiquidityEvent(ctx, sender, pool.GetId(), coinsAdded)
 	k.hooks.AfterJoinPool(ctx, sender, pool.GetId(), coinsAdded, shareOutAmount)
 	k.RecordTotalLiquidityIncrease(ctx, coinsAdded)
@@ -319,13 +302,14 @@ func (k Keeper) ExitPool(
 		return err
 	}
 
-	totalSharesAmount := pool.GetTotalShares().Amount
-	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
-	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
-	shareRatio := shareInAmountAfterExitFee.ToDec().QuoInt(totalSharesAmount)
-
-	if shareRatio.LTE(sdk.ZeroDec()) {
-		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+	coins, err := types.CalcExit(
+		pool.GetAllPoolAssets(),
+		pool.GetTotalShares().Amount,
+		shareInAmount,
+		pool.GetPoolExitFee(),
+	)
+	if err != nil {
+		return err
 	}
 
 	// Assume that the tokenInMaxAmounts is validated.
@@ -334,28 +318,15 @@ func (k Keeper) ExitPool(
 		tokenOutMinMap[min.Denom] = min.Amount
 	}
 
-	PoolAssets := pool.GetAllPoolAssets()
-	newPoolCoins := make([]sdk.Coin, 0, len(PoolAssets))
-	// Transfer the PoolAssets tokens to the user account from the pool's module account.
-	var coins sdk.Coins
-	for _, PoolAsset := range PoolAssets {
-		tokenOutAmount := shareRatio.MulInt(PoolAsset.Token.Amount).TruncateInt()
-		if tokenOutAmount.LTE(sdk.ZeroInt()) {
-			return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
-		}
-
+	for _, tokenOut := range coins {
 		// Check if a minimum token amount is specified for this token,
 		// and if so ensure that the minimum is less than the amount returned.
-		if tokenOutMinAmount, ok := tokenOutMinMap[PoolAsset.Token.Denom]; ok && tokenOutAmount.LT(tokenOutMinAmount) {
-			return sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
+		if tokenOutMinAmount, ok := tokenOutMinMap[tokenOut.Denom]; ok && tokenOut.Amount.LT(tokenOutMinAmount) {
+			return sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOut.Denom)
 		}
-
-		newPoolCoins = append(newPoolCoins,
-			sdk.NewCoin(PoolAsset.Token.Denom, PoolAsset.Token.Amount.Sub(tokenOutAmount)))
-		coins = append(coins, sdk.NewCoin(PoolAsset.Token.Denom, tokenOutAmount))
 	}
 
-	err = pool.UpdatePoolAssetBalances(newPoolCoins)
+	err = pool.SubPoolAssetBalance(coins...)
 	if err != nil {
 		return err
 	}
@@ -365,6 +336,8 @@ func (k Keeper) ExitPool(
 		return err
 	}
 
+	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
+	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 	// Remove the exit fee shares from the pool.
 	// This distributes the exit fee liquidity to every other LP remaining in the pool.
 	if exitFee.IsPositive() {
@@ -413,16 +386,14 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
-	tokenOutAmountDec, err := types.CalcSingleOutGivenPoolIn(
-		pool,
+	tokenOutAmount = types.CalcSingleOutGivenPoolIn(
+		pool.Swap(),
+		PoolAsset.Normalize(pool.GetTotalWeight()),
+		pool.GetTotalShares().Amount,
 		shareInAmount,
-		tokenOutDenom,
-	)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	tokenOutAmount = tokenOutAmountDec.TruncateInt()
+		pool.GetPoolSwapFee(),
+		pool.GetPoolExitFee(),
+	).TruncateInt()
 
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -432,8 +403,9 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
 	}
 
-	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Sub(tokenOutAmount)
-	err = pool.UpdatePoolAssetBalance(PoolAsset.Token)
+	tokenOut := sdk.NewCoin(tokenOutDenom, tokenOutAmount)
+
+	err = pool.SubPoolAssetBalance(tokenOut)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -441,9 +413,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 	exitFee := pool.GetPoolExitFee().MulInt(shareInAmount).TruncateInt()
 	shareInAmountAfterExitFee := shareInAmount.Sub(exitFee)
 
-	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
-		sdk.NewCoin(tokenOutDenom, tokenOutAmount),
-	})
+	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{tokenOut})
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -470,7 +440,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
-	removedCoins := sdk.Coins{sdk.NewCoin(tokenOutDenom, tokenOutAmount)}
+	removedCoins := sdk.Coins{tokenOut}
 	k.createRemoveLiquidityEvent(ctx, sender, pool.GetId(), removedCoins)
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, removedCoins)
 	k.RecordTotalLiquidityDecrease(ctx, removedCoins)
@@ -499,15 +469,14 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, err
 	}
 
-	shareInAmountDec, err := types.CalcPoolInGivenSingleOut(
-		pool,
-		tokenOut,
-	)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	shareInAmount = shareInAmountDec.TruncateInt()
+	shareInAmount = types.CalcPoolInGivenSingleOut(
+		pool.Swap(),
+		PoolAsset.Normalize(pool.GetTotalWeight()),
+		pool.GetTotalShares().Amount,
+		tokenOut.Amount,
+		pool.GetPoolSwapFee(),
+		pool.GetPoolExitFee(),
+	).TruncateInt()
 
 	if shareInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -517,8 +486,7 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", PoolAsset.Token.Denom)
 	}
 
-	PoolAsset.Token.Amount = PoolAsset.Token.Amount.Sub(tokenOut.Amount)
-	err = pool.UpdatePoolAssetBalance(PoolAsset.Token)
+	err = pool.SubPoolAssetBalance(tokenOut)
 	if err != nil {
 		return sdk.Int{}, err
 	}
