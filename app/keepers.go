@@ -211,8 +211,7 @@ func (app *OsmosisApp) InitNormalKeepers() {
 
 	app.LockupKeeper = lockupkeeper.NewKeeper(
 		appCodec, keys[lockuptypes.StoreKey],
-		// TODO: Visit why this needs to be deref'd
-		*app.AccountKeeper,
+		app.AccountKeeper,
 		app.BankKeeper)
 
 	app.EpochsKeeper = epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
