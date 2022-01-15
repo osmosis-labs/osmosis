@@ -16,7 +16,7 @@ var multiplayer = sdk.NewInt(2 << 61)
 // If now < start  return 0.
 // If now == start return 0.
 // if now == start + ROUND return 1...
-// if now > end return round the round at end.
+// if now > end return the end_round.
 // distribution happens at the beginning of each round
 func currentRound(start, end, now time.Time) int64 {
 	if now.Before(start) {
@@ -88,18 +88,18 @@ func withdraw(p *api.LBP, u *api.UserPosition, amount *sdk.Int, now time.Time) e
 }
 
 func pingLBP(p *api.LBP, now time.Time) {
-	round := currentRound(p.StartTime, p.EndTime, now)
 	// Need to use round for the end check to assure we have the final distribution
-	if now.Before(p.StartTime) || round >= p.EndRound {
+	if now.Before(p.StartTime) || p.Round >= p.EndRound {
 		return
 	}
 
+	round := currentRound(p.StartTime, p.EndTime, now)
 	diff := round - p.Round
 	if p.Shares.IsZero() || diff == 0 {
 		p.Round = round
 		return
 	}
-	remainingRounds := p.EndRound - p.Round
+	remainingRounds := p.EndRound - p.Round - 1
 
 	sold := p.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
 	if sold.IsPositive() {
