@@ -37,25 +37,7 @@ func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes
 	}
 	id, idBz := k.nextPoolID(store)
 	end := msg.StartTime.Add(msg.Duration)
-	p := api.LBP{
-		Treasury:  msg.Treasury,
-		Id:        id,
-		TokenOut:  msg.TokenOut,
-		TokenIn:   msg.TokenIn,
-		StartTime: msg.StartTime,
-		EndTime:   end,
-
-		OutRemaining: msg.InitialDeposit.Amount,
-		OutSold:      sdk.ZeroInt(),
-		OutPerShare:  sdk.ZeroInt(),
-
-		Staked: sdk.ZeroInt(),
-		Income: sdk.ZeroInt(),
-
-		Shares:   sdk.ZeroInt(),
-		Round:    0,
-		EndRound: currentRound(msg.StartTime, end, end),
-	}
+	p := newLBP(msg.Treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit.Amount)
 	k.saveLBP(store, idBz, &p)
 	// TODO:
 	// + send initial deposit from sender to the pool
@@ -164,6 +146,8 @@ func (k Keeper) exitLBP(ctx sdk.Context, msg *api.MsgExitLBP, store storetypes.K
 
 	pingLBP(p, ctx.BlockTime())
 	triggerUserPurchase(p, u)
+	// we don't need to update u.Spent, because we delete user record
+
 	coin := sdk.NewCoin(p.TokenOut, u.Purchased)
 	err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, sender, sdk.NewCoins(coin))
 	if err != nil {

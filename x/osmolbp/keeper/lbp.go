@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,12 +11,12 @@ import (
 )
 
 // TODO: verify if this is enough!
-var multiplayer = sdk.NewInt(2 << 61)
+var multiplayer = sdk.NewInt(1_000_000) // sdk.NewInt(2 << 61)
 
 // Returns the round number since lbp `start`.
 // If now < start  return 0.
-// If now == start return 0.
-// if now == start + ROUND return 1...
+// If now == start return 1.
+// if now == start + ROUND return 2...
 // if now > end return the end_round.
 // distribution happens at the beginning of each round
 func currentRound(start, end, now time.Time) int64 {
@@ -25,7 +26,7 @@ func currentRound(start, end, now time.Time) int64 {
 	if !end.After(now) { // !(end>now) => end<=now
 		now = end
 	}
-	return int64(now.Sub(start) / api.ROUND)
+	return int64(now.Sub(start)/api.ROUND) + 1
 }
 
 func lbpRemainigBalance(p *api.LBP, userShares sdk.Int) sdk.Int {
@@ -57,8 +58,8 @@ func lbpHasEnded(p *api.LBP, round int64) bool {
 
 func subscribe(p *api.LBP, u *api.UserPosition, amount sdk.Int, now time.Time) {
 	pingLBP(p, now)
-	triggerUserPurchase(p, u)
-	remaining := lbpRemainigBalance(p, u.Shares)
+	remaining := triggerUserPurchase(p, u)
+	// remaining := lbpRemainigBalance(p, u.Shares)
 	u.Spent = u.Spent.Add(u.Staked).Sub(remaining)
 	shares := computeSharesAmount(p, amount, false)
 	u.Shares = u.Shares.Add(shares)
@@ -70,8 +71,8 @@ func subscribe(p *api.LBP, u *api.UserPosition, amount sdk.Int, now time.Time) {
 
 func withdraw(p *api.LBP, u *api.UserPosition, amount *sdk.Int, now time.Time) error {
 	pingLBP(p, now)
-	triggerUserPurchase(p, u)
-	remaining := lbpRemainigBalance(p, u.Shares)
+	remaining := triggerUserPurchase(p, u)
+	// remaining := lbpRemainigBalance(p, u.Shares)
 	if amount == nil {
 		*amount = remaining
 	} else if remaining.GT(*amount) {
@@ -99,9 +100,17 @@ func pingLBP(p *api.LBP, now time.Time) {
 		p.Round = round
 		return
 	}
+	// remaining rounds including the current round
 	remainingRounds := p.EndRound - p.Round - 1
+	fmt.Println("remaining rounds:", remainingRounds, "current round:", p.Round,
+		" p.round:", p.Round, " round:", round)
+	p.Round = round
+	if remainingRounds == 0 {
+		return
+	}
 
 	sold := p.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
+	fmt.Println("sold", sold)
 	if sold.IsPositive() {
 		p.OutSold = p.OutSold.Add(sold)
 		p.OutRemaining = p.OutRemaining.Sub(sold)
@@ -112,20 +121,29 @@ func pingLBP(p *api.LBP, now time.Time) {
 	income := p.Staked.MulRaw(diff).QuoRaw(remainingRounds)
 	p.Income = p.Income.Add(income)
 	p.Staked = p.Staked.Sub(income)
-	p.Round = round
 }
 
-func triggerUserPurchase(p *api.LBP, u *api.UserPosition) {
+// returns remaining user token_in balance
+func triggerUserPurchase(p *api.LBP, u *api.UserPosition) sdk.Int {
+	// TODO: reorder and optimize - we can early return
 	if !p.OutPerShare.IsZero() && !u.Shares.IsZero() {
 		diff := p.OutPerShare.Sub(u.OutPerShare)
-		purchased := diff.Mul(u.Shares).Quo(multiplayer)
-		u.Purchased = u.Purchased.Add(purchased)
+		if !diff.IsZero() {
+			purchased := diff.Mul(u.Shares).Quo(multiplayer)
+			fmt.Printf("p.OutPerShare=%s   u.Shares=%s,  diff=%s, purchased=%s\n",
+				p.OutPerShare, u.Shares, diff, purchased)
+			u.Purchased = u.Purchased.Add(purchased)
+		}
 	}
 	u.OutPerShare = p.OutPerShare
+	remaining := lbpRemainigBalance(p, u.Shares)
 	if u.Shares.IsPositive() {
-		if lbpRemainigBalance(p, u.Shares).IsZero() {
+		if remaining.IsZero() {
 			p.Shares = p.Shares.Sub(u.Shares)
 			u.Shares = sdk.ZeroInt()
 		}
 	}
+	// we can't compute spent amount here because of the way how  we aggregate
+
+	return remaining
 }

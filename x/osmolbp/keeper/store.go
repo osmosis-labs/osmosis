@@ -48,13 +48,7 @@ func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, poolId []byte, 
 		if create == false {
 			return v, errors.ErrNotFound.Wrap("user position for given LBP is not found")
 		}
-		return api.UserPosition{
-			Shares:      sdk.ZeroInt(),
-			Staked:      sdk.ZeroInt(),
-			OutPerShare: sdk.ZeroInt(),
-			Spent:       sdk.ZeroInt(),
-			Purchased:   sdk.ZeroInt(),
-		}, nil
+		return newUserPosition(), nil
 	}
 	err := k.cdc.Unmarshal(bz, &v)
 	return v, err
