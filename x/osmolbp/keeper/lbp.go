@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -104,14 +103,14 @@ func pingLBP(p *api.LBP, now time.Time) {
 	}
 	// remaining rounds including the current round
 	remainingRounds := p.EndRound - p.Round
-	fmt.Println("remaining rounds:", remainingRounds, " p.round:", p.Round, " c_round:", round)
+	// fmt.Println("remaining rounds:", remainingRounds, " p.round:", p.Round, " c_round:", round)
 	p.Round = round
 	if remainingRounds == 0 {
 		return
 	}
 
 	sold := p.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
-	fmt.Println("sold", sold)
+	// fmt.Println("sold", sold)
 	if sold.IsPositive() {
 		p.OutSold = p.OutSold.Add(sold)
 		p.OutRemaining = p.OutRemaining.Sub(sold)
@@ -131,8 +130,8 @@ func triggerUserPurchase(p *api.LBP, u *api.UserPosition) sdk.Int {
 		diff := p.OutPerShare.Sub(u.OutPerShare)
 		if !diff.IsZero() {
 			purchased := diff.Mul(u.Shares).Quo(multiplayer)
-			fmt.Printf("p.OutPerShare=%s   u.Shares=%s,  diff=%s, purchased=%s\n",
-				p.OutPerShare, u.Shares, diff, purchased)
+			// fmt.Printf("p.OutPerShare=%s   u.Shares=%s,  diff=%s, purchased=%s\n",
+			// 	p.OutPerShare, u.Shares, diff, purchased)
 			u.Purchased = u.Purchased.Add(purchased)
 		}
 	}
