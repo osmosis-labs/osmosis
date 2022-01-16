@@ -36,7 +36,7 @@ func (s *LBPSuite) SetupSuite() {
 	s.before2 = t0.Add(api.ROUND)
 	s.start = t0.Add(api.ROUND * 10)
 	s.end = t0.Add(api.ROUND * 20)
-	s.after = t0.Add(api.ROUND * 22)
+	s.after = t0.Add(api.ROUND * 25)
 }
 
 func (s *LBPSuite) createLBP() *api.LBP {
@@ -70,5 +70,4 @@ func (s *LBPSuite) testNBuyers(n int) {
 		users[i] = &u
 		subscribe(p, &u, stakedAmount, s.before)
 	}
-
 }

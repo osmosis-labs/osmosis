@@ -133,9 +133,9 @@ func (s *TwoBuyersSuite) Test2BuyersEnd1() {
 	subscribe(s.p, s.u1, s.staked1, s.before)
 	subscribe(s.p, s.u2, s.staked2, s.before)
 
-	pingLBP(s.p, s.end.Add(-api.ROUND))
+	pingLBP(s.p, s.end.Add(-api.ROUND)) // last  purchase
 	triggerUserPurchase(s.p, s.u1)
-	checkUser(require, s.u1, s.staked1, s.staked1, s.u1.OutPerShare, s.u1PurchasePerRound.MulRaw(9), "user1 @ end")
+	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, s.u1PurchasePerRound.MulRaw(10), "user1 @ end")
 
 	pingLBP(s.p, s.end)
 	triggerUserPurchase(s.p, s.u1)
@@ -154,6 +154,38 @@ func (s *TwoBuyersSuite) Test2BuyersEnd2() {
 
 func (s *TwoBuyersSuite) Test2BuyersEnd3() {
 	require := s.Require()
+	subscribe(s.p, s.u1, s.staked1, s.before)
+	subscribe(s.p, s.u2, s.staked2, s.before)
+
+	pingLBP(s.p, s.after)
+	triggerUserPurchase(s.p, s.u1)
+	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, s.totalOut.QuoRaw(3), "user1 @ end")
+}
+
+func (s *TwoBuyersSuite) Test2BuyersEnd_mid1() {
+	require := s.Require()
+	end := s.end.Add(api.ROUND / 2) // half round after norrmal end
+	s.p.EndRound = currentRound(s.start, end, end)
+	subscribe(s.p, s.u1, s.staked1, s.before)
+	subscribe(s.p, s.u2, s.staked2, s.before)
+
+	pingLBP(s.p, s.end.Add(-api.ROUND/2)) // last purchase still happens in the end_round
+	triggerUserPurchase(s.p, s.u1)
+	checkUser(require, s.u1, s.staked1, s.staked1, s.u1.OutPerShare, s.totalOut.QuoRaw(3).Sub(s.u1PurchasePerRound), "user1 @ end")
+
+	pingLBP(s.p, s.end) // round(s.end) == round(end) == round(s.end + round/2)
+	triggerUserPurchase(s.p, s.u1)
+	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, s.totalOut.QuoRaw(3), "user1 @ end")
+
+	pingLBP(s.p, end)
+	triggerUserPurchase(s.p, s.u1)
+	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, s.totalOut.QuoRaw(3), "user1 @ end")
+}
+
+func (s *TwoBuyersSuite) Test2BuyersEnd_mid2() {
+	require := s.Require()
+	end := s.end.Add(api.ROUND / 2) // half round after normal end
+	s.p.EndRound = currentRound(s.start, end, end)
 	subscribe(s.p, s.u1, s.staked1, s.before)
 	subscribe(s.p, s.u2, s.staked2, s.before)
 

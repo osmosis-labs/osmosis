@@ -15,22 +15,20 @@ var multiplayer = sdk.NewInt(1_000_000) // sdk.NewInt(2 << 61)
 
 // Returns the round number since lbp `start`.
 // if now < start  return 0.
-// If now == start return 1.
-// if now == start + ROUND return 2
-// if now == start + 1.5*ROUND return 3...
-// if now == start + 2*ROUND return 3...
+// If now == start return 0.
+// if now == start + ROUND return 1
+// if now == start + 1.5*ROUND return 1...
+// if now == start + 2*ROUND return 2...
 // if now > end return the end_round.
-// distribution happens at the beginning of each round. Last distribution is at end_round-1
+// distribution happens at the beginning of each round. Last distribution is at end_round
 func currentRound(start, end, now time.Time) int64 {
 	if now.Before(start) {
 		return 0
 	}
-	var diff int64 = 1
 	if !end.After(now) { // !(end>now) => end<=now
 		now = end
-		diff = 0 // we need to finish earlier, because we start at `start`
 	}
-	return int64(now.Sub(start)/api.ROUND) + diff
+	return int64(now.Sub(start) / api.ROUND)
 }
 
 func lbpRemainigBalance(p *api.LBP, userShares sdk.Int) sdk.Int {
