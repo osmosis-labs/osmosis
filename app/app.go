@@ -108,6 +108,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/mint"
 	mintkeeper "github.com/osmosis-labs/osmosis/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
+	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
@@ -121,6 +122,9 @@ import (
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
 	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
+
+	osmolbpkeeper "github.com/osmosis-labs/osmosis/x/osmolbp/keeper"
+	osmolbpmodule "github.com/osmosis-labs/osmosis/x/osmolbp/module"
 )
 
 const appName = "OsmosisApp"
@@ -162,6 +166,7 @@ var (
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
+		osmolbpmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -180,6 +185,7 @@ var (
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
 		txfeestypes.ModuleName:                   nil,
+		osmolbp.ModuleName:                       nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -238,6 +244,7 @@ type OsmosisApp struct {
 	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
 	TxFeesKeeper         *txfeeskeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
+	OsmolbpKeeper        osmolbpkeeper.Keeper
 
 	transferModule transfer.AppModule
 	// the module manager
@@ -281,7 +288,7 @@ func NewOsmosisApp(
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
 		epochstypes.StoreKey, poolincentivestypes.StoreKey, authzkeeper.StoreKey, txfeestypes.StoreKey,
-		bech32ibctypes.StoreKey,
+		bech32ibctypes.StoreKey, osmolbpkeeper.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -347,6 +354,7 @@ func NewOsmosisApp(
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
+		osmolbpmodule.NewAppModule(appCodec, app.OsmolbpKeeper, *app.BankKeeper, app.interfaceRegistry),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -388,6 +396,7 @@ func NewOsmosisApp(
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+		osmolbp.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)

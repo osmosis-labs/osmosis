@@ -9,8 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 )
+
+// StoreKey is the store key string for osmolbp
+const StoreKey = osmolbp.ModuleName
 
 var (
 	lbpSeqStoreKey = []byte{0} // lbp id sequence
