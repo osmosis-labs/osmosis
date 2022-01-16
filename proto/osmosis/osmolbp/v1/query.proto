@@ -1,0 +1,30 @@
+syntax = "proto3";
+package osmosis.osmolbp.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+import "osmosis/osmolbp/v1/types.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/api";
+option (gogoproto.goproto_getters_all) = false;
+
+// Query defines the gRPC querier service.
+service Query {
+  // Returns list of `Authorization`, granted to the grantee by the granter.
+  rpc LBPs(QueryLBPs) returns (QueryLBPsResponse) {
+    option (google.api.http).get = "/cosmos/osmolbp/v1/lbps";
+  }
+}
+
+message QueryLBPs {
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message QueryLBPsResponse {
+  repeated osmosis.osmolbp.v1.LBP lbps = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
