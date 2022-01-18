@@ -42,6 +42,7 @@ type BankKeeper interface {
 // StakingKeeper expected staking keeper
 type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
+	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
 	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
 	ValidateUnbondAmount(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) (shares sdk.Dec, err error)
 	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (newShares sdk.Dec, err error)
