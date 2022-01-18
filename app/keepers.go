@@ -56,6 +56,8 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
@@ -211,8 +213,10 @@ func (app *OsmosisApp) InitNormalKeepers() {
 
 	app.LockupKeeper = lockupkeeper.NewKeeper(
 		appCodec, keys[lockuptypes.StoreKey],
-		app.AccountKeeper,
-		app.BankKeeper)
+		// TODO: Visit why this needs to be deref'd
+		*app.AccountKeeper,
+		app.BankKeeper,
+		app.DistrKeeper)
 
 	app.EpochsKeeper = epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 
@@ -220,6 +224,10 @@ func (app *OsmosisApp) InitNormalKeepers() {
 		appCodec, keys[incentivestypes.StoreKey],
 		app.GetSubspace(incentivestypes.ModuleName),
 		app.BankKeeper, app.LockupKeeper, app.EpochsKeeper)
+
+	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
+		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
+		*app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.EpochsKeeper, app.LockupKeeper, gammKeeper, app.IncentivesKeeper)
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey],
@@ -279,7 +287,9 @@ func (app *OsmosisApp) SetupHooks() {
 		stakingtypes.NewMultiStakingHooks(
 			app.DistrKeeper.Hooks(),
 			app.SlashingKeeper.Hooks(),
-			app.ClaimKeeper.Hooks()),
+			app.ClaimKeeper.Hooks(),
+			app.SuperfluidKeeper.Hooks(),
+		),
 	)
 
 	app.GAMMKeeper.SetHooks(
@@ -292,7 +302,8 @@ func (app *OsmosisApp) SetupHooks() {
 
 	app.LockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
-		// insert lockup hooks receivers here
+			// insert lockup hooks receivers here
+			app.SuperfluidKeeper.Hooks(),
 		),
 	)
 

@@ -33,11 +33,13 @@ All locks are stored on the KVStore as value at `{KeyPrefixPeriodLock}{ID}` key.
 
 To provide time efficient queries, several reference queues are managed by denom, unlock time, and duration.
 There are two big queues to store the lock references. (`a_prefix_key`)
+
 1. Lock references that hasn't started with unlocking yet has prefix of `KeyPrefixNotUnlocking`.
 2. Lock references that has started unlocking already has prefix of `KeyPrefixUnlocking`.
 3. Lock references that has withdrawn, it's removed from the store.
 
 Regardless the lock has started unlocking or not, it stores below references. (`b_prefix_key`)
+
 1. `{KeyPrefixLockTimestamp}{LockEndTime}`
 2. `{KeyPrefixLockDuration}{Duration}`
 3. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
@@ -68,3 +70,44 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 	return nil
 }
 ```
+
+### Synthetic Lockup
+
+The goal of synthetic lockup is to support the querying of locks by denom especially for delegated staking. By combining native denom and synthetic suffix, lockup supports querying with synthetic denom with existing denom querying functions.
+
+Synthetic lockup is creating virtual lockup where new denom is combination of original denom and synthetic suffix.
+At the time of synthetic lockup creation and deletion, accumulation store is also being updated and on querier side, they can query as freely as native lockup.
+
+Note: The staking, distribution, slashing, superfluid module would be refactored to use lockup module and synthetic lockup.
+The following changes for synthetic lockup on native lockup change could be defined as per use case. For now we assume this change is made on hook receiver side which manages synthetic lockup, e.g. use cases are when user start / pause superfluid staking on a lockup, redelegation event, unbonding event etc.
+
+External modules are managing synthetic locks to use it on their own logic implementation. (e.g. delegated staking and superfluid staking)
+
+A `SyntheticLock` is a single unit of synthetic lockup. Each synthetic lockup has reference `PeriodLock` ID, synthetic suffix (`Suffix`) and synthetic lock's removal time (`EndTime`).
+
+```go
+type SyntheticLock struct {
+	LockId  uint64
+	Suffix  string
+	EndTime time.Time
+}
+```
+
+All synthetic locks are stored on the KVStore as value at `{KeyPrefixPeriodLock}{LockID}{Suffix}` key.
+
+### Synthetic lock reference queues
+
+To provide time efficient queries, several reference queues are managed by denom, unlock time, and duration.
+
+1. `{KeyPrefixDenomLockTimestamp}{SyntheticDenom}{LockEndTime}`
+2. `{KeyPrefixDenomLockDuration}{SyntheticDenom}{Duration}`
+3. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{SyntheticDenom}{LockEndTime}`
+4. `{KeyPrefixAccountDenomLockDuration}{Owner}{SyntheticDenom}{Duration}`
+
+SyntheticDenom is expressed as `{Denom}{Suffix}`. (Note: we can change this to `{Prefix}{Denom}` as per discussion with Dev)
+
+For end time keys, they are converted to sortable string by using `sdk.FormatTimeBytes` function.
+
+**Note:**
+To implement the auto removal of synthetic lockups that is already finished, we manage a separate time basis queue at
+`{KeyPrefixSyntheticLockTimestamp}{EndTime}{LockId}{Suffix}`
