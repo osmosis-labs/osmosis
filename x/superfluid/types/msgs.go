@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -78,8 +77,8 @@ func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgSuperfluidRedelegate{}
 
-// NewMsgSuperfluidDelegate creates a message to do superfluid redelegation
-func NewMsgSuperfluidDelegate(sender sdk.AccAddress, lockId uint64, newValAddr sdk.ValAddress) *MsgSuperfluidRedelegate {
+// NewMsgSuperfluidRedelegate creates a message to do superfluid redelegation
+func NewMsgSuperfluidRedelegate(sender sdk.AccAddress, lockId uint64, newValAddr sdk.ValAddress) *MsgSuperfluidRedelegate {
 	return &MsgSuperfluidRedelegate{
 		Sender:     sender.String(),
 		LockId:     lockId,

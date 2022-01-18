@@ -106,10 +106,14 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper stakingtypes.AccountKeeper
 	bankKeeper    stakingtypes.BankKeeper
+	stakingKeeper types.StakingKeeper
+	lockupKeeper  types.LockupKeeper
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+	stakingKeeper types.StakingKeeper,
+	lockupKeeper types.LockupKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
@@ -117,6 +121,8 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
+		stakingKeeper: stakingKeeper,
+		lockupKeeper:  lockupKeeper,
 	}
 }
 
@@ -203,7 +209,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.bankKeeper, am.keeper,
+		am.accountKeeper, am.bankKeeper, am.stakingKeeper, am.lockupKeeper, am.keeper,
 	)
 }
 
