@@ -146,12 +146,12 @@ func (app *OsmosisApp) InitNormalKeepers() {
 	distrKeeper := distrkeeper.NewKeeper(
 		appCodec, keys[distrtypes.StoreKey],
 		app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, authtypes.FeeCollectorName, app.BlockedAddrs(),
+		app.StakingKeeper, authtypes.FeeCollectorName, app.BlockedAddrs(),
 	)
 	app.DistrKeeper = &distrKeeper
 
 	slashingKeeper := slashingkeeper.NewKeeper(
-		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
+		appCodec, keys[slashingtypes.StoreKey], app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	)
 	app.SlashingKeeper = &slashingKeeper
 
@@ -160,7 +160,7 @@ func (app *OsmosisApp) InitNormalKeepers() {
 		appCodec,
 		keys[ibchost.StoreKey],
 		app.GetSubspace(ibchost.ModuleName),
-		&stakingKeeper,
+		app.StakingKeeper,
 		app.UpgradeKeeper,
 		app.ScopedIBCKeeper)
 
