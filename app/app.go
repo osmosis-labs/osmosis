@@ -185,6 +185,9 @@ import (
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+
 	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
@@ -194,6 +197,34 @@ import (
 )
 
 const appName = "OsmosisApp"
+
+// We pull these out so we can set them with LDFLAGS in the Makefile
+var (
+	// If EnabledSpecificProposals is "", and this is "true", then enable all x/wasm proposals.
+	// If EnabledSpecificProposals is "", and this is not "true", then disable all x/wasm proposals.
+	ProposalsEnabled = "true"
+	// If set to non-empty string it must be comma-separated list of values that are all a subset
+	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)
+	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
+	EnableSpecificProposals = ""
+)
+
+// GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
+// produce a list of enabled proposals to pass into wasmd app.
+func GetEnabledProposals() []wasm.ProposalType {
+	if EnableSpecificProposals == "" {
+		if ProposalsEnabled == "true" {
+			return wasm.EnableAllProposals
+		}
+		return wasm.DisableAllProposals
+	}
+	chunks := strings.Split(EnableSpecificProposals, ",")
+	proposals, err := wasm.ConvertToProposals(chunks)
+	if err != nil {
+		panic(err)
+	}
+	return proposals
+}
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -211,9 +242,11 @@ var (
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
-			poolincentivesclient.UpdatePoolIncentivesHandler,
-			ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
+			append(
+				wasmclient.ProposalHandlers,
+				paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+				poolincentivesclient.UpdatePoolIncentivesHandler,
+				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler)...,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -233,6 +266,7 @@ var (
 		claim.AppModuleBasic{},
 		superfluid.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
+		wasm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -252,6 +286,7 @@ var (
 		poolincentivestypes.ModuleName:           nil,
 		superfluidtypes.ModuleName:               nil,
 		txfeestypes.ModuleName:                   nil,
+		wasm.ModuleName:                          {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -288,6 +323,7 @@ type OsmosisApp struct {
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+	ScopedWasmKeeper     capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
 	AccountKeeper        *authkeeper.AccountKeeper
@@ -311,6 +347,7 @@ type OsmosisApp struct {
 	TxFeesKeeper         *txfeeskeeper.Keeper
 	SuperfluidKeeper     superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
+	WasmKeeper           wasm.Keeper
 
 	transferModule transfer.AppModule
 	// the module manager
@@ -336,6 +373,9 @@ func init() {
 func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+	// encodingConfig wasmappparams.EncodingConfig,
+	// enabledProposals []wasm.ProposalType,
+	// wasmOpts []wasm.Option,
 ) *OsmosisApp {
 
 	appCodec := encodingConfig.Marshaler
@@ -373,6 +413,7 @@ func NewOsmosisApp(
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
 		bech32ibctypes.StoreKey,
+		wasm.StoreKey,
 	)
 	// Define transient store keys
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
