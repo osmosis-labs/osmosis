@@ -190,11 +190,11 @@ func (k Keeper) JoinSwapExternAmountIn(
 		return sdk.Int{}, err
 	}
 
+	normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
 	shareOutAmount = calcPoolOutGivenSingleIn(
 		PoolAsset.Token.Amount.ToDec(),
-		PoolAsset.Weight.ToDec(),
+		normalizedWeight,
 		pool.GetTotalShares().Amount.ToDec(),
-		pool.GetTotalWeight().ToDec(),
 		tokenIn.Amount.ToDec(),
 		pool.GetPoolParams().SwapFee,
 	).TruncateInt()
@@ -258,11 +258,11 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
+	normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
 	tokenInAmount = calcSingleInGivenPoolOut(
 		PoolAsset.Token.Amount.ToDec(),
-		PoolAsset.Weight.ToDec(),
+		normalizedWeight,
 		pool.GetTotalShares().Amount.ToDec(),
-		pool.GetTotalWeight().ToDec(),
 		shareOutAmount.ToDec(),
 		pool.GetPoolParams().SwapFee,
 	).TruncateInt()
@@ -410,11 +410,11 @@ func (k Keeper) ExitSwapShareAmountIn(
 		return sdk.Int{}, err
 	}
 
+	normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
 	tokenOutAmount = calcSingleOutGivenPoolIn(
 		PoolAsset.Token.Amount.ToDec(),
-		PoolAsset.Weight.ToDec(),
+		normalizedWeight,
 		pool.GetTotalShares().Amount.ToDec(),
-		pool.GetTotalWeight().ToDec(),
 		shareInAmount.ToDec(),
 		pool.GetPoolParams().SwapFee,
 		pool.GetPoolParams().ExitFee,
@@ -495,11 +495,11 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, err
 	}
 
+	normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
 	shareInAmount = calcPoolInGivenSingleOut(
 		PoolAsset.Token.Amount.ToDec(),
-		PoolAsset.Weight.ToDec(),
+		normalizedWeight,
 		pool.GetTotalShares().Amount.ToDec(),
-		pool.GetTotalWeight().ToDec(),
 		tokenOut.Amount.ToDec(),
 		pool.GetPoolParams().SwapFee,
 		pool.GetPoolParams().ExitFee,
