@@ -83,14 +83,19 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 	if gauge.IsUpcomingGauge(curTime) {
 		CombinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, timeKey)
-		k.CreateUpcomingGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
+		err = k.CreateUpcomingGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
 	} else if gauge.IsActiveGauge(curTime) {
 		CombinedKeys := combineKeys(types.KeyPrefixActiveGauges, timeKey)
-		k.CreateUpcomingGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
+		err = k.CreateUpcomingGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
 	} else {
 		CombinedKeys := combineKeys(types.KeyPrefixFinishedGauges, timeKey)
-		k.CreateUpcomingGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
+		err = k.CreateUpcomingGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
 	}
+
+	if err != nil {
+		return err
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(gauge)
 	if err != nil {
@@ -139,7 +144,10 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	CombinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 	ActiveOrUpcomingGauge := true
 
-	k.CreateUpcomingGaugeRefKeys(ctx, &gauge, CombinedKeys, ActiveOrUpcomingGauge)
+	err = k.CreateUpcomingGaugeRefKeys(ctx, &gauge, CombinedKeys, ActiveOrUpcomingGauge)
+	if err != nil {
+		return 0, err
+	}
 	k.hooks.AfterCreateGauge(ctx, gauge.Id)
 	return gauge.Id, nil
 }
