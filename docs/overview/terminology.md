@@ -5,7 +5,7 @@ Use this glossary to learn about terms used in Osmosis and the Cosmos ecosystem.
 
 ## Active set
 
-The top 100 validators that participate in consensus and receive rewards.
+The top 118 validators that participate in consensus and receive rewards.
 
 ## Air drops
 
