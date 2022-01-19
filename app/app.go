@@ -434,7 +434,7 @@ func NewOsmosisApp(
 
 	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers()
+	app.InitNormalKeepers(homePath, appOpts)
 	app.SetupHooks()
 	app.setupUpgradeHandlers()
 
@@ -469,6 +469,7 @@ func NewOsmosisApp(
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(*app.UpgradeKeeper),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
@@ -515,6 +516,7 @@ func NewOsmosisApp(
 		paramstypes.ModuleName, vestingtypes.ModuleName,
 		gammtypes.ModuleName, incentivestypes.ModuleName, lockuptypes.ModuleName, claimtypes.ModuleName,
 		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
+		wasm.ModuleName,
 	)
 
 	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
@@ -530,6 +532,7 @@ func NewOsmosisApp(
 		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 		epochstypes.ModuleName,
+		wasm.ModuleName,
 	)
 
 	// NOTE: The genutils moodule must occur after staking so that pools are
@@ -564,6 +567,8 @@ func NewOsmosisApp(
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+		// wasm after ibc transfer
+		wasm.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -589,6 +594,7 @@ func NewOsmosisApp(
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
