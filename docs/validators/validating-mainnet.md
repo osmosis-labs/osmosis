@@ -37,7 +37,7 @@ Here is the empty command:
 osmosisd tx staking create-validator \
 --from=[KEY_NAME] \
 --amount=[staking_amount_uosmo] \
---pubkey=[osmovalconspub...]  \
+--pubkey=$(osmosisd tendermint show-validator) \
 --moniker="[moniker_id_of_your_node]" \
 --security-contact="[security contact email/contact method]" \
 --chain-id="[chain-id]" \
