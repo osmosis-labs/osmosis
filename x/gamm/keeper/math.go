@@ -54,22 +54,35 @@ func calcSpotPriceWithSwapFee(
 	return spotPrice.Mul(scale)
 }
 
+// solveConstantFunctionInvariant solves the constant function of an AMM
+// that determines the relationship between the differences of two sides
+// of assets inside the pool.
+// For fixed balanceXBefore, balanceXAfter, weightX, balanceY, weightY,
+// we could deduce the balanceYDelta, calculated by:
+// balanceYDelta = balanceY * (1 - (balanceXBefore/balanceXAfter)^(weightX/weightY))
+// balanceYDelta is positive when the balance liquidity decreases.
+// balanceYDelta is negative when the balance liquidity increases.
 func solveConstantFunctionInvariant(
-	tokenBalanceFixed,
+	tokenBalanceFixedBefore,
+	tokenBalanceFixedAfter,
 	tokenWeightFixed,
-	tokenBalanceUnknown,
-	tokenWeightUnknown,
-	tokenAmountFixed sdk.Dec,
+	tokenBalanceUnknownBefore,
+	tokenWeightUnknown sdk.Dec,
 ) sdk.Dec {
+	// weightRatio = (weightX/weightY)
 	weightRatio := tokenWeightFixed.Quo(tokenWeightUnknown)
-	y := tokenBalanceFixed.Quo(tokenBalanceFixed.Add(tokenAmountFixed))
-	foo := osmomath.Pow(y, weightRatio)
 
+	// y = balanceXBefore/balanceYAfter
+	y := tokenBalanceFixedBefore.Quo(tokenBalanceFixedAfter)
+
+	// amountY = balanceY * (1 - (y ^ weightRatio))
+	foo := osmomath.Pow(y, weightRatio)
 	multiplier := sdk.OneDec().Sub(foo)
-	return tokenBalanceUnknown.Mul(multiplier)
+	return tokenBalanceUnknownBefore.Mul(multiplier)
 }
 
-// aO
+// calcOutGivenIn calculates token to be swapped out given
+// the provided amount, fee deducted, using solveConstantFunctionInvariant
 func calcOutGivenIn(
 	tokenBalanceIn,
 	tokenWeightIn,
@@ -80,11 +93,13 @@ func calcOutGivenIn(
 ) sdk.Dec {
 	// deduct swapfee on the in asset
 	tokenAmountIn = tokenAmountIn.Mul(sdk.OneDec().Sub(swapFee))
-	tokenAmountOut := solveConstantFunctionInvariant(tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, tokenAmountIn)
+	// delta balanceOut is positive(tokens inside the pool decreases)
+	tokenAmountOut := solveConstantFunctionInvariant(tokenBalanceIn, tokenBalanceIn.Add(tokenAmountIn), tokenWeightIn, tokenBalanceOut, tokenWeightOut)
 	return tokenAmountOut
 }
 
-// aI
+// calcInGivenOut calculates token to be provided, fee added,
+// given the swapped out amount, using solveConstantFunctionInvariant
 func calcInGivenOut(
 	tokenBalanceIn,
 	tokenWeightIn,
@@ -93,22 +108,12 @@ func calcInGivenOut(
 	tokenAmountOut,
 	swapFee sdk.Dec,
 ) sdk.Dec {
-	// provide negative tokenOutAmount as it decreases pool liquidity
-	tokenAmountIn := solveConstantFunctionInvariant(tokenBalanceOut, tokenWeightOut, tokenBalanceIn, tokenWeightIn, tokenAmountOut.Neg()).Neg()
+	// delta balanceIn is negative(tokents inside the pool increases)
+	tokenAmountIn := solveConstantFunctionInvariant(tokenBalanceOut, tokenBalanceOut.Sub(tokenAmountOut), tokenWeightOut, tokenBalanceIn, tokenWeightIn).Neg()
 	// deduct swapfee on the in asset
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
 	return tokenAmountInBeforeFee
 
-}
-
-func weightDelta(
-	normalizedWeight,
-	beforeWeight,
-	afterWeight sdk.Dec,
-) (unknownNewBalance sdk.Dec) {
-	deltaRatio := afterWeight.Quo(beforeWeight)
-	// newBalTo = poolRatio^(1/weightTo) * balTo;
-	return osmomath.Pow(deltaRatio, normalizedWeight)
 }
 
 func feeRatio(
@@ -119,41 +124,8 @@ func feeRatio(
 	return sdk.OneDec().Sub(zar)
 }
 
-func tokenDiffGivenPoolDiff(
-	normalizedWeight,
-	tokenBalance,
-	poolSupply,
-	poolAmount sdk.Dec,
-) sdk.Dec {
-	newPoolSupply := poolSupply.Add(poolAmount)
-
-	poolSupplyDelta := weightDelta(
-		sdk.OneDec().Quo(normalizedWeight), poolSupply, newPoolSupply)
-
-	newTokenBalance := tokenBalance.Mul(poolSupplyDelta)
-
-	// Do reverse order of fees charged in joinswap_ExternAmountIn, this way
-	//     ``` pAo == joinswap_ExternAmountIn(Ti, joinswap_PoolAmountOut(pAo, Ti)) ```
-	//uint tAi = tAiAfterFee / (1 - (1-weightTi) * swapFee) ;
-	return newTokenBalance.Sub(tokenBalance)
-}
-
-func poolDiffGivenTokenDiff(
-	normalizedWeight,
-	tokenBalance,
-	poolSupply,
-	tokenAmount sdk.Dec,
-) sdk.Dec {
-	newTokenBalance := tokenBalance.Add(tokenAmount)
-
-	tokenDelta := weightDelta(
-		normalizedWeight, tokenBalance, newTokenBalance)
-	newPoolSupply := poolSupply.Mul(tokenDelta)
-
-	return newPoolSupply.Sub(poolSupply)
-}
-
-//tAi
+// calcSingleInGivenPoolOut calculates token to be provided, fee added,
+// given the swapped out shares amount, using solveConstantFunctionInvariant
 func calcSingleInGivenPoolOut(
 	tokenBalanceIn,
 	normalizedTokenWeightIn,
@@ -161,7 +133,10 @@ func calcSingleInGivenPoolOut(
 	poolAmountOut,
 	swapFee sdk.Dec,
 ) sdk.Dec {
-	tokenAmountIn := tokenDiffGivenPoolDiff(normalizedTokenWeightIn, tokenBalanceIn, poolSupply, poolAmountOut)
+	// delta balanceIn is negative(tokens inside the pool increases)
+	// pool weight is always 1
+	tokenAmountIn := solveConstantFunctionInvariant(poolSupply.Add(poolAmountOut), poolSupply, sdk.OneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
+	// deduct swapfee on the in asset
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, swapFee))
 	return tokenAmountInBeforeFee
 }
@@ -174,8 +149,11 @@ func calcPoolOutGivenSingleIn(
 	tokenAmountIn,
 	swapFee sdk.Dec,
 ) sdk.Dec {
+	// deduct swapfee on the in asset
 	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(normalizedTokenWeightIn, swapFee))
-	poolAmountOut := poolDiffGivenTokenDiff(normalizedTokenWeightIn, tokenBalanceIn, poolSupply, tokenAmountInAfterFee)
+	// delta poolSupply is negative(total pool shares increases)
+	// pool weight is always 1
+	poolAmountOut := solveConstantFunctionInvariant(tokenBalanceIn.Add(tokenAmountInAfterFee), tokenBalanceIn, normalizedTokenWeightIn, poolSupply, sdk.OneDec()).Neg()
 	return poolAmountOut
 }
 
@@ -191,7 +169,11 @@ func calcSingleOutGivenPoolIn(
 	// charge exit fee on the pool token side
 	// pAiAfterExitFee = pAi*(1-exitFee)
 	poolAmountInAfterExitFee := poolAmountIn.Mul(sdk.OneDec().Sub(exitFee))
-	tokenAmountOut := tokenDiffGivenPoolDiff(normalizedTokenWeightOut, tokenBalanceOut, poolSupply, poolAmountInAfterExitFee.Neg()).Neg()
+
+	// delta balanceOut is positive(tokens inside the pool decreases)
+	// pool weight is always 1
+	tokenAmountOut := solveConstantFunctionInvariant(poolSupply.Sub(poolAmountInAfterExitFee), poolSupply, sdk.OneDec(), tokenBalanceOut, normalizedTokenWeightOut)
+	// deduct
 	tokenAmountOutAfterFee := tokenAmountOut.Mul(feeRatio(normalizedTokenWeightOut, swapFee))
 	return tokenAmountOutAfterFee
 }
@@ -207,7 +189,9 @@ func calcPoolInGivenSingleOut(
 ) sdk.Dec {
 	tokenAmountOutBeforeFee := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, swapFee))
 
-	poolAmountIn := poolDiffGivenTokenDiff(normalizedTokenWeightOut, tokenBalanceOut, poolSupply, tokenAmountOutBeforeFee.Neg()).Neg()
+	// delta poolSupply is positive(total pool shares decreases)
+	// pool weight is always 1
+	poolAmountIn := solveConstantFunctionInvariant(tokenBalanceOut.Sub(tokenAmountOutBeforeFee), tokenBalanceOut, normalizedTokenWeightOut, poolSupply, sdk.OneDec())
 
 	// charge exit fee on the pool token side
 	// pAi = pAiAfterExitFee/(1-exitFee)
