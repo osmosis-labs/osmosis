@@ -108,9 +108,12 @@ func calcInGivenOut(
 	tokenAmountOut,
 	swapFee sdk.Dec,
 ) sdk.Dec {
-	// delta balanceIn is negative(tokents inside the pool increases)
+	// delta balanceIn is negative(amount of tokens inside the pool increases)
 	tokenAmountIn := solveConstantFunctionInvariant(tokenBalanceOut, tokenBalanceOut.Sub(tokenAmountOut), tokenWeightOut, tokenBalanceIn, tokenWeightIn).Neg()
-	// deduct swapfee on the in asset
+	// We deduct a swap fee on the input asset. The swap happens by following the invariant curve on the input * (1 - swap fee)
+	//  and then the swap fee is added to the pool.
+	// Thus in order to give X amount out, we solve the invariant for the invariant input. However invariant input = (1 - swapfee) * trade input.
+	// Therefore we divide by (1 - swapfee) here
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
 	return tokenAmountInBeforeFee
 
