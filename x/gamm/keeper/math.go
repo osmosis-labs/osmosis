@@ -92,9 +92,9 @@ func calcOutGivenIn(
 	swapFee sdk.Dec,
 ) sdk.Dec {
 	// deduct swapfee on the in asset
-	tokenAmountIn = tokenAmountIn.Mul(sdk.OneDec().Sub(swapFee))
+	tokenAmountInAfterFee := tokenAmountIn.Mul(sdk.OneDec().Sub(swapFee))
 	// delta balanceOut is positive(tokens inside the pool decreases)
-	tokenAmountOut := solveConstantFunctionInvariant(tokenBalanceIn, tokenBalanceIn.Add(tokenAmountIn), tokenWeightIn, tokenBalanceOut, tokenWeightOut)
+	tokenAmountOut := solveConstantFunctionInvariant(tokenBalanceIn, tokenBalanceIn.Add(tokenAmountInAfterFee), tokenWeightIn, tokenBalanceOut, tokenWeightOut)
 	return tokenAmountOut
 }
 
