@@ -244,7 +244,7 @@ format:
 ###############################################################################
 
 build-docker-osmosisdnode:
-	$(MAKE) -C networks/local
+	$(MAKE) -C contrib/localtestnet
 
 # Run a 4-node testnet locally
 localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
