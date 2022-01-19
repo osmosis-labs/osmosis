@@ -124,7 +124,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220113004200-25c21881e470
 	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
+	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.2.0
 	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint v0.34.12-0.20220109173307-59a781894ea7
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
