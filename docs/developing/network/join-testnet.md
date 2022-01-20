@@ -132,6 +132,7 @@ ExecStart=${HOME}/go/bin/cosmovisor start
 Restart=always
 RestartSec=3
 LimitNOFILE=infinity
+LimitNPROC=infinity
 [Install]
 WantedBy=multi-user.target
 " >cosmovisor.service
