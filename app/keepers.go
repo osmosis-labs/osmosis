@@ -37,6 +37,9 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
+	ibcgamm "github.com/disperze/ibc-osmo/x/intergamm"
+	ibcgammkeeper "github.com/disperze/ibc-osmo/x/intergamm/keeper"
+	ibcgammtypes "github.com/disperze/ibc-osmo/x/intergamm/types"
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
@@ -85,6 +88,7 @@ func (app *OsmosisApp) InitSpecialKeepers(
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	app.ScopedIBCKeeper = app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	app.ScopedIbcGammKeeper = app.CapabilityKeeper.ScopeToModule(ibcgammtypes.ModuleName)
 	app.CapabilityKeeper.Seal()
 
 	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
@@ -173,9 +177,17 @@ func (app *OsmosisApp) InitNormalKeepers() {
 	app.TransferKeeper = &transferKeeper
 	app.transferModule = transfer.NewAppModule(*app.TransferKeeper)
 
+	ibcGammKeeper := ibcgammkeeper.NewKeeper(
+		appCodec, keys[ibcgammtypes.StoreKey], app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
+		app.ScopedIbcGammKeeper, app.GAMMKeeper,
+	)
+	app.IbcGammKeeper = &ibcGammKeeper
+	app.ibcGammModule = ibcgamm.NewAppModule(*app.IbcGammKeeper)
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, app.transferModule)
+	ibcRouter.AddRoute(ibcgammtypes.ModuleName, app.ibcGammModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	app.Bech32IBCKeeper = bech32ibckeeper.NewKeeper(

@@ -119,6 +119,9 @@ import (
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 
+	ibcgamm "github.com/disperze/ibc-osmo/x/intergamm"
+	ibcgammkeeper "github.com/disperze/ibc-osmo/x/intergamm/keeper"
+	ibcgammtypes "github.com/disperze/ibc-osmo/x/intergamm/types"
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
@@ -166,6 +169,7 @@ var (
 		claim.AppModuleBasic{},
 		superfluid.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
+		ibcgamm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -221,6 +225,7 @@ type OsmosisApp struct {
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+	ScopedIbcGammKeeper  capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
 	AccountKeeper        *authkeeper.AccountKeeper
@@ -244,8 +249,10 @@ type OsmosisApp struct {
 	TxFeesKeeper         *txfeeskeeper.Keeper
 	SuperfluidKeeper     superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
+	IbcGammKeeper        *ibcgammkeeper.Keeper
 
 	transferModule transfer.AppModule
+	ibcGammModule  ibcgamm.AppModule
 	// the module manager
 	mm *module.Manager
 
@@ -289,6 +296,7 @@ func NewOsmosisApp(
 		epochstypes.StoreKey, poolincentivestypes.StoreKey, authzkeeper.StoreKey, txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
 		bech32ibctypes.StoreKey,
+		ibcgammtypes.ModuleName,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -355,6 +363,7 @@ func NewOsmosisApp(
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
 		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
+		app.ibcGammModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -397,6 +406,7 @@ func NewOsmosisApp(
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+		ibcgammtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
