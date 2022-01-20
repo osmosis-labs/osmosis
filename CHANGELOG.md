@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [#741](https://github.com/osmosis-labs/osmosis/pull/741) Allow node operators to set a second min gas price for arbitrage txs.
 - [#623](https://github.com/osmosis-labs/osmosis/pull/623) Use gosec for staticly linting for common non-determinism issues in SDK applications.
 
+- [sdk-#58](https://github.com/osmosis-labs/cosmos-sdk/pull/58) Fix a bug where recheck would not remove txs with invalid sequence numbers
 - [sdk-#52](https://github.com/osmosis-labs/cosmos-sdk/pull/52) Fix inconsistencies in default pruning config, and change defaults. Fix pruning=everything defaults.
   - previously default was actually keeping 3 weeks of state, and every 100th state. (Not that far off from archive nodes)
   - pruning=default now changed to 1 week of state (100k blocks), and keep-every=0. (So a constant number of states stored)
