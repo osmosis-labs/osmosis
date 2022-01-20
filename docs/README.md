@@ -134,13 +134,13 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
      Hosted by Imperator.co (1317)
     </div>
   </a>
-  <a href="https://rpc-osmosis.keplr.app/" class="card lg" target="_blank">
+  <a href="https://rpc-osmosis.blockapsis.com/" class="card lg" target="_blank">
     <img src="img/tender-rpc.png">
     <div class="title">
      Tendermint RPC
     </div>
     <div class="text">
-     Hosted by Keplr (26657)
+     Hosted by Blockapsis (26657)
     </div>
   </a>
 </div>
