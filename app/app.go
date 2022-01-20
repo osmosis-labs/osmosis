@@ -370,11 +370,12 @@ func init() {
 }
 
 // NewOsmosis returns a reference to an initialized Osmosis.
+// FIXME: @alpe do we add wasmOpts []wasm.Option here? Do we set that directly in InitNormalKeepers?
+// I couldn't find any non-test code that used this. I am guessing we don't need to expose it here
 func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions,
 	enabledProposals []wasm.ProposalType,
-	//wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 
