@@ -889,6 +889,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
 
 	return paramsKeeper
 }
