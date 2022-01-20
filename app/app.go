@@ -372,10 +372,10 @@ func init() {
 // NewOsmosis returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
-	// encodingConfig wasmappparams.EncodingConfig,
-	// enabledProposals []wasm.ProposalType,
-	// wasmOpts []wasm.Option,
+	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions,
+	enabledProposals []wasm.ProposalType,
+	//wasmOpts []wasm.Option,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 
 	appCodec := encodingConfig.Marshaler
@@ -434,7 +434,7 @@ func NewOsmosisApp(
 
 	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers(homePath, appOpts)
+	app.InitNormalKeepers(homePath, appOpts, enabledProposals)
 	app.SetupHooks()
 	app.setupUpgradeHandlers()
 

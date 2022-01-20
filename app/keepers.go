@@ -114,6 +114,7 @@ func (app *OsmosisApp) InitSpecialKeepers(
 func (app *OsmosisApp) InitNormalKeepers(
 	homePath string,
 	appOpts servertypes.AppOptions,
+	enabledProposals []wasm.ProposalType,
 ) {
 	appCodec := app.appCodec
 	bApp := app.BaseApp
@@ -293,7 +294,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		wasmDir,
 		wasmConfig,
 		supportedFeatures,
-		// TODO: input from user
+		// TODO: input from caller or just hardcode here?
 		// wasmOpts...,
 	)
 
@@ -314,9 +315,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IBCKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper))
 
-	// but this is created elsewhere
 	// The gov proposal types can be individually enabled
-	enabledProposals := GetEnabledProposals()
 	if len(enabledProposals) != 0 {
 		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, enabledProposals))
 	}
