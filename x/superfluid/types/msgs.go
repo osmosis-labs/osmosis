@@ -30,7 +30,7 @@ func (m MsgSuperfluidDelegate) ValidateBasic() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender should not be an empty address")
 	}
-	if m.LockId > 0 {
+	if m.LockId == 0 {
 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
 	}
 	if m.ValAddr == "" {
@@ -62,7 +62,7 @@ func (m MsgSuperfluidUndelegate) ValidateBasic() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender should not be an empty address")
 	}
-	if m.LockId > 0 {
+	if m.LockId == 0 {
 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
 	}
 	return nil
@@ -92,7 +92,7 @@ func (m MsgSuperfluidRedelegate) ValidateBasic() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender should not be an empty address")
 	}
-	if m.LockId > 0 {
+	if m.LockId == 0 {
 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
 	}
 	if m.NewValAddr == "" {

@@ -80,7 +80,6 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		// select random validator
 		validator := RandomValidator(ctx, r, sk)
@@ -90,7 +89,7 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 		}
 
 		// select random lockup
-		lock := RandomAccountLock(ctx, r, lk, simAccount.Address)
+		lock, simAccount := RandomLockAndAccount(ctx, r, lk, accs)
 		if lock == nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSuperfluidDelegate, "Account have no period lock"), nil, nil
@@ -112,9 +111,8 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
 
-		lock := RandomAccountLock(ctx, r, lk, simAccount.Address)
+		lock, simAccount := RandomLockAndAccount(ctx, r, lk, accs)
 		if lock == nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSuperfluidUndelegate, "Account have no period lock"), nil, nil
@@ -145,7 +143,7 @@ func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk stakingty
 				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "No validator"), nil, nil
 		}
 
-		lock := RandomAccountLock(ctx, r, lk, simAccount.Address)
+		lock, simAccount := RandomLockAndAccount(ctx, r, lk, accs)
 		if lock == nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Account have no period lock"), nil, nil
@@ -161,6 +159,25 @@ func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk stakingty
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 	}
+}
+
+func RandomLockAndAccount(ctx sdk.Context, r *rand.Rand, lk types.LockupKeeper, accs []simtypes.Account) (*lockuptypes.PeriodLock, simtypes.Account) {
+	simAccount, _ := simtypes.RandomAcc(r, accs)
+	locks, err := lk.GetPeriodLocks(ctx)
+	if err != nil {
+		return nil, simAccount
+	}
+	if len(locks) == 0 {
+		return nil, simAccount
+	}
+
+	lock := locks[r.Intn(len(locks))]
+	for _, acc := range accs {
+		if acc.Address.String() == lock.Owner {
+			return &lock, acc
+		}
+	}
+	return &lock, simAccount
 }
 
 func RandomAccountLock(ctx sdk.Context, r *rand.Rand, lk types.LockupKeeper, addr sdk.AccAddress) *lockuptypes.PeriodLock {

@@ -108,6 +108,11 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 
 		// make delegation from module account to the validator
 		cacheCtx, write := ctx.CacheContext()
+		validator, found = k.sk.GetValidator(cacheCtx, valAddress)
+		if !found {
+			k.Logger(ctx).Error(fmt.Sprintf("validator not found or %s", acc.ValAddr))
+			continue
+		}
 		_, err = k.sk.Delegate(cacheCtx, mAddr, amt, stakingtypes.Unbonded, validator, true)
 		if err != nil {
 			// this could happen when validator is fully slashed
