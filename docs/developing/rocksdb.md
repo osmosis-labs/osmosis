@@ -34,16 +34,17 @@ sudo make install-shared INSTALL_PATH=/usr
 
 export flags
 ```
-echo "export LD_LIBRARY_PATH=/usr/lib" >> $HOME/.profile
+echo "export LD_LIBRARY_PATH=/usr/local/lib" >> $HOME/.profile
 source $HOME/.profile
 ```
 ```
-echo "export LD_LIBRARY_PATH=/usr/lib" >> $HOME/.bashrc
+echo "export LD_LIBRARY_PATH=/usr/local/lib" >> $HOME/.bashrc
 source $HOME/.bashrc
 ```
 
 # compile osmosis with rocksdb install tags
 ```
+cd
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
 git checkout v6.1.0
