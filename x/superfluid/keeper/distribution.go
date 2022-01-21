@@ -18,14 +18,16 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 		cacheCtx, write := ctx.CacheContext()
 
 		// Withdraw delegation rewards into intermediary accounts
-		rewards, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
+		_, err = k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
 			continue
 		}
 
 		// Send delegation rewards to gauges
-		err = k.ik.AddToGaugeRewards(cacheCtx, addr, rewards, acc.GaugeId)
+		bondDenom := k.sk.BondDenom(cacheCtx)
+		balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
+		err = k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
 			continue
