@@ -51,4 +51,6 @@ BUILD_TAGS=rocksdb make install
 ```
 
 # start osmosisd with rocksdb db_backend flag
+```
 osmosisd start --db_backend rocksdb
+```
