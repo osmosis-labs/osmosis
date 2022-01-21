@@ -79,6 +79,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		app.MakeEncodingConfig(),
 		sdkSimapp.EmptyAppOptions{},
 		app.GetEnabledProposals(),
+		app.EmptyWasmOpts,
 		interBlockCacheOpt(),
 		fauxMerkleModeOpt)
 
@@ -156,6 +157,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.MakeEncodingConfig(),
 				sdkSimapp.EmptyAppOptions{},
 				app.GetEnabledProposals(),
+				app.EmptyWasmOpts,
 				interBlockCacheOpt())
 
 			fmt.Printf(

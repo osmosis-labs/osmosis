@@ -115,6 +115,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 	homePath string,
 	appOpts servertypes.AppOptions,
 	enabledProposals []wasm.ProposalType,
+	wasmOpts []wasm.Option,
 ) {
 	appCodec := app.appCodec
 	bApp := app.BaseApp
@@ -294,8 +295,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		wasmDir,
 		wasmConfig,
 		supportedFeatures,
-		// TODO: input from caller or just hardcode here?
-		// wasmOpts...,
+		wasmOpts...,
 	)
 
 	// wire up x/wasm to IBC

@@ -198,7 +198,6 @@ import (
 
 const appName = "OsmosisApp"
 
-// We pull these out so we can set them with LDFLAGS in the Makefile
 var (
 	// If EnabledSpecificProposals is "", and this is "true", then enable all x/wasm proposals.
 	// If EnabledSpecificProposals is "", and this is not "true", then disable all x/wasm proposals.
@@ -207,6 +206,9 @@ var (
 	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)
 	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
 	EnableSpecificProposals = ""
+
+	// use this for clarity in argument list
+	EmptyWasmOpts []wasm.Option
 )
 
 // GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
@@ -370,12 +372,10 @@ func init() {
 }
 
 // NewOsmosis returns a reference to an initialized Osmosis.
-// FIXME: @alpe do we add wasmOpts []wasm.Option here? Do we set that directly in InitNormalKeepers?
-// I couldn't find any non-test code that used this. I am guessing we don't need to expose it here
 func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions,
-	enabledProposals []wasm.ProposalType,
+	enabledProposals []wasm.ProposalType, wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 
@@ -435,7 +435,7 @@ func NewOsmosisApp(
 
 	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers(homePath, appOpts, enabledProposals)
+	app.InitNormalKeepers(homePath, appOpts, enabledProposals, wasmOpts)
 	app.SetupHooks()
 	app.setupUpgradeHandlers()
 

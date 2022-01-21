@@ -53,6 +53,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor
 			encodingCfg,
 			simapp.EmptyAppOptions{},
 			GetEnabledProposals(),
+			EmptyWasmOpts,
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
