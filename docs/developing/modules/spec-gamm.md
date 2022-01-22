@@ -248,7 +248,7 @@ osmosisd tx gamm swap-exact-amount-in 407239ibc/1480B8FD20AD5FCAE81EA87584D26954
 Swap a **maximum** amount of tokens out for an **exact** amount of another token, similar to swapping a token on the trade screen GUI.
 
 ```
-osmosisd tx gamm swap-exact-amount-out [token-out] [token-out-max-amount] --pool-id --from --chain-id
+osmosisd tx gamm swap-exact-amount-out [token-out] [token-in-max-amount] --swap-route-pool-ids --from --chain-id
 ```
 
 #### Example
