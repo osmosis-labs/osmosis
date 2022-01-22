@@ -28,6 +28,8 @@ Currently the only supported metadata & spot price calculator is using a GAMM po
   * Contains both JoinPool and ExitPool messages in one tx.
     * Has some false positives.
   * These false positives seem like they primarily will get hit during batching of many distinct operations, not really in one atomic action.
+* A max wanted gas per any tx can be set to filter out attack txes.
+* If tx wanted gas > than predefined threshold of 1M, then separate 'min-gas-price-for-high-gas-tx' option used to calculate min gas price.
 
 ## New SDK messages
 
