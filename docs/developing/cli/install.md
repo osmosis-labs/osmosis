@@ -1,12 +1,12 @@
-# Install Osmosisd 
+# Install Osmosisd
 
 ## Minimum Requirements
 
 The minimum recommended specs for running osmosisd is as follows:
 - 8-core (4 physical core), x86_64 architecture processor
 - 32 GB RAM (or equivalent swap file set up)
-- 1 TB of storage space 
- 
+- 1 TB of storage space
+
 
 ## Update System
 
@@ -38,13 +38,13 @@ After installed, open new terminal to properly load go
 
 ## Install Osmosis Binary
 
-Clone the osmosis repo, checkout and install v6.0.0:
+Clone the osmosis repo, checkout and install v6.2.0:
 
 ```bash
 cd $HOME
 git clone https://github.com/osmosis-labs/osmosis
 cd osmosis
-git checkout v6.0.0
+git checkout v6.2.0
 make install
 ```
 ::: tip

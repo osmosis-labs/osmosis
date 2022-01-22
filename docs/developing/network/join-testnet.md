@@ -163,7 +163,7 @@ To see live logs of the service:
 
 ```bash
 journalctl -u cosmovisor -f
-``` 
+```
 
 ## Update Cosmovisor to V6
 
@@ -179,7 +179,7 @@ To update osmosisd to V6 and replace cosmovisor osmosisd:
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
 cd $HOME/osmosis
 git pull
-git checkout v6.0.0
+git checkout v6.2.0
 make install
 make build
 systemctl stop cosmovisor.service

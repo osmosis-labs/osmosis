@@ -68,7 +68,7 @@ cosmovisor version
 osmosisd version
 ```
 
-These two command should both output 6.0.0
+These two command should both output 6.2.0
 
 ## Download Chain Data
 
@@ -234,7 +234,7 @@ To update osmosisd to V6 and replace cosmovisor osmosisd:
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
 cd $HOME/osmosis
 git pull
-git checkout v6.0.0
+git checkout v6.2.0
 make install
 make build
 systemctl stop cosmovisor.service
