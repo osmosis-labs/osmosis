@@ -144,4 +144,16 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
 </div>
+<br />
+<div class="cards threeColumn">
+  <a href="https://atomscan.com/osmosis" class="card lg" target="_blank">
+    <img src="img/atomscan.png">
+    <div class="title">
+      ATOMScan
+    </div>
+    <div class="text">
+     Block Explorer
+    </div>
+  </a>
+</div>
 
