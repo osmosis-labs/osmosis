@@ -8,7 +8,9 @@ To query the state and send transactions, you must connect to a node, which is t
 
 ### Running your own full node
 
-Running your own full node is the most secure option, but it comes with relatively high resource requirements. For more information about the requirements to run your own full node and a tutorial for installing `osmosisd`, see [installation](../cli/install). For a tutorial that explains how to connect to an existing Osmosis network, see [joining a network](../network/join-mainnet.md).
+Running your own full node is the most secure option, but it comes with relatively high resource requirements. For more information about the requirements to run your own full node and a tutorial for installing `osmosisd`, see [installation](../cli/install).
+
+[comment]: <> ( For a tutorial that explains how to connect to an existing Osmosis network, see [joining a network](../network/join-mainnet.md).)
 
 ### Connecting to a remote full node
 
@@ -50,7 +52,7 @@ osmosisd query distr rewards <delegatorAddress>
 To interact with the blockchain by sending transactions containing module messages with state-changing directives that get processed and included in blocks, use `osmosisd tx`. All of transaction-sending operations follow the form:
 
 ```bash
-osmosisd tx ...
+osmosisd tx bank send...
 ```
 
 To learn more about the different types of interactions you can issue, see the section for each module.
@@ -60,46 +62,13 @@ To learn more about the different types of interactions you can issue, see the s
 To simulate a transaction without actually broadcasting it, append the `--dry-run` flag to the command statement:
 
 ```bash
-osmosisd tx send \
+osmosisd tx bank send \
     <from_key_or_address> \
     <to_address> \
     <coins> \
     --chain-id=<chain_id> \
     --dry-run
 ```
-
-### Generating a transaction without sending
-
-To build a transaction and print its JSON format to STDOUT, append `--generate-only` to the list of the command line arguments. This allows you to separate the creation and signing of a transaction with the broadcasting.
-
-```bash
-osmosisd tx send \
-    <from_key_or_address> \
-    <to_address> \
-    <coins> \
-    --chain-id=<chain_id> \
-    --generate-only > unsignedSendTx.json
-```
-
-```bash
-osmosisd tx sign \
-    --chain-id=<chain_id> \
-    --from=<key_name> \
-    unsignedSendTx.json > signedSendTx.json
-```
-
-You can validate the transaction's signatures by typing the following:
-
-```bash
-osmosisd tx sign --validate-signatures signedSendTx.json
-```
-
-You can broadcast the signed transaction to a node by providing the JSON file to the following command:
-
-```bash
-osmosisd tx broadcast --node=<node> signedSendTx.json
-```
-
 
 ## Fees
 
@@ -126,7 +95,7 @@ Validators may start to prioritize transactions by `gasPrice` in the mempool, so
 To directly use fees:
 
 ```bash
-osmosisd tx send ... --fees=100000uOsmo
+osmosisd tx bank send ... --fees=100000uosmo
 ```
 
 If you use fees, validators will calculate the implied `minGasPrices` by dividing your fee with the estimated gas consumption, to properly assign the right priority to your transaction.
@@ -134,7 +103,7 @@ If you use fees, validators will calculate the implied `minGasPrices` by dividin
 To use gas prices (use a comma-separated list of amount and denominations).
 
 ```bash
-osmosisd tx send ... --gas-prices=0.15uusd
+osmosisd tx bank send ... --gas-prices=0.15uosmo
 ```
 
 ### Taxes
@@ -153,15 +122,15 @@ To get a direct fee estimation from `osmosisd`:
 
 ```bash
 osmosisd tx estimate-fee ...\
-    --gas-prices=0.15uusd
+    --gas-prices=0.15uosmo
     --gas-adjustment=1.4
 ```
 
 To create and send transactions using fee-estimation, use the template below as a format:
 
 ```bash
-osmosisd tx send ... \
-    --gas-prices=0.15uusd
+osmosisd tx bank send ... \
+    --gas-prices=0.15uosmo
     --gas=auto
     --gas-adjustment=1.4
 ```
