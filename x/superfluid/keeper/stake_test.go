@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, de
 	// create lockup of LP token
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin(denom, 1000000)}
-	lock := suite.LockTokens(addr1, coins, keeper.SuperfluidUnbondDuration)
+	lock := suite.LockTokens(addr1, coins, params.UnbondingDuration)
 
 	// call SuperfluidDelegate and check response
 	err := suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.ID, valAddr.String())
@@ -351,11 +351,12 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().Error(err)
 
 				// check unbonding synthetic lockup creation
+				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.UnstakingSuffix(valAddr))
 				suite.Require().NoError(err)
 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
 				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddr))
-				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(keeper.SuperfluidUnbondDuration))
+				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(params.UnbondingDuration))
 			}
 
 			// try undelegating twice
@@ -452,11 +453,12 @@ func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
 				suite.Require().Error(err)
 
 				// check unbonding synthetic lockup creation
+				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
 				suite.Require().NoError(err)
 				suite.Require().Equal(synthLock.UnderlyingLockId, srd.lockId)
 				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
-				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(keeper.SuperfluidUnbondDuration))
+				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(params.UnbondingDuration))
 
 				// check synthetic lockup creation
 				synthLock2, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.StakingSuffix(valAddrs[srd.newValIndex].String()))
@@ -724,7 +726,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			// check intermediary account changes after unbonding operations
 			for index, intAccIndex := range tc.checkAccIndexes {
 				expAcc := intermediaryAccs[intAccIndex]
-				suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(keeper.SuperfluidUnbondDuration + time.Second))
+				suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(params.UnbondingDuration + time.Second))
 				suite.app.EndBlocker(suite.ctx, abci.RequestEndBlock{Height: suite.ctx.BlockHeight()})
 
 				targetAmount := targetAmounts[index]

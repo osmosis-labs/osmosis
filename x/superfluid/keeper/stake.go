@@ -12,8 +12,6 @@ import (
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
-const SuperfluidUnbondDuration = time.Hour * 24 * 21
-
 func stakingSuffix(valAddr string) string {
 	return fmt.Sprintf("superbonding%s", valAddr)
 }
@@ -157,8 +155,10 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		return types.ErrUnbondingLockupNotSupported
 	}
 
+	params := k.GetParams(ctx)
+
 	// length check
-	if lock.Duration < SuperfluidUnbondDuration { // if less than bonding, skip
+	if lock.Duration < params.UnbondingDuration { // if less than bonding, skip
 		return types.ErrNotEnoughLockupDuration
 	}
 
@@ -239,8 +239,9 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 		return nil, err
 	}
 
+	params := k.GetParams(ctx)
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, SuperfluidUnbondDuration)
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration)
 	if err != nil {
 		return nil, err
 	}
