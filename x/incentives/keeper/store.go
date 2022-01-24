@@ -72,7 +72,7 @@ func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64)
 	gaugeIDs := k.getGaugeRefs(ctx, key)
 	gaugeIDs, index = removeValue(gaugeIDs, gaugeID)
 	if index < 0 {
-		return fmt.Errorf("specific gauge with ID %d not found", gaugeID)
+		return fmt.Errorf("specific gauge with ID %d not found by reference %s", gaugeID, key)
 	}
 	if len(gaugeIDs) == 0 {
 		store.Delete(key)
