@@ -187,7 +187,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // GenerateGenesisState creates a randomized GenState of the pool-incentives module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// TODO
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.

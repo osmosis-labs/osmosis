@@ -32,6 +32,15 @@ func RandomizedGenState(simState *module.SimulationState) {
 			CurrentEpochStartTime:   time.Time{},
 			EpochCountingStarted:    false,
 		},
+		{
+			Identifier:              "second",
+			StartTime:               time.Time{},
+			Duration:                time.Second,
+			CurrentEpoch:            0,
+			CurrentEpochStartHeight: 0,
+			CurrentEpochStartTime:   time.Time{},
+			EpochCountingStarted:    false,
+		},
 	}
 	epochGenesis := types.NewGenesisState(epochs)
 

@@ -18,7 +18,8 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 	}
 
 	// Get lockups longer or equal to SuperfluidUnbondDuration
-	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom+unstakingSuffix(acc.ValAddr), SuperfluidUnbondDuration)
+	params := k.GetParams(ctx)
+	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom+unstakingSuffix(acc.ValAddr), params.UnbondingDuration)
 	for _, lock := range locks {
 		// Only single token lock is allowed here
 		slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
