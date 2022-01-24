@@ -13,14 +13,13 @@ import (
 // GetCurrentReward gets total rewards to be distributed in the next epoch per denom + lock
 func (k Keeper) GetCurrentReward(ctx sdk.Context, denom string, lockDuration time.Duration) (types.CurrentReward, error) {
 	currentReward := types.CurrentReward{}
-	currentReward.Coin.Denom = denom
+	currentReward.TotalShares.Denom = denom
 	store := ctx.KVStore(k.storeKey)
 	rewardKey := combineKeys(types.KeyCurrentReward, []byte(denom+"/"+lockDuration.String()))
 
 	bz := store.Get(rewardKey)
 	if bz == nil {
-		currentReward.Period = 1 // starting period is 1
-		currentReward.Coin = sdk.NewCoin(denom, sdk.NewInt(0))
+		currentReward.TotalShares = sdk.NewCoin(denom, sdk.NewInt(0))
 		currentReward.LastProcessedEpoch = -1
 		return currentReward, nil
 	}
@@ -64,19 +63,19 @@ func (k Keeper) SetCurrentReward(ctx sdk.Context, currentReward types.CurrentRew
 	return nil
 }
 
-func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration time.Duration, period uint64) (types.HistoricalReward, error) {
+func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration time.Duration, epochNumber int64) (types.HistoricalReward, error) {
 	historicalReward := types.HistoricalReward{}
 	store := ctx.KVStore(k.storeKey)
-	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom+"/"+lockDuration.String()), sdk.Uint64ToBigEndian(period))
+	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom+"/"+lockDuration.String()), sdk.Uint64ToBigEndian(uint64(epochNumber)))
 
-	if period == 0 {
+	if epochNumber == -1 {
 		historicalReward.CumulativeRewardRatio = sdk.DecCoins{}
 		return historicalReward, nil
 	}
 
 	bz := store.Get(rewardKey)
 	if bz == nil {
-		return historicalReward, fmt.Errorf("historical rewards is not present = %d", period)
+		return historicalReward, fmt.Errorf("historical rewards is not present = %d", epochNumber)
 	}
 
 	err := proto.Unmarshal(bz, &historicalReward)
@@ -86,13 +85,12 @@ func (k Keeper) GetHistoricalReward(ctx sdk.Context, denom string, lockDuration 
 	return historicalReward, nil
 }
 
-func (k Keeper) SetHistoricalReward(ctx sdk.Context, cumulativeRewardRatio sdk.DecCoins, denom string, lockDuration time.Duration, period uint64, epochNumber int64) error {
+func (k Keeper) SetHistoricalReward(ctx sdk.Context, cumulativeRewardRatio sdk.DecCoins, denom string, lockDuration time.Duration, epochNumber int64) error {
 	store := ctx.KVStore(k.storeKey)
-	historicalRewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom+"/"+lockDuration.String()), sdk.Uint64ToBigEndian(period))
+	historicalRewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom+"/"+lockDuration.String()), sdk.Uint64ToBigEndian(uint64(epochNumber)))
 	historicalReward := types.HistoricalReward{
 		CumulativeRewardRatio: cumulativeRewardRatio,
-		Period:                period,
-		LastEligibleEpoch:     uint64(epochNumber),
+		Epoch:                 epochNumber,
 	}
 
 	bz, err := proto.Marshal(&historicalReward)
@@ -101,38 +99,7 @@ func (k Keeper) SetHistoricalReward(ctx sdk.Context, cumulativeRewardRatio sdk.D
 	}
 	store.Set(historicalRewardKey, bz)
 
-	// add historicalReward refs
-	prefix := combineKeys(types.KeyHistoricalRewardRef, []byte(denom+"/"+lockDuration.String()))
-	err = k.setHistoricalRewardRefs(ctx, prefix, period, epochNumber)
-	return err
-}
-
-// addHistoricalRewardRefs works as a ref to indicate which period it was at a specific epoch for a unique denom + lockDuration combination
-func (k Keeper) setHistoricalRewardRefs(ctx sdk.Context, prefix []byte, period uint64, epochNumber int64) error {
-	store := ctx.KVStore(k.storeKey)
-	periodBz := sdk.Uint64ToBigEndian(period)
-	endKey := combineKeys(prefix, sdk.Uint64ToBigEndian(uint64(epochNumber)))
-
-	if store.Has(endKey) {
-		return fmt.Errorf("HistoricalRewardRef with period exist: %d", period)
-	}
-
-	store.Set(endKey, periodBz)
-
 	return nil
-}
-
-// getHistoricalRewardPeriodByEpoch gets the last historicalReward period before specified epoch.
-func (k Keeper) getHistoricalRewardPeriodByEpoch(ctx sdk.Context, denom string, lockDuration time.Duration, epochNumber int64) (uint64, error) {
-	period := uint64(0)
-	rewardKey := combineKeys(types.KeyHistoricalRewardRef, []byte(denom+"/"+lockDuration.String()))
-	iterator := k.HistoricalRewardBeforeEpochIterator(ctx, rewardKey, epochNumber)
-	defer iterator.Close()
-	if iterator.Valid() {
-		period = sdk.BigEndianToUint64(iterator.Value())
-		return period, nil
-	}
-	return period, ErrHistoricalRewardNotExists
 }
 
 func (k Keeper) SetPeriodLockReward(ctx sdk.Context, periodLockReward types.PeriodLockReward) error {
@@ -178,7 +145,6 @@ func (k Keeper) GetPeriodLockReward(ctx sdk.Context, lockID uint64) (types.Perio
 	if bz == nil {
 		return types.PeriodLockReward{
 			LockId: lockID,
-			Period: make(map[string]uint64),
 		}, nil
 	}
 
@@ -196,17 +162,18 @@ func (k Keeper) updateReward(ctx sdk.Context, denom string, lockableDuration tim
 	if err != nil {
 		return err
 	}
-	cumulativeRewardRatio, err := k.CalculateCumulativeRewardRatio(ctx, currentReward, denom, lockableDuration, epochNumber)
-	if err != nil {
-		return err
-	}
-	if cumulativeRewardRatio != nil {
-		err = k.SetHistoricalReward(ctx, cumulativeRewardRatio, denom, lockableDuration, currentReward.Period, epochNumber)
+
+	if currentReward.LastProcessedEpoch != epochNumber {
+		// update currentReward if it's a new epoch that is being stored
+		cumulativeRewardRatio, err := k.CalculateCumulativeRewardRatio(ctx, currentReward, denom, lockableDuration, epochNumber)
+		if err != nil {
+			return err
+		}
+		err = k.SetHistoricalReward(ctx, cumulativeRewardRatio, denom, lockableDuration, epochNumber)
 		if err != nil {
 			return err
 		}
 		currentReward.LastProcessedEpoch = epochNumber
-		currentReward.Period++
 		currentReward.Rewards = sdk.Coins{}
 		err = k.SetCurrentReward(ctx, currentReward, denom, lockableDuration)
 		if err != nil {

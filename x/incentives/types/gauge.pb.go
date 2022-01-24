@@ -9,7 +9,6 @@ import (
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	types "github.com/osmosis-labs/osmosis/x/lockup/types"
 	_ "google.golang.org/protobuf/types/known/durationpb"
@@ -180,11 +179,11 @@ func (m *LockableDurationsInfo) GetLockableDurations() []time.Duration {
 	return nil
 }
 
+// HistoricalReward stores the accumulator value for rewards
 type HistoricalReward struct {
 	// Reward per share for each denom
 	CumulativeRewardRatio github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=cumulative_reward_ratio,json=cumulativeRewardRatio,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"cumulative_reward_ratio"`
-	Period                uint64                                      `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
-	LastEligibleEpoch     uint64                                      `protobuf:"varint,3,opt,name=last_eligible_epoch,json=lastEligibleEpoch,proto3" json:"last_eligible_epoch,omitempty"`
+	Epoch                 int64                                       `protobuf:"varint,2,opt,name=epoch,proto3" json:"epoch,omitempty"`
 }
 
 func (m *HistoricalReward) Reset()         { *m = HistoricalReward{} }
@@ -227,28 +226,23 @@ func (m *HistoricalReward) GetCumulativeRewardRatio() github_com_cosmos_cosmos_s
 	return nil
 }
 
-func (m *HistoricalReward) GetPeriod() uint64 {
+func (m *HistoricalReward) GetEpoch() int64 {
 	if m != nil {
-		return m.Period
+		return m.Epoch
 	}
 	return 0
 }
 
-func (m *HistoricalReward) GetLastEligibleEpoch() uint64 {
-	if m != nil {
-		return m.LastEligibleEpoch
-	}
-	return 0
-}
-
+// CurrentReward stores reward at the most recent epoch for each denom + lockDuration
 type CurrentReward struct {
-	Period             uint64 `protobuf:"varint,1,opt,name=period,proto3" json:"period,omitempty"`
-	LastProcessedEpoch int64  `protobuf:"varint,2,opt,name=last_processed_epoch,json=lastProcessedEpoch,proto3" json:"last_processed_epoch,omitempty"`
-	// total coin locked per denom + lockDuration
-	Coin         types1.Coin                              `protobuf:"bytes,3,opt,name=coin,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"coin"`
-	Rewards      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"rewards"`
-	Denom        string                                   `protobuf:"bytes,5,opt,name=denom,proto3" json:"denom,omitempty"`
-	LockDuration time.Duration                            `protobuf:"bytes,6,opt,name=lock_duration,json=lockDuration,proto3,stdduration" json:"lock_duration" yaml:"duration"`
+	LastProcessedEpoch int64 `protobuf:"varint,1,opt,name=last_processed_epoch,json=lastProcessedEpoch,proto3" json:"last_processed_epoch,omitempty"`
+	// total shares locked for the denom + lockDuration
+	TotalShares types1.Coin `protobuf:"bytes,2,opt,name=total_shares,json=totalShares,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"total_shares"`
+	// total reward that is to be distributed
+	Rewards github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"rewards"`
+	// denom of share
+	Denom        string        `protobuf:"bytes,4,opt,name=denom,proto3" json:"denom,omitempty"`
+	LockDuration time.Duration `protobuf:"bytes,5,opt,name=lock_duration,json=lockDuration,proto3,stdduration" json:"lock_duration" yaml:"duration"`
 }
 
 func (m *CurrentReward) Reset()         { *m = CurrentReward{} }
@@ -284,13 +278,6 @@ func (m *CurrentReward) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CurrentReward proto.InternalMessageInfo
 
-func (m *CurrentReward) GetPeriod() uint64 {
-	if m != nil {
-		return m.Period
-	}
-	return 0
-}
-
 func (m *CurrentReward) GetLastProcessedEpoch() int64 {
 	if m != nil {
 		return m.LastProcessedEpoch
@@ -298,9 +285,9 @@ func (m *CurrentReward) GetLastProcessedEpoch() int64 {
 	return 0
 }
 
-func (m *CurrentReward) GetCoin() types1.Coin {
+func (m *CurrentReward) GetTotalShares() types1.Coin {
 	if m != nil {
-		return m.Coin
+		return m.TotalShares
 	}
 	return types1.Coin{}
 }
@@ -326,28 +313,94 @@ func (m *CurrentReward) GetLockDuration() time.Duration {
 	return 0
 }
 
+// LastEligibleEpochByDurationAndDenom is a struct to store the latest epoch for each denom + lock duration combination
+type LastEligibleEpochByDurationAndDenom struct {
+	Denom        string        `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	LockDuration time.Duration `protobuf:"bytes,2,opt,name=lock_duration,json=lockDuration,proto3,stdduration" json:"lock_duration" yaml:"duration"`
+	Epoch        int64         `protobuf:"varint,3,opt,name=epoch,proto3" json:"epoch,omitempty"`
+}
+
+func (m *LastEligibleEpochByDurationAndDenom) Reset()         { *m = LastEligibleEpochByDurationAndDenom{} }
+func (m *LastEligibleEpochByDurationAndDenom) String() string { return proto.CompactTextString(m) }
+func (*LastEligibleEpochByDurationAndDenom) ProtoMessage()    {}
+func (*LastEligibleEpochByDurationAndDenom) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c0304e2bb0159901, []int{4}
+}
+func (m *LastEligibleEpochByDurationAndDenom) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *LastEligibleEpochByDurationAndDenom) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_LastEligibleEpochByDurationAndDenom.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *LastEligibleEpochByDurationAndDenom) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LastEligibleEpochByDurationAndDenom.Merge(m, src)
+}
+func (m *LastEligibleEpochByDurationAndDenom) XXX_Size() int {
+	return m.Size()
+}
+func (m *LastEligibleEpochByDurationAndDenom) XXX_DiscardUnknown() {
+	xxx_messageInfo_LastEligibleEpochByDurationAndDenom.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LastEligibleEpochByDurationAndDenom proto.InternalMessageInfo
+
+func (m *LastEligibleEpochByDurationAndDenom) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *LastEligibleEpochByDurationAndDenom) GetLockDuration() time.Duration {
+	if m != nil {
+		return m.LockDuration
+	}
+	return 0
+}
+
+func (m *LastEligibleEpochByDurationAndDenom) GetEpoch() int64 {
+	if m != nil {
+		return m.Epoch
+	}
+	return 0
+}
+
+// PeriodLockReward stores total rewards that could be claimed for each individual lock
 type PeriodLockReward struct {
-	LockId  uint64                                   `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	Period  map[string]uint64                        `protobuf:"bytes,2,rep,name=period,proto3" json:"period,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	Rewards github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"rewards"`
+	LockId             uint64                                   `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
+	Rewards            github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"rewards"`
+	LastEligibleEpochs []*LastEligibleEpochByDurationAndDenom   `protobuf:"bytes,3,rep,name=last_eligible_epochs,json=lastEligibleEpochs,proto3" json:"last_eligible_epochs,omitempty"`
 }
 
 func (m *PeriodLockReward) Reset()         { *m = PeriodLockReward{} }
 func (m *PeriodLockReward) String() string { return proto.CompactTextString(m) }
 func (*PeriodLockReward) ProtoMessage()    {}
 func (*PeriodLockReward) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c0304e2bb0159901, []int{4}
+	return fileDescriptor_c0304e2bb0159901, []int{5}
 }
 func (m *PeriodLockReward) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
 func (m *PeriodLockReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	b = b[:cap(b)]
-	n, err := m.MarshalToSizedBuffer(b)
-	if err != nil {
-		return nil, err
+	if deterministic {
+		return xxx_messageInfo_PeriodLockReward.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
 	}
-	return b[:n], nil
 }
 func (m *PeriodLockReward) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_PeriodLockReward.Merge(m, src)
@@ -368,16 +421,16 @@ func (m *PeriodLockReward) GetLockId() uint64 {
 	return 0
 }
 
-func (m *PeriodLockReward) GetPeriod() map[string]uint64 {
+func (m *PeriodLockReward) GetRewards() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
-		return m.Period
+		return m.Rewards
 	}
 	return nil
 }
 
-func (m *PeriodLockReward) GetRewards() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *PeriodLockReward) GetLastEligibleEpochs() []*LastEligibleEpochByDurationAndDenom {
 	if m != nil {
-		return m.Rewards
+		return m.LastEligibleEpochs
 	}
 	return nil
 }
@@ -387,68 +440,67 @@ func init() {
 	proto.RegisterType((*LockableDurationsInfo)(nil), "osmosis.incentives.LockableDurationsInfo")
 	proto.RegisterType((*HistoricalReward)(nil), "osmosis.incentives.HistoricalReward")
 	proto.RegisterType((*CurrentReward)(nil), "osmosis.incentives.CurrentReward")
+	proto.RegisterType((*LastEligibleEpochByDurationAndDenom)(nil), "osmosis.incentives.LastEligibleEpochByDurationAndDenom")
 	proto.RegisterType((*PeriodLockReward)(nil), "osmosis.incentives.PeriodLockReward")
-	proto.RegisterMapType((map[string]uint64)(nil), "osmosis.incentives.PeriodLockReward.PeriodEntry")
 }
 
 func init() { proto.RegisterFile("osmosis/incentives/gauge.proto", fileDescriptor_c0304e2bb0159901) }
 
 var fileDescriptor_c0304e2bb0159901 = []byte{
-	// 850 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x4f, 0x8f, 0xdb, 0x44,
-	0x14, 0x5f, 0x27, 0xde, 0xdd, 0xee, 0x6c, 0x02, 0xc9, 0x90, 0x52, 0x6f, 0x00, 0x27, 0x18, 0x21,
-	0x22, 0xa1, 0xda, 0xdb, 0xed, 0x05, 0xf6, 0x98, 0xed, 0x8a, 0xae, 0x54, 0x89, 0x60, 0xf5, 0x80,
-	0x40, 0xc2, 0x1a, 0xdb, 0xb3, 0xee, 0x28, 0xb6, 0xc7, 0x9a, 0x19, 0x87, 0xe6, 0x1b, 0xc0, 0xad,
-	0x82, 0x4b, 0x2f, 0x1c, 0xb8, 0xf2, 0x49, 0x7a, 0xec, 0x91, 0x53, 0x8b, 0x76, 0x25, 0x3e, 0x00,
-	0x9f, 0x00, 0xcd, 0x1f, 0x6f, 0x42, 0x8a, 0xaa, 0x1e, 0xba, 0x27, 0x7b, 0xe6, 0x37, 0xef, 0xf7,
-	0xde, 0xfb, 0xcd, 0xef, 0xd9, 0xc0, 0xa5, 0xbc, 0xa0, 0x9c, 0xf0, 0x80, 0x94, 0x09, 0x2e, 0x05,
-	0x59, 0x60, 0x1e, 0x64, 0xa8, 0xce, 0xb0, 0x5f, 0x31, 0x2a, 0x28, 0x84, 0x06, 0xf7, 0x57, 0xf8,
-	0x70, 0x90, 0xd1, 0x8c, 0x2a, 0x38, 0x90, 0x6f, 0xfa, 0xe4, 0xd0, 0xcd, 0x28, 0xcd, 0x72, 0x1c,
-	0xa8, 0x55, 0x5c, 0x9f, 0x07, 0x69, 0xcd, 0x90, 0x20, 0xb4, 0x34, 0xf8, 0x68, 0x13, 0x17, 0xa4,
-	0xc0, 0x5c, 0xa0, 0xa2, 0x6a, 0x08, 0x12, 0x95, 0x2b, 0x88, 0x11, 0xc7, 0xc1, 0xe2, 0x4e, 0x8c,
-	0x05, 0xba, 0x13, 0x24, 0x94, 0x34, 0x04, 0x07, 0x4d, 0xa9, 0x39, 0x4d, 0xe6, 0x75, 0xa5, 0x1e,
-	0x1a, 0xf2, 0x7e, 0xb1, 0xc1, 0xf6, 0x57, 0xb2, 0x6a, 0xf8, 0x0e, 0x68, 0x91, 0xd4, 0xb1, 0xc6,
-	0xd6, 0xc4, 0x0e, 0x5b, 0x24, 0x85, 0x1f, 0x83, 0x0e, 0xe1, 0x51, 0x85, 0x59, 0x85, 0x45, 0x8d,
-	0x72, 0xa7, 0x35, 0xb6, 0x26, 0x37, 0xc2, 0x7d, 0xc2, 0x67, 0xcd, 0x16, 0x3c, 0x03, 0xdd, 0x94,
-	0x70, 0xc1, 0x48, 0x5c, 0x0b, 0x1c, 0x09, 0xea, 0xb4, 0xc7, 0xd6, 0x64, 0xff, 0xc8, 0xf5, 0x9b,
-	0xd6, 0x75, 0x3e, 0xff, 0x9b, 0x1a, 0xb3, 0xe5, 0x09, 0x2d, 0x53, 0x22, 0xbb, 0x9a, 0xda, 0xcf,
-	0x5e, 0x8c, 0xb6, 0xc2, 0xce, 0x2a, 0xf4, 0x21, 0x85, 0x08, 0x6c, 0xcb, 0x82, 0xb9, 0x63, 0x8f,
-	0xdb, 0x93, 0xfd, 0xa3, 0x03, 0x5f, 0xb7, 0xe4, 0xcb, 0x96, 0x7c, 0xd3, 0x92, 0x7f, 0x42, 0x49,
-	0x39, 0x3d, 0x94, 0xd1, 0x7f, 0xbc, 0x1c, 0x4d, 0x32, 0x22, 0x1e, 0xd5, 0xb1, 0x9f, 0xd0, 0x22,
-	0x30, 0xfd, 0xeb, 0xc7, 0x6d, 0x9e, 0xce, 0x03, 0xb1, 0xac, 0x30, 0x57, 0x01, 0x3c, 0xd4, 0xcc,
-	0xf0, 0x5b, 0x00, 0xb8, 0x40, 0x4c, 0x44, 0x52, 0x3e, 0x67, 0x5b, 0x95, 0x3a, 0xf4, 0xb5, 0xb6,
-	0x7e, 0xa3, 0xad, 0xff, 0xb0, 0xd1, 0x76, 0xfa, 0x91, 0x4c, 0xf4, 0xcf, 0x8b, 0x51, 0x7f, 0x89,
-	0x8a, 0xfc, 0xd8, 0x5b, 0xc5, 0x7a, 0x4f, 0x5e, 0x8e, 0xac, 0x70, 0x4f, 0x6d, 0xc8, 0xe3, 0x30,
-	0x00, 0x83, 0xb2, 0x2e, 0x22, 0x5c, 0xd1, 0xe4, 0x11, 0x8f, 0x2a, 0x44, 0xd2, 0x88, 0x2e, 0x30,
-	0x73, 0x76, 0x94, 0x98, 0xfd, 0xb2, 0x2e, 0x4e, 0x15, 0x34, 0x43, 0x24, 0xfd, 0x7a, 0x81, 0x19,
-	0xfc, 0x04, 0x74, 0xcf, 0x49, 0x9e, 0xe3, 0xd4, 0xc4, 0x38, 0xbb, 0xea, 0x64, 0x47, 0x6f, 0xea,
-	0xc3, 0xf0, 0x31, 0xe8, 0xaf, 0x24, 0x4a, 0x23, 0x2d, 0xcf, 0x8d, 0xb7, 0x2f, 0x4f, 0x6f, 0x2d,
-	0x8b, 0xda, 0xf1, 0x7e, 0xb2, 0xc0, 0xcd, 0x07, 0x34, 0x99, 0xa3, 0x38, 0xc7, 0xf7, 0x8c, 0x17,
-	0xf9, 0x59, 0x79, 0x4e, 0x21, 0x05, 0x30, 0x37, 0x40, 0xd4, 0xb8, 0x94, 0x3b, 0x96, 0x29, 0x6a,
-	0x53, 0xcb, 0x26, 0x76, 0xfa, 0xa9, 0x91, 0xf2, 0x40, 0x4b, 0xf9, 0x2a, 0x85, 0xf7, 0x54, 0x4a,
-	0xda, 0xcf, 0x37, 0x93, 0x7a, 0x7f, 0x5b, 0xa0, 0x77, 0x9f, 0x70, 0x41, 0x19, 0x49, 0x50, 0x1e,
-	0xe2, 0x1f, 0x11, 0x4b, 0xe1, 0xcf, 0x16, 0xb8, 0x95, 0xd4, 0x45, 0x9d, 0x23, 0x39, 0x56, 0x11,
-	0x53, 0xbb, 0x91, 0x0a, 0x31, 0xb5, 0x7c, 0xf8, 0xbf, 0x02, 0xdd, 0xc3, 0x89, 0xd2, 0xe8, 0xae,
-	0xd1, 0xe8, 0xf3, 0x37, 0xd0, 0xc8, 0xc4, 0xf0, 0xf0, 0xe6, 0x2a, 0xa3, 0x2e, 0x23, 0x94, 0xf9,
-	0xe0, 0xfb, 0x60, 0xa7, 0xc2, 0x8c, 0xd0, 0x54, 0x0d, 0x88, 0x1d, 0x9a, 0x15, 0xf4, 0xc1, 0x7b,
-	0x39, 0xe2, 0x22, 0xc2, 0x39, 0xc9, 0x88, 0xec, 0x55, 0xdd, 0xb4, 0x9a, 0x10, 0x3b, 0xec, 0x4b,
-	0xe8, 0xd4, 0x20, 0xea, 0xba, 0xbd, 0x5f, 0xdb, 0xa0, 0x7b, 0x52, 0x33, 0x86, 0x4b, 0x61, 0xba,
-	0x5c, 0x31, 0x5b, 0xff, 0x61, 0x3e, 0x04, 0x03, 0xc5, 0x5c, 0x31, 0x9a, 0x60, 0xce, 0x1b, 0x13,
-	0xa9, 0xfc, 0xed, 0x10, 0x4a, 0x6c, 0xd6, 0x40, 0x8a, 0x1b, 0xfe, 0x00, 0x6c, 0xe9, 0x1e, 0x33,
-	0x9e, 0xaf, 0x31, 0x4f, 0x60, 0x84, 0xf9, 0xec, 0x0d, 0xcd, 0x13, 0x2a, 0x5e, 0x88, 0xc1, 0xae,
-	0xbe, 0x83, 0x6b, 0x19, 0xdf, 0x86, 0x1b, 0x0e, 0xc0, 0x76, 0x8a, 0x4b, 0x5a, 0xa8, 0xd9, 0xdd,
-	0x0b, 0xf5, 0x02, 0x7e, 0x0f, 0xba, 0xd2, 0x36, 0x57, 0x5e, 0x52, 0x53, 0xf7, 0x5a, 0x37, 0x7e,
-	0x60, 0xdc, 0xf8, 0xae, 0x76, 0x63, 0x13, 0xa8, 0x3d, 0xd8, 0x91, 0x64, 0xcd, 0x51, 0xef, 0xb7,
-	0x16, 0xe8, 0xcd, 0x94, 0xec, 0x72, 0x1e, 0xcc, 0xc5, 0xdc, 0x02, 0xbb, 0x2a, 0xe3, 0xd5, 0xe7,
-	0x72, 0x47, 0x2e, 0xcf, 0x52, 0x78, 0x7f, 0xcd, 0x0b, 0x52, 0x86, 0x43, 0xff, 0xd5, 0x7f, 0x80,
-	0xbf, 0x49, 0x67, 0x36, 0x4e, 0x4b, 0xc1, 0x96, 0x57, 0x77, 0xbc, 0xa6, 0x68, 0xfb, 0xfa, 0x14,
-	0x1d, 0x7e, 0x09, 0xf6, 0xd7, 0xb2, 0xc3, 0x1e, 0x68, 0xcf, 0xf1, 0x52, 0x35, 0xb5, 0x17, 0xca,
-	0x57, 0x29, 0xf9, 0x02, 0xe5, 0x35, 0x36, 0xe6, 0xd6, 0x8b, 0xe3, 0xd6, 0x17, 0xd6, 0xb1, 0xfd,
-	0xf4, 0xf7, 0x91, 0x35, 0x7d, 0xf0, 0xec, 0xc2, 0xb5, 0x9e, 0x5f, 0xb8, 0xd6, 0x5f, 0x17, 0xae,
-	0xf5, 0xe4, 0xd2, 0xdd, 0x7a, 0x7e, 0xe9, 0x6e, 0xfd, 0x79, 0xe9, 0x6e, 0x7d, 0x77, 0xb4, 0x56,
-	0x8d, 0x51, 0xe1, 0x76, 0x8e, 0x62, 0xde, 0x2c, 0x82, 0xc7, 0xeb, 0x3f, 0x4e, 0x55, 0x5d, 0xbc,
-	0xa3, 0xee, 0xea, 0xee, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x73, 0x88, 0x4f, 0x71, 0x5b, 0x07,
-	0x00, 0x00,
+	// 836 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x4f, 0x6f, 0xdc, 0x44,
+	0x14, 0xcf, 0xec, 0x6e, 0x92, 0x76, 0xb2, 0x81, 0x64, 0x94, 0xaa, 0x4e, 0x00, 0xef, 0xe2, 0x0a,
+	0xb1, 0x12, 0xaa, 0xdd, 0xa6, 0x07, 0x24, 0x6e, 0x6c, 0x52, 0x41, 0xa4, 0x48, 0x04, 0xd3, 0x03,
+	0x82, 0x83, 0x35, 0xb6, 0x27, 0xce, 0x28, 0x63, 0x8f, 0x35, 0x33, 0x0e, 0xcd, 0x37, 0x00, 0x4e,
+	0x15, 0x27, 0x3e, 0x03, 0x07, 0x4e, 0x7c, 0x88, 0x1e, 0x7b, 0xe4, 0xd4, 0xa2, 0xe4, 0x1b, 0x70,
+	0x47, 0x42, 0xf3, 0x2f, 0xbb, 0x24, 0x28, 0xca, 0x21, 0x3d, 0xd9, 0x33, 0xbf, 0x79, 0xef, 0xfd,
+	0xde, 0xef, 0xfd, 0xc6, 0x86, 0x21, 0x97, 0x35, 0x97, 0x54, 0x26, 0xb4, 0x29, 0x48, 0xa3, 0xe8,
+	0x09, 0x91, 0x49, 0x85, 0xbb, 0x8a, 0xc4, 0xad, 0xe0, 0x8a, 0x23, 0xe4, 0xf0, 0x78, 0x86, 0x6f,
+	0x6d, 0x54, 0xbc, 0xe2, 0x06, 0x4e, 0xf4, 0x9b, 0x3d, 0xb9, 0x15, 0x56, 0x9c, 0x57, 0x8c, 0x24,
+	0x66, 0x95, 0x77, 0x87, 0x49, 0xd9, 0x09, 0xac, 0x28, 0x6f, 0x1c, 0x3e, 0xba, 0x8c, 0x2b, 0x5a,
+	0x13, 0xa9, 0x70, 0xdd, 0xfa, 0x04, 0x85, 0xa9, 0x95, 0xe4, 0x58, 0x92, 0xe4, 0xe4, 0x71, 0x4e,
+	0x14, 0x7e, 0x9c, 0x14, 0x9c, 0xfa, 0x04, 0x9b, 0x9e, 0x2a, 0xe3, 0xc5, 0x71, 0xd7, 0x9a, 0x87,
+	0x85, 0xa2, 0x5f, 0x06, 0x70, 0xf1, 0x0b, 0xcd, 0x1a, 0xbd, 0x03, 0x7b, 0xb4, 0x0c, 0xc0, 0x18,
+	0x4c, 0x06, 0x69, 0x8f, 0x96, 0xe8, 0x43, 0x38, 0xa4, 0x32, 0x6b, 0x89, 0x68, 0x89, 0xea, 0x30,
+	0x0b, 0x7a, 0x63, 0x30, 0xb9, 0x93, 0xae, 0x50, 0x79, 0xe0, 0xb7, 0xd0, 0x1e, 0x5c, 0x2d, 0xa9,
+	0x54, 0x82, 0xe6, 0x9d, 0x22, 0x99, 0xe2, 0x41, 0x7f, 0x0c, 0x26, 0x2b, 0xdb, 0x61, 0xec, 0x5b,
+	0xb7, 0xf5, 0xe2, 0xaf, 0x3b, 0x22, 0x4e, 0x77, 0x78, 0x53, 0x52, 0xdd, 0xd5, 0x74, 0xf0, 0xf2,
+	0xf5, 0x68, 0x21, 0x1d, 0xce, 0x42, 0x9f, 0x71, 0x84, 0xe1, 0xa2, 0x26, 0x2c, 0x83, 0xc1, 0xb8,
+	0x3f, 0x59, 0xd9, 0xde, 0x8c, 0x6d, 0x4b, 0xb1, 0x6e, 0x29, 0x76, 0x2d, 0xc5, 0x3b, 0x9c, 0x36,
+	0xd3, 0x47, 0x3a, 0xfa, 0xb7, 0x37, 0xa3, 0x49, 0x45, 0xd5, 0x51, 0x97, 0xc7, 0x05, 0xaf, 0x13,
+	0xd7, 0xbf, 0x7d, 0x3c, 0x94, 0xe5, 0x71, 0xa2, 0x4e, 0x5b, 0x22, 0x4d, 0x80, 0x4c, 0x6d, 0x66,
+	0xf4, 0x2d, 0x84, 0x52, 0x61, 0xa1, 0x32, 0x2d, 0x5f, 0xb0, 0x68, 0xa8, 0x6e, 0xc5, 0x56, 0xdb,
+	0xd8, 0x6b, 0x1b, 0x3f, 0xf3, 0xda, 0x4e, 0x3f, 0xd0, 0x85, 0xfe, 0x7e, 0x3d, 0x5a, 0x3f, 0xc5,
+	0x35, 0xfb, 0x2c, 0x9a, 0xc5, 0x46, 0x2f, 0xde, 0x8c, 0x40, 0x7a, 0xd7, 0x6c, 0xe8, 0xe3, 0x28,
+	0x81, 0x1b, 0x4d, 0x57, 0x67, 0xa4, 0xe5, 0xc5, 0x91, 0xcc, 0x5a, 0x4c, 0xcb, 0x8c, 0x9f, 0x10,
+	0x11, 0x2c, 0x19, 0x31, 0xd7, 0x9b, 0xae, 0x7e, 0x6a, 0xa0, 0x03, 0x4c, 0xcb, 0xaf, 0x4e, 0x88,
+	0x40, 0x0f, 0xe0, 0xea, 0x21, 0x65, 0x8c, 0x94, 0x2e, 0x26, 0x58, 0x36, 0x27, 0x87, 0x76, 0xd3,
+	0x1e, 0x46, 0xcf, 0xe1, 0xfa, 0x4c, 0xa2, 0x32, 0xb3, 0xf2, 0xdc, 0xb9, 0x7d, 0x79, 0xd6, 0xe6,
+	0xaa, 0x98, 0x9d, 0xe8, 0x47, 0x00, 0xef, 0xed, 0xf3, 0xe2, 0x18, 0xe7, 0x8c, 0xec, 0x3a, 0x2f,
+	0xca, 0xbd, 0xe6, 0x90, 0x23, 0x0e, 0x11, 0x73, 0x40, 0xe6, 0x5d, 0x2a, 0x03, 0xe0, 0x48, 0x5d,
+	0xd6, 0xd2, 0xc7, 0x4e, 0x3f, 0x72, 0x52, 0x6e, 0x5a, 0x29, 0xaf, 0xa6, 0x88, 0x7e, 0xd5, 0x92,
+	0xae, 0xb3, 0xcb, 0x45, 0xa3, 0x3f, 0x00, 0x5c, 0xfb, 0x92, 0x4a, 0xc5, 0x05, 0x2d, 0x30, 0x4b,
+	0xc9, 0x0f, 0x58, 0x94, 0xe8, 0x27, 0x00, 0xef, 0x17, 0x5d, 0xdd, 0x31, 0xac, 0xaf, 0x55, 0x26,
+	0xcc, 0x6e, 0x66, 0x42, 0x1c, 0x97, 0xf7, 0xff, 0x57, 0xa0, 0x5d, 0x52, 0x18, 0x8d, 0x9e, 0x38,
+	0x8d, 0x3e, 0xb9, 0x81, 0x46, 0x2e, 0x46, 0xa6, 0xf7, 0x66, 0x15, 0x2d, 0x8d, 0x54, 0xd7, 0x43,
+	0x1b, 0x70, 0xd1, 0xcc, 0xd0, 0xdc, 0x8f, 0x7e, 0x6a, 0x17, 0xd1, 0xcf, 0x7d, 0xb8, 0xba, 0xd3,
+	0x09, 0x41, 0x1a, 0xe5, 0x38, 0x3f, 0x82, 0x1b, 0x0c, 0x4b, 0x95, 0xb5, 0x82, 0x17, 0x44, 0x4a,
+	0x3f, 0x7a, 0x73, 0xe1, 0xfa, 0x29, 0xd2, 0xd8, 0x81, 0x87, 0x8c, 0x01, 0x50, 0x0d, 0x87, 0x8a,
+	0x2b, 0xcc, 0x32, 0x79, 0x84, 0x05, 0x91, 0xa6, 0xc0, 0xb5, 0xa3, 0x4f, 0x5c, 0x5b, 0x1f, 0xdf,
+	0x70, 0xf4, 0xe9, 0x8a, 0xc9, 0xff, 0x8d, 0x49, 0x8f, 0x08, 0x5c, 0xb6, 0x42, 0xca, 0xa0, 0x7f,
+	0xfb, 0x26, 0xf3, 0xb9, 0xb5, 0x5e, 0x25, 0x69, 0x78, 0x1d, 0x0c, 0xc6, 0x60, 0x72, 0x37, 0xb5,
+	0x0b, 0xf4, 0x3d, 0x5c, 0xd5, 0xb3, 0xbf, 0x30, 0x84, 0xbb, 0x9e, 0xd7, 0x58, 0xea, 0x3d, 0x67,
+	0xa9, 0x77, 0xad, 0xa5, 0x7c, 0xa0, 0x35, 0xd2, 0x50, 0x27, 0xf3, 0x47, 0xa3, 0xdf, 0x01, 0x7c,
+	0xb0, 0x8f, 0xa5, 0x7a, 0xca, 0x68, 0x45, 0x73, 0x46, 0x8c, 0xbc, 0xd3, 0x53, 0x8f, 0x7f, 0xde,
+	0x94, 0xbb, 0x86, 0xc4, 0x05, 0x35, 0x70, 0x2d, 0xb5, 0xde, 0xed, 0x51, 0x9b, 0xb9, 0xa7, 0x3f,
+	0xef, 0x9e, 0x7f, 0x00, 0x5c, 0x3b, 0x20, 0x82, 0xf2, 0x52, 0xdf, 0x42, 0x67, 0xa0, 0xfb, 0x70,
+	0xd9, 0xf0, 0xb8, 0xf8, 0x48, 0x2f, 0xe9, 0xe5, 0x5e, 0x39, 0x3f, 0xb8, 0xde, 0x5b, 0x1c, 0x1c,
+	0x75, 0x06, 0x26, 0x4e, 0x45, 0xff, 0xe9, 0xb2, 0x66, 0xf9, 0x34, 0xbe, 0xfa, 0xbb, 0x8b, 0x6f,
+	0x20, 0xba, 0x75, 0xfe, 0x7f, 0x0e, 0xc9, 0xe9, 0xfe, 0xcb, 0xb3, 0x10, 0xbc, 0x3a, 0x0b, 0xc1,
+	0x5f, 0x67, 0x21, 0x78, 0x71, 0x1e, 0x2e, 0xbc, 0x3a, 0x0f, 0x17, 0xfe, 0x3c, 0x0f, 0x17, 0xbe,
+	0xdb, 0x9e, 0xe3, 0xed, 0x0a, 0x3e, 0x64, 0x38, 0x97, 0x7e, 0x91, 0x3c, 0x9f, 0xff, 0x1d, 0x9b,
+	0x3e, 0xf2, 0x25, 0x33, 0xa1, 0x27, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x69, 0x6d, 0x2a, 0x78,
+	0xb1, 0x07, 0x00, 0x00,
 }
 
 func (m *Gauge) Marshal() (dAtA []byte, err error) {
@@ -600,13 +652,8 @@ func (m *HistoricalReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.LastEligibleEpoch != 0 {
-		i = encodeVarintGauge(dAtA, i, uint64(m.LastEligibleEpoch))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.Period != 0 {
-		i = encodeVarintGauge(dAtA, i, uint64(m.Period))
+	if m.Epoch != 0 {
+		i = encodeVarintGauge(dAtA, i, uint64(m.Epoch))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -654,13 +701,13 @@ func (m *CurrentReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i -= n3
 	i = encodeVarintGauge(dAtA, i, uint64(n3))
 	i--
-	dAtA[i] = 0x32
+	dAtA[i] = 0x2a
 	if len(m.Denom) > 0 {
 		i -= len(m.Denom)
 		copy(dAtA[i:], m.Denom)
 		i = encodeVarintGauge(dAtA, i, uint64(len(m.Denom)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x22
 	}
 	if len(m.Rewards) > 0 {
 		for iNdEx := len(m.Rewards) - 1; iNdEx >= 0; iNdEx-- {
@@ -673,11 +720,11 @@ func (m *CurrentReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintGauge(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x22
+			dAtA[i] = 0x1a
 		}
 	}
 	{
-		size, err := m.Coin.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.TotalShares.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -685,16 +732,54 @@ func (m *CurrentReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintGauge(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x12
 	if m.LastProcessedEpoch != 0 {
 		i = encodeVarintGauge(dAtA, i, uint64(m.LastProcessedEpoch))
 		i--
-		dAtA[i] = 0x10
-	}
-	if m.Period != 0 {
-		i = encodeVarintGauge(dAtA, i, uint64(m.Period))
-		i--
 		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *LastEligibleEpochByDurationAndDenom) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LastEligibleEpochByDurationAndDenom) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *LastEligibleEpochByDurationAndDenom) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Epoch != 0 {
+		i = encodeVarintGauge(dAtA, i, uint64(m.Epoch))
+		i--
+		dAtA[i] = 0x18
+	}
+	n5, err5 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.LockDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockDuration):])
+	if err5 != nil {
+		return 0, err5
+	}
+	i -= n5
+	i = encodeVarintGauge(dAtA, i, uint64(n5))
+	i--
+	dAtA[i] = 0x12
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintGauge(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -719,10 +804,10 @@ func (m *PeriodLockReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Rewards) > 0 {
-		for iNdEx := len(m.Rewards) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.LastEligibleEpochs) > 0 {
+		for iNdEx := len(m.LastEligibleEpochs) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Rewards[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.LastEligibleEpochs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -733,24 +818,16 @@ func (m *PeriodLockReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x1a
 		}
 	}
-	if len(m.Period) > 0 {
-		keysForPeriod := make([]string, 0, len(m.Period))
-		for k := range m.Period {
-			keysForPeriod = append(keysForPeriod, string(k))
-		}
-		github_com_gogo_protobuf_sortkeys.Strings(keysForPeriod)
-		for iNdEx := len(keysForPeriod) - 1; iNdEx >= 0; iNdEx-- {
-			v := m.Period[string(keysForPeriod[iNdEx])]
-			baseI := i
-			i = encodeVarintGauge(dAtA, i, uint64(v))
-			i--
-			dAtA[i] = 0x10
-			i -= len(keysForPeriod[iNdEx])
-			copy(dAtA[i:], keysForPeriod[iNdEx])
-			i = encodeVarintGauge(dAtA, i, uint64(len(keysForPeriod[iNdEx])))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintGauge(dAtA, i, uint64(baseI-i))
+	if len(m.Rewards) > 0 {
+		for iNdEx := len(m.Rewards) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Rewards[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGauge(dAtA, i, uint64(size))
+			}
 			i--
 			dAtA[i] = 0x12
 		}
@@ -838,11 +915,8 @@ func (m *HistoricalReward) Size() (n int) {
 			n += 1 + l + sovGauge(uint64(l))
 		}
 	}
-	if m.Period != 0 {
-		n += 1 + sovGauge(uint64(m.Period))
-	}
-	if m.LastEligibleEpoch != 0 {
-		n += 1 + sovGauge(uint64(m.LastEligibleEpoch))
+	if m.Epoch != 0 {
+		n += 1 + sovGauge(uint64(m.Epoch))
 	}
 	return n
 }
@@ -853,13 +927,10 @@ func (m *CurrentReward) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Period != 0 {
-		n += 1 + sovGauge(uint64(m.Period))
-	}
 	if m.LastProcessedEpoch != 0 {
 		n += 1 + sovGauge(uint64(m.LastProcessedEpoch))
 	}
-	l = m.Coin.Size()
+	l = m.TotalShares.Size()
 	n += 1 + l + sovGauge(uint64(l))
 	if len(m.Rewards) > 0 {
 		for _, e := range m.Rewards {
@@ -876,6 +947,24 @@ func (m *CurrentReward) Size() (n int) {
 	return n
 }
 
+func (m *LastEligibleEpochByDurationAndDenom) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovGauge(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.LockDuration)
+	n += 1 + l + sovGauge(uint64(l))
+	if m.Epoch != 0 {
+		n += 1 + sovGauge(uint64(m.Epoch))
+	}
+	return n
+}
+
 func (m *PeriodLockReward) Size() (n int) {
 	if m == nil {
 		return 0
@@ -885,16 +974,14 @@ func (m *PeriodLockReward) Size() (n int) {
 	if m.LockId != 0 {
 		n += 1 + sovGauge(uint64(m.LockId))
 	}
-	if len(m.Period) > 0 {
-		for k, v := range m.Period {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovGauge(uint64(len(k))) + 1 + sovGauge(uint64(v))
-			n += mapEntrySize + 1 + sovGauge(uint64(mapEntrySize))
-		}
-	}
 	if len(m.Rewards) > 0 {
 		for _, e := range m.Rewards {
+			l = e.Size()
+			n += 1 + l + sovGauge(uint64(l))
+		}
+	}
+	if len(m.LastEligibleEpochs) > 0 {
+		for _, e := range m.LastEligibleEpochs {
 			l = e.Size()
 			n += 1 + l + sovGauge(uint64(l))
 		}
@@ -1318,9 +1405,9 @@ func (m *HistoricalReward) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Epoch", wireType)
 			}
-			m.Period = 0
+			m.Epoch = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGauge
@@ -1330,26 +1417,7 @@ func (m *HistoricalReward) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Period |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LastEligibleEpoch", wireType)
-			}
-			m.LastEligibleEpoch = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGauge
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LastEligibleEpoch |= uint64(b&0x7F) << shift
+				m.Epoch |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1406,25 +1474,6 @@ func (m *CurrentReward) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
-			}
-			m.Period = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGauge
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Period |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LastProcessedEpoch", wireType)
 			}
 			m.LastProcessedEpoch = 0
@@ -1442,9 +1491,9 @@ func (m *CurrentReward) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Coin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalShares", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1471,11 +1520,11 @@ func (m *CurrentReward) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Coin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.TotalShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Rewards", wireType)
 			}
@@ -1509,7 +1558,7 @@ func (m *CurrentReward) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
 			}
@@ -1541,7 +1590,7 @@ func (m *CurrentReward) Unmarshal(dAtA []byte) error {
 			}
 			m.Denom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LockDuration", wireType)
 			}
@@ -1574,6 +1623,140 @@ func (m *CurrentReward) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGauge(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGauge
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LastEligibleEpochByDurationAndDenom) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGauge
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LastEligibleEpochByDurationAndDenom: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LastEligibleEpochByDurationAndDenom: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGauge
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGauge
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGauge
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockDuration", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGauge
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGauge
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGauge
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.LockDuration, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Epoch", wireType)
+			}
+			m.Epoch = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGauge
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Epoch |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGauge(dAtA[iNdEx:])
@@ -1645,119 +1828,6 @@ func (m *PeriodLockReward) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGauge
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGauge
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGauge
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Period == nil {
-				m.Period = make(map[string]uint64)
-			}
-			var mapkey string
-			var mapvalue uint64
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowGauge
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGauge
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthGauge
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthGauge
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGauge
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipGauge(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthGauge
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Period[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Rewards", wireType)
 			}
 			var msglen int
@@ -1787,6 +1857,40 @@ func (m *PeriodLockReward) Unmarshal(dAtA []byte) error {
 			}
 			m.Rewards = append(m.Rewards, types1.Coin{})
 			if err := m.Rewards[len(m.Rewards)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastEligibleEpochs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGauge
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGauge
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGauge
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LastEligibleEpochs = append(m.LastEligibleEpochs, &LastEligibleEpochByDurationAndDenom{})
+			if err := m.LastEligibleEpochs[len(m.LastEligibleEpochs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

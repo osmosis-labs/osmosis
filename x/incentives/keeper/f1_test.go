@@ -42,13 +42,14 @@ func (suite *KeeperTestSuite) TestF1Distribute() {
 
 	//1st lock
 	suite.LockTokens(owner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, DayDuration)
+	currentReward, err := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
 
 	//next epoch
 	suite.nextEpoch(&now, &height)
 
-	currentReward, err := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
+	currentReward, err = suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewInt64Coin("lptoken", 10), currentReward.Coin)
+	suite.Require().Equal(sdk.NewInt64Coin("lptoken", 10), currentReward.TotalShares)
 	suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 1000)}, currentReward.Rewards)
 
 	//2nd lock
@@ -59,10 +60,10 @@ func (suite *KeeperTestSuite) TestF1Distribute() {
 
 	currentReward, err = suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, duration)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewInt64Coin("lptoken", 50), currentReward.Coin)
+	suite.Require().Equal(sdk.NewInt64Coin("lptoken", 50), currentReward.TotalShares)
 	suite.Require().Equal(sdk.Coins(nil), currentReward.Rewards)
 
-	prevHistoricalReward, err := suite.app.IncentivesKeeper.GetHistoricalReward(suite.ctx, denom, duration, currentReward.Period-1)
+	prevHistoricalReward, err := suite.app.IncentivesKeeper.GetHistoricalReward(suite.ctx, denom, duration, currentReward.LastProcessedEpoch)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewInt64DecCoin("stake", 100), prevHistoricalReward.CumulativeRewardRatio[0])
 }
@@ -276,8 +277,8 @@ func (suite *KeeperTestSuite) TestMultipleLocksFromMultipleUsers() {
 		suite.nextEpoch(&now, &height)
 		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
 		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
-		suite.Require().Equal(user1Stake.Add(user2Stake), currentReward1Day.Coin.Amount)
-		suite.Require().Equal(user2Stake, currentReward14Day.Coin.Amount)
+		suite.Require().Equal(user1Stake.Add(user2Stake), currentReward1Day.TotalShares.Amount)
+		suite.Require().Equal(user2Stake, currentReward14Day.TotalShares.Amount)
 
 		user1Lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
 		lock1Reward, _ := suite.app.IncentivesKeeper.EstimateLockReward(suite.ctx, *user1Lock)
@@ -296,8 +297,8 @@ func (suite *KeeperTestSuite) TestMultipleLocksFromMultipleUsers() {
 		suite.nextEpoch(&now, &height)
 		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
 		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
-		suite.Require().Equal(user2Stake, currentReward1Day.Coin.Amount)
-		suite.Require().Equal(user2Stake, currentReward14Day.Coin.Amount)
+		suite.Require().Equal(user2Stake, currentReward1Day.TotalShares.Amount)
+		suite.Require().Equal(user2Stake, currentReward14Day.TotalShares.Amount)
 	}
 
 	//unlock: user2=10lptoken,14days
@@ -306,7 +307,7 @@ func (suite *KeeperTestSuite) TestMultipleLocksFromMultipleUsers() {
 		suite.nextEpoch(&now, &height)
 		currentReward1Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, DayDuration)
 		currentReward14Day, _ := suite.app.IncentivesKeeper.GetCurrentReward(suite.ctx, denom, FourteenDaysDuration)
-		suite.Require().Equal(user2Stake, currentReward1Day.Coin.Amount)
+		suite.Require().Equal(user2Stake, currentReward1Day.TotalShares.Amount)
 		suite.Require().Equal(sdk.Coins(nil), currentReward14Day.Rewards)
 	}
 

@@ -331,9 +331,8 @@ func (suite *KeeperTestSuite) TestGRPCCurrentReward() {
 	denom := "stake"
 	duration := time.Hour
 	currentReward := types.CurrentReward{
-		Period:             1,
 		LastProcessedEpoch: 1,
-		Coin:               sdk.NewInt64Coin("stake", 100),
+		TotalShares:        sdk.NewInt64Coin("stake", 100),
 		Rewards:            sdk.Coins{sdk.NewInt64Coin("reward", 100)},
 		Denom:              denom,
 		LockDuration:       duration,
@@ -347,9 +346,8 @@ func (suite *KeeperTestSuite) TestGRPCCurrentReward() {
 		LockableDurations: duration,
 	})
 	suite.Require().NoError(err)
-	suite.Require().Equal(currentReward.Period, res.Period)
-	suite.Require().Equal(currentReward.LastProcessedEpoch, res.LastProcessedEpoch)
-	suite.Require().Equal(currentReward.Coin, res.Coin)
+	suite.Require().Equal(currentReward.LastProcessedEpoch, res.Epoch)
+	suite.Require().Equal(currentReward.TotalShares, res.Coin)
 	suite.Require().Equal(currentReward.Rewards, res.Reward)
 }
 
@@ -360,18 +358,17 @@ func (suite *KeeperTestSuite) TestGRPCHistoricalReward() {
 	duration := time.Hour
 	historicalCumulativeRewardRatio := sdk.NewDecCoinsFromCoins(sdk.NewInt64Coin("reward", 100))
 
-	err := suite.app.IncentivesKeeper.SetHistoricalReward(suite.ctx, historicalCumulativeRewardRatio, denom, duration, 1, 1)
+	err := suite.app.IncentivesKeeper.SetHistoricalReward(suite.ctx, historicalCumulativeRewardRatio, denom, duration, 1)
 	suite.Require().NoError(err)
 
 	res, err := suite.app.IncentivesKeeper.HistoricalReward(sdk.WrapSDKContext(suite.ctx), &types.HistoricalRewardRequest{
 		Denom:             denom,
 		LockableDurations: duration,
-		Period:            1,
+		EpochNumber:       1,
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(historicalCumulativeRewardRatio, res.CumulativeRewardRatio)
-	suite.Require().Equal(uint64(1), res.Period)
-	suite.Require().Equal(uint64(1), res.LastEligibleEpoch)
+	suite.Require().Equal(int64(1), res.LastEligibleEpoch)
 }
 
 func (suite *KeeperTestSuite) TestGRPCPeriodLockReward() {
@@ -379,10 +376,8 @@ func (suite *KeeperTestSuite) TestGRPCPeriodLockReward() {
 
 	periodLockReward := types.PeriodLockReward{
 		LockId:  1,
-		Period:  make(map[string]uint64),
 		Rewards: sdk.NewCoins(sdk.NewInt64Coin("reward", 100)),
 	}
-	periodLockReward.Period["stake/1h"] = 1
 
 	err := suite.app.IncentivesKeeper.SetPeriodLockReward(suite.ctx, periodLockReward)
 	suite.Require().NoError(err)
@@ -392,7 +387,6 @@ func (suite *KeeperTestSuite) TestGRPCPeriodLockReward() {
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(periodLockReward.LockId, res.ID)
-	suite.Require().Equal(periodLockReward.Period, res.Period)
 	suite.Require().Equal(periodLockReward.Rewards, res.Rewards)
 }
 
@@ -402,9 +396,8 @@ func (suite *KeeperTestSuite) TestGRPCRewards() {
 	denom := "stake"
 	duration := time.Second
 	currentReward := types.CurrentReward{
-		Period:             1,
 		LastProcessedEpoch: 1,
-		Coin:               sdk.NewInt64Coin("lptoken", 100),
+		TotalShares:        sdk.NewInt64Coin("lptoken", 100),
 		Rewards:            sdk.Coins{sdk.NewInt64Coin("reward", 100)},
 		Denom:              denom,
 		LockDuration:       duration,
@@ -415,10 +408,8 @@ func (suite *KeeperTestSuite) TestGRPCRewards() {
 
 	periodLockReward := types.PeriodLockReward{
 		LockId:  1,
-		Period:  make(map[string]uint64),
 		Rewards: sdk.NewCoins(sdk.NewInt64Coin("reward", 100)),
 	}
-	periodLockReward.Period["lptoken/1s"] = 1
 
 	err = suite.app.IncentivesKeeper.SetPeriodLockReward(suite.ctx, periodLockReward)
 	suite.Require().NoError(err)

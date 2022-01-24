@@ -204,21 +204,19 @@ func (k Keeper) CurrentReward(ctx context.Context, req *types.CurrentRewardReque
 	res, err := k.GetCurrentReward(sdkCtx, req.Denom, req.LockableDurations)
 
 	return &types.CurrentRewardResponse{
-		Period:             res.Period,
-		LastProcessedEpoch: res.LastProcessedEpoch,
-		Coin:               res.Coin,
-		Reward:             res.Rewards,
+		Epoch:  res.LastProcessedEpoch,
+		Coin:   res.TotalShares,
+		Reward: res.Rewards,
 	}, err
 }
 
 func (k Keeper) HistoricalReward(ctx context.Context, req *types.HistoricalRewardRequest) (*types.HistoricalRewardResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	res, err := k.GetHistoricalReward(sdkCtx, req.Denom, req.LockableDurations, uint64(req.Period))
+	res, err := k.GetHistoricalReward(sdkCtx, req.Denom, req.LockableDurations, req.EpochNumber)
 
 	return &types.HistoricalRewardResponse{
 		CumulativeRewardRatio: res.CumulativeRewardRatio,
-		Period:                res.Period,
-		LastEligibleEpoch:     res.LastEligibleEpoch,
+		LastEligibleEpoch:     res.Epoch,
 	}, err
 }
 
@@ -228,7 +226,6 @@ func (k Keeper) PeriodLockReward(ctx context.Context, req *types.PeriodLockRewar
 
 	return &types.PeriodLockRewardResponse{
 		ID:      res.LockId,
-		Period:  res.Period,
 		Rewards: res.Rewards,
 	}, err
 }

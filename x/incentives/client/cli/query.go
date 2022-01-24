@@ -519,12 +519,12 @@ $ %s query incentives historical-reward [denom] [lockable-duration] [period]
 				return err
 			}
 
-			period, err := strconv.ParseInt(args[2], 10, 64)
+			epochNumber, err := strconv.ParseInt(args[2], 10, 64)
 
 			res, err := queryClient.HistoricalReward(cmd.Context(), &types.HistoricalRewardRequest{
 				Denom:             denom,
 				LockableDurations: duration,
-				Period:            period,
+				EpochNumber:       epochNumber,
 			})
 			if err != nil {
 				return err

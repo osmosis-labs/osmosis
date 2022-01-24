@@ -188,10 +188,9 @@ message CurrentRewardRequest {
   ];
 }
 message CurrentRewardResponse {
-  uint64 period = 1;
-  int64 last_processed_epoch = 2;
-  cosmos.base.v1beta1.Coin coin = 3 [ (gogoproto.nullable) = false ];
-  repeated cosmos.base.v1beta1.Coin reward = 4 [
+  int64 epoch = 1;
+  cosmos.base.v1beta1.Coin coin = 2 [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin reward = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
@@ -204,24 +203,21 @@ message HistoricalRewardRequest {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
-  int64 period = 3;
+  int64 epoch_number = 3;
 }
 message HistoricalRewardResponse {
   repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
-  uint64 period = 2;
-  uint64 last_eligible_epoch = 3;
+  int64 last_eligible_epoch = 2;
 }
 
 message PeriodLockRewardRequest { uint64 id = 1; }
 message PeriodLockRewardResponse {
-  // stable_marshaler is added to ensure hashmaps to be deterministic
   option (gogoproto.stable_marshaler) = true;
   uint64 ID = 1;
-  map<string, uint64> period = 2;
-  repeated cosmos.base.v1beta1.Coin rewards = 3 [
+  repeated cosmos.base.v1beta1.Coin rewards = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];

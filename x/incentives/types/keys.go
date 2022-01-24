@@ -49,11 +49,8 @@ var (
 	// KeyHistoricalReward defines key for storing historical reward
 	KeyHistoricalReward = []byte{0x9}
 
-	// KeyHistoricalReward defines key for storing historical reward
-	KeyHistoricalRewardRef = []byte{0x10}
-
 	// KeyPeriodLockReward defines key for storing period lock reward
-	KeyPeriodLockReward = []byte{0x11}
+	KeyPeriodLockReward = []byte{0x10}
 
 	// LockableDurationsKey defines key for storing valid durations for giving incentives
 	LockableDurationsKey = []byte("lockable_durations")

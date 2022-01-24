@@ -1,10 +1,13 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"fmt"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -376,29 +379,28 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 	if err != nil {
 		return err
 	}
-	// check if total stake has changed
-	// if so, add currentReward to historicalReward and start a new currentReward period
-	if (!currentReward.Coin.Amount.Equal(lockSum)) || (len(unlockings) > 0) {
-		cumulativeRewardRatio, err := k.CalculateCumulativeRewardRatio(ctx, currentReward, denom, gaugeDuration, epochNumber)
 
-		if err != nil {
-			return err
-		}
-		// new historical reward
-		if cumulativeRewardRatio != nil {
-			err = k.SetHistoricalReward(ctx, cumulativeRewardRatio, denom, gaugeDuration, currentReward.Period, epochNumber)
+	// check if total stake has changed && last processed epoch is different from current epoch
+	// if so, add currentReward to historicalReward and reset currentReward
+	if !currentReward.TotalShares.Amount.Equal(lockSum) || len(unlockings) > 0 {
+		if currentReward.LastProcessedEpoch != epochNumber {
+			cumulativeRewardRatio, err := k.CalculateCumulativeRewardRatio(ctx, currentReward, denom, gaugeDuration, epochNumber)
+			if err != nil {
+				return err
+			}
+
+			err = k.SetHistoricalReward(ctx, cumulativeRewardRatio, denom, gaugeDuration, epochNumber)
 			if err != nil {
 				return err
 			}
 			currentReward.LastProcessedEpoch = epochNumber
-			currentReward.Period++
 			currentReward.Rewards = sdk.Coins{}
 		}
-		currentReward.Coin = sdk.NewCoin(denom, lockSum)
+		currentReward.TotalShares = sdk.NewCoin(denom, lockSum)
 	}
 
 	// skip gauge process if locked amount is 0
-	if currentReward.Coin.Amount.GT(sdk.ZeroInt()) {
+	if currentReward.TotalShares.Amount.GT(sdk.ZeroInt()) {
 		for _, coin := range remainDistributionCoins {
 			amt := coin.Amount.Quo(sdk.NewInt(int64(remainEpochs)))
 			if amt.IsPositive() {
@@ -422,34 +424,29 @@ func (k Keeper) F1Distribute(ctx sdk.Context, gauge *types.Gauge) error {
 // CalculateCumulativeRewardRatio calulates the cumulativeRewardRatio given currentReward.
 // cumulativeRewardRatio represents reward per share for each denom
 func (k Keeper) CalculateCumulativeRewardRatio(ctx sdk.Context, currentReward types.CurrentReward, denom string, duration time.Duration, epochNumber int64) (sdk.DecCoins, error) {
-	// only calculate cumulativeRewardRatio if currentReward needs update
-	if currentReward.LastProcessedEpoch != epochNumber {
-		totalStakes := currentReward.Coin.Amount
-		prevPeriod := currentReward.Period - 1
-		prevHistoricalReward, err := k.GetHistoricalReward(ctx, denom, duration, prevPeriod)
-		if err != nil {
-			return nil, err
-		}
-		cumulataiveRewardRatioCoins := prevHistoricalReward.CumulativeRewardRatio
-
-		for _, coin := range currentReward.Rewards {
-			totalReward := coin.Amount.ToDec()
-			if totalReward.IsNegative() {
-				return nil, fmt.Errorf("current rewards is negative. denom: %s, duration: %s, reward amount = %d", denom, duration.String(), totalReward)
-			}
-			currRewardPerShare := sdk.NewDec(0)
-			if !totalStakes.IsZero() {
-				currRewardPerShare = totalReward.Quo(totalStakes.ToDec())
-			}
-			cumulataiveRewardRatioCoins = cumulataiveRewardRatioCoins.Add(sdk.NewDecCoinFromDec(coin.Denom, currRewardPerShare))
-		}
-		return cumulataiveRewardRatioCoins, nil
+	totalStakes := currentReward.TotalShares.Amount
+	prevHistoricalReward, err := k.GetHistoricalReward(ctx, denom, duration, currentReward.LastProcessedEpoch)
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+	cumulataiveRewardRatioCoins := prevHistoricalReward.CumulativeRewardRatio
+
+	for _, coin := range currentReward.Rewards {
+		totalReward := coin.Amount.ToDec()
+		if totalReward.IsNegative() {
+			return nil, fmt.Errorf("current rewards is negative. denom: %s, duration: %s, reward amount = %d", denom, duration.String(), totalReward)
+		}
+		currRewardPerShare := sdk.NewDec(0)
+		if !totalStakes.IsZero() {
+			currRewardPerShare = totalReward.Quo(totalStakes.ToDec())
+		}
+		cumulataiveRewardRatioCoins = cumulataiveRewardRatioCoins.Add(sdk.NewDecCoinFromDec(coin.Denom, currRewardPerShare))
+	}
+	return cumulataiveRewardRatioCoins, nil
 }
 
 // CalculateRewardForLock gets the most recent lockReward for a periodLock
-func (k Keeper) CalculateRewardForLock(ctx sdk.Context, lock lockuptypes.PeriodLock, lockReward types.PeriodLockReward, epochInfo epochtypes.EpochInfo, lockableDuration time.Duration, nextRewardEligible bool) (types.PeriodLockReward, error) {
+func (k Keeper) CalculateRewardForLock(ctx sdk.Context, lock lockuptypes.PeriodLock, lockReward types.PeriodLockReward, epochInfo epochtypes.EpochInfo, lockableDuration time.Duration, finishedLock bool) (types.PeriodLockReward, error) {
 	for _, coin := range lock.Coins {
 		denom := coin.Denom
 		currentReward, err := k.GetCurrentReward(ctx, denom, lockableDuration)
@@ -457,45 +454,77 @@ func (k Keeper) CalculateRewardForLock(ctx sdk.Context, lock lockuptypes.PeriodL
 			return types.PeriodLockReward{}, err
 		}
 
-		latestPeriod := uint64(0)
-		if nextRewardEligible {
+		var latestEpoch int64
+
+		if finishedLock {
 			remainEpoch := lock.EndTime.Sub(epochInfo.CurrentEpochStartTime).Nanoseconds() / epochInfo.Duration.Nanoseconds()
 			durationInEpoch := lockableDuration.Nanoseconds() / epochInfo.Duration.Nanoseconds()
-			epochNumber := (epochInfo.CurrentEpoch + remainEpoch - durationInEpoch)
-			latestPeriod, err = k.getHistoricalRewardPeriodByEpoch(ctx, denom, lockableDuration, epochNumber)
+			epochNumber := epochInfo.CurrentEpoch + remainEpoch - durationInEpoch
+
+			latestEpoch, err = k.GetLatestEpochForHistoricalReward(ctx, denom, lockableDuration, epochNumber)
 			if err != nil {
-				if err == ErrHistoricalRewardNotExists {
-					continue
-				}
 				return types.PeriodLockReward{}, err
 			}
 		} else {
-			latestPeriod = currentReward.Period - 1 // last updated historical reward
+			// last updated historical reward
+			latestEpoch = currentReward.LastProcessedEpoch
 		}
-		lockRewardKey := denom + "/" + lockableDuration.String()
-		prevPeriod, ok := lockReward.Period[lockRewardKey]
-		if ok {
-			// get rewards accumulated between last reward given and the latest period
-			reward, err := k.CalculateRewardBetweenPeriod(ctx, denom, lockableDuration, coin.Amount, prevPeriod, latestPeriod)
+
+		index, exists := k.findEpochForLockReward(lockReward, denom, lockableDuration)
+		if exists {
+			epoch := lockReward.LastEligibleEpochs[index].Epoch
+			reward, err := k.CalculateRewardBetweenEpoch(ctx, denom, lockableDuration, coin.Amount, epoch, latestEpoch)
 			if err != nil {
 				return types.PeriodLockReward{}, err
 			}
 			lockReward.Rewards = lockReward.Rewards.Add(reward...)
+			lockReward.LastEligibleEpochs[index].Epoch = latestEpoch
+		} else {
+			lastEligibleEpoch := types.LastEligibleEpochByDurationAndDenom{
+				LockDuration: lockableDuration,
+				Denom:        denom,
+				Epoch:        latestEpoch,
+			}
+			lockReward.LastEligibleEpochs = append(lockReward.LastEligibleEpochs, &lastEligibleEpoch)
 		}
-
-		lockReward.Period[lockRewardKey] = latestPeriod
 	}
 	return lockReward, nil
 }
 
-// CalculateRewardBetweenPeriod calculates reward eligible to claim given amount of coins locked
-func (k Keeper) CalculateRewardBetweenPeriod(ctx sdk.Context, denom string, duration time.Duration, amountLocked sdk.Int, prevPeriod uint64, currPeriod uint64) (sdk.Coins, error) {
+// findEpochForLockReward finds the most recent epoch that was stored for period lock reward
+func (k Keeper) findEpochForLockReward(lockReward types.PeriodLockReward, denom string, locakbleDuration time.Duration) (index int, exists bool) {
+	for i, lastEligibleEpoch := range lockReward.LastEligibleEpochs {
+		if lastEligibleEpoch.Denom == denom && lastEligibleEpoch.LockDuration == locakbleDuration {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+// GetRecentEpoch gets the most recent epoch that was stored for historicalReward
+func (k Keeper) GetLatestEpochForHistoricalReward(ctx sdk.Context, denom string, lockDuration time.Duration, epochNumber int64) (int64, error) {
+	rewardKey := combineKeys(types.KeyHistoricalReward, []byte(denom+"/"+lockDuration.String()))
+	endbyte := combineKeys(rewardKey, sdk.Uint64ToBigEndian(uint64(epochNumber)))
+	iter := ctx.KVStore(k.storeKey).ReverseIterator(rewardKey, storetypes.InclusiveEndBytes(endbyte))
+
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		key := iter.Key()
+		key = key[len(key)-8:]
+		epochNumber := int64(binary.BigEndian.Uint64(key))
+		return epochNumber, nil
+	}
+	return 0, nil
+}
+
+// CalculateRewardBetweenEpoch calculates reward eligible to claim given amount of coins locked
+func (k Keeper) CalculateRewardBetweenEpoch(ctx sdk.Context, denom string, duration time.Duration, amountLocked sdk.Int, prevEpoch int64, latestEpoch int64) (sdk.Coins, error) {
 	totalReward := sdk.Coins{}
-	prevHistoricalReward, err := k.GetHistoricalReward(ctx, denom, duration, prevPeriod)
+	prevHistoricalReward, err := k.GetHistoricalReward(ctx, denom, duration, prevEpoch)
 	if err != nil {
 		return totalReward, err
 	}
-	latestHistoricalReward, err := k.GetHistoricalReward(ctx, denom, duration, currPeriod)
+	latestHistoricalReward, err := k.GetHistoricalReward(ctx, denom, duration, latestEpoch)
 	if err != nil {
 		return totalReward, err
 	}
@@ -522,17 +551,19 @@ func (k Keeper) GetRewardForLock(ctx sdk.Context, lock lockuptypes.PeriodLock, l
 			return types.PeriodLockReward{}, fmt.Errorf("getLockRewards failed: there are no coins for lock=%v", lock)
 		}
 
-		// check if current reward can be applied to this lock
-		nextRewardEligible := lock.IsUnlocking() &&
+		// find if lock has been finished. if finishedLock=true, we find what the last epoch was for the lock.
+		// if finishedLock=false, we use the most recent epoch to calculate reward for lock.
+		finishedLock := lock.IsUnlocking() &&
 			(lock.EndTime.Before(epochInfo.CurrentEpochStartTime.Add(lockableDuration)) || !lock.EndTime.After(ctx.BlockTime()))
 
 		// if short assignments are used for err, lockReward gets de-referenced
 		var err error
-		lockReward, err = k.CalculateRewardForLock(ctx, lock, lockReward, epochInfo, lockableDuration, nextRewardEligible)
+		lockReward, err = k.CalculateRewardForLock(ctx, lock, lockReward, epochInfo, lockableDuration, finishedLock)
 		if err != nil {
 			return lockReward, err
 		}
 	}
+
 	return lockReward, nil
 }
 
@@ -599,8 +630,10 @@ func (k Keeper) EstimateLockReward(ctx sdk.Context, lock lockuptypes.PeriodLock)
 		if lock.Duration < lockableDuration {
 			continue
 		}
-		// check if current reward can be applied to this lock
-		nextRewardEligible := lock.IsUnlocking() &&
+
+		// find if lock has been finished. if finishedLock=true, we find what the last epoch was for the lock.
+		// if finishedLock=false, we use the most recent epoch to calculate reward for lock.
+		finishedLock := lock.IsUnlocking() &&
 			(lock.EndTime.Before(epochInfo.CurrentEpochStartTime.Add(lockableDuration)) || !lock.EndTime.After(ctx.BlockTime()))
 
 		for _, coin := range lock.Coins {
@@ -610,35 +643,42 @@ func (k Keeper) EstimateLockReward(ctx sdk.Context, lock lockuptypes.PeriodLock)
 				return types.PeriodLockReward{}, err
 			}
 
+			historicalReward := (*types.HistoricalReward)(nil)
 			cumulativeRewardRatioCoins := sdk.DecCoins{}
-
-			if nextRewardEligible {
+			if finishedLock {
 				remainEpoch := lock.EndTime.Sub(epochInfo.CurrentEpochStartTime).Nanoseconds() / epochInfo.Duration.Nanoseconds()
 				durationInEpoch := lockableDuration.Nanoseconds() / epochInfo.Duration.Nanoseconds()
-				epochNumber := (epochInfo.CurrentEpoch + remainEpoch - durationInEpoch)
-				latestPeriod, err := k.getHistoricalRewardPeriodByEpoch(ctx, denom, lockableDuration, epochNumber)
+				epochNumber := epochInfo.CurrentEpoch + remainEpoch - durationInEpoch
+
+				latestEpoch, err := k.GetLatestEpochForHistoricalReward(ctx, denom, lockableDuration, epochNumber)
+				if err != nil {
+					return types.PeriodLockReward{}, err
+				}
+
+				latestHistoricalReward, err := k.GetHistoricalReward(ctx, denom, lockableDuration, latestEpoch)
 				if err != nil {
 					panic(err)
 				}
-				latestHistoricalReward, err := k.GetHistoricalReward(ctx, denom, lockableDuration, latestPeriod)
-				if err != nil {
-					panic(err)
-				}
-				cumulativeRewardRatioCoins = latestHistoricalReward.CumulativeRewardRatio
-			} else {
+				historicalReward = &latestHistoricalReward
+			} else if currentReward.LastProcessedEpoch != epochInfo.CurrentEpoch {
 				cumulativeRewardRatioCoins, err = k.CalculateCumulativeRewardRatio(ctx, currentReward, denom, lockableDuration, epochInfo.CurrentEpoch)
 				if err != nil {
 					return types.PeriodLockReward{}, err
 				}
+				historicalReward = &types.HistoricalReward{
+					CumulativeRewardRatio: cumulativeRewardRatioCoins,
+				}
+			} else {
+
 			}
 
-			if len(cumulativeRewardRatioCoins) != 0 {
-				prevHistoricalReward, err := k.GetHistoricalReward(ctx, denom, lockableDuration, currentReward.Period-1)
+			if historicalReward != nil {
+				prevHistoricalReward, err := k.GetHistoricalReward(ctx, denom, lockableDuration, currentReward.LastProcessedEpoch)
 				if err != nil {
 					return types.PeriodLockReward{}, err
 				}
 
-				estDecCoins := cumulativeRewardRatioCoins.Sub(prevHistoricalReward.CumulativeRewardRatio).MulDec(coin.Amount.ToDec())
+				estDecCoins := historicalReward.CumulativeRewardRatio.Sub(prevHistoricalReward.CumulativeRewardRatio).MulDec(coin.Amount.ToDec())
 				for _, decCoin := range estDecCoins {
 					estCoin := sdk.NewCoin(decCoin.Denom, decCoin.Amount.TruncateInt())
 					lockReward.Rewards = lockReward.Rewards.Add(estCoin)
