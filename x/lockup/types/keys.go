@@ -55,6 +55,12 @@ var (
 	// KeyPrefixAccountDenomLockTimestamp defines prefix for the iteration of lock IDs by account, denomination and timestamp
 	KeyPrefixAccountDenomLockTimestamp = []byte{0x0E}
 
+	// KeyPrefixPeriodLock defines prefix to store synthetic lockup by lock ID and synthetic suffix
+	KeyPrefixSyntheticLockup = []byte{0x0F}
+
+	// KeyPrefixSyntheticLockTimestamp defines prefix for the iteration of synthetic lockups by timestamp
+	KeyPrefixSyntheticLockTimestamp = []byte{0x10}
+
 	// KeyPrefixLockAccumulation defines prefix for the lock accumulation store
 	KeyPrefixLockAccumulation = []byte{0x20}
 

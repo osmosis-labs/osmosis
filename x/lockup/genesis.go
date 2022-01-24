@@ -13,6 +13,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.ResetAllLocks(ctx, genState.Locks); err != nil {
 		return
 	}
+	if err := k.ResetAllSyntheticLocks(ctx, genState.SyntheticLocks); err != nil {
+		return
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -22,7 +25,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 	return &types.GenesisState{
-		LastLockId: k.GetLastLockID(ctx),
-		Locks:      locks,
+		LastLockId:     k.GetLastLockID(ctx),
+		Locks:          locks,
+		SyntheticLocks: k.GetAllSyntheticLockups(ctx),
 	}
 }

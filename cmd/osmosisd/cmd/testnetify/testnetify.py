@@ -1,6 +1,7 @@
 import json
 import subprocess
 import re, shutil, tempfile
+import os
 from datetime import date
 
 
@@ -316,3 +317,11 @@ json.dump(read_test_gen, test_gen)
 
 #delete remainder in case new data is shorter than old
 test_gen.truncate()
+
+
+
+#tendermint peer bug fix
+HOME = subprocess.run(["echo $HOME"], capture_output=True, shell=True, text=True)
+os.chdir(os.path.expanduser(HOME.stdout.strip()+'/.osmosisd/config'))
+print("Changing fast sync mode from 'true' to 'false'")
+sed_inplace("config.toml", "fast_sync = true", "fast_sync = false")

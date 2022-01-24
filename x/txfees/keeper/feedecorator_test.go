@@ -143,7 +143,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			tc.txFee,
 		), []legacytx.StdSignature{}, "")
 
-		mfd := keeper.NewMempoolFeeDecorator(suite.app.TxFeesKeeper)
+		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper)
 		antehandler := sdk.ChainAnteDecorators(mfd)
 		_, err := antehandler(suite.ctx, tx, false)
 		if tc.expectPass {

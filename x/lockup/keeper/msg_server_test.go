@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	suite.Require().NoError(err)
 
 	// creation of lock via LockTokens
-	msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
+	msgServer := keeper.NewMsgServerImpl(*suite.app.LockupKeeper)
 	_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(addr1, time.Second, coins))
 
 	// check locks

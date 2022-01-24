@@ -79,7 +79,7 @@ func (suite *KeeperTestSuite) setupEpochAndLockableDurations() (time.Time, int64
 	height := int64(1)
 	suite.ctx = suite.ctx.WithBlockHeight(height).WithBlockTime(now)
 
-	epochs.InitGenesis(suite.ctx, suite.app.EpochsKeeper, types.GenesisState{
+	epochs.InitGenesis(suite.ctx, *suite.app.EpochsKeeper, types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:            "day",
@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) nextEpoch(now *time.Time, height *int64) {
 	*height = *height + 1
 	suite.ctx = suite.ctx.WithBlockHeight(*height).WithBlockTime(*now)
 	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
-	epochs.BeginBlocker(suite.ctx, suite.app.EpochsKeeper)
+	epochs.BeginBlocker(suite.ctx, *suite.app.EpochsKeeper)
 }
 
 func (suite *KeeperTestSuite) nextBlock(now *time.Time, height *int64) {
@@ -121,7 +121,7 @@ func (suite *KeeperTestSuite) nextBlock(now *time.Time, height *int64) {
 	*height = *height + 1
 	suite.ctx = suite.ctx.WithBlockHeight(*height).WithBlockTime(*now)
 	suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
-	epochs.BeginBlocker(suite.ctx, suite.app.EpochsKeeper)
+	epochs.BeginBlocker(suite.ctx, *suite.app.EpochsKeeper)
 }
 
 func (suite *KeeperTestSuite) setupNonPerpetualGauge(owner sdk.AccAddress, now time.Time, duration time.Duration) (string, time.Duration) {

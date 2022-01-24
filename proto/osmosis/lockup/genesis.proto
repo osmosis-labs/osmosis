@@ -10,4 +10,5 @@ option go_package = "github.com/osmosis-labs/osmosis/x/lockup/types";
 message GenesisState {
   uint64 last_lock_id = 1;
   repeated PeriodLock locks = 2 [ (gogoproto.nullable) = false ];
+  repeated SyntheticLock synthetic_locks = 3 [ (gogoproto.nullable) = false ];
 }

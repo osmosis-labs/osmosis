@@ -10,7 +10,7 @@ import (
 func BeginBlockForks(ctx sdk.Context, app *OsmosisApp) {
 	switch ctx.BlockHeight() {
 	case v3.UpgradeHeight:
-		v3.RunForkLogic(ctx, &app.GovKeeper, &app.StakingKeeper)
+		v3.RunForkLogic(ctx, app.GovKeeper, app.StakingKeeper)
 	case v6.UpgradeHeight:
 		v6.RunForkLogic(ctx)
 	default:

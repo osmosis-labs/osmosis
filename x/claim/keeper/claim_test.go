@@ -179,7 +179,7 @@ func (suite *KeeperTestSuite) TestDelegationAutoWithdrawAndDelegateMore() {
 	// set addr[0] as a validator
 	validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[0]), pub1, stakingtypes.Description{})
 	suite.Require().NoError(err)
-	validator = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, true)
+	validator = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator, true)
 	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
 
 	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))

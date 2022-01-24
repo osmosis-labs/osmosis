@@ -20,6 +20,14 @@ Currently the only supported metadata & spot price calculator is using a GAMM po
     * The simple alternative is only check fee equivalency at a txs entry into the mempool, which allows someone to manipulate price down to have many txs enter the chain at low cost.
     * Another alternative is to use TWAP instead of Spot Price once it is available on-chain
     * The former concern isn't very worrisome as long as some nodes have 0 min tx fees.
+* A separate min-gas-fee can be set on every node for arbitrage txs. Methods of detecting an arb tx atm
+  * does start token of a swap = final token of swap (definitionally correct)
+  * does it have multiple swap messages, with different tx ins. If so, we assume its an arb.
+    * This has false positives, but is intended to avoid the obvious solution of splitting an arb into multiple messages.
+  * We record all denoms seen across all swaps, and see if any duplicates. (TODO)
+  * Contains both JoinPool and ExitPool messages in one tx.
+    * Has some false positives.
+  * These false positives seem like they primarily will get hit during batching of many distinct operations, not really in one atomic action.
 
 ## New SDK messages
 
