@@ -65,21 +65,21 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSuperfluidDelegate,
-			SimulateMsgSuperfluidDelegate(ak, bk, sk, lk),
+			SimulateMsgSuperfluidDelegate(ak, bk, sk, lk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgSuperfluidUndelegate,
-			SimulateMsgSuperfluidUndelegate(ak, bk, lk),
+			SimulateMsgSuperfluidUndelegate(ak, bk, lk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgSuperfluidRedelegate,
-			SimulateMsgSuperfluidRedelegate(ak, bk, sk, lk),
+			SimulateMsgSuperfluidRedelegate(ak, bk, sk, lk, k),
 		),
 	}
 }
 
 // SimulateMsgSuperfluidDelegate generates a MsgSuperfluidDelegate with random values
-func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper) simtypes.Operation {
+func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -98,6 +98,17 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 				types.ModuleName, types.TypeMsgSuperfluidDelegate, "Account have no period lock"), nil, nil
 		}
 
+		twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, lock.Coins[0].Denom)
+		if twap.EpochTwapPrice.IsZero() {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgSuperfluidDelegate, "not able to do superfluid staking if asset TWAP is zero"), nil, nil
+		}
+
+		if !k.GetLockIdIntermediaryAccountConnection(ctx, lock.ID).Empty() {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgSuperfluidDelegate, "Lock is already used for superfluid staking"), nil, nil
+		}
+
 		msg := types.MsgSuperfluidDelegate{
 			Sender:  lock.Owner,
 			LockId:  lock.ID,
@@ -110,7 +121,7 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 	}
 }
 
-func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, lk types.LockupKeeper) simtypes.Operation {
+func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -119,6 +130,11 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 		if lock == nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSuperfluidUndelegate, "Account have no period lock"), nil, nil
+		}
+
+		if k.GetLockIdIntermediaryAccountConnection(ctx, lock.ID).Empty() {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgSuperfluidUndelegate, "Lock is not used for superfluid staking"), nil, nil
 		}
 
 		msg := types.MsgSuperfluidUndelegate{
@@ -133,7 +149,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 	}
 }
 
-func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper) simtypes.Operation {
+func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -150,6 +166,11 @@ func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk stakingty
 		if lock == nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Account have no period lock"), nil, nil
+		}
+
+		if k.GetLockIdIntermediaryAccountConnection(ctx, lock.ID).Empty() {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Lock is not used for superfluid staking"), nil, nil
 		}
 
 		msg := types.MsgSuperfluidRedelegate{
