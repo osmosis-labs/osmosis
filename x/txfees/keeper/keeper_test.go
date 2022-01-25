@@ -13,9 +13,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/app"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v5/app"
+	gammtypes "github.com/osmosis-labs/osmosis/v5/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v5/x/txfees/types"
 )
 
 type KeeperTestSuite struct {

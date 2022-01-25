@@ -1,7 +1,7 @@
 package testnetify
 
 import (
-	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/v5/app"
 	"github.com/spf13/cobra"
 )
 
