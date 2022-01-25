@@ -19,12 +19,15 @@ import (
 
 // Simulation operation weights constants
 const (
-	DefaultWeightMsgSuperfluidDelegate   int = 10
-	DefaultWeightMsgSuperfluidUndelegate int = 5
-	DefaultWeightMsgSuperfluidRedelegate int = 5
-	OpWeightMsgSuperfluidDelegate            = "op_weight_msg_superfluid_delegate"
-	OpWeightMsgSuperfluidUndelegate          = "op_weight_msg_superfluid_undelegate"
-	OpWeightMsgSuperfluidRedelegate          = "op_weight_msg_superfluid_redelegate"
+	DefaultWeightMsgSuperfluidDelegate          int = 100
+	DefaultWeightMsgSuperfluidUndelegate        int = 50
+	DefaultWeightMsgSuperfluidRedelegate        int = 50
+	DefaultWeightSetSuperfluidAssetsProposal    int = 5
+	DefaultWeightRemoveSuperfluidAssetsProposal int = 2
+
+	OpWeightMsgSuperfluidDelegate   = "op_weight_msg_superfluid_delegate"
+	OpWeightMsgSuperfluidUndelegate = "op_weight_msg_superfluid_undelegate"
+	OpWeightMsgSuperfluidRedelegate = "op_weight_msg_superfluid_redelegate"
 )
 
 // Steps for superfluid simulation

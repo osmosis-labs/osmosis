@@ -108,12 +108,14 @@ type AppModule struct {
 	bankKeeper    stakingtypes.BankKeeper
 	stakingKeeper types.StakingKeeper
 	lockupKeeper  types.LockupKeeper
+	gammKeeper    types.GammKeeper
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	lockupKeeper types.LockupKeeper,
+	gammKeeper types.GammKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
@@ -123,6 +125,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,
 		lockupKeeper:  lockupKeeper,
+		gammKeeper:    gammKeeper,
 	}
 }
 
@@ -191,8 +194,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil // TODO
+func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	return simulation.ProposalContents(am.keeper, am.gammKeeper)
 }
 
 // RandomizedParams creates randomized pool-incentives param changes for the simulator.
