@@ -150,6 +150,7 @@ Reload and start the service:
 
 ```bash
 sudo systemctl daemon-reload
+systemctl restart systemd-journald
 sudo systemctl start cosmovisor
 ```
 
