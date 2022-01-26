@@ -58,7 +58,7 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	return nil
 }
 
-// Reduces codepaths between InitGenesis and CreateGauge
+// CreateGaugeRefKeys adds gauge references as needed. Used to consolidate codepaths for InitGenesis and CreateGauge
 func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, CombinedKeys []byte, ActiveOrUpcomingGauge bool) error {
 	if err := k.addGaugeRefByKey(ctx, CombinedKeys, gauge.Id); err != nil {
 		return err
