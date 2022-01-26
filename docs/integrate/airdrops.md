@@ -64,10 +64,11 @@ Ensure the daemon is not running in the background. Then, to take a state export
 osmosisd export 2138101 > state_export.json
 ```
 
-This process may take 15 minutes or more.
+This process may take 30 minutes or more.
 
 ::: warning NOTE
 Some cosmos sdk versions write to STDERR instead of STDOUT. If the above command does not work for you, try to replace the > with 2>
+As of this writing, v5 and later will require 2> while anything before v5 will just use >
 :::
 
 
