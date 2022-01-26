@@ -260,6 +260,7 @@ module.exports = {
           title: 'Integrate',
           children: [
             '/integrate/token-listings',
+            '/integrate/airdrops',
           ],
           collapsable: true,
         },

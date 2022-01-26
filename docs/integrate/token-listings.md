@@ -4,7 +4,7 @@
 
 Osmosis is a automated market maker blockchain. This means any IBC-enabled zone can add its token as an asset to be traded on Osmosis AMM completely permissionlessly. Because Osmosis is fundamentally designed as an IBC-native AMM that trades IBC tokens, rather than tokens issued on the Osmosis zone, there are additional nuances to understand and steps to be taken in order to ensure your asset is supported by Osmosis.
 
-This document lays out the prerequisites and the process process that's needed to ensure that your token meets the interchain UX standards set by Osmosis.
+This document lays out the prerequisites and the process that is needed to ensure that your token meets the interchain UX standards set by Osmosis.
 
 ### Prerequisites
 1. Zone must have IBC token transferred enabled (ICS20 standard).

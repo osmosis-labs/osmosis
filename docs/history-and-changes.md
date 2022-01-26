@@ -2,7 +2,7 @@
 
 This is a history of changes to the Osmosis repository.
 
-## v6.0.0 (Carbon) - Dec 16, 2021
+## v6.0.0 (Carbon) - Dec 16, 2021 - Height 2464000
 
 This upgrade fixes a bug in the v5.0.0 upgrade's app.go, which prevents new IBC channels from being created. All existing IBC channels are believed to be fine.
 
@@ -18,7 +18,7 @@ This upgrade has been tested to be compatible with v5.0.0 until the upgrade heig
 - [Height gating change](https://github.com/osmosis-labs/ibc-go/pull/1) - Height gate the change in IBC, to make the v6.0.0 binary compatible until upgrade height.
 
 
-## v5.0.0 (Boron) - Dec 10, 2021
+## v5.0.0 (Boron) - Dec 10, 2021 - Height 2383300
 
 This upgrade is primarily a maintenance upgrade to Osmosis. It updates many of the libraries, brings in the modules [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc), [Authz](https://github.com/cosmos/cosmos-sdk/tree/v0.44.3/x/authz/spec), [Txfees], prepares the chain for [Proposal 32](https://www.mintscan.io/osmosis/proposals/32), and has numerous bug fixes.
 
@@ -96,7 +96,7 @@ This upgrade is state-compatible with v4.0.0, and has been tested to be so with 
 
 
 
-## v4.0.0 (Berylium) - Sep 19, 2021
+## v4.0.0 (Berylium) - Sep 19, 2021 - Height 1314500
 
 This upgrade is a large stability upgrade to Osmosis. It brings with it faster epochs, and improved computation time for various on-chain operations, and fixes to the high gas amounts needed for bonding and unbonding txs.
 
@@ -149,7 +149,7 @@ In proposal 16, the 'min_deposit' value on the proposal was set to 500osmo and n
 Due to this parameter change, a sufficient governance deposit to enter on-chain voting must be in Osmo, which is a denomination that does not exist on chain. Thus no new governance proposals can enter a voting period and get decided on chain.
 
 
-## v3.0.0 (Lithium) - Aug 6, 2021
+## v3.0.0 (Lithium) - Aug 6, 2021 - Height 712000
 
 This upgrade is meant as a patch that must be hard forked in, due to a bug in proposal 16 breaking on-chain governance of Osmosis. It prevents governance proposals from moving into voting period. Details of the bug are at the bottom. This is the version that should be used, not `v2.0.0`. 
 
