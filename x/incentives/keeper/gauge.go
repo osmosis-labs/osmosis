@@ -59,11 +59,11 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 // CreateGaugeRefKeys adds gauge references as needed. Used to consolidate codepaths for InitGenesis and CreateGauge
-func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, CombinedKeys []byte, ActiveOrUpcomingGauge bool) error {
-	if err := k.addGaugeRefByKey(ctx, CombinedKeys, gauge.Id); err != nil {
+func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combinedKeys []byte, activeOrUpcomingGauge bool) error {
+	if err := k.addGaugeRefByKey(ctx, combinedKeys, gauge.Id); err != nil {
 		return err
 	}
-	if ActiveOrUpcomingGauge {
+	if activeOrUpcomingGauge {
 		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 			return err
 		}
@@ -79,17 +79,17 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 	curTime := ctx.BlockTime()
 	timeKey := getTimeKey(gauge.StartTime)
-	ActiveOrUpcomingGauge := gauge.IsActiveGauge(curTime) || gauge.IsUpcomingGauge(curTime)
+	activeOrUpcomingGauge := gauge.IsActiveGauge(curTime) || gauge.IsUpcomingGauge(curTime)
 
 	if gauge.IsUpcomingGauge(curTime) {
-		CombinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
+		combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, timeKey)
+		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	} else if gauge.IsActiveGauge(curTime) {
-		CombinedKeys := combineKeys(types.KeyPrefixActiveGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
+		combinedKeys := combineKeys(types.KeyPrefixActiveGauges, timeKey)
+		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	} else {
-		CombinedKeys := combineKeys(types.KeyPrefixFinishedGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, CombinedKeys, ActiveOrUpcomingGauge)
+		combinedKeys := combineKeys(types.KeyPrefixFinishedGauges, timeKey)
+		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	}
 
 	if err != nil {
@@ -141,10 +141,10 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	k.setLastGaugeID(ctx, gauge.Id)
 
 	// TODO: Do we need to be concerned with case where this should be ActiveGauges?
-	CombinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
-	ActiveOrUpcomingGauge := true
+	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
+	activeOrUpcomingGauge := true
 
-	err = k.CreateGaugeRefKeys(ctx, &gauge, CombinedKeys, ActiveOrUpcomingGauge)
+	err = k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys, activeOrUpcomingGauge)
 	if err != nil {
 		return 0, err
 	}
