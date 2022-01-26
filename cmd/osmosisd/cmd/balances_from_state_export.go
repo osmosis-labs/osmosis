@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -15,6 +13,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
+	"github.com/osmosis-labs/osmosis/osmotestutils"
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -171,7 +170,7 @@ Example:
 			}
 			selectBondedPoolIDs := []uint64{}
 			if selectPoolIdsStr != "" {
-				selectBondedPoolIDs, err = parseUint64SliceFromString(selectPoolIdsStr, ",")
+				selectBondedPoolIDs, err = osmotestutils.ParseUint64SliceFromString(selectPoolIdsStr, ",")
 				if err != nil {
 					return err
 				}
@@ -338,21 +337,4 @@ Example:
 		"Output a special breakdown for amount LP'd to the provided pools. Usage --breakdown-by-pool-ids=1,2,605")
 
 	return cmd
-}
-
-// TODO: move somewhere common, make more commands use it
-func parseUint64SliceFromString(s string, seperator string) ([]uint64, error) {
-	var ids []uint64
-	for _, s := range strings.Split(s, seperator) {
-		s = strings.TrimSpace(s)
-		base := 10
-		bitlen := 64
-
-		parsed, err := strconv.ParseUint(s, base, bitlen)
-		if err != nil {
-			return []uint64{}, err
-		}
-		ids = append(ids, parsed)
-	}
-	return ids, nil
 }

@@ -33,6 +33,21 @@ func lockStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
 }
 
+// syntheticLockStoreKey returns synthetic store key from ID and suffix
+func syntheticLockStoreKey(lockID uint64, suffix string) []byte {
+	return combineKeys(combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)), []byte(suffix))
+}
+
+// syntheticLockTimeStoreKey returns synthetic store key from ID, suffix and time
+func syntheticLockTimeStoreKey(lockID uint64, suffix string, endTime time.Time) []byte {
+	return combineKeys(
+		combineKeys(
+			combineKeys(types.KeyPrefixSyntheticLockTimestamp, getTimeKey(endTime)),
+			sdk.Uint64ToBigEndian(lockID),
+		),
+		[]byte(suffix))
+}
+
 // getLockRefs get lock IDs specified on the prefix and timestamp key
 func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)

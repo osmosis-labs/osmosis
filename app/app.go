@@ -113,6 +113,9 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	superfluid "github.com/osmosis-labs/osmosis/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
@@ -165,6 +168,7 @@ var (
 		poolincentives.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		claim.AppModuleBasic{},
+		superfluid.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
 		osmolbpmodule.AppModuleBasic{},
 	)
@@ -184,6 +188,7 @@ var (
 		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
+		superfluidtypes.ModuleName:               nil,
 		txfeestypes.ModuleName:                   nil,
 		osmolbp.ModuleName:                       nil,
 	}
@@ -243,6 +248,7 @@ type OsmosisApp struct {
 	MintKeeper           *mintkeeper.Keeper
 	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
 	TxFeesKeeper         *txfeeskeeper.Keeper
+	SuperfluidKeeper     superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	OsmolbpKeeper        osmolbpkeeper.Keeper
 
@@ -288,7 +294,9 @@ func NewOsmosisApp(
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
 		epochstypes.StoreKey, poolincentivestypes.StoreKey, authzkeeper.StoreKey, txfeestypes.StoreKey,
-		bech32ibctypes.StoreKey, osmolbpkeeper.StoreKey,
+		superfluidtypes.StoreKey,
+		bech32ibctypes.StoreKey,
+		osmolbpkeeper.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -353,6 +361,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
+		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 		osmolbpmodule.NewAppModule(appCodec, app.OsmolbpKeeper, *app.BankKeeper, app.interfaceRegistry),
 	)
@@ -391,6 +400,7 @@ func NewOsmosisApp(
 		genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		bech32ibctypes.ModuleName, // comes after ibctransfertypes
 		poolincentivestypes.ModuleName,
+		superfluidtypes.ModuleName,
 		claimtypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
@@ -427,6 +437,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
+		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
 		app.transferModule,
 	)
 
@@ -445,6 +456,7 @@ func NewOsmosisApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
 		NewAnteHandler(
+			appOpts,
 			app.AccountKeeper, app.BankKeeper,
 			app.TxFeesKeeper, app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
@@ -712,6 +724,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 
 	return paramsKeeper

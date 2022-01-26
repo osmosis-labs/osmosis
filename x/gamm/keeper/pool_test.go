@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
 		for _, coin := range coinOf[acc.String()] {
 			amt := suite.app.BankKeeper.GetBalance(suite.ctx, acc, coin.Denom)
 			// the refund could have rounding error
-			suite.True(amt.Amount.Equal(coin.Amount) || amt.Amount.Equal(coin.Amount.SubRaw(1)),
+			suite.True(amt.Amount.Sub(coin.Amount).Abs().LTE(sdk.NewInt(2)),
 				"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), coin.Amount.Int64())
 		}
 	}

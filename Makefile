@@ -39,6 +39,8 @@ endif
 
 ifeq (cleveldb,$(findstring cleveldb,$(OSMOSIS_BUILD_OPTIONS)))
   build_tags += gcc
+else ifeq (rocksdb,$(findstring rocksdb,$(OSMOSIS_BUILD_OPTIONS)))
+  build_tags += gcc
 endif
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
@@ -58,6 +60,8 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=osmosis \
 
 ifeq (cleveldb,$(findstring cleveldb,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
+else ifeq (rocksdb,$(findstring rocksdb,$(OSMOSIS_BUILD_OPTIONS)))
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
 ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
@@ -240,7 +244,7 @@ format:
 ###############################################################################
 
 build-docker-osmosisdnode:
-	$(MAKE) -C networks/local
+	$(MAKE) -C contrib/localtestnet
 
 # Run a 4-node testnet locally
 localnet-start: build-linux build-docker-osmosisdnode # localnet-stop

@@ -57,6 +57,8 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
@@ -145,12 +147,12 @@ func (app *OsmosisApp) InitNormalKeepers() {
 	distrKeeper := distrkeeper.NewKeeper(
 		appCodec, keys[distrtypes.StoreKey],
 		app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, authtypes.FeeCollectorName, app.BlockedAddrs(),
+		app.StakingKeeper, authtypes.FeeCollectorName, app.BlockedAddrs(),
 	)
 	app.DistrKeeper = &distrKeeper
 
 	slashingKeeper := slashingkeeper.NewKeeper(
-		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
+		appCodec, keys[slashingtypes.StoreKey], app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	)
 	app.SlashingKeeper = &slashingKeeper
 
@@ -159,7 +161,7 @@ func (app *OsmosisApp) InitNormalKeepers() {
 		appCodec,
 		keys[ibchost.StoreKey],
 		app.GetSubspace(ibchost.ModuleName),
-		&stakingKeeper,
+		app.StakingKeeper,
 		app.UpgradeKeeper,
 		app.ScopedIBCKeeper)
 
@@ -214,15 +216,19 @@ func (app *OsmosisApp) InitNormalKeepers() {
 		appCodec, keys[lockuptypes.StoreKey],
 		// TODO: Visit why this needs to be deref'd
 		*app.AccountKeeper,
-		app.BankKeeper)
+		app.BankKeeper,
+		app.DistrKeeper)
 
 	app.EpochsKeeper = epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 
 	app.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appCodec, keys[incentivestypes.StoreKey],
 		app.GetSubspace(incentivestypes.ModuleName),
-		*app.AccountKeeper,
 		app.BankKeeper, app.LockupKeeper, app.EpochsKeeper)
+
+	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
+		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
+		*app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.EpochsKeeper, app.LockupKeeper, gammKeeper, app.IncentivesKeeper)
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey],
@@ -284,7 +290,9 @@ func (app *OsmosisApp) SetupHooks() {
 		stakingtypes.NewMultiStakingHooks(
 			app.DistrKeeper.Hooks(),
 			app.SlashingKeeper.Hooks(),
-			app.ClaimKeeper.Hooks()),
+			app.ClaimKeeper.Hooks(),
+			app.SuperfluidKeeper.Hooks(),
+		),
 	)
 
 	app.GAMMKeeper.SetHooks(
@@ -297,7 +305,8 @@ func (app *OsmosisApp) SetupHooks() {
 
 	app.LockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
-		// insert lockup hooks receivers here
+			// insert lockup hooks receivers here
+			app.SuperfluidKeeper.Hooks(),
 		),
 	)
 

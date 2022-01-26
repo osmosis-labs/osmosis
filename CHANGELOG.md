@@ -41,18 +41,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- [#765](https://github.com/osmosis-labs/osmosis/pull/765) Fix a bug in `Makefile` regarding the location of localtestnet docker image.
+
 ## Features
 
+- [#724](https://github.com/osmosis-labs/osmosis/pull/724) Make an ante-handler filter for recognizing High gas txs, and having a min gas price for them.
+- [#741](https://github.com/osmosis-labs/osmosis/pull/741) Allow node operators to set a second min gas price for arbitrage txs.
 - [#623](https://github.com/osmosis-labs/osmosis/pull/623) Use gosec for staticly linting for common non-determinism issues in SDK applications.
+
+- [sdk-#58](https://github.com/osmosis-labs/cosmos-sdk/pull/58) Fix a bug where recheck would not remove txs with invalid sequence numbers
+- [sdk-#52](https://github.com/osmosis-labs/cosmos-sdk/pull/52) Fix inconsistencies in default pruning config, and change defaults. Fix pruning=everything defaults.
+  - previously default was actually keeping 3 weeks of state, and every 100th state. (Not that far off from archive nodes)
+  - pruning=default now changed to 1 week of state (100k blocks), and keep-every=0. (So a constant number of states stored)
+  - pruning=everything now stores the last 10 states, to avoid db corruption errors plaguing everyone who used it. This isn't a significant change, because the pruning interval was anyways 10 blocks, so your node had to store 10 blocks of state anyway.
 
 ## Minor improvements & Bug Fixes
 
+- [#722](https://github.com/osmosis-labs/osmosis/issues/722) reuse code for parsing integer slices from string
 - [#704](https://github.com/osmosis-labs/osmosis/pull/704) fix rocksdb 
 - [#666](https://github.com/osmosis-labs/osmosis/pull/666) Fix the `--log-level` and `--log-format` commands on `osmosisd start`
 - [#655](https://github.com/osmosis-labs/osmosis/pull/655) Make the default genesis for pool-incentives work by default
 - [97ac2a8](https://github.com/osmosis-labs/osmosis/commit/97ac2a86303fc8966a4c169107e0945775107e67) Fix InitGenesis bug for gauges
 - [#686](https://github.com/osmosis-labs/osmosis/pull/686) Add silence usage to cli to surpress unnecessary help logs
 - [#731](https://github.com/osmosis-labs/osmosis/pull/731) Add UpdateFeeToken proposal handler to app.go
+
+### SDK fork updates
+
+- [sdk-#51](https://github.com/osmosis-labs/cosmos-sdk/pull/51) Add hooks for superfluid staking
+- [sdk-#50](https://github.com/osmosis-labs/cosmos-sdk/pull/50) Make it possible to better permission the bank keeper's minting ability
 
 ## [v6.0.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.0.0)
 

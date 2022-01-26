@@ -11,7 +11,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/bech32-ibc v0.2.0-rc1.0.20211229033539-6398fe1c7f8c
+	github.com/osmosis-labs/bech32-ibc v0.2.0-rc2
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
@@ -123,7 +123,8 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211209072213-711e78b4f6b4
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk  v0.44.3x-osmo-v5
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220120015748-5df6adc097e8
 	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
