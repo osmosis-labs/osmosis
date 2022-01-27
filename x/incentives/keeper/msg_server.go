@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/x/gamm/utils"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v5/x/gamm/utils"
+	"github.com/osmosis-labs/osmosis/v5/x/incentives/types"
 )
 
 type msgServer struct {

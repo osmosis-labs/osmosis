@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/osmosis-labs/osmosis/app"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v5/app"
+	gammtypes "github.com/osmosis-labs/osmosis/v5/x/gamm/types"
 )
 
 func genPoolAssets(r *rand.Rand) []gammtypes.PoolAsset {

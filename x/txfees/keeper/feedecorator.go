@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v5/x/txfees/types"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
