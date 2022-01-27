@@ -201,6 +201,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	}
 	_, err = k.sk.Delegate(ctx, mAddr, amt, stakingtypes.Unbonded, validator, true)
 	if err != nil {
+		k.Logger(ctx).Error(err.Error())
 		return err
 	}
 
@@ -210,9 +211,11 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         acc.Denom + suffix,
-			Duration:      time.Hour * 24 * 14,
+			Duration:      params.UnbondingDuration,
 		}, ctx.BlockTime(), 1)
+
 		if err != nil {
+			k.Logger(ctx).Error(err.Error())
 			return err
 		}
 

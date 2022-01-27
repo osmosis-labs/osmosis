@@ -327,6 +327,7 @@ func (app *OsmosisApp) SetupHooks() {
 			// insert epoch hooks receivers here
 			app.IncentivesKeeper.Hooks(),
 			app.MintKeeper.Hooks(),
+			app.SuperfluidKeeper.Hooks(),
 		),
 	)
 
