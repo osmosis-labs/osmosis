@@ -600,8 +600,6 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210903155012-21486dadbb55 h1:eeDOj4pkcVmlPF96yJvuy2Sp9yjeP8UbKUsQT6Cfasc=
 github.com/osmosis-labs/cosmos-sdk v0.42.10-0.20210903155012-21486dadbb55/go.mod h1:SrclJP9lMXxz2fCbngxb0brsPNuZXqoQQ9VHuQ3Tpf4=
-github.com/osmosis-labs/osmosis v1.0.4 h1:LpUP+kAeGYqhZBbXJKG+T4HspSrMcK1kysiCSqQkvHM=
-github.com/osmosis-labs/osmosis v1.0.4/go.mod h1:ENV3qCKuW18bWUQASaBZa7JyZQQ/ux3qZrvNpXs8AdQ=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
 github.com/otiai10/copy v1.6.0/go.mod h1:XWfuS3CrI0R6IE0FbgHsEazaXO8G0LpMp9o8tos0x4E=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
