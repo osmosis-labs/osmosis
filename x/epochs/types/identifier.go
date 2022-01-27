@@ -9,8 +9,10 @@ func ValidateEpochIdentifierInterface(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	ValidateEpochIdentifierString(v)
-
+	err := ValidateEpochIdentifierString(v)
+	if err != nil {
+		return fmt.Errorf("Invalid epoch identifier: %s", err)
+	}
 	return nil
 }
 

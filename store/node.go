@@ -2,6 +2,7 @@ package store
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -23,7 +24,10 @@ func (ptr *ptr) node() (res *Node) {
 	res = new(Node)
 	bz := ptr.tree.store.Get(ptr.tree.nodeKey(ptr.level, ptr.key))
 	if bz != nil {
-		proto.Unmarshal(bz, res)
+		err := proto.Unmarshal(bz, res)
+		if err != nil {
+			fmt.Printf("unmarshal error: %v", err)
+		}
 	}
 	return
 }
