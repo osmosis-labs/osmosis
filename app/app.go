@@ -12,7 +12,6 @@ import (
 	// HTTP Router
 	"github.com/gorilla/mux"
 
-
 	// Used to serve OpenAPI information
 	"github.com/rakyll/statik/fs"
 
@@ -25,7 +24,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
-
 
 	// Utilities from the Cosmos-SDK other than Cosmos modules
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -86,7 +84,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	// 
+	//
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -159,7 +157,7 @@ import (
 	mintkeeper "github.com/osmosis-labs/osmosis/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 
-	// Pool incentives: 
+	// Pool incentives:
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
@@ -337,30 +335,29 @@ func NewOsmosisApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
-
 	// Define what keys will be used in the cosmos-sdk key/value store.
-	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain. 
+	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
 	keys := sdk.NewKVStoreKeys(
-		authtypes.StoreKey, 
-		banktypes.StoreKey, 
+		authtypes.StoreKey,
+		banktypes.StoreKey,
 		stakingtypes.StoreKey,
-		minttypes.StoreKey, 
-		distrtypes.StoreKey, 
+		minttypes.StoreKey,
+		distrtypes.StoreKey,
 		slashingtypes.StoreKey,
-		govtypes.StoreKey, 
-		paramstypes.StoreKey, 
-		ibchost.StoreKey, 
+		govtypes.StoreKey,
+		paramstypes.StoreKey,
+		ibchost.StoreKey,
 		upgradetypes.StoreKey,
-		evidencetypes.StoreKey, 
-		ibctransfertypes.StoreKey, 
+		evidencetypes.StoreKey,
+		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
-		gammtypes.StoreKey, 
-		lockuptypes.StoreKey, 
-		claimtypes.StoreKey, 
+		gammtypes.StoreKey,
+		lockuptypes.StoreKey,
+		claimtypes.StoreKey,
 		incentivestypes.StoreKey,
-		epochstypes.StoreKey, 
-		poolincentivestypes.StoreKey, 
-		authzkeeper.StoreKey, 
+		epochstypes.StoreKey,
+		poolincentivestypes.StoreKey,
+		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
 		bech32ibctypes.StoreKey,
@@ -440,8 +437,8 @@ func NewOsmosisApp(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
-	
-	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block. 
+
+	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
 	app.mm.SetOrderBeginBlockers(
 		// Upgrades should be run _very_ first
 		upgradetypes.ModuleName,
@@ -458,7 +455,7 @@ func NewOsmosisApp(
 		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
 	)
 
-	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the end of every block. 
+	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the end of every block.
 	app.mm.SetOrderEndBlockers(
 		lockuptypes.ModuleName,
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, claimtypes.ModuleName,
