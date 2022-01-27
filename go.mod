@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis
+module github.com/osmosis-labs/osmosis/v6
 
 go 1.17
 
@@ -122,9 +122,14 @@ require (
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk  v0.44.3x-osmo-v5
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220120015748-5df6adc097e8
+	// Use osmosis-flavored IBCv2
 	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
+	// Use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.2.0
-	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint v0.34.12-0.20220109173307-59a781894ea7
+	// Use grpc compatible with cosmos-flavored protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
+	// fix builds with rocksdb
+	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.2.0
+	// use osmosis-patched tendermint
+	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint v0.34.12-0.20220109173307-59a781894ea7
 )

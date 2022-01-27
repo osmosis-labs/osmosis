@@ -4,9 +4,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	pooltypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v6/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v6/x/lockup/types"
+	pooltypes "github.com/osmosis-labs/osmosis/v6/x/pool-incentives/types"
 )
 
 func (suite *KeeperTestSuite) TestGRPCGaugeByID() {

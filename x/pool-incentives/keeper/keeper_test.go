@@ -15,8 +15,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/app"
 
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v6/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v6/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {

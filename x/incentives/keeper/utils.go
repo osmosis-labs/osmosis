@@ -4,7 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v6/x/incentives/types"
 )
 
 func findIndex(IDs []uint64, ID uint64) int {
