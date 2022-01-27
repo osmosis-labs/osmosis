@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/osmosis-labs/osmosis/v043_temp/conv"
+	"github.com/osmosis-labs/osmosis/v6/v043_temp/conv"
 )
 
 // Len is the length of base addresses

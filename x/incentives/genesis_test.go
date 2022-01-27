@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	osmoapp "github.com/osmosis-labs/osmosis/app"
+	osmoapp "github.com/osmosis-labs/osmosis/v6/app"
 	"github.com/osmosis-labs/osmosis/v6/x/incentives"
 	"github.com/osmosis-labs/osmosis/v6/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v6/x/lockup/types"

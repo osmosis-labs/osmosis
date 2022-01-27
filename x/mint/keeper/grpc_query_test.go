@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
+	simapp "github.com/osmosis-labs/osmosis/v6/app"
 	"github.com/osmosis-labs/osmosis/v6/x/mint/types"
 )
 

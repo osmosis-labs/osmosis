@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	simapp "github.com/osmosis-labs/osmosis/app"
+	simapp "github.com/osmosis-labs/osmosis/v6/app"
 	"github.com/osmosis-labs/osmosis/v6/x/epochs"
 	"github.com/osmosis-labs/osmosis/v6/x/epochs/types"
 	"github.com/stretchr/testify/require"

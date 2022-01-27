@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/v6/app"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v6/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v6/x/pool-incentives/types"

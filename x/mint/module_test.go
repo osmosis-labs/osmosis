@@ -8,7 +8,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
+	simapp "github.com/osmosis-labs/osmosis/v6/app"
 	"github.com/osmosis-labs/osmosis/v6/x/mint/types"
 )
 

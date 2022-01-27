@@ -9,7 +9,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 
-	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/v6/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/v6/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v6/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v6/x/pool-incentives/types"

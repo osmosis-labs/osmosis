@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
+	simapp "github.com/osmosis-labs/osmosis/v6/app"
 	"github.com/osmosis-labs/osmosis/v6/x/claim"
 	"github.com/osmosis-labs/osmosis/v6/x/claim/types"
 	"github.com/stretchr/testify/assert"
