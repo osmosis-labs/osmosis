@@ -56,6 +56,7 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	superfluid "github.com/osmosis-labs/osmosis/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/x/txfees"
@@ -268,7 +269,8 @@ func (app *OsmosisApp) InitNormalKeepers() {
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*app.PoolIncentivesKeeper)).
 		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IBCKeeper)).
-		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper))
+		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper)).
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(app.SuperfluidKeeper))
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey],

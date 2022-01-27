@@ -113,6 +113,7 @@ import (
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/x/superfluid/client"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/x/txfees"
@@ -147,6 +148,7 @@ var (
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
 			ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
+			superfluidclient.SetSuperfluidAssetsProposalHandler, superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},

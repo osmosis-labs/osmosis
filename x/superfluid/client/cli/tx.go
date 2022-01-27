@@ -3,11 +3,14 @@ package cli
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 	"github.com/spf13/cobra"
 )
@@ -137,4 +140,162 @@ func NewSuperfluidRedelegateCmd() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+// NewCmdSubmitSetSuperfluidAssetsProposal implements a command handler for submitting a superfluid asset set proposal transaction.
+func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-superfluid-assets-proposal [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Submit a superfluid asset set proposal",
+		Long:  "Submit a superfluid asset set proposal",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			content, err := parseSetSuperfluidAssetsArgsToContent(cmd)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(FlagSuperfluidAssets, "", "The superfluid asset array")
+
+	return cmd
+}
+
+// NewCmdSubmitRemoveSuperfluidAssetsProposal implements a command handler for submitting a superfluid asset remove proposal transaction.
+func NewCmdSubmitRemoveSuperfluidAssetsProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-superfluid-assets-proposal [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Submit a superfluid asset remove proposal",
+		Long:  "Submit a superfluid asset remove proposal",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			content, err := parseRemoveSuperfluidAssetsArgsToContent(cmd)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(FlagSuperfluidAssets, "", "The superfluid asset array")
+
+	return cmd
+}
+
+func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	assetsStr, err := cmd.Flags().GetString(FlagSuperfluidAssets)
+	if err != nil {
+		return nil, err
+	}
+
+	assets := strings.Split(assetsStr, ",")
+
+	superfluidAssets := []types.SuperfluidAsset{}
+	for _, asset := range assets {
+		superfluidAssets = append(superfluidAssets, types.SuperfluidAsset{
+			Denom:     asset,
+			AssetType: types.SuperfluidAssetTypeLPShare,
+		})
+	}
+
+	content := &types.SetSuperfluidAssetsProposal{
+		Title:       title,
+		Description: description,
+		Assets:      superfluidAssets,
+	}
+	return content, nil
+}
+
+func parseRemoveSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	assetsStr, err := cmd.Flags().GetString(FlagSuperfluidAssets)
+	if err != nil {
+		return nil, err
+	}
+
+	assets := strings.Split(assetsStr, ",")
+
+	content := &types.RemoveSuperfluidAssetsProposal{
+		Title:                 title,
+		Description:           description,
+		SuperfluidAssetDenoms: assets,
+	}
+	return content, nil
 }
