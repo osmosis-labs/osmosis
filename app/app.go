@@ -467,7 +467,7 @@ func NewOsmosisApp(
 		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
 	)
 
-	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the end of every block.
+	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
 	app.mm.SetOrderEndBlockers(
 		lockuptypes.ModuleName,
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, claimtypes.ModuleName,
