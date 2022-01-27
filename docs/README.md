@@ -54,7 +54,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   <a href="https://app.osmosis.zone/" class="card lg" target="_blank">
     <img src="img/osmologo.svg">
     <div class="title">
-     Osmosis DEX 
+     Osmosis DEX
     </div>
     <div class="text">
       Launch the Osmosis Automated Market Maker
@@ -72,7 +72,7 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   <a href="https://github.com/osmosis-labs/osmosis" class="card lg" target="_blank">
     <img src="img/github.svg">
     <div class="title">
-    Found an Issue? 
+    Found an Issue?
     </div>
     <div class="text">
     Improve this page by adding suggestions on Github.
@@ -89,16 +89,16 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
   <a href="https://mintscan.io/osmosis" class="card lg" target="_blank">
     <img src="img/mintscan.png">
     <div class="title">
-     Mintscan 
+     Mintscan
     </div>
     <div class="text">
      Block Explorer
     </div>
   </a>
-  <a href="https://osmosis.bigdipper.live" class="card lg" target="_blank">
-    <img src="img/bigdipper.png">
+  <a href="https://atomscan.com/osmosis" class="card lg" target="_blank">
+    <img src="img/atomscan.png">
     <div class="title">
-     Big Dipper
+     ATOM Scan
     </div>
     <div class="text">
      Block Explorer
