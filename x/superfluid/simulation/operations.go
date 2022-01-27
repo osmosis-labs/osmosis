@@ -57,7 +57,17 @@ func WeightedOperations(
 	appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidDelegate, &weightMsgSuperfluidDelegate, nil,
 		func(_ *rand.Rand) {
 			weightMsgSuperfluidDelegate = DefaultWeightMsgSuperfluidDelegate
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidUndelegate, &weightMsgSuperfluidUndelegate, nil,
+		func(_ *rand.Rand) {
 			weightMsgSuperfluidUndelegate = DefaultWeightMsgSuperfluidUndelegate
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidRedelegate, &weightMsgSuperfluidRedelegate, nil,
+		func(_ *rand.Rand) {
 			weightMsgSuperfluidRedelegate = DefaultWeightMsgSuperfluidRedelegate
 		},
 	)
