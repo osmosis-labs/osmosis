@@ -21,8 +21,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
-	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
+	appparams "github.com/osmosis-labs/osmosis/v4/app/params"
+	claimtypes "github.com/osmosis-labs/osmosis/v4/x/claim/types"
 )
 
 const (

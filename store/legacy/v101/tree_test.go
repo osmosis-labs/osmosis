@@ -1,12 +1,12 @@
 package v101_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"bytes"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"testing"
-	"github.com/stretchr/testify/require"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -17,8 +17,8 @@ import (
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/store/legacy/v101"
-	"github.com/osmosis-labs/osmosis/store"
+	"github.com/osmosis-labs/osmosis/v4/store"
+	"github.com/osmosis-labs/osmosis/v4/store/legacy/v101"
 )
 
 func setupStore() sdk.KVStore {
@@ -30,17 +30,16 @@ func setupStore() sdk.KVStore {
 }
 
 func compareBranch(oldValueBz []byte, valueBz []byte) (err error) {
-		oldValue := v101.Children{}
-		value := store.Node{}
-		err = json.Unmarshal(oldValueBz, &oldValue)
-		if err != nil {
-			return
-		}
-		err = proto.Unmarshal(valueBz, &value)
-		if err != nil {
-			return
-		}
-
+	oldValue := v101.Children{}
+	value := store.Node{}
+	err = json.Unmarshal(oldValueBz, &oldValue)
+	if err != nil {
+		return
+	}
+	err = proto.Unmarshal(valueBz, &value)
+	if err != nil {
+		return
+	}
 
 	for i, c := range oldValue {
 		c2 := value.Children[i]
@@ -53,21 +52,21 @@ func compareBranch(oldValueBz []byte, valueBz []byte) (err error) {
 }
 
 func compareLeaf(oldValueBz []byte, valueBz []byte) (err error) {
-		oldValue := sdk.ZeroInt()
-		value := store.Leaf{}
-		err = json.Unmarshal(oldValueBz, &oldValue)
-		if err != nil {
-			return
-		}
-		err = proto.Unmarshal(valueBz, &value)
-		if err != nil {
-			return 
-		}
+	oldValue := sdk.ZeroInt()
+	value := store.Leaf{}
+	err = json.Unmarshal(oldValueBz, &oldValue)
+	if err != nil {
+		return
+	}
+	err = proto.Unmarshal(valueBz, &value)
+	if err != nil {
+		return
+	}
 
 	if !oldValue.Equal(value.Leaf.Accumulation) {
 		return fmt.Errorf("leaf value mismatch: %+v / %+v", oldValue, value)
 	}
-	return 
+	return
 }
 
 func comparePair(oldKeyBz, oldValueBz, keyBz, valueBz []byte) (err error) {
@@ -85,7 +84,7 @@ func comparePair(oldKeyBz, oldValueBz, keyBz, valueBz []byte) (err error) {
 }
 
 type kvPair struct {
-	key []byte
+	key   []byte
 	value []byte
 }
 
@@ -117,7 +116,7 @@ func readold() []kvPair {
 	}
 	res := make([]kvPair, len(data))
 	for i, pair := range data {
-		res[i] = kvPair {pair[0], pair[1]}
+		res[i] = kvPair{pair[0], pair[1]}
 	}
 	return res
 }
