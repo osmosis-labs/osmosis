@@ -120,7 +120,7 @@ require (
 )
 
 replace (
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk sunny/rebase-v0.45
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220124045025-f4329814320d
 	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
