@@ -135,9 +135,9 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 
 	// Upgrades from earlier versions of Osmosis
-	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
+	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 
 	// Modules that live in the Osmosis repository and are specific to Osmosis
 	"github.com/osmosis-labs/osmosis/v7/x/claim"
