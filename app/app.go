@@ -130,7 +130,6 @@ import (
 	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
-<<<<<<< HEAD
 
 	// Osmosis application prarmeters
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
@@ -186,63 +185,6 @@ import (
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
-=======
-
-	// Osmosis application prarmeters
-	appparams "github.com/osmosis-labs/osmosis/app/params"
-
-	// Upgrades from earlier versions of Osmosis
-	v4 "github.com/osmosis-labs/osmosis/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/app/upgrades/v5"
-	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
-
-	// Modules that live in the Osmosis repository and are specific to Osmosis
-	"github.com/osmosis-labs/osmosis/x/claim"
-	claimkeeper "github.com/osmosis-labs/osmosis/x/claim/keeper"
-	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
-
-	// Epochs: gives Osmosis a sense of "clock time" so that events can be based on days instead of "number of blocks"
-	"github.com/osmosis-labs/osmosis/x/epochs"
-	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-
-	// Generalized Automated Market Maker
-	"github.com/osmosis-labs/osmosis/x/gamm"
-	gammkeeper "github.com/osmosis-labs/osmosis/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-
-	// Incentives: Allows Osmosis and foriegn chain communities to incentivize users to provide liquidity
-	"github.com/osmosis-labs/osmosis/x/incentives"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
-
-	// Lockup: allows tokens to be locked (made non-transferrable)
-	"github.com/osmosis-labs/osmosis/x/lockup"
-	lockupkeeper "github.com/osmosis-labs/osmosis/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-
-	// Mint: Our modified version of github.com/cosmos/cosmos-sdk/x/mint
-	"github.com/osmosis-labs/osmosis/x/mint"
-	mintkeeper "github.com/osmosis-labs/osmosis/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-
-	// Pool incentives:
-	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
-
-	// Superfluid: Allows users to stake gamm (bonded liquidity)
-	superfluid "github.com/osmosis-labs/osmosis/x/superfluid"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
-
-	// txfees: Allows Osmosis to charge transaction fees without harming IBC user experience
-	"github.com/osmosis-labs/osmosis/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
-
->>>>>>> b25b4ea5b4afa46621223e10a365a4aaa5cc1d2d
 	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
