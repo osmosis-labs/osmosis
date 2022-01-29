@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v6/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v6/x/txfees/types"
 )
 
 // DefaultArbMinGasFee if its not set in a config somewhere.

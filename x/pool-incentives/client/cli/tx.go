@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/osmotestutils"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v6/osmotestutils"
+	"github.com/osmosis-labs/osmosis/v6/x/pool-incentives/types"
 )
 
 func NewTxCmd() *cobra.Command {

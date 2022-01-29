@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v6/x/epochs/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {

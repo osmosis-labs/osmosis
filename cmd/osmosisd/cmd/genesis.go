@@ -26,13 +26,13 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	appParams "github.com/osmosis-labs/osmosis/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v6/app/params"
 
-	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	claimtypes "github.com/osmosis-labs/osmosis/v6/x/claim/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v6/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v6/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v6/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v6/x/pool-incentives/types"
 )
 
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {

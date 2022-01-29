@@ -4,8 +4,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/epochs/keeper"
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v6/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/v6/x/epochs/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

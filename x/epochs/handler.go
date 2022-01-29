@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/x/epochs/keeper"
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v6/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/v6/x/epochs/types"
 )
 
 // NewHandler returns a handler for epochs module messages

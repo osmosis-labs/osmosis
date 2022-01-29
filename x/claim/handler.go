@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/x/claim/keeper"
-	"github.com/osmosis-labs/osmosis/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v6/x/claim/keeper"
+	"github.com/osmosis-labs/osmosis/v6/x/claim/types"
 )
 
 // NewHandler returns claim module messages

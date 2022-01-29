@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v6/x/claim/types"
 )
 
 // GetParams get params

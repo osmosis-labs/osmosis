@@ -9,15 +9,15 @@ import (
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	connectionkeeper "github.com/cosmos/ibc-go/v2/modules/core/03-connection/keeper"
-	gammkeeper "github.com/osmosis-labs/osmosis/x/gamm/keeper"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
+	gammkeeper "github.com/osmosis-labs/osmosis/v6/x/gamm/keeper"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v6/x/txfees/keeper"
 
-	"github.com/osmosis-labs/osmosis/x/txfees"
+	"github.com/osmosis-labs/osmosis/v6/x/txfees"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v6/x/txfees/types"
 )
 
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,

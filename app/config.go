@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/osmosis-labs/osmosis/app/params"
+	"github.com/osmosis-labs/osmosis/v6/app/params"
 	dbm "github.com/tendermint/tm-db"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"

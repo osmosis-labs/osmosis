@@ -9,7 +9,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v6/x/claim/types"
 )
 
 func (suite *KeeperTestSuite) TestHookOfUnclaimableAccount() {

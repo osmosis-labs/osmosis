@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v6/x/mint/types"
 )
 
 var _ types.QueryServer = Keeper{}

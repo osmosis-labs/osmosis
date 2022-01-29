@@ -18,11 +18,11 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/x/gamm/client/rest"
-	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v6/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v6/x/gamm/client/rest"
+	"github.com/osmosis-labs/osmosis/v6/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v6/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v6/x/gamm/types"
 )
 
 var (

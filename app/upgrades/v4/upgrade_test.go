@@ -9,8 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/osmosis-labs/osmosis/app"
-	v4 "github.com/osmosis-labs/osmosis/app/upgrades/v4"
+	"github.com/osmosis-labs/osmosis/v6/app"
+	v4 "github.com/osmosis-labs/osmosis/v6/app/upgrades/v4"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
