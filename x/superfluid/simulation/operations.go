@@ -5,7 +5,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

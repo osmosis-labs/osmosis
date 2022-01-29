@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis
+module github.com/osmosis-labs/osmosis/v7
 
 go 1.17
 

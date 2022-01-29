@@ -11,7 +11,7 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	types "github.com/osmosis-labs/osmosis/x/gamm/types"
+	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	_ "github.com/regen-network/cosmos-proto"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"

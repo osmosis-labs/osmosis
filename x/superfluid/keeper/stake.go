@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 const SuperfluidUnbondDuration = time.Hour * 24 * 21

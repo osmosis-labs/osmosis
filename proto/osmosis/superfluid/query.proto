@@ -8,7 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "osmosis/superfluid/superfluid.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
 // Query defines the gRPC querier service.
 service Query {

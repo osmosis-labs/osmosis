@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "osmosis/superfluid/superfluid.proto";
 import "osmosis/superfluid/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
 message EpochOsmoEquivalentTWAP {
   int64 epoch_number = 1;

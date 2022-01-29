@@ -6,12 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
