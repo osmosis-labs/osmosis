@@ -35,7 +35,7 @@ Set up cosmovisor to ensure future upgrades happen flawlessly. To install Cosmov
 cd $HOME
 git clone https://github.com/cosmos/cosmos-sdk
 cd cosmos-sdk
-git checkout v0.42.9
+git checkout v0.44.0
 make cosmovisor
 cp cosmovisor/cosmovisor $GOPATH/bin/cosmovisor
 cd $HOME
@@ -164,27 +164,4 @@ To see live logs of the service:
 
 ```bash
 journalctl -u cosmovisor -f
-```
-
-## Update Cosmovisor to V6
-
-If still running V5, follow this step.
-
-Unlike prior cosmovisor upgrades, V6 can be upgraded immediately instead of waiting for a specified block height. 
-
-NOTE: This command writes the V6 binary to the V5 folder in order to replace the old V5 binary. If you were to write the binary to a new V6 folder, it would not immediately auto change to use the V6 binary.
-
-To update osmosisd to V6 and replace cosmovisor osmosisd:
-
-```bash
-mkdir -p ~/.osmosisd/cosmovisor/upgrades/v5/bin
-cd $HOME/osmosis
-git pull
-git checkout v6.2.0
-make install
-make build
-systemctl stop cosmovisor.service
-cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v5/bin
-systemctl start cosmovisor.service
-cd $HOME
 ```
