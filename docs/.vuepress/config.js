@@ -177,11 +177,9 @@ module.exports = {
           collapsable: false,
         },
         {
-          title: 'Chain Developer Guide',
+          title: 'Osmosis Daemon',
           children: [
-            '/developing/chain-dev-guide',
             '/developing/cli/install',
-            '/developing/osmosisd/',
           ],
           collapsable: true,
         },

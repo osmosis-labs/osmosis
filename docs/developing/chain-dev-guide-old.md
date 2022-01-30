@@ -18,38 +18,6 @@ The current function documentation is not an exhaustive reference, but has been 
 
 At the end, the specification lists out various module parameters alongside their default values with a brief explanation of their purpose, and associated events / tags and errors emitted by the module.
 
-## Module Architecture
-
-The node software is organized into the following individual modules that implement different parts of the Osmosis protocol.
-They are listed in the order in which they are initialized during genesis:
-
-1. `genaccounts` - import & export genesis account
-2. [`distribution`](./modules/spec-distribution.md): distribute rewards between validators and delegators
-   - tax and reward distribution
-   - community pool
-3. [`staking`](./modules/spec-staking.md): validators and Osmo
-4. [`auth`](./modules/spec-auth.md): ante handler
-   - vesting accounts
-   - stability layer fee
-5. [`bank`](./modules/spec-bank.md) - sending funds from account to account
-6. [`slashing`](./modules/spec-slashing.md) - low-level Tendermint slashing (double-signing, etc)
-7. [`oracle`](./modules/spec-oracle.md) - exchange rate feed oracle
-   - vote tallying weighted median
-   - ballot rewards
-   - slashing misbehaving oracles
-8. [`treasury`](./modules/spec-treasury.md): miner incentive stabilization
-   - macroeconomic monitoring
-   - monetary policy levers (Tax Rate, Reward Weight)
-   - seigniorage settlement: all seigniorage is burned as of Columbus-5
-9. [`gov`](./modules/spec-governance.md): on-chain governance
-    - proposals
-    - parameter updating
-10. [`market`](./modules/spec-market.md): price-stabilization
-    - Osmosis<>Osmosis spot-conversion, Tobin Tax
-    - Osmosis<>Osmo market-maker, Constant-Product spread
-11. `crisis` - reports consensus failure state with proof to halt the chain
-12. `genutil` - handles `gentx` commands
-    - filter and handle `MsgCreateValidator` messages
 
 ### Inherited modules
 
@@ -78,12 +46,7 @@ The following processes get executed during each block transition:
 
    - Check all registered invariants and assert they remain true
 
-5. Oracle
-
-   - If at the end of `VotePeriod`, run [Voting Procedure](modules/spec-oracle.md#voting-procedure) and **update Osmo Exchange Rate**.
-   - If at the end of `SlashWindow`, **penalize validators** who [missed](modules/spec-slashing.md) more `VotePeriod`s than permitted.
-
-6. Governance
+5. Governance
 
    - Get rid of inactive proposals, check active proposals whose voting periods have ended for passes, and run registered proposal handler of the passed proposal.
 

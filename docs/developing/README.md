@@ -7,19 +7,10 @@ title: Developer Home
 The guides on this page will explain the process of developing on Osmosis.
 
 <div class="cards twoColumn">
-  <a href="chain-dev-guide.html" class="card">
-    <img src="/img/book-solid.svg" class="filter-icon"/>
-    <div class="title">
-     Chain Developer Guide
-    </div>
-    <div class="text">
-      Basic developer overview, CLI guide, and install osmosis
-    </div>
-  </a>
   <a href="cli/install" class="card">
     <img src="/img/terminal-solid.svg" class="filter-icon"/>
     <div class="title">
-     Osmosis Daemon 
+     Osmosis Daemon
     </div>
     <div class="text">
       Install osmosisd to join the network
@@ -38,7 +29,7 @@ The guides on this page will explain the process of developing on Osmosis.
   <a href="network/join-mainnet.html" class="card">
     <img src="/img/link.svg" class="filter-icon"/>
     <div class="title">
-     Join Mainnet 
+     Join Mainnet
     </div>
     <div class="text">
       Set up a node on the Osmosis mainnet

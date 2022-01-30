@@ -9,10 +9,10 @@ Make sure you have [installed the Osmosis Binary (CLI).](../cli/install)
 Use osmosisd to initialize your node (replace the ```NODE_NAME``` with a name of your choosing):
 
 ```bash
-osmosisd init NODE_NAME --chain-id=osmosis-testnet-0
+osmosisd init NODE_NAME --chain-id=osmo-testnet-1
 ```
 
-Open the config.toml to edit the seed list:
+Open the config.toml to edit the seeds and persistent peers:
 
 ```bash
 cd $HOME/.osmosisd/config
@@ -22,7 +22,13 @@ nano config.toml
 Use page down or arrow keys to get to the line that says seeds = "" and replace it with the following:
 
 ```bash
-seeds = "4eaed17781cd948149098d55f80a28232a365236@testmosis.blockpane.com:26656"
+seeds = "f5051996db0e0df69c55c36977407a9b8f94edb4@159.203.100.232:26656"
+```
+
+Next, add persistent peers:
+
+```bash
+persistent_peers = "edd2b4968f012148641205b8ddd29f1beae8ab09@68.183.153.16:26656,e159391f00e8127d8e6ec1319b04633ffc33ed1a@165.227.122.46:26656"
 ```
 
 Then press ```Ctrl+O``` then enter to save, then ```Ctrl+X``` to exit
@@ -69,8 +75,8 @@ Download and replace the genesis file:
 
 ```bash
 cd $HOME/.osmosisd/config
-wget https://github.com/osmosis-labs/networks/raw/unity/v4/osmosis-1/upgrades/v4/testnet/genesis.tar.bz2
-tar -xjf genesis.tar.bz2
+wget https://github.com/osmosis-labs/networks/raw/adam/v2testnet/osmo-testnet-1/genesis.tar.bz2
+tar -xjf genesis.tar.bz2 && rm genesis.tar.bz2
 ```
 
 Copy the current osmosisd binary into the cosmovisor/genesis folder:
@@ -86,7 +92,7 @@ cosmovisor version
 osmosisd version
 ```
 
-These two command should both output 6.0.0
+These two command should both output 6.2.0
 
 Reset private validator file to genesis state:
 
@@ -96,21 +102,45 @@ osmosisd unsafe-reset-all
 
 ## Download Chain Data
 
-Download the latest chain data from a snapshot provider. In this example, I will use [the validator MP-20's latest testnet snapshot](https://mp20.net/snapshots/osmosis-testnet/) and I will use the pruned chain data.
+Download the latest chain data from a snapshot provider. In the following commands, I will use <a href="https://quicksync.io/networks/osmosis.html" target="_blank">https://quicksync.io/networks/osmosis.html</a> to download the chain data. You may choose the pruned or archive based on your needs.
 
 Download liblz4-tool to handle the compressed file:
 
 ```bash
-sudo apt-get install wget liblz4-tool aria2 pixz -y
+sudo apt-get install wget liblz4-tool aria2 -y
 ```
 
-Download, decompress, and replace the chain data:
+Download the chain data:
 
-```bash
+- Select the tab to the desired node type (Pruned or Archive)
+
+
+<!-- #region -->
+::::::: tabs :options="{ useUrlFragment: false }"
+
+:::::: tab Pruned
+
+``` bash
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmotestnet-1-pruned")|select (.mirror=="Netherlands")|.url'`
 cd $HOME/.osmosisd/
-wget https://mp20.net/snapshots/osmosis-testnet/osmosis-testnet-mp20-latest.tar.xz
-tar -I'pixz' -xvf osmosis-testnet-mp20-latest.tar.xz --strip-components=4
+wget -O - $URL | lz4 -d | tar -xvf -
 ```
+
+::::::
+
+:::::: tab Archive
+
+``` bash
+URL=`curl https://quicksync.io/osmosis.json|jq -r '.[] |select(.file=="osmotestnet-1-archive")|select (.mirror=="Netherlands")|.url'`
+cd $HOME/.osmosisd/
+wget -O - $URL | lz4 -d | tar -xvf -
+```
+
+::::::
+
+:::::::
+
+<!-- #endregion -->
 
 ## Set Up Osmosis Service
 
