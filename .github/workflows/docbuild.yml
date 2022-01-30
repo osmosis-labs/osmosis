@@ -2,9 +2,7 @@ name: Build and Deploy Docs
 on:
   push:
     branches:
-      - main
-    tags:
-      - documentation
+      - docs
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
