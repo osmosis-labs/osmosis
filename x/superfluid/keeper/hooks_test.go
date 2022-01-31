@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			for _, acc := range intermediaryAccs {
 				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
 				suite.Require().NoError(err)
-				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAddress(), valAddr)
+				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAccAddress(), valAddr)
 				suite.Require().True(found)
 				suite.Require().Equal(delegation.Shares, sdk.NewDec(7125000000)) // 95% x 7500 x 1000000
 			}
@@ -261,8 +261,11 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
+				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
+				suite.Require().NoError(err)
+
 				// superfluid undelegate
-				_, err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
+				_, err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
 				suite.Require().NoError(err)
 			}
 

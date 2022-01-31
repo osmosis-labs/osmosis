@@ -66,10 +66,7 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			for _, del := range tc.superDelegations {
 				valAddr := valAddrs[del.valIndex]
 				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
-				expAcc := types.SuperfluidIntermediaryAccount{
-					Denom:   lock.Coins[0].Denom,
-					ValAddr: valAddr.String(),
-				}
+				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
 
 				// save accounts and locks for future use
 				intermediaryAccs = append(intermediaryAccs, expAcc)
@@ -145,8 +142,10 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
+				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
+				suite.Require().NoError(err)
 				// superfluid undelegate
-				_, err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lockId)
+				_, err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
 				suite.Require().NoError(err)
 			}
 
@@ -155,7 +154,7 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 				suite.NotPanics(func() {
 					suite.app.SuperfluidKeeper.SlashLockupsForUnbondingDelegationSlash(
 						suite.ctx,
-						acc.GetAddress().String(),
+						acc.GetAccAddress().String(),
 						acc.ValAddr,
 						sdk.NewDecWithPrec(5, 2))
 				})

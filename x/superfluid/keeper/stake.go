@@ -23,7 +23,7 @@ func unstakingSuffix(valAddr string) string {
 func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
-		mAddr := acc.GetAddress()
+		mAddr := acc.GetAccAddress()
 		bondDenom := k.sk.BondDenom(ctx)
 
 		balance := k.bk.GetBalance(ctx, mAddr, bondDenom)
@@ -121,7 +121,31 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr string) error {
+func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
+	lock, err := k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	if lock.Owner != sender {
+		return lockuptypes.ErrNotLockOwner
+	}
+
+	if lock.Coins.Len() != 1 {
+		return types.ErrMultipleCoinsLockupNotSupported
+	}
+
+	// prevent unbonding lockups to be not able to be used for superfluid staking
+	if lock.IsUnlocking() {
+		return types.ErrUnbondingLockupNotSupported
+	}
+
+	// length check
+	params := k.GetParams(ctx)
+	if lock.Duration < params.UnbondingDuration { // if less than bonding, skip
+		return types.ErrNotEnoughLockupDuration
+	}
+
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if !intermediaryAccAddr.Empty() {
 		return types.ErrAlreadyUsedSuperfluidLockup
@@ -130,7 +154,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	// check unbonding synthetic lockup already exists on this validator
 	// in this case automatic superfluid undelegation should fail and it is the source of chain halt
 	suffix := unstakingSuffix(valAddr)
-	_, err := k.lk.GetSyntheticLockup(ctx, lockID, suffix)
+	_, err = k.lk.GetSyntheticLockup(ctx, lockID, suffix)
 	if err == nil {
 		return types.ErrUnbondingSyntheticLockupExists
 	}
@@ -142,33 +166,10 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 		return err
 	}
 
-	lock, err := k.lk.GetLockByID(ctx, lockID)
-	if err != nil {
-		return err
-	}
-	if lock.Coins.Len() != 1 {
-		return types.ErrMultipleCoinsLockupNotSupported
-	}
-
-	// prevent unbonding lockups to be not able to be used for superfluid staking
-	if lock.IsUnlocking() {
-		return types.ErrUnbondingLockupNotSupported
-	}
-
-	params := k.GetParams(ctx)
-
-	// length check
-	if lock.Duration < params.UnbondingDuration { // if less than bonding, skip
-		return types.ErrNotEnoughLockupDuration
-	}
-
 	// create intermediary account that converts LP token to OSMO
-	acc := types.SuperfluidIntermediaryAccount{
-		Denom:   lock.Coins[0].Denom,
-		ValAddr: valAddr,
-	}
+	acc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr, 0)
+	mAddr := acc.GetAccAddress()
 
-	mAddr := acc.GetAddress()
 	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
 	if twap.EpochTwapPrice.IsZero() {
 		return types.ErrZeroPriceAssetNotAllowed
@@ -229,7 +230,17 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, lockID uint64, valAddr strin
 	return nil
 }
 
-func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAddress, error) {
+func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) (sdk.ValAddress, error) {
+
+	lock, err := k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, err
+	}
+
+	if lock.Owner != sender {
+		return nil, lockuptypes.ErrNotLockOwner
+	}
+
 	// Remove previously created synthetic lockup
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if intermediaryAccAddr.Empty() {
@@ -237,7 +248,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 	}
 	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	suffix := stakingSuffix(intermediaryAcc.ValAddr)
-	err := k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
+	err = k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
 	if err != nil {
 		return nil, err
 	}
@@ -245,11 +256,6 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 	params := k.GetParams(ctx)
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration)
-	if err != nil {
-		return nil, err
-	}
-
-	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +271,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 	}
 
 	shares, err := k.sk.ValidateUnbondAmount(
-		ctx, intermediaryAcc.GetAddress(), valAddr, amt,
+		ctx, intermediaryAcc.GetAccAddress(), valAddr, amt,
 	)
 
 	if err != nil {
@@ -273,7 +279,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 	} else if shares.IsPositive() {
 		// Note: undelegated amount is automatically sent to intermediary account's free balance
 		// it is burnt on epoch interval
-		_, err = k.sk.Undelegate(ctx, intermediaryAcc.GetAddress(), valAddr, shares)
+		_, err = k.sk.Undelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
 		if err != nil {
 			return valAddr, err
 		}
@@ -283,11 +289,11 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, lockID uint64) (sdk.ValAdd
 	return valAddr, nil
 }
 
-func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr string) error {
+func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, sender string, lockID uint64, newValAddr string) error {
 	// Note: we prevent circular redelegations since when unbonding lockup is available from a specific validator,
 	// not able to redelegate or undelegate again, especially the case for automatic undelegation when native lockup unlock
 
-	valAddr, err := k.SuperfluidUndelegate(ctx, lockID)
+	valAddr, err := k.SuperfluidUndelegate(ctx, sender, lockID)
 	if err != nil {
 		return err
 	}
@@ -296,7 +302,7 @@ func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, lockID uint64, newValAddr 
 		return types.ErrSameValidatorRedelegation
 	}
 
-	return k.SuperfluidDelegate(ctx, lockID, newValAddr)
+	return k.SuperfluidDelegate(ctx, sender, lockID, newValAddr)
 }
 
 // TODO: Need to (eventually) override the existing staking messages and queries, for undelegating, delegating, rewards, and redelegating, to all be going through all superfluid module.

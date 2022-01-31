@@ -13,6 +13,14 @@ func NewSuperfluidAsset(assetType SuperfluidAssetType, denom string) SuperfluidA
 	}
 }
 
-func (a SuperfluidIntermediaryAccount) GetAddress() sdk.AccAddress {
+func NewSuperfluidIntermediaryAccount(denom string, valAddr string, gaugeId uint64) SuperfluidIntermediaryAccount {
+	return SuperfluidIntermediaryAccount{
+		Denom:   denom,
+		ValAddr: valAddr,
+		GaugeId: gaugeId,
+	}
+}
+
+func (a SuperfluidIntermediaryAccount) GetAccAddress() sdk.AccAddress {
 	return authtypes.NewModuleAddress(a.Denom + a.ValAddr)
 }

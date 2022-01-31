@@ -23,20 +23,20 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.MsgSuperfluidDelegate) (*types.MsgSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.SuperfluidDelegate(ctx, msg.LockId, msg.ValAddr)
+	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
 	return &types.MsgSuperfluidDelegateResponse{}, err
 }
 
 func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.MsgSuperfluidUndelegate) (*types.MsgSuperfluidUndelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := server.keeper.SuperfluidUndelegate(ctx, msg.LockId)
+	_, err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
 
 func (server msgServer) SuperfluidRedelegate(goCtx context.Context, msg *types.MsgSuperfluidRedelegate) (*types.MsgSuperfluidRedelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.SuperfluidRedelegate(ctx, msg.LockId, msg.NewValAddr)
+	err := server.keeper.SuperfluidRedelegate(ctx, msg.Sender, msg.LockId, msg.NewValAddr)
 	return &types.MsgSuperfluidRedelegateResponse{}, err
 }

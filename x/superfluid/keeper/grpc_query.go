@@ -26,3 +26,30 @@ func (k Keeper) AllAssets(goCtx context.Context, req *types.AllAssetsRequest) (*
 		Assets: assets,
 	}, nil
 }
+
+// AssetTwap returns superfluid asset TWAP
+func (k Keeper) AssetTwap(goCtx context.Context, req *types.AssetTwapRequest) (*types.AssetTwapResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	twap := k.GetCurrentEpochOsmoEquivalentTWAP(ctx, req.Denom)
+	return &types.AssetTwapResponse{
+		Twap: &twap,
+	}, nil
+}
+
+// AllIntermediaryAccounts returns all superfluid intermediary accounts
+func (k Keeper) AllIntermediaryAccounts(goCtx context.Context, req *types.AllIntermediaryAccountsRequest) (*types.AllIntermediaryAccountsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	accounts := k.GetAllIntermediaryAccounts(ctx)
+	accInfos := []types.SuperfluidIntermediaryAccountInfo{}
+	for _, acc := range accounts {
+		accInfos = append(accInfos, types.SuperfluidIntermediaryAccountInfo{
+			Denom:   acc.Denom,
+			ValAddr: acc.ValAddr,
+			GaugeId: acc.GaugeId,
+			Address: acc.GetAccAddress().String(),
+		})
+	}
+	return &types.AllIntermediaryAccountsResponse{
+		Accounts: accInfos,
+	}, nil
+}

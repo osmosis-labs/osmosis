@@ -1,0 +1,10 @@
+{
+   "title":"set superfluid assets",
+   "description":"set superfluid assets description",
+   "assets":[
+      {
+         "denom":"gamm/pool/1",
+         "asset_type":"SuperfluidAssetTypeLPShare"
+      }
+   ]
+}

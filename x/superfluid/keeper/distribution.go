@@ -7,7 +7,7 @@ import (
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
-		addr := acc.GetAddress()
+		addr := acc.GetAccAddress()
 		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
 		if err != nil {
 			panic(err)
