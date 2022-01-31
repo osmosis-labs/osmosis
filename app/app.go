@@ -1,6 +1,7 @@
 package app
 
 import (
+	// Imports from the Go Standard Library
 	"fmt"
 	"io"
 	"net/http"
@@ -8,16 +9,23 @@ import (
 	"path/filepath"
 	"strings"
 
+	// HTTP Router
+	"github.com/gorilla/mux"
+
+	// Used to serve OpenAPI information
 	"github.com/rakyll/statik/fs"
+
+	// A CLI helper
 	"github.com/spf13/cast"
+
+	// Imports from Tendermint, Osmosis' consensus protocol
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/x/authz"
-
+	// Utilities from the Cosmos-SDK other than Cosmos modules
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -32,6 +40,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	// Cosmos-SDK Modules
+	// https://github.com/cosmos/cosmos-sdk/tree/master/x
+	// NB: Osmosis uses a fork of the cosmos-sdk which can be found at: https://github.com/osmosis-labs/cosmos-sdk
+
+	// Auth: Authentication of accounts and transactions for Cosmos SDK applications.
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
@@ -39,86 +53,139 @@ import (
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	// Vesting: Allows the lock and periodic release of tokens
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
+	// Authz: Authorization for accounts to perform actions on behalf of other accounts.
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+
+	// Bank: allows users to transfer tokens
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	// Capability: allows developers to atomically define what a module can and cannot do
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
+	// Crisis: Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+
+	// Distribution: Fee distribution, and staking token provision distribution.
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
+	// Evidence handling for double signing, misbehaviour, etc.
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+
+	// Genesis Utilities: Used for evertything to do with the very first block of a chain
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	// Governance: Allows stakeholders to make decisions concering a Cosmos-SDK blockchain's economy and development
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	// Params: Parameters that are always available
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	// Slashing:
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+
+	// Staking: Allows the Tendermint validator set to be chosen based on bonded stake.
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	// Upgrade:  Software upgrades handling and coordination.
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v2/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
+
+	// IBC: Inter-blockchain communication
 	ibc "github.com/cosmos/ibc-go/v2/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
-	"github.com/gorilla/mux"
 
+	// Osmosis application prarmeters
 	appparams "github.com/osmosis-labs/osmosis/app/params"
+
+	// Upgrades from earlier versions of Osmosis
 	v4 "github.com/osmosis-labs/osmosis/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/app/upgrades/v5"
 	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
+
+	// Modules that live in the Osmosis repository and are specific to Osmosis
 	"github.com/osmosis-labs/osmosis/x/claim"
 	claimkeeper "github.com/osmosis-labs/osmosis/x/claim/keeper"
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
+
+	// Epochs: gives Osmosis a sense of "clock time" so that events can be based on days instead of "number of blocks"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+
+	// Generalized Automated Market Maker
 	"github.com/osmosis-labs/osmosis/x/gamm"
 	gammkeeper "github.com/osmosis-labs/osmosis/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+
+	// Incentives: Allows Osmosis and foriegn chain communities to incentivize users to provide liquidity
 	"github.com/osmosis-labs/osmosis/x/incentives"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+
+	// Lockup: allows tokens to be locked (made non-transferrable)
 	"github.com/osmosis-labs/osmosis/x/lockup"
 	lockupkeeper "github.com/osmosis-labs/osmosis/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+
+	// Mint: Our modified version of github.com/cosmos/cosmos-sdk/x/mint
 	"github.com/osmosis-labs/osmosis/x/mint"
 	mintkeeper "github.com/osmosis-labs/osmosis/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
+
+	// Pool incentives:
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+
+	// Superfluid: Allows users to stake gamm (bonded liquidity)
 	superfluid "github.com/osmosis-labs/osmosis/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
+
+	// txfees: Allows Osmosis to charge transaction fees without harming IBC user experience
 	"github.com/osmosis-labs/osmosis/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 
+	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
@@ -280,17 +347,37 @@ func NewOsmosisApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
+	// Define what keys will be used in the cosmos-sdk key/value store.
+	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
 	keys := sdk.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
-		epochstypes.StoreKey, poolincentivestypes.StoreKey, authzkeeper.StoreKey, txfeestypes.StoreKey,
+		authtypes.StoreKey,
+		banktypes.StoreKey,
+		stakingtypes.StoreKey,
+		minttypes.StoreKey,
+		distrtypes.StoreKey,
+		slashingtypes.StoreKey,
+		govtypes.StoreKey,
+		paramstypes.StoreKey,
+		ibchost.StoreKey,
+		upgradetypes.StoreKey,
+		evidencetypes.StoreKey,
+		ibctransfertypes.StoreKey,
+		capabilitytypes.StoreKey,
+		gammtypes.StoreKey,
+		lockuptypes.StoreKey,
+		claimtypes.StoreKey,
+		incentivestypes.StoreKey,
+		epochstypes.StoreKey,
+		poolincentivestypes.StoreKey,
+		authzkeeper.StoreKey,
+		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
 		bech32ibctypes.StoreKey,
 	)
+	// Define transient store keys
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+
+	// MemKeys are for information that is stored only in RAM.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &OsmosisApp{
@@ -361,18 +448,45 @@ func NewOsmosisApp(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
+	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
+
+	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
 	app.mm.SetOrderBeginBlockers(
 		// Upgrades should be run _very_ first
 		upgradetypes.ModuleName,
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
 		epochstypes.ModuleName,
-		minttypes.ModuleName, poolincentivestypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, capabilitytypes.ModuleName,
+		capabilitytypes.ModuleName,
+		minttypes.ModuleName,
+		poolincentivestypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
+		paramstypes.ModuleName, vestingtypes.ModuleName,
+		gammtypes.ModuleName, incentivestypes.ModuleName, lockuptypes.ModuleName, claimtypes.ModuleName,
+		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
 	)
+
+	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
 	app.mm.SetOrderEndBlockers(
 		lockuptypes.ModuleName,
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, claimtypes.ModuleName,
-		authz.ModuleName,
+		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
+		slashingtypes.ModuleName, minttypes.ModuleName,
+		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
+		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+		ibchost.ModuleName, ibctransfertypes.ModuleName,
+		gammtypes.ModuleName, incentivestypes.ModuleName, lockuptypes.ModuleName,
+		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 		epochstypes.ModuleName,
 	)
@@ -383,12 +497,24 @@ func NewOsmosisApp(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
-		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
+		slashingtypes.ModuleName,
+		govtypes.ModuleName,
+		minttypes.ModuleName,
+		crisistypes.ModuleName,
 		ibchost.ModuleName,
 		gammtypes.ModuleName,
 		txfeestypes.ModuleName,
-		genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibctransfertypes.ModuleName,
 		bech32ibctypes.ModuleName, // comes after ibctransfertypes
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
