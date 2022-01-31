@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [#795](https://github.com/osmosis-labs/osmosis/pull/795) Annotate app.go
 - [#791](https://github.com/osmosis-labs/osmosis/pull/791) Change to dependabot config to only upgrade patch version of tendermint
+- [#766](https://github.com/osmosis-labs/osmosis/pull/766) Consolidate code between InitGenesis and CreateGauge
 - [#722](https://github.com/osmosis-labs/osmosis/issues/722) reuse code for parsing integer slices from string
 - [#704](https://github.com/osmosis-labs/osmosis/pull/704) fix rocksdb
 - [#666](https://github.com/osmosis-labs/osmosis/pull/666) Fix the `--log-level` and `--log-format` commands on `osmosisd start`
