@@ -92,16 +92,6 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	}
 
-	if err != nil {
-		return err
-	}
-
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(gauge)
-	if err != nil {
-		return err
-	}
-	store.Set(gaugeStoreKey(gauge.Id), bz)
 	return nil
 }
 
