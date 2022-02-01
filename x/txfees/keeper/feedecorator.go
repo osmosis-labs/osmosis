@@ -8,11 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/x/txfees/types"
 )
 
-// DefaultArbMinGasFee if its not set in a config somewhere.
-// currently 0 uosmo/gas to preserve functionality with old node software
-// TODO: Bump after next minor version. (in 6.2+)
-var DefaultArbMinGasFee sdk.Dec = sdk.ZeroDec()
-
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).
 // If fee is too low, decorator returns error and tx is rejected from mempool.
@@ -20,19 +15,15 @@ var DefaultArbMinGasFee sdk.Dec = sdk.ZeroDec()
 // If fee is high enough or not CheckTx, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator
 type MempoolFeeDecorator struct {
-	TxFeesKeeper       Keeper
-	ConfigArbMinGasFee sdk.Dec
+	TxFeesKeeper Keeper
+	Opts         types.MempoolFeeOptions
 }
 
-func NewMempoolFeeDecorator(txFeesKeeper Keeper) MempoolFeeDecorator {
+func NewMempoolFeeDecorator(txFeesKeeper Keeper, opts types.MempoolFeeOptions) MempoolFeeDecorator {
 	return MempoolFeeDecorator{
-		TxFeesKeeper:       txFeesKeeper,
-		ConfigArbMinGasFee: DefaultArbMinGasFee.Clone(),
+		TxFeesKeeper: txFeesKeeper,
+		Opts:         opts,
 	}
-}
-
-func (mfd *MempoolFeeDecorator) SetArbMinGasFee(dec sdk.Dec) {
-	mfd.ConfigArbMinGasFee = dec
 }
 
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -42,6 +33,16 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	// Ensure that the provided gas is less than the maximum gas per tx,
+	// if this is a CheckTx. This is only for local mempool purposes, and thus
+	// is only ran on check tx.
+	if ctx.IsCheckTx() && !simulate {
+		if feeTx.GetGas() > mfd.Opts.MaxGasWantedPerTx {
+			msg := "Too much gas wanted: %d, maximum is %d"
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, msg, feeTx.GetGas(), mfd.Opts.MaxGasWantedPerTx)
+		}
 	}
 
 	feeCoins := feeTx.GetFee()
@@ -71,7 +72,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// So we ensure that the provided fees meet a minimum threshold for the validator,
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, tx)
+		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
 		if !(minBaseGasPrice.IsZero()) {
 			if len(feeCoins) != 1 {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
@@ -108,11 +109,13 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	return nil
 }
 
-func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.Tx) sdk.Dec {
+func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) sdk.Dec {
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
-
+	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
+		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
+	}
 	if txfee_filters.IsArbTxLoose(tx) {
-		return sdk.MaxDec(cfgMinGasPrice, mfd.ConfigArbMinGasFee)
+		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
 	return cfgMinGasPrice
 }

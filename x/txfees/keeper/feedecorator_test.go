@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/txfees/types"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 
@@ -11,6 +12,8 @@ import (
 func (suite *KeeperTestSuite) TestFeeDecorator() {
 	suite.SetupTest(false)
 
+	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
+	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
 	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
 
 	uion := "uion"
@@ -131,6 +134,30 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			isCheckTx:    true,
 			expectPass:   true,
 		},
+		{
+			name:         "tx with gas wanted more than allowed should not pass",
+			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 100000000)),
+			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
+			gasRequested: mempoolFeeOpts.MaxGasWantedPerTx + 1,
+			isCheckTx:    true,
+			expectPass:   false,
+		},
+		{
+			name:         "tx with high gas and not enough fee should no pass",
+			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 1)),
+			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
+			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
+			isCheckTx:    true,
+			expectPass:   false,
+		},
+		{
+			name:         "tx with high gas and enough fee should pass",
+			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 10*1000)),
+			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
+			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
+			isCheckTx:    true,
+			expectPass:   true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -143,7 +170,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			tc.txFee,
 		), []legacytx.StdSignature{}, "")
 
-		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper)
+		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper, mempoolFeeOpts)
 		antehandler := sdk.ChainAnteDecorators(mfd)
 		_, err := antehandler(suite.ctx, tx, false)
 		if tc.expectPass {
