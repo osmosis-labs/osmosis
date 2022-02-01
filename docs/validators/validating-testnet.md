@@ -55,10 +55,10 @@ Here is the same command but with example values:
 osmosisd tx staking create-validator \
 --from=wallet1 \
 --amount=500000000uosmo \
---pubkey=osmovalconspub1zcjduepqrevtrgcntyz04w9yzwvpy2ddf2h5pyu2tczgf9dssmywty0tzqzs0gwu0r  \
+--pubkey=$(osmosisd tendermint show-validator)  \
 --moniker="Wosmongton" \
 --security-contact="wosmongton@osmosis.labs" \
---chain-id="osmosis-testnet-0" \
+--chain-id="osmo-testnet-1" \
 --commission-rate="0.1" \
 --commission-max-rate="0.2" \
 --commission-max-change-rate="0.05" \
@@ -111,11 +111,11 @@ osmosisd tendermint show-validator
 Use your validators public key queried above:
 
 ```bash
-osmosisd query slashing signing-info [validator-pubkey] --chain-id osmosis-testnet-0
+osmosisd query slashing signing-info [validator-pubkey] --chain-id osmo-testnet-1
 ```
 
 Example:
 
 ```bash
-osmosisd query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"HlixoxNZBPq4pBOYEimtSq9Ak4peBISVsIbI5ZHrEAU="}' --chain-id osmosis-testnet-0
+osmosisd query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"HlixoxNZBPq4pBOYEimtSq9Ak4peBISVsIbI5ZHrEAU="}' --chain-id osmo-testnet-1
 ```
