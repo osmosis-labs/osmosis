@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/cosmos/go-bip39"
@@ -80,6 +81,21 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
+			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode.
+			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
+
+			seeds := []string{
+				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",               // Notional
+				"295b417f995073d09ff4c6c141bd138a7f7b5922@65.21.141.212:2000",                // Notional
+				"ec4d3571bf709ab78df61716e47b5ac03d077a1a@65.108.43.26:2000",                 // Notional
+				"4cb8e1e089bdf44741b32638591944dc15b7cce3@65.108.73.18:2000",                 // Notional
+				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656",       // [ block pane ]
+				"6bcdbcfd5d2c6ba58460f10dbcfde58278212833@osmosis.artifact-staking.io:26656", // Artifact Staking
+			}
+
+			config.P2P.Seeds = strings.Join(seeds[:], ",")
+
+			config.P2P.MaxNumInboundPeers = 320
 			config.P2P.MaxNumOutboundPeers = 40
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
