@@ -7,18 +7,31 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
+
+func TestNoStorageWithoutProposal(t *testing.T) {
+	// we use default config
+	osmosis, ctx := CreateTestInput()
+
+	wasmKeeper := osmosis.WasmKeeper
+	// this wraps wasmKeeper, providing interfaces exposed to external messages
+	contractKeeper := keeper.NewDefaultPermissionKeeper(&wasmKeeper)
+
+	_, _, creator := keyPubAddr()
+
+	// upload reflect code
+	wasmCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	require.NoError(t, err)
+	_, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
+	require.Error(t, err)
+}
 
 func TestStoreCodeProposal(t *testing.T) {
 	osmosis, ctx := CreateTestInput()
 
 	govKeeper, wasmKeeper := osmosis.GovKeeper, osmosis.WasmKeeper
-	wasmKeeper.SetParams(ctx, types.Params{
-		CodeUploadAccess:             types.AllowNobody,
-		InstantiateDefaultPermission: types.AccessTypeNobody,
-		MaxWasmCodeSize:              types.DefaultMaxWasmCodeSize,
-	})
 	wasmCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
 
