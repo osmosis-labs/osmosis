@@ -1,6 +1,7 @@
 package wasmtest
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"testing"
 
@@ -9,6 +10,9 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/app"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
@@ -28,17 +32,13 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestStoreCodeProposal(t *testing.T) {
-	osmosis, ctx := CreateTestInput()
-
-	govKeeper, wasmKeeper := osmosis.GovKeeper, osmosis.WasmKeeper
+func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
+	govKeeper := osmosis.GovKeeper
 	wasmCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
 
-	myActorAddress := RandomBech32AccountAddress()
-
 	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
-		p.RunAs = myActorAddress
+		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
 	})
 
@@ -51,13 +51,51 @@ func TestStoreCodeProposal(t *testing.T) {
 	err = handler(ctx, storedProposal.GetContent())
 	require.NoError(t, err)
 
+}
+
+func TestStoreCodeProposal(t *testing.T) {
+	osmosis, ctx := CreateTestInput()
+	myActorAddress := RandomAccountAddress()
+	wasmKeeper := osmosis.WasmKeeper
+
+	storeCodeViaProposal(t, ctx, osmosis, myActorAddress)
+
 	// then
 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
 	require.NotNil(t, cInfo)
-	assert.Equal(t, myActorAddress, cInfo.Creator)
+	assert.Equal(t, myActorAddress.String(), cInfo.Creator)
 	assert.True(t, wasmKeeper.IsPinnedCode(ctx, 1))
 
 	storedCode, err := wasmKeeper.GetByteCode(ctx, 1)
 	require.NoError(t, err)
+	wasmCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	require.NoError(t, err)
 	assert.Equal(t, wasmCode, storedCode)
+}
+
+type HackatomExampleInitMsg struct {
+	Verifier    sdk.AccAddress `json:"verifier"`
+	Beneficiary sdk.AccAddress `json:"beneficiary"`
+}
+
+func TestInstantiateContract(t *testing.T) {
+	osmosis, ctx := CreateTestInput()
+	funder := RandomAccountAddress()
+	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
+	FundAccount(t, ctx, osmosis, funder)
+
+	storeCodeViaProposal(t, ctx, osmosis, funder)
+	contractKeeper := keeper.NewDefaultPermissionKeeper(&osmosis.WasmKeeper)
+	codeID := uint64(1)
+
+	initMsg := HackatomExampleInitMsg{
+		Verifier:    arb,
+		Beneficiary: benefit,
+	}
+	initMsgBz, err := json.Marshal(initMsg)
+	require.NoError(t, err)
+
+	funds := sdk.NewInt64Coin("uosmo", 123456)
+	_, _, err = contractKeeper.Instantiate(ctx, codeID, funder, funder, initMsgBz, "demo contract", sdk.Coins{funds})
+	require.NoError(t, err)
 }

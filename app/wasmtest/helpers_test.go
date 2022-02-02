@@ -1,8 +1,11 @@
 package wasmtest
 
 import (
+	"github.com/stretchr/testify/require"
+	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -15,6 +18,13 @@ func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
 	osmosis := app.Setup(false)
 	ctx := osmosis.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 	return osmosis, ctx
+}
+
+func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sdk.AccAddress) {
+	err := simapp.FundAccount(osmosis.BankKeeper, ctx, acct, sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+	))
+	require.NoError(t, err)
 }
 
 // we need to make this deterministic (same every test run), as content might affect gas costs
