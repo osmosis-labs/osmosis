@@ -104,13 +104,13 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
      Block Explorer
     </div>
   </a>
-  <a href="https://ping.pub/osmosis" class="card lg" target="_blank">
-    <img src="img/ping.png">
+  <a href="https://bigdipper.testnet.osmo.mp20.net/" class="card lg" target="_blank">
+    <img src="img/big_dipper.png">
     <div class="title">
-     Ping.pub
+     Big Dipper V2
     </div>
     <div class="text">
-     Block Explorer
+     Testnet Block Explorer
     </div>
   </a>
 </div>
@@ -144,4 +144,15 @@ Welcome to the official documentation for Osmosis, an advanced automated market 
     </div>
   </a>
 </div>
-
+<br />
+<div class="cards threeColumn">
+  <a href="https://ping.pub/osmosis" class="card lg" target="_blank">
+    <img src="img/ping.png">
+    <div class="title">
+     Ping.pub
+    </div>
+    <div class="text">
+     Block Explorer
+    </div>
+  </a>
+</div>
