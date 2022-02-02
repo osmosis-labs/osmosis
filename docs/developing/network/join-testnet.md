@@ -28,7 +28,7 @@ seeds = "f5051996db0e0df69c55c36977407a9b8f94edb4@159.203.100.232:26656"
 Next, add persistent peers:
 
 ```bash
-persistent_peers = "edd2b4968f012148641205b8ddd29f1beae8ab09@68.183.153.16:26656,e159391f00e8127d8e6ec1319b04633ffc33ed1a@165.227.122.46:26656"
+persistent_peers = "b894030ba5cf2dab4fbe092eb659004d70d7dc90@142.93.177.164:26656,e159391f00e8127d8e6ec1319b04633ffc33ed1a@165.227.122.46:26656"
 ```
 
 Then press ```Ctrl+O``` then enter to save, then ```Ctrl+X``` to exit
