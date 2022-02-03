@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -240,6 +241,7 @@ func (suite *KeeperTestSuite) TestLockAndUnlockFor14Days() {
 		estLockReward, err := suite.app.IncentivesKeeper.EstimateLockReward(suite.ctx, *lock)
 
 		suite.Require().NoError(err)
+		fmt.Println(i)
 		suite.Require().Equal(reward, estLockReward.Rewards)
 	}
 

@@ -43,7 +43,7 @@ message LockableDurationsInfo {
   ];
 }
 
-// HistoricalReward stores the accumulator value for rewards
+// HistoricalReward stores the accumulator value for rewards, indexed by lockDuration + denom + epochNumber combination
 message HistoricalReward {
   // Reward per share for each denom
   repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
@@ -67,7 +67,7 @@ message CurrentReward {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   // denom of share
-  string denom = 4;
+  string lock_denom = 4;
   google.protobuf.Duration lock_duration = 5 [
     (gogoproto.stdduration) = true,
     (gogoproto.nullable) = false,

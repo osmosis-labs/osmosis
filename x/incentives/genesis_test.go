@@ -55,7 +55,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	currentReward := types.CurrentReward{
 		LastProcessedEpoch: 5,
 		TotalShares:        sdk.NewCoin("stake", sdk.NewInt(10)),
-		Denom:              denom,
+		LockDenom:          denom,
 		LockDuration:       duration,
 	}
 	app.IncentivesKeeper.SetCurrentReward(ctx, currentReward, denom, duration)

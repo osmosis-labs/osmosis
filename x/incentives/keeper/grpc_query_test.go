@@ -334,7 +334,7 @@ func (suite *KeeperTestSuite) TestGRPCCurrentReward() {
 		LastProcessedEpoch: 1,
 		TotalShares:        sdk.NewInt64Coin("stake", 100),
 		Rewards:            sdk.Coins{sdk.NewInt64Coin("reward", 100)},
-		Denom:              denom,
+		LockDenom:          denom,
 		LockDuration:       duration,
 	}
 
@@ -399,7 +399,7 @@ func (suite *KeeperTestSuite) TestGRPCRewards() {
 		LastProcessedEpoch: 1,
 		TotalShares:        sdk.NewInt64Coin("lptoken", 100),
 		Rewards:            sdk.Coins{sdk.NewInt64Coin("reward", 100)},
-		Denom:              denom,
+		LockDenom:          denom,
 		LockDuration:       duration,
 	}
 

@@ -51,7 +51,7 @@ func (k Keeper) SetCurrentReward(ctx sdk.Context, currentReward types.CurrentRew
 	store := ctx.KVStore(k.storeKey)
 	rewardKey := combineKeys(types.KeyCurrentReward, []byte(denom+"/"+lockDuration.String()))
 
-	currentReward.Denom = denom
+	currentReward.LockDenom = denom
 	currentReward.LockDuration = lockDuration
 	bz, err := proto.Marshal(&currentReward)
 	if err != nil {

@@ -21,7 +21,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 	for _, genesisReward := range genState.GenesisReward {
 		currentReward := genesisReward.CurrentReward
-		denom := currentReward.Denom
+		denom := currentReward.LockDenom
 		duration := currentReward.LockDuration
 		err := k.SetCurrentReward(ctx, currentReward, denom, duration)
 		if err != nil {
@@ -56,7 +56,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 func GetGenesisRewards(ctx sdk.Context, k keeper.Keeper) []types.GenesisReward {
 	var genesisRewards []types.GenesisReward
 	for _, currentReward := range k.GetAllCurrentReward(ctx) {
-		denom := currentReward.Denom
+		denom := currentReward.LockDenom
 		duration := currentReward.LockDuration
 		genesisReward := types.GenesisReward{}
 		genesisReward.CurrentReward = currentReward
@@ -70,7 +70,7 @@ func GetGenesisRewards(ctx sdk.Context, k keeper.Keeper) []types.GenesisReward {
 			}
 			historicalRewards = append(historicalRewards, historicalReward)
 
-			latestEpoch, err = k.GetLatestEpochForHistoricalReward(ctx, currentReward.Denom, currentReward.LockDuration, latestEpoch)
+			latestEpoch, err = k.GetLatestEpochForHistoricalReward(ctx, currentReward.LockDenom, currentReward.LockDuration, latestEpoch)
 			if err != nil {
 				panic(fmt.Sprintf("unable to retrieve historical reward for denom(%v) d(%v) period(%v)", denom, duration, latestEpoch))
 			}
