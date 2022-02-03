@@ -20,6 +20,17 @@ func unstakingSuffix(valAddr string) string {
 	return fmt.Sprintf("superunbonding%s", valAddr)
 }
 
+func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
+	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, denom)
+	if twap.EpochTwapPrice.IsZero() {
+		return sdk.ZeroInt()
+	}
+
+	decAmt := twap.EpochTwapPrice.Mul(amount.ToDec())
+	asset := k.GetSuperfluidAsset(ctx, denom)
+	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
+}
+
 func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
@@ -74,11 +85,6 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			}
 		}
 
-		twap := k.GetCurrentEpochOsmoEquivalentTWAP(ctx, acc.Denom)
-		if twap.EpochTwapPrice.IsZero() {
-			continue
-		}
-
 		// mint OSMO token based on TWAP of locked denom to denom module account
 		// Get total delegation from synthetic lockups
 		totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
@@ -86,10 +92,8 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
 			Duration:      time.Hour * 24 * 14,
 		})
-		decAmt := twap.EpochTwapPrice.Mul(totalSuperfluidDelegation.ToDec())
-		asset := k.GetSuperfluidAsset(ctx, acc.Denom)
-		amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 
+		amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
 		if amt.IsZero() {
 			continue
 		}
@@ -119,6 +123,49 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			write()
 		}
 	}
+}
+
+func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sdk.Coins) error {
+	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	if intermediaryAccAddr.Empty() {
+		return nil
+	}
+
+	acc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
+	valAddr := acc.ValAddr
+
+	// mint OSMO token based on TWAP of locked denom to denom module account
+	bondDenom := k.sk.BondDenom(ctx)
+	amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
+	if amt.IsZero() {
+		return nil
+	}
+
+	coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
+	err := k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	if err != nil {
+		return err
+	}
+
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, intermediaryAccAddr, coins)
+	if err != nil {
+		return err
+	}
+
+	// make delegation from module account to the validator
+	valAddress, err := sdk.ValAddressFromBech32(valAddr)
+	if err != nil {
+		return err
+	}
+	validator, found := k.sk.GetValidator(ctx, valAddress)
+	if !found {
+		return stakingtypes.ErrNoValidatorFound
+	}
+	_, err = k.sk.Delegate(ctx, intermediaryAccAddr, amt, stakingtypes.Unbonded, validator, true)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
@@ -170,16 +217,13 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	acc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr, 0)
 	mAddr := acc.GetAccAddress()
 
-	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
-	if twap.EpochTwapPrice.IsZero() {
-		return types.ErrZeroPriceAssetNotAllowed
-	}
 	// mint OSMO token based on TWAP of locked denom to denom module account
-	decAmt := twap.EpochTwapPrice.Mul(lock.Coins.AmountOf(acc.Denom).ToDec())
-	asset := k.GetSuperfluidAsset(ctx, acc.Denom)
-	amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
-
 	bondDenom := k.sk.BondDenom(ctx)
+	amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lock.Coins.AmountOf(acc.Denom))
+	if amt.IsZero() {
+		return types.ErrOsmoEquivalentZeroNotAllowed
+	}
+
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
 	err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
@@ -260,10 +304,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 		return nil, err
 	}
 
-	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, intermediaryAcc.Denom)
-	decAmt := twap.EpochTwapPrice.Mul(lock.Coins.AmountOf(intermediaryAcc.Denom).ToDec())
-	asset := k.GetSuperfluidAsset(ctx, intermediaryAcc.Denom)
-	amt := k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
+	amt := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lock.Coins.AmountOf(intermediaryAcc.Denom))
 
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {

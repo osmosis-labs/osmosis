@@ -349,6 +349,13 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 
 	// increase synthetic lockup's accumulation store
 	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+
+	// when synthetic lockup exists for the lockup, disallow adding different coins
+	if len(synthLocks) > 0 && len(lock.Coins) > 1 {
+		return fmt.Errorf("multiple tokens lockup is not allowed for superfluid")
+	}
+
+	// Note: as long as token denoms does not change, synthetic lockup references are not needed to change
 	for _, synthLock := range synthLocks {
 		sCoins := syntheticCoins(lock.Coins, synthLock.Suffix)
 		for _, coin := range sCoins {
@@ -362,6 +369,9 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 
 // removeTokensFromLock is called by lockup slash function - called by superfluid module only
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
+	// TODO: how to handle full slash for both normal lockup
+	// TODO: how to handle full slash for superfluid delegated lockup?
+
 	lock.Coins = lock.Coins.Sub(coins)
 
 	err := k.setLock(ctx, *lock)
