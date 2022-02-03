@@ -1,7 +1,12 @@
 package app
 
 import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -85,6 +90,7 @@ func (app *OsmosisApp) InitSpecialKeepers(
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	app.ScopedIBCKeeper = app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	app.ScopedWasmKeeper = app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	app.CapabilityKeeper.Seal()
 
 	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
@@ -104,7 +110,13 @@ func (app *OsmosisApp) InitSpecialKeepers(
 	app.UpgradeKeeper = &upgradeKeeper
 }
 
-func (app *OsmosisApp) InitNormalKeepers() {
+// Note: I put x/wasm here as I need to write it up to these other ones
+func (app *OsmosisApp) InitNormalKeepers(
+	homePath string,
+	appOpts servertypes.AppOptions,
+	wasmEnabledProposals []wasm.ProposalType,
+	wasmOpts []wasm.Option,
+) {
 	appCodec := app.appCodec
 	bApp := app.BaseApp
 	keys := app.keys
@@ -176,7 +188,7 @@ func (app *OsmosisApp) InitNormalKeepers() {
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, app.transferModule)
-	app.IBCKeeper.SetRouter(ibcRouter)
+	// Note: the sealing is done after creating wasmd and wiring that up
 
 	app.Bech32IBCKeeper = bech32ibckeeper.NewKeeper(
 		app.IBCKeeper.ChannelKeeper, appCodec, keys[bech32ibctypes.StoreKey],
@@ -257,6 +269,40 @@ func (app *OsmosisApp) InitNormalKeepers() {
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic(fmt.Sprintf("error while reading wasm config: %s", err))
+	}
+
+	// The last arguments can contain custom message handlers, and custom query handlers,
+	// if we want to allow any custom callbacks
+	supportedFeatures := "iterator,staking,stargate"
+	wasmKeeper := wasm.NewKeeper(
+		appCodec,
+		keys[wasm.StoreKey],
+		app.GetSubspace(wasm.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		app.ScopedWasmKeeper,
+		app.TransferKeeper,
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		supportedFeatures,
+		wasmOpts...,
+	)
+	app.WasmKeeper = &wasmKeeper
+
+	// wire up x/wasm to IBC
+	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper))
+	app.IBCKeeper.SetRouter(ibcRouter)
+
 	// register the proposal types
 	// TODO: This appears to be missing tx fees proposal type
 	govRouter := govtypes.NewRouter()
@@ -269,6 +315,11 @@ func (app *OsmosisApp) InitNormalKeepers() {
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*app.PoolIncentivesKeeper)).
 		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IBCKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper))
+
+	// The gov proposal types can be individually enabled
+	if len(wasmEnabledProposals) != 0 {
+		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasmEnabledProposals))
+	}
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey],

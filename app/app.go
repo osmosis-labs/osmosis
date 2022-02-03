@@ -185,6 +185,9 @@ import (
 	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+
 	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
@@ -194,6 +197,36 @@ import (
 )
 
 const appName = "OsmosisApp"
+
+var (
+	// If EnableSpecificWasmProposals is "", and this is "true", then enable all x/wasm proposals.
+	// If EnableSpecificWasmProposals is "", and this is not "true", then disable all x/wasm proposals.
+	WasmProposalsEnabled = "true"
+	// If set to non-empty string it must be comma-separated list of values that are all a subset
+	// of "EnableAllProposals" (takes precedence over WasmProposalsEnabled)
+	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
+	EnableSpecificWasmProposals = ""
+
+	// use this for clarity in argument list
+	EmptyWasmOpts []wasm.Option
+)
+
+// GetWasmEnabledProposals parses the WasmProposalsEnabled / EnableSpecificWasmProposals values to
+// produce a list of enabled proposals to pass into wasmd app.
+func GetWasmEnabledProposals() []wasm.ProposalType {
+	if EnableSpecificWasmProposals == "" {
+		if WasmProposalsEnabled == "true" {
+			return wasm.EnableAllProposals
+		}
+		return wasm.DisableAllProposals
+	}
+	chunks := strings.Split(EnableSpecificWasmProposals, ",")
+	proposals, err := wasm.ConvertToProposals(chunks)
+	if err != nil {
+		panic(err)
+	}
+	return proposals
+}
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -211,9 +244,11 @@ var (
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
-			poolincentivesclient.UpdatePoolIncentivesHandler,
-			ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
+			append(
+				wasmclient.ProposalHandlers,
+				paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+				poolincentivesclient.UpdatePoolIncentivesHandler,
+				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler)...,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -233,6 +268,7 @@ var (
 		claim.AppModuleBasic{},
 		superfluid.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
+		wasm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -252,6 +288,7 @@ var (
 		poolincentivestypes.ModuleName:           nil,
 		superfluidtypes.ModuleName:               nil,
 		txfeestypes.ModuleName:                   nil,
+		wasm.ModuleName:                          {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -288,6 +325,7 @@ type OsmosisApp struct {
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+	ScopedWasmKeeper     capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
 	AccountKeeper        *authkeeper.AccountKeeper
@@ -311,6 +349,7 @@ type OsmosisApp struct {
 	TxFeesKeeper         *txfeeskeeper.Keeper
 	SuperfluidKeeper     superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
+	WasmKeeper           *wasm.Keeper
 
 	transferModule transfer.AppModule
 	// the module manager
@@ -335,7 +374,9 @@ func init() {
 // NewOsmosis returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions,
+	wasmEnabledProposals []wasm.ProposalType, wasmOpts []wasm.Option,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 
 	appCodec := encodingConfig.Marshaler
@@ -373,6 +414,7 @@ func NewOsmosisApp(
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
 		bech32ibctypes.StoreKey,
+		wasm.StoreKey,
 	)
 	// Define transient store keys
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -393,7 +435,7 @@ func NewOsmosisApp(
 
 	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers()
+	app.InitNormalKeepers(homePath, appOpts, wasmEnabledProposals, wasmOpts)
 	app.SetupHooks()
 	app.setupUpgradeHandlers()
 
@@ -428,6 +470,7 @@ func NewOsmosisApp(
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(*app.UpgradeKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
@@ -474,6 +517,7 @@ func NewOsmosisApp(
 		paramstypes.ModuleName, vestingtypes.ModuleName,
 		gammtypes.ModuleName, incentivestypes.ModuleName, lockuptypes.ModuleName, claimtypes.ModuleName,
 		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
+		wasm.ModuleName,
 	)
 
 	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
@@ -489,6 +533,7 @@ func NewOsmosisApp(
 		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 		epochstypes.ModuleName,
+		wasm.ModuleName,
 	)
 
 	// NOTE: The genutils moodule must occur after staking so that pools are
@@ -523,6 +568,8 @@ func NewOsmosisApp(
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+		// wasm after ibc transfer
+		wasm.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -548,6 +595,7 @@ func NewOsmosisApp(
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
@@ -842,6 +890,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
 
 	return paramsKeeper
 }

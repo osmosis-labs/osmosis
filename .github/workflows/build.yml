@@ -15,11 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [amd64, arm64]
+        arch: [amd64]
         targetos: [darwin, linux]
-        include:
-          - targetos: windows
-            arch: amd64
+#        include:
+#          - targetos: windows
+#            arch: amd64
     name: osmosis ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v2
