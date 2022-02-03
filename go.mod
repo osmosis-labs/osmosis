@@ -121,9 +121,6 @@ require (
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
-)
-
-require (
 	github.com/dgraph-io/badger/v2 v2.2007.3 // indirect
 	github.com/prometheus/client_golang v1.12.0
 )
