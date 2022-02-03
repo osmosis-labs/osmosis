@@ -21,7 +21,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 
 	wasmKeeper := osmosis.WasmKeeper
 	// this wraps wasmKeeper, providing interfaces exposed to external messages
-	contractKeeper := keeper.NewDefaultPermissionKeeper(&wasmKeeper)
+	contractKeeper := keeper.NewDefaultPermissionKeeper(wasmKeeper)
 
 	_, _, creator := keyPubAddr()
 
@@ -85,7 +85,7 @@ func TestInstantiateContract(t *testing.T) {
 	FundAccount(t, ctx, osmosis, funder)
 
 	storeCodeViaProposal(t, ctx, osmosis, funder)
-	contractKeeper := keeper.NewDefaultPermissionKeeper(&osmosis.WasmKeeper)
+	contractKeeper := keeper.NewDefaultPermissionKeeper(osmosis.WasmKeeper)
 	codeID := uint64(1)
 
 	initMsg := HackatomExampleInitMsg{

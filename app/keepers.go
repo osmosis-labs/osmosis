@@ -114,7 +114,7 @@ func (app *OsmosisApp) InitSpecialKeepers(
 func (app *OsmosisApp) InitNormalKeepers(
 	homePath string,
 	appOpts servertypes.AppOptions,
-	enabledProposals []wasm.ProposalType,
+	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 ) {
 	appCodec := app.appCodec
@@ -278,7 +278,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate"
-	app.WasmKeeper = wasm.NewKeeper(
+	wasmKeeper := wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
 		app.GetSubspace(wasm.ModuleName),
@@ -297,6 +297,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		supportedFeatures,
 		wasmOpts...,
 	)
+	app.WasmKeeper = &wasmKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper))
@@ -316,8 +317,8 @@ func (app *OsmosisApp) InitNormalKeepers(
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper))
 
 	// The gov proposal types can be individually enabled
-	if len(enabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, enabledProposals))
+	if len(wasmEnabledProposals) != 0 {
+		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasmEnabledProposals))
 	}
 
 	govKeeper := govkeeper.NewKeeper(

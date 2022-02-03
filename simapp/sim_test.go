@@ -78,7 +78,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		sdkSimapp.FlagPeriodValue,
 		app.MakeEncodingConfig(),
 		sdkSimapp.EmptyAppOptions{},
-		app.GetEnabledProposals(),
+		app.GetWasmEnabledProposals(),
 		app.EmptyWasmOpts,
 		interBlockCacheOpt(),
 		fauxMerkleModeOpt)
@@ -156,7 +156,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				sdkSimapp.FlagPeriodValue,
 				app.MakeEncodingConfig(),
 				sdkSimapp.EmptyAppOptions{},
-				app.GetEnabledProposals(),
+				app.GetWasmEnabledProposals(),
 				app.EmptyWasmOpts,
 				interBlockCacheOpt())
 
