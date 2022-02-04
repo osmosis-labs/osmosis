@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -102,6 +103,9 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.StateSync.SnapshotInterval = 1500
 	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.MinGasPrices = "0uosmo"
+
+	// 128MB IAVL cache
+	srvCfg.IAVLCacheSize = 781250
 
 	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.01"}
 
