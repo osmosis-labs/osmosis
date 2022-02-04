@@ -263,50 +263,73 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
 		superDelegations      []superfluidDelegation
+		addMoreTokensLockIds  []uint64
 		superUnbondingLockIds []uint64
 		expSuperUnbondingErr  []bool
+		expInterDelegation    []sdk.Dec
 	}{
 		{
 			"with single validator and single superfluid delegation and single undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]uint64{},
 			[]uint64{1},
 			[]bool{false},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+		{
+			"with single validator, single superfluid delegation, add more tokens to the lock, and single undelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]uint64{1},
+			[]uint64{1},
+			[]bool{false},
+			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
 			"with single validator and multiple superfluid delegations and single undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]uint64{},
 			[]uint64{1},
 			[]bool{false},
+			[]sdk.Dec{sdk.NewDec(19000000)},
 		},
 		{
 			"with single validator and multiple superfluid delegations and multiple undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]uint64{},
 			[]uint64{1, 2},
 			[]bool{false, false},
+			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations and multiple undelegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]uint64{},
 			[]uint64{1, 2},
 			[]bool{false, false},
+			[]sdk.Dec{sdk.ZeroDec()},
 		},
 		{
 			"undelegating not available lock id",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]uint64{},
 			[]uint64{2},
 			[]bool{true},
+			[]sdk.Dec{sdk.NewDec(19000000)},
 		},
 		{
 			"try undelegating twice for same lock id",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]uint64{},
 			[]uint64{1, 1},
 			[]bool{false, true},
+			[]sdk.Dec{sdk.ZeroDec()},
 		},
 	}
 
@@ -324,6 +347,18 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			// setup superfluid delegations
 			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+
+			for _, lockId := range tc.addMoreTokensLockIds {
+				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
+				suite.Require().NoError(err)
+				lockOwner, err := sdk.AccAddressFromBech32(lock.Owner)
+				suite.Require().NoError(err)
+				coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
+				suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, lockOwner, coins)
+				_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, lockOwner, lockId, coins)
+				suite.Require().NoError(err)
+			}
 
 			for index, lockId := range tc.superUnbondingLockIds {
 				// get intermediary account
@@ -359,6 +394,20 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
 				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddr))
 				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(params.UnbondingDuration))
+			}
+
+			// check remaining intermediary account delegation
+			for index, expDelegation := range tc.expInterDelegation {
+				acc := intermediaryAccs[index]
+				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
+				suite.Require().NoError(err)
+				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAccAddress(), valAddr)
+				if expDelegation.IsZero() {
+					suite.Require().False(found)
+				} else {
+					suite.Require().True(found)
+					suite.Require().Equal(expDelegation, delegation.Shares)
+				}
 			}
 
 			// try undelegating twice

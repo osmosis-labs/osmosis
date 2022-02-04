@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,12 +17,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
 		// Slash all module accounts' LP token based on slash amount before twap update
-		fmt.Println("AfterEpochEnd1")
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 				// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 				poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
-				fmt.Println("AfterEpochEnd2", poolId)
 				pool, err := k.gk.GetPool(ctx, poolId)
 				if err != nil {
 					k.Logger(ctx).Error(err.Error())
@@ -31,7 +28,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					continue
 				}
 
-				fmt.Println("AfterEpochEnd3", poolId)
 				// get OSMO amount
 				bondDenom := k.sk.BondDenom(ctx)
 				osmoPoolAsset, err := pool.GetPoolAsset(bondDenom)
@@ -42,7 +38,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				}
 
 				twap := osmoPoolAsset.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
-				fmt.Println("AfterEpochEnd4", twap.String())
 				k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
 			} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 				// TODO: should get twap price from gamm module and use the price

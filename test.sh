@@ -30,8 +30,13 @@ nano stake-valtoken.json
 # (I think it's not mandatory since it should be updated on intermediary account side - but in case other slash exists, could add hook for refreshing that lockup)
 # - Should clarify last TWAP and current twap thoughts
 # - Fix unit tests
+# - add unit test for superfluid delegate, add more tokens, undelegate and remaining amount is zero for intermediary account
+# - add cli command for checking all superfluid assets
+# - add query for intermediary account connected to lockup by id
 
-# - Bug: Delegation exists after superfluid delegate, add more tokens, undelegate
+# - BugCLI: Delegation exists after superfluid undelegate 
+# - BugCLI: Delegation exists after superfluid delegate, add more tokens, undelegate 
+# Thoughts: - probably issue with staking query - if it involves unbonding queries as well
 
 # - Check delegation amount changes when add more tokens to existing lock
 # - Check the case adding more tokens to locks after starting redelegation or undelegation
@@ -83,11 +88,11 @@ osmosisd query gov proposals
 osmosisd query superfluid asset-twap gamm/pool/1
 osmosisd query superfluid all-intermediary-accounts
 
-osmosisd tx superfluid delegate 1 osmovaloper1l7tnl5fgcw4aad2lsl3hcgteg5fyl29mx63wcn --from=validator --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes
+osmosisd tx superfluid delegate 1 osmovaloper1zv64jqmcmlevtagp2wz2hutzhsgcxluwnlumm9 --from=validator --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes
 osmosisd tx superfluid undelegate 1 --from=validator --keyring-backend=test --chain-id=testing  --broadcast-mode=block --yes
-osmosisd tx superfluid redelegate 1 osmovaloper1l7tnl5fgcw4aad2lsl3hcgteg5fyl29mx63wcn --from=validator --keyring-backend=test --chain-id=testing  --broadcast-mode=block --yes
+osmosisd tx superfluid redelegate 1 osmovaloper1zv64jqmcmlevtagp2wz2hutzhsgcxluwnlumm9 --from=validator --keyring-backend=test --chain-id=testing  --broadcast-mode=block --yes
 
-osmosisd query staking delegation osmo1098s7vzm9x0uwz8vpssp9zrz80kzd67kqhtpfq osmovaloper1l7tnl5fgcw4aad2lsl3hcgteg5fyl29mx63wcn
+osmosisd query staking delegation osmo16hwc7ykw8gzp7f0dy50qm0ank5lh5y0wpsysex osmovaloper1zv64jqmcmlevtagp2wz2hutzhsgcxluwnlumm9
 
 osmosisd query distribution rewards $(osmosisd keys show -a validator --keyring-backend=test)
 osmosisd query incentives active-gauges 
@@ -97,3 +102,6 @@ osmosisd tx bank send validator $(osmosisd keys show -a acc2 --keyring-backend=t
 osmosisd tx lockup lock-tokens 10000000000000000000gamm/pool/1 --duration=504h --from=acc2 --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes
 osmosisd query lockup lock-by-id 2
 osmosisd tx superfluid delegate 2 osmovaloper1sv8m28x9kjdavt8uqsv0x49kzmfzvyghtprg6m --from=acc2 --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes
+
+osmosisd query superfluid all-superfluid-assets
+osmosisd query superfluid connected-intermediary-account 1
