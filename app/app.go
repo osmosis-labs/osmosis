@@ -137,6 +137,7 @@ import (
 	// Upgrades from earlier versions of Osmosis
 	v4 "github.com/osmosis-labs/osmosis/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/app/upgrades/v5"
+	v7 "github.com/osmosis-labs/osmosis/app/upgrades/v7"
 	_ "github.com/osmosis-labs/osmosis/client/docs/statik"
 
 	// Modules that live in the Osmosis repository and are specific to Osmosis
@@ -825,9 +826,10 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
 	}
 
-	if upgradeInfo.Name == v5.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == v7.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// @Frey do we do this for Cosmwasm?
 		storeUpgrades := store.StoreUpgrades{
-			Added: []string{authz.ModuleName, txfees.ModuleName, bech32ibctypes.ModuleName},
+			Added: []string{wasm.ModuleName},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
@@ -849,6 +851,12 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 			app.mm, app.configurator,
 			&app.IBCKeeper.ConnectionKeeper, app.TxFeesKeeper,
 			app.GAMMKeeper, app.StakingKeeper))
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v7.UpgradeName,
+		v7.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			app.WasmKeeper))
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
