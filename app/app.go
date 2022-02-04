@@ -829,7 +829,7 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	if upgradeInfo.Name == v7.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// @Frey do we do this for Cosmwasm?
 		storeUpgrades := store.StoreUpgrades{
-			Added: []string{wasm.ModuleName},
+			Added: []string{wasm.ModuleName, superfluidtypes.ModuleName},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
