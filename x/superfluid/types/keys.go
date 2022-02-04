@@ -1,9 +1,5 @@
 package types
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
 var (
 	// ModuleName defines the module name
 	ModuleName = "superfluid"
@@ -29,7 +25,3 @@ var (
 	// KeyPrefixLockIntermediaryAccAddr defines prefix to connect lockId and intermediary account address
 	KeyPrefixLockIntermediaryAccAddr = []byte{0x05}
 )
-
-func TokenPriceTwapEpochPrefix(epoch int64) []byte {
-	return append(KeyPrefixTokenPriceTwap, sdk.Uint64ToBigEndian(uint64(epoch))...)
-}

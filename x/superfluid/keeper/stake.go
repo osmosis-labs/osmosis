@@ -21,12 +21,12 @@ func unstakingSuffix(valAddr string) string {
 }
 
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
-	twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, denom)
-	if twap.EpochTwapPrice.IsZero() {
+	twap := k.GetEpochOsmoEquivalentTWAP(ctx, denom)
+	if twap.IsZero() {
 		return sdk.ZeroInt()
 	}
 
-	decAmt := twap.EpochTwapPrice.Mul(amount.ToDec())
+	decAmt := twap.Mul(amount.ToDec())
 	asset := k.GetSuperfluidAsset(ctx, denom)
 	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 }

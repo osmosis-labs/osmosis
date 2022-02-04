@@ -108,8 +108,8 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 				types.ModuleName, types.TypeMsgSuperfluidDelegate, "Account have no period lock"), nil, nil
 		}
 
-		twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, lock.Coins[0].Denom)
-		if twap.EpochTwapPrice.IsZero() {
+		twap := k.GetEpochOsmoEquivalentTWAP(ctx, lock.Coins[0].Denom)
+		if twap.IsZero() {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSuperfluidDelegate, "not able to do superfluid staking if asset TWAP is zero"), nil, nil
 		}

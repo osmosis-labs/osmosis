@@ -41,11 +41,6 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 			continue
 		}
 
-		twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
-		if twap.EpochTwapPrice.IsZero() {
-			continue
-		}
-
 		// mint OSMO token based on TWAP of locked denom to denom module account
 		// Get total delegation from synthetic lockups
 		queryCondition := lockuptypes.QueryCondition{
