@@ -6,7 +6,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
 enum SuperfluidAssetType {
   option (gogoproto.goproto_enum_prefix) = false;
@@ -25,7 +25,8 @@ message SuperfluidAsset {
   SuperfluidAssetType asset_type = 2;
 }
 
-// SuperfluidIntermediaryAccount takes the role of intermediary between LP token and OSMO tokens for superfluid staking
+// SuperfluidIntermediaryAccount takes the role of intermediary between LP token
+// and OSMO tokens for superfluid staking
 message SuperfluidIntermediaryAccount {
   string denom = 1;
   string val_addr = 2;

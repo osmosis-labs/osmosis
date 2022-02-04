@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	balanacertypes "github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	balanacertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 var (

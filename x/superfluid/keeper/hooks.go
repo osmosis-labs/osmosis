@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
