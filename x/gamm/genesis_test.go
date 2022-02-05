@@ -39,7 +39,7 @@ func TestGammInitGenesis(t *testing.T) {
 	any, err := codectypes.NewAnyWithValue(&balancerPool)
 	require.NoError(t, err)
 
-	gamm.InitGenesis(ctx, app.GAMMKeeper, types.GenesisState{
+	gamm.InitGenesis(ctx, *app.GAMMKeeper, types.GenesisState{
 		Pools:          []*codectypes.Any{any},
 		NextPoolNumber: 2,
 		Params: types.Params{
@@ -102,7 +102,7 @@ func TestGammExportGenesis(t *testing.T) {
 	}}, "")
 	require.NoError(t, err)
 
-	genesis := gamm.ExportGenesis(ctx, app.GAMMKeeper)
+	genesis := gamm.ExportGenesis(ctx, *app.GAMMKeeper)
 	require.Equal(t, genesis.NextPoolNumber, uint64(3))
 	require.Len(t, genesis.Pools, 2)
 }
@@ -113,7 +113,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
+	am := gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 	err := simapp.FundAccount(app.BankKeeper, ctx, acc1, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -137,7 +137,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	genesis := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-		am := gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
+		am := gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 		am.InitGenesis(ctx, appCodec, genesis)
 	})
 }

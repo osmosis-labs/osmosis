@@ -1,0 +1,34 @@
+syntax = "proto3";
+package osmosis.superfluid;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
+
+enum SuperfluidAssetType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  SuperfluidAssetTypeNative = 0;
+  SuperfluidAssetTypeLPShare = 1;
+  // SuperfluidAssetTypeLendingShare = 2; // for now not exist
+}
+
+// SuperfluidAsset stores the pair of superfluid asset type and denom pair
+message SuperfluidAsset {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+
+  string denom = 1;
+  SuperfluidAssetType asset_type = 2;
+}
+
+// SuperfluidIntermediaryAccount takes the role of intermediary between LP token and OSMO tokens for superfluid staking
+message SuperfluidIntermediaryAccount {
+  string denom = 1;
+  string val_addr = 2;
+  // id of perpetual gauge to send rewards to for distribution
+  uint64 gauge_id = 3;
+}

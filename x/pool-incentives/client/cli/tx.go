@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
@@ -14,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	"github.com/osmosis-labs/osmosis/osmotestutils"
 	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
 )
 
@@ -45,26 +44,15 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			var gaugeIds []uint64
-			for _, gaugeIdStr := range strings.Split(args[0], ",") {
-				gaugeIdStr = strings.TrimSpace(gaugeIdStr)
-
-				parsed, err := strconv.ParseUint(gaugeIdStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				gaugeIds = append(gaugeIds, parsed)
+			// TODO: Make a parse uint64 slice function
+			gaugeIds, err := osmotestutils.ParseUint64SliceFromString(args[0], ",")
+			if err != nil {
+				return err
 			}
 
-			var weights []sdk.Int
-			for _, weightStr := range strings.Split(args[1], ",") {
-				weightStr = strings.TrimSpace(weightStr)
-
-				parsed, err := strconv.ParseUint(weightStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				weights = append(weights, sdk.NewIntFromUint64(parsed))
+			weights, err := osmotestutils.ParseSdkIntFromString(args[1], ",")
+			if err != nil {
+				return err
 			}
 
 			if len(gaugeIds) != len(weights) {
@@ -139,26 +127,14 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			var gaugeIds []uint64
-			for _, gaugeIdStr := range strings.Split(args[0], ",") {
-				gaugeIdStr = strings.TrimSpace(gaugeIdStr)
-
-				parsed, err := strconv.ParseUint(gaugeIdStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				gaugeIds = append(gaugeIds, parsed)
+			gaugeIds, err := osmotestutils.ParseUint64SliceFromString(args[0], ",")
+			if err != nil {
+				return err
 			}
 
-			var weights []sdk.Int
-			for _, weightStr := range strings.Split(args[1], ",") {
-				weightStr = strings.TrimSpace(weightStr)
-
-				parsed, err := strconv.ParseUint(weightStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				weights = append(weights, sdk.NewIntFromUint64(parsed))
+			weights, err := osmotestutils.ParseSdkIntFromString(args[1], ",")
+			if err != nil {
+				return err
 			}
 
 			if len(gaugeIds) != len(weights) {

@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/server"
-	appcfg "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -85,7 +84,10 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
 
 			seeds := []string{
-				"63aba59a7da5197c0fbcdc13e760d7561791dca8@162.55.132.230:2000",               // Notional
+				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",               // Notional
+				"295b417f995073d09ff4c6c141bd138a7f7b5922@65.21.141.212:2000",                // Notional
+				"ec4d3571bf709ab78df61716e47b5ac03d077a1a@65.108.43.26:2000",                 // Notional
+				"4cb8e1e089bdf44741b32638591944dc15b7cce3@65.108.73.18:2000",                 // Notional
 				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656",       // [ block pane ]
 				"6bcdbcfd5d2c6ba58460f10dbcfde58278212833@osmosis.artifact-staking.io:26656", // Artifact Staking
 			}
@@ -99,13 +101,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.FastSync.Version = "v0"
 
 			config.SetRoot(clientCtx.HomeDir)
-
-			//Override default settings in app.toml
-			appConfig := appcfg.DefaultConfig()
-			appConfig.API.Enable = true
-			appConfig.StateSync.SnapshotInterval = 1500
-			appConfig.StateSync.SnapshotKeepRecent = 2
-			appConfig.MinGasPrices = "0uosmo"
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if chainID == "" {
@@ -167,7 +162,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
-			appcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "app.toml"), appConfig)
 
 			return displayInfo(toPrint)
 		},
