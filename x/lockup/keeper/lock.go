@@ -355,9 +355,12 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 		return fmt.Errorf("multiple tokens lockup is not allowed for superfluid")
 	}
 
+	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
+	// all the synthetic lockups' accumulation should be increased
+
 	// Note: as long as token denoms does not change, synthetic lockup references are not needed to change
 	for _, synthLock := range synthLocks {
-		sCoins := syntheticCoins(lock.Coins, synthLock.Suffix)
+		sCoins := syntheticCoins(coins, synthLock.Suffix)
 		for _, coin := range sCoins {
 			// Note: we use native lock's duration on accumulation store
 			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
@@ -386,8 +389,11 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 
 	// increase synthetic lockup's accumulation store
 	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+
+	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
+	// all the synthetic lockups' accumulation should be decreased
 	for _, synthLock := range synthLocks {
-		sCoins := syntheticCoins(lock.Coins, synthLock.Suffix)
+		sCoins := syntheticCoins(coins, synthLock.Suffix)
 		for _, coin := range sCoins {
 			// Note: we use native lock's duration on accumulation store
 			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)

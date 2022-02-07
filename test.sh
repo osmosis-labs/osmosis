@@ -33,39 +33,12 @@ nano stake-valtoken.json
 # - add unit test for superfluid delegate, add more tokens, undelegate and remaining amount is zero for intermediary account
 # - add cli command for checking all superfluid assets
 # - add query for intermediary account connected to lockup by id
-
 # - BugCLI: Delegation exists after superfluid undelegate 
 # - BugCLI: Delegation exists after superfluid delegate, add more tokens, undelegate 
 # Thoughts: - probably issue with staking query - if it involves unbonding queries as well
-
 # - Check delegation amount changes when add more tokens to existing lock
-# - Check the case adding more tokens to locks after starting redelegation or undelegation
-# - Undelegate take effect correctly for delegation amount?
-# - Add backwards testing for new changes
-# - Write unit test scenario, user test scenario
-# - Revert changes for go.mod, go.sum, .json, .sh files
-# - Invariant: Total superfluid delegation amount by intermediary account should be same as superfluid delegated lockups' sum
-# - TODO: think all the case where this invariant issue can happen
-# - simulation test should increase coverage for all of these manual testings to avoid unexpected issues - https://github.com/osmosis-labs/osmosis/issues/809
+# - Undelegate take effect correctly for delegation amount
 
-# removeTokensFromLock could be called for synthetic lockup?
-# addTokensToLock could be called for synthetic lockup?
-
-# Think of synthetic lockup accumulation store and synthetic lockup itself lifecycle
-# - Could there be negative or more than the balance made during this cycle?
-# 1) Add more tokens to lock
-# 2) Remove tokens from lock
-# 3) Redelegation
-# 4) Undelegation
-# 5) Create new synthetic lockup
-# 6) Delete synthetic lockup
-
-# - Delegation exists for a while even though asset-twap is zero already - probably 1 epoch delay I think
-# - Delegation not found for a while after enabling again instantly - probably 1 epoch delay I think - check the timing between TWAP and delegation
-# - Coins on current epoch is released on next epoch - which should be instantly claimed at gauge
-
-# - should try redelegation
-# - should try producing slashing on multi-nodes (is there a way to do this on single node?)
 
 
 osmosisd tx gamm create-pool --pool-file=./stake-valtoken.json --from=validator --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes
@@ -88,11 +61,12 @@ osmosisd query gov proposals
 osmosisd query superfluid asset-twap gamm/pool/1
 osmosisd query superfluid all-intermediary-accounts
 
-osmosisd tx superfluid delegate 1 osmovaloper1zv64jqmcmlevtagp2wz2hutzhsgcxluwnlumm9 --from=validator --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes
+osmosisd tx superfluid delegate 1 osmovaloper1njvl27h9xmt2v9hu568ryqk8xc2wean8y4c2sc --from=validator --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes
 osmosisd tx superfluid undelegate 1 --from=validator --keyring-backend=test --chain-id=testing  --broadcast-mode=block --yes
-osmosisd tx superfluid redelegate 1 osmovaloper1zv64jqmcmlevtagp2wz2hutzhsgcxluwnlumm9 --from=validator --keyring-backend=test --chain-id=testing  --broadcast-mode=block --yes
+osmosisd tx superfluid redelegate 1 osmovaloper1njvl27h9xmt2v9hu568ryqk8xc2wean8y4c2sc --from=validator --keyring-backend=test --chain-id=testing  --broadcast-mode=block --yes
+osmosisd tx lockup begin-unlock-by-id 1 --from=validator --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes
 
-osmosisd query staking delegation osmo16hwc7ykw8gzp7f0dy50qm0ank5lh5y0wpsysex osmovaloper1zv64jqmcmlevtagp2wz2hutzhsgcxluwnlumm9
+osmosisd query staking delegation osmo1p7za50gky60ufad6mr90vwu50zqe02rl2hkn8c osmovaloper1njvl27h9xmt2v9hu568ryqk8xc2wean8y4c2sc
 
 osmosisd query distribution rewards $(osmosisd keys show -a validator --keyring-backend=test)
 osmosisd query incentives active-gauges 
