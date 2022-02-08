@@ -121,8 +121,8 @@ require (
 
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk  v0.44.3x-osmo-v5
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220207024723-4ad6d82b557a
-	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-fast.1.0.20220207021926-5f889f6b44d5
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220208163234-4fee686a21bb
+	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-fast.4
 	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.2.0
