@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
@@ -15,12 +16,6 @@ import (
 // object provided to it during init.
 type GenesisState map[string]json.RawMessage
 
-const (
-	// DefaultMaxWasmCodeSize limit max bytes read to prevent gzip bombs
-	// 600 KB is copied from x/wasm, but you can customize here as desired
-	DefaultMaxWasmCodeSize = 600 * 1024 * 2
-)
-
 // NewDefaultGenesisState generates the default state for the application.
 func NewDefaultGenesisState() GenesisState {
 	encCfg := MakeEncodingConfig()
@@ -31,7 +26,9 @@ func NewDefaultGenesisState() GenesisState {
 		Params: wasmtypes.Params{
 			CodeUploadAccess:             wasmtypes.AllowNobody,
 			InstantiateDefaultPermission: wasmtypes.AccessTypeEverybody,
-			MaxWasmCodeSize:              DefaultMaxWasmCodeSize,
+			// DefaultMaxWasmCodeSize limit max bytes read to prevent gzip bombs
+			// It is 1200 KB in x/wasm, update it later via governance if really needed
+			MaxWasmCodeSize:              wasmtypes.DefaultMaxWasmCodeSize,
 		},
 	}
 	gen[wasm.ModuleName] = encCfg.Marshaler.MustMarshalJSON(&wasmGen)
