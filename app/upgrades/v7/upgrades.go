@@ -3,9 +3,10 @@ package v7
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
@@ -22,6 +23,13 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 		if err != nil {
 			return newVM, err
 		}
+
+		// Since we provide custom DefaultGenesis (privileges StoreCode) in app/genesis.go rather than
+		// the wasm module, we need to set the params here when migrating (is it is not customized).
+
+		params := wasmKeeper.GetParams(ctx)
+		params.CodeUploadAccess = wasmtypes.AllowNobody
+		wasmKeeper.SetParams(ctx, params)
 
 		// override here
 		return newVM, err
