@@ -30,19 +30,6 @@ const (
 	OpWeightMsgSuperfluidRedelegate = "op_weight_msg_superfluid_redelegate"
 )
 
-// Steps for superfluid simulation
-// - lockup module should create random lockups (ensure simulation already exists for this)
-// - SuperfluidDelegate for existing lockup or create new one
-// - SuperfluidUndelegate for random lockup
-// - SuperfluidRedelegate for random lockup
-// - lockup module’s begin unlock for random lockup simulation  (check simulation is already available)
-// - Price should be modified as time goes by gamm module  (check simulation is already available)
-// - AfterEpochEnd hook should be coming for params.RefreshEpochIdentifier from epoch module (check simulation is already available)
-// - BeforeValidatorSlashed and BeforeSlashingUnbondingDelegation hook should be coming from staking module (check simulation is already available)
-// - Distribution module should be distributing rewards on simulation (check simulation is already available)
-// - Incentives module should distribute superfluid gauge rewards on simulation (check simulation is already available)
-// - Time passing for checking automatic unbondings
-
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingtypes.AccountKeeper,
