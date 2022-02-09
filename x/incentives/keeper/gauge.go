@@ -100,6 +100,8 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 // CreateGauge create a gauge and send coins to the gauge
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
+	
+	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
 	if distrTo.LockQueryType == lockuptypes.ByDuration {
 		durationOk := false
@@ -112,6 +114,31 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		if !durationOk {
 			return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
 		}
+	}
+
+	/* Questions:
+		1. Are the function inputs correct?
+		
+		2. How do we account for what happens if k.bk.HasSupply() fails or throws an error? - go stuff
+			general in go: https://earthly.dev/blog/golang-errors/
+
+		3. Is using "break" here a clean approach, or would it be better to bake this into the logic 
+		   of the whole function (i.e. wrap in an if statement)?
+		
+		4. How can I run existing tests against this and/or create my own for it?
+			setup state you want - we want table driven tests. automate most of the setup/post-condition testing bits.
+			
+			go test ./...
+
+			example: https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/pool-models/balancer/balancer_pool_test.go#L151-L272
+
+		5. Why is the distrTo parameter type "lockuptypes.QueryCondition"? What does the "QueryCondition"
+		   part mean and where does it come from?
+	*/
+
+	// Ensure that the denom this gauge pays out to exists on-chain
+	if k.bk.HasSupply(ctx, distrTo.Denom) {
+		return 0, fmt.Errorf("denom does not exist: %d", distrTo.Denom)
 	}
 
 	gauge := types.Gauge{
