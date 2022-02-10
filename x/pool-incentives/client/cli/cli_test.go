@@ -6,9 +6,9 @@ import (
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v6/app"
+	"github.com/osmosis-labs/osmosis/v6/x/pool-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v6/x/pool-incentives/types"
 )
 
 type IntegrationTestSuite struct {

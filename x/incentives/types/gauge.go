@@ -4,7 +4,7 @@ import (
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v6/x/lockup/types"
 )
 
 func NewGauge(id uint64, isPerpetual bool, distrTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, filledEpochs uint64, distrCoins sdk.Coins) Gauge {

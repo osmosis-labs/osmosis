@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v6/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v6/x/incentives/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

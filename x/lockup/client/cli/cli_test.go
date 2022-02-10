@@ -16,10 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/x/lockup/client/cli"
-	lockuptestutil "github.com/osmosis-labs/osmosis/x/lockup/client/testutil"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v6/app"
+	"github.com/osmosis-labs/osmosis/v6/x/lockup/client/cli"
+	lockuptestutil "github.com/osmosis-labs/osmosis/v6/x/lockup/client/testutil"
+	"github.com/osmosis-labs/osmosis/v6/x/lockup/types"
 )
 
 type IntegrationTestSuite struct {

@@ -2,8 +2,8 @@ package txfees
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v6/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v6/x/txfees/types"
 )
 
 // InitGenesis initializes the txfees module's state from a provided genesis

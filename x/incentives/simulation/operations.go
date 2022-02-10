@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	osmo_simulation "github.com/osmosis-labs/osmosis/x/simulation"
+	osmo_simulation "github.com/osmosis-labs/osmosis/v6/x/simulation"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -13,9 +13,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v6/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v6/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v6/x/lockup/types"
 )
 
 // Simulation operation weights constants

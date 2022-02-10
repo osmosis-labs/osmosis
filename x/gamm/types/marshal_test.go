@@ -11,7 +11,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	appParams "github.com/osmosis-labs/osmosis/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v6/app/params"
 )
 
 var ymlAssetTest = []PoolAsset{

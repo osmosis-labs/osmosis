@@ -16,10 +16,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/osmosis-labs/osmosis/x/claim/client/cli"
-	"github.com/osmosis-labs/osmosis/x/claim/client/rest"
-	"github.com/osmosis-labs/osmosis/x/claim/keeper"
-	"github.com/osmosis-labs/osmosis/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v6/x/claim/client/cli"
+	"github.com/osmosis-labs/osmosis/v6/x/claim/client/rest"
+	"github.com/osmosis-labs/osmosis/v6/x/claim/keeper"
+	"github.com/osmosis-labs/osmosis/v6/x/claim/types"
 )
 
 var (
