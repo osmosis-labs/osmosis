@@ -134,7 +134,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	}
 
 	gauge := types.Gauge{
-		Id:                k.getLastGaugeID(ctx) + 1,
+		Id:                k.GetLastGaugeID(ctx) + 1,
 		IsPerpetual:       isPerpetual,
 		DistributeTo:      distrTo,
 		Coins:             coins,
@@ -150,7 +150,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	if err != nil {
 		return 0, err
 	}
-	k.setLastGaugeID(ctx, gauge.Id)
+	k.SetLastGaugeID(ctx, gauge.Id)
 
 	// TODO: Do we need to be concerned with case where this should be ActiveGauges?
 	if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime)), gauge.Id); err != nil {
