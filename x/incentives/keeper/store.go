@@ -8,8 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 )
 
-// getLastGaugeID returns ID used last time
-func (k Keeper) getLastGaugeID(ctx sdk.Context) uint64 {
+// GetLastGaugeID returns ID used last time
+func (k Keeper) GetLastGaugeID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.KeyLastGaugeID)
@@ -20,8 +20,8 @@ func (k Keeper) getLastGaugeID(ctx sdk.Context) uint64 {
 	return sdk.BigEndianToUint64(bz)
 }
 
-// setLastGaugeID save ID used by last gauge
-func (k Keeper) setLastGaugeID(ctx sdk.Context, ID uint64) {
+// SetLastGaugeID save ID used by last gauge
+func (k Keeper) SetLastGaugeID(ctx sdk.Context, ID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.KeyLastGaugeID, sdk.Uint64ToBigEndian(ID))
 }
