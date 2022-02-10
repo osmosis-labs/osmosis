@@ -15,3 +15,7 @@ func (k Keeper) DeleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) e
 func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	return k.getLockRefs(ctx, key)
 }
+
+func (k Keeper) SyntheticCoins(coins sdk.Coins, suffix string) sdk.Coins {
+	return syntheticCoins(coins, suffix)
+}

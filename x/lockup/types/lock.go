@@ -24,6 +24,11 @@ func (p PeriodLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
 }
 
+// IsUnlocking returns lock started unlocking already
+func (p SyntheticLock) IsUnlocking() bool {
+	return !p.EndTime.Equal(time.Time{})
+}
+
 func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	sum := sdk.NewInt(0)
 	err := sdk.ValidateDenom(denom)

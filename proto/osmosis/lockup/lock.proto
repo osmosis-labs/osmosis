@@ -65,4 +65,15 @@ message SyntheticLock {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"end_time\""
   ];
+  google.protobuf.Duration duration = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+  repeated cosmos.base.v1beta1.Coin coins = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  string owner = 6 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 }
