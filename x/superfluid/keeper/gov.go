@@ -21,6 +21,7 @@ func (k Keeper) HandleSetSuperfluidAssetsProposal(ctx sdk.Context, p *types.SetS
 
 func (k Keeper) HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, p *types.RemoveSuperfluidAssetsProposal) error {
 	for _, denom := range p.SuperfluidAssetDenoms {
+		k.SetEpochOsmoEquivalentTWAP(ctx, 0, denom, sdk.ZeroDec())
 		k.DeleteSuperfluidAsset(ctx, denom)
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(

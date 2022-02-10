@@ -178,6 +178,7 @@ import (
 
 	// Superfluid: Allows users to stake gamm (bonded liquidity)
 	superfluid "github.com/osmosis-labs/osmosis/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/x/superfluid/client"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/x/superfluid/types"
 
@@ -249,7 +250,8 @@ var (
 				wasmclient.ProposalHandlers,
 				paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
 				poolincentivesclient.UpdatePoolIncentivesHandler,
-				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler)...,
+				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
+				superfluidclient.SetSuperfluidAssetsProposalHandler, superfluidclient.RemoveSuperfluidAssetsProposalHandler)...,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -484,7 +486,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
+		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	)
 
@@ -602,7 +604,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
+		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
 		app.transferModule,
 	)
 

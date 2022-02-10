@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/store"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -279,7 +280,7 @@ func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, 
 	store := ctx.KVStore(k.storeKey)
 	lockKey := lockStoreKey(lockID)
 	if !store.Has(lockKey) {
-		return nil, fmt.Errorf("lock with ID %d does not exist", lockID)
+		return nil, sdkerrors.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lockID))
 	}
 	bz := store.Get(lockKey)
 	err := proto.Unmarshal(bz, &lock)
@@ -346,11 +347,34 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	}
 
+	// increase synthetic lockup's accumulation store
+	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+
+	// when synthetic lockup exists for the lockup, disallow adding different coins
+	if len(synthLocks) > 0 && len(lock.Coins) > 1 {
+		return fmt.Errorf("multiple tokens lockup is not allowed for superfluid")
+	}
+
+	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
+	// all the synthetic lockups' accumulation should be increased
+
+	// Note: as long as token denoms does not change, synthetic lockup references are not needed to change
+	for _, synthLock := range synthLocks {
+		sCoins := syntheticCoins(coins, synthLock.Suffix)
+		for _, coin := range sCoins {
+			// Note: we use native lock's duration on accumulation store
+			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
+		}
+	}
+
 	return nil
 }
 
 // removeTokensFromLock is called by lockup slash function - called by superfluid module only
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
+	// TODO: how to handle full slash for both normal lockup
+	// TODO: how to handle full slash for superfluid delegated lockup?
+
 	lock.Coins = lock.Coins.Sub(coins)
 
 	err := k.setLock(ctx, *lock)
@@ -361,6 +385,19 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	// modifications to accumulation store
 	for _, coin := range coins {
 		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+	}
+
+	// increase synthetic lockup's accumulation store
+	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+
+	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
+	// all the synthetic lockups' accumulation should be decreased
+	for _, synthLock := range synthLocks {
+		sCoins := syntheticCoins(coins, synthLock.Suffix)
+		for _, coin := range sCoins {
+			// Note: we use native lock's duration on accumulation store
+			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+		}
 	}
 
 	return nil

@@ -18,7 +18,8 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 	}
 
 	// Get lockups longer or equal to SuperfluidUnbondDuration
-	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom+unstakingSuffix(acc.ValAddr), SuperfluidUnbondDuration)
+	params := k.GetParams(ctx)
+	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom+unstakingSuffix(acc.ValAddr), params.UnbondingDuration)
 	for _, lock := range locks {
 		// Only single token lock is allowed here
 		slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
@@ -37,11 +38,6 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		if acc.ValAddr != valAddr.String() { // only apply for slashed validator
-			continue
-		}
-
-		twap := k.GetLastEpochOsmoEquivalentTWAP(ctx, acc.Denom)
-		if twap.EpochTwapPrice.IsZero() {
 			continue
 		}
 
