@@ -208,7 +208,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 
 	// Register a synthetic lockup for superfluid staking
 	suffix = stakingSuffix(valAddr)
-  notUnlocking := false
+	notUnlocking := false
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, notUnlocking)
 	if err != nil {
 		return err
@@ -300,7 +300,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 
 	params := k.GetParams(ctx)
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
-  unlocking := true
+	unlocking := true
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, unlocking)
 	if err != nil {
 		return nil, err
