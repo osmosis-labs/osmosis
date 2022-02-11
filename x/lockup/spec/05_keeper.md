@@ -42,8 +42,6 @@ type Keeper interface {
     GetPeriodLocks(sdk.Context) ([]types.PeriodLock, error)
     // UnlockAllUnlockableCoins Unlock all unlockable coins
     UnlockAllUnlockableCoins(sdk.Context, account sdk.AccAddress) (sdk.Coins, error)
-    // UnlockPeriodLockByID unlock by period lock ID
-    UnlockPeriodLockByID(sdk.Context, LockID uint64) (*types.PeriodLock, error)
     // LockTokens lock tokens from an account for specified duration
     LockTokens(sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error)
     // AddTokensToLock locks more tokens into a lockup

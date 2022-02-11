@@ -55,29 +55,9 @@ func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCon
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
-func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
-	locks, coins, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
-	return locks, coins, err
-}
-
-// BeginUnlockPeriodLockByID begin unlock by period lock ID
-func (k Keeper) BeginUnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.PeriodLock, error) {
-	lock, err := k.GetLockByID(ctx, LockID)
-	if err != nil {
-		return lock, err
-	}
-	err = k.BeginUnlock(ctx, *lock)
-	return lock, err
-}
-
-// UnlockPeriodLockByID unlock by period lock ID
-func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.PeriodLock, error) {
-	lock, err := k.GetLockByID(ctx, LockID)
-	if err != nil {
-		return lock, err
-	}
-	err = k.Unlock(ctx, *lock)
-	return lock, err
+func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, error) {
+	locks, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
+	return locks, err
 }
 
 func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
@@ -474,11 +454,23 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
-	return k.unlock(ctx, lock)
+	return k.unlockInternalLogic(ctx, lock)
 }
 
-func (k Keeper) unlock(ctx sdk.Context, lock types.PeriodLock) error {
+// ForceUnlock ignores unlock duration and immediately unlock and refund.
+// CONTRACT: should be used only at the chain upgrade script
+// TODO: Revisit for Superfluid Staking
+func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
+	if !lock.IsUnlocking() {
+		err := k.BeginUnlock(ctx, lock)
+		if err != nil {
+			return err
+		}
+	}
+	return k.unlockInternalLogic(ctx, lock)
+}
 
+func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
 		return err
@@ -489,6 +481,7 @@ func (k Keeper) unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 
+	// TODO: Should we refactor next several lines into a 'delete lock' method?
 	// remove lock from store object
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(lock.ID))
@@ -506,17 +499,4 @@ func (k Keeper) unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
-}
-
-// ForceUnlock ignores unlock duration and immediately unlock and refund.
-// CONTRACT: should be used only at the chain upgrade script
-// TODO: Revisit for Superfluid Staking
-func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
-	if !lock.IsUnlocking() {
-		err := k.BeginUnlock(ctx, lock)
-		if err != nil {
-			return err
-		}
-	}
-	return k.unlock(ctx, lock)
 }
