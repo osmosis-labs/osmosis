@@ -105,6 +105,9 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.MinGasPrices = "0uosmo"
 
+	// 128MB IAVL cache
+	srvCfg.IAVLCacheSize = 781250
+
 	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.01"}
 
 	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg}

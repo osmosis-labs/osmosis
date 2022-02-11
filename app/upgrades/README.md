@@ -7,5 +7,6 @@ This folder contains logic for every osmosis upgrade. (Both state migrations, an
 * v4 - Berylium State Migration
 * v5 - Boron State migration
 * v6 - hard fork for IBC bug fix
+* v7 - Carbon State migration
 
 ## TODO: Make a fork-upgrade struct and a state-migration upgrade struct
