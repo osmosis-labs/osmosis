@@ -77,26 +77,27 @@ func (k Keeper) deleteLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types
 	return nil
 }
 
-func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
-	refKeys, err := syntheticLockRefKeys(lock)
+// XXX
+func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, synthLock types.SyntheticLock) error {
+	refKeys, err := syntheticLockRefKeys(synthLock)
 	if err != nil {
 		return err
 	}
 	for _, refKey := range refKeys {
-		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
+		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockId); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
-	refKeys, err := syntheticLockRefKeys(lock)
+func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, synthLock types.SyntheticLock) error {
+	refKeys, err := syntheticLockRefKeys(synthLock)
 	if err != nil {
 		return err
 	}
 	for _, refKey := range refKeys {
-		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
+		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockId); err != nil {
 			return err
 		}
 	}
@@ -564,33 +565,26 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 			ctx.Logger().Info(msg)
 		}
 
-		lock, err := k.GetLockByID(ctx, synthLock.UnderlyingLockId)
-		if err != nil {
-			return err
-		}
-		lock.Coins = syntheticCoins(lock.Coins, synthLock.Suffix)
-		lock.EndTime = synthLock.EndTime
-
-		err = k.setSyntheticLockAndResetRefs(ctx, *lock, synthLock)
+		err := k.setSyntheticLockAndResetRefs(ctx, synthLock)
 		if err != nil {
 			return err
 		}
 
 		// Add to the accumlation store cache
-		for _, coin := range lock.Coins {
+		for _, coin := range synthLock.Coins {
 			// update or create the new map from duration -> Int for this denom.
 			var curDurationMap map[time.Duration]sdk.Int
 			if durationMap, ok := accumulationStoreEntries[coin.Denom]; ok {
 				curDurationMap = durationMap
 				// update or create new amount in the duration map
 				newAmt := coin.Amount
-				if curAmt, ok := durationMap[lock.Duration]; ok {
+				if curAmt, ok := durationMap[synthLock.Duration]; ok {
 					newAmt = newAmt.Add(curAmt)
 				}
-				curDurationMap[lock.Duration] = newAmt
+				curDurationMap[synthLock.Duration] = newAmt
 			} else {
 				denoms = append(denoms, coin.Denom)
-				curDurationMap = map[time.Duration]sdk.Int{lock.Duration: coin.Amount}
+				curDurationMap = map[time.Duration]sdk.Int{synthLock.Duration: coin.Amount}
 			}
 			accumulationStoreEntries[coin.Denom] = curDurationMap
 		}
@@ -619,18 +613,18 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 	return nil
 }
 
-func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
-	err := k.setSyntheticLockupObject(ctx, synthLock.UnderlyingLockId, synthLock.Suffix, synthLock.EndTime)
+func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, synthLock types.SyntheticLock) error {
+	err := k.setSyntheticLockupObject(ctx, &synthLock)
 	if err != nil {
 		return err
 	}
 
 	// store refs by the status of unlock
-	if lock.IsUnlocking() {
-		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	if synthLock.IsUnlocking() {
+		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, synthLock)
 	}
 
-	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, synthLock)
 }
 
 // setLockAndResetLockRefs sets the lock, and resets all of its lock references
