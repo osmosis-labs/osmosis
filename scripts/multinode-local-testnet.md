@@ -42,9 +42,9 @@ Ensure to include the `--home` flag or `--node` flag when using a particular nod
 
 ## Examples
 
-Validator2: `osmosisd status --node "tcp://localhost:26654`
+Validator2: `osmosisd status --node "tcp://localhost:26654"`
 
-Validator3: `osmosisd status --node "tcp://localhost:26651`
+Validator3: `osmosisd status --node "tcp://localhost:26651"`
 
 or
 
