@@ -1,6 +1,6 @@
 # Multi Node Local Testnet Script
 
-This script creates a multi node local testnet with three validator nodes on a single machine.
+This script creates a multi node local testnet with three validator nodes on a single machine. Note: The default weights of these validators is 5:5:4 respectively. That means in order to keep the chain running, at a minimum Validator1 and Validator2 must be running in order to keep greater than 66% power online.
 
 ## Instructions
 
@@ -38,7 +38,7 @@ Validator2: `1316, 9088, 9089, 26655, 26654, 26653, 6061`
 
 Validator3: `1315, 9086, 9087, 26652, 26651, 26650, 6062`
 
-Ensure to include the `--home` flag or `--node` flag when using a particular node. 
+Ensure to include the `--home` flag or `--node` flag when using a particular node.
 
 ## Examples
 
