@@ -56,15 +56,15 @@ func (suite *KeeperTestSuite) TestRepeatedLockTokensGas() {
 	totalNumLocks := 10000
 
 	firstLockGasAmount := suite.measureLockGas(defaultAddr, defaultCoins, time.Second)
-	suite.Assert().Equal(87871, int(firstLockGasAmount))
+	suite.Assert().Less(int(firstLockGasAmount), 87871)
 
 	for i := 1; i < startAveragingAt; i++ {
 		suite.LockTokens(defaultAddr, defaultCoins, time.Second)
 	}
 	avgGas, maxGas := suite.measureAvgAndMaxLockGas(totalNumLocks-startAveragingAt, defaultAddr, coinsFn, durFn)
 	fmt.Printf("test deets: total locks created %d, begin average at %d\n", totalNumLocks, startAveragingAt)
-	suite.Assert().Equal(75074, int(avgGas), "average gas / lock")
-	suite.Assert().Equal(75164, int(maxGas), "max gas / lock")
+	suite.Assert().Less(int(avgGas), 75074, "average gas / lock")
+	suite.Assert().Less(int(maxGas), 75164, "max gas / lock")
 }
 
 func (suite *KeeperTestSuite) TestRepeatedLockTokensDistinctDurationGas() {
@@ -76,6 +76,6 @@ func (suite *KeeperTestSuite) TestRepeatedLockTokensDistinctDurationGas() {
 
 	avgGas, maxGas := suite.measureAvgAndMaxLockGas(totalNumLocks, defaultAddr, coinsFn, durFn)
 	fmt.Printf("test deets: total locks created %d\n", totalNumLocks)
-	suite.Assert().EqualValues(125249, int(avgGas), "average gas / lock")
-	suite.Assert().EqualValues(254947, int(maxGas), "max gas / lock")
+	suite.Assert().Less(int(avgGas), 125249, "average gas / lock")
+	suite.Assert().Less(int(maxGas), 254947, "max gas / lock")
 }
