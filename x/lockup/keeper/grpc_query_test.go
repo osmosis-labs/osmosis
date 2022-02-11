@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 }
 
 func (suite *KeeperTestSuite) BeginUnlocking(addr sdk.AccAddress) {
-	_, _, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr)
+	_, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr)
 	suite.Require().NoError(err)
 }
 

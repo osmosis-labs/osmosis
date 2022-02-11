@@ -195,21 +195,18 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]typ
 	return locks, coins
 }
 
-func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins, error) {
+func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, error) {
 	// Note: this function is only used for an account
 	// and this has no conflicts with synthetic lockups
 
-	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
 		err := k.BeginUnlock(ctx, lock)
 		if err != nil {
-			return locks, coins, err
+			return locks, err
 		}
-		// sum up all coins begin unlocking
-		coins = coins.Add(lock.Coins...)
 	}
-	return locks, coins, nil
+	return locks, nil
 }
 
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {

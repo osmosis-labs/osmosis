@@ -29,10 +29,11 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 	suite.Require().Equal(locks[0].IsUnlocking(), false)
 
 	// begin unlock
-	locks, unlockCoins, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr1)
+	locks, err = suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr1)
+	unlockedCoins := suite.app.LockupKeeper.GetCoinsFromLocks(locks)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 1)
-	suite.Require().Equal(unlockCoins, coins)
+	suite.Require().Equal(unlockedCoins, coins)
 	suite.Require().Equal(locks[0].ID, uint64(1))
 
 	// check locks
@@ -347,10 +348,11 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		}
 
 		// begin unlock
-		locks, unlockCoins, err := suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr1)
+		locks, err = suite.app.LockupKeeper.BeginUnlockAllNotUnlockings(suite.ctx, addr1)
+		unlockedCoins := suite.app.LockupKeeper.GetCoinsFromLocks(locks)
 		suite.Require().NoError(err)
 		suite.Require().Len(locks, len(times))
-		suite.Require().Equal(unlockCoins, totalCoins)
+		suite.Require().Equal(unlockedCoins, totalCoins)
 		for i := 0; i < len(times); i++ {
 			suite.Require().Equal(locks[i].ID, uint64(i+1))
 		}

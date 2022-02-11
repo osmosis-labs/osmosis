@@ -55,9 +55,9 @@ func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCon
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
-func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, sdk.Coins, error) {
-	locks, coins, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
-	return locks, coins, err
+func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, error) {
+	locks, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
+	return locks, err
 }
 
 func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
@@ -481,6 +481,7 @@ func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) erro
 		return err
 	}
 
+	// TODO: Should we refactor next several lines into a 'delete lock' method?
 	// remove lock from store object
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(lock.ID))
