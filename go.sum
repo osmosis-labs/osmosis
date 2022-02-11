@@ -710,6 +710,8 @@ github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220207024723-4ad6d82b557a h1:
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220207024723-4ad6d82b557a/go.mod h1:P79b8Rn2oRXHycvJzjNDFpRfPWh0M8tFwIR+0S1niWU=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220208163234-4fee686a21bb h1:9N8+eN7LmMUofDiRCsigaFZ7pkbdXNBvHt4PTDLvZQ8=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220208163234-4fee686a21bb/go.mod h1:yI7ivinz6n3zgrcyN9BHhqR4If29rpTzQjBBSeaJwMg=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220211041951-07d6cfc7148d h1:eYV8OCDOcMFe36klDmOdgNvCEhhdaG0qpY4tsRdwtYw=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220211041951-07d6cfc7148d/go.mod h1:yI7ivinz6n3zgrcyN9BHhqR4If29rpTzQjBBSeaJwMg=
 github.com/osmosis-labs/cosmos-sdk v0.44.3-osmo-v5-fast.0 h1:8VoqeP0FtZ9N2kIarqwa3rO+npZ/bpGC85xWKrMLNH4=
 github.com/osmosis-labs/cosmos-sdk v0.44.3-osmo-v5-fast.0/go.mod h1:+EPZP3+d0p3UtbWaHAOv+wJUevAI4TYNRhWnFPNc0XY=
 github.com/osmosis-labs/iavl v0.17.3-fast.1 h1:ZcCiRS/jCse2d80IXMXY94C8JTLYUORzyGC1ZS++Apc=
