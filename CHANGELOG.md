@@ -39,7 +39,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v6.3.0]
+## [v6.3.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.3.0)
 
 ## Features
 
@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [iavl-5](https://github.com/osmosis-labs/iavl/pull/5) Fast storage optimization for queries and iterations
 
-## [v6.2.0]
+## [v6.2.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.2.0)
 
 ### SDK fork updates
 
@@ -70,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [#765](https://github.com/osmosis-labs/osmosis/pull/765) Fix a bug in `Makefile` regarding the location of localtestnet docker image.
 
-## [v6.1.0]
+## [v6.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.1.0)
 
 ## Features
 
