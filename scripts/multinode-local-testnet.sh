@@ -2,24 +2,30 @@
 rm -rf $HOME/.osmosisd/
 
 
-#make four osmosis directories
+# make four osmosis directories
 mkdir $HOME/.osmosisd
 mkdir $HOME/.osmosisd/validator1
 mkdir $HOME/.osmosisd/validator2
 mkdir $HOME/.osmosisd/validator3
 
-#init first osmosis directory to create genesis file
+# init all three validators
 osmosisd init --chain-id=testing validator1 --home=$HOME/.osmosisd/validator1
+osmosisd init --chain-id=testing validator2 --home=$HOME/.osmosisd/validator2
+osmosisd init --chain-id=testing validator3 --home=$HOME/.osmosisd/validator3
+# create keys for all three validators
 osmosisd keys add validator1 --keyring-backend=test --home=$HOME/.osmosisd/validator1
+osmosisd keys add validator2 --keyring-backend=test --home=$HOME/.osmosisd/validator2
+osmosisd keys add validator3 --keyring-backend=test --home=$HOME/.osmosisd/validator3
 
 # change staking denom to uosmo
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="uosmo"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
-#create validator node with tokens to transfer to the three other nodes
+# create validator node with tokens to transfer to the three other nodes
 osmosisd add-genesis-account $(osmosisd keys show validator1 -a --keyring-backend=test --home=$HOME/.osmosisd/validator1) 100000000000uosmo --home=$HOME/.osmosisd/validator1
 osmosisd gentx validator1 500000000uosmo --keyring-backend=test --home=$HOME/.osmosisd/validator1 --chain-id=testing
 osmosisd collect-gentxs --home=$HOME/.osmosisd/validator1
 
+# genesis modification
 
 # update staking genesis
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["staking"]["params"]["unbonding_time"]="120s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
@@ -54,17 +60,12 @@ cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["superfluid"
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["superfluid"]["params"]["unbonding_duration"]="120s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
 
-
-
-# init validator2-3
-osmosisd init --chain-id=testing validator2 --home=$HOME/.osmosisd/validator2
-osmosisd init --chain-id=testing validator3 --home=$HOME/.osmosisd/validator3
-
-# port key
+# port key (validator1 uses default ports)
 # validator1 1317, 9090, 9091, 26658, 26657, 26656, 6060
 # validator2 1316, 9088, 9089, 26655, 26654, 26653, 6061
 # validator3 1315, 9086, 9087, 26652, 26651, 26650, 6062
 # validator4 1314, 9084, 9085, 26649, 26648, 26647, 6063
+
 
 # change app.toml values
 
@@ -106,11 +107,6 @@ cp $HOME/.osmosisd/validator1/config/genesis.json $HOME/.osmosisd/validator3/con
 sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(osmosisd tendermint show-node-id --home=$HOME/.osmosisd/validator1)@$(curl -4 icanhazip.com):26656\"|g" $HOME/.osmosisd/validator2/config/config.toml
 sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(osmosisd tendermint show-node-id --home=$HOME/.osmosisd/validator1)@$(curl -4 icanhazip.com):26656\"|g" $HOME/.osmosisd/validator3/config/config.toml
 
-
-
-# add second and thrird validator keys
-osmosisd keys add validator2 --keyring-backend=test --home=$HOME/.osmosisd/validator2
-osmosisd keys add validator3 --keyring-backend=test --home=$HOME/.osmosisd/validator3
 
 # start all three validators
 tmux new -s validator1 -d osmosisd start --home=$HOME/.osmosisd/validator1
