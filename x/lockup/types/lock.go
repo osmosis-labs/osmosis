@@ -31,6 +31,7 @@ func (p SyntheticLock) IsUnlocking() bool {
 
 func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	sum := sdk.NewInt(0)
+	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
 	err := sdk.ValidateDenom(denom)
 	if err != nil {
 		panic(fmt.Errorf("invalid denom used internally: %s, %v", denom, err))

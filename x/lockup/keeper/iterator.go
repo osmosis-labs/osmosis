@@ -6,6 +6,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	db "github.com/tendermint/tm-db"
 )
 
 func unlockingPrefix(isUnlocking bool) []byte {
@@ -161,4 +162,56 @@ func (k Keeper) AccountLockIteratorLongerDurationDenom(ctx sdk.Context, isUnlock
 func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, duration time.Duration) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
+}
+
+func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []types.PeriodLock {
+	locks := []types.PeriodLock{}
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		lockID := sdk.BigEndianToUint64(iterator.Value())
+		lock, err := k.GetLockByID(ctx, lockID)
+		if err != nil {
+			panic(err)
+		}
+		locks = append(locks, *lock)
+	}
+	return locks
+}
+
+func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
+	// Note: this function is only used for an account
+	// and this has no conflicts with synthetic lockups
+
+	coins := sdk.Coins{}
+	locks := k.getLocksFromIterator(ctx, iterator)
+	for _, lock := range locks {
+		err := k.Unlock(ctx, lock)
+		if err != nil {
+			panic(err)
+		}
+		// sum up all coins unlocked
+		coins = coins.Add(lock.Coins...)
+	}
+	return locks, coins
+}
+
+func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins, error) {
+	// Note: this function is only used for an account
+	// and this has no conflicts with synthetic lockups
+
+	coins := sdk.Coins{}
+	locks := k.getLocksFromIterator(ctx, iterator)
+	for _, lock := range locks {
+		err := k.BeginUnlock(ctx, lock)
+		if err != nil {
+			return locks, coins, err
+		}
+		// sum up all coins begin unlocking
+		coins = coins.Add(lock.Coins...)
+	}
+	return locks, coins, nil
+}
+
+func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
+	return k.getCoinsFromLocks(k.getLocksFromIterator(ctx, iterator))
 }
