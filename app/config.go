@@ -28,6 +28,7 @@ func DefaultConfig() network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
+<<<<<<< HEAD
 		AppConstructor: func(val network.Validator) servertypes.Application {
 			return NewOsmosisApp(
 				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
@@ -49,5 +50,34 @@ func DefaultConfig() network.Config {
 		CleanupDir:      true,
 		SigningAlgo:     string(hd.Secp256k1Type),
 		KeyringOptions:  []keyring.Option{},
+=======
+		AppConstructor:    NewAppConstructor(encCfg),
+		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		TimeoutCommit:     1 * time.Second / 2,
+		ChainID:           "osmosis-code-test",
+		NumValidators:     1,
+		BondDenom:         sdk.DefaultBondDenom,
+		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
+		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
+		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
+		PruningStrategy:   storetypes.PruningOptionNothing,
+		CleanupDir:        true,
+		SigningAlgo:       string(hd.Secp256k1Type),
+		KeyringOptions:    []keyring.Option{},
+	}
+}
+
+func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
+	return func(val network.Validator) servertypes.Application {
+		return NewOsmosisApp(
+			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			encodingCfg,
+			simapp.EmptyAppOptions{},
+			GetWasmEnabledProposals(),
+			EmptyWasmOpts,
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+>>>>>>> 39c4457 (Reduce block time for CLI tests (#848))
 	}
 }
