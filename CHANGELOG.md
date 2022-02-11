@@ -39,31 +39,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v6.3.0]
-
-- [#845](https://github.com/osmosis-labs/osmosis/pull/846) Upgrade iavl and sdk with fast storage
-- [#765](https://github.com/osmosis-labs/osmosis/pull/765) Fix a bug in `Makefile` regarding the location of localtestnet docker image.
+## [v6.3.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.3.0)
 
 ## Features
 
-- Update to Tendermint v0.34.15
-- Increase p2p timeouts to alleviate p2p network breaking at epoch
+- [#845](https://github.com/osmosis-labs/osmosis/pull/846) Upgrade iavl and sdk with fast storage
 - [#724](https://github.com/osmosis-labs/osmosis/pull/724) Make an ante-handler filter for recognizing High gas txs, and having a min gas price for them.
-- [#741](https://github.com/osmosis-labs/osmosis/pull/741) Allow node operators to set a second min gas price for arbitrage txs.
-- [#623](https://github.com/osmosis-labs/osmosis/pull/623) Use gosec for staticly linting for common non-determinism issues in SDK applications.
-
-- [sdk-#100](https://github.com/osmosis-labs/cosmos-sdk/pull/100) Upgrade iavl with fast storage
-- [sdk-#58](https://github.com/osmosis-labs/cosmos-sdk/pull/58) Fix a bug where recheck would not remove txs with invalid sequence numbers
-- [sdk-#52](https://github.com/osmosis-labs/cosmos-sdk/pull/52) Fix inconsistencies in default pruning config, and change defaults. Fix pruning=everything defaults.
-  - previously default was actually keeping 3 weeks of state, and every 100th state. (Not that far off from archive nodes)
-  - pruning=default now changed to 1 week of state (100k blocks), and keep-every=0. (So a constant number of states stored)
-  - pruning=everything now stores the last 10 states, to avoid db corruption errors plaguing everyone who used it. This isn't a significant change, because the pruning interval was anyways 10 blocks, so your node had to store 10 blocks of state anyway.
 
 ## Minor improvements & Bug Fixes
 
 - [#795](https://github.com/osmosis-labs/osmosis/pull/795) Annotate app.go
 - [#791](https://github.com/osmosis-labs/osmosis/pull/791) Change to dependabot config to only upgrade patch version of tendermint
 - [#766](https://github.com/osmosis-labs/osmosis/pull/766) Consolidate code between InitGenesis and CreateGauge
+
+### SDK fork updates
+
+- [sdk-#100](https://github.com/osmosis-labs/cosmos-sdk/pull/100) Upgrade iavl with fast storage
+
+### IAVL fork updates
+
+- [iavl-5](https://github.com/osmosis-labs/iavl/pull/5) Fast storage optimization for queries and iterations
+
+## [v6.2.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.2.0)
+
+### SDK fork updates
+
+- [sdk-#58](https://github.com/osmosis-labs/cosmos-sdk/pull/58) Fix a bug where recheck would not remove txs with invalid sequence numbers
+
+## Minor improvements & Bug Fixes
+
+- [#765](https://github.com/osmosis-labs/osmosis/pull/765) Fix a bug in `Makefile` regarding the location of localtestnet docker image.
+
+## [v6.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.1.0)
+
+## Features
+
+- Update to Tendermint v0.34.15
+- Increase p2p timeouts to alleviate p2p network breaking at epoch
+- [#741](https://github.com/osmosis-labs/osmosis/pull/741) Allow node operators to set a second min gas price for arbitrage txs.
+- [#623](https://github.com/osmosis-labs/osmosis/pull/623) Use gosec for staticly linting for common non-determinism issues in SDK applications.
+
+## Minor improvements & Bug Fixes
+
 - [#722](https://github.com/osmosis-labs/osmosis/issues/722) reuse code for parsing integer slices from string
 - [#704](https://github.com/osmosis-labs/osmosis/pull/704) fix rocksdb
 - [#666](https://github.com/osmosis-labs/osmosis/pull/666) Fix the `--log-level` and `--log-format` commands on `osmosisd start`
@@ -73,6 +90,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### SDK fork updates
 
+- [sdk-#52](https://github.com/osmosis-labs/cosmos-sdk/pull/52) Fix inconsistencies in default pruning config, and change defaults. Fix pruning=everything defaults.
+  - previously default was actually keeping 3 weeks of state, and every 100th state. (Not that far off from archive nodes)
+  - pruning=default now changed to 1 week of state (100k blocks), and keep-every=0. (So a constant number of states stored)
+  - pruning=everything now stores the last 10 states, to avoid db corruption errors plaguing everyone who used it. This isn't a significant change, because the pruning interval was anyways 10 blocks, so your node had to store 10 blocks of state anyway.
 - [sdk-#51](https://github.com/osmosis-labs/cosmos-sdk/pull/51) Add hooks for superfluid staking
 - [sdk-#50](https://github.com/osmosis-labs/cosmos-sdk/pull/50) Make it possible to better permission the bank keeper's minting ability
 
