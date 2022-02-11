@@ -454,11 +454,23 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
-	return k.unlock(ctx, lock)
+	return k.unlockInternalLogic(ctx, lock)
 }
 
-func (k Keeper) unlock(ctx sdk.Context, lock types.PeriodLock) error {
+// ForceUnlock ignores unlock duration and immediately unlock and refund.
+// CONTRACT: should be used only at the chain upgrade script
+// TODO: Revisit for Superfluid Staking
+func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
+	if !lock.IsUnlocking() {
+		err := k.BeginUnlock(ctx, lock)
+		if err != nil {
+			return err
+		}
+	}
+	return k.unlockInternalLogic(ctx, lock)
+}
 
+func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
 		return err
@@ -486,17 +498,4 @@ func (k Keeper) unlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
-}
-
-// ForceUnlock ignores unlock duration and immediately unlock and refund.
-// CONTRACT: should be used only at the chain upgrade script
-// TODO: Revisit for Superfluid Staking
-func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
-	if !lock.IsUnlocking() {
-		err := k.BeginUnlock(ctx, lock)
-		if err != nil {
-			return err
-		}
-	}
-	return k.unlock(ctx, lock)
 }
