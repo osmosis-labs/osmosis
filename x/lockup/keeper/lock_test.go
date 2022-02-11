@@ -64,9 +64,8 @@ func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
 	suite.Require().Equal(locks[0].IsUnlocking(), false)
 
 	// begin unlock
-	lock1, err := suite.app.LockupKeeper.BeginUnlockPeriodLockByID(suite.ctx, 1)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, locks[0])
 	suite.Require().NoError(err)
-	suite.Require().Equal(lock1.ID, uint64(1))
 
 	// check locks
 	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
@@ -97,9 +96,10 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	suite.SetupTest()
 	now := suite.ctx.BlockTime()
+	lockKeeper := suite.app.LockupKeeper
 
 	// initial check
-	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	locks, err := lockKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
 
@@ -109,27 +109,34 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	suite.LockTokens(addr1, coins, time.Second)
 
 	// unlock lock just now
-	lock1, err := suite.app.LockupKeeper.UnlockPeriodLockByID(suite.ctx, 1)
+	lock, err := lockKeeper.GetLockByID(suite.ctx, 1)
+	suite.Require().NoError(err)
+	err = lockKeeper.Unlock(suite.ctx, *lock)
 	suite.Require().Error(err)
-	suite.Require().Equal(lock1.ID, uint64(1))
 
-	// unlock lock after 1s before starting unlock
-	lock2, err := suite.app.LockupKeeper.UnlockPeriodLockByID(suite.ctx.WithBlockTime(now.Add(time.Second)), 1)
+	// move start time to 1 second in the future.
+	suite.ctx = suite.ctx.WithBlockTime(now.Add(time.Second))
+
+	// Try to finish unlocking a lock, before starting unlock.
+	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
+	suite.Require().NoError(err)
+	err = lockKeeper.Unlock(suite.ctx, *lock)
 	suite.Require().Error(err)
-	suite.Require().Equal(lock2.ID, uint64(1))
 
 	// begin unlock
-	lock3, err := suite.app.LockupKeeper.BeginUnlockPeriodLockByID(suite.ctx.WithBlockTime(now.Add(time.Second)), 1)
+	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	suite.Require().Equal(lock3.ID, uint64(1))
+	err = lockKeeper.BeginUnlock(suite.ctx, *lock)
+	suite.Require().NoError(err)
 
 	// unlock 1s after begin unlock
-	lock4, err := suite.app.LockupKeeper.UnlockPeriodLockByID(suite.ctx.WithBlockTime(now.Add(time.Second*2)), 1)
+	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	suite.Require().Equal(lock4.ID, uint64(1))
+	err = lockKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second*2)), *lock)
+	suite.Require().NoError(err)
 
 	// check locks
-	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	locks, err = lockKeeper.GetPeriodLocks(suite.ctx)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
 }

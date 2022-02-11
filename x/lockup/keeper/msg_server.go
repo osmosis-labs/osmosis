@@ -50,6 +50,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 			return &types.MsgLockTokensResponse{}, nil
 		}
 	}
+	// TODO: Add a case here for blocking locking of multiple coin denoms
 
 	lock, err := server.keeper.LockTokens(ctx, owner, msg.Coins, msg.Duration)
 	if err != nil {
@@ -73,7 +74,11 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBeginUnlocking) (*types.MsgBeginUnlockingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	lock, err := server.keeper.BeginUnlockPeriodLockByID(ctx, msg.ID)
+	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	err = server.keeper.BeginUnlock(ctx, *lock)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

@@ -60,26 +60,6 @@ func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddr
 	return locks, coins, err
 }
 
-// BeginUnlockPeriodLockByID begin unlock by period lock ID
-func (k Keeper) BeginUnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.PeriodLock, error) {
-	lock, err := k.GetLockByID(ctx, LockID)
-	if err != nil {
-		return lock, err
-	}
-	err = k.BeginUnlock(ctx, *lock)
-	return lock, err
-}
-
-// UnlockPeriodLockByID unlock by period lock ID
-func (k Keeper) UnlockPeriodLockByID(ctx sdk.Context, LockID uint64) (*types.PeriodLock, error) {
-	lock, err := k.GetLockByID(ctx, LockID)
-	if err != nil {
-		return lock, err
-	}
-	err = k.Unlock(ctx, *lock)
-	return lock, err
-}
-
 func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
 	lock.Coins = lock.Coins.Add(coins...)
 
