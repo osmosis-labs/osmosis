@@ -25,6 +25,23 @@ func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.Require().NoError(err)
 }
 
+func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
+	suite.SetupTest()
+
+	addrNoSupply := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
+	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         defaultLPDenom,
+		Duration:      defaultLockDuration,
+	}
+	_, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1)
+	suite.Require().Error(err)
+
+	_, err = suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	suite.Require().NoError(err)
+}
+
 // TODO: Make this test table driven
 // OR if it needs to be script based,
 // remove lots of boilerplate so this can actually be followed
