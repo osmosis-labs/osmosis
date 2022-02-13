@@ -82,6 +82,12 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
+
+	// mints coins so supply exists on chain
+	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, gaugeCreator, mintLPtokens)
+	suite.Require().NoError(err)
+
 	gaugeId, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, true, gaugeCreator, coins, distrTo, time.Now(), 1)
 	suite.NoError(err)
 	err = suite.app.PoolIncentivesKeeper.UpdateDistrRecords(suite.ctx, poolincentivestypes.DistrRecord{

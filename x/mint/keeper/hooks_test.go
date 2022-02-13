@@ -216,6 +216,12 @@ func setupGaugeForLPIncentives(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Co
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
+
+	// mints coins so supply exists on chain
+	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
+	require.NoError(t, err)
+
 	_, err = app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 }
