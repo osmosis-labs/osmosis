@@ -145,8 +145,9 @@ dist_index = [i for i, elem in enumerate(app_state_balances_list) if dist_addres
 dist_all = app_state_balances_list[dist_index]['coins']
 osmo_index = [i for i, elem in enumerate(dist_all) if 'uosmo' in elem['denom']][0]
 current_dist_osmo_bal = dist_all[osmo_index]['amount']
+dist_offset_amt = 3
 print("Current distribution account uosmo balance is " + current_dist_osmo_bal)
-new_dist_osmo_bal = str(int(current_dist_osmo_bal) - 3)
+new_dist_osmo_bal = str(int(current_dist_osmo_bal) - dist_offset_amt)
 print("New distribution account uosmo balance is " + new_dist_osmo_bal)
 dist_all[osmo_index]['amount'] = new_dist_osmo_bal
 
@@ -228,9 +229,8 @@ osmo_supply = supply[osmo_index]['amount']
 print("Current OSMO supply is " + osmo_supply)
 
 #update osmo supply to new total osmo value (add 2 Billion OSMO)
-#changed to 1.9 due to module account off by two error
 #subtract by however much module account is subtracted by
-osmo_supply_new = int(osmo_supply) + 1999999999999997
+osmo_supply_new = int(osmo_supply) + 2000000000000000 - dist_offset_amt
 print("New OSMO supply is " + str(osmo_supply_new))
 supply[osmo_index]['amount'] = str(osmo_supply_new)
 
@@ -252,13 +252,13 @@ bank_bal_list[module_acct_index]['coins'][osmo_bal_index]['amount'] = str(new_os
 
 
 #edit epoch params
-#change epoch duration to 3600s
+#change epoch duration to 21600s
 epochs_list = read_test_gen['app_state']['epochs']['epochs'][0]
 duration_current = epochs_list['duration']
 print("Current epoch duration is " + duration_current)
 #21600s for 6 hour epoch
 #CAN MODIFY
-new_duration = '3600s'
+new_duration = '21600s'
 print("New epoch duration is " + new_duration)
 epochs_list['duration'] = new_duration
 
