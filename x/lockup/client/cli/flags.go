@@ -14,13 +14,13 @@ const (
 func FlagSetLockTokens() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagDuration, "86400s", "The duration token to be locked. e.g. 1h, 1m, 1s, 0.1s")
+	fs.String(FlagDuration, "86400s", "The duration token to be locked. e.g. 86400s, 604800s, 1209600s")
 	return fs
 }
 
 func FlagSetMinDuration() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagMinDuration, "1d", "The minimum duration of token bonded. e.g. 1d, 7d, 14d")
+	fs.String(FlagMinDuration, "86400s", "The minimum duration of token bonded. e.g. 86400s, 604800s, 1209600s")
 	return fs
 }
