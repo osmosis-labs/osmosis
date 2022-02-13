@@ -238,7 +238,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.GetSubspace(incentivestypes.ModuleName),
 		app.BankKeeper, app.LockupKeeper, app.EpochsKeeper)
 
-	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
+	app.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
 		*app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.EpochsKeeper, app.LockupKeeper, gammKeeper, app.IncentivesKeeper)
 
@@ -316,7 +316,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*app.PoolIncentivesKeeper)).
 		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IBCKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper)).
-		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(app.SuperfluidKeeper))
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*app.SuperfluidKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {

@@ -350,7 +350,7 @@ type OsmosisApp struct {
 	MintKeeper           *mintkeeper.Keeper
 	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
 	TxFeesKeeper         *txfeeskeeper.Keeper
-	SuperfluidKeeper     superfluidkeeper.Keeper
+	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
 
@@ -486,7 +486,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
+		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	)
 
@@ -604,7 +604,7 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
+		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
 		app.transferModule,
 	)
 
