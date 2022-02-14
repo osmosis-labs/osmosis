@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,33 +23,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 
 		// Slash all module accounts' LP token based on slash amount before twap update
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			if asset.AssetType == types.SuperfluidAssetTypeLPShare {
-				// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
-				poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
-				pool, err := k.gk.GetPool(ctx, poolId)
-				if err != nil {
-					// Pool has been unexpectedly deleted
-					k.Logger(ctx).Error(err.Error())
-					k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
-					continue
-				}
-
-				// get OSMO amount
-				bondDenom := k.sk.BondDenom(ctx)
-				osmoPoolAsset, err := pool.GetPoolAsset(bondDenom)
-				if err != nil {
-					// Pool has unexpectedly removed Osmo from its assets.
-					k.Logger(ctx).Error(err.Error())
-					k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
-					continue
-				}
-
-				twap := osmoPoolAsset.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
-				k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
-			} else if asset.AssetType == types.SuperfluidAssetTypeNative {
-				// TODO: should get twap price from gamm module and use the price
-				// which pool should it use to calculate native token price?
-				k.Logger(ctx).Error("unsupported superfluid asset type")
+			err := k.updateEpochTwap(ctx, asset, epochNumber)
+			if err != nil {
+				// TODO: Revisit what we do here.
+				// Since at MVP of feature, we only have one pool of superfluid staking,
+				// we can punt this question.
+				// each of the errors feels like significant misconfig
+				break
 			}
 		}
 
@@ -58,6 +39,39 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 		// Refresh intermediary accounts' delegation amounts
 		k.RefreshIntermediaryDelegationAmounts(ctx)
 	}
+}
+
+func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, epochNumber int64) error {
+	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
+		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
+		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
+		pool, err := k.gk.GetPool(ctx, poolId)
+		if err != nil {
+			// Pool has been unexpectedly deleted
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
+
+		// get OSMO amount
+		bondDenom := k.sk.BondDenom(ctx)
+		osmoPoolAsset, err := pool.GetPoolAsset(bondDenom)
+		if err != nil {
+			// Pool has unexpectedly removed Osmo from its assets.
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
+
+		twap := osmoPoolAsset.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
+		k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
+	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
+		// TODO: should get twap price from gamm module and use the price
+		// which pool should it use to calculate native token price?
+		k.Logger(ctx).Error("unsupported superfluid asset type")
+		return errors.New("SuperfluidAssetTypeNative is unspported")
+	}
+	return nil
 }
 
 // ___________________________________________________________________________________________________
