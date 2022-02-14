@@ -23,8 +23,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
 				pool, err := k.gk.GetPool(ctx, poolId)
 				if err != nil {
+					// Pool has been unexpectedly deleted
 					k.Logger(ctx).Error(err.Error())
-					k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, sdk.NewDec(0))
+					k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 					continue
 				}
 
@@ -32,8 +33,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				bondDenom := k.sk.BondDenom(ctx)
 				osmoPoolAsset, err := pool.GetPoolAsset(bondDenom)
 				if err != nil {
+					// Pool has unexpectedly removed Osmo from its assets.
 					k.Logger(ctx).Error(err.Error())
-					k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, sdk.NewDec(0))
+					k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 					continue
 				}
 

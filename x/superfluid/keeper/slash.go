@@ -12,8 +12,10 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 	if err != nil {
 		panic(err)
 	}
+
 	acc := k.GetIntermediaryAccount(ctx, delAddr)
-	if acc.Denom == "" { // if delAddr is not intermediary account, pass
+	// if delAddr is not intermediary account, pass
+	if acc.Denom == "" {
 		return
 	}
 

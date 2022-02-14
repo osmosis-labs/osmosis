@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
@@ -20,9 +22,12 @@ func (k Keeper) HandleSetSuperfluidAssetsProposal(ctx sdk.Context, p *types.SetS
 
 func (k Keeper) HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, p *types.RemoveSuperfluidAssetsProposal) error {
 	for _, denom := range p.SuperfluidAssetDenoms {
-		// TODO: Why do we need this SetEpochOsmoEquivalentTWAP, why don't we have a unified delete?
-		k.SetEpochOsmoEquivalentTWAP(ctx, 0, denom, sdk.ZeroDec())
-		k.DeleteSuperfluidAsset(ctx, denom)
+		asset := k.GetSuperfluidAsset(ctx, denom)
+		dummyAsset := types.SuperfluidAsset{}
+		if asset == dummyAsset {
+			return fmt.Errorf("superfluid asset %s doesn't exist", denom)
+		}
+		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 		event := sdk.NewEvent(
 			types.TypeEvtRemoveSuperfluidAsset,
 			sdk.NewAttribute(types.AttributeDenom, denom),
