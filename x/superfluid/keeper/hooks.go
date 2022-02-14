@@ -10,12 +10,16 @@ import (
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 )
 
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, _ int64) {
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
+		// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
+		// the supplied epoch number is wrong at time of commit. hence we get from the info.
+		epochNumber := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
+
 		// Slash all module accounts' LP token based on slash amount before twap update
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			if asset.AssetType == types.SuperfluidAssetTypeLPShare {
