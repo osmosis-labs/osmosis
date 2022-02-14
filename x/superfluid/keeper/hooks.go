@@ -25,11 +25,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			err := k.updateEpochTwap(ctx, asset, epochNumber)
 			if err != nil {
-				// TODO: Revisit what we do here.
+				// TODO: Revisit what we do here. (halt all distr, only skip this asset)
 				// Since at MVP of feature, we only have one pool of superfluid staking,
 				// we can punt this question.
 				// each of the errors feels like significant misconfig
-				break
+				return
 			}
 		}
 

@@ -18,3 +18,9 @@ func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asse
 	k.SetEpochOsmoEquivalentTWAP(ctx, epochNum, asset.Denom, sdk.ZeroDec())
 	k.DeleteSuperfluidAsset(ctx, asset.Denom)
 }
+
+func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.SuperfluidAsset, amount sdk.Int) sdk.Int {
+	// TODO: we need to figure out how to do this later.
+	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
+	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt())
+}

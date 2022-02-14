@@ -59,10 +59,3 @@ func (k Keeper) GetAllSuperfluidAssets(ctx sdk.Context) []types.SuperfluidAsset 
 	}
 	return assets
 }
-
-// TODO: Move this function to another file
-func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.SuperfluidAsset, amount sdk.Int) sdk.Int {
-	// TODO: we need to figure out how to do this later.
-	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
-	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt())
-}
