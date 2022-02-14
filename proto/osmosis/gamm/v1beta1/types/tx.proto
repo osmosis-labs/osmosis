@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.gamm.v1beta1;
+package osmosis.gamm.v1beta1.types;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
