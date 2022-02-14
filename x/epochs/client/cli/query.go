@@ -75,7 +75,7 @@ func GetCmdCurrentEpoch() *cobra.Command {
 			fmt.Sprintf(`Query current epoch by specified identifier.
 
 Example:
-$ %s query epochs current-epoch weekly
+$ %s query epochs current-epoch day
 `,
 				version.AppName,
 			),
