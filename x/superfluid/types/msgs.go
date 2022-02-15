@@ -75,35 +75,35 @@ func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
-var _ sdk.Msg = &MsgSuperfluidRedelegate{}
+// var _ sdk.Msg = &MsgSuperfluidRedelegate{}
 
-// NewMsgSuperfluidRedelegate creates a message to do superfluid redelegation
-func NewMsgSuperfluidRedelegate(sender sdk.AccAddress, lockId uint64, newValAddr sdk.ValAddress) *MsgSuperfluidRedelegate {
-	return &MsgSuperfluidRedelegate{
-		Sender:     sender.String(),
-		LockId:     lockId,
-		NewValAddr: newValAddr.String(),
-	}
-}
+// // NewMsgSuperfluidRedelegate creates a message to do superfluid redelegation
+// func NewMsgSuperfluidRedelegate(sender sdk.AccAddress, lockId uint64, newValAddr sdk.ValAddress) *MsgSuperfluidRedelegate {
+// 	return &MsgSuperfluidRedelegate{
+// 		Sender:     sender.String(),
+// 		LockId:     lockId,
+// 		NewValAddr: newValAddr.String(),
+// 	}
+// }
 
-func (m MsgSuperfluidRedelegate) Route() string { return RouterKey }
-func (m MsgSuperfluidRedelegate) Type() string  { return TypeMsgSuperfluidRedelegate }
-func (m MsgSuperfluidRedelegate) ValidateBasic() error {
-	if m.Sender == "" {
-		return fmt.Errorf("sender should not be an empty address")
-	}
-	if m.LockId == 0 {
-		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
-	}
-	if m.NewValAddr == "" {
-		return fmt.Errorf("NewValAddr should not be empty")
-	}
-	return nil
-}
-func (m MsgSuperfluidRedelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-func (m MsgSuperfluidRedelegate) GetSigners() []sdk.AccAddress {
-	sender, _ := sdk.AccAddressFromBech32(m.Sender)
-	return []sdk.AccAddress{sender}
-}
+// func (m MsgSuperfluidRedelegate) Route() string { return RouterKey }
+// func (m MsgSuperfluidRedelegate) Type() string  { return TypeMsgSuperfluidRedelegate }
+// func (m MsgSuperfluidRedelegate) ValidateBasic() error {
+// 	if m.Sender == "" {
+// 		return fmt.Errorf("sender should not be an empty address")
+// 	}
+// 	if m.LockId == 0 {
+// 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
+// 	}
+// 	if m.NewValAddr == "" {
+// 		return fmt.Errorf("NewValAddr should not be empty")
+// 	}
+// 	return nil
+// }
+// func (m MsgSuperfluidRedelegate) GetSignBytes() []byte {
+// 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+// }
+// func (m MsgSuperfluidRedelegate) GetSigners() []sdk.AccAddress {
+// 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+// 	return []sdk.AccAddress{sender}
+// }

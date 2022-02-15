@@ -208,11 +208,13 @@ func (m *QueryCondition) GetTimestamp() time.Time {
 type SyntheticLock struct {
 	UnderlyingLockId uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockId,proto3" json:"underlying_lock_id,omitempty"`
 	Suffix           string `protobuf:"bytes,2,opt,name=suffix,proto3" json:"suffix,omitempty"`
-	// used for unbonding synthetic lockups, for active synthetic lockups, this value is set to uninitialized value
-	EndTime  time.Time                                `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
-	Duration time.Duration                            `protobuf:"bytes,4,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
-	Coins    github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
-	Owner    string                                   `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
+	// used for unbonding synthetic lockups, for active synthetic lockups, this
+	// value is set to uninitialized value
+	EndTime  time.Time     `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
+	Duration time.Duration `protobuf:"bytes,4,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
+	// The coins from the underlying lock ID that are synthetically locked
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+	Owner string                                   `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
 }
 
 func (m *SyntheticLock) Reset()         { *m = SyntheticLock{} }

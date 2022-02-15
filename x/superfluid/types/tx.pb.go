@@ -214,141 +214,40 @@ func (m *MsgSuperfluidUndelegateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSuperfluidUndelegateResponse proto.InternalMessageInfo
 
-type MsgSuperfluidRedelegate struct {
-	Sender     string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LockId     uint64 `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	NewValAddr string `protobuf:"bytes,3,opt,name=new_val_addr,json=newValAddr,proto3" json:"new_val_addr,omitempty"`
-}
-
-func (m *MsgSuperfluidRedelegate) Reset()         { *m = MsgSuperfluidRedelegate{} }
-func (m *MsgSuperfluidRedelegate) String() string { return proto.CompactTextString(m) }
-func (*MsgSuperfluidRedelegate) ProtoMessage()    {}
-func (*MsgSuperfluidRedelegate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_55b645f187d22814, []int{4}
-}
-func (m *MsgSuperfluidRedelegate) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSuperfluidRedelegate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSuperfluidRedelegate.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSuperfluidRedelegate) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSuperfluidRedelegate.Merge(m, src)
-}
-func (m *MsgSuperfluidRedelegate) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSuperfluidRedelegate) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSuperfluidRedelegate.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSuperfluidRedelegate proto.InternalMessageInfo
-
-func (m *MsgSuperfluidRedelegate) GetSender() string {
-	if m != nil {
-		return m.Sender
-	}
-	return ""
-}
-
-func (m *MsgSuperfluidRedelegate) GetLockId() uint64 {
-	if m != nil {
-		return m.LockId
-	}
-	return 0
-}
-
-func (m *MsgSuperfluidRedelegate) GetNewValAddr() string {
-	if m != nil {
-		return m.NewValAddr
-	}
-	return ""
-}
-
-type MsgSuperfluidRedelegateResponse struct {
-}
-
-func (m *MsgSuperfluidRedelegateResponse) Reset()         { *m = MsgSuperfluidRedelegateResponse{} }
-func (m *MsgSuperfluidRedelegateResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgSuperfluidRedelegateResponse) ProtoMessage()    {}
-func (*MsgSuperfluidRedelegateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_55b645f187d22814, []int{5}
-}
-func (m *MsgSuperfluidRedelegateResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSuperfluidRedelegateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSuperfluidRedelegateResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSuperfluidRedelegateResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSuperfluidRedelegateResponse.Merge(m, src)
-}
-func (m *MsgSuperfluidRedelegateResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSuperfluidRedelegateResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSuperfluidRedelegateResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSuperfluidRedelegateResponse proto.InternalMessageInfo
-
 func init() {
 	proto.RegisterType((*MsgSuperfluidDelegate)(nil), "osmosis.superfluid.MsgSuperfluidDelegate")
 	proto.RegisterType((*MsgSuperfluidDelegateResponse)(nil), "osmosis.superfluid.MsgSuperfluidDelegateResponse")
 	proto.RegisterType((*MsgSuperfluidUndelegate)(nil), "osmosis.superfluid.MsgSuperfluidUndelegate")
 	proto.RegisterType((*MsgSuperfluidUndelegateResponse)(nil), "osmosis.superfluid.MsgSuperfluidUndelegateResponse")
-	proto.RegisterType((*MsgSuperfluidRedelegate)(nil), "osmosis.superfluid.MsgSuperfluidRedelegate")
-	proto.RegisterType((*MsgSuperfluidRedelegateResponse)(nil), "osmosis.superfluid.MsgSuperfluidRedelegateResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/superfluid/tx.proto", fileDescriptor_55b645f187d22814) }
 
 var fileDescriptor_55b645f187d22814 = []byte{
-	// 413 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x31, 0x6f, 0xda, 0x40,
-	0x18, 0xc5, 0x50, 0x41, 0x7b, 0x6a, 0x87, 0x9e, 0xa8, 0xa0, 0xae, 0x6a, 0xa8, 0xbb, 0x50, 0x55,
-	0xf5, 0x09, 0xd8, 0xba, 0x15, 0x75, 0xa9, 0x54, 0x16, 0x57, 0xcd, 0x10, 0x29, 0x42, 0x67, 0xdf,
-	0x71, 0xb1, 0x72, 0xf8, 0x2c, 0x9f, 0x6d, 0x60, 0xca, 0x5f, 0xc8, 0xcf, 0xca, 0xc8, 0x98, 0x29,
-	0x8a, 0x60, 0xce, 0x92, 0x5f, 0x10, 0x61, 0x6c, 0x1c, 0xc0, 0x11, 0x44, 0x62, 0xbb, 0xef, 0xde,
-	0xd3, 0x7b, 0x4f, 0xef, 0xb3, 0x0f, 0x7c, 0x12, 0x72, 0x24, 0xa4, 0x23, 0x91, 0x0c, 0x3d, 0xea,
-	0x0f, 0x79, 0xe8, 0x10, 0x14, 0x4c, 0x0c, 0xcf, 0x17, 0x81, 0x80, 0x30, 0x01, 0x8d, 0x0c, 0x54,
-	0xab, 0x4c, 0x30, 0x11, 0xc3, 0x68, 0x79, 0x5a, 0x31, 0x55, 0x8d, 0x09, 0xc1, 0x38, 0x45, 0xf1,
-	0x64, 0x85, 0x43, 0x44, 0x42, 0x1f, 0x07, 0x8e, 0x70, 0x53, 0xdc, 0x8e, 0xa5, 0x90, 0x85, 0x25,
-	0x45, 0x51, 0xdb, 0xa2, 0x01, 0x6e, 0x23, 0x5b, 0x38, 0x29, 0xfe, 0x35, 0x27, 0x46, 0x76, 0x5c,
-	0x91, 0xf4, 0x08, 0x7c, 0xe8, 0x4b, 0xf6, 0x6f, 0x7d, 0xfd, 0x9b, 0x72, 0xca, 0x70, 0x40, 0xe1,
-	0x37, 0x50, 0x96, 0xd4, 0x25, 0xd4, 0xaf, 0x2b, 0x4d, 0xa5, 0xf5, 0xa6, 0xf7, 0xfe, 0xe1, 0xb6,
-	0xf1, 0x6e, 0x8a, 0x47, 0xfc, 0xa7, 0xbe, 0xba, 0xd7, 0xcd, 0x84, 0x00, 0x6b, 0xa0, 0xc2, 0x85,
-	0x7d, 0x31, 0x70, 0x48, 0xbd, 0xd8, 0x54, 0x5a, 0xaf, 0xcc, 0xf2, 0x72, 0xfc, 0x43, 0xe0, 0x47,
-	0xf0, 0x3a, 0xc2, 0x7c, 0x80, 0x09, 0xf1, 0xeb, 0xa5, 0xa5, 0x8a, 0x59, 0x89, 0x30, 0xff, 0x45,
-	0x88, 0xaf, 0x37, 0xc0, 0xe7, 0x5c, 0x5f, 0x93, 0x4a, 0x4f, 0xb8, 0x92, 0xea, 0x67, 0xa0, 0xb6,
-	0x41, 0xf8, 0xef, 0x92, 0x23, 0x46, 0xd3, 0xbf, 0x80, 0xc6, 0x33, 0xf2, 0xeb, 0x04, 0x97, 0x5b,
-	0x09, 0x4c, 0x7a, 0xcc, 0x04, 0xb0, 0x09, 0xde, 0xba, 0x74, 0x3c, 0xd8, 0x2a, 0x08, 0xb8, 0x74,
-	0x7c, 0x92, 0x74, 0xb4, 0x9d, 0x31, 0x0b, 0x90, 0x66, 0xec, 0xdc, 0x17, 0x41, 0xa9, 0x2f, 0x19,
-	0xf4, 0x01, 0xcc, 0xdb, 0xa1, 0xb1, 0xfb, 0xb1, 0x19, 0xb9, 0xb5, 0xab, 0xed, 0x83, 0xa9, 0xa9,
-	0x37, 0x9c, 0x80, 0x6a, 0xee, 0x7a, 0xbe, 0xef, 0x95, 0xca, 0xc8, 0x6a, 0xf7, 0x05, 0xe4, 0x7c,
-	0xe7, 0x27, 0x6b, 0xd9, 0xef, 0x9c, 0x91, 0x0f, 0x70, 0xde, 0xed, 0xbb, 0xf7, 0xf7, 0x7a, 0xae,
-	0x29, 0xb3, 0xb9, 0xa6, 0xdc, 0xcd, 0x35, 0xe5, 0x6a, 0xa1, 0x15, 0x66, 0x0b, 0xad, 0x70, 0xb3,
-	0xd0, 0x0a, 0xa7, 0x1d, 0xe6, 0x04, 0xe7, 0xa1, 0x65, 0xd8, 0x62, 0x84, 0x12, 0xe1, 0x1f, 0x1c,
-	0x5b, 0x32, 0x1d, 0xd0, 0x64, 0xe3, 0x39, 0x98, 0x7a, 0x54, 0x5a, 0xe5, 0xf8, 0x1f, 0xec, 0x3e,
-	0x06, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x29, 0x6d, 0x31, 0x31, 0x04, 0x00, 0x00,
+	// 367 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xc1, 0x4a, 0xf3, 0x40,
+	0x10, 0xc7, 0x9b, 0xaf, 0x1f, 0xad, 0x2e, 0x78, 0x70, 0xa9, 0xb4, 0x46, 0xdc, 0xd6, 0x78, 0xa9,
+	0x88, 0x59, 0xda, 0xde, 0xbc, 0x59, 0xbc, 0x08, 0xf6, 0x12, 0xf1, 0x22, 0x48, 0xd9, 0x64, 0xb7,
+	0x6b, 0x70, 0x9b, 0x0d, 0xbb, 0x49, 0x68, 0xdf, 0xc2, 0xc7, 0xf2, 0xd8, 0xa3, 0x27, 0x91, 0xf6,
+	0x0d, 0xf4, 0x05, 0xa4, 0x69, 0x63, 0x29, 0x46, 0x54, 0xf0, 0x36, 0x33, 0xff, 0x1f, 0xff, 0x99,
+	0xd9, 0x1d, 0xb0, 0x27, 0xf5, 0x50, 0x6a, 0x5f, 0x63, 0x1d, 0x87, 0x4c, 0x0d, 0x44, 0xec, 0x53,
+	0x1c, 0x8d, 0xec, 0x50, 0xc9, 0x48, 0x42, 0xb8, 0x14, 0xed, 0x95, 0x68, 0x56, 0xb8, 0xe4, 0x32,
+	0x95, 0xf1, 0x3c, 0x5a, 0x90, 0x26, 0xe2, 0x52, 0x72, 0xc1, 0x70, 0x9a, 0xb9, 0xf1, 0x00, 0xd3,
+	0x58, 0x91, 0xc8, 0x97, 0x41, 0xa6, 0x7b, 0xa9, 0x15, 0x76, 0x89, 0x66, 0x38, 0x69, 0xb9, 0x2c,
+	0x22, 0x2d, 0xec, 0x49, 0x3f, 0xd3, 0x0f, 0x73, 0xc6, 0x58, 0x85, 0x0b, 0xc8, 0x4a, 0xc0, 0x4e,
+	0x4f, 0xf3, 0xab, 0x8f, 0xf2, 0x39, 0x13, 0x8c, 0x93, 0x88, 0xc1, 0x23, 0x50, 0xd2, 0x2c, 0xa0,
+	0x4c, 0xd5, 0x8c, 0x86, 0xd1, 0xdc, 0xec, 0x6e, 0xbf, 0x3e, 0xd7, 0xb7, 0xc6, 0x64, 0x28, 0x4e,
+	0xad, 0x45, 0xdd, 0x72, 0x96, 0x00, 0xac, 0x82, 0xb2, 0x90, 0xde, 0x7d, 0xdf, 0xa7, 0xb5, 0x7f,
+	0x0d, 0xa3, 0xf9, 0xdf, 0x29, 0xcd, 0xd3, 0x0b, 0x0a, 0x77, 0xc1, 0x46, 0x42, 0x44, 0x9f, 0x50,
+	0xaa, 0x6a, 0xc5, 0xb9, 0x8b, 0x53, 0x4e, 0x88, 0x38, 0xa3, 0x54, 0x59, 0x75, 0xb0, 0x9f, 0xdb,
+	0xd7, 0x61, 0x3a, 0x94, 0x81, 0x66, 0xd6, 0x2d, 0xa8, 0xae, 0x01, 0xd7, 0x01, 0xfd, 0xc3, 0xd1,
+	0xac, 0x03, 0x50, 0xff, 0xc2, 0x3e, 0x9b, 0xa0, 0xfd, 0x66, 0x80, 0x62, 0x4f, 0x73, 0xa8, 0x00,
+	0xcc, 0x7b, 0x1f, 0xfb, 0xf3, 0x47, 0xda, 0xb9, 0x2b, 0x99, 0xad, 0x1f, 0xa3, 0x59, 0x6f, 0x38,
+	0x02, 0x95, 0xdc, 0xd5, 0x8f, 0xbf, 0xb5, 0x5a, 0xc1, 0x66, 0xe7, 0x17, 0x70, 0xd6, 0xb9, 0x7b,
+	0xf9, 0x38, 0x45, 0xc6, 0x64, 0x8a, 0x8c, 0x97, 0x29, 0x32, 0x1e, 0x66, 0xa8, 0x30, 0x99, 0xa1,
+	0xc2, 0xd3, 0x0c, 0x15, 0x6e, 0xda, 0xdc, 0x8f, 0xee, 0x62, 0xd7, 0xf6, 0xe4, 0x10, 0x2f, 0x8d,
+	0x4f, 0x04, 0x71, 0x75, 0x96, 0xe0, 0xd1, 0xda, 0xc1, 0x8f, 0x43, 0xa6, 0xdd, 0x52, 0x7a, 0x65,
+	0x9d, 0xf7, 0x00, 0x00, 0x00, 0xff, 0xff, 0x5d, 0x88, 0xc4, 0x5e, 0x13, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -367,8 +266,6 @@ type MsgClient interface {
 	SuperfluidDelegate(ctx context.Context, in *MsgSuperfluidDelegate, opts ...grpc.CallOption) (*MsgSuperfluidDelegateResponse, error)
 	// Execute superfluid undelegation for a lockup
 	SuperfluidUndelegate(ctx context.Context, in *MsgSuperfluidUndelegate, opts ...grpc.CallOption) (*MsgSuperfluidUndelegateResponse, error)
-	// Execute superfluid redelegation for a lockup
-	SuperfluidRedelegate(ctx context.Context, in *MsgSuperfluidRedelegate, opts ...grpc.CallOption) (*MsgSuperfluidRedelegateResponse, error)
 }
 
 type msgClient struct {
@@ -397,23 +294,12 @@ func (c *msgClient) SuperfluidUndelegate(ctx context.Context, in *MsgSuperfluidU
 	return out, nil
 }
 
-func (c *msgClient) SuperfluidRedelegate(ctx context.Context, in *MsgSuperfluidRedelegate, opts ...grpc.CallOption) (*MsgSuperfluidRedelegateResponse, error) {
-	out := new(MsgSuperfluidRedelegateResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Msg/SuperfluidRedelegate", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Execute superfluid delegation for a lockup
 	SuperfluidDelegate(context.Context, *MsgSuperfluidDelegate) (*MsgSuperfluidDelegateResponse, error)
 	// Execute superfluid undelegation for a lockup
 	SuperfluidUndelegate(context.Context, *MsgSuperfluidUndelegate) (*MsgSuperfluidUndelegateResponse, error)
-	// Execute superfluid redelegation for a lockup
-	SuperfluidRedelegate(context.Context, *MsgSuperfluidRedelegate) (*MsgSuperfluidRedelegateResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -425,9 +311,6 @@ func (*UnimplementedMsgServer) SuperfluidDelegate(ctx context.Context, req *MsgS
 }
 func (*UnimplementedMsgServer) SuperfluidUndelegate(ctx context.Context, req *MsgSuperfluidUndelegate) (*MsgSuperfluidUndelegateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SuperfluidUndelegate not implemented")
-}
-func (*UnimplementedMsgServer) SuperfluidRedelegate(ctx context.Context, req *MsgSuperfluidRedelegate) (*MsgSuperfluidRedelegateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SuperfluidRedelegate not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -470,24 +353,6 @@ func _Msg_SuperfluidUndelegate_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SuperfluidRedelegate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSuperfluidRedelegate)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).SuperfluidRedelegate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/osmosis.superfluid.Msg/SuperfluidRedelegate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SuperfluidRedelegate(ctx, req.(*MsgSuperfluidRedelegate))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.superfluid.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -499,10 +364,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SuperfluidUndelegate",
 			Handler:    _Msg_SuperfluidUndelegate_Handler,
-		},
-		{
-			MethodName: "SuperfluidRedelegate",
-			Handler:    _Msg_SuperfluidRedelegate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -632,71 +493,6 @@ func (m *MsgSuperfluidUndelegateResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgSuperfluidRedelegate) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSuperfluidRedelegate) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSuperfluidRedelegate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.NewValAddr) > 0 {
-		i -= len(m.NewValAddr)
-		copy(dAtA[i:], m.NewValAddr)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.NewValAddr)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.LockId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.LockId))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Sender) > 0 {
-		i -= len(m.Sender)
-		copy(dAtA[i:], m.Sender)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgSuperfluidRedelegateResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSuperfluidRedelegateResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSuperfluidRedelegateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -754,35 +550,6 @@ func (m *MsgSuperfluidUndelegate) Size() (n int) {
 }
 
 func (m *MsgSuperfluidUndelegateResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgSuperfluidRedelegate) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Sender)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.LockId != 0 {
-		n += 1 + sovTx(uint64(m.LockId))
-	}
-	l = len(m.NewValAddr)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgSuperfluidRedelegateResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1108,189 +875,6 @@ func (m *MsgSuperfluidUndelegateResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgSuperfluidUndelegateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgSuperfluidRedelegate) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSuperfluidRedelegate: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSuperfluidRedelegate: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Sender = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
-			}
-			m.LockId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LockId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NewValAddr", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.NewValAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgSuperfluidRedelegateResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSuperfluidRedelegateResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSuperfluidRedelegateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
