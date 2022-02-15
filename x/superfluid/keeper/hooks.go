@@ -67,8 +67,8 @@ func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, en
 		}
 
 		twap := osmoPoolAsset.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
-		// TODO: This reads to me as an off by one error in the epoch number
-		k.SetEpochOsmoEquivalentTWAP(ctx, endedEpochNumber, asset.Denom, twap)
+		beginningEpochNumber := endedEpochNumber + 1
+		k.SetEpochOsmoEquivalentTWAP(ctx, beginningEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: should get twap price from gamm module and use the price
 		// which pool should it use to calculate native token price?
