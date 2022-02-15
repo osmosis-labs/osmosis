@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- [#869](https://github.com/osmosis-labs/osmosis/pull/869) Update Dockerfile to use distroless base image.
 - [#856](https://github.com/osmosis-labs/osmosis/pull/856) Make superfluid staking keeper in app.go a pointer receiver.
 - [#765](https://github.com/osmosis-labs/osmosis/pull/765) Fix a bug in `Makefile` regarding the location of localtestnet docker image.
 - [#795](https://github.com/osmosis-labs/osmosis/pull/795) Annotate app.go
