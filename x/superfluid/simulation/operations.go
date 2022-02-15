@@ -38,7 +38,7 @@ func WeightedOperations(
 	var (
 		weightMsgSuperfluidDelegate   int
 		weightMsgSuperfluidUndelegate int
-		weightMsgSuperfluidRedelegate int
+		// weightMsgSuperfluidRedelegate int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidDelegate, &weightMsgSuperfluidDelegate, nil,
@@ -53,11 +53,11 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidRedelegate, &weightMsgSuperfluidRedelegate, nil,
-		func(_ *rand.Rand) {
-			weightMsgSuperfluidRedelegate = DefaultWeightMsgSuperfluidRedelegate
-		},
-	)
+	// appParams.GetOrGenerate(cdc, OpWeightMsgSuperfluidRedelegate, &weightMsgSuperfluidRedelegate, nil,
+	// 	func(_ *rand.Rand) {
+	// 		weightMsgSuperfluidRedelegate = DefaultWeightMsgSuperfluidRedelegate
+	// 	},
+	// )
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -68,10 +68,10 @@ func WeightedOperations(
 			weightMsgSuperfluidUndelegate,
 			SimulateMsgSuperfluidUndelegate(ak, bk, lk, k),
 		),
-		simulation.NewWeightedOperation(
-			weightMsgSuperfluidRedelegate,
-			SimulateMsgSuperfluidRedelegate(ak, bk, sk, lk, k),
-		),
+		// simulation.NewWeightedOperation(
+		// 	weightMsgSuperfluidRedelegate,
+		// 	SimulateMsgSuperfluidRedelegate(ak, bk, sk, lk, k),
+		// ),
 	}
 }
 
@@ -146,41 +146,41 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 	}
 }
 
-func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
+// func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
+// 	return func(
+// 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+// 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+// 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
-		// select random validator
-		validator := RandomValidator(ctx, r, sk)
-		if validator == nil {
-			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "No validator"), nil, nil
-		}
+// 		// select random validator
+// 		validator := RandomValidator(ctx, r, sk)
+// 		if validator == nil {
+// 			return simtypes.NoOpMsg(
+// 				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "No validator"), nil, nil
+// 		}
 
-		lock, simAccount := RandomLockAndAccount(ctx, r, lk, accs)
-		if lock == nil {
-			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Account have no period lock"), nil, nil
-		}
+// 		lock, simAccount := RandomLockAndAccount(ctx, r, lk, accs)
+// 		if lock == nil {
+// 			return simtypes.NoOpMsg(
+// 				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Account have no period lock"), nil, nil
+// 		}
 
-		if k.GetLockIdIntermediaryAccountConnection(ctx, lock.ID).Empty() {
-			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Lock is not used for superfluid staking"), nil, nil
-		}
+// 		if k.GetLockIdIntermediaryAccountConnection(ctx, lock.ID).Empty() {
+// 			return simtypes.NoOpMsg(
+// 				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Lock is not used for superfluid staking"), nil, nil
+// 		}
 
-		msg := types.MsgSuperfluidRedelegate{
-			Sender:     lock.Owner,
-			LockId:     lock.ID,
-			NewValAddr: validator.OperatorAddress,
-		}
+// 		msg := types.MsgSuperfluidRedelegate{
+// 			Sender:     lock.Owner,
+// 			LockId:     lock.ID,
+// 			NewValAddr: validator.OperatorAddress,
+// 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
-	}
-}
+// 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+// 		return osmo_simulation.GenAndDeliverTxWithRandFees(
+// 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
+// 	}
+// }
 
 func RandomLockAndAccount(ctx sdk.Context, r *rand.Rand, lk types.LockupKeeper, accs []simtypes.Account) (*lockuptypes.PeriodLock, simtypes.Account) {
 	simAccount, _ := simtypes.RandomAcc(r, accs)
