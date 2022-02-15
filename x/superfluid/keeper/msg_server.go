@@ -34,9 +34,9 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
 
-func (server msgServer) SuperfluidRedelegate(goCtx context.Context, msg *types.MsgSuperfluidRedelegate) (*types.MsgSuperfluidRedelegateResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+// func (server msgServer) SuperfluidRedelegate(goCtx context.Context, msg *types.MsgSuperfluidRedelegate) (*types.MsgSuperfluidRedelegateResponse, error) {
+// 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.SuperfluidRedelegate(ctx, msg.Sender, msg.LockId, msg.NewValAddr)
-	return &types.MsgSuperfluidRedelegateResponse{}, err
-}
+// 	err := server.keeper.SuperfluidRedelegate(ctx, msg.Sender, msg.LockId, msg.NewValAddr)
+// 	return &types.MsgSuperfluidRedelegateResponse{}, err
+// }

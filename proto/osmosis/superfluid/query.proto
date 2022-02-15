@@ -15,7 +15,8 @@ option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 service Query {
   // Returns superfluid asset type
   rpc AssetType(AssetTypeRequest) returns (AssetTypeResponse) {
-    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_type/{denom}";
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/asset_type/{denom}";
   }
   // Returns all superfluid asset types
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
@@ -23,36 +24,33 @@ service Query {
   }
   // Returns superfluid asset TWAP
   rpc AssetTwap(AssetTwapRequest) returns (AssetTwapResponse) {
-    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_twap/{denom}";
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/asset_twap/{denom}";
   }
   // Returns all superfluid intermediary account
-  rpc AllIntermediaryAccounts(AllIntermediaryAccountsRequest) returns (AllIntermediaryAccountsResponse) {
-    option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_intermediary_accounts";
+  rpc AllIntermediaryAccounts(AllIntermediaryAccountsRequest)
+      returns (AllIntermediaryAccountsResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/all_intermediary_accounts";
   }
   // Returns intermediary account connected to a superfluid staked lock by id
-  rpc ConnectedIntermediaryAccount(ConnectedIntermediaryAccountRequest) returns (ConnectedIntermediaryAccountResponse) {
-    option (google.api.http).get = "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
+  rpc ConnectedIntermediaryAccount(ConnectedIntermediaryAccountRequest)
+      returns (ConnectedIntermediaryAccountResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
 }
 
-message AssetTypeRequest {
-  string denom = 1;
-};
-message AssetTypeResponse {
-  SuperfluidAssetType asset_type = 1;
-};
+message AssetTypeRequest { string denom = 1; };
+message AssetTypeResponse { SuperfluidAssetType asset_type = 1; };
 
 message AllAssetsRequest {};
 message AllAssetsResponse {
-   repeated SuperfluidAsset assets = 1 [(gogoproto.nullable) = false];
+  repeated SuperfluidAsset assets = 1 [ (gogoproto.nullable) = false ];
 };
 
-message AssetTwapRequest {
-  string denom = 1;
-};
-message AssetTwapResponse {
-  EpochOsmoEquivalentTWAP twap = 1;
-};
+message AssetTwapRequest { string denom = 1; };
+message AssetTwapResponse { EpochOsmoEquivalentTWAP twap = 1; };
 
 message SuperfluidIntermediaryAccountInfo {
   string denom = 1;
@@ -64,13 +62,12 @@ message AllIntermediaryAccountsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 };
 message AllIntermediaryAccountsResponse {
-  repeated SuperfluidIntermediaryAccountInfo accounts = 1 [ (gogoproto.nullable) = false ];
+  repeated SuperfluidIntermediaryAccountInfo accounts = 1
+      [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 };
 
-message ConnectedIntermediaryAccountRequest {
-  uint64 lock_id = 1;
-}
+message ConnectedIntermediaryAccountRequest { uint64 lock_id = 1; }
 message ConnectedIntermediaryAccountResponse {
   SuperfluidIntermediaryAccountInfo account = 1;
 }

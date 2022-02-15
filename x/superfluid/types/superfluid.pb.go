@@ -91,7 +91,8 @@ func (m *SuperfluidAsset) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SuperfluidAsset proto.InternalMessageInfo
 
-// SuperfluidIntermediaryAccount takes the role of intermediary between LP token and OSMO tokens for superfluid staking
+// SuperfluidIntermediaryAccount takes the role of intermediary between LP token
+// and OSMO tokens for superfluid staking
 type SuperfluidIntermediaryAccount struct {
 	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	ValAddr string `protobuf:"bytes,2,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
@@ -152,6 +153,12 @@ func (m *SuperfluidIntermediaryAccount) GetGaugeId() uint64 {
 	return 0
 }
 
+// The Osmo-Equivalent-TWAP for epoch N refers to the osmo worth we treat an LP
+// share as having, for all of epoch N. This is intended to be set as the
+// Time-weighted-average-osmo-backing for the entire duration of epoch N-1.
+// (Thereby locking whats in use for epoch N as based on the prior epochs
+// rewards) However for now, this is not the TWAP but instead the spot price at
+// the boundary.
 type EpochOsmoEquivalentTWAP struct {
 	EpochNumber    int64                                  `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
 	Denom          string                                 `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
