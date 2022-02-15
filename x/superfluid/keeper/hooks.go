@@ -66,12 +66,11 @@ func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, en
 			return err
 		}
 
-		twap := osmoPoolAsset.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
+		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
 		beginningEpochNumber := endedEpochNumber + 1
 		k.SetEpochOsmoEquivalentTWAP(ctx, beginningEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
-		// TODO: should get twap price from gamm module and use the price
-		// which pool should it use to calculate native token price?
+		// TODO: Consider deleting superfluid asset type native
 		k.Logger(ctx).Error("unsupported superfluid asset type")
 		return errors.New("SuperfluidAssetTypeNative is unspported")
 	}
