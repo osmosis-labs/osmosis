@@ -19,11 +19,16 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 	if epochIdentifier == params.RefreshEpochIdentifier {
 		// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
 		// the supplied epoch number is wrong at time of commit. hence we get from the info.
-		epochNumber := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
+		endedEpochNumber := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
 
-		// Slash all module accounts' LP token based on slash amount before twap update
+		// Move delegation rewards to perpetual gauge
+		k.MoveSuperfluidDelegationRewardToGauges(ctx)
+
+		// Update all LP tokens TWAP's for the upcoming epoch.
+		// This affects staking reward distribution until the next epochs rewards.
+		// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			err := k.updateEpochTwap(ctx, asset, epochNumber)
+			err := k.updateEpochTwap(ctx, asset, endedEpochNumber)
 			if err != nil {
 				// TODO: Revisit what we do here. (halt all distr, only skip this asset)
 				// Since at MVP of feature, we only have one pool of superfluid staking,
@@ -33,15 +38,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 			}
 		}
 
-		// Move delegation rewards to perpetual gauge
-		k.MoveSuperfluidDelegationRewardToGauges(ctx)
-
-		// Refresh intermediary accounts' delegation amounts
+		// Refresh intermediary accounts' delegation amounts,
+		// making staking rewards follow the updated TWAP numbers.
 		k.RefreshIntermediaryDelegationAmounts(ctx)
 	}
 }
 
-func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, epochNumber int64) error {
+func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, endedEpochNumber int64) error {
 	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
@@ -64,7 +67,8 @@ func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, ep
 		}
 
 		twap := osmoPoolAsset.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
-		k.SetEpochOsmoEquivalentTWAP(ctx, epochNumber, asset.Denom, twap)
+		// TODO: This reads to me as an off by one error in the epoch number
+		k.SetEpochOsmoEquivalentTWAP(ctx, endedEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: should get twap price from gamm module and use the price
 		// which pool should it use to calculate native token price?

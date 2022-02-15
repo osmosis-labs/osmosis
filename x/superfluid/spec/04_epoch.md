@@ -9,6 +9,6 @@ The envisioned flow of how this works is as follows:
 
 * (Epochs) AfterEpochEnd hook runs
 * (Mint) distributes rewards to all stakers at the epoch that just endeds prices
-* (Superfluid) Update all TWAP values [updateEpochEnd][./../keeper/hooks.go]
 * (Superfluid) Claim all staking rewards to every intermediary module accounts
+* (Superfluid) Update all TWAP values [updateEpochEnd][./../keeper/hooks.go]
 * (Superfluid) Update all the intermediary accounts staked amounts. (Mint/Burn coins as needed as well)
