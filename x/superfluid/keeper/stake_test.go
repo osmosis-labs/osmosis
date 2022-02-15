@@ -426,155 +426,155 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
-	testCases := []struct {
-		name                    string
-		validatorStats          []stakingtypes.BondStatus
-		superDelegations        []superfluidDelegation
-		superRedelegations      []superfluidRedelegation
-		expSuperRedelegationErr []bool
-	}{
-		{
-			"with single validator and single superfluid delegation with single redelegation",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
-			[]superfluidRedelegation{{1, 0, 1}}, // lock1 => val0 -> val1
-			[]bool{false},
-		},
-		{
-			"with multiple superfluid delegations with single redelegation",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
-			[]superfluidRedelegation{{1, 0, 1}}, // lock1 => val0 -> val1
-			[]bool{false},
-		},
-		{
-			"with multiple superfluid delegations with multiple redelegations",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
-			[]superfluidRedelegation{{1, 0, 1}, {2, 0, 1}}, // lock1 => val0 -> val1, lock2 => val0 -> val1
-			[]bool{false, false},
-		},
-		{
-			"try redelegating back from new validator to original validator",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
-			[]superfluidRedelegation{{1, 0, 1}, {1, 1, 0}}, // lock1 => val0 -> val1, lock1 => val1 -> val0
-			[]bool{false, true},
-		},
-		{
-			"not available lock id redelegation",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
-			[]superfluidRedelegation{{2, 0, 1}}, // lock1 => val0 -> val1
-			[]bool{true},
-		},
-		{
-			"redelegation for same validator",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
-			[]superfluidRedelegation{{1, 0, 0}}, // lock1 => val0 -> val0
-			[]bool{true},
-		},
-	}
+// func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
+// 	testCases := []struct {
+// 		name                    string
+// 		validatorStats          []stakingtypes.BondStatus
+// 		superDelegations        []superfluidDelegation
+// 		superRedelegations      []superfluidRedelegation
+// 		expSuperRedelegationErr []bool
+// 	}{
+// 		{
+// 			"with single validator and single superfluid delegation with single redelegation",
+// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+// 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+// 			[]superfluidRedelegation{{1, 0, 1}}, // lock1 => val0 -> val1
+// 			[]bool{false},
+// 		},
+// 		{
+// 			"with multiple superfluid delegations with single redelegation",
+// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+// 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+// 			[]superfluidRedelegation{{1, 0, 1}}, // lock1 => val0 -> val1
+// 			[]bool{false},
+// 		},
+// 		{
+// 			"with multiple superfluid delegations with multiple redelegations",
+// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+// 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+// 			[]superfluidRedelegation{{1, 0, 1}, {2, 0, 1}}, // lock1 => val0 -> val1, lock2 => val0 -> val1
+// 			[]bool{false, false},
+// 		},
+// 		{
+// 			"try redelegating back from new validator to original validator",
+// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+// 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+// 			[]superfluidRedelegation{{1, 0, 1}, {1, 1, 0}}, // lock1 => val0 -> val1, lock1 => val1 -> val0
+// 			[]bool{false, true},
+// 		},
+// 		{
+// 			"not available lock id redelegation",
+// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+// 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+// 			[]superfluidRedelegation{{2, 0, 1}}, // lock1 => val0 -> val1
+// 			[]bool{true},
+// 		},
+// 		{
+// 			"redelegation for same validator",
+// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+// 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+// 			[]superfluidRedelegation{{1, 0, 0}}, // lock1 => val0 -> val0
+// 			[]bool{true},
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+// 	for _, tc := range testCases {
+// 		tc := tc
+// 		suite.Run(tc.name, func() {
+// 			suite.SetupTest()
 
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
+// 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+// 			suite.Require().Equal(poolId, uint64(1))
 
-			// setup validators
-			valAddrs := suite.SetupValidators(tc.validatorStats)
+// 			// setup validators
+// 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
-			// setup superfluid delegations
-			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
-			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+// 			// setup superfluid delegations
+// 			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+// 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
-			// execute redelegation and check changes on store
-			for index, srd := range tc.superRedelegations {
-				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, srd.lockId)
-				if err != nil {
-					lock = &lockuptypes.PeriodLock{}
-				}
+// 			// execute redelegation and check changes on store
+// 			for index, srd := range tc.superRedelegations {
+// 				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, srd.lockId)
+// 				if err != nil {
+// 					lock = &lockuptypes.PeriodLock{}
+// 				}
 
-				// superfluid redelegate
-				err = suite.app.SuperfluidKeeper.SuperfluidRedelegate(suite.ctx, lock.Owner, srd.lockId, valAddrs[srd.newValIndex].String())
-				if tc.expSuperRedelegationErr[index] {
-					suite.Require().Error(err)
-					continue
-				}
-				suite.Require().NoError(err)
+// 				// superfluid redelegate
+// 				err = suite.app.SuperfluidKeeper.SuperfluidRedelegate(suite.ctx, lock.Owner, srd.lockId, valAddrs[srd.newValIndex].String())
+// 				if tc.expSuperRedelegationErr[index] {
+// 					suite.Require().Error(err)
+// 					continue
+// 				}
+// 				suite.Require().NoError(err)
 
-				// check previous validator bonding synthetic lockup deletion
-				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.StakingSuffix(valAddrs[srd.oldValIndex].String()))
-				suite.Require().Error(err)
+// 				// check previous validator bonding synthetic lockup deletion
+// 				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.StakingSuffix(valAddrs[srd.oldValIndex].String()))
+// 				suite.Require().Error(err)
 
-				// check unbonding synthetic lockup creation
-				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
-				suite.Require().NoError(err)
-				suite.Require().Equal(synthLock.UnderlyingLockId, srd.lockId)
-				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
-				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(params.UnbondingDuration))
+// 				// check unbonding synthetic lockup creation
+// 				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+// 				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
+// 				suite.Require().NoError(err)
+// 				suite.Require().Equal(synthLock.UnderlyingLockId, srd.lockId)
+// 				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
+// 				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(params.UnbondingDuration))
 
-				// check synthetic lockup creation
-				synthLock2, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.StakingSuffix(valAddrs[srd.newValIndex].String()))
-				suite.Require().NoError(err)
-				suite.Require().Equal(synthLock2.UnderlyingLockId, srd.lockId)
-				suite.Require().Equal(synthLock2.Suffix, keeper.StakingSuffix(valAddrs[srd.newValIndex].String()))
-				suite.Require().Equal(synthLock2.EndTime, time.Time{})
+// 				// check synthetic lockup creation
+// 				synthLock2, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, srd.lockId, keeper.StakingSuffix(valAddrs[srd.newValIndex].String()))
+// 				suite.Require().NoError(err)
+// 				suite.Require().Equal(synthLock2.UnderlyingLockId, srd.lockId)
+// 				suite.Require().Equal(synthLock2.Suffix, keeper.StakingSuffix(valAddrs[srd.newValIndex].String()))
+// 				suite.Require().Equal(synthLock2.EndTime, time.Time{})
 
-				// check intermediary account creation
-				lock, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, srd.lockId)
-				suite.Require().NoError(err)
+// 				// check intermediary account creation
+// 				lock, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, srd.lockId)
+// 				suite.Require().NoError(err)
 
-				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddrs[srd.newValIndex].String(), 1)
-				gotAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, expAcc.GetAccAddress())
-				suite.Require().Equal(gotAcc.Denom, expAcc.Denom)
-				suite.Require().Equal(gotAcc.ValAddr, expAcc.ValAddr)
+// 				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddrs[srd.newValIndex].String(), 1)
+// 				gotAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, expAcc.GetAccAddress())
+// 				suite.Require().Equal(gotAcc.Denom, expAcc.Denom)
+// 				suite.Require().Equal(gotAcc.ValAddr, expAcc.ValAddr)
 
-				// check gauge creation
-				gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
-				suite.Require().NoError(err)
-				suite.Require().Equal(gauge.Id, gotAcc.GaugeId)
-				suite.Require().Equal(gauge.IsPerpetual, true)
-				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
-					LockQueryType: lockuptypes.ByDuration,
-					Denom:         expAcc.Denom + keeper.StakingSuffix(valAddrs[srd.newValIndex].String()),
-					Duration:      params.UnbondingDuration,
-				})
-				suite.Require().Equal(gauge.Coins, sdk.Coins(nil))
-				suite.Require().Equal(gauge.StartTime, suite.ctx.BlockTime())
-				suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
-				suite.Require().Equal(gauge.FilledEpochs, uint64(0))
-				suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
+// 				// check gauge creation
+// 				gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
+// 				suite.Require().NoError(err)
+// 				suite.Require().Equal(gauge.Id, gotAcc.GaugeId)
+// 				suite.Require().Equal(gauge.IsPerpetual, true)
+// 				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
+// 					LockQueryType: lockuptypes.ByDuration,
+// 					Denom:         expAcc.Denom + keeper.StakingSuffix(valAddrs[srd.newValIndex].String()),
+// 					Duration:      params.UnbondingDuration,
+// 				})
+// 				suite.Require().Equal(gauge.Coins, sdk.Coins(nil))
+// 				suite.Require().Equal(gauge.StartTime, suite.ctx.BlockTime())
+// 				suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
+// 				suite.Require().Equal(gauge.FilledEpochs, uint64(0))
+// 				suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
 
-				// Check lockID connection with intermediary account
-				intAcc := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, srd.lockId)
-				suite.Require().Equal(intAcc.String(), expAcc.GetAccAddress().String())
+// 				// Check lockID connection with intermediary account
+// 				intAcc := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, srd.lockId)
+// 				suite.Require().Equal(intAcc.String(), expAcc.GetAccAddress().String())
 
-				// check delegation from intermediary account to validator
-				_, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAccAddress(), valAddrs[srd.newValIndex])
-				suite.Require().True(found)
-			}
+// 				// check delegation from intermediary account to validator
+// 				_, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAccAddress(), valAddrs[srd.newValIndex])
+// 				suite.Require().True(found)
+// 			}
 
-			// try redelegating twice
-			for index, srd := range tc.superRedelegations {
-				if tc.expSuperRedelegationErr[index] {
-					continue
-				}
-				cacheCtx, _ := suite.ctx.CacheContext()
-				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, srd.lockId)
-				suite.Require().NoError(err)
-				err = suite.app.SuperfluidKeeper.SuperfluidRedelegate(cacheCtx, lock.Owner, srd.lockId, valAddrs[srd.newValIndex].String())
-				suite.Require().Error(err)
-			}
-		})
-	}
-}
+// 			// try redelegating twice
+// 			for index, srd := range tc.superRedelegations {
+// 				if tc.expSuperRedelegationErr[index] {
+// 					continue
+// 				}
+// 				cacheCtx, _ := suite.ctx.CacheContext()
+// 				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, srd.lockId)
+// 				suite.Require().NoError(err)
+// 				err = suite.app.SuperfluidKeeper.SuperfluidRedelegate(cacheCtx, lock.Owner, srd.lockId, valAddrs[srd.newValIndex].String())
+// 				suite.Require().Error(err)
+// 			}
+// 		})
+// 	}
+// }
 
 func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	testCases := []struct {
