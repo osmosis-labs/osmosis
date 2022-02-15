@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/osmotestutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/x/lockup/client/cli"
 	lockuptestutil "github.com/osmosis-labs/osmosis/x/lockup/client/testutil"
 	"github.com/osmosis-labs/osmosis/x/lockup/types"
@@ -153,7 +153,7 @@ func (s *IntegrationTestSuite) TestBeginUnlockingCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmotestutils.DefaultFeeString(s.cfg),
+		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -221,7 +221,7 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmotestutils.DefaultFeeString(s.cfg),
+		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 

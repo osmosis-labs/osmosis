@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
@@ -15,25 +16,16 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 
 		// To avoid unexpected issues on WithdrawDelegationRewards and AddToGaugeRewards
 		// we use cacheCtx and apply the changes later
-		cacheCtx, write := ctx.CacheContext()
-
-		// Withdraw delegation rewards into intermediary accounts
-		_, err = k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
-		if err != nil {
-			k.Logger(ctx).Error(err.Error())
-		} else {
-			write()
-		}
+		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			_, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
+			return err
+		})
 
 		// Send delegation rewards to gauges
-		cacheCtx, write = ctx.CacheContext()
-		bondDenom := k.sk.BondDenom(cacheCtx)
-		balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
-		err = k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)
-		if err != nil {
-			k.Logger(ctx).Error(err.Error())
-		} else {
-			write()
-		}
+		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			bondDenom := k.sk.BondDenom(cacheCtx)
+			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
+			return k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)
+		})
 	}
 }
