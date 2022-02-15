@@ -135,8 +135,10 @@ func (m *PeriodLock) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 }
 
 type QueryCondition struct {
+	// type of lock query, ByLockDuration | ByLockTime
 	LockQueryType LockQueryType `protobuf:"varint,1,opt,name=lock_query_type,json=lockQueryType,proto3,enum=osmosis.lockup.LockQueryType" json:"lock_query_type,omitempty"`
-	Denom         string        `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	// What token denomination are we looking for lockups of
+	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 	// valid when query condition is ByDuration
 	Duration time.Duration `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration" yaml:"duration"`
 	// valid when query condition is ByTime
@@ -206,8 +208,10 @@ func (m *QueryCondition) GetTimestamp() time.Time {
 
 // SyntheticLock is a single unit of synthetic lockup
 type SyntheticLock struct {
+	// underlying native lockup id for this synthetic lockup
 	UnderlyingLockId uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockId,proto3" json:"underlying_lock_id,omitempty"`
-	Suffix           string `protobuf:"bytes,2,opt,name=suffix,proto3" json:"suffix,omitempty"`
+	// synthetic suffix comes after native denom - used for querying
+	Suffix string `protobuf:"bytes,2,opt,name=suffix,proto3" json:"suffix,omitempty"`
 	// used for unbonding synthetic lockups, for active synthetic lockups, this
 	// value is set to uninitialized value
 	EndTime  time.Time     `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
