@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func stakingSuffix(valAddr string) string {
@@ -332,21 +332,21 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	return valAddr, nil
 }
 
-func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, sender string, lockID uint64, newValAddr string) error {
-	// Note: we prevent circular redelegations since when unbonding lockup is available from a specific validator,
-	// not able to redelegate or undelegate again, especially the case for automatic undelegation when native lockup unlock
+// func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, sender string, lockID uint64, newValAddr string) error {
+// 	// Note: we prevent circular redelegations since when unbonding lockup is available from a specific validator,
+// 	// not able to redelegate or undelegate again, especially the case for automatic undelegation when native lockup unlock
 
-	valAddr, err := k.SuperfluidUndelegate(ctx, sender, lockID)
-	if err != nil {
-		return err
-	}
+// 	valAddr, err := k.SuperfluidUndelegate(ctx, sender, lockID)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if valAddr.String() == newValAddr {
-		return types.ErrSameValidatorRedelegation
-	}
+// 	if valAddr.String() == newValAddr {
+// 		return types.ErrSameValidatorRedelegation
+// 	}
 
-	return k.SuperfluidDelegate(ctx, sender, lockID, newValAddr)
-}
+// 	return k.SuperfluidDelegate(ctx, sender, lockID, newValAddr)
+// }
 
 // TODO: Need to (eventually) override the existing staking messages and queries, for undelegating, delegating, rewards, and redelegating, to all be going through all superfluid module.
 // Want integrators to be able to use the same staking queries and messages

@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
@@ -23,6 +23,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		isAdd          bool
 		assets         []types.SuperfluidAsset
 		expectedAssets []types.SuperfluidAsset
+		expectErr      bool
 	}
 	testCases := []struct {
 		name    string
@@ -32,13 +33,21 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			"happy path flow",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1, asset2}, []types.SuperfluidAsset{asset1, asset2},
+					true, []types.SuperfluidAsset{asset1, asset2}, []types.SuperfluidAsset{asset1, asset2}, false,
 				},
 				{
-					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1},
+					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, false,
+				},
+			},
+		},
+		{
+			"token does not exist",
+			[]Action{
+				{
+					true, []types.SuperfluidAsset{asset1, asset2}, []types.SuperfluidAsset{asset1, asset2}, false,
 				},
 				{
-					false, []types.SuperfluidAsset{asset3}, []types.SuperfluidAsset{asset1},
+					false, []types.SuperfluidAsset{asset3}, []types.SuperfluidAsset{asset1, asset2}, true,
 				},
 			},
 		},
@@ -55,7 +64,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			suite.Require().NoError(err)
 			suite.Require().Len(resp.Assets, 0)
 
-			for _, action := range tc.actions {
+			for i, action := range tc.actions {
 				if action.isAdd {
 					// set superfluid assets via proposal
 					err = suite.app.SuperfluidKeeper.HandleSetSuperfluidAssetsProposal(suite.ctx, &types.SetSuperfluidAssetsProposal{
@@ -63,7 +72,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 						Description: "description",
 						Assets:      action.assets,
 					})
-					suite.Require().NoError(err)
 				} else {
 					assetDenoms := []string{}
 					for _, asset := range action.assets {
@@ -75,6 +83,10 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 						Description:           "description",
 						SuperfluidAssetDenoms: assetDenoms,
 					})
+				}
+				if action.expectErr {
+					suite.Require().Error(err)
+				} else {
 					suite.Require().NoError(err)
 				}
 
@@ -82,7 +94,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 				for _, asset := range action.expectedAssets {
 					res, err := suite.app.SuperfluidKeeper.AssetType(sdk.WrapSDKContext(suite.ctx), &types.AssetTypeRequest{Denom: asset.Denom})
 					suite.Require().NoError(err)
-					suite.Require().Equal(res.AssetType, asset.AssetType)
+					suite.Require().Equal(res.AssetType, asset.AssetType, "tcname %s, action num %d", tc.name, i)
 				}
 
 				// check assets

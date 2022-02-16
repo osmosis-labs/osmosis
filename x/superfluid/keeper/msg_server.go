@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 type msgServer struct {
@@ -34,9 +34,9 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
 
-func (server msgServer) SuperfluidRedelegate(goCtx context.Context, msg *types.MsgSuperfluidRedelegate) (*types.MsgSuperfluidRedelegateResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+// func (server msgServer) SuperfluidRedelegate(goCtx context.Context, msg *types.MsgSuperfluidRedelegate) (*types.MsgSuperfluidRedelegateResponse, error) {
+// 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.SuperfluidRedelegate(ctx, msg.Sender, msg.LockId, msg.NewValAddr)
-	return &types.MsgSuperfluidRedelegateResponse{}, err
-}
+// 	err := server.keeper.SuperfluidRedelegate(ctx, msg.Sender, msg.LockId, msg.NewValAddr)
+// 	return &types.MsgSuperfluidRedelegateResponse{}, err
+// }

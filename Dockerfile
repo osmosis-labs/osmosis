@@ -1,32 +1,22 @@
-FROM faddat/archlinux AS build
+# syntax=docker/dockerfile:1
 
-ENV GOPATH=/go
-ENV PATH=$PATH:/go/bin
+## Build
+FROM golang:1.17-bullseye as build
 
-# Set up dependencies
-RUN pacman -Syyu --noconfirm curl make git go gcc linux-headers python base-devel protobuf wget && \
-    wget -O /genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
-
-
-# Add source files
+WORKDIR /osmosis
 COPY . /osmosis
+RUN make build
 
-# Install minimum necessary dependencies, build Cosmos SDK, remove packages
-RUN cd /osmosis && \
-    make install
+## Deploy
+FROM gcr.io/distroless/base-debian11
 
-# Final image
-FROM faddat/archlinux
+WORKDIR /
 
-RUN pacman -Syyu --noconfirm 
+COPY --from=build /osmosis/build/osmosisd /osmosisd
 
-# Copy over binaries from the build-env
-COPY --from=build /go/bin/osmosisd /usr/bin/osmosisd
-COPY --from=build /genesis.json /genesis.json
-
-# Run osmosisd by default, omit entrypoint to ease using container with osmosiscli
 EXPOSE 26656
 EXPOSE 26657
 EXPOSE 1317
 EXPOSE 9090
 
+ENTRYPOINT ["/osmosisd"]

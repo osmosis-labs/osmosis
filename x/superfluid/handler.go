@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 // NewHandler returns a handler for "superfluid" type messages.
@@ -22,9 +22,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgSuperfluidUndelegate:
 			res, err := msgServer.SuperfluidUndelegate(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgSuperfluidRedelegate:
-			res, err := msgServer.SuperfluidRedelegate(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
+		// case *types.MsgSuperfluidRedelegate:
+		// 	res, err := msgServer.SuperfluidRedelegate(sdk.WrapSDKContext(ctx), msg)
+		// return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)

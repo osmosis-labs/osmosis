@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/osmotestutils"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -45,12 +45,12 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 			}
 
 			// TODO: Make a parse uint64 slice function
-			gaugeIds, err := osmotestutils.ParseUint64SliceFromString(args[0], ",")
+			gaugeIds, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
 			if err != nil {
 				return err
 			}
 
-			weights, err := osmotestutils.ParseSdkIntFromString(args[1], ",")
+			weights, err := osmoutils.ParseSdkIntFromString(args[1], ",")
 			if err != nil {
 				return err
 			}
@@ -127,12 +127,12 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			gaugeIds, err := osmotestutils.ParseUint64SliceFromString(args[0], ",")
+			gaugeIds, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
 			if err != nil {
 				return err
 			}
 
-			weights, err := osmotestutils.ParseSdkIntFromString(args[1], ",")
+			weights, err := osmoutils.ParseSdkIntFromString(args[1], ",")
 			if err != nil {
 				return err
 			}

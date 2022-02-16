@@ -4,7 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddrStr string, valAddrStr string, slashFactor sdk.Dec) {
@@ -12,8 +12,10 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 	if err != nil {
 		panic(err)
 	}
+
 	acc := k.GetIntermediaryAccount(ctx, delAddr)
-	if acc.Denom == "" { // if delAddr is not intermediary account, pass
+	// if delAddr is not intermediary account, pass
+	if acc.Denom == "" {
 		return
 	}
 

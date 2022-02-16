@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +28,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewSuperfluidDelegateCmd(),
 		NewSuperfluidUndelegateCmd(),
-		NewSuperfluidRedelegateCmd(),
+		// NewSuperfluidRedelegateCmd(),
 	)
 
 	return cmd
@@ -105,42 +105,42 @@ func NewSuperfluidUndelegateCmd() *cobra.Command {
 }
 
 // NewSuperfluidRedelegateCmd broadcast MsgSuperfluidRedelegate
-func NewSuperfluidRedelegateCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "redelegate [lock_id] [val_addr] [flags]",
-		Short: "superfluid redelegate a lock to a new validator",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
+// func NewSuperfluidRedelegateCmd() *cobra.Command {
+// 	cmd := &cobra.Command{
+// 		Use:   "redelegate [lock_id] [val_addr] [flags]",
+// 		Short: "superfluid redelegate a lock to a new validator",
+// 		Args:  cobra.ExactArgs(2),
+// 		RunE: func(cmd *cobra.Command, args []string) error {
+// 			clientCtx, err := client.GetClientTxContext(cmd)
+// 			if err != nil {
+// 				return err
+// 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+// 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			lockId, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
+// 			lockId, err := strconv.Atoi(args[0])
+// 			if err != nil {
+// 				return err
+// 			}
 
-			valAddr, err := sdk.ValAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
+// 			valAddr, err := sdk.ValAddressFromBech32(args[1])
+// 			if err != nil {
+// 				return err
+// 			}
 
-			msg := types.NewMsgSuperfluidRedelegate(
-				clientCtx.GetFromAddress(),
-				uint64(lockId),
-				valAddr,
-			)
+// 			msg := types.NewMsgSuperfluidRedelegate(
+// 				clientCtx.GetFromAddress(),
+// 				uint64(lockId),
+// 				valAddr,
+// 			)
 
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
+// 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+// 		},
+// 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
+// 	flags.AddTxFlagsToCmd(cmd)
+// 	return cmd
+// }
 
 // NewCmdSubmitSetSuperfluidAssetsProposal implements a command handler for submitting a superfluid asset set proposal transaction.
 func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {

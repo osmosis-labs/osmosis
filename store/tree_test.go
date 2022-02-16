@@ -15,7 +15,7 @@ import (
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/store"
+	"github.com/osmosis-labs/osmosis/v7/store"
 )
 
 type TreeTestSuite struct {
