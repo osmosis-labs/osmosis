@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [#765](https://github.com/osmosis-labs/osmosis/pull/765) Fix a bug in `Makefile` regarding the location of localtestnet docker image.
 - [#795](https://github.com/osmosis-labs/osmosis/pull/795) Annotate app.go
 - [#791](https://github.com/osmosis-labs/osmosis/pull/791) Change to dependabot config to only upgrade patch version of tendermint
+- [#804](https://github.com/osmosis-labs/osmosis/pull/804) Semantic Versioning for v7
+- [#880](https://github.com/osmosis-labs/osmosis/pull/880) Set constants in x/superfluid/types for commonly used times
 
 ## Features
 
