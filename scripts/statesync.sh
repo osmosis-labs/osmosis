@@ -1,6 +1,4 @@
 # microtick and bitcanna contributed significantly here.
-# rocksdb works
-# This defaults to rocksdb.  Read the script, some stuff is commented out based on your system. 
 
 
 # PRINT EVERY COMMAND
