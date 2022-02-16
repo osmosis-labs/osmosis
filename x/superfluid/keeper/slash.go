@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/superfluid/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
@@ -48,7 +49,7 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 		queryCondition := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
-			Duration:      time.Hour * 24 * 14,
+			Duration:      OsmoTime.twoweeks,
 		}
 
 		// (1 - amt/delegatedTokens) describes slash factor

@@ -34,7 +34,7 @@ func DefaultParams() Params {
 	return Params{
 		RefreshEpochIdentifier: "day",
 		MinimumRiskFactor:      sdk.NewDecWithPrec(5, 2), // 5%
-		UnbondingDuration:      time.Hour * 24 * 21,      // 3w
+		UnbondingDuration:      OsmoTime.threeweeks,    
 	}
 }
 
