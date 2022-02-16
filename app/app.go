@@ -858,7 +858,9 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 		v7.UpgradeName,
 		v7.CreateUpgradeHandler(
 			app.mm, app.configurator,
-			app.WasmKeeper))
+			app.WasmKeeper,
+			app.LockupKeeper,
+			app.AccountKeeper))
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
