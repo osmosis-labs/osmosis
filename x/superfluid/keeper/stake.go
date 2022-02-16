@@ -168,12 +168,7 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 	return nil
 }
 
-func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
-	lock, err := k.lk.GetLockByID(ctx, lockID)
-	if err != nil {
-		return err
-	}
-
+func (k Keeper) validateLockIdForSFDelegate(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
 	if lock.Owner != sender {
 		return lockuptypes.ErrNotLockOwner
 	}
@@ -191,6 +186,23 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	params := k.GetParams(ctx)
 	if lock.Duration < params.UnbondingDuration { // if less than bonding, skip
 		return types.ErrNotEnoughLockupDuration
+	}
+
+	return nil
+}
+
+//
+func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
+	lock, err := k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	params := k.GetParams(ctx)
+
+	err = k.validateLockIdForSFDelegate(ctx, lock, sender)
+	if err != nil {
+		return err
 	}
 
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)

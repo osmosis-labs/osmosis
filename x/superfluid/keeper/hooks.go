@@ -159,6 +159,7 @@ func (h Hooks) BeforeSlashingUnbondingDelegation(ctx sdk.Context, unbondingDeleg
 	h.k.SlashLockupsForUnbondingDelegationSlash(ctx, unbondingDelegation.DelegatorAddress, unbondingDelegation.ValidatorAddress, slashFactor)
 }
 
+// Not used right now, as we don't allow superfluid redelegations
 func (h Hooks) BeforeSlashingRedelegation(ctx sdk.Context, srcValidator stakingtypes.Validator, redelegation stakingtypes.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) {
 }

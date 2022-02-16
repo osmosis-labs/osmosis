@@ -17,7 +17,7 @@ Lots of questions to be answered here
 
 ## Synthetic Lockups created
 
-Many questions to be answered here
+At the moment, one lock can only be fully bonded to one validator.
 
 ## TWAP
 
