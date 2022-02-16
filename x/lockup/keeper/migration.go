@@ -16,8 +16,12 @@ var (
 	BaselineDurations  = []time.Duration{DayDuration, WeekDuration, TwoWeekDuration}
 )
 
+// baselineDurations is expected to be sorted by the caller
 func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Duration, duration time.Duration) (time.Duration, bool) {
 	for _, base := range baselineDurations {
+		// if base > duration, continue to next base size.
+		// if base <= duration, then we are in a duration that is greater than or equal to base size.
+		// If its within base + allowed diff, we set it to base.
 		if base <= duration && duration < base+allowedDiff {
 			return base, true
 		}
@@ -25,7 +29,13 @@ func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Durat
 	return duration, false
 }
 
-// between duration windows of baselineDurations.map((duration) => (duration, duration+durationDiff)).
+// MergeLockupsForSimilarDurations iterates through every account. For each account,
+// it combines all lockups it has at a similar duration (to be defined in a bit).
+// It will delete every existing lockup for that account, and make at most, a single new lockup per
+// "base duration", denom pair.
+// If a lockup is far from any base duration, we don't change anything about it.
+// We define a lockup length as a "Similar duration to base duration D", if:
+// D <= lockup length <= D + durationDiff.
 func MergeLockupsForSimilarDurations(
 	ctx sdk.Context,
 	k Keeper,
@@ -35,6 +45,8 @@ func MergeLockupsForSimilarDurations(
 ) {
 	for _, acc := range ak.GetAllAccounts(ctx) {
 		addr := acc.GetAddress()
+		// We make at most one lock per (addr, denom, base duration) triplet, which we keep adding coins to.
+		// We call this the new "normalized lock", and the value in the map is the new lock ID.
 		normals := make(map[string]uint64)
 		for _, lock := range k.GetAccountPeriodLocks(ctx, addr) {
 			// ignore multilocks
@@ -51,6 +63,7 @@ func MergeLockupsForSimilarDurations(
 				continue
 			}
 
+			// serialize (addr, denom, duration) into a unique triplet for use in normals map.
 			key := addr.String() + "/" + coin.Denom + "/" + strconv.FormatInt(int64(normalizedDuration), 10)
 			normalID, ok := normals[key]
 
