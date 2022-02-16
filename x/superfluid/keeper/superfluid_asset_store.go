@@ -1,5 +1,7 @@
 package keeper
 
+// This file handles
+
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,10 +58,4 @@ func (k Keeper) GetAllSuperfluidAssets(ctx sdk.Context) []types.SuperfluidAsset 
 		assets = append(assets, asset)
 	}
 	return assets
-}
-
-func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.SuperfluidAsset, amount sdk.Int) sdk.Int {
-	// TODO: we need to figure out how to do this later.
-	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
-	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt())
 }

@@ -18,4 +18,5 @@ message GenesisState {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
+  uint64 last_gauge_id = 4;
 }

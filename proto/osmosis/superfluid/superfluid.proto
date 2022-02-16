@@ -30,6 +30,21 @@ message SuperfluidAsset {
 message SuperfluidIntermediaryAccount {
   string denom = 1;
   string val_addr = 2;
-  // id of perpetual gauge to send rewards to for distribution
-  uint64 gauge_id = 3;
+  uint64 gauge_id = 3; // perpetual gauge for rewards distribution
+}
+
+// The Osmo-Equivalent-TWAP for epoch N refers to the osmo worth we treat an LP
+// share as having, for all of epoch N. This is intended to be set as the
+// Time-weighted-average-osmo-backing for the entire duration of epoch N-1.
+// (Thereby locking whats in use for epoch N as based on the prior epochs
+// rewards) However for now, this is not the TWAP but instead the spot price at
+// the boundary.
+message EpochOsmoEquivalentTWAP {
+  int64 epoch_number = 1;
+  string denom = 2; // superfluid asset denom, can be LP token or native token
+  string epoch_twap_price = 3 [
+    (gogoproto.moretags) = "yaml:\"epoch_twap_price\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

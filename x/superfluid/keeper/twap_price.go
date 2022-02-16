@@ -4,12 +4,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
+// This function calculates the osmo equivalent worth of an LP share.
+// It is intended to eventually use the TWAP of the worth of an LP share
+// once that is exposed from the gamm module.
+func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.PoolI, osmoInPool gammtypes.PoolAsset) sdk.Dec {
+	twap := osmoInPool.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
+	return twap
+}
+
 func (k Keeper) SetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom string, price sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
 	priceRecord := types.EpochOsmoEquivalentTWAP{
 		EpochNumber:    epoch,
 		Denom:          denom,
@@ -22,15 +31,15 @@ func (k Keeper) SetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom s
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func (k Keeper) DeleteEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom string) {
+func (k Keeper) DeleteEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) {
 	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
 	prefixStore.Delete([]byte(denom))
 }
 
-func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom string) sdk.Dec {
+func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) sdk.Dec {
 	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
 	bz := prefixStore.Get([]byte(denom))
 	if bz == nil {
 		return sdk.ZeroDec()
@@ -43,31 +52,9 @@ func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom s
 	return priceRecord.EpochTwapPrice
 }
 
-func (k Keeper) GetLastEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) types.EpochOsmoEquivalentTWAP {
-	params := k.GetParams(ctx)
-	epochInfo := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
-
-	return types.EpochOsmoEquivalentTWAP{
-		EpochNumber:    epochInfo.CurrentEpoch - 1,
-		Denom:          denom,
-		EpochTwapPrice: k.GetEpochOsmoEquivalentTWAP(ctx, epochInfo.CurrentEpoch-1, denom),
-	}
-}
-
-func (k Keeper) GetCurrentEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) types.EpochOsmoEquivalentTWAP {
-	params := k.GetParams(ctx)
-	epochInfo := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
-
-	return types.EpochOsmoEquivalentTWAP{
-		EpochNumber:    epochInfo.CurrentEpoch,
-		Denom:          denom,
-		EpochTwapPrice: k.GetEpochOsmoEquivalentTWAP(ctx, epochInfo.CurrentEpoch, denom),
-	}
-}
-
 func (k Keeper) GetAllEpochOsmoEquivalentTWAPs(ctx sdk.Context, epoch int64) []types.EpochOsmoEquivalentTWAP {
 	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.TokenPriceTwapEpochPrefix(epoch))
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 

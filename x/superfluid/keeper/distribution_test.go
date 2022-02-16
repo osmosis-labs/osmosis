@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -82,6 +80,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// setup superfluid delegations
 			suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {
@@ -100,7 +99,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
 					Denom:         gaugeCheck.lpDenom + keeper.StakingSuffix(valAddrs[gaugeCheck.valIndex].String()),
-					Duration:      time.Hour * 24 * 14,
+					Duration:      params.UnbondingDuration,
 				})
 				if gaugeCheck.rewarded {
 					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())

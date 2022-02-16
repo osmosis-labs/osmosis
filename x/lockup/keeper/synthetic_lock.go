@@ -9,20 +9,15 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, underlyingLockID uint64, suffix string, endTime time.Time) error {
-	synthLock := &types.SyntheticLock{
-		UnderlyingLockId: underlyingLockID,
-		Suffix:           suffix,
-		EndTime:          endTime,
-	}
+func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, synthLock *types.SyntheticLock) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(synthLock)
 	if err != nil {
 		return err
 	}
-	store.Set(syntheticLockStoreKey(underlyingLockID, suffix), bz)
-	if !endTime.Equal(time.Time{}) {
-		store.Set(syntheticLockTimeStoreKey(underlyingLockID, suffix, endTime), bz)
+	store.Set(syntheticLockStoreKey(synthLock.UnderlyingLockId, synthLock.Suffix), bz)
+	if !synthLock.EndTime.Equal(time.Time{}) {
+		store.Set(syntheticLockTimeStoreKey(synthLock.UnderlyingLockId, synthLock.Suffix, synthLock.EndTime), bz)
 	}
 	return nil
 }
@@ -81,7 +76,7 @@ func (k Keeper) GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock {
 }
 
 // CreateSyntheticLockup create synthetic lockup with lock id and suffix
-func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration) error {
+func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration, isUnlocking bool) error {
 	// Note: synthetic lockup is doing everything same as lockup except coin movement
 	// There is no relationship between unbonding and bonding synthetic lockup, it's managed separately
 	// Accumulation store works without caring about unlocking synthetic or not
@@ -91,7 +86,6 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix str
 		return types.ErrSyntheticLockupAlreadyExists
 	}
 
-	isUnlocking := (unlockDuration != 0)
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return err
@@ -108,7 +102,15 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix str
 	}
 
 	// set synthetic lockup object
-	err = k.setSyntheticLockupObject(ctx, lockID, suffix, lock.EndTime)
+	synthLock := types.SyntheticLock{
+		UnderlyingLockId: lockID,
+		Suffix:           suffix,
+		EndTime:          lock.EndTime,
+		Duration:         unlockDuration,
+		Coins:            lock.Coins,
+		Owner:            lock.Owner,
+	}
+	err = k.setSyntheticLockupObject(ctx, &synthLock)
 	if err != nil {
 		return err
 	}
@@ -116,7 +118,7 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix str
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 
 	// add lock refs into not unlocking queue
-	err = k.addSyntheticLockRefs(ctx, unlockingPrefix, *lock)
+	err = k.addSyntheticLockRefs(ctx, unlockingPrefix, synthLock)
 	if err != nil {
 		return err
 	}
@@ -148,7 +150,7 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix str
 	k.deleteSyntheticLockupObject(ctx, lockID, suffix)
 
 	// delete lock refs from the unlocking queue
-	err = k.deleteSyntheticLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *lock)
+	err = k.deleteSyntheticLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *synthLock)
 	if err != nil {
 		return err
 	}

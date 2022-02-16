@@ -7,16 +7,6 @@ import "osmosis/superfluid/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
-message EpochOsmoEquivalentTWAP {
-  int64 epoch_number = 1;
-  string denom = 2; // superfluid asset denom, can be LP token or native token
-  string epoch_twap_price = 3 [
-    (gogoproto.moretags) = "yaml:\"epoch_twap_price\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
-}
-
 // GenesisState defines the module's genesis state.
 message GenesisState {
   Params params = 1 [ (gogoproto.nullable) = false ];

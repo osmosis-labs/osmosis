@@ -14,15 +14,11 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
 
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
-	acc := types.SuperfluidIntermediaryAccount{
-		Denom:   "gamm/pool/1",
-		ValAddr: valAddr.String(),
-		GaugeId: 1,
-	}
+	acc := types.NewSuperfluidIntermediaryAccount("gamm/pool/1", valAddr.String(), 1)
 	suite.app.SuperfluidKeeper.SetIntermediaryAccount(suite.ctx, acc)
 
 	// get account
-	gacc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, acc.GetAddress())
+	gacc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, acc.GetAccAddress())
 	suite.Require().Equal(gacc.Denom, "gamm/pool/1")
 	suite.Require().Equal(gacc.ValAddr, valAddr.String())
 	suite.Require().Equal(gacc.GaugeId, uint64(1))
@@ -32,10 +28,10 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
 	suite.Require().Equal(accs, []types.SuperfluidIntermediaryAccount{acc})
 
 	// delete asset
-	suite.app.SuperfluidKeeper.DeleteIntermediaryAccount(suite.ctx, acc.GetAddress())
+	suite.app.SuperfluidKeeper.DeleteIntermediaryAccount(suite.ctx, acc.GetAccAddress())
 
 	// get account
-	gacc = suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, acc.GetAddress())
+	gacc = suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, acc.GetAccAddress())
 	suite.Require().Equal(gacc.Denom, "")
 	suite.Require().Equal(gacc.ValAddr, "")
 	suite.Require().Equal(gacc.GaugeId, uint64(0))
@@ -54,16 +50,12 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
-	acc := types.SuperfluidIntermediaryAccount{
-		Denom:   "gamm/pool/1",
-		ValAddr: valAddr.String(),
-		GaugeId: 1,
-	}
+	acc := types.NewSuperfluidIntermediaryAccount("gamm/pool/1", valAddr.String(), 1)
 	suite.app.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(suite.ctx, 1, acc)
 
 	// get account
 	addr = suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, 1)
-	suite.Require().Equal(addr.String(), acc.GetAddress().String())
+	suite.Require().Equal(addr.String(), acc.GetAccAddress().String())
 
 	// delete account
 	suite.app.SuperfluidKeeper.DeleteLockIdIntermediaryAccountConnection(suite.ctx, 1)

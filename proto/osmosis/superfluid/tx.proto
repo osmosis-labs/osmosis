@@ -9,6 +9,34 @@ import "osmosis/superfluid/superfluid.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
 // Msg defines the Msg service.
-service Msg {}
+service Msg {
+  // Execute superfluid delegation for a lockup
+  rpc SuperfluidDelegate(MsgSuperfluidDelegate)
+      returns (MsgSuperfluidDelegateResponse);
+  // Execute superfluid undelegation for a lockup
+  rpc SuperfluidUndelegate(MsgSuperfluidUndelegate)
+      returns (MsgSuperfluidUndelegateResponse);
+  // Execute superfluid redelegation for a lockup
+  // rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns
+  // (MsgSuperfluidRedelegateResponse);
+}
 
-// For now, module just supports gov messages
+message MsgSuperfluidDelegate {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 lock_id = 2;
+  string val_addr = 3;
+}
+message MsgSuperfluidDelegateResponse {}
+
+message MsgSuperfluidUndelegate {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 lock_id = 2;
+}
+message MsgSuperfluidUndelegateResponse {}
+
+// message MsgSuperfluidRedelegate {
+//   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+//   uint64 lock_id = 2;
+//   string new_val_addr = 3;
+// }
+// message MsgSuperfluidRedelegateResponse {}

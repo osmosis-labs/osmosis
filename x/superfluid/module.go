@@ -106,10 +106,16 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper stakingtypes.AccountKeeper
 	bankKeeper    stakingtypes.BankKeeper
+	stakingKeeper types.StakingKeeper
+	lockupKeeper  types.LockupKeeper
+	gammKeeper    types.GammKeeper
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+	stakingKeeper types.StakingKeeper,
+	lockupKeeper types.LockupKeeper,
+	gammKeeper types.GammKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
@@ -117,6 +123,9 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
+		stakingKeeper: stakingKeeper,
+		lockupKeeper:  lockupKeeper,
+		gammKeeper:    gammKeeper,
 	}
 }
 
@@ -181,12 +190,12 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // GenerateGenesisState creates a randomized GenState of the pool-incentives module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// TODO
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil // TODO
+func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	return simulation.ProposalContents(am.keeper, am.gammKeeper)
 }
 
 // RandomizedParams creates randomized pool-incentives param changes for the simulator.
@@ -203,7 +212,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.bankKeeper, am.keeper,
+		am.accountKeeper, am.bankKeeper, am.stakingKeeper, am.lockupKeeper, am.keeper,
 	)
 }
 

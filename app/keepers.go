@@ -63,6 +63,7 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
@@ -237,7 +238,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.GetSubspace(incentivestypes.ModuleName),
 		app.BankKeeper, app.LockupKeeper, app.EpochsKeeper)
 
-	app.SuperfluidKeeper = *superfluidkeeper.NewKeeper(
+	app.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
 		*app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.EpochsKeeper, app.LockupKeeper, gammKeeper, app.IncentivesKeeper)
 
@@ -314,7 +315,8 @@ func (app *OsmosisApp) InitNormalKeepers(
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*app.PoolIncentivesKeeper)).
 		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IBCKeeper)).
-		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper))
+		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper)).
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*app.SuperfluidKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
@@ -374,6 +376,7 @@ func (app *OsmosisApp) SetupHooks() {
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
+			app.SuperfluidKeeper.Hooks(),
 			app.IncentivesKeeper.Hooks(),
 			app.MintKeeper.Hooks(),
 		),

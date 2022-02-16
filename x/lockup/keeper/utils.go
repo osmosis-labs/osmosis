@@ -69,19 +69,19 @@ func lockRefKeys(lock types.PeriodLock) ([][]byte, error) {
 }
 
 // syntheticLockRefKeys are different from native lockRefKeys to avoid conflicts
-func syntheticLockRefKeys(lock types.PeriodLock) ([][]byte, error) {
+func syntheticLockRefKeys(synthLock types.SyntheticLock) ([][]byte, error) {
 	// Note: syntheticLockRefKeys should be only used for querying and should not be combined with native lockup operations
 	// synthetic suffix denom should not conflict with native denom
 	refKeys := [][]byte{}
-	timeKey := getTimeKey(lock.EndTime)
-	durationKey := getDurationKey(lock.Duration)
+	timeKey := getTimeKey(synthLock.EndTime)
+	durationKey := getDurationKey(synthLock.Duration)
 
-	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	owner, err := sdk.AccAddressFromBech32(synthLock.Owner)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, coin := range lock.Coins {
+	for _, coin := range synthLock.Coins {
 		denomBz := []byte(coin.Denom)
 		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockTimestamp, denomBz, timeKey))
 		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockDuration, denomBz, durationKey))

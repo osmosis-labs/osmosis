@@ -13,7 +13,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/osmotestutils"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -170,7 +170,7 @@ Example:
 			}
 			selectBondedPoolIDs := []uint64{}
 			if selectPoolIdsStr != "" {
-				selectBondedPoolIDs, err = osmotestutils.ParseUint64SliceFromString(selectPoolIdsStr, ",")
+				selectBondedPoolIDs, err = osmoutils.ParseUint64SliceFromString(selectPoolIdsStr, ",")
 				if err != nil {
 					return err
 				}

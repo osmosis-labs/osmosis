@@ -1,4 +1,4 @@
-package osmotestutils
+package osmoutils
 
 import (
 	"fmt"
