@@ -1,8 +1,7 @@
 import json
 import subprocess
 import re, shutil, tempfile
-import os
-from datetime import date
+from datetime import datetime
 
 
 #get values from your priv_validator_key.json to later switch with high power validator
@@ -10,25 +9,41 @@ from datetime import date
 #get bas64
 result = subprocess.run(["osmosisd","tendermint","show-validator"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 base64 = result.stdout.strip()
+##base64 = '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"3QVAkiUIkKR3B6kkbd+QqzWDdcExoggbZV5fwH4jKDs="}'
+##bash64_wal = '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A2MR6q+pOpLtdxh0tHHe2JrEY2KOcvRogtLxHDHzJvOh"}'
 
 #get validator cons pubkey
 val_pubkey = base64[base64.find('key":') +6 :-2]
+##val_pubkey = "3QVAkiUIkKR3B6kkbd+QqzWDdcExoggbZV5fwH4jKDs="
+#CAN MODIFY
+val_pubkey_wal = "A2MR6q+pOpLtdxh0tHHe2JrEY2KOcvRogtLxHDHzJvOh"
 
 #osmosisd debug pubkey {base64} to get address
 debug_pubkey = subprocess.run(["osmosisd","debug", "pubkey", base64], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-#hex address
+#address
 address = debug_pubkey.stderr[9: debug_pubkey.stderr.find("\n")]
+##based on show-valdiator
+##address = "214D831D6F49A75F9104BDC3F2E12A6CC1FC5669"
+##address_wal = "54366539BF22D6C20982452A4532607014097579"
 
-#feed hex address into osmosisd debug addr {address} to get bech32 validator address (osmovaloper)
+#feed address into osmosisd debug addr {address} to get bech32 validator address (osmovaloper)
 bech32 = subprocess.run(["osmosisd","debug", "addr", address], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 #osmovaloper
 bech32_val = bech32.stderr[bech32.stderr.find("Val: ") + 5: -1]
+##operator address
+##bech32_val = "osmovaloper1y9xcx8t0fxn4lygyhhpl9cf2dnqlc4nf4pymm4"
+#CAN MODIFY
+bech32_val_wal = "osmovaloper12smx2wdlyttvyzvzg54y2vnqwq2qjatex7kgq4"
 
 #pass osmovaloper address into osmosisd debug bech32-convert -p osmovalcons
 bech32_convert = subprocess.run(["osmosisd","debug", "bech32-convert", bech32_val, "-p", "osmovalcons"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 #osmovalcons
+#CAN MODIFY
 final_address = bech32_convert.stderr[:bech32_convert.stderr.find("\n")]
+##osmovalcons is taken from show-validator
+##final_address = "osmovalcons1y9xcx8t0fxn4lygyhhpl9cf2dnqlc4nfpjh8h5"
+##final_address_wal = "osmovalcons12smx2wdlyttvyzvzg54y2vnqwq2qjatejd95v5"
 
 
 #own opp address
@@ -85,8 +100,8 @@ print("Replacing 16A169951A878247DBE258FDDC71638F6606D156 with " + address)
 sed_inplace("testnet_genesis.json", "16A169951A878247DBE258FDDC71638F6606D156", address)
 
 #replace validator osmovaloper
-print("Replacing osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n with " + bech32_val)
-sed_inplace("testnet_genesis.json", "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n", bech32_val)
+print("Replacing osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n with " + bech32_val_wal)
+sed_inplace("testnet_genesis.json", "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n", bech32_val_wal)
 
 #replace actual account
 print("Replacing osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5 with " + op_address)
@@ -121,6 +136,7 @@ print("New chain-id is " + read_test_gen['chain_id'])
 app_state_val_list = read_test_gen['app_state']['staking']['validators']
 val_index = [i for i, elem in enumerate(app_state_val_list) if 'Sentinel' in elem['description']['moniker']][0]
 #first val list update key
+#based on val
 app_state_val_list[val_index]['consensus_pubkey']['key'] = val_pubkey
 #also update delegator shares and tokens
 current_del_share = str(app_state_val_list[val_index]['delegator_shares'])
@@ -135,6 +151,7 @@ print("New delegator tokens is " + app_state_val_list[val_index]['tokens'])
 val_list_2 = read_test_gen['validators']
 val_list_2_index = [i for i, elem in enumerate(val_list_2) if 'Sentinel' in elem['name']][0]
 #second val list update key
+#based on val
 val_list_2[val_list_2_index]['pub_key']['value'] = val_pubkey
 
 
@@ -145,7 +162,7 @@ dist_index = [i for i, elem in enumerate(app_state_balances_list) if dist_addres
 dist_all = app_state_balances_list[dist_index]['coins']
 osmo_index = [i for i, elem in enumerate(dist_all) if 'uosmo' in elem['denom']][0]
 current_dist_osmo_bal = dist_all[osmo_index]['amount']
-dist_offset_amt = 3
+dist_offset_amt = 2
 print("Current distribution account uosmo balance is " + current_dist_osmo_bal)
 new_dist_osmo_bal = str(int(current_dist_osmo_bal) - dist_offset_amt)
 print("New distribution account uosmo balance is " + new_dist_osmo_bal)
@@ -184,9 +201,9 @@ print("Current validator power is " + str(current_power))
 new_power = str(current_power + 1000000000)
 print("New validator power is " + new_power)
 val_power_list[val_power_index]['power'] = new_power
-#get index of val power in app state (osmovaloper) (bech32_val)
+#get index of val power in app state (osmovaloper) (bech32_val_wal)
 last_val_power_list = read_test_gen['app_state']['staking']['last_validator_powers']
-last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if bech32_val in elem['address']][0]
+last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if bech32_val_wal in elem['address']][0]
 val_power = int(read_test_gen['app_state']['staking']['last_validator_powers'][last_val_power_index]['power'])
 print("Current validator power in second location is " + str(val_power))
 new_val_power = str(val_power + 1000000000)
@@ -265,10 +282,12 @@ epochs_list['duration'] = new_duration
 #change current_epoch_start_time
 start_time_current = epochs_list['current_epoch_start_time']
 print("Current epoch start time is " + start_time_current)
-today = date.today()
-date_format = today.strftime("%Y-%m-%d")
+#today = date.today()
+now = datetime.now()
+#date_format = now.strftime("%Y-%m-%d")
+date_format = now.strftime("%Y-%m-%d"+"T"+"%H:%M:")
 start_time_current_list = list(start_time_current)
-start_time_current_list[:10] = date_format
+start_time_current_list[:17] = date_format
 start_time_new = ''.join(start_time_current_list)
 epochs_list['current_epoch_start_time'] = start_time_new
 print("New epoch start time is " + start_time_new)
