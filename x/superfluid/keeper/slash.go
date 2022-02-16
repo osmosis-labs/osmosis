@@ -4,12 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-<<<<<<< HEAD
-	"github.com/osmosis-labs/osmosis/x/superfluid/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-=======
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
->>>>>>> bdff1dacaabe8055f52fc40a812c92df5a6c9547
 )
 
 func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddrStr string, valAddrStr string, slashFactor sdk.Dec) {
