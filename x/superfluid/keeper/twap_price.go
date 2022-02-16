@@ -37,10 +37,6 @@ func (k Keeper) DeleteEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) {
 	prefixStore.Delete([]byte(denom))
 }
 
-// Not clear to me how this works?
-// looks like it expects twap to be already in state?
-// but we're supposed to be using spot price instead in MVP?
-// also wouldn't this depend on the ordering of the assets? Osmo/X vs X/Osmo?
 func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) sdk.Dec {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
