@@ -15,9 +15,12 @@ var (
 	TwoWeekDuration, _ = time.ParseDuration("336h")
 	BaselineDurations  = []time.Duration{DayDuration, WeekDuration, TwoWeekDuration}
 )
-
+// baselineDurations is expected to be sorted by the caller 
 func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Duration, duration time.Duration) time.Duration {
 	for _, base := range baselineDurations {
+	// if base > duration, continue to next base size.
+	// if base <= duration, then we are in a duration that is greater than or equal to base size.
+	// If its within base + allowed diff, we set it to base.
 		if base <= duration && duration < base+allowedDiff {
 			return base
 		}
