@@ -9,7 +9,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/x/lockup/keeper"
+	lockupkeeper "github.com/osmosis-labs/osmosis/x/v7/lockup/keeper"
 )
 
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,

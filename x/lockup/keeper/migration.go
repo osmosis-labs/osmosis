@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/x/v7/lockup/types"
 )
 
 var (
