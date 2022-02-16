@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -90,7 +89,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
-			Duration:      OsmoTime.twoweeks,
+			Duration:      types.Twoweeks,
 		})
 
 		amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)

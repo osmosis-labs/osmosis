@@ -2,9 +2,8 @@ package types
 
 import (
 	fmt "fmt"
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"time"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
@@ -34,7 +33,7 @@ func DefaultParams() Params {
 	return Params{
 		RefreshEpochIdentifier: "day",
 		MinimumRiskFactor:      sdk.NewDecWithPrec(5, 2), // 5%
-		UnbondingDuration:      OsmoTime.threeweeks,    
+		UnbondingDuration:      Threeweeks,
 	}
 }
 

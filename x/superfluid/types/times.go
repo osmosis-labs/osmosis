@@ -1,11 +1,8 @@
-package superfluid
+package types
 
 import (
-	time
+	"time"
 )
 
-
-type OsmoTime {
-	twoweeks	time.Hour * 24 * 14        
-	threeweeks  time.Hour * 24 * 21
-}
+const Twoweeks = time.Hour * 24 * 14
+const Threeweeks = time.Hour * 24 * 21

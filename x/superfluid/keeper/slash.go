@@ -1,10 +1,9 @@
 package keeper
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddrStr string, valAddrStr string, slashFactor sdk.Dec) {
@@ -48,7 +47,7 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 		queryCondition := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
-			Duration:      OsmoTime.twoweeks,
+			Duration:      types.Twoweeks,
 		}
 
 		// (1 - amt/delegatedTokens) describes slash factor
