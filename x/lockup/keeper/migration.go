@@ -16,13 +16,13 @@ var (
 	BaselineDurations  = []time.Duration{DayDuration, WeekDuration, TwoWeekDuration}
 )
 
-func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Duration, duration time.Duration) time.Duration {
+func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Duration, duration time.Duration) (time.Duration, bool) {
 	for _, base := range baselineDurations {
 		if base <= duration && duration < base+allowedDiff {
-			return base
+			return base, true
 		}
 	}
-	return duration
+	return duration, false
 }
 
 // between duration windows of baselineDurations.map((duration) => (duration, duration+durationDiff)).
@@ -46,7 +46,11 @@ func MergeLockupsForSimilarDurations(
 				continue
 			}
 			coin := lock.Coins[0]
-			normalizedDuration := normalizeDuration(baselineDurations, durationDiff, lock.Duration)
+			normalizedDuration, ok := normalizeDuration(baselineDurations, durationDiff, lock.Duration)
+			if !ok {
+				continue
+			}
+
 			key := addr.String() + "/" + coin.Denom + "/" + strconv.FormatInt(int64(normalizedDuration), 10)
 			normalID, ok := normals[key]
 
