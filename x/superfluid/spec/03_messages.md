@@ -15,27 +15,19 @@ type MsgSuperfluidDelegate struct {
 ```
 
 **State Modifications:**
-- Lookup `lock` by `LockId`
+- Lookup `lock` by `LockID`
 - Safety Checks
     - Check that `Sender` is the owner of `lock`
     - Check that `lock` corresponds to a single locked asset
     - Check that `lock` is not unlocking
     - Check that `lock` is locked for at least the unbonding period
-    - Check that this `LockId` is not already superfluided
+    - Check that this `LockID` is not already superfluided
     - FIXME something to do with getting the unstaking synthetic lockup?
 - Get the `IntermediaryAccount` for this `lock` `Denom` and `ValAddr` pair.
-- Mint `Osmo` to match amount in `lock` and send to `IntermediaryAccount`
+- Mint `Osmo` to match amount in `lock` (based on LP to Osmo ratio at last epoch) and send to `IntermediaryAccount`
 - Create a delegation from `IntermediaryAccount` to `Validator`
 - Create a new perpetual `Gauge` for distributing staking payouts to locks of a synethic asset based on this `Validator` / `Denom` pair.
 - Create a connection between this `lockID` and this `IntermediaryAccount`
-
-### Questions
-
-- Where are we checking that the lock is of an LP share?
-- Where are we checking that the pool contains Osmo?
-- Where are we checking that this pool is approved for superluid?
-- How does twap work here? It looks like it expects twap to already be stored in state?
-    - Why do we need to mint osmo now, instead of in the epoch? (presumably during epoch the amount will be changed to match live twap/spot anyway?)
 
 
 ## Superfluid Undelegate
@@ -45,3 +37,14 @@ type MsgSuperfluidUndelegate struct {
 	LockId uint64
 }
 ```
+
+**State Modifications:**
+- Lookup `lock` by `LockID`
+- Check that `Sender` is the owner of `lock`
+- Get the `IntermediaryAccount` for this `lockID`
+- Delete the `SyntheticLockup` associated to this `lockID` + `ValAddr` pair
+- Create a new `SyntheticLockup` which is unbonding
+- Calculate the amount of `Osmo` delegated on behalf of this `lock`
+- Undelegate `Osmo` from `IntermediaryAccount` to `Validator`
+    - `Osmo` will be burned from `IntermediaryAccount` on epoch after unbonding finishes
+- Delete the connection betweene `lockID` and `IntermediaryAccount`
