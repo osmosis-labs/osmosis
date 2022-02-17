@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
+	//import keeper: keeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 const FlagSelectPoolIds = "breakdown-by-pool-ids"
@@ -314,6 +315,30 @@ Example:
 					Add(account.UnclaimedAirdrop...)
 				snapshotAccs[addr] = account
 			}
+
+			/*
+				Structure:
+				for _, account := range snapshotAccs {
+
+					acc := keeper.GetAccount(ctx, account.Address)
+
+					err := *authtypes.ModuleAccount(acc)
+					//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
+					if err != nil {
+						continue
+					}
+
+					//Repeat same casting/error check but w/o * in front of the cast, just to be comprehensive
+					err := authtypes.ModuleAccount(acc)
+					//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
+					if err != nil {
+						continue
+					}
+
+					//Else, remove account from list - how do we remove an item from a map in go?
+				}
+				//Make sure the length etc. is updated so the resulting json file generated next in the func doesn't error/generate garbage
+			*/
 
 			snapshot := DeriveSnapshot{
 				NumberAccounts: uint64(len(snapshotAccs)),
