@@ -3,14 +3,19 @@ package v7
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
+	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 )
 
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 	wasmKeeper *wasm.Keeper,
+	lockupKeeper *lockupkeeper.Keeper,
+	accountKeeper *authkeeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// Set wasm old version to 1 if we want to call wasm's InitGenesis ourselves
@@ -30,6 +35,12 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 		params := wasmKeeper.GetParams(ctx)
 		params.CodeUploadAccess = wasmtypes.AllowNobody
 		wasmKeeper.SetParams(ctx, params)
+
+		// Merge similar duration lockups
+		lockupkeeper.MergeLockupsForSimilarDurations(
+			ctx, *lockupKeeper, accountKeeper,
+			lockupkeeper.BaselineDurations, lockupkeeper.HourDuration,
+		)
 
 		// override here
 		return newVM, err
