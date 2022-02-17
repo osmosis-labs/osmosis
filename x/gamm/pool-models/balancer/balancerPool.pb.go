@@ -233,7 +233,7 @@ var xxx_messageInfo_BalancerPool proto.InternalMessageInfo
 func init() {
 	proto.RegisterType((*SmoothWeightChangeParams)(nil), "osmosis.gamm.poolmodels.SmoothWeightChangeParams")
 	proto.RegisterType((*BalancerPoolParams)(nil), "osmosis.gamm.poolmodels.BalancerPoolParams")
-	proto.RegisterType((*BalancerPool)(nil), "osmosis.gamm.poolmodels.BalancerPool")
+	proto.RegisterType((*BalancerPool)(nil), "osmosis.gamm.v1beta1.Pool")
 }
 
 func init() {
