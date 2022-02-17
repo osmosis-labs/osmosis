@@ -76,7 +76,10 @@ func MergeLockupsForSimilarDurations(
 				// create a normalized lock that will absorb the locks in the duration window
 				normalID = k.GetLastLockID(ctx) + 1
 				normalLock = types.NewPeriodLock(normalID, owner, normalizedDuration, time.Time{}, lock.Coins)
-				k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, normalLock)
+				err = k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, normalLock)
+				if err != nil {
+					panic(err)
+				}
 				k.SetLastLockID(ctx, normalID)
 				normals[key] = normalID
 			} else {
@@ -91,10 +94,16 @@ func MergeLockupsForSimilarDurations(
 			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
 			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(normalizedDuration), coin.Amount)
 
-			k.setLock(ctx, normalLock)
+			err := k.setLock(ctx, normalLock)
+			if err != nil {
+				panic(err)
+			}
 
 			k.deleteLock(ctx, lock.ID)
-			k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+			err = k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+			if err != nil {
+				panic(err)
+			}
 
 			// don't call hooks, tokens are just moved from a lock to another
 		}
