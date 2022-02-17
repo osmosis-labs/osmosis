@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
@@ -25,13 +26,10 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 	for _, lock := range locks {
 		// Only single token lock is allowed here
 		slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
-		cacheCtx, write := ctx.CacheContext()
-		_, err = k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
-		if err != nil {
-			k.Logger(ctx).Error(err.Error())
-		} else {
-			write()
-		}
+		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			_, err = k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
+			return err
+		})
 	}
 }
 
@@ -56,13 +54,10 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 		for _, lock := range locks {
 			// Only single token lock is allowed here
 			slashAmt := lock.Coins[0].Amount.ToDec().Mul(fraction).TruncateInt()
-			cacheCtx, write := ctx.CacheContext()
-			_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
-			if err != nil {
-				k.Logger(ctx).Error(err.Error())
-			} else {
-				write()
-			}
+			osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+				_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
+				return err
+			})
 		}
 	}
 }

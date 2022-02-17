@@ -14,6 +14,7 @@ We also want to avoid resource exhaustion attacks. We relegate concerns around u
 
 - Intermediary accounts are not created on SetSuperfluidAsset
 - They are created at-time-of-need on MsgSuperfluidDelegate
+- Concerns: What happens if you delegate to an unbonding or jailed validator.
 
 ## Future optimizations
 

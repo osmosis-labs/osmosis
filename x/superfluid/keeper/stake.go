@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
 	"github.com/osmosis-labs/osmosis/x/superfluid/types"
@@ -109,19 +110,14 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		}
 
 		// make delegation from module account to the validator
-		cacheCtx, write := ctx.CacheContext()
-		validator, found = k.sk.GetValidator(cacheCtx, valAddress)
-		if !found {
-			k.Logger(ctx).Error(fmt.Sprintf("validator not found or %s", acc.ValAddr))
-			continue
-		}
-		_, err = k.sk.Delegate(cacheCtx, mAddr, amt, stakingtypes.Unbonded, validator, true)
-		if err != nil {
-			// this could happen when validator is fully slashed
-			k.Logger(ctx).Error(err.Error())
-		} else {
-			write()
-		}
+		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			validator, found = k.sk.GetValidator(cacheCtx, valAddress)
+			if !found {
+				return fmt.Errorf("validator not found or %s", acc.ValAddr)
+			}
+			_, err = k.sk.Delegate(cacheCtx, mAddr, amt, stakingtypes.Unbonded, validator, true)
+			return err
+		})
 	}
 }
 
