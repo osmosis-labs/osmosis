@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -12,6 +13,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/osmosis-labs/osmosis/app"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/osmotestutils"
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
@@ -19,8 +21,8 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	//import keeper: keeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 const FlagSelectPoolIds = "breakdown-by-pool-ids"
@@ -316,37 +318,18 @@ Example:
 				snapshotAccs[addr] = account
 			}
 
-			/*
-				Structure:
-				for addr, account := range snapshotAccs {
-
-					acc := keeper.GetAccount(ctx, account.Address)
-
-					err := *authtypes.ModuleAccount(acc)
-					//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
-					if err != nil {
-						continue
-					}
-
-					//Repeat same casting/error check but w/o * in front of the cast, just to be comprehensive
-					err := authtypes.ModuleAccount(acc)
-					//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
-					if err != nil {
-						continue
-					}
-
-					//Else, remove account from list - how do we remove an item from a map in go?
-					//ASSUMING THAT "addr" IS THE KEY
-					delete(snapshotAccs, addr)
-				}
-				//Make sure the length etc. is updated so the resulting json file generated next in the func doesn't error/generate garbage
-			*/
+			app := app.Setup(false)
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now().UTC()})
 
 			for addr, account := range snapshotAccs {
 
-				acc := keeper.accountKeeper.GetAccount(ctx, account.Address)
+				accAddr, err := sdk.AccAddressFromBech32(account.Address)
+				if err != nil {
+					return err
+				}
+				acc := app.AccountKeeper.GetAccount(ctx, accAddr)
 
-				err := *authtypes.ModuleAccount(acc)
+				err = *authtypes.ModuleAccount(acc)
 				//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
 				if err != nil {
 					continue
@@ -363,7 +346,6 @@ Example:
 				//ASSUMING THAT "addr" IS THE KEY
 				delete(snapshotAccs, addr)
 			}
-			//Make sure the length etc. is updated so the resulting json file generated next in the func doesn't error/generate garbage
 
 			snapshot := DeriveSnapshot{
 				NumberAccounts: uint64(len(snapshotAccs)),
