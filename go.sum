@@ -702,12 +702,16 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc2 h1:7xy1pLtNiF2KaRSkolayZf4z3OfCJsO3eqBtEAXg2VA=
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc2/go.mod h1:0JCaioRNOVUiw7c3MngmKACnumaQ2sjPenXCnwxCttI=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220211185927-cfeeeb16331d h1:QTXhz+YDjwtBJvAH5C8QIYKNHyLgKN0BedDYMC65EkQ=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220211185927-cfeeeb16331d/go.mod h1:XIvt5YKBsdq6wM84ixUlMkswPAgRFe+EA2PySK+8PzA=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220214220252-d69df1dbc317 h1:8x0W9mOmIlQK6YZ8yOMFhV8AKuDCzZOHL3PjGAmg3So=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220214220252-d69df1dbc317/go.mod h1:XIvt5YKBsdq6wM84ixUlMkswPAgRFe+EA2PySK+8PzA=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220216163232-0737b226f84e h1:2wSAvesY5VzNttBw5PRImwRFpM0KaYU6wgtDA+M/qj0=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220216163232-0737b226f84e/go.mod h1:XIvt5YKBsdq6wM84ixUlMkswPAgRFe+EA2PySK+8PzA=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220216163659-0ad06a893a62 h1:ifMcDvmRQLxlbmsfsE5HzdKwzEDG3DVoHmu3eGflnCY=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220216163659-0ad06a893a62/go.mod h1:XIvt5YKBsdq6wM84ixUlMkswPAgRFe+EA2PySK+8PzA=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220217222221-58cf7d085c78 h1:4/PzLXcB2mswimKoU6TiMMFx6P3nouhEsiTjYoYeuwo=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220217222221-58cf7d085c78/go.mod h1:XIvt5YKBsdq6wM84ixUlMkswPAgRFe+EA2PySK+8PzA=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v1 h1:orHUut98Miu2+bsFiNZJ29B3ogrbiBbQpti94L2w3Z4=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v1/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo h1:XyYyDTjPIu7qX2nhQp9mboj7Pa9FEnjg1RXw73Ctv5U=
