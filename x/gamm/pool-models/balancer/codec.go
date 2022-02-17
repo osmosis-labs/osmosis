@@ -17,11 +17,11 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	registry.RegisterInterface(
-		"osmosis.gamm.v1beta1.PoolI",
+	registry.RegisterImplementations(
 		(*types.PoolI)(nil),
 		&BalancerPool{},
 	)
+
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateBalancerPool{},
