@@ -89,7 +89,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
-			Duration:      types.Twoweeks,
+			Duration:      types.OsmosisMainnetUnbondingPeriod,
 		})
 
 		amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)

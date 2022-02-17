@@ -4,5 +4,4 @@ import (
 	"time"
 )
 
-const Twoweeks = time.Hour * 24 * 14
-const Threeweeks = time.Hour * 24 * 21
+const OsmosisMainnetUnbondingPeriod = time.Hour * 24 * 14

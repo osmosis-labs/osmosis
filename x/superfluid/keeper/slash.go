@@ -47,7 +47,7 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 		queryCondition := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
-			Duration:      types.Twoweeks,
+			Duration:      types.OsmosisMainnetUnbondingPeriod,
 		}
 
 		// (1 - amt/delegatedTokens) describes slash factor

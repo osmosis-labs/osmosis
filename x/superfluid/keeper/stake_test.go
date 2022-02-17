@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAc
 func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, denom string) lockuptypes.PeriodLock {
 
 	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
-		time.Hour * 24 * 14,
+		types.OsmosisMainnetUnbondingPeriod,
 		time.Hour,
 		time.Hour * 3,
 		time.Hour * 7,
