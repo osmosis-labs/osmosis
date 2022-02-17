@@ -301,7 +301,6 @@ func NewOsmosisApp(
 	app.setupUpgradeStoreLoaders()
 	app.InitNormalKeepers()
 	app.SetupHooks()
-	app.setupUpgradeHandlers()
 
 	/****  Module Options ****/
 
@@ -394,6 +393,8 @@ func NewOsmosisApp(
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
+
+	app.setupUpgradeHandlers()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
