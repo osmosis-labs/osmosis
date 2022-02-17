@@ -71,18 +71,17 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			}
 			if returnAmount.IsPositive() {
 				// burn undelegated tokens
+				// TODO: Why tf are we burning from staking module accounts here???
 				burnCoins := sdk.Coins{sdk.NewCoin(bondDenom, returnAmount)}
+				moduleName := stakingtypes.NotBondedPoolName
 				if validator.IsBonded() {
-					err = k.bk.BurnCoins(ctx, stakingtypes.BondedPoolName, burnCoins)
-					if err != nil {
-						panic(err)
-					}
-				} else {
-					err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, burnCoins)
-					if err != nil {
-						panic(err)
-					}
+					moduleName = stakingtypes.BondedPoolName
 				}
+				err = k.bk.BurnCoins(ctx, moduleName, burnCoins)
+				if err != nil {
+					panic(err)
+				}
+
 			}
 		}
 
