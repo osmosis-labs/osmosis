@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
 	suite.Require().Equal(locks[0].IsUnlocking(), false)
 
 	// begin unlock
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, locks[0])
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, locks[0], nil)
 	suite.Require().NoError(err)
 
 	// check locks
@@ -127,7 +127,7 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	// begin unlock
 	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.BeginUnlock(suite.ctx, *lock)
+	err = lockKeeper.BeginUnlock(suite.ctx, *lock, nil)
 	suite.Require().NoError(err)
 
 	// unlock 1s after begin unlock
@@ -190,7 +190,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	suite.Require().NoError(err)
 
 	// begin unlock with lock object
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, nil)
 	suite.Require().NoError(err)
 
 	// unlock with lock object

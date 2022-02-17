@@ -413,9 +413,45 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
+// splitLock splits a lock with the given amount, and stores split new lock to the state
+func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) (types.PeriodLock, error) {
+	lock.Coins = lock.Coins.Sub(coins)
+	err := k.setLock(ctx, lock)
+	if err != nil {
+		return types.PeriodLock{}, err
+	}
+
+	splitLockID := k.GetLastLockID(ctx) + 1
+	k.SetLastLockID(ctx, splitLockID)
+
+	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.Duration, lock.EndTime, coins)
+	err = k.setLock(ctx, splitLock)
+	return splitLock, err
+}
+
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
-func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
-	// remove lock refs from not unlocking queue
+func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+	// sanity check
+	if !coins.IsAllLTE(lock.Coins) {
+		return fmt.Errorf("requested amount to unlock exceedes locked tokens")
+	}
+
+	// check if the unlocking coins are less than locked coins
+	// if then, split lock and partial unlock on it
+	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
+		// prohibit partial unlock if other locks are referring
+		if k.HasAnySyntheticLockups(ctx, lock.ID) {
+			return fmt.Errorf("cannot partial unlock a lock with synthetic lockup")
+		}
+
+		splitLock, err := k.splitLock(ctx, lock, coins)
+		if err != nil {
+			return err
+		}
+		lock = splitLock
+	}
+
+	// remove lock refs from not unlocking queue if exists
 	err := k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 	if err != nil {
 		return err
@@ -423,12 +459,7 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 
 	// store lock with end time set
 	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(&lock)
-	if err != nil {
-		return err
-	}
-	store.Set(lockStoreKey(lock.ID), bz)
+	k.setLock(ctx, lock)
 
 	// add lock refs into unlocking queue
 	err = k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
@@ -440,11 +471,7 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return nil
 	}
 
-	lockOwner, err := sdk.AccAddressFromBech32(lock.Owner)
-	if err != nil {
-		panic(err)
-	}
-	k.hooks.OnStartUnlock(ctx, lockOwner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 
 	return nil
 }
@@ -468,7 +495,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 // TODO: Revisit for Superfluid Staking
 func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	if !lock.IsUnlocking() {
-		err := k.BeginUnlock(ctx, lock)
+		err := k.BeginUnlock(ctx, lock, nil)
 		if err != nil {
 			return err
 		}
