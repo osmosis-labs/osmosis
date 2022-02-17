@@ -318,7 +318,7 @@ Example:
 
 			/*
 				Structure:
-				for _, account := range snapshotAccs {
+				for addr, account := range snapshotAccs {
 
 					acc := keeper.GetAccount(ctx, account.Address)
 
@@ -336,9 +336,34 @@ Example:
 					}
 
 					//Else, remove account from list - how do we remove an item from a map in go?
+					//ASSUMING THAT "addr" IS THE KEY
+					delete(snapshotAccs, addr)
 				}
 				//Make sure the length etc. is updated so the resulting json file generated next in the func doesn't error/generate garbage
 			*/
+
+			for addr, account := range snapshotAccs {
+
+				acc := keeper.accountKeeper.GetAccount(ctx, account.Address)
+
+				err := *authtypes.ModuleAccount(acc)
+				//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
+				if err != nil {
+					continue
+				}
+
+				//Repeat same casting/error check but w/o * in front of the cast, just to be comprehensive
+				err = authtypes.ModuleAccount(acc)
+				//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
+				if err != nil {
+					continue
+				}
+
+				//Else, remove account from list - how do we remove an item from a map in go?
+				//ASSUMING THAT "addr" IS THE KEY
+				delete(snapshotAccs, addr)
+			}
+			//Make sure the length etc. is updated so the resulting json file generated next in the func doesn't error/generate garbage
 
 			snapshot := DeriveSnapshot{
 				NumberAccounts: uint64(len(snapshotAccs)),
