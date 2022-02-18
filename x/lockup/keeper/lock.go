@@ -462,7 +462,10 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 
 	// store lock with end time set
 	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
-	k.setLock(ctx, lock)
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
 
 	// add lock refs into unlocking queue
 	err = k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
