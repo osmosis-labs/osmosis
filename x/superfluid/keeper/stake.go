@@ -207,6 +207,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 
 	// check unbonding synthetic lockup already exists on this validator
 	// in this case automatic superfluid undelegation should fail and it is the source of chain halt
+	// TODO/FIXME ... ^ what?
 	suffix := unstakingSuffix(valAddr)
 	_, err = k.lk.GetSyntheticLockup(ctx, lockID, suffix)
 	if err == nil {
