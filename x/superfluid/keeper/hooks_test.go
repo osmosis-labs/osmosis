@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	suite.Require().NoError(err)
 
 	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(
-		suite.ctx, acc1, balancer.BalancerPoolParams{
+		suite.ctx, acc1, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, poolAssets, "")

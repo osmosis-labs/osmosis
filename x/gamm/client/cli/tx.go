@@ -376,7 +376,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		})
 	}
 
-	poolParams := &balancer.BalancerPoolParams{
+	poolParams := &balancer.PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	}

@@ -45,7 +45,7 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
-func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolParams balancer.BalancerPoolParams) uint64 {
+func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balancer.PoolParams) uint64 {
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, sdk.NewCoins(
@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolPara
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, BalancerPoolParams, []types.PoolAsset{
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(BalancerPoolPara
 }
 
 func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
-	poolId := suite.prepareBalancerPoolWithPoolParams(balancer.BalancerPoolParams{
+	poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})
