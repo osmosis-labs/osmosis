@@ -704,8 +704,12 @@ github.com/osmosis-labs/bech32-ibc v0.2.0-rc2 h1:7xy1pLtNiF2KaRSkolayZf4z3OfCJsO
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc2/go.mod h1:0JCaioRNOVUiw7c3MngmKACnumaQ2sjPenXCnwxCttI=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220214220252-d69df1dbc317 h1:8x0W9mOmIlQK6YZ8yOMFhV8AKuDCzZOHL3PjGAmg3So=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220214220252-d69df1dbc317/go.mod h1:XIvt5YKBsdq6wM84ixUlMkswPAgRFe+EA2PySK+8PzA=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220218160317-0895f58ac5dc h1:J+DbcTUrNqri0fWZIr+dxcdvdm1Sfuj01XE3F+WKxEU=
+github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220218160317-0895f58ac5dc/go.mod h1:nuuWERUYTPCrSq8A8/Zfrc4pJ+hbuJCjcfkM8YPXUfM=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v1 h1:orHUut98Miu2+bsFiNZJ29B3ogrbiBbQpti94L2w3Z4=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v1/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
+github.com/osmosis-labs/iavl v0.17.3-osmo-v2.rc4 h1:3M1NWj1C8Sg0OpIMJiiN2uuxU1ImyL8Nh0ykm1t81e4=
+github.com/osmosis-labs/iavl v0.17.3-osmo-v2.rc4/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo h1:XyYyDTjPIu7qX2nhQp9mboj7Pa9FEnjg1RXw73Ctv5U=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo/go.mod h1:XUmW7wmubCRhIEAGtMGS+5IjiSSmcAwihoN/yPGd6Kk=
 github.com/osmosis-labs/tendermint v0.34.12-0.20220109173307-59a781894ea7 h1:uMaGJbQ2g2pSK+7fWIlr+JJTape8hGHlSAMIiRPg2To=
