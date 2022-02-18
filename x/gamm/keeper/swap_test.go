@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 				panic(err)
 			}
 
-			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.BalancerPoolParams{
+			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})

@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, coins)
 	suite.Require().NoError(err)
 
-	defaultBalancerPoolParams := balanacertypes.BalancerPoolParams{
+	defaultPoolParams := balanacertypes.PoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	}
@@ -126,7 +126,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 			},
 		}
 
-		_, err = suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, defaultAddr, defaultBalancerPoolParams, poolAssets, "")
+		_, err = suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, defaultAddr, defaultPoolParams, poolAssets, "")
 		suite.Require().NoError(err)
 	}
 

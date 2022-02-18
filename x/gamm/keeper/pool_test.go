@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestCleanupPool() {
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultBalancerPoolParams, []types.PoolAsset{
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultPoolParams, []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
 	for _, coin := range coinOf[acc1.String()] {
 		initialAssets = append(initialAssets, types.PoolAsset{Weight: types.OneShare.MulRaw(100), Token: coin})
 	}
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultBalancerPoolParams, initialAssets, "")
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultPoolParams, initialAssets, "")
 	suite.NoError(err)
 
 	for _, acc := range []sdk.AccAddress{acc2, acc3} {
@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
 		panic(err)
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultBalancerPoolParams, []types.PoolAsset{
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultPoolParams, []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolWithLockup() {
 		panic(err)
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultBalancerPoolParams, []types.PoolAsset{
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, defaultPoolParams, []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
