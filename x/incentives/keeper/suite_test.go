@@ -114,6 +114,12 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 		Denom:         "lptoken",
 		Duration:      duration,
 	}
+
+	// mints coins so supply exists on chain
+	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, mintCoins)
+	suite.Require().NoError(err)
+
 	numEpochsPaidOver := uint64(2)
 	if isPerpetual {
 		numEpochsPaidOver = uint64(1)
