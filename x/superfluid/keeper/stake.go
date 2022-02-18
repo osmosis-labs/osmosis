@@ -186,7 +186,32 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	return nil
 }
 
-//
+// ensure the valAddr is correctly formatted & corresponds to a real validator on chain.
+func (k Keeper) validateValAddrForSFDelegate(ctx sdk.Context, valAddr string) (stakingtypes.Validator, error) {
+	valAddress, err := sdk.ValAddressFromBech32(valAddr)
+	if err != nil {
+		return stakingtypes.Validator{}, err
+	}
+	validator, found := k.sk.GetValidator(ctx, valAddress)
+	if !found {
+		return stakingtypes.Validator{}, stakingtypes.ErrNoValidatorFound
+	}
+	return validator, nil
+}
+
+// func (k Keeper) hasBondedSuperfluidDelegation(ctx sdk.Context, lockID int64) bool {
+// 	valAddress, err := sdk.ValAddressFromBech32(valAddr)
+// 	if err != nil {
+// 		return stakingtypes.Validator{}, err
+// 	}
+// 	validator, found := k.sk.GetValidator(ctx, valAddress)
+// 	if !found {
+// 		return stakingtypes.Validator{}, stakingtypes.ErrNoValidatorFound
+// 	}
+// 	return validator, nil
+// }
+
+// TODO: Merge a lot of logic with SuperfluidDelegateMore
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -199,6 +224,10 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	if err != nil {
 		return err
 	}
+	validator, err := k.validateValAddrForSFDelegate(ctx, valAddr)
+	if err != nil {
+		return err
+	}
 
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if !intermediaryAccAddr.Empty() {
@@ -207,7 +236,6 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 
 	// check unbonding synthetic lockup already exists on this validator
 	// in this case automatic superfluid undelegation should fail and it is the source of chain halt
-	// TODO/FIXME ... ^ what?
 	suffix := unstakingSuffix(valAddr)
 	_, err = k.lk.GetSyntheticLockup(ctx, lockID, suffix)
 	if err == nil {
@@ -222,8 +250,13 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 
-	// create intermediary account that converts LP token to OSMO
-	acc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr, 0)
+	// get the intermediate account for this (denom, validator) pair.
+	// This account tracks the amount of osmo being considered as staked.
+	// If an intermediary account doesn't exist, then create it + a perpetual gauge.
+	acc, err := k.GetOrCreateIntermediaryAccount(ctx, lock.Coins[0].Denom, valAddr)
+	if err != nil {
+		return err
+	}
 	mAddr := acc.GetAccAddress()
 
 	// mint OSMO token based on TWAP of locked denom to denom module account
@@ -245,36 +278,11 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	}
 
 	// make delegation from module account to the validator
-	valAddress, err := sdk.ValAddressFromBech32(valAddr)
-	if err != nil {
-		return err
-	}
-	validator, found := k.sk.GetValidator(ctx, valAddress)
-	if !found {
-		return stakingtypes.ErrNoValidatorFound
-	}
+	// TODO: What happens here if validator is jailed, tombstoned, or unbonding
 	_, err = k.sk.Delegate(ctx, mAddr, amt, stakingtypes.Unbonded, validator, true)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
 		return err
-	}
-
-	// create a perpetual gauge to send staking distribution rewards to if not available yet
-	prevAcc := k.GetIntermediaryAccount(ctx, mAddr)
-	if prevAcc.Denom == "" { // when intermediary account is not created yet
-		acc.GaugeId, err = k.ik.CreateGauge(ctx, true, mAddr, sdk.Coins{}, lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         acc.Denom + suffix,
-			Duration:      params.UnbondingDuration,
-		}, ctx.BlockTime(), 1)
-
-		if err != nil {
-			k.Logger(ctx).Error(err.Error())
-			return err
-		}
-
-		// connect intermediary account struct to its address
-		k.SetIntermediaryAccount(ctx, acc)
 	}
 
 	// create connection record between lock id and intermediary account
