@@ -172,6 +172,11 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 		return types.ErrMultipleCoinsLockupNotSupported
 	}
 
+	defaultSuperfluidAsset := types.SuperfluidAsset{}
+	if k.GetSuperfluidAsset(ctx, lock.Coins[0].Denom) == defaultSuperfluidAsset {
+		return types.ErrAttemptingToSuperfluidNonSuperfluidAsset
+	}
+
 	// prevent unbonding lockups to be not able to be used for superfluid staking
 	if lock.IsUnlocking() {
 		return types.ErrUnbondingLockupNotSupported
@@ -292,7 +297,6 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 }
 
 func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) (sdk.ValAddress, error) {
-
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
 		return nil, err
