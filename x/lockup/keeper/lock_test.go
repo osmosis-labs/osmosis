@@ -198,6 +198,69 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	suite.Require().NoError(err)
 }
 
+func (suite *KeeperTestSuite) TestPartialUnlock() {
+	suite.SetupTest()
+	now := suite.ctx.BlockTime()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+	// lock with balance
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
+	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, coins, time.Second)
+	suite.Require().NoError(err)
+
+	// check unlocking coins
+	unlockings := suite.app.LockupKeeper.GetAccountUnlockingCoins(suite.ctx, addr1)
+	suite.Require().Equal(len(unlockings), 0)
+
+	// check locked coins
+	locked := suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
+	suite.Require().Equal(len(locked), 1)
+	suite.Require().Equal(locked[0].Amount.Int64(), int64(10))
+
+	// test exceeding coins
+	exceedingCoins := sdk.Coins{sdk.NewInt64Coin("stake", 15)}
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, exceedingCoins)
+	suite.Require().Error(err)
+
+	// test invalid coins
+	invalidCoins := sdk.Coins{sdk.NewInt64Coin("unknown", 1)}
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, invalidCoins)
+	suite.Require().Error(err)
+
+	// begin unlock partial amount
+	partialCoins := sdk.Coins{sdk.NewInt64Coin("stake", 1)}
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, partialCoins)
+	suite.Require().NoError(err)
+
+	// check unlocking coins
+	unlockings = suite.app.LockupKeeper.GetAccountUnlockingCoins(suite.ctx, addr1)
+	suite.Require().Equal(len(unlockings), 1)
+	suite.Require().Equal(unlockings[0].Amount.Int64(), int64(1))
+
+	// check locked coins
+	locked = suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
+	suite.Require().Equal(len(locked), 1)
+	suite.Require().Equal(locked[0].Amount.Int64(), int64(10))
+
+	// unlock partial unlock
+	partialUnlock := suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)[1]
+	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), partialUnlock)
+	suite.Require().NoError(err)
+
+	// check unlocking coins
+	unlockings = suite.app.LockupKeeper.GetAccountUnlockingCoins(suite.ctx, addr1)
+	suite.Require().Equal(len(unlockings), 0)
+
+	// check locked coins
+	locked = suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
+	suite.Require().Equal(len(locked), 1)
+	suite.Require().Equal(locked[0].Amount.Int64(), int64(9))
+
+}
+
 func (suite *KeeperTestSuite) TestModuleLockedCoins() {
 	suite.SetupTest()
 

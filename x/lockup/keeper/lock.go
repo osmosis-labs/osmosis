@@ -415,6 +415,9 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 
 // splitLock splits a lock with the given amount, and stores split new lock to the state
 func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) (types.PeriodLock, error) {
+	if lock.IsUnlocking() {
+		return types.PeriodLock{}, fmt.Errorf("cannot split unlocking lock")
+	}
 	lock.Coins = lock.Coins.Sub(coins)
 	err := k.setLock(ctx, lock)
 	if err != nil {
