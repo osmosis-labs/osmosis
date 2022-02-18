@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -13,7 +12,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/app"
 	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/osmosis-labs/osmosis/osmotestutils"
 	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
@@ -21,7 +19,6 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -318,27 +315,24 @@ Example:
 				snapshotAccs[addr] = account
 			}
 
-			app := app.Setup(false)
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now().UTC()})
+			queryClient := authtypes.NewQueryClient(clientCtx)
 
-			for addr, account := range snapshotAccs {
+			for addr, _ := range snapshotAccs {
 
-				accAddr, err := sdk.AccAddressFromBech32(account.Address)
+				acc, err := queryClient.Account(cmd.Context(), &authtypes.QueryAccountRequest{
+					Address: addr,
+				})
 				if err != nil {
 					return err
 				}
-				acc := app.AccountKeeper.GetAccount(ctx, accAddr)
 
-				err = *authtypes.ModuleAccount(acc)
-				//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
-				if err != nil {
+				moduleAccount, ok := acc.(*authtypes.ModuleAccount)
+				if !ok {
 					continue
 				}
 
-				//Repeat same casting/error check but w/o * in front of the cast, just to be comprehensive
-				err = authtypes.ModuleAccount(acc)
-				//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
-				if err != nil {
+				moduleAccount, ok = acc.(authtypes.ModuleAccount)
+				if !ok {
 					continue
 				}
 
