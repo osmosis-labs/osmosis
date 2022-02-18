@@ -403,7 +403,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().NoError(err)
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAccAddress(), valAddr)
 				if expDelegation.IsZero() {
-					suite.Require().False(found)
+					suite.Require().False(found, delegation.Shares)
 				} else {
 					suite.Require().True(found)
 					suite.Require().Equal(expDelegation, delegation.Shares)

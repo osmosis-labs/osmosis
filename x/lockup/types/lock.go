@@ -42,6 +42,18 @@ func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	return sum
 }
 
+func SumSyntheticLocksByDenom(synthLocks []SyntheticLock, denom string) sdk.Int {
+	sum := sdk.NewInt(0)
+	err := sdk.ValidateDenom(denom)
+	if err != nil {
+		panic(fmt.Errorf("invalid denom used internally: %s, %v", denom, err))
+	}
+	for _, synthLock := range synthLocks {
+		sum = sum.Add(synthLock.Coins.AmountOfNoDenomValidation(denom))
+	}
+	return sum
+}
+
 // quick fix for getting native denom from synthetic denom
 func NativeDenom(denom string) string {
 	if strings.Contains(denom, "superbonding") {
@@ -51,4 +63,20 @@ func NativeDenom(denom string) string {
 		return strings.Split(denom, "superunbonding")[0]
 	}
 	return denom
+}
+
+func SyntheticSuffix(denom string) string {
+	return strings.TrimLeft(denom, NativeDenom(denom))
+}
+
+func IsSyntheticDenom(denom string) bool {
+	return NativeDenom(denom) != denom
+}
+
+func IsStakingSuffix(suffix string) bool {
+	return strings.Contains(suffix, "superbonding")
+}
+
+func IsUnstakingSuffix(suffix string) bool {
+	return strings.Contains(suffix, "superunbonding")
 }

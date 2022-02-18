@@ -61,6 +61,8 @@ func (suite *KeeperTestSuite) TestDistribute() {
 			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "tcnum %d, person %d", tcIndex, i)
 		}
 	}
+
+	// TODO: test distribution for synthetic lockup as well
 }
 
 // TODO: Make this test table driven, or move whatever it tests into

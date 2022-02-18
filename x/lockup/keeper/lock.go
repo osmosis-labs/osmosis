@@ -86,7 +86,17 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 
 	// Note: as long as token denoms does not change, synthetic lockup references are not needed to change
 	for _, synthLock := range synthLocks {
+		// increase synthetic lockup's Coins object - only for bonding synthetic lockup
+		if types.IsUnstakingSuffix(synthLock.Suffix) {
+			continue
+		}
+
 		sCoins := syntheticCoins(coins, synthLock.Suffix)
+		synthLock.Coins = synthLock.Coins.Add(sCoins...)
+		err := k.setSyntheticLockupObject(ctx, &synthLock)
+		if err != nil {
+			panic(err)
+		}
 		for _, coin := range sCoins {
 			// Note: we use native lock's duration on accumulation store
 			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
@@ -120,6 +130,12 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	// all the synthetic lockups' accumulation should be decreased
 	for _, synthLock := range synthLocks {
 		sCoins := syntheticCoins(coins, synthLock.Suffix)
+		synthLock.Coins = synthLock.Coins.Sub(sCoins)
+		err := k.setSyntheticLockupObject(ctx, &synthLock)
+		if err != nil {
+			panic(err)
+		}
+
 		for _, coin := range sCoins {
 			// Note: we use native lock's duration on accumulation store
 			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
