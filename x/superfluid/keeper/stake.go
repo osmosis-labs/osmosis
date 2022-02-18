@@ -265,6 +265,11 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	mAddr := acc.GetAccAddress()
 
 	// mint OSMO token based on TWAP of locked denom to denom module account
+	// TODO: Figure out whats going on in next 3 code blocks
+	// (1) Get superfluid osmo tokens backing this LP share
+	// (2) Mint these as new osmo in minttypes.ModuleName
+	// (3) If no account exists, make a new account at this addr
+	// (4) send newly minted coins to this account.
 	bondDenom := k.sk.BondDenom(ctx)
 	amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lock.Coins.AmountOf(acc.Denom))
 	if amt.IsZero() {
@@ -276,7 +281,11 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	if err != nil {
 		return err
 	}
-	k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
+	// TODO: @Dev added this hasAccount gating, think through if theres an edge case that makes it not right
+	if !k.ak.HasAccount(ctx, mAddr) {
+		// TODO: Why is this a base account, not a module account?
+		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
+	}
 	err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
 	if err != nil {
 		return err
