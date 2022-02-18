@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/store"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/store"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 // TODO: Reorganize functions in this file
@@ -374,6 +374,12 @@ func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
+// deleteLock removes the lock object from the state
+func (k Keeper) deleteLock(ctx sdk.Context, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(lockStoreKey(id))
+}
+
 // Lock is a utility to lock coins into module account
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
@@ -481,10 +487,7 @@ func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) erro
 		return err
 	}
 
-	// TODO: Should we refactor next several lines into a 'delete lock' method?
-	// remove lock from store object
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(lockStoreKey(lock.ID))
+	k.deleteLock(ctx, lock.ID)
 
 	// delete lock refs from the unlocking queue
 	err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)

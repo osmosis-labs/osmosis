@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 // Relock unlock previous lockID and create a new lock with newCoins with same duration and endtime
@@ -58,8 +58,7 @@ func (ak AdminKeeper) BreakLock(ctx sdk.Context, lockID uint64) error {
 		return err
 	}
 
-	store := ctx.KVStore(ak.storeKey)
-	store.Delete(lockStoreKey(lockID)) // remove lock from store
+	ak.deleteLock(ctx, lockID)
 
 	refKeys, err := lockRefKeys(*lock)
 	if err != nil {

@@ -18,8 +18,8 @@ import (
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/store"
-	v101 "github.com/osmosis-labs/osmosis/store/legacy/v101"
+	"github.com/osmosis-labs/osmosis/v7/store"
+	v101 "github.com/osmosis-labs/osmosis/v7/store/legacy/v101"
 )
 
 func setupStore() sdk.KVStore {
