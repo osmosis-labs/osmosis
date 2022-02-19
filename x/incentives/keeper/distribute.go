@@ -222,6 +222,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // distributeSyntheticInternal runs the distribution logic for a synthetic rewards distribution gauge, and adds the sends to
 // the distrInfo computed. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
+// TODO: Make this code have way more re-use with distribute internal (post-v7)
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
@@ -358,19 +359,17 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		filteredLocks := FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
 
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
+		var gaugeDistributedCoins sdk.Coins
+		var err error
 		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
-			gaugeDistributedCoins, err := k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
-			if err != nil {
-				return nil, err
-			}
-			totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
+			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 		} else {
-			gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
-			if err != nil {
-				return nil, err
-			}
-			totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
+			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		}
+		if err != nil {
+			return nil, err
+		}
+		totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
 	}
 
 	err := k.doDistributionSends(ctx, &distrInfo)
