@@ -176,7 +176,7 @@ func (suite *KeeperTestSuite) TestOnStartUnlock() {
 				// unlock native lockup
 				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
 				if err == nil {
-					err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, *lock)
+					err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, *lock, nil)
 				}
 
 				if tc.expUnbondingErr[index] {
