@@ -255,7 +255,7 @@ func (k Keeper) distributeSyntheticInternal(
 		for _, coin := range remainCoins {
 			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 			denomLockAmt := synthLock.Coins.AmountOfNoDenomValidation(denom)
-			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewIntFromUint64(remainEpochs)))
 			if amt.IsPositive() {
 				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
 				distrCoins = distrCoins.Add(newlyDistributedCoin)
@@ -348,13 +348,14 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		// TODO: FIXME!!!
 		// Confusingly, there is no way to get all synthetic lockups.
 		// All gauges have a precondition of being ByDuration.
-		if _, ok := locksByDenomCache[gauge.DistributeTo.Denom]; !ok {
-			locksByDenomCache[gauge.DistributeTo.Denom] = k.getLocksToDistributionWithMaxDuration(
+		distributeBaseDenom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
+		if _, ok := locksByDenomCache[distributeBaseDenom]; !ok {
+			locksByDenomCache[distributeBaseDenom] = k.getLocksToDistributionWithMaxDuration(
 				ctx, gauge.DistributeTo, time.Millisecond)
 		}
 		// get this from memory instead of hitting iterators / underlying stores.
 		// due to many details of cacheKVStore, iteration will still cause expensive IAVL reads.
-		allLocks := locksByDenomCache[gauge.DistributeTo.Denom]
+		allLocks := locksByDenomCache[distributeBaseDenom]
 		filteredLocks := FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
 
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
