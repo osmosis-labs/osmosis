@@ -83,8 +83,12 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
 	case lockuptypes.ByDuration:
+		// TODO: FIX ME!!!!
+		// Confusingly, synthetic lockups aren't indexed by denom as expected.
+		// Thus you have to do this as a hack
+		denom := lockuptypes.NativeDenom(distrTo.Denom)
 		if distrTo.Duration > minDuration {
-			return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, minDuration)
+			return k.lk.GetLocksLongerThanDurationDenom(ctx, denom, minDuration)
 		}
 		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
 	case lockuptypes.ByTime:
@@ -218,67 +222,67 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // distributeSyntheticInternal runs the distribution logic for a synthetic rewards distribution gauge, and adds the sends to
 // the distrInfo computed. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
-// func (k Keeper) distributeSyntheticInternal(
-// 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
-// 	totalDistrCoins := sdk.NewCoins()
-// 	denom := gauge.DistributeTo.Denom
-// 	suffix := lockuptypes.SyntheticSuffix(denom)
+func (k Keeper) distributeSyntheticInternal(
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
+	totalDistrCoins := sdk.NewCoins()
+	denom := gauge.DistributeTo.Denom
+	suffix := lockuptypes.SyntheticSuffix(denom)
 
-// 	synthLocks := []lockuptypes.SyntheticLock{}
-// 	for _, lock := range locks {
-// 		synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, suffix)
-// 		if err != nil {
-// 			k.Logger(ctx).Error(err.Error())
-// 			continue
-// 		}
-// 		synthLocks = append(synthLocks, *synthLock)
-// 	}
+	synthLocks := []lockuptypes.SyntheticLock{}
+	for _, lock := range locks {
+		synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, suffix)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			continue
+		}
+		synthLocks = append(synthLocks, *synthLock)
+	}
 
-// 	lockSum := lockuptypes.SumSyntheticLocksByDenom(synthLocks, denom)
+	lockSum := lockuptypes.SumSyntheticLocksByDenom(synthLocks, denom)
 
-// 	if lockSum.IsZero() {
-// 		return nil, nil
-// 	}
+	if lockSum.IsZero() {
+		return nil, nil
+	}
 
-// 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
-// 	remainEpochs := uint64(1)
-// 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
-// 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
-// 	}
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainEpochs := uint64(1)
+	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
+		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
+	}
 
-// 	for _, synthLock := range synthLocks {
-// 		distrCoins := sdk.Coins{}
-// 		for _, coin := range remainCoins {
-// 			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-// 			denomLockAmt := synthLock.Coins.AmountOfNoDenomValidation(denom)
-// 			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
-// 			if amt.IsPositive() {
-// 				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
-// 				distrCoins = distrCoins.Add(newlyDistributedCoin)
-// 			}
-// 		}
-// 		distrCoins = distrCoins.Sort()
-// 		if distrCoins.Empty() {
-// 			continue
-// 		}
-// 		// Update the amount for that address
-// 		err := distrInfo.addLockRewards(synthLock.Owner, distrCoins)
-// 		if err != nil {
-// 			return nil, err
-// 		}
+	for _, synthLock := range synthLocks {
+		distrCoins := sdk.Coins{}
+		for _, coin := range remainCoins {
+			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
+			denomLockAmt := synthLock.Coins.AmountOfNoDenomValidation(denom)
+			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+			if amt.IsPositive() {
+				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
+				distrCoins = distrCoins.Add(newlyDistributedCoin)
+			}
+		}
+		distrCoins = distrCoins.Sort()
+		if distrCoins.Empty() {
+			continue
+		}
+		// Update the amount for that address
+		err := distrInfo.addLockRewards(synthLock.Owner, distrCoins)
+		if err != nil {
+			return nil, err
+		}
 
-// 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
-// 	}
+		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
+	}
 
-// 	// increase filled epochs after distribution
-// 	gauge.FilledEpochs += 1
-// 	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
-// 	if err := k.setGauge(ctx, &gauge); err != nil {
-// 		return nil, err
-// 	}
+	// increase filled epochs after distribution
+	gauge.FilledEpochs += 1
+	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
+	if err := k.setGauge(ctx, &gauge); err != nil {
+		return nil, err
+	}
 
-// 	return totalDistrCoins, nil
-// }
+	return totalDistrCoins, nil
+}
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo computed. It also updates the gauge for the distribution.
@@ -341,7 +345,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
-		// All gauges have a precondition of being ByDuration
+		// TODO: FIXME!!!
+		// Confusingly, there is no way to get all synthetic lockups.
+		// All gauges have a precondition of being ByDuration.
 		if _, ok := locksByDenomCache[gauge.DistributeTo.Denom]; !ok {
 			locksByDenomCache[gauge.DistributeTo.Denom] = k.getLocksToDistributionWithMaxDuration(
 				ctx, gauge.DistributeTo, time.Millisecond)
@@ -352,14 +358,13 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		filteredLocks := FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
 
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
-		// if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
-		// 	gaugeDistributedCoins, err := k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
-		// 	if err != nil {
-		// 		return nil, err
-		// 	}
-		// 	totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
-		// } else
-		{
+		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
+			gaugeDistributedCoins, err := k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
+			if err != nil {
+				return nil, err
+			}
+			totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
+		} else {
 			gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 			if err != nil {
 				return nil, err
