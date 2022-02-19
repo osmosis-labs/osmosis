@@ -23,6 +23,8 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 
 		// Send delegation rewards to gauges
 		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			// Note! We only send the bond denom (osmo), to avoid attack vectors where people
+			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
 			bondDenom := k.sk.BondDenom(cacheCtx)
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
 			return k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)

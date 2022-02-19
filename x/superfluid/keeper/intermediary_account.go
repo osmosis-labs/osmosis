@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -46,6 +47,34 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 		panic(err)
 	}
 	return acc
+}
+
+func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr string) (types.SuperfluidIntermediaryAccount, error) {
+	accountAddr := types.GetSuperfluidIntermediaryAccountAddr(denom, valAddr)
+	storeAccount := k.GetIntermediaryAccount(ctx, accountAddr)
+	// if storeAccount isn't set in state, we get the default storeAccount.
+	// if it set, then the denom is non-blank
+	if storeAccount.Denom != "" {
+		return storeAccount, nil
+	}
+	params := k.GetParams(ctx)
+	// Otherwise we create the intermediary account.
+	// first step, we create the gaugeID
+	gaugeID, err := k.ik.CreateGauge(ctx, true, accountAddr, sdk.Coins{}, lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		// move this synthetic denom creation to a dedicated function
+		Denom:    denom + stakingSuffix(valAddr),
+		Duration: params.UnbondingDuration,
+	}, ctx.BlockTime(), 1)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
+
+	intermediaryAcct := types.NewSuperfluidIntermediaryAccount(denom, valAddr, gaugeID)
+	k.SetIntermediaryAccount(ctx, intermediaryAcct)
+	return intermediaryAcct, nil
 }
 
 func (k Keeper) SetIntermediaryAccount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) {
