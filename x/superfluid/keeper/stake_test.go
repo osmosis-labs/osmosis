@@ -266,7 +266,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		addMoreTokensLockIds  []uint64
 		superUnbondingLockIds []uint64
 		expSuperUnbondingErr  []bool
-		expInterDelegation    []sdk.Dec
+		// expected amount of delegation to intermediary account
+		expInterDelegation []sdk.Dec
 	}{
 		{
 			"with single validator and single superfluid delegation and single undelegation",
@@ -277,15 +278,15 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]bool{false},
 			[]sdk.Dec{sdk.ZeroDec()},
 		},
-		{
-			"with single validator, single superfluid delegation, add more tokens to the lock, and single undelegation",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
-			[]uint64{1},
-			[]uint64{1},
-			[]bool{false},
-			[]sdk.Dec{sdk.ZeroDec()},
-		},
+		// {
+		// 	"with single validator, single superfluid delegation, add more tokens to the lock, and single undelegation",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
+		// 	[]superfluidDelegation{{0, "gamm/pool/1"}},
+		// 	[]uint64{1},
+		// 	[]uint64{1},
+		// 	[]bool{false},
+		// 	[]sdk.Dec{sdk.ZeroDec()},
+		// },
 		{
 			"with single validator and multiple superfluid delegations and single undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
@@ -403,7 +404,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().NoError(err)
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAccAddress(), valAddr)
 				if expDelegation.IsZero() {
-					suite.Require().False(found)
+					suite.Require().False(found, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
 				} else {
 					suite.Require().True(found)
 					suite.Require().Equal(expDelegation, delegation.Shares)

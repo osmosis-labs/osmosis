@@ -93,12 +93,12 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			Duration:      time.Hour * 24 * 14,
 		})
 
-		amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
-		if amt.IsZero() {
+		amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
+		if amount.IsZero() {
 			continue
 		}
 
-		coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
+		coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
 		err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
 		if err != nil {
 			panic(err)
@@ -114,7 +114,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			if !found {
 				return fmt.Errorf("validator not found or %s", acc.ValAddr)
 			}
-			_, err = k.sk.Delegate(cacheCtx, mAddr, amt, stakingtypes.Unbonded, validator, true)
+			_, err = k.sk.Delegate(cacheCtx, mAddr, amount, stakingtypes.Unbonded, validator, true)
 			return err
 		})
 	}
@@ -271,12 +271,12 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// (3) If no account exists, make a new account at this addr
 	// (4) send newly minted coins to this account.
 	bondDenom := k.sk.BondDenom(ctx)
-	amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lock.Coins.AmountOf(acc.Denom))
-	if amt.IsZero() {
+	amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lock.Coins.AmountOf(acc.Denom))
+	if amount.IsZero() {
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
+	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
 	err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		return err
@@ -322,20 +322,23 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	}
 	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	suffix := stakingSuffix(intermediaryAcc.ValAddr)
+
+	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, suffix)
+	if err != nil {
+		return nil, err
+	}
+
+	if synthLock.Owner != sender {
+		return nil, lockuptypes.ErrNotLockOwner
+	}
+
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
 	if err != nil {
 		return nil, err
 	}
 
-	params := k.GetParams(ctx)
-	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
-	unlocking := true
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, unlocking)
-	if err != nil {
-		return nil, err
-	}
-
-	amt := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lock.Coins.AmountOf(intermediaryAcc.Denom))
+	// use synthetic lockup coins for unbonding
+	amount := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, synthLock.Coins.AmountOf(intermediaryAcc.Denom+suffix))
 
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {
@@ -343,7 +346,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	}
 
 	shares, err := k.sk.ValidateUnbondAmount(
-		ctx, intermediaryAcc.GetAccAddress(), valAddr, amt,
+		ctx, intermediaryAcc.GetAccAddress(), valAddr, amount,
 	)
 
 	if err != nil {
@@ -355,6 +358,17 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 		if err != nil {
 			return valAddr, err
 		}
+	}
+
+	params := k.GetParams(ctx)
+	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
+
+	// Note: bonding synthetic lockup amount is always same as native lockup amount in current implementation.
+	// If there's the case, it's different, we should create synthetic lockup at deleted bonding
+	// synthetic lockup amount
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, true)
+	if err != nil {
+		return nil, err
 	}
 
 	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)

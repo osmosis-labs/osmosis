@@ -15,7 +15,7 @@ var (
 	defaultSwapFee            = sdk.MustNewDecFromStr("0.025")
 	defaultExitFee            = sdk.MustNewDecFromStr("0.025")
 	defaultPoolId             = uint64(10)
-	defaultBalancerPoolParams = BalancerPoolParams{
+	defaultBalancerPoolParams = PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
@@ -28,7 +28,7 @@ var (
 )
 
 // Expected is un-scaled
-func testTotalWeight(t *testing.T, expected sdk.Int, pool BalancerPool) {
+func testTotalWeight(t *testing.T, expected sdk.Int, pool Pool) {
 	scaledExpected := expected.MulRaw(types.GuaranteedWeightPrecision)
 	require.Equal(t,
 		scaledExpected.String(),
@@ -70,7 +70,7 @@ func TestBalancerPoolParams(t *testing.T) {
 	}
 
 	for i, params := range tests {
-		PoolParams := BalancerPoolParams{
+		PoolParams := PoolParams{
 			SwapFee: params.SwapFee,
 			ExitFee: params.ExitFee,
 		}
@@ -352,7 +352,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 		},
 	}
 
-	pacc, err := NewBalancerPool(defaultPoolId, BalancerPoolParams{
+	pacc, err := NewBalancerPool(defaultPoolId, PoolParams{
 		SmoothWeightChangeParams: &params,
 		SwapFee:                  defaultSwapFee,
 		ExitFee:                  defaultExitFee,
@@ -545,7 +545,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 			initialPoolAssets[i] = assetCopy
 		}
 		// Initialize the pool
-		pacc, err := NewBalancerPool(uint64(poolNum), BalancerPoolParams{
+		pacc, err := NewBalancerPool(uint64(poolNum), PoolParams{
 			SwapFee:                  defaultSwapFee,
 			ExitFee:                  defaultExitFee,
 			SmoothWeightChangeParams: &tc.params,

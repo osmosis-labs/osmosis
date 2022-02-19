@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	defaultSwapFee            = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee            = sdk.MustNewDecFromStr("0.025")
-	defaultBalancerPoolParams = balancer.BalancerPoolParams{
+	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
+	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
+	defaultPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		keeper := suite.app.GAMMKeeper
 
 		// Try to create pool without balances.
-		_, err := keeper.CreateBalancerPool(suite.ctx, acc1, defaultBalancerPoolParams, defaultPoolAssets, defaultFutureGovernor)
+		_, err := keeper.CreateBalancerPool(suite.ctx, acc1, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
 		suite.Require().Error(err)
 	}()
 
@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			keeper := suite.app.GAMMKeeper
 			prevFeePool := suite.app.DistrKeeper.GetFeePoolCommunityCoins(suite.ctx)
 			prevAcc1Bal := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc1)
-			poolId, err := keeper.CreateBalancerPool(suite.ctx, acc1, defaultBalancerPoolParams, defaultPoolAssets, defaultFutureGovernor)
+			poolId, err := keeper.CreateBalancerPool(suite.ctx, acc1, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
 			suite.Require().NoError(err)
 
 			pool, err := keeper.GetPool(suite.ctx, poolId)
@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
 			_, err := keeper.CreateBalancerPool(
-				suite.ctx, acc1, balancer.BalancerPoolParams{
+				suite.ctx, acc1, balancer.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(1, 2),
 				}, defaultPoolAssets, defaultFutureGovernor)
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(-1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor)
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{}, defaultFutureGovernor)
@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -180,7 +180,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}, {
 		fn: func() {
 			keeper := suite.app.GAMMKeeper
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []types.PoolAsset{{
@@ -198,7 +198,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			keeper.SetParams(suite.ctx, types.Params{
 				PoolCreationFee: sdk.Coins{},
 			})
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor)
@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			keeper.SetParams(suite.ctx, types.Params{
 				PoolCreationFee: nil,
 			})
-			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor)
@@ -315,7 +315,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 		}
 
 		// Create the pool at first
-		poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+		poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, defaultPoolAssets, defaultFutureGovernor)
@@ -408,7 +408,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			}
 
 			// Create the pool at first
-			poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, balancer.BalancerPoolParams{
+			poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
@@ -441,7 +441,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 			}
 
 			// Create the pool at first
-			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.BalancerPoolParams{
+			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})

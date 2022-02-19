@@ -32,6 +32,12 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	startTime := time.Now()
 	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
 	require.NoError(t, err)
+
+	// mints coins so supply exists on chain
+	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
+	require.NoError(t, err)
+
 	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1)
 	require.NoError(t, err)
 

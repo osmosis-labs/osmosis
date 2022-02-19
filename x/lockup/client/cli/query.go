@@ -46,6 +46,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdAccountLockedLongerDurationDenom(),
 		GetCmdTotalLockedByDenom(),
 		GetCmdOutputLocksJson(),
+		GetCmdSyntheticLockupsByLockupID(),
 	)
 
 	return cmd
@@ -437,6 +438,48 @@ $ %s query lockup lock-by-id <id>
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: id})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id
+func GetCmdSyntheticLockupsByLockupID() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "synthetic-lockups-by-lock-id <id>",
+		Short: "Query synthetic lockups by lockup id",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query synthetic lockups by lockup id.
+
+Example:
+$ %s query lockup synthetic-lockups-by-lock-id <id>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				panic(err)
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.SyntheticLockupsByLockupID(cmd.Context(), &types.SyntheticLockupsByLockupIDRequest{LockId: id})
 			if err != nil {
 				return err
 			}

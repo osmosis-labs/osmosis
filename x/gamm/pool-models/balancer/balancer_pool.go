@@ -19,15 +19,15 @@ import (
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewBalancerPool(poolId uint64, balancerPoolParams BalancerPoolParams, assets []types.PoolAsset, futureGovernor string, blockTime time.Time) (BalancerPool, error) {
+func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []types.PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
 	poolAddr := types.NewPoolAddress(poolId)
 
 	// pool thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
-	pool := &BalancerPool{
+	pool := &Pool{
 		Address:            poolAddr.String(),
 		Id:                 poolId,
-		PoolParams:         BalancerPoolParams{},
+		PoolParams:         PoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), sdk.ZeroInt()),
 		PoolAssets:         nil,
@@ -36,18 +36,18 @@ func NewBalancerPool(poolId uint64, balancerPoolParams BalancerPoolParams, asset
 
 	err := pool.setInitialPoolAssets(assets)
 	if err != nil {
-		return BalancerPool{}, err
+		return Pool{}, err
 	}
 
 	sortedPoolAssets := pool.GetAllPoolAssets()
 	err = balancerPoolParams.Validate(sortedPoolAssets)
 	if err != nil {
-		return BalancerPool{}, err
+		return Pool{}, err
 	}
 
 	err = pool.setInitialPoolParams(balancerPoolParams, sortedPoolAssets, blockTime)
 	if err != nil {
-		return BalancerPool{}, err
+		return Pool{}, err
 	}
 
 	return *pool, nil
@@ -55,7 +55,7 @@ func NewBalancerPool(poolId uint64, balancerPoolParams BalancerPoolParams, asset
 
 // GetAddress returns the address of a pool.
 // If the pool address is not bech32 valid, it returns an empty address.
-func (pa BalancerPool) GetAddress() sdk.AccAddress {
+func (pa Pool) GetAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(pa.Address)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", pa.GetId()))
@@ -63,35 +63,35 @@ func (pa BalancerPool) GetAddress() sdk.AccAddress {
 	return addr
 }
 
-func (pa BalancerPool) GetId() uint64 {
+func (pa Pool) GetId() uint64 {
 	return pa.Id
 }
 
-func (pa BalancerPool) GetPoolSwapFee() sdk.Dec {
+func (pa Pool) GetPoolSwapFee() sdk.Dec {
 	return pa.PoolParams.SwapFee
 }
 
-func (pa BalancerPool) GetPoolExitFee() sdk.Dec {
+func (pa Pool) GetPoolExitFee() sdk.Dec {
 	return pa.PoolParams.ExitFee
 }
 
-func (pa BalancerPool) GetPoolParams() BalancerPoolParams {
+func (pa Pool) GetPoolParams() PoolParams {
 	return pa.PoolParams
 }
 
-func (pa BalancerPool) GetTotalWeight() sdk.Int {
+func (pa Pool) GetTotalWeight() sdk.Int {
 	return pa.TotalWeight
 }
 
-func (pa BalancerPool) GetTotalShares() sdk.Coin {
+func (pa Pool) GetTotalShares() sdk.Coin {
 	return pa.TotalShares
 }
 
-func (pa *BalancerPool) AddTotalShares(amt sdk.Int) {
+func (pa *Pool) AddTotalShares(amt sdk.Int) {
 	pa.TotalShares.Amount = pa.TotalShares.Amount.Add(amt)
 }
 
-func (pa *BalancerPool) SubTotalShares(amt sdk.Int) {
+func (pa *Pool) SubTotalShares(amt sdk.Int) {
 	pa.TotalShares.Amount = pa.TotalShares.Amount.Sub(amt)
 }
 
@@ -100,7 +100,7 @@ func (pa *BalancerPool) SubTotalShares(amt sdk.Int) {
 // If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
 // TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
-func (pa *BalancerPool) setInitialPoolAssets(PoolAssets []types.PoolAsset) error {
+func (pa *Pool) setInitialPoolAssets(PoolAssets []types.PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
 		exists[asset.Token.Denom] = true
@@ -143,7 +143,7 @@ func (pa *BalancerPool) setInitialPoolAssets(PoolAssets []types.PoolAsset) error
 }
 
 // setInitialPoolParams
-func (pa *BalancerPool) setInitialPoolParams(params BalancerPoolParams, sortedAssets []types.PoolAsset, curBlockTime time.Time) error {
+func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []types.PoolAsset, curBlockTime time.Time) error {
 	pa.PoolParams = params
 	if params.SmoothWeightChangeParams != nil {
 		// set initial assets
@@ -185,13 +185,13 @@ func (pa *BalancerPool) setInitialPoolParams(params BalancerPoolParams, sortedAs
 // GetPoolAssets returns the denom's PoolAsset, If the PoolAsset doesn't exist, will return error.
 // As above, it will search the denom's PoolAsset by using binary search.
 // So, it is important to make sure that the PoolAssets are sorted.
-func (pa BalancerPool) GetPoolAsset(denom string) (types.PoolAsset, error) {
+func (pa Pool) GetPoolAsset(denom string) (types.PoolAsset, error) {
 	_, asset, err := pa.getPoolAssetAndIndex(denom)
 	return asset, err
 }
 
 // Returns a pool asset, and its index. If err != nil, then the index will be valid.
-func (pa BalancerPool) getPoolAssetAndIndex(denom string) (int, types.PoolAsset, error) {
+func (pa Pool) getPoolAssetAndIndex(denom string) (int, types.PoolAsset, error) {
 	if denom == "" {
 		return -1, types.PoolAsset{}, fmt.Errorf("you tried to find the PoolAsset with empty denom")
 	}
@@ -218,7 +218,7 @@ func (pa BalancerPool) getPoolAssetAndIndex(denom string) (int, types.PoolAsset,
 	return i, pa.PoolAssets[i], nil
 }
 
-func (pa *BalancerPool) UpdatePoolAssetBalance(coin sdk.Coin) error {
+func (pa *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	// Check that PoolAsset exists.
 	assetIndex, existingAsset, err := pa.getPoolAssetAndIndex(coin.Denom)
 	if err != nil {
@@ -235,7 +235,7 @@ func (pa *BalancerPool) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	return nil
 }
 
-func (pa *BalancerPool) UpdatePoolAssetBalances(coins sdk.Coins) error {
+func (pa *Pool) UpdatePoolAssetBalances(coins sdk.Coins) error {
 	// Ensures that there are no duplicate denoms, all denom's are valid,
 	// and amount is > 0
 	err := coins.Validate()
@@ -256,7 +256,7 @@ func (pa *BalancerPool) UpdatePoolAssetBalances(coins sdk.Coins) error {
 	return nil
 }
 
-func (pa BalancerPool) GetPoolAssets(denoms ...string) ([]types.PoolAsset, error) {
+func (pa Pool) GetPoolAssets(denoms ...string) ([]types.PoolAsset, error) {
 	result := make([]types.PoolAsset, 0, len(denoms))
 
 	for _, denom := range denoms {
@@ -271,7 +271,7 @@ func (pa BalancerPool) GetPoolAssets(denoms ...string) ([]types.PoolAsset, error
 	return result, nil
 }
 
-func (pa BalancerPool) GetAllPoolAssets() []types.PoolAsset {
+func (pa Pool) GetAllPoolAssets() []types.PoolAsset {
 	copyslice := make([]types.PoolAsset, len(pa.PoolAssets))
 	copy(copyslice, pa.PoolAssets)
 	return copyslice
@@ -288,7 +288,7 @@ func (pa BalancerPool) GetAllPoolAssets() []types.PoolAsset {
 // TODO: (post-launch) If newWeights excludes an existing denomination,
 // remove the weight from the pool, and figure out something to do
 // with any remaining coin.
-func (pa *BalancerPool) updateAllWeights(newWeights []types.PoolAsset) {
+func (pa *Pool) updateAllWeights(newWeights []types.PoolAsset) {
 	if len(pa.PoolAssets) != len(newWeights) {
 		panic("updateAllWeights called with invalid input, len(newWeights) != len(existingWeights)")
 	}
@@ -311,7 +311,7 @@ func (pa *BalancerPool) updateAllWeights(newWeights []types.PoolAsset) {
 
 // PokeTokenWeights checks to see if the pool's token weights need to be updated,
 // and if so, does so.
-func (pa *BalancerPool) PokeTokenWeights(blockTime time.Time) {
+func (pa *Pool) PokeTokenWeights(blockTime time.Time) {
 	// Pool weights aren't changing, do nothing.
 	poolWeightsChanging := (pa.PoolParams.SmoothWeightChangeParams != nil)
 	if !poolWeightsChanging {
@@ -362,7 +362,7 @@ func (pa *BalancerPool) PokeTokenWeights(blockTime time.Time) {
 	}
 }
 
-func (pa BalancerPool) GetTokenWeight(denom string) (sdk.Int, error) {
+func (pa Pool) GetTokenWeight(denom string) (sdk.Int, error) {
 	PoolAsset, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -371,7 +371,7 @@ func (pa BalancerPool) GetTokenWeight(denom string) (sdk.Int, error) {
 	return PoolAsset.Weight, nil
 }
 
-func (pa BalancerPool) GetTokenBalance(denom string) (sdk.Int, error) {
+func (pa Pool) GetTokenBalance(denom string) (sdk.Int, error) {
 	PoolAsset, err := pa.GetPoolAsset(denom)
 	if err != nil {
 		return sdk.Int{}, err
@@ -380,18 +380,18 @@ func (pa BalancerPool) GetTokenBalance(denom string) (sdk.Int, error) {
 	return PoolAsset.Token.Amount, nil
 }
 
-func (pa BalancerPool) NumAssets() int {
+func (pa Pool) NumAssets() int {
 	return len(pa.PoolAssets)
 }
 
-func (pa BalancerPool) IsActive(curBlockTime time.Time) bool {
+func (pa Pool) IsActive(curBlockTime time.Time) bool {
 
 	// Add frozen pool checking, etc...
 
 	return true
 }
 
-func (params BalancerPoolParams) Validate(poolWeights []types.PoolAsset) error {
+func (params PoolParams) Validate(poolWeights []types.PoolAsset) error {
 	if params.ExitFee.IsNegative() {
 		return types.ErrNegativeExitFee
 	}
@@ -444,11 +444,11 @@ func (params BalancerPoolParams) Validate(poolWeights []types.PoolAsset) error {
 	return nil
 }
 
-func (params BalancerPoolParams) GetPoolSwapFee() sdk.Dec {
+func (params PoolParams) GetPoolSwapFee() sdk.Dec {
 	return params.SwapFee
 }
 
-func (params BalancerPoolParams) GetPoolExitFee() sdk.Dec {
+func (params PoolParams) GetPoolExitFee() sdk.Dec {
 	return params.ExitFee
 }
 

@@ -21,7 +21,7 @@ func TestGammInitGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	balancerPool, err := balancer.NewBalancerPool(1, balancer.BalancerPoolParams{
+	balancerPool, err := balancer.NewBalancerPool(1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{
@@ -78,7 +78,7 @@ func TestGammExportGenesis(t *testing.T) {
 	))
 	require.NoError(t, err)
 
-	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.BalancerPoolParams{
+	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{{
@@ -90,7 +90,7 @@ func TestGammExportGenesis(t *testing.T) {
 	}}, "")
 	require.NoError(t, err)
 
-	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.BalancerPoolParams{
+	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{{
@@ -122,7 +122,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	))
 	require.NoError(t, err)
 
-	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.BalancerPoolParams{
+	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{{

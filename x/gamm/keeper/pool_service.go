@@ -15,7 +15,7 @@ import (
 func (k Keeper) CreateBalancerPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	BalancerPoolParams balancer.BalancerPoolParams,
+	BalancerPoolParams balancer.PoolParams,
 	poolAssets []types.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {
