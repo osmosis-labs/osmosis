@@ -25,7 +25,8 @@ message SuperfluidAsset {
   SuperfluidAssetType asset_type = 2;
 }
 
-// SuperfluidIntermediaryAccount takes the role of intermediary between LP token and OSMO tokens for superfluid staking
+// SuperfluidIntermediaryAccount takes the role of intermediary between LP token
+// and OSMO tokens for superfluid staking
 message SuperfluidIntermediaryAccount {
   string denom = 1;
   string val_addr = 2;

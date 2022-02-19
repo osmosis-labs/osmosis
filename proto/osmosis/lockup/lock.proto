@@ -39,7 +39,8 @@ enum LockQueryType {
 }
 
 message QueryCondition {
-  LockQueryType lock_query_type = 1; // type of lock query, ByLockDuration | ByLockTime
+  LockQueryType lock_query_type =
+      1;            // type of lock query, ByLockDuration | ByLockTime
   string denom = 2; // What token denomination are we looking for lockups of
   // valid when query condition is ByDuration
   google.protobuf.Duration duration = 3 [
@@ -57,9 +58,12 @@ message QueryCondition {
 
 // SyntheticLock is a single unit of synthetic lockup
 message SyntheticLock {
-  uint64 underlying_lock_id = 1; // underlying native lockup id for this synthetic lockup
-  string suffix = 2; // synthetic suffix comes after native denom - used for querying
-  // used for unbonding synthetic lockups, for active synthetic lockups, this value is set to uninitialized value
+  uint64 underlying_lock_id =
+      1; // underlying native lockup id for this synthetic lockup
+  string suffix =
+      2; // synthetic suffix comes after native denom - used for querying
+  // used for unbonding synthetic lockups, for active synthetic lockups, this
+  // value is set to uninitialized value
   google.protobuf.Timestamp end_time = 3 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,

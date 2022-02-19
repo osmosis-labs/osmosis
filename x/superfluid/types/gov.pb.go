@@ -23,7 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// SetSuperfluidAssetsProposal is a gov Content type to update the superfluid assets
+// SetSuperfluidAssetsProposal is a gov Content type to update the superfluid
+// assets
 type SetSuperfluidAssetsProposal struct {
 	Title       string            `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string            `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -62,7 +63,8 @@ func (m *SetSuperfluidAssetsProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SetSuperfluidAssetsProposal proto.InternalMessageInfo
 
-// RemoveSuperfluidAssetsProposal is a gov Content type to remove the superfluid assets by denom
+// RemoveSuperfluidAssetsProposal is a gov Content type to remove the superfluid
+// assets by denom
 type RemoveSuperfluidAssetsProposal struct {
 	Title                 string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description           string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

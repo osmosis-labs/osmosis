@@ -9,8 +9,6 @@ import "osmosis/superfluid/superfluid.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
 
 // Msg defines the Msg service.
-service Msg {
-}
+service Msg {}
 
 // For now, module just supports gov messages
-

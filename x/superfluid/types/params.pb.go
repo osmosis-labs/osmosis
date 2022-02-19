@@ -28,7 +28,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Params struct {
 	// refresh epoch identifier for staked amount
 	RefreshEpochIdentifier string `protobuf:"bytes,1,opt,name=refresh_epoch_identifier,json=refreshEpochIdentifier,proto3" json:"refresh_epoch_identifier,omitempty" yaml:"refresh_epoch_identifier"`
-	// the risk_factor is to be cut on OSMO equivalent value of lp tokens for superfluid staking, default: 5%
+	// the risk_factor is to be cut on OSMO equivalent value of lp tokens for
+	// superfluid staking, default: 5%
 	MinimumRiskFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=minimum_risk_factor,json=minimumRiskFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"minimum_risk_factor" yaml:"minimum_risk_factor"`
 }
 

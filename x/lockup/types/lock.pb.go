@@ -208,7 +208,8 @@ func (m *QueryCondition) GetTimestamp() time.Time {
 type SyntheticLock struct {
 	UnderlyingLockId uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockId,proto3" json:"underlying_lock_id,omitempty"`
 	Suffix           string `protobuf:"bytes,2,opt,name=suffix,proto3" json:"suffix,omitempty"`
-	// used for unbonding synthetic lockups, for active synthetic lockups, this value is set to uninitialized value
+	// used for unbonding synthetic lockups, for active synthetic lockups, this
+	// value is set to uninitialized value
 	EndTime time.Time `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
 }
 

@@ -90,7 +90,8 @@ func (m *SuperfluidAsset) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SuperfluidAsset proto.InternalMessageInfo
 
-// SuperfluidIntermediaryAccount takes the role of intermediary between LP token and OSMO tokens for superfluid staking
+// SuperfluidIntermediaryAccount takes the role of intermediary between LP token
+// and OSMO tokens for superfluid staking
 type SuperfluidIntermediaryAccount struct {
 	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	ValAddr string `protobuf:"bytes,2,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
