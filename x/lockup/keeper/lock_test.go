@@ -245,7 +245,7 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 	suite.Require().Equal(len(locked), 1)
 	suite.Require().Equal(locked[0].Amount.Int64(), int64(10))
 
-	// unlock partial unlock
+	// Finish unlocking partial unlock
 	partialUnlock := suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)[1]
 	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), partialUnlock)
 	suite.Require().NoError(err)

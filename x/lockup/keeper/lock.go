@@ -439,8 +439,9 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		return fmt.Errorf("requested amount to unlock exceedes locked tokens")
 	}
 
-	// check if the unlocking coins are less than locked coins
-	// if then, split lock and partial unlock on it
+	// If the amount were unlocking is empty, or the entire coins amount, unlock the entire lock.
+	// Otherwise, split the lock into two locks, and fully unlock the newly created lock.
+	// (By virtue, the newly created lock we split into should have the unlock amount)
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
 		// prohibit partial unlock if other locks are referring
 		if k.HasAnySyntheticLockups(ctx, lock.ID) {
