@@ -6,6 +6,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper/gov"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -24,9 +25,9 @@ func NewSuperfluidProposalHandler(k keeper.Keeper) govtypes.Handler {
 }
 
 func handleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetSuperfluidAssetsProposal) error {
-	return k.HandleSetSuperfluidAssetsProposal(ctx, p)
+	return gov.HandleSetSuperfluidAssetsProposal(ctx, k, p)
 }
 
 func handleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveSuperfluidAssetsProposal) error {
-	return k.HandleRemoveSuperfluidAssetsProposal(ctx, p)
+	return gov.HandleRemoveSuperfluidAssetsProposal(ctx, k, p)
 }

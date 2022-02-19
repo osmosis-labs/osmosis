@@ -1,7 +1,8 @@
-package keeper_test
+package gov_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper/gov"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -67,7 +68,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			for i, action := range tc.actions {
 				if action.isAdd {
 					// set superfluid assets via proposal
-					err = suite.app.SuperfluidKeeper.HandleSetSuperfluidAssetsProposal(suite.ctx, &types.SetSuperfluidAssetsProposal{
+					err = gov.HandleSetSuperfluidAssetsProposal(suite.ctx, *suite.app.SuperfluidKeeper, &types.SetSuperfluidAssetsProposal{
 						Title:       "title",
 						Description: "description",
 						Assets:      action.assets,
@@ -78,7 +79,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 						assetDenoms = append(assetDenoms, asset.Denom)
 					}
 					// remove existing superfluid asset via proposal
-					err = suite.app.SuperfluidKeeper.HandleRemoveSuperfluidAssetsProposal(suite.ctx, &types.RemoveSuperfluidAssetsProposal{
+					err = gov.HandleRemoveSuperfluidAssetsProposal(suite.ctx, *suite.app.SuperfluidKeeper, &types.RemoveSuperfluidAssetsProposal{
 						Title:                 "title",
 						Description:           "description",
 						SuperfluidAssetDenoms: assetDenoms,
