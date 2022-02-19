@@ -16,6 +16,15 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 	}
 
 	// TODO: What?? The intermediary accounts aren't serialized by delAddr??
+	// Lets replace with the following pseudocode
+	// locks := lk.GetAllSyntheticLockupsByAddr(delAddr)
+	// for _, lock := range locks {
+	// 	denom, val := parse_denom(lock.suffix)
+	//  // No need for infraction height checks, as this delegator is already confirmed as needing a slash.
+	// 	if val == relevant_val {
+	// 	   do_slash(lock)
+	// 	}
+	//  }
 	acc := k.GetIntermediaryAccount(ctx, delAddr)
 	// if delAddr is not intermediary account, pass
 	if acc.Denom == "" {
