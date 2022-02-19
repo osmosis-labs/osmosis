@@ -15,6 +15,7 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 		panic(err)
 	}
 
+	// TODO: What?? The intermediary accounts aren't serialized by delAddr??
 	acc := k.GetIntermediaryAccount(ctx, delAddr)
 	// if delAddr is not intermediary account, pass
 	if acc.Denom == "" {

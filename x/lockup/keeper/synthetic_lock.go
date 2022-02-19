@@ -60,6 +60,15 @@ func (k Keeper) GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) [
 	return synthLocks
 }
 
+func (k Keeper) GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddress) []types.SyntheticLock {
+	synthLocks := []types.SyntheticLock{}
+	locks := k.GetAccountPeriodLocks(ctx, owner)
+	for _, lock := range locks {
+		synthLocks = append(synthLocks, k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)...)
+	}
+	return synthLocks
+}
+
 func (k Keeper) HasAnySyntheticLockups(ctx sdk.Context, lockID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
