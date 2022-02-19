@@ -129,6 +129,17 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 	acc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	valAddr := acc.ValAddr
 
+	suffix := stakingSuffix(valAddr)
+	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, suffix)
+	if err != nil {
+		return err
+	}
+	// TODO: Add safety checks?
+	err = k.lk.AddTokensToSyntheticLock(ctx, *synthLock, amount)
+	if err != nil {
+		return err
+	}
+
 	// mint OSMO token based on TWAP of locked denom to denom module account
 	bondDenom := k.sk.BondDenom(ctx)
 	amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
@@ -137,7 +148,7 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 	}
 
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
-	err := k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		return err
 	}
@@ -239,8 +250,15 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return types.ErrAlreadyUsedSuperfluidLockup
 	}
 
-	// check unbonding synthetic lockup already exists on this validator
-	// in this case automatic superfluid undelegation should fail and it is the source of chain halt
+	// A lock ID can only have one of three associated superfluid states:
+	// 1) Not superfluid'd
+	// 2) Superfluid bonded to a single validator
+	// 3) Superfluid unbonding from a single validator.
+	// If we are in case (2), ensure this is to the same validator.
+	//   - TODO: CODE
+	// If we are in case (3), disable this delegation.
+	// We can wrap (2) and (3) into one check, by checking if we have any synthetic lockups on this ID.
+	// and make it more precise later.
 	suffix := unstakingSuffix(valAddr)
 	_, err = k.lk.GetSyntheticLockup(ctx, lockID, suffix)
 	if err == nil {
