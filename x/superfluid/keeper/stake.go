@@ -293,7 +293,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 
 	// make delegation from module account to the validator
 	// TODO: What happens here if validator is jailed, tombstoned, or unbonding
-	_, err = k.sk.Delegate(ctx, mAddr, amt, stakingtypes.Unbonded, validator, true)
+	_, err = k.sk.Delegate(ctx, mAddr, amount, stakingtypes.Unbonded, validator, true)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
 		return err
