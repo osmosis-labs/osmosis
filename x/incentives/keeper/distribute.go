@@ -275,13 +275,8 @@ func (k Keeper) distributeSyntheticInternal(
 	}
 
 	// increase filled epochs after distribution
-	gauge.FilledEpochs += 1
-	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
-	if err := k.setGauge(ctx, &gauge); err != nil {
-		return nil, err
-	}
-
-	return totalDistrCoins, nil
+	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+	return totalDistrCoins, err
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
@@ -327,14 +322,18 @@ func (k Keeper) distributeInternal(
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
+	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+	return totalDistrCoins, err
+}
+
+func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, newlyDistributedCoins sdk.Coins) error {
 	// increase filled epochs after distribution
 	gauge.FilledEpochs += 1
-	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
+	gauge.DistributedCoins = gauge.DistributedCoins.Add(newlyDistributedCoins...)
 	if err := k.setGauge(ctx, &gauge); err != nil {
-		return nil, err
+		return err
 	}
-
-	return totalDistrCoins, nil
+	return nil
 }
 
 // Distribute coins from gauge according to its conditions
