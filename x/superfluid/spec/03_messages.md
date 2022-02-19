@@ -15,15 +15,15 @@ type MsgSuperfluidDelegate struct {
 ```
 
 **State Modifications:**
-- Lookup `lock` by `LockID`
-- Safety Checks
+- Safety Checks that are being done before running superfluid logic:
     - Check that `Sender` is the owner of `lock`
     - Check that `lock` corresponds to a single locked asset
     - Check that `lock` is not unlocking
     - Check that `lock` is locked for at least the unbonding period
     - Check that this `LockID` is not already superfluided
-    - FIXME something to do with getting the unstaking synthetic lockup?
-- Get the `IntermediaryAccount` for this `lock` `Denom` and `ValAddr` pair.
+    - Check that the same lock isn't being unbonded
+- Create a SyntheticLockup. 
+- Either get or create an intermediaryAccount for the denom + valaddress combination
 - Mint `Osmo` to match amount in `lock` (based on LP to Osmo ratio at last epoch) and send to `IntermediaryAccount`
 - Create a delegation from `IntermediaryAccount` to `Validator`
 - Create a new perpetual `Gauge` for distributing staking payouts to locks of a synethic asset based on this `Validator` / `Denom` pair.

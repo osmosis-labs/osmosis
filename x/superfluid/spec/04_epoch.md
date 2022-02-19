@@ -12,4 +12,5 @@ The envisioned flow of how this works is as follows:
 * (Superfluid) Claim all staking rewards to every intermediary module accounts
 * (Superfluid) Update all TWAP values [updateEpochEnd][./../keeper/hooks.go]
   * Here we are setting the TWAP value for epoch N+1, as the TWAP from the duration of epoch N.
+  * Currently using spot price at epoch time. 
 * (Superfluid) Update all the intermediary accounts staked amounts. (Mint/Burn coins as needed as well)
