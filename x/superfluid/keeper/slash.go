@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddrStr string, valAddrStr string, slashFactor sdk.Dec) {
@@ -43,11 +44,15 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 // Note: Based on sdk.staking.Slash function review, slashed tokens are burnt not sent to community pool
 func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
+	valAccs := []types.SuperfluidIntermediaryAccount{}
 	for _, acc := range accs {
 		if acc.ValAddr != valAddr.String() { // only apply for slashed validator
 			continue
 		}
+		valAccs = append(valAccs, acc)
+	}
 
+	for _, acc := range valAccs {
 		// mint OSMO token based on TWAP of locked denom to denom module account
 		// Get total delegation from synthetic lockups
 		queryCondition := lockuptypes.QueryCondition{
