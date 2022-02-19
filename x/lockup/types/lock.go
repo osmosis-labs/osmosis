@@ -29,6 +29,15 @@ func (p SyntheticLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
 }
 
+// OwnerAddress returns locks owner address
+func (p PeriodLock) OwnerAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	sum := sdk.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.

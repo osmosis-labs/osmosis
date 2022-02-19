@@ -66,10 +66,11 @@ func (m MsgBeginUnlockingAll) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgBeginUnlocking{}
 
 // NewMsgBeginUnlocking creates a message to begin unlocking the tokens of a specific lock
-func NewMsgBeginUnlocking(owner sdk.AccAddress, id uint64) *MsgBeginUnlocking {
+func NewMsgBeginUnlocking(owner sdk.AccAddress, id uint64, coins sdk.Coins) *MsgBeginUnlocking {
 	return &MsgBeginUnlocking{
 		Owner: owner.String(),
 		ID:    id,
+		Coins: coins,
 	}
 }
 

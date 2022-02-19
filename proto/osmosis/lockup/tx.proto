@@ -42,5 +42,10 @@ message MsgBeginUnlockingAllResponse { repeated PeriodLock unlocks = 1; }
 message MsgBeginUnlocking {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
+  // Amount of unlocking coins. Unlock all if not set.
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 message MsgBeginUnlockingResponse { bool success = 1; }

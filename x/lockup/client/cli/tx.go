@@ -128,6 +128,7 @@ func NewBeginUnlockByIDCmd() *cobra.Command {
 			msg := types.NewMsgBeginUnlocking(
 				clientCtx.GetFromAddress(),
 				uint64(id),
+				nil,
 			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
