@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -30,14 +29,17 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sd
 	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 }
 
+func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk.Int {
+	return k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         denom,
+		Duration:      k.sk.UnbondingTime(ctx),
+	})
+}
+
 func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
 	// Get total number of Osmo this account should have delegated after refresh
-	totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
-		Duration:      time.Hour * 24 * 14, // should be a variable?
-	})
-
+	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, acc.Denom+stakingSuffix(acc.ValAddr))
 	refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
 	return refreshedAmount
 }
@@ -361,15 +363,15 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 		return err
 	}
 
-	res, err := k.sk.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
+	undelegatedCoins, err := k.sk.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
 	if err != nil {
 		return err
 	}
-	err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, res)
+	err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
 	if err != nil {
 		return err
 	}
-	err = k.bk.BurnCoins(ctx, types.ModuleName, res)
+	err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
 	if err != nil {
 		return err
 	}
