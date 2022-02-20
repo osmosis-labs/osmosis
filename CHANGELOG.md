@@ -81,6 +81,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [iavl-19](https://github.com/osmosis-labs/iavl/pull/19) force GC, no cache during migration, auto heap profile
 - [iavl-5](https://github.com/osmosis-labs/iavl/pull/5) Fast storage optimization for queries and iterations
 
+### Wasdm fork updates
+
+- [wasmd-v.022.0-osmo-v7](https://github.com/osmosis-labs/wasmd/releases/tag/v0.22.0-osmo-v7) Upgrade SDK and IAVL dependencies to use fast storage
+
 ## [v6.0.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.0.0)
 
 This upgrade fixes a bug in the v5.0.0 upgrade's app.go, which prevents new IBC channels from being created.
