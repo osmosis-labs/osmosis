@@ -34,7 +34,7 @@ func (k Keeper) AssetMultiplier(goCtx context.Context, req *types.AssetMultiplie
 	epochInfo := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
 
 	return &types.AssetMultiplierResponse{
-		OsmoEquivalentMultiplier: &types.OsmoEquivalentMultiplier{
+		OsmoEquivalentMultiplier: &types.OsmoEquivalentMultiplierRecord{
 			EpochNumber: epochInfo.CurrentEpoch,
 			Denom:       req.Denom,
 			Multiplier:  k.GetOsmoEquivalentMultiplier(ctx, req.Denom),

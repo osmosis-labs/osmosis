@@ -52,7 +52,7 @@ message AllAssetsResponse {
 
 message AssetMultiplierRequest { string denom = 1; };
 message AssetMultiplierResponse {
-  OsmoEquivalentMultiplier osmo_equivalent_multiplier = 1;
+  OsmoEquivalentMultiplierRecord osmo_equivalent_multiplier = 1;
 };
 
 message SuperfluidIntermediaryAccountInfo {

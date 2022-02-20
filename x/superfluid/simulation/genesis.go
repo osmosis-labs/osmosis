@@ -19,7 +19,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			UnbondingDuration:      time.Second * 10,
 		},
 		SuperfluidAssets:          []types.SuperfluidAsset{},
-		OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplier{},
+		OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplierRecord{},
 	}
 
 	bz, err := json.MarshalIndent(&superfluidGenesis.Params, "", " ")

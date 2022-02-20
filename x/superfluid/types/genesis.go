@@ -15,7 +15,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params:                    DefaultParams(),
 		SuperfluidAssets:          []SuperfluidAsset{},
-		OsmoEquivalentMultipliers: []OsmoEquivalentMultiplier{},
+		OsmoEquivalentMultipliers: []OsmoEquivalentMultiplierRecord{},
 	}
 }
 

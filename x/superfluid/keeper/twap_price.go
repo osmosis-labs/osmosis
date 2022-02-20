@@ -19,7 +19,7 @@ func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.PoolI, osmoInPool ga
 func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom string, multiplier sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
-	priceRecord := types.OsmoEquivalentMultiplier{
+	priceRecord := types.OsmoEquivalentMultiplierRecord{
 		EpochNumber: epoch,
 		Denom:       denom,
 		Multiplier:  multiplier,
@@ -44,7 +44,7 @@ func (k Keeper) GetOsmoEquivalentMultiplier(ctx sdk.Context, denom string) sdk.D
 	if bz == nil {
 		return sdk.ZeroDec()
 	}
-	priceRecord := types.OsmoEquivalentMultiplier{}
+	priceRecord := types.OsmoEquivalentMultiplierRecord{}
 	err := proto.Unmarshal(bz, &priceRecord)
 	if err != nil {
 		panic(err)
@@ -52,15 +52,15 @@ func (k Keeper) GetOsmoEquivalentMultiplier(ctx sdk.Context, denom string) sdk.D
 	return priceRecord.Multiplier
 }
 
-func (k Keeper) GetAllOsmoEquivalentMultipliers(ctx sdk.Context) []types.OsmoEquivalentMultiplier {
+func (k Keeper) GetAllOsmoEquivalentMultipliers(ctx sdk.Context) []types.OsmoEquivalentMultiplierRecord {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 
-	priceRecords := []types.OsmoEquivalentMultiplier{}
+	priceRecords := []types.OsmoEquivalentMultiplierRecord{}
 	for ; iterator.Valid(); iterator.Next() {
-		priceRecord := types.OsmoEquivalentMultiplier{}
+		priceRecord := types.OsmoEquivalentMultiplierRecord{}
 
 		err := proto.Unmarshal(iterator.Value(), &priceRecord)
 		if err != nil {

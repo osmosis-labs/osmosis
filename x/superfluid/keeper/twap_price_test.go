@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 	suite.Require().Equal(multiplier, sdk.NewDec(2))
 
 	// check multipliers
-	expectedMultipliers := []types.OsmoEquivalentMultiplier{
+	expectedMultipliers := []types.OsmoEquivalentMultiplierRecord{
 		{
 			EpochNumber: 1,
 			Denom:       "gamm/pool/1",
