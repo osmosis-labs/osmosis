@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -38,18 +37,6 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		mAddr := acc.GetAccAddress()
 		bondDenom := k.sk.BondDenom(ctx)
 
-		balance := k.bk.GetBalance(ctx, mAddr, bondDenom)
-		if balance.Amount.IsPositive() { // if free balance is available on intermediary account burn it
-			err := k.bk.SendCoinsFromAccountToModule(ctx, mAddr, stakingtypes.NotBondedPoolName, sdk.Coins{balance})
-			if err != nil {
-				panic(err)
-			}
-			err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, sdk.Coins{balance})
-			if err != nil {
-				panic(err)
-			}
-		}
-
 		valAddress, err := sdk.ValAddressFromBech32(acc.ValAddr)
 		if err != nil {
 			panic(err)
@@ -61,62 +48,65 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			continue
 		}
 
-		// undelegate full amount from the validator
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
-
-		if found {
-			returnAmount, err := k.sk.Unbond(ctx, mAddr, valAddress, delegation.Shares)
-			if err != nil {
-				panic(err)
-			}
-			if returnAmount.IsPositive() {
-				// burn undelegated tokens
-				// TODO: Why tf are we burning from staking module accounts here???
-				burnCoins := sdk.Coins{sdk.NewCoin(bondDenom, returnAmount)}
-				moduleName := stakingtypes.NotBondedPoolName
-				if validator.IsBonded() {
-					moduleName = stakingtypes.BondedPoolName
-				}
-				err = k.bk.BurnCoins(ctx, moduleName, burnCoins)
-				if err != nil {
-					panic(err)
-				}
-
-			}
+		if !found {
+			k.Logger(ctx).Error(fmt.Sprintf("delegation not found for %s with %s", mAddr.String(), acc.ValAddr))
+			continue
 		}
+
+		currentAmount := validator.TokensFromShares(delegation.Shares).RoundInt() // is this the correct way to get delegated uosmo as Int?
 
 		// mint OSMO token based on TWAP of locked denom to denom module account
 		// Get total delegation from synthetic lockups
+		//TODO not sure about this calculation, might be broken
 		totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
 			Duration:      time.Hour * 24 * 14,
 		})
 
-		amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
-		if amount.IsZero() {
-			continue
-		}
+		refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
 
-		coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-		err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
-		if err != nil {
-			panic(err)
-		}
-		err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
-		if err != nil {
-			panic(err)
-		}
-
-		// make delegation from module account to the validator
-		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			validator, found = k.sk.GetValidator(cacheCtx, valAddress)
-			if !found {
-				return fmt.Errorf("validator not found or %s", acc.ValAddr)
+		if refreshedAmount.GT(currentAmount) {
+			//need to mint and delegate
+			adjustment := refreshedAmount.Sub(currentAmount)
+			coins := sdk.NewCoins(sdk.NewCoin(bondDenom, adjustment))
+			err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+			if err != nil {
+				panic(err)
 			}
-			_, err = k.sk.Delegate(cacheCtx, mAddr, amount, stakingtypes.Unbonded, validator, true)
-			return err
-		})
+			err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+			if err != nil {
+				panic(err)
+			}
+			_, err = k.sk.Delegate(ctx, mAddr, adjustment, stakingtypes.Unbonded, validator, true)
+			if err != nil {
+				panic(err)
+			}
+		} else if currentAmount.GT(refreshedAmount) {
+			//need to instantUndelegate and burn
+			adjustment := currentAmount.Sub(refreshedAmount)
+			adjustShares, _ := validator.SharesFromTokens(adjustment)
+			if err != nil {
+				panic(err)
+			}
+			res, err := k.sk.InstantUndelegate(ctx, mAddr, valAddress, adjustShares)
+			if err != nil {
+				panic(err)
+			}
+			err = k.bk.SendCoinsFromAccountToModule(ctx, mAddr, "???", res)
+			if err != nil {
+				panic(err)
+			}
+			err = k.bk.BurnCoins(ctx, "???", res)
+			if err != nil {
+				panic(err)
+			}
+
+		} else {
+			fmt.Println("sus")
+			ctx.Logger().Info("Intermediary account already has correct delegation amount? sus.")
+		}
 	}
 }
 

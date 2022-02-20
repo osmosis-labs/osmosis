@@ -793,6 +793,8 @@ github.com/osmosis-labs/bech32-ibc v0.2.0-rc2 h1:7xy1pLtNiF2KaRSkolayZf4z3OfCJsO
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc2/go.mod h1:0JCaioRNOVUiw7c3MngmKACnumaQ2sjPenXCnwxCttI=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220124045025-f4329814320d h1:rV2K3AcMG66cBPp0GSOy1E+VAq977bbEHhtJdl2p/40=
 github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20220124045025-f4329814320d/go.mod h1:ThWFGTvQHB9AVuKLxAIw+RWJy0EB2CF3Xg2+JNd2jzg=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220220013146-f7a3986e0329 h1:WptGLS9LrauJXL1L2/QWOBZ2x1JPzECJzhalDP541N0=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220220013146-f7a3986e0329/go.mod h1:ThWFGTvQHB9AVuKLxAIw+RWJy0EB2CF3Xg2+JNd2jzg=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo h1:XyYyDTjPIu7qX2nhQp9mboj7Pa9FEnjg1RXw73Ctv5U=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo/go.mod h1:XUmW7wmubCRhIEAGtMGS+5IjiSSmcAwihoN/yPGd6Kk=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
