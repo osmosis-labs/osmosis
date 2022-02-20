@@ -287,7 +287,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	}
 
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-	err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		// TODO: Why is this a base account, not a module account?
 		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
 	}
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mAddr, coins)
 	if err != nil {
 		return err
 	}
@@ -315,36 +315,36 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	return nil
 }
 
-func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) (sdk.ValAddress, error) {
+func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if lock.Owner != sender {
-		return nil, lockuptypes.ErrNotLockOwner
+		return lockuptypes.ErrNotLockOwner
 	}
 
 	// Remove previously created synthetic lockup
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if intermediaryAccAddr.Empty() {
-		return nil, types.ErrNotSuperfluidUsedLockup
+		return types.ErrNotSuperfluidUsedLockup
 	}
 	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	suffix := stakingSuffix(intermediaryAcc.ValAddr)
 
 	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, suffix)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if synthLock.Owner != sender {
-		return nil, lockuptypes.ErrNotLockOwner
+		return lockuptypes.ErrNotLockOwner
 	}
 
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// use synthetic lockup coins for unbonding
@@ -352,22 +352,27 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	shares, err := k.sk.ValidateUnbondAmount(
 		ctx, intermediaryAcc.GetAccAddress(), valAddr, amount,
 	)
-
 	if err != nil {
-		k.Logger(ctx).Error(err.Error())
-	} else if shares.IsPositive() {
-		// Note: undelegated amount is automatically sent to intermediary account's free balance
-		// it is burnt on epoch interval
-		_, err = k.sk.Undelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
-		if err != nil {
-			return valAddr, err
-		}
+		return err
+	}
+
+	res, err := k.sk.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
+	if err != nil {
+		return err
+	}
+	err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, res)
+	if err != nil {
+		return err
+	}
+	err = k.bk.BurnCoins(ctx, types.ModuleName, res)
+	if err != nil {
+		return err
 	}
 
 	params := k.GetParams(ctx)
@@ -378,11 +383,11 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	// synthetic lockup amount
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, true)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
-	return valAddr, nil
+	return nil
 }
 
 // func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, sender string, lockID uint64, newValAddr string) error {

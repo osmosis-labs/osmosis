@@ -373,7 +373,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				}
 
 				// superfluid undelegate
-				_, err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
+				err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
 				if tc.expSuperUnbondingErr[index] {
 					suite.Require().Error(err)
 					continue
@@ -420,7 +420,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
 				suite.Require().NoError(err)
 
-				_, err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
+				err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
 				suite.Require().Error(err)
 			}
 		})
@@ -779,7 +779,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			// unbond all lockups
 			for _, lock := range locks {
 				// superfluid undelegate
-				_, err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lock.ID)
+				err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lock.ID)
 				suite.Require().NoError(err)
 			}
 

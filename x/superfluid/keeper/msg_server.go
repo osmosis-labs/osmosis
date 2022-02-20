@@ -32,7 +32,7 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.MsgSuperfluidUndelegate) (*types.MsgSuperfluidUndelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
+	err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
 
