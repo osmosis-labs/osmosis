@@ -17,6 +17,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSuperfluidDelegate{},
 		&MsgSuperfluidUndelegate{},
 		// &MsgSuperfluidRedelegate{},
+		&MsgLockAndSuperfluidDelegate{},
 	)
 
 	registry.RegisterImplementations(
