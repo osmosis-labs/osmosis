@@ -31,6 +31,18 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sd
 	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 }
 
+func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
+	// Get total number of Osmo this account should have delegated after refresh
+	totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
+		Duration:      time.Hour * 24 * 14, // should be a variable?
+	})
+
+	refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
+	return refreshedAmount
+}
+
 func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
@@ -54,18 +66,9 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			continue
 		}
 
-		currentAmount := validator.TokensFromShares(delegation.Shares).RoundInt() // is this the correct way to get delegated uosmo as Int?
+		currentAmount := validator.TokensFromShares(delegation.Shares).RoundInt()
 
-		// mint OSMO token based on TWAP of locked denom to denom module account
-		// Get total delegation from synthetic lockups
-		//TODO not sure about this calculation, might be broken
-		totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
-			Duration:      time.Hour * 24 * 14,
-		})
-
-		refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
+		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
 
 		if refreshedAmount.GT(currentAmount) {
 			//need to mint and delegate
