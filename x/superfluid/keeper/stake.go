@@ -48,7 +48,6 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		mAddr := acc.GetAccAddress()
-		bondDenom := k.sk.BondDenom(ctx)
 
 		valAddress, err := sdk.ValAddressFromBech32(acc.ValAddr)
 		if err != nil {
@@ -74,16 +73,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		if refreshedAmount.GT(currentAmount) {
 			//need to mint and delegate
 			adjustment := refreshedAmount.Sub(currentAmount)
-			coins := sdk.NewCoins(sdk.NewCoin(bondDenom, adjustment))
-			err = k.bk.MintCoins(ctx, types.ModuleName, coins)
-			if err != nil {
-				panic(err)
-			}
-			err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mAddr, coins)
-			if err != nil {
-				panic(err)
-			}
-			_, err = k.sk.Delegate(ctx, mAddr, adjustment, stakingtypes.Unbonded, validator, true)
+			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc, validator)
 			if err != nil {
 				panic(err)
 			}
