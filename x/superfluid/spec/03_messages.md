@@ -50,6 +50,6 @@ type MsgSuperfluidUndelegate struct {
 - Delete the `SyntheticLockup` associated to this `lockID` + `ValAddr` pair
 - Create a new `SyntheticLockup` which is unbonding
 - Calculate the amount of `Osmo` delegated on behalf of this `lock`
-- Undelegate `Osmo` from `IntermediaryAccount` to `Validator`
-  - `Osmo` will be burned from `IntermediaryAccount` on epoch after unbonding finishes
+- Use `InstantUndelegate` to instantly remove delegation from `IntermediaryAccount` to `Validator`
+- Immediately burn undelegated `Osmo`
 - Delete the connection betweene `lockID` and `IntermediaryAccount`
