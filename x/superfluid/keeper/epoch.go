@@ -90,7 +90,7 @@ func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, en
 
 		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
 		beginningEpochNumber := endedEpochNumber + 1
-		k.SetEpochOsmoEquivalentTWAP(ctx, beginningEpochNumber, asset.Denom, twap)
+		k.SetOsmoEquivalentMultiplier(ctx, beginningEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
 		k.Logger(ctx).Error("unsupported superfluid asset type")

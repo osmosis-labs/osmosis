@@ -91,7 +91,7 @@ $ %s query superfluid asset-twap gamm/pool/1
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AssetTwap(cmd.Context(), &types.AssetTwapRequest{
+			res, err := queryClient.AssetMultiplier(cmd.Context(), &types.AssetMultiplierRequest{
 				Denom: args[0],
 			})
 			if err != nil {

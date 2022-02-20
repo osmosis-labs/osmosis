@@ -22,10 +22,11 @@ service Query {
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_assets";
   }
-  // Returns superfluid asset TWAP
-  rpc AssetTwap(AssetTwapRequest) returns (AssetTwapResponse) {
+  // Returns superfluid asset Multiplier
+  rpc AssetMultiplier(AssetMultiplierRequest)
+      returns (AssetMultiplierResponse) {
     option (google.api.http).get =
-        "/osmosis/superfluid/v1beta1/asset_twap/{denom}";
+        "/osmosis/superfluid/v1beta1/asset_multiplier/{denom}";
   }
   // Returns all superfluid intermediary account
   rpc AllIntermediaryAccounts(AllIntermediaryAccountsRequest)
@@ -49,8 +50,10 @@ message AllAssetsResponse {
   repeated SuperfluidAsset assets = 1 [ (gogoproto.nullable) = false ];
 };
 
-message AssetTwapRequest { string denom = 1; };
-message AssetTwapResponse { EpochOsmoEquivalentTWAP twap = 1; };
+message AssetMultiplierRequest { string denom = 1; };
+message AssetMultiplierResponse {
+  OsmoEquivalentMultiplier osmo_equivalent_multiplier = 1;
+};
 
 message SuperfluidIntermediaryAccountInfo {
   string denom = 1;

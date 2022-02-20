@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			// gamm swap operation before refresh
-			suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
+			suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
 			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 			coins := sdk.Coins{sdk.NewInt64Coin("foo", 100000000000000)}
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			})
 
 			// check lptoken twap value set
-			newEpochTwap := suite.app.SuperfluidKeeper.GetEpochOsmoEquivalentTWAP(suite.ctx, "gamm/pool/1")
+			newEpochTwap := suite.app.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.ctx, "gamm/pool/1")
 			suite.Require().Equal(newEpochTwap.String(), "0.009999997500000000")
 
 			// check delegation changes

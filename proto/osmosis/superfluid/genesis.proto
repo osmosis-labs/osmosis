@@ -12,7 +12,7 @@ message GenesisState {
   Params params = 1 [ (gogoproto.nullable) = false ];
   repeated SuperfluidAsset superfluid_assets = 2
       [ (gogoproto.nullable) = false ];
-  repeated EpochOsmoEquivalentTWAP twap_price_records = 3
+  repeated OsmoEquivalentMultiplier osmo_equivalent_multipliers = 3
       [ (gogoproto.nullable) = false ];
   repeated SuperfluidIntermediaryAccount intermediary_accounts = 4
       [ (gogoproto.nullable) = false ];

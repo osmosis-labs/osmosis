@@ -28,16 +28,16 @@ func (k Keeper) AllAssets(goCtx context.Context, req *types.AllAssetsRequest) (*
 }
 
 // AssetTwap returns superfluid asset TWAP
-func (k Keeper) AssetTwap(goCtx context.Context, req *types.AssetTwapRequest) (*types.AssetTwapResponse, error) {
+func (k Keeper) AssetMultiplier(goCtx context.Context, req *types.AssetMultiplierRequest) (*types.AssetMultiplierResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	params := k.GetParams(ctx)
 	epochInfo := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
 
-	return &types.AssetTwapResponse{
-		Twap: &types.EpochOsmoEquivalentTWAP{
-			EpochNumber:    epochInfo.CurrentEpoch,
-			Denom:          req.Denom,
-			EpochTwapPrice: k.GetEpochOsmoEquivalentTWAP(ctx, req.Denom),
+	return &types.AssetMultiplierResponse{
+		OsmoEquivalentMultiplier: &types.OsmoEquivalentMultiplier{
+			EpochNumber: epochInfo.CurrentEpoch,
+			Denom:       req.Denom,
+			Multiplier:  k.GetOsmoEquivalentMultiplier(ctx, req.Denom),
 		},
 	}, nil
 }

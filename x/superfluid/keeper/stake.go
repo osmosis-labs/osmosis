@@ -22,7 +22,7 @@ func unstakingSuffix(valAddr string) string {
 }
 
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
-	twap := k.GetEpochOsmoEquivalentTWAP(ctx, denom)
+	twap := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if twap.IsZero() {
 		return sdk.ZeroInt()
 	}
