@@ -140,12 +140,12 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 	}
 
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
-	err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
 	if err != nil {
 		return err
 	}
 
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, intermediaryAccAddr, coins)
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccAddr, coins)
 	if err != nil {
 		return err
 	}
