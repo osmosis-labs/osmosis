@@ -83,7 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Wasdm fork updates
 
-- [wasmd-v.022.0-osmo-v7](https://github.com/osmosis-labs/wasmd/releases/tag/v0.22.0-osmo-v7) Upgrade SDK and IAVL dependencies to use fast storage
+- [wasmd-v.022.0-osmo-v7](https://github.com/osmosis-labs/wasmd/releases/tag/v0.22.0-osmo-v7.27) Upgrade SDK and IAVL dependencies to use fast storage
 
 ## [v6.0.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.0.0)
 
