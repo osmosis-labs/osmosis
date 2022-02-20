@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### SDK fork updates
 
-- [sdk-#114](https://github.com/osmosis-labs/cosmos-sdk/pull/114) [commit](https://github.com/osmosis-labs/cosmos-sdk/pull/114/commits/7ec05684856bf87b868f67d05459d64931ac599d) upgrading iavl with ram optimizations during migration and extra logs
+- [sdk-#114](https://github.com/osmosis-labs/cosmos-sdk/pull/114) upgrading iavl with ram optimizations during migration, and extra logs and fixes for "version X was already saved to a different hash" and "insufficient funds" bugs
 
 ### IAVL fork updates
 
