@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 
 	// check multipliers
 	multipliers = suite.app.SuperfluidKeeper.GetAllOsmoEquivalentMultipliers(suite.ctx)
-	suite.Require().Len(multiplier, 0)
+	suite.Require().Len(multipliers, 0)
 
 	// test last epoch price
 	multiplier = suite.app.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.ctx, "gamm/pool/1")
