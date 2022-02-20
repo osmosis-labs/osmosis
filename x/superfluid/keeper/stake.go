@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -226,19 +225,12 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	if err != nil {
 		return err
 	}
-	mAddr := acc.GetAccAddress()
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
 	amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lock.Coins.AmountOf(acc.Denom))
 	if amount.IsZero() {
 		return types.ErrOsmoEquivalentZeroNotAllowed
-	}
-
-	// TODO: @Dev added this hasAccount gating, think through if theres an edge case that makes it not right
-	if !k.ak.HasAccount(ctx, mAddr) {
-		// TODO: Why is this a base account, not a module account?
-		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
 	}
 
 	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc, validator)
@@ -373,22 +365,6 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
 	return err
 }
-
-// func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, sender string, lockID uint64, newValAddr string) error {
-// 	// Note: we prevent circular redelegations since when unbonding lockup is available from a specific validator,
-// 	// not able to redelegate or undelegate again, especially the case for automatic undelegation when native lockup unlock
-
-// 	valAddr, err := k.SuperfluidUndelegate(ctx, sender, lockID)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if valAddr.String() == newValAddr {
-// 		return types.ErrSameValidatorRedelegation
-// 	}
-
-// 	return k.SuperfluidDelegate(ctx, sender, lockID, newValAddr)
-// }
 
 // TODO: Need to (eventually) override the existing staking messages and queries, for undelegating, delegating, rewards, and redelegating, to all be going through all superfluid module.
 // Want integrators to be able to use the same staking queries and messages
