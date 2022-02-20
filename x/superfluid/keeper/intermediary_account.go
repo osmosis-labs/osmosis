@@ -74,9 +74,8 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	// first step, we create the gaugeID
 	gaugeID, err := k.ik.CreateGauge(ctx, true, accountAddr, sdk.Coins{}, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
-		// move this synthetic denom creation to a dedicated function
-		Denom:    denom + stakingSuffix(valAddr),
-		Duration: params.UnbondingDuration,
+		Denom:         SyntheticDenom(denom, valAddr),
+		Duration:      params.UnbondingDuration,
 	}, ctx.BlockTime(), 1)
 
 	if err != nil {

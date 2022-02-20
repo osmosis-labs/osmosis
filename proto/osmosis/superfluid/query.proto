@@ -40,6 +40,54 @@ service Query {
     option (google.api.http).get =
         "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
+
+  // Returns the coins superfluid delegated for a delegator, validator, denom
+  // triplet
+  rpc SuperfluidDelegationAmount(SuperfluidDelegationAmountRequest)
+      returns (SuperfluidDelegationAmountResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/superfluid_delegation_amount";
+  }
+
+  // Returns all the superfluid poistions for a specific delegator
+  rpc SuperfluidDelegationsByDelegator(SuperfluidDelegationsByDelegatorRequest)
+      returns (SuperfluidDelegationsByDelegatorResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
+                                   "superfluid_delegations/{delegator_address}";
+  }
+
+  // Returns all the superfluid positions of a specific denom delegated to one
+  // validator
+  rpc SuperfluidDelegationsByValidatorDenom(
+      SuperfluidDelegationsByValidatorDenomRequest)
+      returns (SuperfluidDelegationsByValidatorDenomResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/superfluid_delegations_by_validator_denom";
+  }
+
+  // Returns the amount of a specific denom delegated to a specific validator
+  rpc SuperfluidDelegatedAmountByValidatorDenom(
+      SuperfluidDelegatedAmountByValidatorDenomRequest)
+      returns (SuperfluidDelegatedAmountByValidatorDenomResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/"
+        "superfluid_delegation_amount_by_validator_denom";
+  }
+
+  // // Returns all the unbonding superfluid positions of a delegator
+  // rpc SuperfluidUnbondingsByDelegator(SuperfluidUnbondingsByDelegatorRequest)
+  //   returns (SuperfluidUnbondingsByDelegatorResponse) {
+  // option (google.api.http).get =
+  //     "/osmosis/superfluid/v1beta1/superfluid_unbondings/{delegator_address}";
+  // }
+
+  // // Returns all the unbonding superfluid positions of a specific denom
+  // unbonding from one validator rpc
+  // SuperfluidUnbondingsByValidatorDenom(SuperfluidUnbondingsByValidatorDenomRequest)
+  //     returns (SuperfluidUnbondingsByValidatorDenomResponse) {
+  //   option (google.api.http).get =
+  //       "/osmosis/superfluid/v1beta1/superfluid_unbondings_by_validator_denom";
+  // }
 }
 
 message AssetTypeRequest { string denom = 1; };
@@ -74,3 +122,82 @@ message ConnectedIntermediaryAccountRequest { uint64 lock_id = 1; }
 message ConnectedIntermediaryAccountResponse {
   SuperfluidIntermediaryAccountInfo account = 1;
 }
+
+message SuperfluidDelegationAmountRequest {
+  string delegator_address = 1;
+  string validator_address = 2;
+  string denom = 3;
+}
+
+message SuperfluidDelegationAmountResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message SuperfluidDelegationsByDelegatorRequest {
+  string delegator_address = 1;
+}
+
+message SuperfluidDelegationsByDelegatorResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message SuperfluidDelegationsByValidatorDenomRequest {
+  string validator_address = 1;
+  string denom = 2;
+}
+
+message SuperfluidDelegationsByValidatorDenomResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message SuperfluidDelegatedAmountByValidatorDenomRequest {
+  string validator_address = 1;
+  string denom = 2;
+}
+
+message SuperfluidDelegatedAmountByValidatorDenomResponse {
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// message SuperfluidUnbondingsByDelegatorRequest {
+//   string delegator_address = 1;
+// }
+
+// message SuperfluidUnbondingsByDelegatorResponse {
+//   repeated SuperfluidDelegationRecord superfluid_unbonding_records = 1
+//   [ (gogoproto.nullable) = false ];
+//   repeated cosmos.base.v1beta1.Coin total_unbonding_coins = 2 [
+//     (gogoproto.nullable) = false,
+//     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+//   ];
+// }
+
+// message SuperfluidUnbondingsByValidatorDenomRequest {
+//   string validator_address = 1;
+//   string denom = 2;
+// }
+
+// message SuperfluidUnbondingsByValidatorDenomResponse {
+//   repeated SuperfluidDelegationRecord superfluid_unbonding_records = 1
+//   [ (gogoproto.nullable) = false ];
+//   repeated cosmos.base.v1beta1.Coin total_unbonding_coins = 2 [
+//     (gogoproto.nullable) = false,
+//     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+//   ];
+// }

@@ -18,6 +18,10 @@ func unstakingSuffix(valAddr string) string {
 	return fmt.Sprintf("superunbonding%s", valAddr)
 }
 
+func SyntheticDenom(denom, valAddr string) string {
+	return denom + stakingSuffix(valAddr)
+}
+
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
@@ -156,7 +160,7 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 
 	defaultSuperfluidAsset := types.SuperfluidAsset{}
 	if k.GetSuperfluidAsset(ctx, lock.Coins[0].Denom) == defaultSuperfluidAsset {
-		return types.ErrAttemptingToSuperfluidNonSuperfluidAsset
+		return types.ErrNonSuperfluidAsset
 	}
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking

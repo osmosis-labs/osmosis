@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -73,5 +75,140 @@ func (k Keeper) ConnectedIntermediaryAccount(goCtx context.Context, req *types.C
 			GaugeId: acc.GaugeId,
 			Address: acc.GetAccAddress().String(),
 		},
+	}, nil
+}
+
+// ConnectedIntermediaryAccount returns intermediary account connected to a superfluid staked lock by id
+func (k Keeper) SuperfluidDelegationAmount(goCtx context.Context, req *types.SuperfluidDelegationAmountRequest) (*types.SuperfluidDelegationAmountResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetSuperfluidAsset(ctx, req.Denom).Denom == "" {
+		return nil, types.ErrNonSuperfluidAsset
+	}
+
+	_, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	syntheticDenom := SyntheticDenom(req.Denom, req.ValidatorAddress)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	periodLocks := k.lk.GetAccountLockedLongerDurationDenomNotUnlockingOnly(ctx, delAddr, syntheticDenom, time.Second)
+
+	if len(periodLocks) == 0 {
+		return &types.SuperfluidDelegationAmountResponse{sdk.NewCoins()}, nil
+	}
+
+	return &types.SuperfluidDelegationAmountResponse{periodLocks[0].GetCoins()}, nil
+}
+
+func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *types.SuperfluidDelegationsByDelegatorRequest) (*types.SuperfluidDelegationsByDelegatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	res := types.SuperfluidDelegationsByDelegatorResponse{
+		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
+		TotalDelegatedCoins:         sdk.NewCoins(),
+	}
+
+	syntheticLocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
+
+	for _, syntheticLock := range syntheticLocks {
+		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockId)
+		if err != nil {
+			return nil, err
+		}
+
+		baseDenom := periodLock.Coins.GetDenomByIndex(0)
+
+		lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
+		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
+			types.SuperfluidDelegationRecord{
+				DelegatorAddress: req.DelegatorAddress,
+				ValidatorAddress: syntheticLock.Suffix,
+				DelegationAmount: lockedCoins,
+			},
+		)
+		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+	}
+	return &res, nil
+
+}
+
+func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req *types.SuperfluidDelegationsByValidatorDenomRequest) (*types.SuperfluidDelegationsByValidatorDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetSuperfluidAsset(ctx, req.Denom).Denom == "" {
+		return nil, types.ErrNonSuperfluidAsset
+	}
+
+	_, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	syntheticDenom := SyntheticDenom(req.Denom, req.ValidatorAddress)
+
+	res := types.SuperfluidDelegationsByValidatorDenomResponse{
+		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
+		TotalDelegatedCoins:         sdk.NewCoins(),
+	}
+
+	periodLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, syntheticDenom, time.Second)
+
+	for _, lock := range periodLocks {
+		lockedCoins := sdk.NewCoin(req.Denom, lock.GetCoins().AmountOf(syntheticDenom))
+		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
+			types.SuperfluidDelegationRecord{
+				DelegatorAddress: lock.GetOwner(),
+				ValidatorAddress: req.ValidatorAddress,
+				DelegationAmount: lockedCoins,
+			},
+		)
+		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+	}
+	return &res, nil
+}
+
+func (k Keeper) SuperfluidDelegatedAmountByValidatorDenom(goCtx context.Context, req *types.SuperfluidDelegatedAmountByValidatorDenomRequest) (*types.SuperfluidDelegatedAmountByValidatorDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetSuperfluidAsset(ctx, req.Denom).Denom == "" {
+		return nil, types.ErrNonSuperfluidAsset
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	intermediaryAcc, err := k.GetOrCreateIntermediaryAccount(ctx, req.Denom, req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	val, found := k.sk.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, stakingtypes.ErrNoValidatorFound
+	}
+
+	delegation, found := k.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
+	if err != nil {
+		return nil, stakingtypes.ErrNoDelegation
+	}
+
+	syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
+	baseAmount := syntheticOsmoAmt.Quo(k.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
+	return &types.SuperfluidDelegatedAmountByValidatorDenomResponse{
+		TotalDelegatedCoins: sdk.NewCoins(sdk.NewCoin(req.Denom, baseAmount)),
 	}, nil
 }
