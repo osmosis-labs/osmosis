@@ -74,13 +74,13 @@ func NativeDenom(denom string) string {
 	return denom
 }
 
-// func SyntheticSuffix(denom string) string {
-// 	return strings.TrimLeft(denom, NativeDenom(denom))
-// }
+func SyntheticSuffix(denom string) string {
+	return strings.TrimLeft(denom, NativeDenom(denom))
+}
 
-// func IsSyntheticDenom(denom string) bool {
-// 	return NativeDenom(denom) != denom
-// }
+func IsSyntheticDenom(denom string) bool {
+	return NativeDenom(denom) != denom
+}
 
 // func IsStakingSuffix(suffix string) bool {
 // 	return strings.Contains(suffix, "superbonding")
