@@ -126,7 +126,7 @@ require (
 )
 
 replace (
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk branch: v0.45.0x-osmo-v7, tag: v0.45.0x-osmo-v7.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220220082240-1b4ae82744ea
 
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v3
