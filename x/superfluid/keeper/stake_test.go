@@ -658,6 +658,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 		// 	[]int64{0},
 		// },
+		//FIXME at least this last test should pass. I think the others can be removed?
 	}
 
 	for _, tc := range testCases {
