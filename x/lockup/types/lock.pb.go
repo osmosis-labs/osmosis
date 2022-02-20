@@ -207,6 +207,19 @@ func (m *QueryCondition) GetTimestamp() time.Time {
 }
 
 // SyntheticLock is a single unit of synthetic lockup
+// TODO: Change this to have
+// * underlying_lock_id
+// * synthetic_coin
+// * end_time
+// * duration
+// * owner
+// We then index synthetic locks by the denom, just like we do with normal
+// locks. Ideally we even get an interface, so we can re-use that same logic.
+// I currently have no idea how reward distribution is supposed to be working...
+// EVENTUALLY
+// we make a "constrained_coin" field, which is what the current "coins" field
+// is. Constrained coin field can be a #post-v7 feature, since we aren't
+// allowing partial unlocks of synthetic lockups.
 type SyntheticLock struct {
 	// underlying native lockup id for this synthetic lockup
 	UnderlyingLockId uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockId,proto3" json:"underlying_lock_id,omitempty"`

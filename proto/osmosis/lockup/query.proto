@@ -83,7 +83,8 @@ service Query {
   }
 
   // Returns synthetic lockups by native lockup id
-  rpc SyntheticLockupsByLockupID(SyntheticLockupsByLockupIDRequest) returns (SyntheticLockupsByLockupIDResponse) {
+  rpc SyntheticLockupsByLockupID(SyntheticLockupsByLockupIDRequest)
+      returns (SyntheticLockupsByLockupIDResponse) {
     option (google.api.http).get =
         "/osmosis/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}";
   }
