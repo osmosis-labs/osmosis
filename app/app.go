@@ -289,7 +289,7 @@ var (
 		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
-		superfluidtypes.ModuleName:               nil,
+		superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		txfeestypes.ModuleName:                   nil,
 		wasm.ModuleName:                          {authtypes.Burner},
 	}

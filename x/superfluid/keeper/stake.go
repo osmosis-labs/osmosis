@@ -2,14 +2,11 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -32,25 +29,26 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sd
 	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 }
 
+func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk.Int {
+	return k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         denom,
+		Duration:      k.sk.UnbondingTime(ctx),
+	})
+}
+
+func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
+	// Get total number of Osmo this account should have delegated after refresh
+	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, acc.Denom+stakingSuffix(acc.ValAddr))
+	refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
+	return refreshedAmount
+}
+
 func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		mAddr := acc.GetAccAddress()
 		bondDenom := k.sk.BondDenom(ctx)
-
-		balance := k.bk.GetBalance(ctx, mAddr, bondDenom)
-		// if free balance is available on intermediary account burn it
-		// TODO: Why??? What is the flow undelegate that would leave it in the intermediary delegation object?
-		if balance.Amount.IsPositive() {
-			err := k.bk.SendCoinsFromAccountToModule(ctx, mAddr, stakingtypes.NotBondedPoolName, sdk.Coins{balance})
-			if err != nil {
-				panic(err)
-			}
-			err = k.bk.BurnCoins(ctx, stakingtypes.NotBondedPoolName, sdk.Coins{balance})
-			if err != nil {
-				panic(err)
-			}
-		}
 
 		valAddress, err := sdk.ValAddressFromBech32(acc.ValAddr)
 		if err != nil {
@@ -63,62 +61,59 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			continue
 		}
 
-		// undelegate full amount from the validator
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
-
-		if found {
-			returnAmount, err := k.sk.Unbond(ctx, mAddr, valAddress, delegation.Shares)
-			if err != nil {
-				panic(err)
-			}
-			if returnAmount.IsPositive() {
-				// burn undelegated tokens
-				// TODO: Why tf are we burning from staking module accounts here???
-				burnCoins := sdk.Coins{sdk.NewCoin(bondDenom, returnAmount)}
-				moduleName := stakingtypes.NotBondedPoolName
-				if validator.IsBonded() {
-					moduleName = stakingtypes.BondedPoolName
-				}
-				err = k.bk.BurnCoins(ctx, moduleName, burnCoins)
-				if err != nil {
-					panic(err)
-				}
-
-			}
-		}
-
-		// mint OSMO token based on TWAP of locked denom to denom module account
-		// Get total delegation from synthetic lockups
-		totalSuperfluidDelegation := k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
-			Duration:      time.Hour * 24 * 14,
-		})
-
-		amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
-		if amount.IsZero() {
+		if !found {
+			k.Logger(ctx).Error(fmt.Sprintf("delegation not found for %s with %s", mAddr.String(), acc.ValAddr))
 			continue
 		}
 
-		coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-		err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
-		if err != nil {
-			panic(err)
-		}
-		err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
-		if err != nil {
-			panic(err)
-		}
+		currentAmount := validator.TokensFromShares(delegation.Shares).RoundInt()
 
-		// make delegation from module account to the validator
-		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			validator, found = k.sk.GetValidator(cacheCtx, valAddress)
-			if !found {
-				return fmt.Errorf("validator not found or %s", acc.ValAddr)
+		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
+
+		if refreshedAmount.GT(currentAmount) {
+			//need to mint and delegate
+			adjustment := refreshedAmount.Sub(currentAmount)
+			coins := sdk.NewCoins(sdk.NewCoin(bondDenom, adjustment))
+			err = k.bk.MintCoins(ctx, types.ModuleName, coins)
+			if err != nil {
+				panic(err)
 			}
-			_, err = k.sk.Delegate(cacheCtx, mAddr, amount, stakingtypes.Unbonded, validator, true)
-			return err
-		})
+			err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mAddr, coins)
+			if err != nil {
+				panic(err)
+			}
+			_, err = k.sk.Delegate(ctx, mAddr, adjustment, stakingtypes.Unbonded, validator, true)
+			if err != nil {
+				panic(err)
+			}
+		} else if currentAmount.GT(refreshedAmount) {
+			// In this case, we want to change the IA's delegated balance to be refreshed Amount
+			// which is less than what it already has.
+			// This means we need to "InstantUndelegate" some of its delegation (not going through the unbonding queue)
+			// and then burn that excessly delegated bits.
+			adjustment := currentAmount.Sub(refreshedAmount)
+			adjustShares, _ := validator.SharesFromTokens(adjustment)
+			if err != nil {
+				panic(err)
+			}
+			res, err := k.sk.InstantUndelegate(ctx, mAddr, valAddress, adjustShares)
+			if err != nil {
+				panic(err)
+			}
+			// Move the surplus coins into a temporary superlfuid holding account that we can burn from.
+			err = k.bk.SendCoinsFromAccountToModule(ctx, mAddr, types.ModuleName, res)
+			if err != nil {
+				panic(err)
+			}
+			err = k.bk.BurnCoins(ctx, types.ModuleName, res)
+			if err != nil {
+				panic(err)
+			}
+
+		} else {
+			ctx.Logger().Info("Intermediary account already has correct delegation amount? sus. This whp implies the exact same spot price as the last epoch, and no delegation changes.")
+		}
 	}
 }
 
@@ -150,12 +145,12 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 	}
 
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
-	err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
 	if err != nil {
 		return err
 	}
 
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, intermediaryAccAddr, coins)
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccAddr, coins)
 	if err != nil {
 		return err
 	}
@@ -297,7 +292,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	}
 
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-	err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
 	if err != nil {
 		return err
 	}
@@ -306,7 +301,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		// TODO: Why is this a base account, not a module account?
 		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
 	}
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mAddr, coins)
 	if err != nil {
 		return err
 	}
@@ -325,36 +320,36 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	return nil
 }
 
-func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) (sdk.ValAddress, error) {
+func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if lock.Owner != sender {
-		return nil, lockuptypes.ErrNotLockOwner
+		return lockuptypes.ErrNotLockOwner
 	}
 
 	// Remove previously created synthetic lockup
 	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if intermediaryAccAddr.Empty() {
-		return nil, types.ErrNotSuperfluidUsedLockup
+		return types.ErrNotSuperfluidUsedLockup
 	}
 	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	suffix := stakingSuffix(intermediaryAcc.ValAddr)
 
 	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, suffix)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if synthLock.Owner != sender {
-		return nil, lockuptypes.ErrNotLockOwner
+		return lockuptypes.ErrNotLockOwner
 	}
 
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, suffix)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// use synthetic lockup coins for unbonding
@@ -362,22 +357,27 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	shares, err := k.sk.ValidateUnbondAmount(
 		ctx, intermediaryAcc.GetAccAddress(), valAddr, amount,
 	)
-
 	if err != nil {
-		k.Logger(ctx).Error(err.Error())
-	} else if shares.IsPositive() {
-		// Note: undelegated amount is automatically sent to intermediary account's free balance
-		// it is burnt on epoch interval
-		_, err = k.sk.Undelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
-		if err != nil {
-			return valAddr, err
-		}
+		return err
+	}
+
+	undelegatedCoins, err := k.sk.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
+	if err != nil {
+		return err
+	}
+	err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
+	if err != nil {
+		return err
+	}
+	err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
+	if err != nil {
+		return err
 	}
 
 	params := k.GetParams(ctx)
@@ -388,11 +388,11 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	// synthetic lockup amount
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, true)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
-	return valAddr, nil
+	return nil
 }
 
 // func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, sender string, lockID uint64, newValAddr string) error {
