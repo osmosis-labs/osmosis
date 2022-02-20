@@ -108,7 +108,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			}
 
 		} else {
-			ctx.Logger().Info("Intermediary account already has correct delegation amount? sus.")
+			ctx.Logger().Info("Intermediary account already has correct delegation amount? sus. This whp implies the exact same spot price as the last epoch, and no delegation changes.")
 		}
 	}
 }
