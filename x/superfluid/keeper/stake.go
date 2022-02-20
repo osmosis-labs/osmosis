@@ -88,7 +88,10 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 				panic(err)
 			}
 		} else if currentAmount.GT(refreshedAmount) {
-			//need to instantUndelegate and burn
+			// In this case, we want to change the IA's delegated balance to be refreshed Amount
+			// which is less than what it already has.
+			// This means we need to "InstantUndelegate" some of its delegation (not going through the unbonding queue)
+			// and then burn that excessly delegated bits.
 			adjustment := currentAmount.Sub(refreshedAmount)
 			adjustShares, _ := validator.SharesFromTokens(adjustment)
 			if err != nil {
