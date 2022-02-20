@@ -204,29 +204,15 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 
-	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
-	if !intermediaryAccAddr.Empty() {
+	// This guarantees this lockID does not already have a superfluid stake position
+	// associated with it.
+	// Thus when we stake now, this will be the only superfluid position for this lockID.
+	if k.alreadySuperfluidStaking(ctx, lockID) {
 		return types.ErrAlreadyUsedSuperfluidLockup
 	}
 
-	// A lock ID can only have one of three associated superfluid states:
-	// 1) Not superfluid'd
-	// 2) Superfluid bonded to a single validator
-	// 3) Superfluid unbonding from a single validator.
-	// If we are in case (2), ensure this is to the same validator.
-	//   - TODO: CODE
-	// If we are in case (3), disable this delegation.
-	// We can wrap (2) and (3) into one check, by checking if we have any synthetic lockups on this ID.
-	// and make it more precise later.
-	suffix := unstakingSuffix(valAddr)
-	_, err = k.lk.GetSyntheticLockup(ctx, lockID, suffix)
-	// throws an error if synthetic lock exists.
-	if err == nil {
-		return types.ErrUnbondingSyntheticLockupExists
-	}
-
 	// Register a synthetic lockup for superfluid staking
-	suffix = stakingSuffix(valAddr)
+	suffix := stakingSuffix(valAddr)
 	notUnlocking := false
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, notUnlocking)
 	if err != nil {
@@ -323,6 +309,22 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 
 	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
 	return nil
+}
+
+func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
+	// We need to catch two cases:
+	// (1) lockID has another superfluid bond
+	// (2) lockID has a superfluid unbonding
+	// we check (1) by looking for presence of an intermediary account lock ID connection
+	// we check (2) (and re-check 1 for suredness) by looking for the existence of
+	// synthetic locks for this.
+	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	if !intermediaryAccAddr.Empty() {
+		return true
+	}
+
+	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, lockID)
+	return len(synthLocks) > 0
 }
 
 // mint osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account
