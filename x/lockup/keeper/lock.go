@@ -304,10 +304,10 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 			return err
 		}
 
-		if len(lock.Coins) != 1 {
-			return fmt.Errorf("lock %d does not have single coin: %s", lock.ID, lock.Coins)
+		coin, err := lock.SingleCoin()
+		if err != nil {
+			return err
 		}
-		coin := lock.Coins[0]
 
 		var curDurationMap map[time.Duration]sdk.Int
 		if durationMap, ok := accumulationStoreEntries[synthLock.SynthDenom]; ok {
@@ -321,7 +321,7 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 			denoms = append(denoms, synthLock.SynthDenom)
 			curDurationMap = map[time.Duration]sdk.Int{synthLock.Duration: coin.Amount}
 		}
-		accumulationStoreEntries[coin.Denom] = curDurationMap
+		accumulationStoreEntries[synthLock.SynthDenom] = curDurationMap
 	}
 
 	// deterministically iterate over durationMap cache.
