@@ -287,14 +287,14 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			for _, lockId := range tc.expSlashedLockIds {
 				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
 				suite.Require().NoError(err)
-				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(950000).String())
+				suite.Require().Equal(sdk.NewInt(950000).String(), gotLock.Coins.AmountOf("gamm/pool/1").String())
 			}
 
 			// check unslashed lockups
 			for _, lockId := range tc.expUnslashedLockIds {
 				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
 				suite.Require().NoError(err)
-				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(1000000).String())
+				suite.Require().Equal(sdk.NewInt(1000000).String(), gotLock.Coins.AmountOf("gamm/pool/1").String())
 			}
 		})
 	}
