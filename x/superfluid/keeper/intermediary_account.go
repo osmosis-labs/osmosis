@@ -49,6 +49,18 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 	return acc
 }
 
+func (k Keeper) GetIntermediaryAccountsForVal(ctx sdk.Context, valAddr sdk.ValAddress) []types.SuperfluidIntermediaryAccount {
+	accs := k.GetAllIntermediaryAccounts(ctx)
+	valAccs := []types.SuperfluidIntermediaryAccount{}
+	for _, acc := range accs {
+		if acc.ValAddr != valAddr.String() { // only apply for slashed validator
+			continue
+		}
+		valAccs = append(valAccs, acc)
+	}
+	return valAccs
+}
+
 func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr string) (types.SuperfluidIntermediaryAccount, error) {
 	accountAddr := types.GetSuperfluidIntermediaryAccountAddr(denom, valAddr)
 	storeAccount := k.GetIntermediaryAccount(ctx, accountAddr)

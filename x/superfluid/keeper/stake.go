@@ -39,7 +39,9 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		bondDenom := k.sk.BondDenom(ctx)
 
 		balance := k.bk.GetBalance(ctx, mAddr, bondDenom)
-		if balance.Amount.IsPositive() { // if free balance is available on intermediary account burn it
+		// if free balance is available on intermediary account burn it
+		// TODO: Why??? What is the flow undelegate that would leave it in the intermediary delegation object?
+		if balance.Amount.IsPositive() {
 			err := k.bk.SendCoinsFromAccountToModule(ctx, mAddr, stakingtypes.NotBondedPoolName, sdk.Coins{balance})
 			if err != nil {
 				panic(err)

@@ -12,8 +12,8 @@ On AfterEpochEnd, we iterate through all existing intermediary accounts and with
 
 ## OnTokenLocked
 
-When a token is locked, we first check if the corresponding lock is currently in the state of superfluid delegation. If it is, we run the logic to add delegation via intermediary account. 
+When a token is locked, we first check if the corresponding lock is currently in the state of superfluid delegation. If it is, we run the logic to add delegation via intermediary account.
 
-## OnStartUnlock 
+## OnStartUnlock
 
 On Unlocking of a lock, we check if the corresponding lock has been superfluid staked. If it has, we run `SuperfluidUndelegate` for undelegation of the superfluid delegation.
