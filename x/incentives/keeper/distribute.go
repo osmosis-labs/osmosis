@@ -346,7 +346,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
 		// TODO: FIXME!!!
-		// Confusingly, there is no way to get all synthetic lockups.
+		// Confusingly, there is no way to get all synthetic lockups. Thus we use a separate method `distributeSyntheticInternal` to separately get lockSum for synthetic lockups.
 		// All gauges have a precondition of being ByDuration.
 		distributeBaseDenom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
 		if _, ok := locksByDenomCache[distributeBaseDenom]; !ok {
