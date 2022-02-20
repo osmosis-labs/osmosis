@@ -125,6 +125,10 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 
 	acc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	valAddr := acc.ValAddr
+	validator, err := k.validateValAddrForSFDelegate(ctx, valAddr)
+	if err != nil {
+		return err
+	}
 
 	suffix := stakingSuffix(valAddr)
 	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, suffix)
@@ -138,36 +142,16 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 	}
 
 	// mint OSMO token based on TWAP of locked denom to denom module account
-	bondDenom := k.sk.BondDenom(ctx)
 	amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
 	if amt.IsZero() {
 		return nil
 	}
 
-	coins := sdk.Coins{sdk.NewCoin(bondDenom, amt)}
-	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
+	err = k.mintOsmoTokensAndDelegate(ctx, amt, acc, validator)
 	if err != nil {
 		return err
 	}
 
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccAddr, coins)
-	if err != nil {
-		return err
-	}
-
-	// make delegation from module account to the validator
-	valAddress, err := sdk.ValAddressFromBech32(valAddr)
-	if err != nil {
-		return err
-	}
-	validator, found := k.sk.GetValidator(ctx, valAddress)
-	if !found {
-		return stakingtypes.ErrNoValidatorFound
-	}
-	_, err = k.sk.Delegate(ctx, intermediaryAccAddr, amt, stakingtypes.Unbonded, validator, true)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -279,44 +263,52 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	}
 	mAddr := acc.GetAccAddress()
 
-	// mint OSMO token based on TWAP of locked denom to denom module account
-	// TODO: Figure out whats going on in next 3 code blocks
-	// (1) Get superfluid osmo tokens backing this LP share
-	// (2) Mint these as new osmo in minttypes.ModuleName
-	// (3) If no account exists, make a new account at this addr
-	// (4) send newly minted coins to this account.
-	bondDenom := k.sk.BondDenom(ctx)
+	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
+	// and twap of the denom.
 	amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lock.Coins.AmountOf(acc.Denom))
 	if amount.IsZero() {
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
-	if err != nil {
-		return err
-	}
 	// TODO: @Dev added this hasAccount gating, think through if theres an edge case that makes it not right
 	if !k.ak.HasAccount(ctx, mAddr) {
 		// TODO: Why is this a base account, not a module account?
 		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
 	}
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mAddr, coins)
-	if err != nil {
-		return err
-	}
 
-	// make delegation from module account to the validator
-	// TODO: What happens here if validator is jailed, tombstoned, or unbonding
-	_, err = k.sk.Delegate(ctx, mAddr, amount, stakingtypes.Unbonded, validator, true)
+	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc, validator)
 	if err != nil {
-		k.Logger(ctx).Error(err.Error())
 		return err
 	}
 
 	// create connection record between lock id and intermediary account
 	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
 
+	return nil
+}
+
+// mint osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account
+func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, intermediaryAccount types.SuperfluidIntermediaryAccount, validator stakingtypes.Validator) error {
+	bondDenom := k.sk.BondDenom(ctx)
+	coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
+	err := k.bk.MintCoins(ctx, types.ModuleName, coins)
+	if err != nil {
+		return err
+	}
+	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
+	if err != nil {
+		return err
+	}
+
+	// make delegation from module account to the validator
+	// TODO: What happens here if validator is jailed, tombstoned, or unbonding
+	_, err = k.sk.Delegate(ctx,
+		intermediaryAccount.GetAccAddress(),
+		osmoAmount, stakingtypes.Unbonded, validator, true)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return err
+	}
 	return nil
 }
 
