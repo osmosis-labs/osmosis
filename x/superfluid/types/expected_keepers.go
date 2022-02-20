@@ -27,6 +27,10 @@ type LockupKeeper interface {
 	AddTokensToSyntheticLock(ctx sdk.Context, lock lockuptypes.SyntheticLock, amount sdk.Coins) error
 }
 
+type LockupMsgServer interface {
+	LockTokens(goCtx context.Context, msg *lockuptypes.MsgLockTokens) (*lockuptypes.MsgLockTokensResponse, error)
+}
+
 // GammKeeper defines the expected interface needed for superfluid module
 type GammKeeper interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error)
