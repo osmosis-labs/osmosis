@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -48,7 +47,7 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 
 	lockupMsg := lockuptypes.MsgLockTokens{
 		Owner:    msg.Sender,
-		Duration: time.Duration(server.keeper.GetParams(ctx).UnbondingDuration),
+		Duration: server.keeper.sk.GetParams(ctx).UnbondingTime,
 		Coins:    msg.Coins,
 	}
 

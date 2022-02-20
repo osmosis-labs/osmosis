@@ -151,9 +151,8 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 		return types.ErrUnbondingLockupNotSupported
 	}
 
-	// length check
-	params := k.GetParams(ctx)
-	if lock.Duration < params.UnbondingDuration { // if less than bonding, skip
+	// ensure that lock duration >= staking.UnbondingTime
+	if lock.Duration < k.sk.GetParams(ctx).UnbondingTime {
 		return types.ErrNotEnoughLockupDuration
 	}
 
@@ -192,8 +191,6 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 
-	params := k.GetParams(ctx)
-
 	err = k.validateLockForSFDelegate(ctx, lock, sender)
 	if err != nil {
 		return err
@@ -213,7 +210,8 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// Register a synthetic lockup for superfluid staking
 	suffix := stakingSuffix(valAddr)
 	notUnlocking := false
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, notUnlocking)
+	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, unbondingDuration, notUnlocking)
 	if err != nil {
 		return err
 	}
@@ -288,13 +286,13 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 		return err
 	}
 
-	params := k.GetParams(ctx)
+	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
 
 	// Note: bonding synthetic lockup amount is always same as native lockup amount in current implementation.
 	// If there's the case, it's different, we should create synthetic lockup at deleted bonding
 	// synthetic lockup amount
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, true)
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, unbondingDuration, true)
 	if err != nil {
 		return err
 	}
