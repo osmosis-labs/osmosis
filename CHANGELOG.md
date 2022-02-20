@@ -39,22 +39,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v6.3.2](https://github.com/osmosis-labs/osmosis/releases/tag/v6.3.2)
+## [v6.4.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.4.0)
 
 ## Minor improvements & Bug Fixes
 
--[#907](https://github.com/osmosis-labs/osmosis/pull/907) Upgrade IAVL and SDK with RAM improvements and bug fixes for v6.3.2
+-[#907](https://github.com/osmosis-labs/osmosis/pull/907) Upgrade IAVL and SDK with RAM improvements and bug fixes for v6.4.0
 
 ### SDK fork updates
 
-- [sdk-#114](https://github.com/osmosis-labs/cosmos-sdk/pull/114) upgrading iavl with ram optimizations during migration and extra logs
+- [sdk-#114](https://github.com/osmosis-labs/cosmos-sdk/pull/114) [commit](https://github.com/osmosis-labs/cosmos-sdk/pull/114/commits/7ec05684856bf87b868f67d05459d64931ac599d) upgrading iavl with ram optimizations during migration and extra logs
 
 ### IAVL fork updates
 
 - [iavl-19](https://github.com/osmosis-labs/iavl/pull/19) force GC, no cache during migration, auto heap profile
 
 ## [v6.3.1](https://github.com/osmosis-labs/osmosis/releases/tag/v6.3.1)
-- [#859](https://github.com/osmosis-labs/osmosis/pull/859) min duration from days to hours, changed weekly to day
+- [#859](https://github.com/osmosis-labs/osmosis/pull/859) CLI, update default durations to be in better units.
 - [#Unknown](https://github.com/osmosis-labs/osmosis/commit/3bf63f1d3b7efee503106a008e84129489bdba8d) Switch to SDK branch with vesting by duration
 
 ## Minor improvements & Bug Fixes
