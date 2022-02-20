@@ -17,11 +17,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 		endedEpochNumber := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
 
 		// Move delegation rewards to perpetual gauge
+		ctx.Logger().Info("Move delegation rewards to gauges")
 		k.MoveSuperfluidDelegationRewardToGauges(ctx)
 
 		// Update all LP tokens multipliers for the upcoming epoch.
 		// This affects staking reward distribution until the next epochs rewards.
 		// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
+		ctx.Logger().Info("Update all osmo equivalency multipliers")
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 			err := k.updateOsmoEquivalentMultipliers(ctx, asset, endedEpochNumber)
 			if err != nil {
@@ -35,6 +37,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 
 		// Refresh intermediary accounts' delegation amounts,
 		// making staking rewards follow the updated multiplier numbers.
+		ctx.Logger().Info("Refresh all superfluid delegation amounts")
 		k.RefreshIntermediaryDelegationAmounts(ctx)
 	}
 }

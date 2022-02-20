@@ -266,7 +266,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 				suite.Require().NoError(err)
 
 				// superfluid undelegate
-				_, err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
+				err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
 				suite.Require().NoError(err)
 			}
 
