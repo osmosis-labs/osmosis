@@ -19,6 +19,10 @@ service Msg {
   // Execute superfluid redelegation for a lockup
   // rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns
   // (MsgSuperfluidRedelegateResponse);
+
+  // Execute lockup lock and superfluid delegation in a single msg
+  rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
+      returns (MsgLockAndSuperfluidDelegateResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -40,3 +44,13 @@ message MsgSuperfluidUndelegateResponse {}
 //   string new_val_addr = 3;
 // }
 // message MsgSuperfluidRedelegateResponse {}
+
+message MsgLockAndSuperfluidDelegate {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  string val_addr = 3;
+}
+message MsgLockAndSuperfluidDelegateResponse { uint64 ID = 1; }
