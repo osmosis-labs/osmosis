@@ -16,9 +16,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetSuperfluidAsset(ctx, asset)
 	}
 
-	// initialize epoch twap price
-	for _, priceRecord := range genState.OsmoEquivalentMultipliers {
-		k.SetOsmoEquivalentMultiplier(ctx, priceRecord.EpochNumber, priceRecord.Denom, priceRecord.Multiplier)
+	// initialize osmo equivalent multipliers
+	for _, multiplierRecord := range genState.OsmoEquivalentMultipliers {
+		k.SetOsmoEquivalentMultiplier(ctx, multiplierRecord.EpochNumber, multiplierRecord.Denom, multiplierRecord.Multiplier)
 	}
 }
 

@@ -27,7 +27,7 @@ func (k Keeper) AllAssets(goCtx context.Context, req *types.AllAssetsRequest) (*
 	}, nil
 }
 
-// AssetTwap returns superfluid asset TWAP
+// AssetMultiplier returns superfluid asset multiplier
 func (k Keeper) AssetMultiplier(goCtx context.Context, req *types.AssetMultiplierRequest) (*types.AssetMultiplierResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	params := k.GetParams(ctx)

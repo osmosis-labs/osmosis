@@ -25,7 +25,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(
 		GetCmdAllSuperfluidAssets(),
-		GetCmdAssetTwap(),
+		GetCmdAssetMultiplier(),
 		GetCmdAllIntermediaryAccounts(),
 		GetCmdConnectedIntermediaryAccount(),
 	)
@@ -69,16 +69,16 @@ $ %s query superfluid all-superfluid-assets
 	return cmd
 }
 
-// GetCmdAssetTwap returns twap of an asset by denom
-func GetCmdAssetTwap() *cobra.Command {
+// GetCmdAssetMultiplier returns multiplier of an asset by denom
+func GetCmdAssetMultiplier() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "asset-twap [denom]",
-		Short: "Query asset twap by denom",
+		Use:   "asset-multiplier [denom]",
+		Short: "Query asset multiplier by denom",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query asset twap by denom.
+			fmt.Sprintf(`Query asset multiplier by denom.
 
 Example:
-$ %s query superfluid asset-twap gamm/pool/1
+$ %s query superfluid asset-multiplier gamm/pool/1
 `,
 				version.AppName,
 			),
