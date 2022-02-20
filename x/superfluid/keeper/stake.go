@@ -94,17 +94,16 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			if err != nil {
 				panic(err)
 			}
-			err = k.bk.SendCoinsFromAccountToModule(ctx, mAddr, "???", res)
+			err = k.bk.SendCoinsFromAccountToModule(ctx, mAddr, types.ModuleName, res)
 			if err != nil {
 				panic(err)
 			}
-			err = k.bk.BurnCoins(ctx, "???", res)
+			err = k.bk.BurnCoins(ctx, types.ModuleName, res)
 			if err != nil {
 				panic(err)
 			}
 
 		} else {
-			fmt.Println("sus")
 			ctx.Logger().Info("Intermediary account already has correct delegation amount? sus.")
 		}
 	}
