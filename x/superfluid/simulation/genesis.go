@@ -18,8 +18,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 			MinimumRiskFactor:      sdk.NewDecWithPrec(5, 2), // 5%
 			UnbondingDuration:      time.Second * 10,
 		},
-		SuperfluidAssets: []types.SuperfluidAsset{},
-		TwapPriceRecords: []types.EpochOsmoEquivalentTWAP{},
+		SuperfluidAssets:          []types.SuperfluidAsset{},
+		OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplierRecord{},
 	}
 
 	bz, err := json.MarshalIndent(&superfluidGenesis.Params, "", " ")
