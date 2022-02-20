@@ -8,10 +8,10 @@ import (
 
 // constants
 const (
-	TypeMsgSuperfluidDelegate          = "superfluid_delegate"
-	TypeMsgSuperfluidUndelegate        = "superfluid_undelegate"
-	TypeMsgSuperfluidRedelegate        = "superfluid_redelegate"
-	TypeMsgLockAndSuperfluidRedelegate = "lock_and_superfluid_delegate"
+	TypeMsgSuperfluidDelegate        = "superfluid_delegate"
+	TypeMsgSuperfluidUndelegate      = "superfluid_undelegate"
+	TypeMsgSuperfluidRedelegate      = "superfluid_redelegate"
+	TypeMsgLockAndSuperfluidDelegate = "lock_and_superfluid_delegate"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
