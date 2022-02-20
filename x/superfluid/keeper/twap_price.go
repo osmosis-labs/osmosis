@@ -16,13 +16,13 @@ func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.PoolI, osmoInPool ga
 	return twap
 }
 
-func (k Keeper) SetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom string, price sdk.Dec) {
+func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom string, multiplier sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
-	priceRecord := types.EpochOsmoEquivalentTWAP{
-		EpochNumber:    epoch,
-		Denom:          denom,
-		EpochTwapPrice: price,
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
+	priceRecord := types.OsmoEquivalentMultiplierRecord{
+		EpochNumber: epoch,
+		Denom:       denom,
+		Multiplier:  multiplier,
 	}
 	bz, err := proto.Marshal(&priceRecord)
 	if err != nil {
@@ -31,56 +31,36 @@ func (k Keeper) SetEpochOsmoEquivalentTWAP(ctx sdk.Context, epoch int64, denom s
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func (k Keeper) DeleteEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) {
+func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {
 	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
 	prefixStore.Delete([]byte(denom))
 }
 
-func (k Keeper) GetEpochOsmoEquivalentTWAP(ctx sdk.Context, denom string) sdk.Dec {
+func (k Keeper) GetOsmoEquivalentMultiplier(ctx sdk.Context, denom string) sdk.Dec {
 	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
 	bz := prefixStore.Get([]byte(denom))
 	if bz == nil {
 		return sdk.ZeroDec()
 	}
-	priceRecord := types.EpochOsmoEquivalentTWAP{}
+	priceRecord := types.OsmoEquivalentMultiplierRecord{}
 	err := proto.Unmarshal(bz, &priceRecord)
 	if err != nil {
 		panic(err)
 	}
-	return priceRecord.EpochTwapPrice
+	return priceRecord.Multiplier
 }
 
-func (k Keeper) GetAllEpochOsmoEquivalentTWAPs(ctx sdk.Context, epoch int64) []types.EpochOsmoEquivalentTWAP {
+func (k Keeper) GetAllOsmoEquivalentMultipliers(ctx sdk.Context) []types.OsmoEquivalentMultiplierRecord {
 	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 
-	priceRecords := []types.EpochOsmoEquivalentTWAP{}
+	priceRecords := []types.OsmoEquivalentMultiplierRecord{}
 	for ; iterator.Valid(); iterator.Next() {
-		priceRecord := types.EpochOsmoEquivalentTWAP{}
-
-		err := proto.Unmarshal(iterator.Value(), &priceRecord)
-		if err != nil {
-			panic(err)
-		}
-
-		priceRecords = append(priceRecords, priceRecord)
-	}
-	return priceRecords
-}
-
-func (k Keeper) GetAllOsmoEquivalentTWAPs(ctx sdk.Context) []types.EpochOsmoEquivalentTWAP {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenPriceTwap)
-	iterator := prefixStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	priceRecords := []types.EpochOsmoEquivalentTWAP{}
-	for ; iterator.Valid(); iterator.Next() {
-		priceRecord := types.EpochOsmoEquivalentTWAP{}
+		priceRecord := types.OsmoEquivalentMultiplierRecord{}
 
 		err := proto.Unmarshal(iterator.Value(), &priceRecord)
 		if err != nil {

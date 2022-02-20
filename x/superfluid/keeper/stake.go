@@ -22,12 +22,12 @@ func unstakingSuffix(valAddr string) string {
 }
 
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
-	twap := k.GetEpochOsmoEquivalentTWAP(ctx, denom)
-	if twap.IsZero() {
+	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
+	if multiplier.IsZero() {
 		return sdk.ZeroInt()
 	}
 
-	decAmt := twap.Mul(amount.ToDec())
+	decAmt := multiplier.Mul(amount.ToDec())
 	asset := k.GetSuperfluidAsset(ctx, denom)
 	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 }
@@ -39,7 +39,9 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		bondDenom := k.sk.BondDenom(ctx)
 
 		balance := k.bk.GetBalance(ctx, mAddr, bondDenom)
-		if balance.Amount.IsPositive() { // if free balance is available on intermediary account burn it
+		// if free balance is available on intermediary account burn it
+		// TODO: Why??? What is the flow undelegate that would leave it in the intermediary delegation object?
+		if balance.Amount.IsPositive() {
 			err := k.bk.SendCoinsFromAccountToModule(ctx, mAddr, stakingtypes.NotBondedPoolName, sdk.Coins{balance})
 			if err != nil {
 				panic(err)

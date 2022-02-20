@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			// gamm swap operation before refresh
-			suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
+			suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
 			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 			coins := sdk.Coins{sdk.NewInt64Coin("foo", 100000000000000)}
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			})
 
 			// check lptoken twap value set
-			newEpochTwap := suite.app.SuperfluidKeeper.GetEpochOsmoEquivalentTWAP(suite.ctx, "gamm/pool/1")
+			newEpochTwap := suite.app.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.ctx, "gamm/pool/1")
 			suite.Require().Equal(newEpochTwap.String(), "0.009999997500000000")
 
 			// check delegation changes
@@ -287,14 +287,14 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			for _, lockId := range tc.expSlashedLockIds {
 				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
 				suite.Require().NoError(err)
-				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(950000).String())
+				suite.Require().Equal(sdk.NewInt(950000).String(), gotLock.Coins.AmountOf("gamm/pool/1").String())
 			}
 
 			// check unslashed lockups
 			for _, lockId := range tc.expUnslashedLockIds {
 				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
 				suite.Require().NoError(err)
-				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(1000000).String())
+				suite.Require().Equal(sdk.NewInt(1000000).String(), gotLock.Coins.AmountOf("gamm/pool/1").String())
 			}
 		})
 	}

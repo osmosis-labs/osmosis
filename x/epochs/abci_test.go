@@ -101,9 +101,13 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 				epochs.BeginBlocker(ctx, *app.EpochsKeeper)
 				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
 				epochs.BeginBlocker(ctx, *app.EpochsKeeper)
-				ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 33))
+				numBlocksSinceStart, _ := app.EpochsKeeper.NumBlocksSinceEpochStart(ctx, "monthly")
+				require.Equal(t, int64(0), numBlocksSinceStart)
+				ctx = ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 33))
 				epochs.BeginBlocker(ctx, *app.EpochsKeeper)
 				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+				numBlocksSinceStart, _ = app.EpochsKeeper.NumBlocksSinceEpochStart(ctx, "monthly")
+				require.Equal(t, int64(1), numBlocksSinceStart)
 			},
 		},
 	}
