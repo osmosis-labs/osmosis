@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 				suite.Require().Equal(gauge.IsPerpetual, true)
 				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
-					Denom:         gaugeCheck.lpDenom + keeper.StakingSuffix(valAddrs[gaugeCheck.valIndex].String()),
+					Denom:         keeper.StakingSuffix(gaugeCheck.lpDenom, valAddrs[gaugeCheck.valIndex].String()),
 					Duration:      params.UnbondingDuration,
 				})
 				if gaugeCheck.rewarded {

@@ -128,18 +128,10 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 
 	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
 	// all the synthetic lockups' accumulation should be decreased
-	for _, synthLock := range synthLocks {
-		sCoins := syntheticCoins(coins, synthLock.Suffix)
-		synthLock.Coins = synthLock.Coins.Sub(sCoins)
-		err := k.setSyntheticLockupObject(ctx, &synthLock)
-		if err != nil {
-			panic(err)
-		}
-
-		for _, coin := range sCoins {
-			// Note: we use native lock's duration on accumulation store
-			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-		}
+	for _, synthlock := range synthLocks {
+		// XXX: WHY???? Other methods are using synth lock's duration on accumulation store
+		// Note: we use native lock's duration on accumulation store
+		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(lock.Duration), lock.Coins[0].Amount)
 	}
 
 	return nil
@@ -301,29 +293,35 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 			ctx.Logger().Info(msg)
 		}
 
-		err := k.setSyntheticLockAndResetRefs(ctx, synthLock)
+		// Add to the accumlation store cache
+		lock, err := k.GetLockByID(ctx, synthLock.UnderlyingLockId)
 		if err != nil {
 			return err
 		}
 
-		// Add to the accumlation store cache
-		for _, coin := range synthLock.Coins {
-			// update or create the new map from duration -> Int for this denom.
-			var curDurationMap map[time.Duration]sdk.Int
-			if durationMap, ok := accumulationStoreEntries[coin.Denom]; ok {
-				curDurationMap = durationMap
-				// update or create new amount in the duration map
-				newAmt := coin.Amount
-				if curAmt, ok := durationMap[synthLock.Duration]; ok {
-					newAmt = newAmt.Add(curAmt)
-				}
-				curDurationMap[synthLock.Duration] = newAmt
-			} else {
-				denoms = append(denoms, coin.Denom)
-				curDurationMap = map[time.Duration]sdk.Int{synthLock.Duration: coin.Amount}
-			}
-			accumulationStoreEntries[coin.Denom] = curDurationMap
+		err = k.setSyntheticLockAndResetRefs(ctx, *lock, synthLock)
+		if err != nil {
+			return err
 		}
+
+		if len(lock.Coins) != 1 {
+			return fmt.Errorf("lock %d does not have single coin: %s", lock.ID, lock.Coins)
+		}
+		coin := lock.Coins[0]
+
+		var curDurationMap map[time.Duration]sdk.Int
+		if durationMap, ok := accumulationStoreEntries[synthLock.SynthDenom]; ok {
+			curDurationMap = durationMap
+			newAmt := coin.Amount
+			if curAmt, ok := durationMap[synthLock.Duration]; ok {
+				newAmt = newAmt.Add(curAmt)
+			}
+			curDurationMap[synthLock.Duration] = newAmt
+		} else {
+			denoms = append(denoms, synthLock.SynthDenom)
+			curDurationMap = map[time.Duration]sdk.Int{synthLock.Duration: coin.Amount}
+		}
+		accumulationStoreEntries[coin.Denom] = curDurationMap
 	}
 
 	// deterministically iterate over durationMap cache.
@@ -349,7 +347,7 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 	return nil
 }
 
-func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, synthLock types.SyntheticLock) error {
+func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
 	err := k.setSyntheticLockupObject(ctx, &synthLock)
 	if err != nil {
 		return err
@@ -357,10 +355,10 @@ func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, synthLock types.Sy
 
 	// store refs by the status of unlock
 	if synthLock.IsUnlocking() {
-		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, synthLock)
+		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, lock, synthLock)
 	}
 
-	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, synthLock)
+	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, lock, synthLock)
 }
 
 // setLockAndResetLockRefs sets the lock, and resets all of its lock references

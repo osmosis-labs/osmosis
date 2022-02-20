@@ -61,8 +61,7 @@ message QueryCondition {
 message SyntheticLock {
   // underlying native lockup id for this synthetic lockup
   uint64 underlying_lock_id = 1;
-  // synthetic suffix comes after native denom - used for querying
-  string suffix = 2;
+  string synth_denom = 2;
   // used for unbonding synthetic lockups, for active synthetic lockups, this
   // value is set to uninitialized value
   google.protobuf.Timestamp end_time = 3 [
@@ -76,10 +75,4 @@ message SyntheticLock {
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
-  // The coins from the underlying lock ID that are synthetically locked
-  repeated cosmos.base.v1beta1.Coin coins = 5 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  string owner = 6 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 }

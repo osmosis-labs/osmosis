@@ -22,17 +22,19 @@ func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddr
 
 	// Get lockups longer or equal to SuperfluidUnbondDuration
 	params := k.GetParams(ctx)
-	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom+unstakingSuffix(acc.ValAddr), params.UnbondingDuration)
+	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, unstakingSuffix(acc.Denom, acc.ValAddr), params.UnbondingDuration)
 	for _, lock := range locks {
+		/* XXX: not used. check later if safe to delete
 		// slashing only applies to synthetic lockup amount
 		synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSuffix(acc.ValAddr))
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
 			continue
 		}
+		*/
 
 		// Only single token lock is allowed here
-		slashAmt := synthLock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
+		slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
 		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err = k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
 			return err
@@ -52,7 +54,7 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 		// Get total delegation from synthetic lockups
 		queryCondition := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
-			Denom:         acc.Denom + stakingSuffix(acc.ValAddr),
+			Denom:         stakingSuffix(acc.Denom, acc.ValAddr),
 			Duration:      time.Hour * 24 * 14,
 		}
 
@@ -60,14 +62,17 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, queryCondition.Denom, queryCondition.Duration)
 		for _, lock := range locks {
 			// slashing only applies to synthetic lockup amount
-			synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSuffix(acc.ValAddr))
-			if err != nil {
-				k.Logger(ctx).Error(err.Error())
-				continue
-			}
+			// XXX: not used. check later if safe to delete
+			/*
+				synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSuffix(acc.ValAddr))
+				if err != nil {
+					k.Logger(ctx).Error(err.Error())
+					continue
+				}
+			*/
 
 			// Only single token lock is allowed here
-			slashAmt := synthLock.Coins[0].Amount.ToDec().Mul(fraction).TruncateInt()
+			slashAmt := lock.Coins[0].Amount.ToDec().Mul(fraction).TruncateInt()
 			osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 				_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
 				return err
