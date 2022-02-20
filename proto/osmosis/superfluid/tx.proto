@@ -45,6 +45,8 @@ message MsgSuperfluidUndelegateResponse {}
 // }
 // message MsgSuperfluidRedelegateResponse {}
 
+// MsgLockAndSuperfluidDelegate locks coins with the unbonding period duration,
+// and then does a superfluid lock from the newly created lockup, to the specified validator addr.
 message MsgLockAndSuperfluidDelegate {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated cosmos.base.v1beta1.Coin coins = 2 [
