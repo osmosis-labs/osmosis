@@ -8,7 +8,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -74,11 +73,11 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			//need to mint and delegate
 			adjustment := refreshedAmount.Sub(currentAmount)
 			coins := sdk.NewCoins(sdk.NewCoin(bondDenom, adjustment))
-			err = k.bk.MintCoins(ctx, minttypes.ModuleName, coins)
+			err = k.bk.MintCoins(ctx, types.ModuleName, coins)
 			if err != nil {
 				panic(err)
 			}
-			err = k.bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, mAddr, coins)
+			err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mAddr, coins)
 			if err != nil {
 				panic(err)
 			}
