@@ -98,6 +98,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			if err != nil {
 				panic(err)
 			}
+			// Move the surplus coins into a temporary superlfuid holding account that we can burn from.
 			err = k.bk.SendCoinsFromAccountToModule(ctx, mAddr, types.ModuleName, res)
 			if err != nil {
 				panic(err)
