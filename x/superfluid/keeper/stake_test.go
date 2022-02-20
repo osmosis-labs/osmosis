@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, de
 	})
 
 	// set OSMO TWAP price for LP token
-	suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, denom, sdk.NewDec(20))
+	suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 1, denom, sdk.NewDec(20))
 	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
 		Identifier:   params.RefreshEpochIdentifier,
@@ -691,7 +691,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			twapByDenom := make(map[string]sdk.Dec)
 			for _, twap := range tc.roundOneTwaps {
 				twapByDenom[twap.denom] = twap.price
-				suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 2, twap.denom, twap.price)
+				suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 2, twap.denom, twap.price)
 			}
 
 			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
@@ -753,7 +753,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				twap2ByDenom := make(map[string]sdk.Dec)
 				for _, twap := range tc.roundTwoTwaps {
 					twap2ByDenom[twap.denom] = twap.price
-					suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 3, twap.denom, twap.price)
+					suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 3, twap.denom, twap.price)
 				}
 				// refresh intermediary account delegations
 				suite.NotPanics(func() {

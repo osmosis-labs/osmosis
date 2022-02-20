@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
@@ -82,21 +81,9 @@ func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, slashFactor sdk.Dec) {
+func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
 	if slashFactor == sdk.ZeroDec() {
 		return
 	}
-	h.k.SlashLockupsForValidatorSlash(ctx, valAddr, slashFactor)
-}
-func (h Hooks) BeforeSlashingUnbondingDelegation(ctx sdk.Context, unbondingDelegation stakingtypes.UnbondingDelegation,
-	infractionHeight int64, slashFactor sdk.Dec) {
-	if slashFactor == sdk.ZeroDec() {
-		return
-	}
-	h.k.SlashLockupsForUnbondingDelegationSlash(ctx, unbondingDelegation.DelegatorAddress, unbondingDelegation.ValidatorAddress, slashFactor)
-}
-
-// Not used right now, as we don't allow superfluid redelegations
-func (h Hooks) BeforeSlashingRedelegation(ctx sdk.Context, srcValidator stakingtypes.Validator, redelegation stakingtypes.Redelegation,
-	infractionHeight int64, slashFactor sdk.Dec) {
+	h.k.SlashLockupsForValidatorSlash(ctx, valAddr, infractionHeight, slashFactor)
 }

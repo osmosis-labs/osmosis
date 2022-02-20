@@ -215,6 +215,9 @@ func (m *MsgSuperfluidUndelegateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSuperfluidUndelegateResponse proto.InternalMessageInfo
 
+// MsgLockAndSuperfluidDelegate locks coins with the unbonding period duration,
+// and then does a superfluid lock from the newly created lockup, to the
+// specified validator addr.
 type MsgLockAndSuperfluidDelegate struct {
 	Sender  string                                   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	Coins   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`

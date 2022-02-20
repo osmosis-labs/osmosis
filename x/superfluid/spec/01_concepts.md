@@ -31,4 +31,4 @@ It has state:
 * Intermediary Accounts
 * Dedicated Gauges
 * Synthetic Locks
-* Historical osmo equivalent twaps?
+* Historical osmo equivalent multipliers?

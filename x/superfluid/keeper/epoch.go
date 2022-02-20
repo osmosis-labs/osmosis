@@ -19,11 +19,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 		// Move delegation rewards to perpetual gauge
 		k.MoveSuperfluidDelegationRewardToGauges(ctx)
 
-		// Update all LP tokens TWAP's for the upcoming epoch.
+		// Update all LP tokens multipliers for the upcoming epoch.
 		// This affects staking reward distribution until the next epochs rewards.
 		// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			err := k.updateEpochTwap(ctx, asset, endedEpochNumber)
+			err := k.updateOsmoEquivalentMultipliers(ctx, asset, endedEpochNumber)
 			if err != nil {
 				// TODO: Revisit what we do here. (halt all distr, only skip this asset)
 				// Since at MVP of feature, we only have one pool of superfluid staking,
@@ -34,7 +34,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 		}
 
 		// Refresh intermediary accounts' delegation amounts,
-		// making staking rewards follow the updated TWAP numbers.
+		// making staking rewards follow the updated multiplier numbers.
 		k.RefreshIntermediaryDelegationAmounts(ctx)
 	}
 }
@@ -66,7 +66,7 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, endedEpochNumber int64) error {
+func (k Keeper) updateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, endedEpochNumber int64) error {
 	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
@@ -90,11 +90,11 @@ func (k Keeper) updateEpochTwap(ctx sdk.Context, asset types.SuperfluidAsset, en
 
 		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
 		beginningEpochNumber := endedEpochNumber + 1
-		k.SetEpochOsmoEquivalentTWAP(ctx, beginningEpochNumber, asset.Denom, twap)
+		k.SetOsmoEquivalentMultiplier(ctx, beginningEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
 		k.Logger(ctx).Error("unsupported superfluid asset type")
-		return errors.New("SuperfluidAssetTypeNative is unspported")
+		return errors.New("SuperfluidAssetTypeNative is unsupported")
 	}
 	return nil
 }
