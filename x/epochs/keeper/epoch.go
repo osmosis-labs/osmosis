@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
@@ -68,4 +70,16 @@ func (k Keeper) AllEpochInfos(ctx sdk.Context) []types.EpochInfo {
 		return false
 	})
 	return epochs
+}
+
+// NumBlocksSinceEpochStart returns the number of blocks since the epoch started.
+// if the epoch started on block N, then calling this during block N (after BeforeEpochStart)
+// would return 0.
+// Calling it any point in block N+1 (assuming the epoch doesn't increment) would return 1.
+func (k Keeper) NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (int64, error) {
+	epoch := k.GetEpochInfo(ctx, identifier)
+	if (epoch == types.EpochInfo{}) {
+		return 0, fmt.Errorf("epoch with identifier %s not found", identifier)
+	}
+	return ctx.BlockHeight() - epoch.CurrentEpochStartHeight, nil
 }
