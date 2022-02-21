@@ -112,5 +112,82 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 			)))
 		}
 	}
+}
 
+func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
+	suite.SetupTest()
+
+	poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+	suite.Require().Equal(poolId, uint64(1))
+
+	// Generate delegator addresses
+	delAddrs := CreateRandomAccounts(2)
+
+	// setup 2 validators
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+
+	denoms := []string{"gamm/pool/1", "gamm/pool/2"}
+
+	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
+	superfluidDelegations := []superfluidDelegation{
+		{0, 0, denoms[0], 1000000},
+		{0, 0, denoms[1], 1000000},
+
+		{0, 1, denoms[0], 1000000},
+		{0, 1, denoms[1], 1000000},
+
+		{1, 0, denoms[0], 1000000},
+		{1, 0, denoms[1], 1000000},
+
+		{1, 1, denoms[0], 1000000},
+		{1, 1, denoms[1], 1000000},
+	}
+
+	// setup superfluid delegations
+	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations)
+
+	// start unbonding the superfluid delegations of denom0 from delegator0 to validator0
+	err := suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, locks[0].Owner, locks[0].ID)
+	suite.Require().NoError(err)
+
+	// query to make sure that the amount delegated for the now unbonding delegation is 0
+	res, err := suite.queryClient.SuperfluidDelegationAmount(sdk.WrapSDKContext(suite.ctx), &types.SuperfluidDelegationAmountRequest{
+		DelegatorAddress: delAddrs[0].String(),
+		ValidatorAddress: valAddrs[0].String(),
+		Denom:            denoms[0],
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.Amount.AmountOf(denoms[0]).Int64(), int64(0))
+
+	// query to make sure that the unbonding delegation is not included in delegator query
+	res2, err := suite.queryClient.SuperfluidDelegationsByDelegator(sdk.WrapSDKContext(suite.ctx), &types.SuperfluidDelegationsByDelegatorRequest{
+		DelegatorAddress: delAddrs[0].String(),
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(res2.SuperfluidDelegationRecords, 3)
+	suite.Require().True(res2.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+		sdk.NewInt64Coin("gamm/pool/1", 1000000),
+		sdk.NewInt64Coin("gamm/pool/2", 2000000),
+	)))
+
+	// query to make sure that the unbonding delegation is not included in the validator denom pair query
+	amountRes, err := suite.queryClient.SuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(suite.ctx), &types.SuperfluidDelegatedAmountByValidatorDenomRequest{
+		ValidatorAddress: valAddrs[0].String(),
+		Denom:            denoms[0],
+	})
+
+	suite.Require().NoError(err)
+	suite.Require().True(amountRes.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+		sdk.NewInt64Coin(denoms[0], 1000000),
+	)))
+
+	delegationsRes, err := suite.queryClient.SuperfluidDelegationsByValidatorDenom(sdk.WrapSDKContext(suite.ctx), &types.SuperfluidDelegationsByValidatorDenomRequest{
+		ValidatorAddress: valAddrs[0].String(),
+		Denom:            denoms[0],
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(delegationsRes.SuperfluidDelegationRecords, 1)
+	suite.Require().True(delegationsRes.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+		sdk.NewInt64Coin(denoms[0], 1000000),
+	)))
 }
