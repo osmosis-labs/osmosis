@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -508,6 +507,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		// undelegation needs to happen prior to SuperfluidUnbondLock
 		err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lock.ID)
 		suite.Require().NoError(err)
+		balance := suite.app.BankKeeper.GetBalance(suite.ctx, lock.OwnerAddress(), "gamm/pool/1")
+		suite.Require().Equal(balance.Amount, sdk.NewInt(0))
 
 		// check that unbonding synth has been created correctly after undelegation
 		unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
@@ -529,6 +530,9 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		updatedLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 		suite.Require().NoError(err)
 		suite.Require().True(updatedLock.IsUnlocking())
+		// check if finsihed unlocking synth lock did not increase balance
+		balance = suite.app.BankKeeper.GetBalance(suite.ctx, lock.OwnerAddress(), "gamm/pool/1")
+		suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
 		// test that synth lock finish does not mean underlying lock is finished
 		suite.ctx = suite.ctx.WithBlockTime((startTime.Add(unbondingDuration)))
@@ -543,10 +547,12 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		// test after SuperfluidUnbondLock + lockup unbonding duration, lock is finished and does not exist
 		suite.ctx = suite.ctx.WithBlockTime(unbondLockStartTime.Add(unbondingDuration))
 		suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
-		updatedLock, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
-		fmt.Println(updatedLock)
+		_, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 		suite.Require().Error(err)
 
+		// check if finsihed unlocking succesfully increased balance
+		balance = suite.app.BankKeeper.GetBalance(suite.ctx, lock.OwnerAddress(), "gamm/pool/1")
+		suite.Require().Equal(sdk.NewInt(1000000), balance.Amount)
 	}
 }
 
