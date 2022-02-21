@@ -39,6 +39,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v6.4.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.4.0)
+
+## Minor improvements & Bug Fixes
+
+-[#907](https://github.com/osmosis-labs/osmosis/pull/907) Upgrade IAVL and SDK with RAM improvements and bug fixes for v6.4.0
+
+### SDK fork updates
+
+- [sdk-#114](https://github.com/osmosis-labs/cosmos-sdk/pull/114) upgrading iavl with ram optimizations during migration, and extra logs and fixes for "version X was already saved to a different hash" and "insufficient funds" bugs
+
+### IAVL fork updates
+
+- [iavl-19](https://github.com/osmosis-labs/iavl/pull/19) force GC, no cache during migration, auto heap profile
+
+## [v6.3.1](https://github.com/osmosis-labs/osmosis/releases/tag/v6.3.1)
+- [#859](https://github.com/osmosis-labs/osmosis/pull/859) CLI, update default durations to be in better units.
+- [#Unknown](https://github.com/osmosis-labs/osmosis/commit/3bf63f1d3b7efee503106a008e84129489bdba8d) Switch to SDK branch with vesting by duration
+
+## Minor improvements & Bug Fixes
+
+- [#795](https://github.com/osmosis-labs/osmosis/pull/795) Annotate app.go
+- [#791](https://github.com/osmosis-labs/osmosis/pull/791) Change to dependabot config to only upgrade patch version of tendermint
+- [#766](https://github.com/osmosis-labs/osmosis/pull/766) Consolidate code between InitGenesis and CreateGauge
+
 ## [v6.3.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.3.0)
 
 ## Features
