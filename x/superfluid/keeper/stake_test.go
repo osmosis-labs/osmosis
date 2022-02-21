@@ -508,7 +508,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lock.ID)
 		suite.Require().NoError(err)
 		balance := suite.app.BankKeeper.GetBalance(suite.ctx, lock.OwnerAddress(), "gamm/pool/1")
-		suite.Require().Equal(balance.Amount, sdk.NewInt(0))
+		suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
 		// check that unbonding synth has been created correctly after undelegation
 		unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
