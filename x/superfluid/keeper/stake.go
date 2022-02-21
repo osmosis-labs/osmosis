@@ -170,15 +170,6 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 	lockedCoin := lock.Coins[0]
-	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
-
-	// Register a synthetic lockup for superfluid staking
-	synthdenom := stakingSuffix(lockedCoin.Denom, valAddr)
-	notUnlocking := false
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, synthdenom, unbondingDuration, notUnlocking)
-	if err != nil {
-		return err
-	}
 
 	// get the intermediate account for this (denom, validator) pair.
 	// This account tracks the amount of osmo being considered as staked.
@@ -189,6 +180,12 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	}
 	// create connection record between lock id and intermediary account
 	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
+
+	// Register a synthetic lockup for superfluid staking
+	err = k.createSyntheticLockup(ctx, lockID, acc, bondedStatus)
+	if err != nil {
+		return err
+	}
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
@@ -238,9 +235,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	}
 
 	// Create a new synthetic lockup representing the unstaking side.
-	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
-	synthdenom = unstakingSuffix(lockedCoin.Denom, intermediaryAcc.ValAddr)
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, synthdenom, unbondingDuration, true)
+	err = k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
 	if err != nil {
 		return err
 	}

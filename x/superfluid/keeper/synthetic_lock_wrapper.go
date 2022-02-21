@@ -5,14 +5,23 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-type bondingStatus int64
+type lockingStatus int64
 
 const (
-	Unbonding bondingStatus = iota
-	Bonded
+	unlockingStatus lockingStatus = iota
+	bondedStatus
 )
 
 func (k Keeper) createSyntheticLockup(ctx sdk.Context,
-	underlyingLockId uint64, intemediateAccount types.SuperfluidIntermediaryAccount, bond bondingStatus) {
-
+	underlyingLockId uint64, intermediateAcc types.SuperfluidIntermediaryAccount, lockingStat lockingStatus) error {
+	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
+	if lockingStat == unlockingStatus {
+		isUnlocking := true
+		synthdenom := unstakingSuffix(intermediateAcc.Denom, intermediateAcc.ValAddr)
+		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unbondingDuration, isUnlocking)
+	} else {
+		notUnlocking := false
+		synthdenom := stakingSuffix(intermediateAcc.Denom, intermediateAcc.ValAddr)
+		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unbondingDuration, notUnlocking)
+	}
 }
