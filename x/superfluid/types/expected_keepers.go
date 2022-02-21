@@ -80,4 +80,5 @@ type IncentivesKeeper interface {
 
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+	NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (int64, error)
 }

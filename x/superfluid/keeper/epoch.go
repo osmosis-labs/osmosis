@@ -42,6 +42,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 	}
 }
 
+func (k Keeper) BlockAfterEpoch(ctx sdk.Context) {
+
+}
+
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
