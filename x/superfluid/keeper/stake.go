@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -16,17 +15,6 @@ func stakingSuffix(valAddr string) string {
 
 func unstakingSuffix(valAddr string) string {
 	return fmt.Sprintf("superunbonding%s", valAddr)
-}
-
-func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
-	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
-	if multiplier.IsZero() {
-		return sdk.ZeroInt()
-	}
-
-	decAmt := multiplier.Mul(amount.ToDec())
-	asset := k.GetSuperfluidAsset(ctx, denom)
-	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 }
 
 func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk.Int {
@@ -152,9 +140,8 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 		return types.ErrUnbondingLockupNotSupported
 	}
 
-	// length check
-	params := k.GetParams(ctx)
-	if lock.Duration < params.UnbondingDuration { // if less than bonding, skip
+	// ensure that lock duration >= staking.UnbondingTime
+	if lock.Duration < k.sk.GetParams(ctx).UnbondingTime {
 		return types.ErrNotEnoughLockupDuration
 	}
 
@@ -193,8 +180,6 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 
-	params := k.GetParams(ctx)
-
 	err = k.validateLockForSFDelegate(ctx, lock, sender)
 	if err != nil {
 		return err
@@ -204,31 +189,18 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 
-	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
-	if !intermediaryAccAddr.Empty() {
+	// This guarantees this lockID does not already have a superfluid stake position
+	// associated with it.
+	// Thus when we stake now, this will be the only superfluid position for this lockID.
+	if k.alreadySuperfluidStaking(ctx, lockID) {
 		return types.ErrAlreadyUsedSuperfluidLockup
 	}
 
-	// A lock ID can only have one of three associated superfluid states:
-	// 1) Not superfluid'd
-	// 2) Superfluid bonded to a single validator
-	// 3) Superfluid unbonding from a single validator.
-	// If we are in case (2), ensure this is to the same validator.
-	//   - TODO: CODE
-	// If we are in case (3), disable this delegation.
-	// We can wrap (2) and (3) into one check, by checking if we have any synthetic lockups on this ID.
-	// and make it more precise later.
-	suffix := unstakingSuffix(valAddr)
-	_, err = k.lk.GetSyntheticLockup(ctx, lockID, suffix)
-	// throws an error if synthetic lock exists.
-	if err == nil {
-		return types.ErrUnbondingSyntheticLockupExists
-	}
-
 	// Register a synthetic lockup for superfluid staking
-	suffix = stakingSuffix(valAddr)
+	suffix := stakingSuffix(valAddr)
 	notUnlocking := false
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, notUnlocking)
+	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, unbondingDuration, notUnlocking)
 	if err != nil {
 		return err
 	}
@@ -240,19 +212,12 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	if err != nil {
 		return err
 	}
-	mAddr := acc.GetAccAddress()
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
 	amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lock.Coins.AmountOf(acc.Denom))
 	if amount.IsZero() {
 		return types.ErrOsmoEquivalentZeroNotAllowed
-	}
-
-	// TODO: @Dev added this hasAccount gating, think through if theres an edge case that makes it not right
-	if !k.ak.HasAccount(ctx, mAddr) {
-		// TODO: Why is this a base account, not a module account?
-		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(mAddr, nil, 0, 0))
 	}
 
 	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc, validator)
@@ -310,19 +275,35 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 		return err
 	}
 
-	params := k.GetParams(ctx)
+	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
 	suffix = unstakingSuffix(intermediaryAcc.ValAddr)
 
 	// Note: bonding synthetic lockup amount is always same as native lockup amount in current implementation.
 	// If there's the case, it's different, we should create synthetic lockup at deleted bonding
 	// synthetic lockup amount
-	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, params.UnbondingDuration, true)
+	err = k.lk.CreateSyntheticLockup(ctx, lockID, suffix, unbondingDuration, true)
 	if err != nil {
 		return err
 	}
 
 	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
 	return nil
+}
+
+func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
+	// We need to catch two cases:
+	// (1) lockID has another superfluid bond
+	// (2) lockID has a superfluid unbonding
+	// we check (1) by looking for presence of an intermediary account lock ID connection
+	// we check (2) (and re-check 1 for suredness) by looking for the existence of
+	// synthetic locks for this.
+	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	if !intermediaryAccAddr.Empty() {
+		return true
+	}
+
+	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, lockID)
+	return len(synthLocks) > 0
 }
 
 // mint osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account
@@ -371,22 +352,6 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
 	return err
 }
-
-// func (k Keeper) SuperfluidRedelegate(ctx sdk.Context, sender string, lockID uint64, newValAddr string) error {
-// 	// Note: we prevent circular redelegations since when unbonding lockup is available from a specific validator,
-// 	// not able to redelegate or undelegate again, especially the case for automatic undelegation when native lockup unlock
-
-// 	valAddr, err := k.SuperfluidUndelegate(ctx, sender, lockID)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if valAddr.String() == newValAddr {
-// 		return types.ErrSameValidatorRedelegation
-// 	}
-
-// 	return k.SuperfluidDelegate(ctx, sender, lockID, newValAddr)
-// }
 
 // TODO: Need to (eventually) override the existing staking messages and queries, for undelegating, delegating, rewards, and redelegating, to all be going through all superfluid module.
 // Want integrators to be able to use the same staking queries and messages

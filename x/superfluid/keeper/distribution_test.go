@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// setup superfluid delegations
 			suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
-			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+			unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
 					Denom:         gaugeCheck.lpDenom + keeper.StakingSuffix(valAddrs[gaugeCheck.valIndex].String()),
-					Duration:      params.UnbondingDuration,
+					Duration:      unbondingDuration,
 				})
 				if gaugeCheck.rewarded {
 					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())

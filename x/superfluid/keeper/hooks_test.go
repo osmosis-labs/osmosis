@@ -194,12 +194,12 @@ func (suite *KeeperTestSuite) TestOnStartUnlock() {
 				suite.Require().Error(err)
 
 				// check unbonding synthetic lockup creation
-				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+				unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
 				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.UnstakingSuffix(valAddr))
 				suite.Require().NoError(err)
 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
 				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddr))
-				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(params.UnbondingDuration))
+				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(unbondingDuration))
 			}
 		})
 	}
