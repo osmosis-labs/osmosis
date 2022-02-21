@@ -72,7 +72,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			// and then burn that excessly delegated bits.
 			adjustment := currentAmount.Sub(refreshedAmount)
 
-			err := k.forceUndelegateAndBurnOsmoTokens(ctx, adjustment, acc, valAddress)
+			err := k.forceUndelegateAndBurnOsmoTokens(ctx, adjustment, acc)
 			if err != nil {
 				// TODO: We can't panic here. We can err-wrap though.
 				panic(err)
@@ -236,14 +236,9 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 		return err
 	}
 
-	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
-	if err != nil {
-		return err
-	}
-
 	// use lockup coins for unbonding
 	amount := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
-	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc, valAddr)
+	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc)
 	if err != nil {
 		return err
 	}
@@ -303,7 +298,12 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 // force undelegate osmoAmount worth of delegation shares from delegations between intermediary account and valAddr
 // We take the returned tokens, and then immediately burn them.
 func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
-	osmoAmount sdk.Int, intermediaryAcc types.SuperfluidIntermediaryAccount, valAddr sdk.ValAddress) error {
+	osmoAmount sdk.Int, intermediaryAcc types.SuperfluidIntermediaryAccount) error {
+	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
+	// Every intermediary account should have a valid ValAddress.
+	if err != nil {
+		return err
+	}
 	// TODO: Better understand and decide between ValidateUnbondAmount and SharesFromTokens
 	// briefly looked into it, did not understand whats correct.
 	// TODO: ensure that intermediate account has at least osmoAmount staked.
