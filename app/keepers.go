@@ -1,12 +1,8 @@
 package app
 
 import (
-	"fmt"
-	"path/filepath"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -113,8 +109,8 @@ func (app *OsmosisApp) InitSpecialKeepers(
 
 // Note: I put x/wasm here as I need to write it up to these other ones
 func (app *OsmosisApp) InitNormalKeepers(
-	homePath string,
-	appOpts servertypes.AppOptions,
+	wasmDir string,
+	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 ) {
@@ -270,12 +266,6 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.GAMMKeeper,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
-
-	wasmDir := filepath.Join(homePath, "wasm")
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
-	if err != nil {
-		panic(fmt.Sprintf("error while reading wasm config: %s", err))
-	}
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
