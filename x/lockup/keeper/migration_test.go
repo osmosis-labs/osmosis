@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 )
 
-func (suite *KeeperTestSuite) TestLockupMergreMigration() {
+func (suite *KeeperTestSuite) TestLockupMergeMigration() {
 	suite.SetupTest()
 
 	m := make(map[string]int64)

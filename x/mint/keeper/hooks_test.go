@@ -47,6 +47,11 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
 		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
+
+		// get pre-epoch osmo supply and supplyWithOffset
+		presupply := app.BankKeeper.GetSupply(ctx, mintParams.MintDenom)
+		presupplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, mintParams.MintDenom)
+
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
@@ -54,6 +59,13 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
 		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking).Amount
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
+
+		// ensure post-epoch supply with offset changed by exactly the minted coins amount
+		// ensure post-epoch supply with offset changed by less than the minted coins amount (because of developer vesting account)
+		postsupply := app.BankKeeper.GetSupply(ctx, mintParams.MintDenom)
+		postsupplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, mintParams.MintDenom)
+		require.False(t, postsupply.IsEqual(presupply.Add(mintedCoin)))
+		require.True(t, postsupplyWithOffset.IsEqual(presupplyWithOffset.Add(mintedCoin)))
 
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
