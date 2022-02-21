@@ -103,15 +103,22 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 	return nil
 }
 
-func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
+// basic validation for locks, that sender is correct, and that the lock length is correct.
+func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
 	if lock.Owner != sender {
 		return lockuptypes.ErrNotLockOwner
 	}
-
 	if lock.Coins.Len() != 1 {
 		return types.ErrMultipleCoinsLockupNotSupported
 	}
+	return nil
+}
 
+func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
+	err := k.validateLockForSF(ctx, lock, sender)
+	if err != nil {
+		return err
+	}
 	defaultSuperfluidAsset := types.SuperfluidAsset{}
 	if k.GetSuperfluidAsset(ctx, lock.Coins[0].Denom) == defaultSuperfluidAsset {
 		return types.ErrAttemptingToSuperfluidNonSuperfluidAsset
@@ -203,45 +210,41 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	if err != nil {
 		return err
 	}
-	if lock.Owner != sender {
-		return lockuptypes.ErrNotLockOwner
-	}
-	lockedCoin, err := lock.SingleCoin()
+	err = k.validateLockForSF(ctx, lock, sender)
 	if err != nil {
 		return err
 	}
+	lockedCoin := lock.Coins[0]
 
+	// get the intermediate acct asscd. with lock id, and delete the connection.
 	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
 	if !found {
 		return types.ErrNotSuperfluidUsedLockup
 	}
+	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
 
+	// Delete the old synthetic lockup, and create a new synthetic lockup representing the unstaking
 	synthdenom := stakingSuffix(lockedCoin.Denom, intermediaryAcc.ValAddr)
-
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {
 		return err
 	}
 
-	// use lockup coins for unbonding
+	// undelegate this lock's delegation amount, and burn the minted osmo.
 	amount := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
 	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc)
 	if err != nil {
 		return err
 	}
 
+	// Create a new synthetic lockup representing the unstaking side.
 	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
 	synthdenom = unstakingSuffix(lockedCoin.Denom, intermediaryAcc.ValAddr)
-
-	// Note: bonding synthetic lockup amount is always same as native lockup amount in current implementation.
-	// If there's the case, it's different, we should create synthetic lockup at deleted bonding
-	// synthetic lockup amount
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, synthdenom, unbondingDuration, true)
 	if err != nil {
 		return err
 	}
 
-	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
 	return nil
 }
 
