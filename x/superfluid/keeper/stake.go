@@ -2,32 +2,12 @@ package keeper
 
 import (
 	"fmt"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
-
-func stakingSyntheticDenom(denom, valAddr string) string {
-	return fmt.Sprintf("%s/superbonding/%s", denom, valAddr)
-}
-
-func unstakingSyntheticDenom(denom, valAddr string) string {
-	return fmt.Sprintf("%s/superunbonding/%s", denom, valAddr)
-}
-
-// quick fix for getting the validator addresss from a synthetic denom
-func ValidatorAddressFromSuffix(suffix string) (string, error) {
-	if strings.Contains(suffix, "superbonding") {
-		return strings.TrimLeft(suffix, "superbonding"), nil
-	}
-	if strings.Contains(suffix, "superunbonding") {
-		return strings.TrimLeft(suffix, "superunbonding"), nil
-	}
-	return "", fmt.Errorf("%s is not a valid synthetic denom suffix", suffix)
-}
 
 func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk.Int {
 	return k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
@@ -206,12 +186,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
 }
 
 func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
@@ -247,12 +222,26 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	}
 
 	// Create a new synthetic lockup representing the unstaking side.
-	err = k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
+	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
+}
+
+func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
+	lock, err := k.lk.GetLockByID(ctx, underlyingLockId)
 	if err != nil {
 		return err
 	}
-
-	return nil
+	err = k.validateLockForSF(ctx, lock, sender)
+	if err != nil {
+		return err
+	}
+	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, underlyingLockId)
+	if len(synthLocks) != 1 {
+		return types.ErrNotSuperfluidUsedLockup
+	}
+	if !synthLocks[0].IsUnlocking() {
+		return types.ErrBondingLockupNotSupported
+	}
+	return k.lk.BeginUnlock(ctx, *lock, sdk.Coins{})
 }
 
 func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {

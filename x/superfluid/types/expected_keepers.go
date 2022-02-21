@@ -20,6 +20,7 @@ type LockupKeeper interface {
 	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock
 	GetPeriodLocks(ctx sdk.Context) ([]lockuptypes.PeriodLock, error)
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
+	BeginUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock, coins sdk.Coins) error
 
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
 
