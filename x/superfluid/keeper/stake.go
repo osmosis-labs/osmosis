@@ -282,20 +282,20 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 		return err
 	}
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		bondDenom := k.sk.BondDenom(ctx)
+		bondDenom := k.sk.BondDenom(cacheCtx)
 		coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
-		err = k.bk.MintCoins(ctx, types.ModuleName, coins)
+		err = k.bk.MintCoins(cacheCtx, types.ModuleName, coins)
 		if err != nil {
 			return err
 		}
-		err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
+		err = k.bk.SendCoinsFromModuleToAccount(cacheCtx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
 		if err != nil {
 			return err
 		}
 
 		// make delegation from module account to the validator
 		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
-		_, err = k.sk.Delegate(ctx,
+		_, err = k.sk.Delegate(cacheCtx,
 			intermediaryAccount.GetAccAddress(),
 			osmoAmount, stakingtypes.Unbonded, validator, true)
 		return err
@@ -323,16 +323,16 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		return err
 	}
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		undelegatedCoins, err := k.sk.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
+		undelegatedCoins, err := k.sk.InstantUndelegate(cacheCtx, intermediaryAcc.GetAccAddress(), valAddr, shares)
 		if err != nil {
 			return err
 		}
 		// TODO: Should we compare undelegatedCoins vs osmoAmount?
-		err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
+		err = k.bk.SendCoinsFromAccountToModule(cacheCtx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
 		if err != nil {
 			return err
 		}
-		err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
+		err = k.bk.BurnCoins(cacheCtx, types.ModuleName, undelegatedCoins)
 		return err
 	})
 	return err

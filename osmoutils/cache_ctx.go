@@ -14,10 +14,9 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) error {
 	err := f(cacheCtx)
 	if err != nil {
 		ctx.Logger().Error(err.Error())
-		return err
 	} else {
 		// no error, write the output of f
 		write()
-		return nil
 	}
+	return err
 }
