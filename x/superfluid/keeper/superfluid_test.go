@@ -1,16 +1,18 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // TODO: add more test cases
@@ -53,7 +55,12 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			}
 			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochInfo)
 
-			epochs.BeginBlocker(suite.ctx, *suite.app.EpochsKeeper)
+			// epochs.BeginBlocker(suite.ctx, *suite.app.EpochsKeeper)
+			header := tmproto.Header{
+				Height: suite.ctx.BlockHeight(),
+				Time:   suite.ctx.BlockTime(),
+			}
+			suite.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
 			suite.Require().Equal(poolId, uint64(1))
@@ -83,7 +90,7 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 				AssetType: types.SuperfluidAssetTypeLPShare,
 			})
 
-			suite.app.SuperfluidKeeper.SetEpochOsmoEquivalentTWAP(suite.ctx, 1, tc.superDelegation.lpDenom, sdk.NewDec(20))
+			suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 1, tc.superDelegation.lpDenom, sdk.NewDec(20))
 			// create lockup of LP token
 			addr1 := sdk.AccAddress([]byte("addr1---------------"))
 			coins := sdk.Coins{sdk.NewInt64Coin(tc.superDelegation.lpDenom, 1000000)}
@@ -156,14 +163,28 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			// allocate 20_000 stake to rewards to validators,
 			// this is done manually per testing environment, should be automatically happening
 			suite.allocateRewardsToValidator(valAddrs[0])
-			totalReward = suite.app.DistrKeeper.GetTotalRewards(suite.ctx)
 
-			// now we test if `AfterEpochEnd` shpws normal behaviour
+			// now we test if `AfterEpochEnd` shows normal behaviour
 			// we first trigger AfterEpochEnd by incrementing block height and time
+			// AfterEpochEnd should be triggering distribution of staking rewards to sf created gauges.
+			suite.app.EndBlock(abci.RequestEndBlock{Height: suite.ctx.BlockHeight()})
+			suite.app.Commit()
 			suite.ctx = suite.ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Hour * 25))
-			epochs.BeginBlocker(suite.ctx, *suite.app.EpochsKeeper)
+			header = tmproto.Header{
+				Height: suite.ctx.BlockHeight(),
+				Time:   now.Add(time.Hour * 25),
+			}
+			suite.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+			balance := suite.app.BankKeeper.GetBalance(suite.ctx, addr1, "stake")
+			fmt.Println(balance)
+			balance1 := suite.app.BankKeeper.GetBalance(suite.ctx, intAcc, "stake")
+			fmt.Println(balance1)
+
+
+
 
 			gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
+			fmt.Println(gauge)
 			suite.Require().NoError(err)
 			suite.Require().Equal(gauge.Id, gotAcc.GaugeId)
 			suite.Require().Equal(gauge.IsPerpetual, true)
@@ -173,10 +194,29 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 				Duration:      params.UnbondingDuration,
 			})
 
+			// // check if staking rewards has been passed to gauges
+			// distributedReward := gauge.Coins.AmountOf(sdk.DefaultBondDenom)
+			// // 190_00 = 95% x 20_000
+			// suite.Require().Equal(sdk.NewInt(19_000), distributedReward)
+
+			suite.app.EndBlock(abci.RequestEndBlock{Height: suite.ctx.BlockHeight()})
+			suite.app.Commit()
+			suite.ctx = suite.ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 25 * 2))
+			header = tmproto.Header{
+				Height: suite.ctx.BlockHeight(),
+				Time:   now.Add(time.Hour * 25 * 2),
+			}
+			suite.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+			totalReward = suite.app.DistrKeeper.GetTotalRewards(suite.ctx)
+			fmt.Println(totalReward)
+
+			gauge, _ = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
 			// check if staking rewards has been passed to gauges
 			distributedReward := gauge.Coins.AmountOf(sdk.DefaultBondDenom)
-			// // 190_00 = 95% x 20_000
+			// 190_00 = 95% x 20_000
 			suite.Require().Equal(sdk.NewInt(19_000), distributedReward)
+
 		})
 	}
 }
