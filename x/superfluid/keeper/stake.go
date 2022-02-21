@@ -17,17 +17,6 @@ func unstakingSuffix(valAddr string) string {
 	return fmt.Sprintf("superunbonding%s", valAddr)
 }
 
-func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
-	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
-	if multiplier.IsZero() {
-		return sdk.ZeroInt()
-	}
-
-	decAmt := multiplier.Mul(amount.ToDec())
-	asset := k.GetSuperfluidAsset(ctx, denom)
-	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
-}
-
 func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk.Int {
 	return k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,

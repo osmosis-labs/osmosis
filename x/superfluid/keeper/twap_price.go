@@ -31,6 +31,17 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
+func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
+	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
+	if multiplier.IsZero() {
+		return sdk.ZeroInt()
+	}
+
+	decAmt := multiplier.Mul(amount.ToDec())
+	asset := k.GetSuperfluidAsset(ctx, denom)
+	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
+}
+
 func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
