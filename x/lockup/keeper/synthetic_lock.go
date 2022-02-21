@@ -117,20 +117,19 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 		return err
 	}
 
+	endTime := time.Time{}
 	if isUnlocking { // end time is set automatically if it's unlocking lockup
 		if unlockDuration > lock.Duration {
 			return types.ErrSyntheticDurationLongerThanNative
 		}
-		lock.EndTime = ctx.BlockTime().Add(unlockDuration)
-	} else {
-		lock.EndTime = time.Time{}
+		endTime = ctx.BlockTime().Add(unlockDuration)
 	}
 
 	// set synthetic lockup object
 	synthLock := types.SyntheticLock{
 		UnderlyingLockId: lockID,
 		SynthDenom:       synthDenom,
-		EndTime:          lock.EndTime,
+		EndTime:          endTime,
 		Duration:         unlockDuration,
 	}
 	err = k.setSyntheticLockupObject(ctx, &synthLock)
@@ -151,7 +150,7 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 		return err
 	}
 
-	k.accumulationStore(ctx, synthLock.SynthDenom).Increase(accumulationKey(lock.Duration), coin.Amount)
+	k.accumulationStore(ctx, synthLock.SynthDenom).Increase(accumulationKey(unlockDuration), coin.Amount)
 	return nil
 }
 
