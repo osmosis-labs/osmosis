@@ -4,13 +4,21 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetSuperfluidAssetsProposal) error {
+func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
-		k.SetSuperfluidAsset(ctx, asset)
+		// initialize osmo equivalent multipliers
+		epochIdentifier := k.GetParams(ctx).RefreshEpochIdentifier
+		currentEpoch := ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
+		osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+			k.SetSuperfluidAsset(ctx, asset)
+			err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, currentEpoch)
+			return err
+		})
 		event := sdk.NewEvent(
 			types.TypeEvtSetSuperfluidAsset,
 			sdk.NewAttribute(types.AttributeDenom, asset.Denom),
