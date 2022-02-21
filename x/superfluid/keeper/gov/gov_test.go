@@ -14,13 +14,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
-	// pools, err := suite.app.GAMMKeeper.GetPools(suite.ctx)
-	// suite.Require().NoError(err)
-
-	// for _, pool := range pools {
-	// 	suite.app.GAMMKeeper.DeletePool(suite.ctx, pool.GetId())
-	// }
-
 	coins := suite.app.GAMMKeeper.GetParams(suite.ctx).PoolCreationFee
 	poolAssets := []gammtypes.PoolAsset{}
 	for _, denom := range denoms {

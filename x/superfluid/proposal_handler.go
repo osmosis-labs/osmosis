@@ -5,14 +5,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
-
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper/gov"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func NewSuperfluidProposalHandler(k keeper.Keeper, ek epochskeeper.Keeper) govtypes.Handler {
+func NewSuperfluidProposalHandler(k keeper.Keeper, ek types.EpochKeeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *types.SetSuperfluidAssetsProposal:
@@ -26,7 +24,7 @@ func NewSuperfluidProposalHandler(k keeper.Keeper, ek epochskeeper.Keeper) govty
 	}
 }
 
-func handleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek epochskeeper.Keeper, p *types.SetSuperfluidAssetsProposal) error {
+func handleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	return gov.HandleSetSuperfluidAssetsProposal(ctx, k, ek, p)
 }
 

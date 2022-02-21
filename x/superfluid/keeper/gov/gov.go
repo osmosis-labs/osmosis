@@ -3,14 +3,12 @@ package gov
 import (
 	"fmt"
 
-	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek epochskeeper.Keeper, p *types.SetSuperfluidAssetsProposal) error {
+func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
 		k.SetSuperfluidAsset(ctx, asset)
 
