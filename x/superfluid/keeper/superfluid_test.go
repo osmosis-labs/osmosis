@@ -17,6 +17,24 @@ import (
 
 var defaultLpShare string = "gamm/pool/1"
 
+func resetEpochs(suite *KeeperTestSuite) {
+	// run initial setup for epoch, starting with deleting old epoch information
+	epochInfos := suite.app.EpochsKeeper.AllEpochInfos(suite.ctx)
+	for _, epochInfo := range epochInfos {
+		suite.app.EpochsKeeper.DeleteEpochInfo(suite.ctx, epochInfo.Identifier)
+	}
+
+	epochInfo := epochstypes.EpochInfo{
+		Identifier:            "day",
+		StartTime:             suite.ctx.BlockTime(),
+		Duration:              time.Hour * 24,
+		CurrentEpoch:          0,
+		CurrentEpochStartTime: time.Time{},
+		EpochCountingStarted:  false,
+	}
+	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochInfo)
+}
+
 // TODO: add more test cases
 func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 	testCases := []struct {
@@ -41,21 +59,7 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			// we set suite.ctx so that other suite methods are ran in the correct block height and block time
 			now := time.Now()
 			suite.ctx = suite.ctx.WithBlockHeight(1).WithBlockTime(now)
-			// run initial setup for epoch, starting with deleting old epoch information
-			epochInfos := suite.app.EpochsKeeper.AllEpochInfos(suite.ctx)
-			for _, epochInfo := range epochInfos {
-				suite.app.EpochsKeeper.DeleteEpochInfo(suite.ctx, epochInfo.Identifier)
-			}
-
-			epochInfo := epochstypes.EpochInfo{
-				Identifier:            "day",
-				StartTime:             suite.ctx.BlockTime(),
-				Duration:              time.Hour * 24,
-				CurrentEpoch:          0,
-				CurrentEpochStartTime: time.Time{},
-				EpochCountingStarted:  false,
-			}
-			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochInfo)
+			resetEpochs(suite)
 
 			header := tmproto.Header{
 				Height: suite.ctx.BlockHeight(),
