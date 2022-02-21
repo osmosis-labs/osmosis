@@ -61,7 +61,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		if refreshedAmount.GT(currentAmount) {
 			//need to mint and delegate
 			adjustment := refreshedAmount.Sub(currentAmount)
-			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc, validator)
+			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
 				panic(err)
 			}
@@ -89,18 +89,13 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 		return nil
 	}
 
-	validator, err := k.validateValAddrForSFDelegate(ctx, acc.ValAddr)
-	if err != nil {
-		return err
-	}
-
 	// mint OSMO token based on TWAP of locked denom to denom module account
 	osmoAmt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
 	if osmoAmt.IsZero() {
 		return nil
 	}
 
-	err = k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc, validator)
+	err := k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc)
 	if err != nil {
 		return err
 	}
@@ -132,11 +127,16 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 		return types.ErrNotEnoughLockupDuration
 	}
 
+	// Thus when we stake now, this will be the only superfluid position for this lockID.
+	if k.alreadySuperfluidStaking(ctx, lock.ID) {
+		return types.ErrAlreadyUsedSuperfluidLockup
+	}
+
 	return nil
 }
 
 // ensure the valAddr is correctly formatted & corresponds to a real validator on chain.
-func (k Keeper) validateValAddrForSFDelegate(ctx sdk.Context, valAddr string) (stakingtypes.Validator, error) {
+func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (stakingtypes.Validator, error) {
 	valAddress, err := sdk.ValAddressFromBech32(valAddr)
 	if err != nil {
 		return stakingtypes.Validator{}, err
@@ -155,31 +155,18 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 
+	// This guarantees the lockID does not already have a superfluid stake position
+	// associated with it, the lock is sufficiently long, the lock only locks one asset, etc.
+	// Thus when we stake this lock, it will be the only superfluid position for this lockID.
 	err = k.validateLockForSFDelegate(ctx, lock, sender)
 	if err != nil {
 		return err
 	}
-	validator, err := k.validateValAddrForSFDelegate(ctx, valAddr)
-	if err != nil {
-		return err
-	}
-
-	// This guarantees this lockID does not already have a superfluid stake position
-	// associated with it.
-	// Thus when we stake now, this will be the only superfluid position for this lockID.
-	if k.alreadySuperfluidStaking(ctx, lockID) {
-		return types.ErrAlreadyUsedSuperfluidLockup
-	}
-
-	coin, err := lock.SingleCoin()
-	if err != nil {
-		return err
-	}
-
+	lockedCoin := lock.Coins[0]
 	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
 
 	// Register a synthetic lockup for superfluid staking
-	synthdenom := stakingSuffix(coin.Denom, valAddr)
+	synthdenom := stakingSuffix(lockedCoin.Denom, valAddr)
 	notUnlocking := false
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, synthdenom, unbondingDuration, notUnlocking)
 	if err != nil {
@@ -189,7 +176,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// get the intermediate account for this (denom, validator) pair.
 	// This account tracks the amount of osmo being considered as staked.
 	// If an intermediary account doesn't exist, then create it + a perpetual gauge.
-	acc, err := k.GetOrCreateIntermediaryAccount(ctx, coin.Denom, valAddr)
+	acc, err := k.GetOrCreateIntermediaryAccount(ctx, lockedCoin.Denom, valAddr)
 	if err != nil {
 		return err
 	}
@@ -198,12 +185,12 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
-	amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lock.Coins.AmountOf(acc.Denom))
+	amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount)
 	if amount.IsZero() {
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc, validator)
+	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
 	if err != nil {
 		return err
 	}
@@ -275,10 +262,14 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 }
 
 // mint osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account
-func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, intermediaryAccount types.SuperfluidIntermediaryAccount, validator stakingtypes.Validator) error {
+func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, intermediaryAccount types.SuperfluidIntermediaryAccount) error {
+	validator, err := k.validateValAddrForDelegate(ctx, intermediaryAccount.ValAddr)
+	if err != nil {
+		return err
+	}
 	bondDenom := k.sk.BondDenom(ctx)
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
-	err := k.bk.MintCoins(ctx, types.ModuleName, coins)
+	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
 	if err != nil {
 		return err
 	}
@@ -300,7 +291,6 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	osmoAmount sdk.Int, intermediaryAcc types.SuperfluidIntermediaryAccount) error {
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
-	// Every intermediary account should have a valid ValAddress.
 	if err != nil {
 		return err
 	}
@@ -318,6 +308,7 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	if err != nil {
 		return err
 	}
+	// TODO: Should we compare undelegatedCoins vs osmoAmount?
 	err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
 	if err != nil {
 		return err
