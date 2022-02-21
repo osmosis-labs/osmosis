@@ -15,6 +15,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
+var defaultLpShare string = "gamm/pool/1"
+
 // TODO: add more test cases
 func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 	testCases := []struct {
@@ -71,13 +73,13 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 
 			valAddr := valAddrs[tc.superDelegation.valIndex]
 
-			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+			unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
 			suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
 				time.Hour * 24 * 14,
 				time.Hour,
 				time.Hour * 3,
 				time.Hour * 7,
-				params.UnbondingDuration,
+				unbondingDuration,
 			})
 
 			// register a LP token as a superfluid asset
@@ -90,7 +92,7 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			// create lockup of LP token
 			addr1 := sdk.AccAddress([]byte("addr1---------------"))
 			coins := sdk.Coins{sdk.NewInt64Coin(tc.superDelegation.lpDenom, 1000000)}
-			lock := suite.LockTokens(addr1, coins, params.UnbondingDuration)
+			lock := suite.LockTokens(addr1, coins, unbondingDuration)
 
 			// call SuperfluidDelegate and check response
 			err := suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.Owner, lock.ID, valAddr.String())
@@ -133,7 +135,7 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.ByDuration,
 				Denom:         expAcc.Denom + keeper.StakingSuffix(valAddr.String()),
-				Duration:      params.UnbondingDuration,
+				Duration:      unbondingDuration,
 			})
 			suite.Require().Equal(gauge.Coins, sdk.Coins(nil))
 			suite.Require().Equal(gauge.StartTime, suite.ctx.BlockTime())
@@ -182,8 +184,8 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			suite.Require().Equal(gauge.IsPerpetual, true)
 			suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.ByDuration,
-				Denom:         "gamm/pool/1" + keeper.StakingSuffix(valAddrs[0].String()),
-				Duration:      params.UnbondingDuration,
+				Denom:         defaultLpShare + keeper.StakingSuffix(valAddrs[0].String()),
+				Duration:      unbondingDuration,
 			})
 
 			// check if staking rewards has been passed to gauges
