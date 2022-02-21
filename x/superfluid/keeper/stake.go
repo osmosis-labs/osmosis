@@ -51,6 +51,8 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		currentAmount := sdk.NewInt(0)
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
 		if !found {
+			// continue if current delegation is 0, in case its really a dust delegation 
+			// that becomes worth something after refresh.
 			k.Logger(ctx).Error(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh", mAddr.String(), acc.ValAddr))
 		} else {
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
