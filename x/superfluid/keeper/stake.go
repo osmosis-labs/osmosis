@@ -48,13 +48,14 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			continue
 		}
 
+		currentAmount := sdk.NewInt(0)
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
 		if !found {
-			k.Logger(ctx).Error(fmt.Sprintf("delegation not found for %s with %s", mAddr.String(), acc.ValAddr))
-			continue
-		}
+			k.Logger(ctx).Error(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh", mAddr.String(), acc.ValAddr))
+		} else {
+			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
 
-		currentAmount := validator.TokensFromShares(delegation.Shares).RoundInt()
+		}
 
 		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
 
@@ -337,7 +338,9 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	shares, err := k.sk.ValidateUnbondAmount(
 		ctx, intermediaryAcc.GetAccAddress(), valAddr, osmoAmount,
 	)
-	if err != nil {
+	if err == stakingtypes.ErrNoDelegation {
+		return nil
+	} else if err != nil {
 		return err
 	}
 
