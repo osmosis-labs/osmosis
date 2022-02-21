@@ -650,7 +650,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"zero price twap check",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
 			[]assetTwap{},
 			[]int64{0},
@@ -658,7 +658,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"refresh case from zero to non-zero",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 			[]int64{0},
@@ -666,7 +666,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"dust price twap check",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
 			[]assetTwap{},
 			[]int64{0},
@@ -674,7 +674,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"refresh case from dust to non-dust",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 			[]int64{0},
