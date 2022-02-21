@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
@@ -63,7 +64,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		currentAmount := sdk.NewInt(0)
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
 		if !found {
-			// continue if current delegation is 0, in case its really a dust delegation 
+			// continue if current delegation is 0, in case its really a dust delegation
 			// that becomes worth something after refresh.
 			k.Logger(ctx).Error(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh", mAddr.String(), acc.ValAddr))
 		} else {
@@ -280,22 +281,25 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 	if err != nil {
 		return err
 	}
-	bondDenom := k.sk.BondDenom(ctx)
-	coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
-	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
-	if err != nil {
-		return err
-	}
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
-	if err != nil {
-		return err
-	}
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		bondDenom := k.sk.BondDenom(ctx)
+		coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
+		err = k.bk.MintCoins(ctx, types.ModuleName, coins)
+		if err != nil {
+			return err
+		}
+		err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
+		if err != nil {
+			return err
+		}
 
-	// make delegation from module account to the validator
-	// TODO: What happens here if validator is jailed, tombstoned, or unbonding
-	_, err = k.sk.Delegate(ctx,
-		intermediaryAccount.GetAccAddress(),
-		osmoAmount, stakingtypes.Unbonded, validator, true)
+		// make delegation from module account to the validator
+		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
+		_, err = k.sk.Delegate(ctx,
+			intermediaryAccount.GetAccAddress(),
+			osmoAmount, stakingtypes.Unbonded, validator, true)
+		return err
+	})
 	return err
 }
 
@@ -318,17 +322,19 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	} else if err != nil {
 		return err
 	}
-
-	undelegatedCoins, err := k.sk.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
-	if err != nil {
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		undelegatedCoins, err := k.sk.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
+		if err != nil {
+			return err
+		}
+		// TODO: Should we compare undelegatedCoins vs osmoAmount?
+		err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
+		if err != nil {
+			return err
+		}
+		err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
 		return err
-	}
-	// TODO: Should we compare undelegatedCoins vs osmoAmount?
-	err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
-	if err != nil {
-		return err
-	}
-	err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
+	})
 	return err
 }
 
