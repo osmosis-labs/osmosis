@@ -18,10 +18,4 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  // unbonding duration of superfluid delegation
-  google.protobuf.Duration unbonding_duration = 3 [
-    (gogoproto.stdduration) = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"unbonding_duration\""
-  ];
 }
