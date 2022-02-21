@@ -27,7 +27,7 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk
 
 func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
 	// Get total number of Osmo this account should have delegated after refresh
-	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, acc.Denom+stakingSuffix(acc.ValAddr))
+	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, stakingSuffix(acc.Denom, acc.ValAddr))
 	refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
 	return refreshedAmount
 }
@@ -96,8 +96,8 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 		return err
 	}
 
-	suffix := stakingSuffix(valAddr)
-	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, suffix)
+	synthdenom := stakingSuffix(acc.Denom, valAddr)
+	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {
 		return err
 	}
@@ -263,20 +263,9 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 
 	coin, err := lock.SingleCoin()
 	if err != nil {
-		return nil, err
-	}
-	synthdenom := stakingSuffix(coin.Denom, intermediaryAcc.ValAddr)
-
-	/* XXX: shouldn't we check the duration and unlock time and stuffs using synthlock?
-	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, synthdenom)
-	if err != nil {
 		return err
 	}
-	*/
-
-	if lock.Owner != sender {
-		return nil, lockuptypes.ErrNotLockOwner
-	}
+	synthdenom := stakingSuffix(coin.Denom, intermediaryAcc.ValAddr)
 
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {

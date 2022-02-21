@@ -227,19 +227,8 @@ func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
-	suffix := lockuptypes.SyntheticSuffix(denom)
 
-	synthLocks := []lockuptypes.SyntheticLock{}
-	for _, lock := range locks {
-		synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, suffix)
-		if err != nil {
-			k.Logger(ctx).Error(err.Error())
-			continue
-		}
-		synthLocks = append(synthLocks, *synthLock)
-	}
-
-	lockSum := lockuptypes.SumSyntheticLocksByDenom(synthLocks, denom)
+	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
 
 	if lockSum.IsZero() {
 		return nil, nil
@@ -251,12 +240,17 @@ func (k Keeper) distributeSyntheticInternal(
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
 
-	for _, synthLock := range synthLocks {
+	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
+			lockedCoin, err := lock.SingleCoin()
+			if err != nil {
+				k.Logger(ctx).Error(err.Error())
+				continue
+			}
 			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			denomLockAmt := synthLock.Coins.AmountOfNoDenomValidation(denom)
-			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewIntFromUint64(remainEpochs)))
+			// check if the synthlock is qualified for GetLocksToDistribution
+			amt := coin.Amount.Mul(lockedCoin.Amount).Quo(lockSum.Mul(sdk.NewIntFromUint64(remainEpochs)))
 			if amt.IsPositive() {
 				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
 				distrCoins = distrCoins.Add(newlyDistributedCoin)
@@ -267,7 +261,7 @@ func (k Keeper) distributeSyntheticInternal(
 			continue
 		}
 		// Update the amount for that address
-		err := distrInfo.addLockRewards(synthLock.Owner, distrCoins)
+		err := distrInfo.addLockRewards(lock.Owner, distrCoins)
 		if err != nil {
 			return nil, err
 		}

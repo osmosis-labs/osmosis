@@ -358,7 +358,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
 				suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, lockOwner, coins)
-				_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, lockOwner, lockId, coins)
+				_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, lockId, coins)
 				suite.Require().NoError(err)
 			}
 
@@ -395,7 +395,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
 				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSuffix(lock.Coins[0].Denom, valAddr))
-				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(params.unbondingDuration))
+				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(unbondingDuration))
 			}
 
 			// check remaining intermediary account delegation

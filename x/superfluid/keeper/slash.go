@@ -8,32 +8,6 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-func (k Keeper) SlashLockupsForUnbondingDelegationSlash(ctx sdk.Context, delAddrStr string, valAddrStr string, slashFactor sdk.Dec) {
-	delAddr, err := sdk.AccAddressFromBech32(delAddrStr)
-	if err != nil {
-		panic(err)
-	}
-
-	acc := k.GetIntermediaryAccount(ctx, delAddr)
-	// if delAddr is not intermediary account, pass
-	if acc.Denom == "" {
-		return
-	}
-
-	// Get lockups longer or equal to SuperfluidUnbondDuration
-	params := k.GetParams(ctx)
-	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, unstakingSuffix(acc.Denom, acc.ValAddr), params.UnbondingDuration)
-
-	for _, lock := range locks {
-		// Only single token lock is allowed here
-		slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
-		osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			_, err = k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, slashAmt)})
-			return err
-		})
-	}
-}
-
 // SlashLockupsForValidatorSlash should be called before the validator at valAddr is slashed.
 // This function is responsible for inspecting every intermediate account to valAddr.
 // For each intermediate account IA, it slashes every constituent delegation behind IA.
@@ -60,16 +34,13 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 	// We do these slashes as burns.
 	// TODO: Make it go to community pool.
 	for _, acc := range accs {
-		// Get total delegation from synthetic lockups
-		nativeDenom := lockuptypes.NativeDenom(syntheticDenom)
-
-		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, syntheticDenom, time.Second)
+		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom, time.Second)
 		for _, lock := range locks {
 			// slashing only applies to synthetic lockup amount
-			synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSuffix(acc.ValAddr))
+			synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSuffix(acc.Denom, acc.ValAddr))
 			// synth lock doesn't exist for bonding
 			if err != nil {
-				synthLock, err = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSuffix(acc.ValAddr))
+				synthLock, err = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSuffix(acc.Denom, acc.ValAddr))
 				// synth lock doesn't exist for unbonding
 				// => no superlfuid staking on this lock ID, so continue
 				if err != nil {
