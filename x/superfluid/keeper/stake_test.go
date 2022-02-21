@@ -207,16 +207,29 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 
 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
 			suite.Require().Equal(poolId, uint64(1))
+			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
-			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
-			unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
+
+			// get pre-superfluid delgations osmo supply and supplyWithOffset
+			presupply := suite.app.BankKeeper.GetSupply(suite.ctx, bondDenom)
+			presupplyWithOffset := suite.app.BankKeeper.GetSupplyWithOffset(suite.ctx, bondDenom)
 
 			// setup superfluid delegations
+			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
+
+			// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
+			postsupply := suite.app.BankKeeper.GetSupply(suite.ctx, bondDenom)
+			postsupplyWithOffset := suite.app.BankKeeper.GetSupplyWithOffset(suite.ctx, bondDenom)
+			suite.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
+			suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
+
+			unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
+
 			for index, del := range tc.superDelegations {
 				lock := locks[index]
 				valAddr := valAddrs[del.valIndex]
@@ -359,6 +372,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
 			suite.Require().Equal(poolId, uint64(1))
+			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
@@ -393,6 +407,10 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 					lock = &lockuptypes.PeriodLock{}
 				}
 
+				// get pre-superfluid delgations osmo supply and supplyWithOffset
+				presupply := suite.app.BankKeeper.GetSupply(suite.ctx, bondDenom)
+				presupplyWithOffset := suite.app.BankKeeper.GetSupplyWithOffset(suite.ctx, bondDenom)
+
 				// superfluid undelegate
 				err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
 				if tc.expSuperUnbondingErr[index] {
@@ -400,6 +418,12 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 					continue
 				}
 				suite.Require().NoError(err)
+
+				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
+				postsupply := suite.app.BankKeeper.GetSupply(suite.ctx, bondDenom)
+				postsupplyWithOffset := suite.app.BankKeeper.GetSupplyWithOffset(suite.ctx, bondDenom)
+				suite.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
+				suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
 
 				// check lockId and intermediary account connection deletion
 				addr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lockId)
@@ -689,6 +713,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
 			suite.Require().Equal(poolId, uint64(1))
+			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
@@ -723,10 +748,20 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				CurrentEpoch: 2,
 			})
 
+			// get pre-superfluid delgations osmo supply and supplyWithOffset
+			presupply := suite.app.BankKeeper.GetSupply(suite.ctx, bondDenom)
+			presupplyWithOffset := suite.app.BankKeeper.GetSupplyWithOffset(suite.ctx, bondDenom)
+
 			// refresh intermediary account delegations
 			suite.NotPanics(func() {
 				suite.app.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.ctx)
 			})
+
+			// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
+			postsupply := suite.app.BankKeeper.GetSupply(suite.ctx, bondDenom)
+			postsupplyWithOffset := suite.app.BankKeeper.GetSupplyWithOffset(suite.ctx, bondDenom)
+			suite.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
+			suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
 
 			originTwap := sdk.NewDec(20)
 			targetDelegations := []sdk.Dec{}

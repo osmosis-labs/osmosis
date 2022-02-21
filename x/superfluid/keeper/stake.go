@@ -275,6 +275,7 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 	if err != nil {
 		return err
 	}
+	k.bk.AddSupplyOffset(ctx, bondDenom, osmoAmount.Neg())
 	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
 	if err != nil {
 		return err
@@ -318,6 +319,8 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		return err
 	}
 	err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
+	bondDenom := k.sk.BondDenom(ctx)
+	k.bk.AddSupplyOffset(ctx, bondDenom, undelegatedCoins.AmountOf(bondDenom))
 	return err
 }
 
