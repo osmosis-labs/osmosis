@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -182,7 +181,6 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			suite.app.Commit()
 
 			gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
-			fmt.Println(gauge)
 			suite.Require().NoError(err)
 			suite.Require().Equal(gauge.Id, gotAcc.GaugeId)
 			suite.Require().Equal(gauge.IsPerpetual, true)
