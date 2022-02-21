@@ -138,7 +138,7 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 
 		baseDenom := periodLock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
-		valAddr, err := ValidatorAddressFromSuffix(syntheticLock.SynthDenom)
+		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
 		if err != nil {
 			return nil, err
 		}
