@@ -84,25 +84,23 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 }
 
 func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sdk.Coins) error {
-	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
-	if intermediaryAccAddr.Empty() {
+	acc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
+	if !found {
 		return nil
 	}
 
-	acc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
-	valAddr := acc.ValAddr
-	validator, err := k.validateValAddrForSFDelegate(ctx, valAddr)
+	validator, err := k.validateValAddrForSFDelegate(ctx, acc.ValAddr)
 	if err != nil {
 		return err
 	}
 
 	// mint OSMO token based on TWAP of locked denom to denom module account
-	amt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
-	if amt.IsZero() {
+	osmoAmt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
+	if osmoAmt.IsZero() {
 		return nil
 	}
 
-	err = k.mintOsmoTokensAndDelegate(ctx, amt, acc, validator)
+	err = k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc, validator)
 	if err != nil {
 		return err
 	}
@@ -150,18 +148,6 @@ func (k Keeper) validateValAddrForSFDelegate(ctx sdk.Context, valAddr string) (s
 	return validator, nil
 }
 
-// func (k Keeper) hasBondedSuperfluidDelegation(ctx sdk.Context, lockID int64) bool {
-// 	valAddress, err := sdk.ValAddressFromBech32(valAddr)
-// 	if err != nil {
-// 		return stakingtypes.Validator{}, err
-// 	}
-// 	validator, found := k.sk.GetValidator(ctx, valAddress)
-// 	if !found {
-// 		return stakingtypes.Validator{}, stakingtypes.ErrNoValidatorFound
-// 	}
-// 	return validator, nil
-// }
-
 // TODO: Merge a lot of logic with SuperfluidDelegateMore
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
@@ -207,6 +193,8 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	if err != nil {
 		return err
 	}
+	// create connection record between lock id and intermediary account
+	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
@@ -220,8 +208,6 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 
-	// create connection record between lock id and intermediary account
-	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
 	return nil
 }
 
@@ -230,44 +216,40 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	if err != nil {
 		return err
 	}
-
 	if lock.Owner != sender {
 		return lockuptypes.ErrNotLockOwner
 	}
-
-	// Remove previously created synthetic lockup
-	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
-	if intermediaryAccAddr.Empty() {
-		return types.ErrNotSuperfluidUsedLockup
-	}
-	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
-
-	coin, err := lock.SingleCoin()
+	lockedCoin, err := lock.SingleCoin()
 	if err != nil {
 		return err
 	}
-	synthdenom := stakingSuffix(coin.Denom, intermediaryAcc.ValAddr)
+
+	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
+	if !found {
+		return types.ErrNotSuperfluidUsedLockup
+	}
+
+	synthdenom := stakingSuffix(lockedCoin.Denom, intermediaryAcc.ValAddr)
 
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {
 		return err
 	}
 
-	// use synthetic lockup coins for unbonding
-	amount := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, coin.Amount)
-
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {
 		return err
 	}
 
+	// use lockup coins for unbonding
+	amount := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
 	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc, valAddr)
 	if err != nil {
 		return err
 	}
 
 	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
-	synthdenom = unstakingSuffix(coin.Denom, intermediaryAcc.ValAddr)
+	synthdenom = unstakingSuffix(lockedCoin.Denom, intermediaryAcc.ValAddr)
 
 	// Note: bonding synthetic lockup amount is always same as native lockup amount in current implementation.
 	// If there's the case, it's different, we should create synthetic lockup at deleted bonding
