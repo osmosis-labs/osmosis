@@ -13,11 +13,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 type superfluidDelegation struct {
+	delIndex int64
 	valIndex int64
 	lpDenom  string
+	lpAmount int64
 }
 type superfluidRedelegation struct {
 	lockId      uint64
@@ -28,6 +31,17 @@ type superfluidRedelegation struct {
 type assetTwap struct {
 	denom string
 	price sdk.Dec
+}
+
+// CreateRandomAccounts is a function return a list of randomly generated AccAddresses
+func CreateRandomAccounts(accNum int) []sdk.AccAddress {
+	testAddrs := make([]sdk.AccAddress, accNum)
+	for i := 0; i < accNum; i++ {
+		pk := ed25519.GenPrivKey().PubKey()
+		testAddrs[i] = sdk.AccAddress(pk.Address())
+	}
+
+	return testAddrs
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) lockuptypes.PeriodLock {
@@ -82,15 +96,16 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 	return valAddrs
 }
 
-func (suite *KeeperTestSuite) SetupSuperfluidDelegations(valAddrs []sdk.ValAddress, superDelegations []superfluidDelegation) ([]types.SuperfluidIntermediaryAccount, []lockuptypes.PeriodLock) {
+func (suite *KeeperTestSuite) SetupSuperfluidDelegations(delAddrs []sdk.AccAddress, valAddrs []sdk.ValAddress, superDelegations []superfluidDelegation) ([]types.SuperfluidIntermediaryAccount, []lockuptypes.PeriodLock) {
 	flagIntermediaryAcc := make(map[string]bool)
 	intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
 	locks := []lockuptypes.PeriodLock{}
 
 	// setup superfluid delegations
 	for _, del := range superDelegations {
+		delAddr := delAddrs[del.delIndex]
 		valAddr := valAddrs[del.valIndex]
-		lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
+		lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, del.lpDenom, del.lpAmount)
 		expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
 
 		// save accounts for future use
@@ -122,7 +137,7 @@ func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAc
 	}
 }
 
-func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, denom string) lockuptypes.PeriodLock {
+func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, amount int64) lockuptypes.PeriodLock {
 	unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
 
 	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
@@ -148,9 +163,8 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(valAddr sdk.ValAddress, de
 	})
 
 	// create lockup of LP token
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin(denom, 1000000)}
-	lock := suite.LockTokens(addr1, coins, unbondingDuration)
+	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}
+	lock := suite.LockTokens(delAddr, coins, unbondingDuration)
 
 	// call SuperfluidDelegate and check response
 	err := suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.Owner, lock.ID, valAddr.String())
@@ -169,19 +183,19 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 		{
 			"with single validator and single superfluid delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]sdk.Dec{sdk.NewDec(19000000)}, // 95% x 2 x 1000000
 		},
 		{
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]sdk.Dec{sdk.NewDec(38000000)}, // 95% x 2 x 1000000 x 2
 		},
 		{
 			"with multiples validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]sdk.Dec{sdk.NewDec(19000000), sdk.NewDec(19000000)}, // 95% x 2 x 1000000
 		},
 	}
@@ -194,9 +208,12 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
 			suite.Require().Equal(poolId, uint64(1))
 
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(1)
+
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
-			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
 			unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
 
 			// setup superfluid delegations
@@ -205,10 +222,10 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				valAddr := valAddrs[del.valIndex]
 
 				// check synthetic lockup creation
-				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(lock.Coins[0].Denom, valAddr.String()))
+				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
 				suite.Require().NoError(err)
 				suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
-				suite.Require().Equal(synthLock.SynthDenom, keeper.StakingSuffix(lock.Coins[0].Denom, valAddr.String()))
+				suite.Require().Equal(synthLock.SynthDenom, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
 				suite.Require().Equal(synthLock.EndTime, time.Time{})
 
 				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
@@ -235,7 +252,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				suite.Require().Equal(gauge.IsPerpetual, true)
 				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
-					Denom:         keeper.StakingSuffix(expAcc.Denom, valAddr.String()),
+					Denom:         keeper.StakingSyntheticDenom(expAcc.Denom, valAddr.String()),
 					Duration:      unbondingDuration,
 				})
 				suite.Require().Equal(gauge.Coins, sdk.Coins(nil))
@@ -273,7 +290,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		{
 			"with single validator and single superfluid delegation and single undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{},
 			[]uint64{1},
 			[]bool{false},
@@ -282,7 +299,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		// {
 		// 	"with single validator, single superfluid delegation, add more tokens to the lock, and single undelegation",
 		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1"}},
+		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
 		// 	[]uint64{1},
 		// 	[]uint64{1},
 		// 	[]bool{false},
@@ -291,7 +308,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		{
 			"with single validator and multiple superfluid delegations and single undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{},
 			[]uint64{1},
 			[]bool{false},
@@ -300,7 +317,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		{
 			"with single validator and multiple superfluid delegations and multiple undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{},
 			[]uint64{1, 2},
 			[]bool{false, false},
@@ -309,7 +326,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		{
 			"with multiple validators and multiple superfluid delegations and multiple undelegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]uint64{},
 			[]uint64{1, 2},
 			[]bool{false, false},
@@ -318,7 +335,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		{
 			"undelegating not available lock id",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{},
 			[]uint64{2},
 			[]bool{true},
@@ -327,7 +344,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		{
 			"try undelegating twice for same lock id",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{},
 			[]uint64{1, 1},
 			[]bool{false, true},
@@ -343,11 +360,14 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
 			suite.Require().Equal(poolId, uint64(1))
 
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(1)
+
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			// setup superfluid delegations
-			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.addMoreTokensLockIds {
@@ -386,15 +406,15 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().Equal(addr.String(), "")
 
 				// check bonding synthetic lockup deletion
-				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.StakingSuffix(lock.Coins[0].Denom, valAddr))
+				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 				suite.Require().Error(err)
 
 				// check unbonding synthetic lockup creation
 				unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
-				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.UnstakingSuffix(lock.Coins[0].Denom, valAddr))
+				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 				suite.Require().NoError(err)
 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
-				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSuffix(lock.Coins[0].Denom, valAddr))
+				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(unbondingDuration))
 			}
 
@@ -439,42 +459,42 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 // 		{
 // 			"with single validator and single superfluid delegation with single redelegation",
 // 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+// 			[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
 // 			[]superfluidRedelegation{{1, 0, 1}}, // lock1 => val0 -> val1
 // 			[]bool{false},
 // 		},
 // 		{
 // 			"with multiple superfluid delegations with single redelegation",
 // 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+// 			[]superfluidDelegation{{0, "gamm/pool/1", 1000000}, {0, "gamm/pool/1", 1000000}},
 // 			[]superfluidRedelegation{{1, 0, 1}}, // lock1 => val0 -> val1
 // 			[]bool{false},
 // 		},
 // 		{
 // 			"with multiple superfluid delegations with multiple redelegations",
 // 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+// 			[]superfluidDelegation{{0, "gamm/pool/1", 1000000}, {0, "gamm/pool/1", 1000000}},
 // 			[]superfluidRedelegation{{1, 0, 1}, {2, 0, 1}}, // lock1 => val0 -> val1, lock2 => val0 -> val1
 // 			[]bool{false, false},
 // 		},
 // 		{
 // 			"try redelegating back from new validator to original validator",
 // 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+// 			[]superfluidDelegation{{0, "gamm/pool/1", 1000000}, {0, "gamm/pool/1", 1000000}},
 // 			[]superfluidRedelegation{{1, 0, 1}, {1, 1, 0}}, // lock1 => val0 -> val1, lock1 => val1 -> val0
 // 			[]bool{false, true},
 // 		},
 // 		{
 // 			"not available lock id redelegation",
 // 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+// 			[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
 // 			[]superfluidRedelegation{{2, 0, 1}}, // lock1 => val0 -> val1
 // 			[]bool{true},
 // 		},
 // 		{
 // 			"redelegation for same validator",
 // 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, "gamm/pool/1"}},
+// 			[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
 // 			[]superfluidRedelegation{{1, 0, 0}}, // lock1 => val0 -> val0
 // 			[]bool{true},
 // 		},
@@ -590,7 +610,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"with single validator and single delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 			[]assetTwap{},
 			[]int64{0},
@@ -598,7 +618,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"with single validator and multiple delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 			[]assetTwap{},
 			[]int64{0},
@@ -606,7 +626,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"with multiple validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 			[]assetTwap{},
 			[]int64{0, 1},
@@ -614,7 +634,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"with single validator and multiple denom superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/2"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/2", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
 			[]assetTwap{},
 			[]int64{0, 1},
@@ -622,7 +642,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		{
 			"with multiple validators and multiple denom superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/2"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/2", 1000000}},
 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
 			[]assetTwap{},
 			[]int64{0, 1},
@@ -630,7 +650,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		// {
 		// 	"zero price twap check",
 		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1"}},
+		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
 		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
 		// 	[]assetTwap{},
 		// 	[]int64{0},
@@ -638,7 +658,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		// {
 		// 	"refresh case from zero to non-zero",
 		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1"}},
+		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
 		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
 		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 		// 	[]int64{0},
@@ -646,7 +666,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		// {
 		// 	"dust price twap check",
 		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1"}},
+		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
 		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
 		// 	[]assetTwap{},
 		// 	[]int64{0},
@@ -654,7 +674,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		// {
 		// 	"refresh case from dust to non-dust",
 		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1"}},
+		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
 		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
 		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
 		// 	[]int64{0},
@@ -671,10 +691,13 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
 			suite.Require().Equal(poolId, uint64(1))
 
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(1)
+
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 			// setup superfluid delegations
-			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 			intermediaryDels := []sdk.Dec{}
 

@@ -37,10 +37,10 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom, time.Second)
 		for _, lock := range locks {
 			// slashing only applies to synthetic lockup amount
-			synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSuffix(acc.Denom, acc.ValAddr))
+			synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
 			// synth lock doesn't exist for bonding
 			if err != nil {
-				synthLock, err = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSuffix(acc.Denom, acc.ValAddr))
+				synthLock, err = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSyntheticDenom(acc.Denom, acc.ValAddr))
 				// synth lock doesn't exist for unbonding
 				// => no superlfuid staking on this lock ID, so continue
 				if err != nil {
