@@ -146,15 +146,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 				fmt.Println(resp)
 				suite.Require().NoError(err)
 				suite.Require().Equal(resp.Assets, action.expectedAssets)
-
-				superfluidAsset := suite.app.SuperfluidKeeper.GetAllSuperfluidAssets(suite.ctx)
-				fmt.Println("====superfluid asset")
-				fmt.Println(superfluidAsset)
-
-				osmoEquivilentMultiplers := suite.app.SuperfluidKeeper.GetAllOsmoEquivalentMultipliers(suite.ctx)
-				// a := suite.app.SuperfluidKeeper.GetOsmoEquivalentMultiplier(ctx, )
-				fmt.Println("=====osmo equivalent")
-				fmt.Println(osmoEquivilentMultiplers)
 			}
 		})
 	}
