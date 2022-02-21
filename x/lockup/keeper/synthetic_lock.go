@@ -31,6 +31,14 @@ func (k Keeper) deleteSyntheticLockupObject(ctx sdk.Context, lockID uint64, synt
 	store.Delete(syntheticLockStoreKey(lockID, synthdenom))
 }
 
+func (k Keeper) GetUnderlyingLock(ctx sdk.Context, synthlock types.SyntheticLock) types.PeriodLock {
+	lock, err := k.GetLockByID(ctx, synthlock.UnderlyingLockId)
+	if err != nil {
+		panic(err) // Synthetic lock MUST have underlying lock
+	}
+	return *lock
+}
+
 func (k Keeper) GetSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom string) (*types.SyntheticLock, error) {
 	synthLock := types.SyntheticLock{}
 	store := ctx.KVStore(k.storeKey)

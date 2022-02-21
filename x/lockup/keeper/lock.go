@@ -78,9 +78,14 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 	return nil
 }
 
-func (k Keeper) AddTokensToSyntheticLock(ctx sdk.Context, lock types.SyntheticLock, coins sdk.Coins) error {
+func (k Keeper) AddTokensToSyntheticLock(ctx sdk.Context, synthlock types.SyntheticLock, coins sdk.Coins) error {
+	lock, err := k.AddTokensToLockByID(ctx, synthlock.UnderlyingLockId, coins)
+	if err != nil {
+		return err
+	}
+
 	// when synthetic lockup exists for the lockup, disallow adding different coins
-	if len(lock.Coins.Add(coins...)) > 1 {
+	if len(lock.Coins) > 1 {
 		return fmt.Errorf("multiple tokens lockup is not allowed for superfluid")
 	}
 
@@ -90,16 +95,8 @@ func (k Keeper) AddTokensToSyntheticLock(ctx sdk.Context, lock types.SyntheticLo
 	// Note: as long as token denoms does not change, synthetic lockup references are not needed to change
 	// increase synthetic lockup's Coins object - only for bonding synthetic lockup
 
-	sCoins := syntheticCoins(coins, lock.Suffix)
-	lock.Coins = lock.Coins.Add(sCoins...)
-	err := k.setSyntheticLockupObject(ctx, &lock)
-	if err != nil {
-		panic(err)
-	}
-	for _, coin := range sCoins {
-		// Note: we use native lock's duration on accumulation store
-		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
-	}
+	k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), coins[0].Amount)
+
 	return nil
 }
 
@@ -135,15 +132,12 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 
 // AddTokensToLock locks more tokens into a lockup
 // This also saves the lock to the store.
-func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
+func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return nil, err
 	}
-	if lock.Owner != owner.String() {
-		return nil, types.ErrNotLockOwner
-	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.OwnerAddress(), types.ModuleName, coins); err != nil {
 		return nil, err
 	}
 
@@ -156,7 +150,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockI
 		return lock, nil
 	}
 
-	k.hooks.OnTokenLocked(ctx, owner, lock.ID, coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, coins, lock.Duration, lock.EndTime)
 	return lock, nil
 }
 
