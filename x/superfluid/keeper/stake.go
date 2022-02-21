@@ -333,18 +333,16 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	}
 	synthdenom := stakingSuffix(coin.Denom, intermediaryAcc.ValAddr)
 
-	/* XXX: shouldn't we check the duration and unlock time and stuffs?
+	/* XXX: shouldn't we check the duration and unlock time and stuffs using synthlock?
 	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {
 		return nil, err
 	}
 	*/
 
-	/* XXX
-	if synthLock.Owner != sender {
+	if lock.Owner != sender {
 		return nil, lockuptypes.ErrNotLockOwner
 	}
-	*/
 
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {
