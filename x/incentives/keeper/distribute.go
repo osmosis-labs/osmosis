@@ -228,16 +228,16 @@ func (k Keeper) distributeSyntheticInternal(
 	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 
-	qualifiedLocks := make([]locktypes.PeriodLock, 0, len(locks))
+	qualifiedLocks := make([]lockuptypes.PeriodLock, 0, len(locks))
 	for _, lock := range locks {
-		_, err := k.GetSyntheticLockup(ctx, lock.ID, denom)
+		_, err := k.lk.GetSyntheticLockup(ctx, lock.ID, denom)
 		if err != nil {
-			k.Logger(ctx).Error(err.Error())	
+			k.Logger(ctx).Error(err.Error())
 			continue
 		}
 		qualifiedLocks = append(qualifiedLocks, lock)
 	}
-	
+
 	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, denom)
 
 	if lockSum.IsZero() {
