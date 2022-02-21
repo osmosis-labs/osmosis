@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	// for each validator denom pair, make sure they have 2 delegations
 	for _, validator := range valAddrs {
 		for _, denom := range denoms {
-			amountRes, err := suite.queryClient.SuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(suite.ctx), &types.SuperfluidDelegatedAmountByValidatorDenomRequest{
+			amountRes, err := suite.queryClient.EstimateSuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(suite.ctx), &types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest{
 				ValidatorAddress: validator.String(),
 				Denom:            denom,
 			})
@@ -171,7 +171,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	)))
 
 	// query to make sure that the unbonding delegation is not included in the validator denom pair query
-	amountRes, err := suite.queryClient.SuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(suite.ctx), &types.SuperfluidDelegatedAmountByValidatorDenomRequest{
+	amountRes, err := suite.queryClient.EstimateSuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(suite.ctx), &types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest{
 		ValidatorAddress: valAddrs[0].String(),
 		Denom:            denoms[0],
 	})

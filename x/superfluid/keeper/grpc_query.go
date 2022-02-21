@@ -188,7 +188,7 @@ func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req
 	return &res, nil
 }
 
-func (k Keeper) SuperfluidDelegatedAmountByValidatorDenom(goCtx context.Context, req *types.SuperfluidDelegatedAmountByValidatorDenomRequest) (*types.SuperfluidDelegatedAmountByValidatorDenomResponse, error) {
+func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.Context, req *types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest) (*types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if k.GetSuperfluidAsset(ctx, req.Denom).Denom == "" {
@@ -218,7 +218,7 @@ func (k Keeper) SuperfluidDelegatedAmountByValidatorDenom(goCtx context.Context,
 	syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
 
 	baseAmount := k.UnriskAdjustOsmoValue(ctx, syntheticOsmoAmt).Quo(k.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
-	return &types.SuperfluidDelegatedAmountByValidatorDenomResponse{
+	return &types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse{
 		TotalDelegatedCoins: sdk.NewCoins(sdk.NewCoin(req.Denom, baseAmount)),
 	}, nil
 }

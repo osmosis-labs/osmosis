@@ -66,12 +66,15 @@ service Query {
   }
 
   // Returns the amount of a specific denom delegated to a specific validator
-  rpc SuperfluidDelegatedAmountByValidatorDenom(
-      SuperfluidDelegatedAmountByValidatorDenomRequest)
-      returns (SuperfluidDelegatedAmountByValidatorDenomResponse) {
+  // This is labeled an estimate, because the way it calculates the amount can
+  // lead rounding errors from the true delegated amount For exact amount, use
+  // the `SuperfluidDelegationsByValidatorDenom` query
+  rpc EstimateSuperfluidDelegatedAmountByValidatorDenom(
+      EstimateSuperfluidDelegatedAmountByValidatorDenomRequest)
+      returns (EstimateSuperfluidDelegatedAmountByValidatorDenomResponse) {
     option (google.api.http).get =
         "/osmosis/superfluid/v1beta1/"
-        "superfluid_delegation_amount_by_validator_denom";
+        "estimate_superfluid_delegation_amount_by_validator_denom";
   }
 
   // // Returns all the unbonding superfluid positions of a delegator
@@ -163,12 +166,12 @@ message SuperfluidDelegationsByValidatorDenomResponse {
   ];
 }
 
-message SuperfluidDelegatedAmountByValidatorDenomRequest {
+message EstimateSuperfluidDelegatedAmountByValidatorDenomRequest {
   string validator_address = 1;
   string denom = 2;
 }
 
-message SuperfluidDelegatedAmountByValidatorDenomResponse {
+message EstimateSuperfluidDelegatedAmountByValidatorDenomResponse {
   repeated cosmos.base.v1beta1.Coin total_delegated_coins = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
