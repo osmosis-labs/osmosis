@@ -23,12 +23,14 @@ func SyntheticLockupInvariant(keeper Keeper) sdk.Invariant {
 			if err != nil {
 				panic(err)
 			}
-			if !baselock.Coins.IsAllGTE(synthlock.Coins) {
+			if baselock.ID != synthlock.UnderlyingLockId {
 				return sdk.FormatInvariant(types.ModuleName, "synthetic-lockup-invariant",
-					fmt.Sprintf("\tSynthetic lock token amount %s\n\tUnderlying lock ID: %d, token amount %s\n",
-						synthlock.Coins, baselock.ID, baselock.Coins)), true
+					fmt.Sprintf("\tSynthetic lock denom %s\n\tUnderlying lock ID: %d\n\tActual underying lock ID: %d\n",
+						synthlock.SynthDenom, synthlock.UnderlyingLockId, baselock.ID,
+					)), true
 			}
 		}
+
 		return sdk.FormatInvariant(types.ModuleName, "synthetic-lockup-invariant", "All synthetic lockup invariant passed"), false
 	}
 }

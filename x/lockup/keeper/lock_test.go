@@ -346,7 +346,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, addCoins)
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, addr1, locks[0].ID, addCoins)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, locks[0].ID, addCoins)
 	suite.Require().NoError(err)
 
 	// check locks after adding tokens to lock
@@ -368,19 +368,19 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	err = simapp.FundAccount(suite.app.BankKeeper, cacheCtx, addr1, addCoins)
 	suite.Require().NoError(err)
 	curBalance := suite.app.BankKeeper.GetAllBalances(cacheCtx, addr1)
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, 1111, curBalance)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, 1111, curBalance)
 	suite.Require().Error(err)
 
 	// try to add tokens with lack balance
 	cacheCtx, _ = suite.ctx.CacheContext()
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, locks[0].ID, addCoins)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addCoins)
 	suite.Require().Error(err)
 
 	// try to add tokens to lock that is owned by others
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, addCoins)
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr2, locks[0].ID, addCoins)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addCoins)
 	suite.Require().Error(err)
 }
 

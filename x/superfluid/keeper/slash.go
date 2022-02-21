@@ -34,17 +34,13 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 	// We do these slashes as burns.
 	// TODO: Make it go to community pool.
 	for _, acc := range accs {
-		// Get total delegation from synthetic lockups
-		syntheticDenom := acc.Denom + stakingSuffix(acc.ValAddr)
-		nativeDenom := lockuptypes.NativeDenom(syntheticDenom)
-
-		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, nativeDenom, time.Second)
+		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom, time.Second)
 		for _, lock := range locks {
 			// slashing only applies to synthetic lockup amount
-			synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSuffix(acc.ValAddr))
+			synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSuffix(acc.Denom, acc.ValAddr))
 			// synth lock doesn't exist for bonding
 			if err != nil {
-				synthLock, err = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSuffix(acc.ValAddr))
+				synthLock, err = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSuffix(acc.Denom, acc.ValAddr))
 				// synth lock doesn't exist for unbonding
 				// => no superlfuid staking on this lock ID, so continue
 				if err != nil {
@@ -63,7 +59,7 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.SyntheticLock, slashFactor sdk.Dec) {
 	// Only single token lock is allowed here
 	lock, _ := k.lk.GetLockByID(ctx, synthLock.UnderlyingLockId)
-	slashAmt := synthLock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
+	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
 	slashCoins := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt))
 	osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		// These tokens get moved to the community pool.
