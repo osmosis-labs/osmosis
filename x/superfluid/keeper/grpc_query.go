@@ -79,7 +79,8 @@ func (k Keeper) ConnectedIntermediaryAccount(goCtx context.Context, req *types.C
 	}, nil
 }
 
-// ConnectedIntermediaryAccount returns intermediary account connected to a superfluid staked lock by id
+// SuperfluidDelegationAmount returns the coins superfluid delegated for a
+//delegator, validator, denom triplet
 func (k Keeper) SuperfluidDelegationAmount(goCtx context.Context, req *types.SuperfluidDelegationAmountRequest) (*types.SuperfluidDelegationAmountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -108,6 +109,7 @@ func (k Keeper) SuperfluidDelegationAmount(goCtx context.Context, req *types.Sup
 	return &types.SuperfluidDelegationAmountResponse{periodLocks[0].GetCoins()}, nil
 }
 
+// SuperfluidDelegationsByDelegator returns all the superfluid poistions for a specific delegator
 func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *types.SuperfluidDelegationsByDelegatorRequest) (*types.SuperfluidDelegationsByDelegatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -153,6 +155,8 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 
 }
 
+// SuperfluidDelegationsByValidatorDenom returns all the superfluid positions
+// of a specific denom delegated to one validator
 func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req *types.SuperfluidDelegationsByValidatorDenomRequest) (*types.SuperfluidDelegationsByValidatorDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -169,7 +173,6 @@ func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req
 
 	res := types.SuperfluidDelegationsByValidatorDenomResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
-		TotalDelegatedCoins:         sdk.NewCoins(),
 	}
 
 	periodLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, syntheticDenom, time.Second)
@@ -183,11 +186,15 @@ func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req
 				DelegationAmount: lockedCoins,
 			},
 		)
-		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
 	}
 	return &res, nil
 }
 
+// EstimateSuperfluidDelegatedAmountByValidatorDenom returns the amount of a
+// specific denom delegated to a specific validator
+// This is labeled an estimate, because the way it calculates the amount can
+// lead rounding errors from the true delegated amount For exact amount, use
+// the `SuperfluidDelegationsByValidatorDenom` query
 func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.Context, req *types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest) (*types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

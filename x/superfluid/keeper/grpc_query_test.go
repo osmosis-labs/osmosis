@@ -107,9 +107,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 			})
 			suite.Require().NoError(err)
 			suite.Require().Len(delegationsRes.SuperfluidDelegationRecords, 2)
-			suite.Require().True(delegationsRes.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
-				sdk.NewInt64Coin(denom, 2000000),
-			)))
 		}
 	}
 }
@@ -187,7 +184,4 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	})
 	suite.Require().NoError(err)
 	suite.Require().Len(delegationsRes.SuperfluidDelegationRecords, 1)
-	suite.Require().True(delegationsRes.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
-		sdk.NewInt64Coin(denoms[0], 1000000),
-	)))
 }
