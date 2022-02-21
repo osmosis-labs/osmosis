@@ -176,6 +176,11 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	if err != nil {
 		return err
 	}
+
+	// Take the current balance of the developer rewards pool and remove it from the supply offset
+	developerAccountBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintedCoin.Denom)
+	k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount)
+
 	if len(params.WeightedDeveloperRewardsReceivers) == 0 {
 		// fund community pool when rewards address is empty
 		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
@@ -206,6 +211,10 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 			}
 		}
 	}
+
+	// Take the new balance of the developer rewards pool and add it back to the supply offset deduction
+	developerAccountBalance = k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintedCoin.Denom)
+	k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
 	// subtract from original provision to ensure no coins left over after the allocations
 	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(devRewardCoins)
