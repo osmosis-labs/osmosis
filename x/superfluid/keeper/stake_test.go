@@ -222,10 +222,10 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				valAddr := valAddrs[del.valIndex]
 
 				// check synthetic lockup creation
-				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(valAddr.String()))
+				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.StakingSuffix(lock.Coins[0].Denom, valAddr.String()))
 				suite.Require().NoError(err)
 				suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
-				suite.Require().Equal(synthLock.Suffix, keeper.StakingSuffix(valAddr.String()))
+				suite.Require().Equal(synthLock.SynthDenom, keeper.StakingSuffix(lock.Coins[0].Denom, valAddr.String()))
 				suite.Require().Equal(synthLock.EndTime, time.Time{})
 
 				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
@@ -252,7 +252,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				suite.Require().Equal(gauge.IsPerpetual, true)
 				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
-					Denom:         expAcc.Denom + keeper.StakingSuffix(valAddr.String()),
+					Denom:         keeper.StakingSuffix(expAcc.Denom, valAddr.String()),
 					Duration:      unbondingDuration,
 				})
 				suite.Require().Equal(gauge.Coins, sdk.Coins(nil))
@@ -378,7 +378,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
 				suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, lockOwner, coins)
-				_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, lockOwner, lockId, coins)
+				_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, lockId, coins)
 				suite.Require().NoError(err)
 			}
 
@@ -406,15 +406,15 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().Equal(addr.String(), "")
 
 				// check bonding synthetic lockup deletion
-				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.StakingSuffix(valAddr))
+				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.StakingSuffix(lock.Coins[0].Denom, valAddr))
 				suite.Require().Error(err)
 
 				// check unbonding synthetic lockup creation
 				unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
-				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.UnstakingSuffix(valAddr))
+				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockId, keeper.UnstakingSuffix(lock.Coins[0].Denom, valAddr))
 				suite.Require().NoError(err)
 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
-				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddr))
+				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSuffix(lock.Coins[0].Denom, valAddr))
 				suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(unbondingDuration))
 			}
 

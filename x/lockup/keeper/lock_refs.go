@@ -34,8 +34,8 @@ func (k Keeper) deleteLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types
 // TODO: This is messed up that this works. It shouldn't.
 // You should _have_ to get the synthetic lockup.
 // We can make a wrapper that then gets the underlying locks easily.
-func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, synthLock types.SyntheticLock) error {
-	refKeys, err := syntheticLockRefKeys(synthLock)
+func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock, synthLock types.SyntheticLock) error {
+	refKeys, err := syntheticLockRefKeys(lock, synthLock)
 	if err != nil {
 		return err
 	}
@@ -47,8 +47,8 @@ func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, synt
 	return nil
 }
 
-func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, synthLock types.SyntheticLock) error {
-	refKeys, err := syntheticLockRefKeys(synthLock)
+func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock, synthLock types.SyntheticLock) error {
+	refKeys, err := syntheticLockRefKeys(lock, synthLock)
 	if err != nil {
 		return err
 	}

@@ -92,7 +92,7 @@ func (k Keeper) SuperfluidDelegationAmount(goCtx context.Context, req *types.Sup
 		return nil, err
 	}
 
-	syntheticDenom := SyntheticDenom(req.Denom, req.ValidatorAddress)
+	syntheticDenom := stakingSuffix(req.Denom, req.ValidatorAddress)
 
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
 	if err != nil {
@@ -125,7 +125,7 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 
 	for _, syntheticLock := range syntheticLocks {
 		// don't include unbonding delegations
-		if strings.Contains(syntheticLock.Suffix, "superunbonding") {
+		if strings.Contains(syntheticLock.SynthDenom, "superunbonding") {
 			continue
 		}
 
@@ -136,7 +136,7 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 
 		baseDenom := periodLock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
-		valAddr, err := ValidatorAddressFromSuffix(syntheticLock.Suffix)
+		valAddr, err := ValidatorAddressFromSuffix(syntheticLock.SynthDenom)
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +165,7 @@ func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req
 		return nil, err
 	}
 
-	syntheticDenom := SyntheticDenom(req.Denom, req.ValidatorAddress)
+	syntheticDenom := stakingSuffix(req.Denom, req.ValidatorAddress)
 
 	res := types.SuperfluidDelegationsByValidatorDenomResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
