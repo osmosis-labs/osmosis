@@ -29,6 +29,8 @@ func GetTxCmd() *cobra.Command {
 		NewSuperfluidDelegateCmd(),
 		NewSuperfluidUndelegateCmd(),
 		// NewSuperfluidRedelegateCmd(),
+		NewCmdSubmitSetSuperfluidAssetsProposal(),
+		NewCmdSubmitRemoveSuperfluidAssetsProposal(),
 	)
 
 	return cmd

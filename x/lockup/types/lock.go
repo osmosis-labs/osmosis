@@ -29,24 +29,20 @@ func (p SyntheticLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
 }
 
+// OwnerAddress returns locks owner address
+func (p PeriodLock) OwnerAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 	if len(p.Coins) != 1 {
 		return sdk.Coin{}, fmt.Errorf("PeriodLock %d has no single coin: %s", p.ID, p.Coins)
 	}
 	return p.Coins[0], nil
-}
-
-func (s SyntheticLock) Coin(p PeriodLock) (sdk.Coin, error) {
-	// sanity check
-	if s.UnderlyingLockId != p.ID {
-		panic(fmt.Sprintf("invalid argument on SyntheticLock.Coin: %s, %d, %d", s.SynthDenom, s.UnderlyingLockId, p.ID))
-	}
-
-	coin, err := p.SingleCoin()
-	if err != nil {
-		return sdk.Coin{}, err
-	}
-	return sdk.Coin{s.SynthDenom, coin.Amount}, nil
 }
 
 func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
@@ -73,13 +69,13 @@ func NativeDenom(denom string) string {
 	return denom
 }
 
-// func SyntheticSuffix(denom string) string {
-// 	return strings.TrimLeft(denom, NativeDenom(denom))
-// }
+func SyntheticSuffix(denom string) string {
+	return strings.TrimLeft(denom, NativeDenom(denom))
+}
 
-// func IsSyntheticDenom(denom string) bool {
-// 	return NativeDenom(denom) != denom
-// }
+func IsSyntheticDenom(denom string) bool {
+	return NativeDenom(denom) != denom
+}
 
 // func IsStakingSuffix(suffix string) bool {
 // 	return strings.Contains(suffix, "superbonding")

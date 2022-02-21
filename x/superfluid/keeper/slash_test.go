@@ -145,19 +145,18 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
 				suite.Require().NoError(err)
 				// superfluid undelegate
-				_, err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
+				err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
 				suite.Require().NoError(err)
 			}
 
 			// slash unbonding lockups for all intermediary accounts
-			for _, acc := range intermediaryAccs {
-				suite.NotPanics(func() {
-					suite.app.SuperfluidKeeper.SlashLockupsForUnbondingDelegationSlash(
-						suite.ctx,
-						acc.GetAccAddress().String(),
-						acc.ValAddr,
-						sdk.NewDecWithPrec(5, 2))
-				})
+			slashFactor := sdk.NewDecWithPrec(5, 2)
+			for i := 0; i < len(valAddrs); i++ {
+				suite.app.SuperfluidKeeper.SlashLockupsForValidatorSlash(
+					suite.ctx,
+					valAddrs[i],
+					suite.ctx.BlockHeight(),
+					slashFactor)
 			}
 
 			// check check unbonding lockup changes

@@ -13,7 +13,6 @@ import (
 var (
 	KeyRefreshEpochIdentifier = []byte("RefreshEpochIdentifier")
 	KeyMinimumRiskFactor      = []byte("MinimumRiskFactor")
-	KeyUnbondingDuration      = []byte("UnbondingDuration")
 )
 
 // ParamTable for minting module.
@@ -21,11 +20,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(refreshEpochIdentifier string, minimumRiskFactor sdk.Dec, unbondingDuration time.Duration) Params {
+func NewParams(refreshEpochIdentifier string, minimumRiskFactor sdk.Dec) Params {
 	return Params{
 		RefreshEpochIdentifier: refreshEpochIdentifier,
 		MinimumRiskFactor:      minimumRiskFactor,
-		UnbondingDuration:      unbondingDuration,
 	}
 }
 
@@ -34,7 +32,6 @@ func DefaultParams() Params {
 	return Params{
 		RefreshEpochIdentifier: "day",
 		MinimumRiskFactor:      sdk.NewDecWithPrec(5, 2), // 5%
-		UnbondingDuration:      time.Hour * 24 * 21,      // 3w
 	}
 }
 
@@ -51,7 +48,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyRefreshEpochIdentifier, &p.RefreshEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
 		paramtypes.NewParamSetPair(KeyMinimumRiskFactor, &p.MinimumRiskFactor, ValidateMinimumRiskFactor),
-		paramtypes.NewParamSetPair(KeyUnbondingDuration, &p.UnbondingDuration, ValidateUnbondingDuration),
 	}
 }
 

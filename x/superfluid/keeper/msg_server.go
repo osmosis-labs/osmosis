@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -30,7 +31,7 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.MsgSuperfluidUndelegate) (*types.MsgSuperfluidUndelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
+	err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
 
@@ -40,3 +41,29 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 // 	err := server.keeper.SuperfluidRedelegate(ctx, msg.Sender, msg.LockId, msg.NewValAddr)
 // 	return &types.MsgSuperfluidRedelegateResponse{}, err
 // }
+
+func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgLockAndSuperfluidDelegate) (*types.MsgLockAndSuperfluidDelegateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	lockupMsg := lockuptypes.MsgLockTokens{
+		Owner:    msg.Sender,
+		Duration: server.keeper.sk.GetParams(ctx).UnbondingTime,
+		Coins:    msg.Coins,
+	}
+
+	lockupRes, err := server.keeper.lms.LockTokens(goCtx, &lockupMsg)
+	if err != nil {
+		return &types.MsgLockAndSuperfluidDelegateResponse{}, err
+	}
+
+	superfluidDelegateMsg := types.MsgSuperfluidDelegate{
+		Sender:  msg.Sender,
+		LockId:  lockupRes.GetID(),
+		ValAddr: msg.ValAddr,
+	}
+
+	_, err = server.SuperfluidDelegate(goCtx, &superfluidDelegateMsg)
+	return &types.MsgLockAndSuperfluidDelegateResponse{
+		ID: lockupRes.ID,
+	}, err
+}

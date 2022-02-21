@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/gogo/protobuf/proto"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -49,6 +50,18 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 	return acc
 }
 
+func (k Keeper) GetIntermediaryAccountsForVal(ctx sdk.Context, valAddr sdk.ValAddress) []types.SuperfluidIntermediaryAccount {
+	accs := k.GetAllIntermediaryAccounts(ctx)
+	valAccs := []types.SuperfluidIntermediaryAccount{}
+	for _, acc := range accs {
+		if acc.ValAddr != valAddr.String() { // only apply for slashed validator
+			continue
+		}
+		valAccs = append(valAccs, acc)
+	}
+	return valAccs
+}
+
 func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr string) (types.SuperfluidIntermediaryAccount, error) {
 	accountAddr := types.GetSuperfluidIntermediaryAccountAddr(denom, valAddr)
 	storeAccount := k.GetIntermediaryAccount(ctx, accountAddr)
@@ -57,14 +70,13 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	if storeAccount.Denom != "" {
 		return storeAccount, nil
 	}
-	params := k.GetParams(ctx)
 	// Otherwise we create the intermediary account.
 	// first step, we create the gaugeID
 	gaugeID, err := k.ik.CreateGauge(ctx, true, accountAddr, sdk.Coins{}, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		// move this synthetic denom creation to a dedicated function
 		Denom:    stakingSuffix(denom, valAddr),
-		Duration: params.UnbondingDuration,
+		Duration: k.sk.GetParams(ctx).UnbondingTime,
 	}, ctx.BlockTime(), 1)
 
 	if err != nil {
@@ -74,6 +86,13 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 
 	intermediaryAcct := types.NewSuperfluidIntermediaryAccount(denom, valAddr, gaugeID)
 	k.SetIntermediaryAccount(ctx, intermediaryAcct)
+
+	// TODO: @Dev added this hasAccount gating, think through if theres an edge case that makes it not right
+	if !k.ak.HasAccount(ctx, intermediaryAcct.GetAccAddress()) {
+		// TODO: Why is this a base account, not a module account?
+		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, 0, 0))
+	}
+
 	return intermediaryAcct, nil
 }
 

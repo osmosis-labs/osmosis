@@ -15,7 +15,7 @@ import (
 // See https://github.com/osmosis-labs/osmosis/issues/864
 func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asset types.SuperfluidAsset) {
 	// Right now set the TWAP to 0, and delete the asset.
-	k.SetEpochOsmoEquivalentTWAP(ctx, epochNum, asset.Denom, sdk.ZeroDec())
+	k.SetOsmoEquivalentMultiplier(ctx, epochNum, asset.Denom, sdk.ZeroDec())
 	k.DeleteSuperfluidAsset(ctx, asset.Denom)
 }
 
