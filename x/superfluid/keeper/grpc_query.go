@@ -92,7 +92,7 @@ func (k Keeper) SuperfluidDelegationAmount(goCtx context.Context, req *types.Sup
 		return nil, err
 	}
 
-	syntheticDenom := stakingSuffix(req.Denom, req.ValidatorAddress)
+	syntheticDenom := stakingSyntheticDenom(req.Denom, req.ValidatorAddress)
 
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
 	if err != nil {
@@ -165,7 +165,7 @@ func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req
 		return nil, err
 	}
 
-	syntheticDenom := stakingSuffix(req.Denom, req.ValidatorAddress)
+	syntheticDenom := stakingSyntheticDenom(req.Denom, req.ValidatorAddress)
 
 	res := types.SuperfluidDelegationsByValidatorDenomResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
