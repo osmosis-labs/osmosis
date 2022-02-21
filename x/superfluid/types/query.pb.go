@@ -1092,8 +1092,7 @@ type QueryClient interface {
 	SuperfluidDelegationsByValidatorDenom(ctx context.Context, in *SuperfluidDelegationsByValidatorDenomRequest, opts ...grpc.CallOption) (*SuperfluidDelegationsByValidatorDenomResponse, error)
 	// Returns the amount of a specific denom delegated to a specific validator
 	// This is labeled an estimate, because the way it calculates the amount can
-	// lead rounding errors from the true delegated amount For exact amount, use
-	// the `SuperfluidDelegationsByValidatorDenom` query
+	// lead rounding errors from the true delegated amount
 	EstimateSuperfluidDelegatedAmountByValidatorDenom(ctx context.Context, in *EstimateSuperfluidDelegatedAmountByValidatorDenomRequest, opts ...grpc.CallOption) (*EstimateSuperfluidDelegatedAmountByValidatorDenomResponse, error)
 }
 
@@ -1208,8 +1207,7 @@ type QueryServer interface {
 	SuperfluidDelegationsByValidatorDenom(context.Context, *SuperfluidDelegationsByValidatorDenomRequest) (*SuperfluidDelegationsByValidatorDenomResponse, error)
 	// Returns the amount of a specific denom delegated to a specific validator
 	// This is labeled an estimate, because the way it calculates the amount can
-	// lead rounding errors from the true delegated amount For exact amount, use
-	// the `SuperfluidDelegationsByValidatorDenom` query
+	// lead rounding errors from the true delegated amount
 	EstimateSuperfluidDelegatedAmountByValidatorDenom(context.Context, *EstimateSuperfluidDelegatedAmountByValidatorDenomRequest) (*EstimateSuperfluidDelegatedAmountByValidatorDenomResponse, error)
 }
 

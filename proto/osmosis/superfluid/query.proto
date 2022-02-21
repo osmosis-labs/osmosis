@@ -67,8 +67,7 @@ service Query {
 
   // Returns the amount of a specific denom delegated to a specific validator
   // This is labeled an estimate, because the way it calculates the amount can
-  // lead rounding errors from the true delegated amount For exact amount, use
-  // the `SuperfluidDelegationsByValidatorDenom` query
+  // lead rounding errors from the true delegated amount
   rpc EstimateSuperfluidDelegatedAmountByValidatorDenom(
       EstimateSuperfluidDelegatedAmountByValidatorDenomRequest)
       returns (EstimateSuperfluidDelegatedAmountByValidatorDenomResponse) {

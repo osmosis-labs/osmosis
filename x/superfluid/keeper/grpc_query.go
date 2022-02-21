@@ -193,8 +193,7 @@ func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req
 // EstimateSuperfluidDelegatedAmountByValidatorDenom returns the amount of a
 // specific denom delegated to a specific validator
 // This is labeled an estimate, because the way it calculates the amount can
-// lead rounding errors from the true delegated amount For exact amount, use
-// the `SuperfluidDelegationsByValidatorDenom` query
+// lead rounding errors from the true delegated amount
 func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.Context, req *types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest) (*types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
