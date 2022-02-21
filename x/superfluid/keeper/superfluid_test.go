@@ -55,7 +55,6 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			}
 			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochInfo)
 
-			// epochs.BeginBlocker(suite.ctx, *suite.app.EpochsKeeper)
 			header := tmproto.Header{
 				Height: suite.ctx.BlockHeight(),
 				Time:   suite.ctx.BlockTime(),
@@ -68,9 +67,6 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
-			// setup superfluid delegations
-			//flagIntermediaryAcc := make(map[string]bool)
-			//intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
 			locks := []lockuptypes.PeriodLock{}
 
 			valAddr := valAddrs[tc.superDelegation.valIndex]
@@ -116,7 +112,7 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 
 			expAcc = types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
 
-			// Check lockID connection with intermediary account
+			// check lockID connection with intermediary account
 			intAcc := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lock.ID)
 			suite.Require().Equal(intAcc.String(), expAcc.GetAccAddress().String())
 
@@ -175,13 +171,9 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 				Time:   now.Add(time.Hour * 25),
 			}
 			suite.app.BeginBlock(abci.RequestBeginBlock{Header: header})
-			balance := suite.app.BankKeeper.GetBalance(suite.ctx, addr1, "stake")
-			fmt.Println(balance)
-			balance1 := suite.app.BankKeeper.GetBalance(suite.ctx, intAcc, "stake")
-			fmt.Println(balance1)
-
-
-
+			// committing after BeginBlock would not happen in prod
+			// we do commit here to set state that has happened at beginBlock and test
+			suite.app.Commit()
 
 			gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
 			fmt.Println(gauge)
@@ -194,24 +186,6 @@ func (suite *KeeperTestSuite) TestSuperfluidFlow() {
 				Duration:      params.UnbondingDuration,
 			})
 
-			// // check if staking rewards has been passed to gauges
-			// distributedReward := gauge.Coins.AmountOf(sdk.DefaultBondDenom)
-			// // 190_00 = 95% x 20_000
-			// suite.Require().Equal(sdk.NewInt(19_000), distributedReward)
-
-			suite.app.EndBlock(abci.RequestEndBlock{Height: suite.ctx.BlockHeight()})
-			suite.app.Commit()
-			suite.ctx = suite.ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 25 * 2))
-			header = tmproto.Header{
-				Height: suite.ctx.BlockHeight(),
-				Time:   now.Add(time.Hour * 25 * 2),
-			}
-			suite.app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-			totalReward = suite.app.DistrKeeper.GetTotalRewards(suite.ctx)
-			fmt.Println(totalReward)
-
-			gauge, _ = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gotAcc.GaugeId)
 			// check if staking rewards has been passed to gauges
 			distributedReward := gauge.Coins.AmountOf(sdk.DefaultBondDenom)
 			// 190_00 = 95% x 20_000
