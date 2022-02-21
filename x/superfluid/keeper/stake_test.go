@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -469,6 +470,83 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().Error(err)
 			}
 		})
+	}
+}
+
+// TestSuperfluidUnbondLock tests the following.
+// 		1. test SuperfluidUnbondLock does not work before undelegation
+// 		2. test SuperfluidUnbondLock makes underlying lock start unlocking
+// 		3. test that synthetic lockup being finished does not mean underlying lock is finished
+//      4. test after SuperfluidUnbondLock + lockup time, the underlying lock is finished
+func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
+	suite.SetupTest()
+
+	poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+	suite.Require().Equal(poolId, uint64(1))
+
+	// Generate delegator addresses
+	delAddrs := CreateRandomAccounts(1)
+
+	// setup validators
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+
+	// setup superfluid delegations
+	intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, []superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}})
+	suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+
+	for _, lock := range locks {
+		startTime := time.Now()
+		suite.ctx = suite.ctx.WithBlockTime(startTime)
+		accAddr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, lock.ID)
+		intermediaryAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.ctx, accAddr)
+		valAddr := intermediaryAcc.ValAddr
+
+		// first we test that SuperfluidUnbondLock would cause error before undelegating
+		err := suite.app.SuperfluidKeeper.SuperfluidUnbondLock(suite.ctx, lock.ID, lock.GetOwner())
+		suite.Require().Error(err)
+
+		// undelegation needs to happen prior to SuperfluidUnbondLock
+		err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lock.ID)
+		suite.Require().NoError(err)
+
+		// check that unbonding synth has been created correctly after undelegation
+		unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
+		synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+		suite.Require().NoError(err)
+		suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
+		suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+		suite.Require().Equal(synthLock.EndTime, suite.ctx.BlockTime().Add(unbondingDuration))
+
+		// test SuperfluidUnbondLock
+		unbondLockStartTime := startTime.Add(time.Hour)
+		suite.ctx = suite.ctx.WithBlockTime(unbondLockStartTime)
+		err = suite.app.SuperfluidKeeper.SuperfluidUnbondLock(suite.ctx, lock.ID, lock.GetOwner())
+		suite.Require().NoError(err)
+
+		// check that SuperfluidUnbondLock makes underlying lock start unlocking
+		// we run WithdrawAllMaturedLocks to ensure that lock isn't getting finished immediately
+		suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
+		updatedLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
+		suite.Require().NoError(err)
+		suite.Require().True(updatedLock.IsUnlocking())
+
+		// test that synth lock finish does not mean underlying lock is finished
+		suite.ctx = suite.ctx.WithBlockTime((startTime.Add(unbondingDuration)))
+		suite.app.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.ctx)
+		suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
+		_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+		suite.Require().Error(err)
+		updatedLock, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
+		suite.Require().NoError(err)
+		suite.Require().True(updatedLock.IsUnlocking())
+
+		// test after SuperfluidUnbondLock + lockup unbonding duration, lock is finished and does not exist
+		suite.ctx = suite.ctx.WithBlockTime(unbondLockStartTime.Add(unbondingDuration))
+		suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
+		updatedLock, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
+		fmt.Println(updatedLock)
+		suite.Require().Error(err)
+
 	}
 }
 
