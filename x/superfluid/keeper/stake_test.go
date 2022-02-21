@@ -504,7 +504,6 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
 		updatedLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 		suite.Require().NoError(err)
-		suite.Require().False(lock.IsUnlocking())
 		suite.Require().True(updatedLock.IsUnlocking())
 
 		// test that synth lock finish does not mean underlying lock is finished
