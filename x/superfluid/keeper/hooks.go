@@ -44,16 +44,6 @@ func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uin
 }
 
 func (h Hooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
-	// undelegate automatically when start unlocking if superfluid staking is available
-	intermediaryAccAddr := h.k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
-	if !intermediaryAccAddr.Empty() {
-		err := h.k.SuperfluidUndelegate(ctx, address.String(), lockID)
-		if err != nil {
-			h.k.Logger(ctx).Error(err.Error())
-			// TODO: If not panic, there could be the case user get infinite amount of rewards without actual lockup
-			panic(err)
-		}
-	}
 }
 
 func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
