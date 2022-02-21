@@ -19,28 +19,28 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 		{
 			"with single validator and single superfluid delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]int64{0},
 		},
 		{
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]int64{0, 1},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations with single validator slash",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]int64{0},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations with two validators slash",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]int64{0, 1},
 			[]int64{0, 1},
 		},
@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			// setup superfluid delegations
 			for _, del := range tc.superDelegations {
 				valAddr := valAddrs[del.valIndex]
-				lock := suite.SetupSuperfluidDelegate(delAddrs[0], valAddr, del.lpDenom)
+				lock := suite.SetupSuperfluidDelegate(delAddrs[0], valAddr, del.lpDenom, del.lpAmount)
 				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
 
 				// save accounts and locks for future use
@@ -112,19 +112,19 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 		{
 			"happy path with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1},
 		},
 		{
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1, 2},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]uint64{1, 2},
 		},
 	}

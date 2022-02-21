@@ -36,11 +36,16 @@ func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 // 	poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
 // 	suite.Require().Equal(poolId, uint64(1))
 
+// 	// Generate delegator addresses
+// 	delAddrs := CreateRandomAccounts(2)
+
 // 	// setup 2 validators
 // 	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 
-// 	// // setup superfluid delegations
-// 	// intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, []superfluidDelegation{
-// 	// 	{0, "gamm/pool/1"}, {0, "gamm/pool/2"}, {1, "gamm/pool/1"}, {1, "gamm/pool/2"}})
-// 	// suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+// 	// setup superfluid delegations
+// 	intermediaryAccs, lockIds := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, []superfluidDelegation{
+// 		{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/2", 1000000}, {1, 1, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/2", 1000000},
+// 	})
+
+// 	// suite.queryClient.
 // }

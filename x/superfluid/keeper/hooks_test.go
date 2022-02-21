@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 		},
 	}
 
@@ -114,42 +114,42 @@ func (suite *KeeperTestSuite) TestOnStartUnlock() {
 		{
 			"with single validator and single superfluid delegation and single lockup unlock",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1},
 			[]bool{false},
 		},
 		{
 			"with single validator and multiple superfluid delegations and single undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1},
 			[]bool{false},
 		},
 		{
 			"with single validator and multiple superfluid delegations and multiple undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations and multiple undelegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
 		},
 		{
 			"undelegating not available lock id",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{2},
 			[]bool{true},
 		},
 		{
 			"try undelegating twice for same lock id",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1, 1},
 			[]bool{false, true},
 		},
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 		{
 			"happy path with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1},
 			[]int64{0},
 			[]uint64{1},
@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 		{
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1, 2},
 			[]int64{0},
 			[]uint64{1, 2},
@@ -242,7 +242,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 		{
 			"with multiple validators and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]uint64{1, 2},
 			[]int64{0},
 			[]uint64{1},
