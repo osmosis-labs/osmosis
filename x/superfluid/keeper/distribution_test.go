@@ -42,28 +42,28 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1"}},
 			[]int64{0},
 			[]gaugeChecker{{1, 0, "gamm/pool/1", true}},
 		},
 		{
 			"two LP tokens delegation to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/2"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 0, "gamm/pool/2"}},
 			[]int64{0},
 			[]gaugeChecker{{1, 0, "gamm/pool/1", true}, {2, 0, "gamm/pool/2", true}},
 		},
 		{
 			"one LP token with two locks to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 0, "gamm/pool/1"}},
 			[]int64{0},
 			[]gaugeChecker{{1, 0, "gamm/pool/1", true}},
 		},
 		{
 			"add unbonded validator case",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1"}, {0, 1, "gamm/pool/1"}},
 			[]int64{0},
 			[]gaugeChecker{{1, 0, "gamm/pool/1", true}, {2, 1, "gamm/pool/1", false}},
 		},
@@ -75,11 +75,14 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(1)
+
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			// setup superfluid delegations
-			suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
 			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
 
 			// allocate rewards to first validator

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -20,6 +21,17 @@ func unstakingSuffix(valAddr string) string {
 
 func SyntheticDenom(denom, valAddr string) string {
 	return denom + stakingSuffix(valAddr)
+}
+
+// quick fix for getting the validator addresss from a synthetic denom
+func ValidatorAddressFromSuffix(suffix string) (string, error) {
+	if strings.Contains(suffix, "superbonding") {
+		return strings.TrimLeft(suffix, "superbonding"), nil
+	}
+	if strings.Contains(suffix, "superunbonding") {
+		return strings.TrimLeft(suffix, "superunbonding"), nil
+	}
+	return "", fmt.Errorf("%s is not a valid synthetic denom suffix", suffix)
 }
 
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -123,18 +124,26 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 	syntheticLocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
 
 	for _, syntheticLock := range syntheticLocks {
+		// don't include unbonding delegations
+		if strings.Contains(syntheticLock.Suffix, "superunbonding") {
+			continue
+		}
+
 		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockId)
 		if err != nil {
 			return nil, err
 		}
 
 		baseDenom := periodLock.Coins.GetDenomByIndex(0)
-
 		lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
+		valAddr, err := ValidatorAddressFromSuffix(syntheticLock.Suffix)
+		if err != nil {
+			return nil, err
+		}
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
 				DelegatorAddress: req.DelegatorAddress,
-				ValidatorAddress: syntheticLock.Suffix,
+				ValidatorAddress: valAddr,
 				DelegationAmount: lockedCoins,
 			},
 		)
