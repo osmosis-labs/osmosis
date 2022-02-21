@@ -28,7 +28,9 @@ type MsgSuperfluidDelegate struct {
 - Get the `IntermediaryAccount` for this `lock` `Denom` and `ValAddr` pair.
   - Create it + a new gauge for the synthetic denom, if it does not yet exist.
 - Create a SyntheticLockup.
-- Mint `Osmo` to match amount in `lock` (based on LP to Osmo ratio at last epoch) and send to `IntermediaryAccount`
+- Calculate `Osmo` to delegate on behalf of this `lock`, as `Osmo Equivalent Multiplier` * `# LP Shares` * `Risk Adjustment Factor`
+  - If this amount is less than 0.000001 `Osmo` (`1 uosmo`) reject the transaction, as it would be delegating `0 uosmo`
+- Mint `Osmo` to match this amount and send to `IntermediaryAccount`
 - Create a delegation from `IntermediaryAccount` to `Validator`
 - Create a new perpetual `Gauge` for distributing staking payouts to locks of a synethic asset based on this `Validator` / `Denom` pair.
 - Create a connection between this `lockID` and this `IntermediaryAccount`
@@ -49,7 +51,8 @@ type MsgSuperfluidUndelegate struct {
 - Get the `IntermediaryAccount` for this `lockID`
 - Delete the `SyntheticLockup` associated to this `lockID` + `ValAddr` pair
 - Create a new `SyntheticLockup` which is unbonding
-- Calculate the amount of `Osmo` delegated on behalf of this `lock`
+- Calculate the amount of `Osmo` delegated on behalf of this `lock` as `Osmo Equivalent Multipler` * `# LP Shares` * `Risk Adjustment Factor`
+  - If this amount is less than 0.000001 `Osmo`, there is no delegated `Osmo` to undelegate and burn
 - Use `InstantUndelegate` to instantly remove delegation from `IntermediaryAccount` to `Validator`
 - Immediately burn undelegated `Osmo`
 - Delete the connection betweene `lockID` and `IntermediaryAccount`
