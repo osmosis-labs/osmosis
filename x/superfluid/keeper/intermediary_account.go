@@ -127,6 +127,15 @@ func (k Keeper) GetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId u
 	return prefixStore.Get(sdk.Uint64ToBigEndian(lockId))
 }
 
+// Returns Superfluid Intermediate Account and a bool if found / not found
+func (k Keeper) GetIntermediaryAccountFromLockId(ctx sdk.Context, lockId uint64) (types.SuperfluidIntermediaryAccount, bool) {
+	addr := k.GetLockIdIntermediaryAccountConnection(ctx, lockId)
+	if addr.Empty() {
+		return types.SuperfluidIntermediaryAccount{}, false
+	}
+	return k.GetIntermediaryAccount(ctx, addr), true
+}
+
 func (k Keeper) DeleteLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
