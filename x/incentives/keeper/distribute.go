@@ -228,7 +228,17 @@ func (k Keeper) distributeSyntheticInternal(
 	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 
-	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
+	qualifiedLocks := make([]locktypes.PeriodLock, 0, len(locks))
+	for _, lock := range locks {
+		_, err := k.GetSyntheticLockup(ctx, lock.ID, denom)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())	
+			continue
+		}
+		qualifiedLocks = append(qualifiedLocks, lock)
+	}
+	
+	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, denom)
 
 	if lockSum.IsZero() {
 		return nil, nil
@@ -240,7 +250,7 @@ func (k Keeper) distributeSyntheticInternal(
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
 
-	for _, lock := range locks {
+	for _, lock := range qualifiedLocks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
 			lockedCoin, err := lock.SingleCoin()
