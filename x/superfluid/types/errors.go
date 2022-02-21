@@ -14,6 +14,7 @@ var (
 	ErrSameValidatorRedelegation       = sdkerrors.Register(ModuleName, 6, "redelegation to the same validator is not allowed")
 	ErrAlreadyUsedSuperfluidLockup     = sdkerrors.Register(ModuleName, 7, "lockup is already being used for superfluid staking")
 	ErrUnbondingSyntheticLockupExists  = sdkerrors.Register(ModuleName, 8, "unbonding synthetic lockup exists on the validator")
+	ErrBondingLockupNotSupported       = sdkerrors.Register(ModuleName, 9, "bonded superfluid stake is not allowed to have underlying lock unlocked")
 
-	ErrAttemptingToSuperfluidNonSuperfluidAsset = sdkerrors.Register(ModuleName, 10, "attempting to superfluid stake an LP share thats not supported")
+	ErrNonSuperfluidAsset = sdkerrors.Register(ModuleName, 10, "provided asset is not supported for superfluid staking")
 )

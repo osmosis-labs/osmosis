@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -346,7 +347,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, addCoins)
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, addr1, locks[0].ID, addCoins)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, locks[0].ID, addCoins)
 	suite.Require().NoError(err)
 
 	// check locks after adding tokens to lock
@@ -368,20 +369,113 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	err = simapp.FundAccount(suite.app.BankKeeper, cacheCtx, addr1, addCoins)
 	suite.Require().NoError(err)
 	curBalance := suite.app.BankKeeper.GetAllBalances(cacheCtx, addr1)
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, 1111, curBalance)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, 1111, curBalance)
 	suite.Require().Error(err)
 
 	// try to add tokens with lack balance
 	cacheCtx, _ = suite.ctx.CacheContext()
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr1, locks[0].ID, addCoins)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addCoins)
 	suite.Require().Error(err)
 
 	// try to add tokens to lock that is owned by others
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, addCoins)
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, addr2, locks[0].ID, addCoins)
+	_, err = suite.app.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addCoins)
 	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
+	suite.SetupTest()
+
+	// lock coins
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// lock coins on other durations
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+	suite.LockTokens(addr1, coins, time.Second*2)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 30)}
+	suite.LockTokens(addr1, coins, time.Second*3)
+
+	synthlocks := []types.SyntheticLock{}
+	// make three synthetic locks on each locks
+	for i := uint64(1); i <= 3; i++ {
+		// testing not unlocking synthlock, with same duration with underlying
+		synthlock := types.SyntheticLock{
+			UnderlyingLockId: i,
+			SynthDenom:       fmt.Sprintf("synth1/%d", i),
+			Duration:         time.Second * time.Duration(i),
+		}
+		err := suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, i, synthlock.SynthDenom, synthlock.Duration, false)
+		suite.Require().NoError(err)
+		synthlocks = append(synthlocks, synthlock)
+
+		// testing not unlocking synthlock, different duration with underlying
+		synthlock.SynthDenom = fmt.Sprintf("synth2/%d", i)
+		synthlock.Duration = time.Second * time.Duration(i) / 2
+		err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, i, synthlock.SynthDenom, synthlock.Duration, false)
+		suite.Require().NoError(err)
+		synthlocks = append(synthlocks, synthlock)
+
+		// testing unlocking synthlock, different duration with underlying
+		synthlock.SynthDenom = fmt.Sprintf("synth3/%d", i)
+		err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, i, synthlock.SynthDenom, synthlock.Duration, true)
+		suite.Require().NoError(err)
+		synthlocks = append(synthlocks, synthlock)
+	}
+
+	// check synthlocks are all set
+	checkSynthlocks := func(amounts []uint64) {
+		// by GetAllSyntheticLockups
+		for i, synthlock := range suite.app.LockupKeeper.GetAllSyntheticLockups(suite.ctx) {
+			suite.Require().Equal(synthlock, synthlocks[i])
+		}
+		// by GetAllSyntheticLockupsByLockup
+		for i := uint64(1); i <= 3; i++ {
+			for j, synthlockByLockup := range suite.app.LockupKeeper.GetAllSyntheticLockupsByLockup(suite.ctx, i) {
+				suite.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+j])
+			}
+		}
+		// by GetAllSyntheticLockupsByAddr
+		for i, synthlock := range suite.app.LockupKeeper.GetAllSyntheticLockupsByAddr(suite.ctx, addr1) {
+			suite.Require().Equal(synthlock, synthlocks[i])
+		}
+		// by GetPeriodLocksAccumulation
+		for i := 1; i <= 3; i++ {
+			for j := 1; j <= 3; j++ {
+				// get accumulation with always-qualifiing condition
+				acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+					Denom:    fmt.Sprintf("synth%d/%d", j, i),
+					Duration: time.Second / 10,
+				})
+				// amount retrieved should be equal with underlying lock's locked amount
+				suite.Require().Equal(acc.Int64(), amounts[i])
+
+				// get accumulation with non-qualifiing condition
+				acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+					Denom:    fmt.Sprintf("synth%d/%d", j, i),
+					Duration: time.Second * 100,
+				})
+				suite.Require().Equal(acc.Int64(), 0)
+			}
+		}
+	}
+
+	checkSynthlocks([]uint64{10, 20, 30})
+
+	// call AddTokensToLock
+	for i := uint64(1); i <= 3; i++ {
+		coins := sdk.Coins{sdk.NewInt64Coin("stake", int64(i)*10)}
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
+		suite.Require().NoError(err)
+		_, err = suite.app.LockupKeeper.AddTokensToLockByID(suite.ctx, i, coins)
+		suite.Require().NoError(err)
+	}
+
+	// check if all invariants holds after calling AddTokensToLock
+	checkSynthlocks([]uint64{20, 40, 60})
 }
 
 func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {

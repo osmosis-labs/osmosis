@@ -42,28 +42,28 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]gaugeChecker{{1, 0, "gamm/pool/1", true}},
 		},
 		{
 			"two LP tokens delegation to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/2"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/2", 1000000}},
 			[]int64{0},
 			[]gaugeChecker{{1, 0, "gamm/pool/1", true}, {2, 0, "gamm/pool/2", true}},
 		},
 		{
 			"one LP token with two locks to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]gaugeChecker{{1, 0, "gamm/pool/1", true}},
 		},
 		{
 			"add unbonded validator case",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]gaugeChecker{{1, 0, "gamm/pool/1", true}, {2, 1, "gamm/pool/1", false}},
 		},
@@ -75,12 +75,15 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(1)
+
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			// setup superfluid delegations
-			suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
-			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+			suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
+			unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {
@@ -98,8 +101,8 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 				suite.Require().Equal(gauge.IsPerpetual, true)
 				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
-					Denom:         gaugeCheck.lpDenom + keeper.StakingSuffix(valAddrs[gaugeCheck.valIndex].String()),
-					Duration:      params.UnbondingDuration,
+					Denom:         keeper.StakingSyntheticDenom(gaugeCheck.lpDenom, valAddrs[gaugeCheck.valIndex].String()),
+					Duration:      unbondingDuration,
 				})
 				if gaugeCheck.rewarded {
 					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())

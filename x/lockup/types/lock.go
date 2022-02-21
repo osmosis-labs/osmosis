@@ -38,6 +38,13 @@ func (p PeriodLock) OwnerAddress() sdk.AccAddress {
 	return addr
 }
 
+func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
+	if len(p.Coins) != 1 {
+		return sdk.Coin{}, fmt.Errorf("PeriodLock %d has no single coin: %s", p.ID, p.Coins)
+	}
+	return p.Coins[0], nil
+}
+
 func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	sum := sdk.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
@@ -47,18 +54,6 @@ func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	}
 	for _, lock := range locks {
 		sum = sum.Add(lock.Coins.AmountOfNoDenomValidation(denom))
-	}
-	return sum
-}
-
-func SumSyntheticLocksByDenom(synthLocks []SyntheticLock, denom string) sdk.Int {
-	sum := sdk.NewInt(0)
-	err := sdk.ValidateDenom(denom)
-	if err != nil {
-		panic(fmt.Errorf("invalid denom used internally: %s, %v", denom, err))
-	}
-	for _, synthLock := range synthLocks {
-		sum = sum.Add(synthLock.Coins.AmountOfNoDenomValidation(denom))
 	}
 	return sum
 }

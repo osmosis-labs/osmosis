@@ -73,33 +73,17 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	}
 
+	// modifications to accumulation store by synthlocks
+	// CONTRACT: lock will have synthetic lock only if it has a single coin
+	lockedCoin, err := lock.SingleCoin()
+	if err == nil {
+		for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
+			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), lockedCoin.Amount)
+		}
+	}
+
 	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), coins)
 
-	return nil
-}
-
-func (k Keeper) AddTokensToSyntheticLock(ctx sdk.Context, lock types.SyntheticLock, coins sdk.Coins) error {
-	// when synthetic lockup exists for the lockup, disallow adding different coins
-	if len(lock.Coins.Add(coins...)) > 1 {
-		return fmt.Errorf("multiple tokens lockup is not allowed for superfluid")
-	}
-
-	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
-	// all the synthetic lockups' accumulation should be increased
-
-	// Note: as long as token denoms does not change, synthetic lockup references are not needed to change
-	// increase synthetic lockup's Coins object - only for bonding synthetic lockup
-
-	sCoins := syntheticCoins(coins, lock.Suffix)
-	lock.Coins = lock.Coins.Add(sCoins...)
-	err := k.setSyntheticLockupObject(ctx, &lock)
-	if err != nil {
-		panic(err)
-	}
-	for _, coin := range sCoins {
-		// Note: we use native lock's duration on accumulation store
-		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
-	}
 	return nil
 }
 
@@ -125,18 +109,9 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 
 	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
 	// all the synthetic lockups' accumulation should be decreased
-	for _, synthLock := range synthLocks {
-		sCoins := syntheticCoins(coins, synthLock.Suffix)
-		synthLock.Coins = synthLock.Coins.Sub(sCoins)
-		err := k.setSyntheticLockupObject(ctx, &synthLock)
-		if err != nil {
-			panic(err)
-		}
-
-		for _, coin := range sCoins {
-			// Note: we use native lock's duration on accumulation store
-			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-		}
+	for _, synthlock := range synthLocks {
+		// Note: we use native lock's duration on accumulation store
+		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), lock.Coins[0].Amount)
 	}
 
 	return nil
@@ -144,15 +119,12 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 
 // AddTokensToLock locks more tokens into a lockup
 // This also saves the lock to the store.
-func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
+func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return nil, err
 	}
-	if lock.Owner != owner.String() {
-		return nil, types.ErrNotLockOwner
-	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.OwnerAddress(), types.ModuleName, coins); err != nil {
 		return nil, err
 	}
 
@@ -165,7 +137,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, owner sdk.AccAddress, lockI
 		return lock, nil
 	}
 
-	k.hooks.OnTokenLocked(ctx, owner, lock.ID, coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, coins, lock.Duration, lock.EndTime)
 	return lock, nil
 }
 
@@ -298,29 +270,35 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 			ctx.Logger().Info(msg)
 		}
 
-		err := k.setSyntheticLockAndResetRefs(ctx, synthLock)
+		// Add to the accumlation store cache
+		lock, err := k.GetLockByID(ctx, synthLock.UnderlyingLockId)
 		if err != nil {
 			return err
 		}
 
-		// Add to the accumlation store cache
-		for _, coin := range synthLock.Coins {
-			// update or create the new map from duration -> Int for this denom.
-			var curDurationMap map[time.Duration]sdk.Int
-			if durationMap, ok := accumulationStoreEntries[coin.Denom]; ok {
-				curDurationMap = durationMap
-				// update or create new amount in the duration map
-				newAmt := coin.Amount
-				if curAmt, ok := durationMap[synthLock.Duration]; ok {
-					newAmt = newAmt.Add(curAmt)
-				}
-				curDurationMap[synthLock.Duration] = newAmt
-			} else {
-				denoms = append(denoms, coin.Denom)
-				curDurationMap = map[time.Duration]sdk.Int{synthLock.Duration: coin.Amount}
-			}
-			accumulationStoreEntries[coin.Denom] = curDurationMap
+		err = k.setSyntheticLockAndResetRefs(ctx, *lock, synthLock)
+		if err != nil {
+			return err
 		}
+
+		coin, err := lock.SingleCoin()
+		if err != nil {
+			return err
+		}
+
+		var curDurationMap map[time.Duration]sdk.Int
+		if durationMap, ok := accumulationStoreEntries[synthLock.SynthDenom]; ok {
+			curDurationMap = durationMap
+			newAmt := coin.Amount
+			if curAmt, ok := durationMap[synthLock.Duration]; ok {
+				newAmt = newAmt.Add(curAmt)
+			}
+			curDurationMap[synthLock.Duration] = newAmt
+		} else {
+			denoms = append(denoms, synthLock.SynthDenom)
+			curDurationMap = map[time.Duration]sdk.Int{synthLock.Duration: coin.Amount}
+		}
+		accumulationStoreEntries[synthLock.SynthDenom] = curDurationMap
 	}
 
 	// deterministically iterate over durationMap cache.
@@ -346,7 +324,7 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 	return nil
 }
 
-func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, synthLock types.SyntheticLock) error {
+func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
 	err := k.setSyntheticLockupObject(ctx, &synthLock)
 	if err != nil {
 		return err
@@ -354,10 +332,10 @@ func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, synthLock types.Sy
 
 	// store refs by the status of unlock
 	if synthLock.IsUnlocking() {
-		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, synthLock)
+		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, lock, synthLock)
 	}
 
-	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, synthLock)
+	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, lock, synthLock)
 }
 
 // setLockAndResetLockRefs sets the lock, and resets all of its lock references
@@ -447,27 +425,25 @@ func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
 func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
-	// sanity check
-	if !coins.IsAllLTE(lock.Coins) {
-		return fmt.Errorf("requested amount to unlock exceedes locked tokens")
-	}
-
 	// prohibit BeginUnlock if synthetic locks are referring to this
 	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
-	// if k.HasAnySyntheticLockups(ctx, lock.ID) {
-	// 	return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
-	// }
+	if k.HasAnySyntheticLockups(ctx, lock.ID) {
+		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
+	}
+
+	return k.BeginForceUnlock(ctx, lock, coins)
+}
+
+func (k Keeper) BeginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+	// sanity check
+	if !coins.IsAllLTE(lock.Coins) {
+		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
+	}
 
 	// If the amount were unlocking is empty, or the entire coins amount, unlock the entire lock.
 	// Otherwise, split the lock into two locks, and fully unlock the newly created lock.
 	// (By virtue, the newly created lock we split into should have the unlock amount)
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
-		// prohibit BeginUnlock if synthetic locks are referring to this
-		// TODO: Delete, and do for all locks,
-		// once we correct superfluid to not trigger undelegates on OnTokenUnlock. This may happen post v7
-		if k.HasAnySyntheticLockups(ctx, lock.ID) {
-			return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
-		}
 		splitLock, err := k.splitLock(ctx, lock, coins)
 		if err != nil {
 			return err
@@ -494,11 +470,9 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		return err
 	}
 
-	if k.hooks == nil {
-		return nil
+	if k.hooks != nil {
+		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	}
-
-	k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 
 	return nil
 }
