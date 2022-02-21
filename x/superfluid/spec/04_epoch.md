@@ -11,10 +11,14 @@ Overall Epoch sequence:
   * Update `Osmo Equivalent Multiplier` value for each LP token
     * (Currently spot price at epoch)
   * Refresh delegation amounts for all `Intermediary Accounts`
+    * Calcultate the expected delegation for this account as `Osmo Equivalent Multipler` * `# LP Shares` * `Risk adjustment`
+      * If this is less than 0.000001 `Osmo` it will be rounded to 0
+    * Lookup current delegation amount for `Intermediary Account`
+      * If there is no delegation, treat the current delegation as 0
     * If expected amount > current delegation:
-      * Mint new `Osmo` and `Delegate`
+      * Mint new `Osmo` and `Delegate` to `Validator`
     * If expected amount < current delegation:
-      * Use `InstantUndelegate` and burn the extra `Osmo`
+      * Use `InstantUndelegate` and burn the received `Osmo`
 * Incentives
   * Payout rewards from gagues to `Synthetic Lock` owners
   * (Also pay out regular LP incentives)

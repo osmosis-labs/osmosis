@@ -647,39 +647,38 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			[]assetTwap{},
 			[]int64{0, 1},
 		},
-		// {
-		// 	"zero price twap check",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
-		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
-		// 	[]assetTwap{},
-		// 	[]int64{0},
-		// },
-		// {
-		// 	"refresh case from zero to non-zero",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
-		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
-		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
-		// 	[]int64{0},
-		// },
-		// {
-		// 	"dust price twap check",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
-		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
-		// 	[]assetTwap{},
-		// 	[]int64{0},
-		// },
-		// {
-		// 	"refresh case from dust to non-dust",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, "gamm/pool/1", 1000000}},
-		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
-		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
-		// 	[]int64{0},
-		// },
-		//FIXME at least this last test should pass. I think the others can be removed?
+		{
+			"zero price twap check",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
+			[]assetTwap{},
+			[]int64{0},
+		},
+		{
+			"refresh case from zero to non-zero",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+			[]int64{0},
+		},
+		{
+			"dust price twap check",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
+			[]assetTwap{},
+			[]int64{0},
+		},
+		{
+			"refresh case from dust to non-dust",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+			[]int64{0},
+		},
 	}
 
 	for _, tc := range testCases {
