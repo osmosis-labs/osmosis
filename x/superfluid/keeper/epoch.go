@@ -25,7 +25,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 		// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
 		ctx.Logger().Info("Update all osmo equivalency multipliers")
 		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			err := k.updateOsmoEquivalentMultipliers(ctx, asset, endedEpochNumber)
+			err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, endedEpochNumber)
 			if err != nil {
 				// TODO: Revisit what we do here. (halt all distr, only skip this asset)
 				// Since at MVP of feature, we only have one pool of superfluid staking,
@@ -69,7 +69,7 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) updateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, endedEpochNumber int64) error {
+func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, endedEpochNumber int64) error {
 	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)

@@ -3,14 +3,25 @@ package gov
 import (
 	"fmt"
 
+	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetSuperfluidAssetsProposal) error {
+func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek epochskeeper.Keeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
 		k.SetSuperfluidAsset(ctx, asset)
+
+		// initialize osmo equivalent multipliers
+		epochIdentifier := k.GetParams(ctx).RefreshEpochIdentifier
+		currentEpoch := ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
+		err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, currentEpoch)
+		if err != nil {
+			panic(err)
+		}
+
 		event := sdk.NewEvent(
 			types.TypeEvtSetSuperfluidAsset,
 			sdk.NewAttribute(types.AttributeDenom, asset.Denom),
