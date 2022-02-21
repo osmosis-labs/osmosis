@@ -10,11 +10,11 @@ import (
 )
 
 func stakingSuffix(denom, valAddr string) string {
-	return fmt.Sprintf("%ssuperbonding%s", denom, valAddr)
+	return fmt.Sprintf("%s/superbonding/%s", denom, valAddr)
 }
 
 func unstakingSuffix(denom, valAddr string) string {
-	return fmt.Sprintf("%ssuperunbonding%s", denom, valAddr)
+	return fmt.Sprintf("%s/superunbonding/%s", denom, valAddr)
 }
 
 func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk.Int {
@@ -92,17 +92,6 @@ func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sd
 	acc := k.GetIntermediaryAccount(ctx, intermediaryAccAddr)
 	valAddr := acc.ValAddr
 	validator, err := k.validateValAddrForSFDelegate(ctx, valAddr)
-	if err != nil {
-		return err
-	}
-
-	synthdenom := stakingSuffix(acc.Denom, valAddr)
-	synthLock, err := k.lk.GetSyntheticLockup(ctx, lockID, synthdenom)
-	if err != nil {
-		return err
-	}
-	// TODO: Add safety checks?
-	err = k.lk.AddTokensToSyntheticLock(ctx, *synthLock, amount)
 	if err != nil {
 		return err
 	}
@@ -201,18 +190,10 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 
-	// check unbonding synthetic lockup already exists on this validator
-	// in this case automatic superfluid undelegation should fail and it is the source of chain halt
-	synthdenom := unstakingSuffix(coin.Denom, valAddr)
-	_, err = k.lk.GetSyntheticLockup(ctx, lockID, synthdenom)
-	if err == nil {
-		return types.ErrUnbondingSyntheticLockupExists
-	}
-
 	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
 
 	// Register a synthetic lockup for superfluid staking
-	synthdenom = stakingSuffix(coin.Denom, valAddr)
+	synthdenom := stakingSuffix(coin.Denom, valAddr)
 	notUnlocking := false
 	err = k.lk.CreateSyntheticLockup(ctx, lockID, synthdenom, unbondingDuration, notUnlocking)
 	if err != nil {

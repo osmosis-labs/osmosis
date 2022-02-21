@@ -73,29 +73,16 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	}
 
+	// modifications to accumulation store by synthlocks
+	// CONTRACT: lock will have synthetic lock only if it has a single coin
+	lockedCoin, err := lock.SingleCoin()
+	if err == nil {
+		for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
+			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), lockedCoin.Amount)
+		}
+	}
+
 	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), coins)
-
-	return nil
-}
-
-func (k Keeper) AddTokensToSyntheticLock(ctx sdk.Context, synthlock types.SyntheticLock, coins sdk.Coins) error {
-	lock, err := k.AddTokensToLockByID(ctx, synthlock.UnderlyingLockId, coins)
-	if err != nil {
-		return err
-	}
-
-	// when synthetic lockup exists for the lockup, disallow adding different coins
-	if len(lock.Coins) > 1 {
-		return fmt.Errorf("multiple tokens lockup is not allowed for superfluid")
-	}
-
-	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
-	// all the synthetic lockups' accumulation should be increased
-
-	// Note: as long as token denoms does not change, synthetic lockup references are not needed to change
-	// increase synthetic lockup's Coins object - only for bonding synthetic lockup
-
-	k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), coins[0].Amount)
 
 	return nil
 }
