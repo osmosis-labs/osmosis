@@ -550,7 +550,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		_, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 		suite.Require().Error(err)
 
-		// check if finsihed unlocking succesfully increased balance
+		// check if finished unlocking succesfully increased balance
 		balance = suite.app.BankKeeper.GetBalance(suite.ctx, lock.OwnerAddress(), "gamm/pool/1")
 		suite.Require().Equal(sdk.NewInt(1000000), balance.Amount)
 	}
