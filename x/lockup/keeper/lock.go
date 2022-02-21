@@ -425,27 +425,25 @@ func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
 func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
-	// sanity check
-	if !coins.IsAllLTE(lock.Coins) {
-		return fmt.Errorf("requested amount to unlock exceedes locked tokens")
-	}
-
 	// prohibit BeginUnlock if synthetic locks are referring to this
 	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
-	// if k.HasAnySyntheticLockups(ctx, lock.ID) {
-	// 	return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
-	// }
+	if k.HasAnySyntheticLockups(ctx, lock.ID) {
+		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
+	}
+
+	return k.BeginForceUnlock(ctx, lock, coins)
+}
+
+func (k Keeper) BeginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+	// sanity check
+	if !coins.IsAllLTE(lock.Coins) {
+		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
+	}
 
 	// If the amount were unlocking is empty, or the entire coins amount, unlock the entire lock.
 	// Otherwise, split the lock into two locks, and fully unlock the newly created lock.
 	// (By virtue, the newly created lock we split into should have the unlock amount)
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
-		// prohibit BeginUnlock if synthetic locks are referring to this
-		// TODO: Delete, and do for all locks,
-		// once we correct superfluid to not trigger undelegates on OnTokenUnlock. This may happen post v7
-		if k.HasAnySyntheticLockups(ctx, lock.ID) {
-			return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
-		}
 		splitLock, err := k.splitLock(ctx, lock, coins)
 		if err != nil {
 			return err
@@ -472,11 +470,9 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		return err
 	}
 
-	if k.hooks == nil {
-		return nil
+	if k.hooks != nil {
+		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	}
-
-	k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 
 	return nil
 }
