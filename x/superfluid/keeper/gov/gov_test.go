@@ -1,21 +1,55 @@
 package gov_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper/gov"
+
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
+func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
+	coins := suite.app.GAMMKeeper.GetParams(suite.ctx).PoolCreationFee
+	poolAssets := []gammtypes.PoolAsset{}
+	for _, denom := range denoms {
+		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
+		poolAssets = append(poolAssets, gammtypes.PoolAsset{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin(denom, sdk.NewInt(1000000000000000000)),
+		})
+	}
+
+	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+	suite.Require().NoError(err)
+	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, acc1, coins)
+	suite.Require().NoError(err)
+
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(
+		suite.ctx, acc1, balancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.NewDecWithPrec(1, 2),
+		}, poolAssets, "")
+	suite.Require().NoError(err)
+
+	return poolId
+}
+
 func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
+	nativeAsset := types.SuperfluidAsset{
+		Denom:     "stake",
+		AssetType: types.SuperfluidAssetTypeNative,
+	}
 	asset1 := types.SuperfluidAsset{
 		Denom:     "gamm/pool/1",
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	asset2 := types.SuperfluidAsset{
-		Denom:     "nativetoken",
-		AssetType: types.SuperfluidAssetTypeNative,
-	}
-	asset3 := types.SuperfluidAsset{
 		Denom:     "nonexistanttoken",
 		AssetType: types.SuperfluidAssetTypeNative,
 	}
@@ -34,10 +68,10 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			"happy path flow",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1, asset2}, []types.SuperfluidAsset{asset1, asset2}, false,
+					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false,
 				},
 				{
-					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, false,
+					false, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{}, false,
 				},
 			},
 		},
@@ -45,10 +79,10 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			"token does not exist",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1, asset2}, []types.SuperfluidAsset{asset1, asset2}, false,
+					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false,
 				},
 				{
-					false, []types.SuperfluidAsset{asset3}, []types.SuperfluidAsset{asset1, asset2}, true,
+					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, true,
 				},
 			},
 		},
@@ -66,23 +100,32 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			suite.Require().Len(resp.Assets, 0)
 
 			for i, action := range tc.actions {
+
+				// here we set two different string arrays of denoms.
+				// The reason we do this is because native denom should be an asset within the pool,
+				// while we do not want native asset to be in gov proposals.
+				govDenoms := []string{}
+				poolDenoms := []string{nativeAsset.Denom}
+
+				for _, asset := range action.assets {
+					poolDenoms = append(poolDenoms, asset.Denom)
+					govDenoms = append(govDenoms, asset.Denom)
+				}
+
 				if action.isAdd {
+					suite.createGammPool(poolDenoms)
 					// set superfluid assets via proposal
-					err = gov.HandleSetSuperfluidAssetsProposal(suite.ctx, *suite.app.SuperfluidKeeper, &types.SetSuperfluidAssetsProposal{
+					err = gov.HandleSetSuperfluidAssetsProposal(suite.ctx, *suite.app.SuperfluidKeeper, *suite.app.EpochsKeeper, &types.SetSuperfluidAssetsProposal{
 						Title:       "title",
 						Description: "description",
 						Assets:      action.assets,
 					})
 				} else {
-					assetDenoms := []string{}
-					for _, asset := range action.assets {
-						assetDenoms = append(assetDenoms, asset.Denom)
-					}
 					// remove existing superfluid asset via proposal
 					err = gov.HandleRemoveSuperfluidAssetsProposal(suite.ctx, *suite.app.SuperfluidKeeper, &types.RemoveSuperfluidAssetsProposal{
 						Title:                 "title",
 						Description:           "description",
-						SuperfluidAssetDenoms: assetDenoms,
+						SuperfluidAssetDenoms: govDenoms,
 					})
 				}
 				if action.expectErr {
@@ -100,6 +143,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				// check assets
 				resp, err = suite.app.SuperfluidKeeper.AllAssets(sdk.WrapSDKContext(suite.ctx), &types.AllAssetsRequest{})
+				fmt.Println(resp)
 				suite.Require().NoError(err)
 				suite.Require().Equal(resp.Assets, action.expectedAssets)
 			}

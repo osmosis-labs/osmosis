@@ -49,3 +49,14 @@ message OsmoEquivalentMultiplierRecord {
     (gogoproto.nullable) = false
   ];
 }
+
+// SuperfluidDelegationRecord takes the role of intermediary between LP token
+// and OSMO tokens for superfluid staking
+message SuperfluidDelegationRecord {
+  string delegator_address = 1;
+  string validator_address = 2;
+  cosmos.base.v1beta1.Coin delegation_amount = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}

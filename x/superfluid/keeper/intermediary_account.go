@@ -75,7 +75,7 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	gaugeID, err := k.ik.CreateGauge(ctx, true, accountAddr, sdk.Coins{}, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		// move this synthetic denom creation to a dedicated function
-		Denom:    denom + stakingSuffix(valAddr),
+		Denom:    stakingSyntheticDenom(denom, valAddr),
 		Duration: k.sk.GetParams(ctx).UnbondingTime,
 	}, ctx.BlockTime(), 1)
 
@@ -125,6 +125,15 @@ func (k Keeper) GetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId u
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
 	return prefixStore.Get(sdk.Uint64ToBigEndian(lockId))
+}
+
+// Returns Superfluid Intermediate Account and a bool if found / not found
+func (k Keeper) GetIntermediaryAccountFromLockId(ctx sdk.Context, lockId uint64) (types.SuperfluidIntermediaryAccount, bool) {
+	addr := k.GetLockIdIntermediaryAccountConnection(ctx, lockId)
+	if addr.Empty() {
+		return types.SuperfluidIntermediaryAccount{}, false
+	}
+	return k.GetIntermediaryAccount(ctx, addr), true
 }
 
 func (k Keeper) DeleteLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64) {
