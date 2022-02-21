@@ -95,6 +95,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 				ValidatorAddress: validator.String(),
 				Denom:            denom,
 			})
+
 			suite.Require().NoError(err)
 			suite.Require().True(amountRes.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
 				sdk.NewInt64Coin(denom, 2000000),

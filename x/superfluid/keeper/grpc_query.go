@@ -175,7 +175,7 @@ func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req
 	periodLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, syntheticDenom, time.Second)
 
 	for _, lock := range periodLocks {
-		lockedCoins := sdk.NewCoin(req.Denom, lock.GetCoins().AmountOf(syntheticDenom))
+		lockedCoins := sdk.NewCoin(req.Denom, lock.GetCoins().AmountOf(req.Denom))
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
 				DelegatorAddress: lock.GetOwner(),
@@ -216,7 +216,8 @@ func (k Keeper) SuperfluidDelegatedAmountByValidatorDenom(goCtx context.Context,
 	}
 
 	syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
-	baseAmount := syntheticOsmoAmt.Quo(k.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
+
+	baseAmount := k.UnriskAdjustOsmoValue(ctx, syntheticOsmoAmt).Quo(k.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
 	return &types.SuperfluidDelegatedAmountByValidatorDenomResponse{
 		TotalDelegatedCoins: sdk.NewCoins(sdk.NewCoin(req.Denom, baseAmount)),
 	}, nil
