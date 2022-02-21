@@ -17,11 +17,11 @@ func (k Keeper) createSyntheticLockup(ctx sdk.Context,
 	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
 	if lockingStat == unlockingStatus {
 		isUnlocking := true
-		synthdenom := unstakingSuffix(intermediateAcc.Denom, intermediateAcc.ValAddr)
+		synthdenom := unstakingSyntheticDenom(intermediateAcc.Denom, intermediateAcc.ValAddr)
 		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unbondingDuration, isUnlocking)
 	} else {
 		notUnlocking := false
-		synthdenom := stakingSuffix(intermediateAcc.Denom, intermediateAcc.ValAddr)
+		synthdenom := stakingSyntheticDenom(intermediateAcc.Denom, intermediateAcc.ValAddr)
 		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unbondingDuration, notUnlocking)
 	}
 }

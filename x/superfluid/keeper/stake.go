@@ -233,7 +233,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
 
 	// Delete the old synthetic lockup, and create a new synthetic lockup representing the unstaking
-	synthdenom := stakingSuffix(lockedCoin.Denom, intermediaryAcc.ValAddr)
+	synthdenom := stakingSyntheticDenom(lockedCoin.Denom, intermediaryAcc.ValAddr)
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {
 		return err
