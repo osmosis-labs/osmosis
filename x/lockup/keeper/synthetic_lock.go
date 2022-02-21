@@ -117,7 +117,7 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 		return err
 	}
 
-	var endTime time.Time
+	endTime := time.Time{}
 	if isUnlocking { // end time is set automatically if it's unlocking lockup
 		if unlockDuration > lock.Duration {
 			return types.ErrSyntheticDurationLongerThanNative
