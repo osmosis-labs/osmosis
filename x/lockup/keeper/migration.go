@@ -91,8 +91,8 @@ func MergeLockupsForSimilarDurations(
 				normalLock.Coins[0].Amount = normalLock.Coins[0].Amount.Add(coin.Amount)
 			}
 
-			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(normalizedDuration), coin.Amount)
+			// k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+			// k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(normalizedDuration), coin.Amount)
 
 			err := k.setLock(ctx, normalLock)
 			if err != nil {
