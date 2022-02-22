@@ -14,8 +14,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper) {
 	if err != nil {
 		panic(err)
 	}
-	if numBlocksSinceEpochStart == 1 {
-		k.BlockAfterEpoch(ctx)
+	if numBlocksSinceEpochStart == 0 {
+		k.AfterEpochStartBeginBlock(ctx)
 	}
 }
 

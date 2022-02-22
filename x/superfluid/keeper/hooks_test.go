@@ -44,8 +44,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.Require().NoError(err)
 
 			// run epoch actions
-			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-			suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 2)
+			suite.BeginNewBlock(true)
 
 			// check lptoken twap value set
 			newEpochTwap := suite.app.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.ctx, "gamm/pool/1")
@@ -58,6 +57,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAccAddress(), valAddr)
 				suite.Require().True(found)
 				suite.Require().Equal(delegation.Shares, sdk.NewDec(9500))
+				// TODO: Check reward distribution
 			}
 		})
 	}
