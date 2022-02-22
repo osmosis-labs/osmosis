@@ -46,7 +46,8 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		if !found {
 			// continue if current delegation is 0, in case its really a dust delegation
 			// that becomes worth something after refresh.
-			k.Logger(ctx).Error(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh", mAddr.String(), acc.ValAddr))
+			k.Logger(ctx).Info(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh."+
+				" It may have been previously bonded, but now unbonded.", mAddr.String(), acc.ValAddr))
 		} else {
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
 
@@ -245,7 +246,7 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, s
 	if !synthLocks[0].IsUnlocking() {
 		return types.ErrBondingLockupNotSupported
 	}
-	return k.lk.BeginForceUnlock(ctx, *lock, sdk.Coins{})
+	return k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
 }
 
 func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {

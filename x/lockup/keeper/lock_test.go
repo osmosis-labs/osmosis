@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	lock := types.NewPeriodLock(1, addr1, time.Second, now.Add(time.Second), coins)
+	lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, coins)
 
 	// lock with balance
 	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
@@ -194,8 +194,11 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, nil)
 	suite.Require().NoError(err)
 
+	lockPtr, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
+	suite.Require().NoError(err)
+
 	// unlock with lock object
-	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), lock)
+	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), *lockPtr)
 	suite.Require().NoError(err)
 }
 

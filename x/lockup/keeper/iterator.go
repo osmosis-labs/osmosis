@@ -25,9 +25,10 @@ func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time
 	return store.Iterator(storetypes.PrefixEndBytes(key), storetypes.PrefixEndBytes(prefix))
 }
 
-func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
+// iterate through keys between that use prefix, and have a time LTE max time
+func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	timeKey := getTimeKey(time)
+	timeKey := getTimeKey(maxTime)
 	key := combineKeys(prefix, timeKey)
 	// If it’s unlockTime, then it should count as unlocked
 	// inclusive end bytes = key + 1, next iterator

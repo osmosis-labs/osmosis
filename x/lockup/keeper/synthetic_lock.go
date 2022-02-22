@@ -137,10 +137,8 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 		return err
 	}
 
-	unlockingPrefix := unlockingPrefix(isUnlocking)
-
 	// add lock refs into not unlocking queue
-	err = k.addSyntheticLockRefs(ctx, unlockingPrefix, *lock, synthLock)
+	err = k.addSyntheticLockRefs(ctx, *lock, synthLock)
 	if err != nil {
 		return err
 	}
@@ -172,7 +170,7 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom
 	k.deleteSyntheticLockupObject(ctx, lockID, synthdenom)
 
 	// delete lock refs from the unlocking queue
-	err = k.deleteSyntheticLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *lock, *synthLock)
+	err = k.deleteSyntheticLockRefs(ctx, *lock, *synthLock)
 	if err != nil {
 		return err
 	}
@@ -183,18 +181,6 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom
 		return err
 	}
 	k.accumulationStore(ctx, synthLock.SynthDenom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-	return nil
-}
-
-// DeleteAllSyntheticLocksByLockup delete all the synthetic lockups by lockup id
-func (k Keeper) DeleteAllSyntheticLocksByLockup(ctx sdk.Context, lockID uint64) error {
-	syntheticLocks := k.GetAllSyntheticLockupsByLockup(ctx, lockID)
-	for _, synthLock := range syntheticLocks {
-		err := k.DeleteSyntheticLockup(ctx, lockID, synthLock.SynthDenom)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

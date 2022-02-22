@@ -208,40 +208,6 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	suite.Require().Equal(accum.String(), "0")
 }
 
-func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllSyntheticLocksByLockup() {
-	suite.SetupTest()
-
-	// lock coins
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-
-	// check locks
-	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].Coins, coins)
-
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1", time.Second, false)
-	suite.Require().NoError(err)
-
-	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
-	suite.Require().NoError(err)
-	suite.Require().Equal(*synthLock, types.SyntheticLock{
-		UnderlyingLockId: 1,
-		SynthDenom:       "synthstakestakedtovalidator1",
-		EndTime:          time.Time{},
-		Duration:         time.Second,
-	})
-
-	err = suite.app.LockupKeeper.DeleteAllSyntheticLocksByLockup(suite.ctx, 1)
-	suite.Require().NoError(err)
-
-	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
-	suite.Require().Error(err)
-	suite.Require().Nil(synthLock)
-}
-
 func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks() {
 	suite.SetupTest()
 
