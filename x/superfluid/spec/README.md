@@ -14,9 +14,7 @@ Superfluid module provides a common interface for superfluid staking.
 Module provides below functionalities
 
 - Governance defined list of assets to allow get superfluid staked
-- Superfluid staked assets implement an interface which has a function for "get risk-adjusted osmo value".
-- Every epoch, every assets value for "current superfluid amount staked" should be recorded in state.
-- Later on, we should move the slashing module into here, and make it read from the superfluid staking module.
+- Superfluid delegation / undelegation mechanism utilizing lockup, staking, incentives and minter modules
 
 ## Contents
 
