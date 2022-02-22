@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/stretchr/testify/suite"
@@ -16,6 +18,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 type KeeperTestSuite struct {
@@ -105,6 +112,42 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	suite.Require().NoError(err)
 
 	return poolId
+}
+
+func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
+	msgServer := lockupkeeper.NewMsgServerImpl(*suite.app.LockupKeeper)
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
+	suite.Require().NoError(err)
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	suite.Require().NoError(err)
+	return msgResponse.ID
+}
+
+func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
+	valPub := secp256k1.GenPrivKey().PubKey()
+	valAddr := sdk.ValAddress(valPub.Address())
+	bondDenom := suite.app.StakingKeeper.GetParams(suite.ctx).BondDenom
+	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
+
+	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sdk.AccAddress(valAddr), selfBond)
+	sh := teststaking.NewHelper(suite.T(), suite.ctx, *suite.app.StakingKeeper)
+	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
+	sh.Handle(msg, true)
+	val, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
+	suite.Require().True(found)
+	val = val.UpdateStatus(bondStatus)
+	suite.app.StakingKeeper.SetValidator(suite.ctx, val)
+
+	return valAddr
+}
+
+func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
+	valAddrs := []sdk.ValAddress{}
+	for _, status := range bondStatuses {
+		valAddr := suite.SetupValidator(status)
+		valAddrs = append(valAddrs, valAddr)
+	}
+	return valAddrs
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -6,13 +6,13 @@ order: 4
 
 Overall Epoch sequence
 
-* Epoch N ends:
+* Epoch N ends, during AfterEpochEnd:
   * Distribute gauge rewards for all non-superfluid gauges
   * Mint new tokens
     * Issue new Osmo, and send to various modules (distribution, incentives, etc.)
     * 25% currently goes to `x/distribution` which funds `Staking` and `Superfluid` rewards
     * Rewards for `Superfluid` are based on the just updated delegation amounts, and queued for payout in the next epoch
-* First block after epoch:
+* Epoch N ends, during BeginBlock **After** AfterEpochEnd:
   * Claim staking rewards for every `Intermediary Account`, put them into gauges.
   * Distribute Superfluid staking rewards from gauges to bonded Synthetic Lock owners
   * Update `Osmo Equivalent Multiplier` value for each LP token

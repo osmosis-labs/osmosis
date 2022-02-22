@@ -57,6 +57,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAccAddress(), valAddr)
 				suite.Require().True(found)
 				suite.Require().Equal(delegation.Shares, sdk.NewDec(9500))
+				// TODO: Check reward distribution
 			}
 		})
 	}
