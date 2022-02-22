@@ -78,7 +78,7 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 	lockedCoin, err := lock.SingleCoin()
 	if err == nil {
 		for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
-			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), lockedCoin.Amount)
+			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), coins.AmountOf(lockedCoin.Denom))
 		}
 	}
 
