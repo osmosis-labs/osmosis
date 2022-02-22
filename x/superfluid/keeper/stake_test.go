@@ -507,8 +507,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		// undelegation needs to happen prior to SuperfluidUnbondLock
 		err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lock.ID)
 		suite.Require().NoError(err)
-		balance := suite.app.BankKeeper.GetBalance(suite.ctx, lock.OwnerAddress(), "gamm/pool/1")
-		suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+		balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, lock.OwnerAddress())
+		suite.Require().Equal(0, balances.Len())
 
 		// check that unbonding synth has been created correctly after undelegation
 		unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
@@ -530,9 +530,10 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		updatedLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 		suite.Require().NoError(err)
 		suite.Require().True(updatedLock.IsUnlocking())
+
 		// check if finsihed unlocking synth lock did not increase balance
-		balance = suite.app.BankKeeper.GetBalance(suite.ctx, lock.OwnerAddress(), "gamm/pool/1")
-		suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+		balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, lock.OwnerAddress())
+		suite.Require().Equal(0, balances.Len())
 
 		// test that synth lock finish does not mean underlying lock is finished
 		suite.ctx = suite.ctx.WithBlockTime((startTime.Add(unbondingDuration)))
@@ -551,8 +552,11 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		suite.Require().Error(err)
 
 		// check if finished unlocking succesfully increased balance
-		balance = suite.app.BankKeeper.GetBalance(suite.ctx, lock.OwnerAddress(), "gamm/pool/1")
-		suite.Require().Equal(sdk.NewInt(1000000), balance.Amount)
+		balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, lock.OwnerAddress())
+		suite.Require().Equal(1, balances.Len())
+		suite.Require().Equal("gamm/pool/1", balances[0].Denom)
+		suite.Require().Equal(sdk.NewInt(1000000), balances[0].Amount)
+
 	}
 }
 
