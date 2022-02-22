@@ -9,6 +9,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
@@ -45,15 +46,15 @@ func CreateRandomAccounts(accNum int) []sdk.AccAddress {
 	return testAddrs
 }
 
-func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) lockuptypes.PeriodLock {
+func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
+	msgServer := lockupkeeper.NewMsgServerImpl(*suite.app.LockupKeeper)
 	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 	suite.Require().NoError(err)
 	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, coins)
 	suite.Require().NoError(err)
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	suite.Require().NoError(err)
-	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
-	suite.Require().NoError(err)
-	return lock
+	return msgResponse.ID
 }
 
 func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
@@ -103,6 +104,10 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegations(delAddrs []sdk.AccAddre
 	locks := []lockuptypes.PeriodLock{}
 
 	// setup superfluid delegations
+
+	// we do sanity check on the test cases.
+	// if superfluid staking is happening with single val and multiple superfluid delegations,
+	// we should be running `AddTokensToLockByID`, instead of creating new locks
 	for _, del := range superDelegations {
 		delAddr := delAddrs[del.delIndex]
 		valAddr := valAddrs[del.valIndex]
@@ -165,13 +170,43 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, va
 
 	// create lockup of LP token
 	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}
-	lock := suite.LockTokens(delAddr, coins, unbondingDuration)
+	lastLockID := suite.app.LockupKeeper.GetLastLockID(suite.ctx)
 
-	// call SuperfluidDelegate and check response
-	err := suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.Owner, lock.ID, valAddr.String())
+	msgServer := lockupkeeper.NewMsgServerImpl(*suite.app.LockupKeeper)
+	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+	suite.Require().NoError(err)
+	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, delAddr, coins)
+	suite.Require().NoError(err)
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), lockuptypes.NewMsgLockTokens(delAddr, unbondingDuration, coins))
+	suite.Require().NoError(err)
+	lockID := msgResponse.ID
+
+	lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockID)
 	suite.Require().NoError(err)
 
-	return lock
+	// here we check if check `LockTokens` added to existing locks or created a new lock.
+	// if `LockTokens` created a new lock, we continue SuperfluidDelegate
+	// if lock has been existing before, we wouldn't have to call SuperfluidDelegate separately, as hooks on LockTokens would have automatically called SuperfluidDelegateMore
+	if lastLockID != lockID {
+		err = suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.Owner, lock.ID, valAddr.String())
+		suite.Require().NoError(err)
+	} else {
+		// here we handle two cases.
+		// 1. the lock has existed before but has not been superflud staking
+		// 2. the lock has existed before and has been superfluid staking
+
+		// we check if synth lock that has existed before, if it did, it means that the lock has been superfluid staked
+		// we do not care about unbonding synthlocks, as superfluid delegation has no effect
+
+		_, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, lockID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+		// if lock has existed before but has not been superfluid staked, we do initial superfluid staking
+		if err != nil {
+			err = suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.Owner, lock.ID, valAddr.String())
+			suite.Require().NoError(err)
+		}
+	}
+
+	return *lock
 }
 
 func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
