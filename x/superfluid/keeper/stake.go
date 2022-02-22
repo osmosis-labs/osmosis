@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
@@ -269,23 +270,27 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 	if err != nil {
 		return err
 	}
-	bondDenom := k.sk.BondDenom(ctx)
-	coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
-	err = k.bk.MintCoins(ctx, types.ModuleName, coins)
-	if err != nil {
-		return err
-	}
-	k.bk.AddSupplyOffset(ctx, bondDenom, osmoAmount.Neg())
-	err = k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
-	if err != nil {
-		return err
-	}
 
-	// make delegation from module account to the validator
-	// TODO: What happens here if validator is jailed, tombstoned, or unbonding
-	_, err = k.sk.Delegate(ctx,
-		intermediaryAccount.GetAccAddress(),
-		osmoAmount, stakingtypes.Unbonded, validator, true)
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		bondDenom := k.sk.BondDenom(cacheCtx)
+		coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
+		err = k.bk.MintCoins(cacheCtx, types.ModuleName, coins)
+		if err != nil {
+			return err
+		}
+		k.bk.AddSupplyOffset(cacheCtx, bondDenom, osmoAmount.Neg())
+		err = k.bk.SendCoinsFromModuleToAccount(cacheCtx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
+		if err != nil {
+			return err
+		}
+
+		// make delegation from module account to the validator
+		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
+		_, err = k.sk.Delegate(cacheCtx,
+			intermediaryAccount.GetAccAddress(),
+			osmoAmount, stakingtypes.Unbonded, validator, true)
+		return err
+	})
 	return err
 }
 
@@ -308,19 +313,23 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	} else if err != nil {
 		return err
 	}
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		undelegatedCoins, err := k.sk.InstantUndelegate(cacheCtx, intermediaryAcc.GetAccAddress(), valAddr, shares)
+		if err != nil {
+			return err
+		}
+		// TODO: Should we compare undelegatedCoins vs osmoAmount?
+		err = k.bk.SendCoinsFromAccountToModule(cacheCtx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
+		if err != nil {
+			return err
+		}
+		err = k.bk.BurnCoins(cacheCtx, types.ModuleName, undelegatedCoins)
+		bondDenom := k.sk.BondDenom(cacheCtx)
+		k.bk.AddSupplyOffset(cacheCtx, bondDenom, undelegatedCoins.AmountOf(bondDenom))
 
-	undelegatedCoins, err := k.sk.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
-	if err != nil {
 		return err
-	}
-	// TODO: Should we compare undelegatedCoins vs osmoAmount?
-	err = k.bk.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
-	if err != nil {
-		return err
-	}
-	err = k.bk.BurnCoins(ctx, types.ModuleName, undelegatedCoins)
-	bondDenom := k.sk.BondDenom(ctx)
-	k.bk.AddSupplyOffset(ctx, bondDenom, undelegatedCoins.AmountOf(bondDenom))
+	})
+
 	return err
 }
 
