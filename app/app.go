@@ -635,6 +635,7 @@ func NewOsmosisApp(
 		NewAnteHandler(
 			appOpts,
 			wasmConfig,
+			keys[wasm.StoreKey],
 			app.AccountKeeper, app.BankKeeper,
 			app.TxFeesKeeper, app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
