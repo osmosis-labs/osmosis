@@ -4,38 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
-
-func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
-	coins := suite.app.GAMMKeeper.GetParams(suite.ctx).PoolCreationFee
-	poolAssets := []gammtypes.PoolAsset{}
-	for _, denom := range denoms {
-		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
-		poolAssets = append(poolAssets, gammtypes.PoolAsset{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin(denom, sdk.NewInt(1000000000000000000)),
-		})
-	}
-
-	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-	suite.Require().NoError(err)
-	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, acc1, coins)
-	suite.Require().NoError(err)
-
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(
-		suite.ctx, acc1, balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, poolAssets, "")
-	suite.Require().NoError(err)
-
-	return poolId
-}
 
 func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 	testCases := []struct {
