@@ -22,6 +22,7 @@ import (
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
 	wasmConfig wasm.Config,
+	txCounterStoreKey sdk.StoreKey,
 	ak ante.AccountKeeper, bankKeeper authtypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper, spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
@@ -33,6 +34,7 @@ func NewAnteHandler(
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
+		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
 		ante.NewRejectExtensionOptionsDecorator(),
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
