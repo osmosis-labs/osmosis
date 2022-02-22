@@ -102,13 +102,6 @@ func (k Keeper) LockedByID(goCtx context.Context, req *types.LockedRequest) (*ty
 	return &types.LockedResponse{Lock: lock}, err
 }
 
-// SyntheticLockupsByLockupID returns synthetic lockups by native lockup id
-func (k Keeper) SyntheticLockupsByLockupID(goCtx context.Context, req *types.SyntheticLockupsByLockupIDRequest) (*types.SyntheticLockupsByLockupIDResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, req.LockId)
-	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: synthLocks}, nil
-}
-
 // AccountLockedLongerDuration Returns account locked with duration longer than specified
 func (k Keeper) AccountLockedLongerDuration(goCtx context.Context, req *types.AccountLockedLongerDurationRequest) (*types.AccountLockedLongerDurationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

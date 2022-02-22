@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 // SlashLockupsForValidatorSlash should be called before the validator at valAddr is slashed.
@@ -36,29 +35,21 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 	for _, acc := range accs {
 		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom, time.Second)
 		for _, lock := range locks {
-			// slashing only applies to synthetic lockup amount
-			synthLock, err := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
-			// synth lock doesn't exist for bonding
-			if err != nil {
-				synthLock, err = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSyntheticDenom(acc.Denom, acc.ValAddr))
-				// synth lock doesn't exist for unbonding
-				// => no superlfuid staking on this lock ID, so continue
-				if err != nil {
-					continue
-				}
+			if lock.HasSecondaryIndex(ctx, stakingSecondaryIndex(acc.Denom, acc.ValAddr)) {
+				k.slashLock(ctx, lock.ID, slashFactor)
+				continue
 			}
-
-			// slash the lock whether its bonding or unbonding.
-			// this overslashes unbondings that started unbonding before the slash infraction,
-			// but this seems to be an acceptable trade-off based upon choices taken in the SDK.
-			k.slashSynthLock(ctx, synthLock, slashFactor)
+			if lock.HasSecondaryIndex(ctx, unstakingSecondaryIndex(acc.Denom, acc.ValAddr)) {
+				k.slashLock(ctx, lock.ID, slashFactor)
+				continue
+			}
 		}
 	}
 }
 
-func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.SyntheticLock, slashFactor sdk.Dec) {
+func (k Keeper) slashLock(ctx sdk.Context, lockID uint64, slashFactor sdk.Dec) {
 	// Only single token lock is allowed here
-	lock, _ := k.lk.GetLockByID(ctx, synthLock.UnderlyingLockId)
+	lock, _ := k.lk.GetLockByID(ctx, lockID)
 	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
 	slashCoins := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt))
 	osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {

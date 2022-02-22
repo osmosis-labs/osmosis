@@ -20,9 +20,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		return []abci.ValidatorUpdate{}
 	}
 
-	// delete synthetic locks matured before lockup deletion
-	k.DeleteAllMaturedSyntheticLocks(ctx)
-
 	// withdraw and delete locks
 	k.WithdrawAllMaturedLocks(ctx)
 	return []abci.ValidatorUpdate{}

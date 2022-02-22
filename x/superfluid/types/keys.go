@@ -13,6 +13,9 @@ var (
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
 
+	// UnlockBlockerKey is the default key to use for putting unlock blockers on locks
+	UnlockBlockerKey = "superfluidstaking"
+
 	// KeyPrefixSuperfluidAsset defines prefix key for superfluid asset
 	KeyPrefixSuperfluidAsset = []byte{0x01}
 

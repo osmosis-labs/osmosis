@@ -68,3 +68,13 @@ func FilterLocksByMinDuration(locks []lockuptypes.PeriodLock, minDuration time.D
 	}
 	return filteredLocks
 }
+
+func FilterLocksBySecondaryIndex(locks []lockuptypes.PeriodLock, secondaryIndex string) []lockuptypes.PeriodLock {
+	filteredLocks := make([]lockuptypes.PeriodLock, 0, len(locks)/2)
+	for _, lock := range locks {
+		if lock.HasSecondaryIndex(secondaryIndex) {
+			filteredLocks = append(filteredLocks, lock)
+		}
+	}
+	return filteredLocks
+}

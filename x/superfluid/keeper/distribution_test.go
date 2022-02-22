@@ -101,8 +101,11 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 				suite.Require().Equal(gauge.IsPerpetual, true)
 				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
-					Denom:         keeper.StakingSyntheticDenom(gaugeCheck.lpDenom, valAddrs[gaugeCheck.valIndex].String()),
+					Denom:         gaugeCheck.lpDenom,
 					Duration:      unbondingDuration,
+					SecondaryIndexes: []string{
+						keeper.StakingSecondaryIndex(gaugeCheck.lpDenom, valAddrs[gaugeCheck.valIndex].String()),
+					},
 				})
 				if gaugeCheck.rewarded {
 					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())

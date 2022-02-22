@@ -12,4 +12,7 @@ var (
 	ErrSyntheticLockupAlreadyExists      = sdkerrors.Register(ModuleName, 2, "synthetic lockup already exists for same lock and suffix")
 	ErrSyntheticDurationLongerThanNative = sdkerrors.Register(ModuleName, 3, "synthetic lockup duration should be shorter than native lockup duration")
 	ErrLockupNotFound                    = sdkerrors.Register(ModuleName, 4, "lockup not found")
+	ErrUnlockBlockerAlreadyAdded         = sdkerrors.Register(ModuleName, 5, "unlock blocker already added")
+	ErrCantUnlockDueToBlockers           = sdkerrors.Register(ModuleName, 6, "cannot BeginUnlocking a lock with outstanding unlock blockers")
+	ErrSecondaryIndexAlreadyAdded        = sdkerrors.Register(ModuleName, 7, "secondary index already added")
 )
