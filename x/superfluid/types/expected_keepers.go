@@ -20,6 +20,7 @@ type LockupKeeper interface {
 	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock
 	GetPeriodLocks(ctx sdk.Context) ([]lockuptypes.PeriodLock, error)
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
+	BeginForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock, coins sdk.Coins) error
 
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
 
@@ -46,6 +47,9 @@ type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
+	GetSupplyOffset(ctx sdk.Context, denom string) sdk.Int
+	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
+	GetSupplyWithOffset(ctx sdk.Context, denom string) sdk.Coin
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }

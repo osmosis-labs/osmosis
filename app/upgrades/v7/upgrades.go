@@ -10,11 +10,13 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
+	mintkeeper "github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
 )
 
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 	wasmKeeper *wasm.Keeper,
 	lockupKeeper *lockupkeeper.Keeper,
+	mintKeeper *mintkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -41,6 +43,9 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 			ctx, *lockupKeeper, accountKeeper,
 			lockupkeeper.BaselineDurations, lockupkeeper.HourDuration,
 		)
+
+		// Set the supply offset from the developer vesting account
+		mintkeeper.SetInitialSupplyOffsetDuringMigration(ctx, *mintKeeper)
 
 		// override here
 		return newVM, err

@@ -467,7 +467,7 @@ func NewOsmosisApp(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper),
+		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -593,7 +593,7 @@ func NewOsmosisApp(
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper),
+		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -861,6 +861,7 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 			app.mm, app.configurator,
 			app.WasmKeeper,
 			app.LockupKeeper,
+			app.MintKeeper,
 			app.AccountKeeper))
 }
 

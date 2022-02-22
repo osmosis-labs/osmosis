@@ -22,6 +22,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgSuperfluidUndelegate:
 			res, err := msgServer.SuperfluidUndelegate(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgSuperfluidUnbondLock:
+			res, err := msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgLockAndSuperfluidDelegate:
+			res, err := msgServer.LockAndSuperfluidDelegate(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		// case *types.MsgSuperfluidRedelegate:
 		// 	res, err := msgServer.SuperfluidRedelegate(sdk.WrapSDKContext(ctx), msg)
 		// return sdk.WrapServiceResult(ctx, res, err)

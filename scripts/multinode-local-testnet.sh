@@ -37,8 +37,7 @@ cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["gov"]["voti
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="uosmo"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
 # update epochs genesis
-cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["epochs"]["epochs"][0]["identifier"]="min"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
-cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["epochs"]["epochs"][0]["duration"]="60s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
+cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["epochs"]["epochs"][1]["duration"]="60s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
 # update poolincentives genesis
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["poolincentives"]["lockable_durations"][0]="120s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
@@ -47,22 +46,16 @@ cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["poolincenti
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["poolincentives"]["params"]["minted_denom"]="uosmo"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
 # update incentives genesis
-cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["incentives"]["params"]["distr_epoch_identifier"]="min"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["incentives"]["lockable_durations"][0]="1s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["incentives"]["lockable_durations"][1]="120s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["incentives"]["lockable_durations"][2]="180s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["incentives"]["lockable_durations"][3]="240s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
 # update mint genesis
-cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["mint"]["params"]["epoch_identifier"]="min"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="uosmo"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
 # update gamm genesis
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["gamm"]["params"]["pool_creation_fee"][0]["denom"]="uosmo"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
-
-# update superfluid genesis
-cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["superfluid"]["params"]["refresh_epoch_identifier"]="min"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
-cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["superfluid"]["params"]["unbonding_duration"]="120s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
 
 # port key (validator1 uses default ports)
