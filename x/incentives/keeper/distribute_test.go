@@ -25,6 +25,12 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		lockDuration: 2 * defaultLockDuration,
 		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
 	}
+	noRewardGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{},
+	}
+	noRewardCoins := sdk.Coins{}
 	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
 	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
 	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
@@ -47,6 +53,16 @@ func (suite *KeeperTestSuite) TestDistribute() {
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, fiveKRewardCoins},
+		},
+		{
+			users:           []userLocks{oneLockupUser, twoLockupUser},
+			gauges:          []perpGaugeDesc{noRewardGauge},
+			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
+		},
+		{
+			users:           []userLocks{oneLockupUser, twoLockupUser},
+			gauges:          []perpGaugeDesc{noRewardGauge, defaultGauge},
+			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
 	}
 	for tcIndex, tc := range tests {
