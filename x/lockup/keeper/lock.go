@@ -422,10 +422,18 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
 	}
 
-	return k.BeginForceUnlock(ctx, lock, coins)
+	return k.beginForceUnlock(ctx, lock, coins)
 }
 
-func (k Keeper) BeginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+	return k.beginForceUnlock(ctx, *lock, coins)
+}
+
+func (k Keeper) beginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
 	// sanity check
 	if !coins.IsAllLTE(lock.Coins) {
 		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
