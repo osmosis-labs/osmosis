@@ -278,7 +278,7 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 		if err != nil {
 			return err
 		}
-		k.bk.AddSupplyOffset(ctx, bondDenom, osmoAmount.Neg())
+		k.bk.AddSupplyOffset(cacheCtx, bondDenom, osmoAmount.Neg())
 		err = k.bk.SendCoinsFromModuleToAccount(cacheCtx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
 		if err != nil {
 			return err
