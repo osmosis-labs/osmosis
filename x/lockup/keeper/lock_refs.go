@@ -47,11 +47,12 @@ func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lock types.PeriodLock, syn
 	return nil
 }
 
-func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock, synthLock types.SyntheticLock) error {
+func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
 	refKeys, err := syntheticLockRefKeys(lock, synthLock)
 	if err != nil {
 		return err
 	}
+	lockRefPrefix := unlockingPrefix(synthLock.IsUnlocking())
 	for _, refKey := range refKeys {
 		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockId); err != nil {
 			return err

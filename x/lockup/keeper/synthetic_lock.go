@@ -170,7 +170,7 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom
 	k.deleteSyntheticLockupObject(ctx, lockID, synthdenom)
 
 	// delete lock refs from the unlocking queue
-	err = k.deleteSyntheticLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *lock, *synthLock)
+	err = k.deleteSyntheticLockRefs(ctx, *lock, *synthLock)
 	if err != nil {
 		return err
 	}
