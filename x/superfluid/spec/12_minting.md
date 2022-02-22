@@ -32,6 +32,6 @@ In the `RefreshIntermediaryDelegationAmounts` method, calls are made to `mintOsm
 This is called as a result of a user adding more assets to a lock that has already been associated to an `IntermediaryAccount`. The invariant is maintained by using `mintOsmoTokenAndDelegate` to match the amount of new asset locked * `GetOsmoEquivalentMultiplier` * `GetRiskAdjustment` for the underlying asset.
 
 
-
-
+### SlashLockupsForValidatorSlash (BeforeValidatorSlashed Hook)
+During slashing the invariant is likely to be temporraily broken if the referenced validator has any unbonding delegations. These unbonding delegations are slashed first, which means that the amount delegated by the `IntermediaryAccount` will be slashed by less than the `SyntheticLock`s held by the account.
 
