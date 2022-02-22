@@ -127,8 +127,8 @@ require (
 
 replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.22.0-osmo-alpha-0
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220221115656-75545ea8cb2d
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7, tag: v0.45.0x-osmo-v7-pprof-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220222153247-b1bc397d297b
 
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v3
 	// Use osmosis fork of ibc-go
