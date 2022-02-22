@@ -14,7 +14,7 @@ func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek type
 		// initialize osmo equivalent multipliers
 		epochIdentifier := k.GetParams(ctx).RefreshEpochIdentifier
 		currentEpoch := ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
-		osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+		_ = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
 			k.SetSuperfluidAsset(ctx, asset)
 			err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, currentEpoch)
 			return err
