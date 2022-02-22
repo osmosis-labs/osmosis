@@ -32,7 +32,7 @@ In the `RefreshIntermediaryDelegationAmounts` method, calls are made to `mintOsm
 
 ### SuperfluidDelegateMore (AfterAddTokensToLock Hook)
 
-This is called as a result of a user adding more assets to a lock that has already been associated to an `IntermediaryAccount`. The invariant is maintained by using `mintOsmoTokenAndDelegate` to match the amount of new asset locked \_ `GetOsmoEquivalentMultiplier` \* `GetRiskAdjustment` for the underlying asset.
+This is called as a result of a user adding more assets to a lock that has already been associated to an `IntermediaryAccount`. The invariant is maintained by using `mintOsmoTokenAndDelegate` to match the amount of new asset locked \* `GetOsmoEquivalentMultiplier` \* `GetRiskAdjustment` for the underlying asset.
 
 ### SlashLockupsForValidatorSlash (BeforeValidatorSlashed Hook)
 
