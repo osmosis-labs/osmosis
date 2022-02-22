@@ -436,9 +436,15 @@ func NewOsmosisApp(
 		memKeys:           memKeys,
 	}
 
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic(fmt.Sprintf("error while reading wasm config: %s", err))
+	}
+
 	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers(homePath, appOpts, wasmEnabledProposals, wasmOpts)
+	app.InitNormalKeepers(wasmDir, wasmConfig, wasmEnabledProposals, wasmOpts)
 	app.SetupHooks()
 
 	/****  Module Options ****/
@@ -625,6 +631,7 @@ func NewOsmosisApp(
 	app.SetAnteHandler(
 		NewAnteHandler(
 			appOpts,
+			wasmConfig,
 			app.AccountKeeper, app.BankKeeper,
 			app.TxFeesKeeper, app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
