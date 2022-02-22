@@ -187,6 +187,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	}
 
 	// Take the current balance of the developer rewards pool and remove it from the supply offset
+	// We re-introduce the new supply at the end, in order to avoid any rounding discrepancies.
 	developerAccountBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintedCoin.Denom)
 	k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount)
 
