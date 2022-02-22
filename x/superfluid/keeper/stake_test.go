@@ -123,14 +123,6 @@ func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAc
 func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, amount int64) lockuptypes.PeriodLock {
 	unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
 
-	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
-		time.Hour * 24 * 14,
-		time.Hour,
-		time.Hour * 3,
-		time.Hour * 7,
-		unbondingDuration,
-	})
-
 	// register a LP token as a superfluid asset
 	suite.app.SuperfluidKeeper.SetSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
 		Denom:     denom,
@@ -149,15 +141,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, va
 	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}
 	lastLockID := suite.app.LockupKeeper.GetLastLockID(suite.ctx)
 
-	msgServer := lockupkeeper.NewMsgServerImpl(*suite.app.LockupKeeper)
-	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-	suite.Require().NoError(err)
-	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, delAddr, coins)
-	suite.Require().NoError(err)
-	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), lockuptypes.NewMsgLockTokens(delAddr, unbondingDuration, coins))
-	suite.Require().NoError(err)
-	lockID := msgResponse.ID
-
+	lockID := suite.LockTokens(delAddr, coins, unbondingDuration)
 	lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockID)
 	suite.Require().NoError(err)
 
