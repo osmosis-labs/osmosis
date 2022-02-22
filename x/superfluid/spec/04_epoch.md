@@ -11,7 +11,7 @@ Overall Epoch sequence
   - Mint new tokens
     - Issue new Osmo, and send to various modules (distribution, incentives, etc.)
     - 25% currently goes to `x/distribution` which funds `Staking` and `Superfluid` rewards
-    - Rewards for `Superfluid` are based on the just updated delegation amounts, and queued for payout in the next epoch
+    - Rewards for `Superfluid` are based on the just updated delegation amounts, and it is paid out at the end
 - First block after epoch:
   - Claim staking rewards for every `Intermediary Account`, put them into gauges.
   - Distribute Superfluid staking rewards from gauges to bonded Synthetic Lock owners
@@ -26,5 +26,3 @@ Overall Epoch sequence
       - Mint new `Osmo` and `Delegate` to `Validator`
     - If expected amount < current delegation:
       - Use `InstantUndelegate` and burn the received `Osmo`
-
-TODO: Rewards superfluid is not queued for next epoch but it should be paid out instantly for what I have tested on single node.
