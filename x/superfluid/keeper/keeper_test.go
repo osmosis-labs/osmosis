@@ -29,6 +29,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
+func (suite *KeeperTestSuite) SetupDefaultPool() {
+	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
+	poolId := suite.createGammPool([]string{bondDenom, "foo"})
+	suite.Require().Equal(poolId, uint64(1))
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

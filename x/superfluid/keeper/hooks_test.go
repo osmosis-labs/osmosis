@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
@@ -42,29 +43,25 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
 		superDelegations []superfluidDelegation
+		expRewards       sdk.Coins
 	}{
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+			sdk.Coins{},
 		},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-
+			suite.SetupDefaultPool()
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
-			poolId := suite.createGammPool([]string{bondDenom, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
-
-			// setup validators
-			valAddrs := suite.SetupValidators(tc.validatorStats)
 			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
@@ -73,9 +70,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 			coins := sdk.Coins{sdk.NewInt64Coin("foo", 100000000000000)}
-			err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-			suite.Require().NoError(err)
-			err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, acc1, coins)
+			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, coins)
 			suite.Require().NoError(err)
 			_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, 1, "foo", sdk.NewInt(100000000000000), sdk.NewInt64Coin(bondDenom, 250000000000))
 			suite.Require().NoError(err)

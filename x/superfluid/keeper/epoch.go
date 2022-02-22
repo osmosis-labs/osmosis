@@ -101,7 +101,7 @@ func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, endedEpochNumber int64) error {
+func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, newEpochNumber int64) error {
 	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
@@ -124,8 +124,9 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
-		beginningEpochNumber := endedEpochNumber + 1
-		k.SetOsmoEquivalentMultiplier(ctx, beginningEpochNumber, asset.Denom, twap)
+		// TODO: "newEpochNumber" is wrong in the edge-case where the chain is down for over a day.
+		// However, since we don't use this epoch number right now, we don't deal with it.
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
 		k.Logger(ctx).Error("unsupported superfluid asset type")
