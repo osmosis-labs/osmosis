@@ -342,12 +342,7 @@ func (k Keeper) setLockAndResetLockRefs(ctx sdk.Context, lock types.PeriodLock) 
 		return err
 	}
 
-	// store refs by the status of unlock
-	if lock.IsUnlocking() {
-		return k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
-	}
-
-	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	return k.addLockRefs(ctx, lock)
 }
 
 // setLock is a utility to store lock object into the store
@@ -386,7 +381,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	store.Set(lockStoreKey(lock.ID), bz)
 
 	// add lock refs into not unlocking queue
-	err = k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	err = k.addLockRefs(ctx, lock)
 	if err != nil {
 		return err
 	}
@@ -461,7 +456,7 @@ func (k Keeper) BeginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins s
 	}
 
 	// add lock refs into unlocking queue
-	err = k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	err = k.addLockRefs(ctx, lock)
 	if err != nil {
 		return err
 	}

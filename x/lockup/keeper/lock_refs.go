@@ -5,11 +5,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-func (k Keeper) addLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
+func (k Keeper) addLockRefs(ctx sdk.Context, lock types.PeriodLock) error {
 	refKeys, err := lockRefKeys(lock)
 	if err != nil {
 		return err
 	}
+	lockRefPrefix := unlockingPrefix(lock.IsUnlocking())
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
 			return err

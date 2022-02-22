@@ -76,7 +76,7 @@ func MergeLockupsForSimilarDurations(
 				// create a normalized lock that will absorb the locks in the duration window
 				normalID = k.GetLastLockID(ctx) + 1
 				normalLock = types.NewPeriodLock(normalID, owner, normalizedDuration, time.Time{}, lock.Coins)
-				err = k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, normalLock)
+				err = k.addLockRefs(ctx, normalLock)
 				if err != nil {
 					panic(err)
 				}
