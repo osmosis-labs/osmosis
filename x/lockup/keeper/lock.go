@@ -330,12 +330,8 @@ func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodL
 		return err
 	}
 
-	// store refs by the status of unlock
-	if synthLock.IsUnlocking() {
-		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, lock, synthLock)
-	}
-
-	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, lock, synthLock)
+	// store synth lock refs
+	return k.addSyntheticLockRefs(ctx, lock, synthLock)
 }
 
 // setLockAndResetLockRefs sets the lock, and resets all of its lock references

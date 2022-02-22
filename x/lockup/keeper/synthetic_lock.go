@@ -137,10 +137,8 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 		return err
 	}
 
-	unlockingPrefix := unlockingPrefix(isUnlocking)
-
 	// add lock refs into not unlocking queue
-	err = k.addSyntheticLockRefs(ctx, unlockingPrefix, *lock, synthLock)
+	err = k.addSyntheticLockRefs(ctx, *lock, synthLock)
 	if err != nil {
 		return err
 	}
