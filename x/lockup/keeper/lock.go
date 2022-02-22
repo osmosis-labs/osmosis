@@ -89,9 +89,7 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 
 // removeTokensFromLock is called by lockup slash function - called by superfluid module only
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
-	// TODO: how to handle full slash for both normal lockup
-	// TODO: how to handle full slash for superfluid delegated lockup?
-
+	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
 	lock.Coins = lock.Coins.Sub(coins)
 
 	err := k.setLock(ctx, *lock)
@@ -113,7 +111,6 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 		// Note: we use native lock's duration on accumulation store
 		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), lock.Coins[0].Amount)
 	}
-
 	return nil
 }
 
