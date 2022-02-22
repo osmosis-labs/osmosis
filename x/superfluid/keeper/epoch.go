@@ -7,43 +7,54 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+
+	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.RefreshEpochIdentifier {
-		// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
-		// the supplied epoch number is wrong at time of commit. hence we get from the info.
-		endedEpochNumber := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
-
-		// Move delegation rewards to perpetual gauge
-		ctx.Logger().Info("Move delegation rewards to gauges")
-		k.MoveSuperfluidDelegationRewardToGauges(ctx)
-
-		// Update all LP tokens multipliers for the upcoming epoch.
-		// This affects staking reward distribution until the next epochs rewards.
-		// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
-		ctx.Logger().Info("Update all osmo equivalency multipliers")
-		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, endedEpochNumber)
-			if err != nil {
-				// TODO: Revisit what we do here. (halt all distr, only skip this asset)
-				// Since at MVP of feature, we only have one pool of superfluid staking,
-				// we can punt this question.
-				// each of the errors feels like significant misconfig
-				return
-			}
+		endedEpoch := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
+		// edge case where the epoch ends one block after it started, BlockAfterEpoch won't get called.
+		if endedEpoch.CurrentEpochStartHeight+1 == ctx.BlockHeight() {
+			k.BlockAfterEpoch(ctx)
 		}
-
-		// Refresh intermediary accounts' delegation amounts,
-		// making staking rewards follow the updated multiplier numbers.
-		ctx.Logger().Info("Refresh all superfluid delegation amounts")
-		k.RefreshIntermediaryDelegationAmounts(ctx)
 	}
 }
 
 func (k Keeper) BlockAfterEpoch(ctx sdk.Context) {
+	params := k.GetParams(ctx)
+	// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
+	// the supplied epoch number is wrong at time of commit. hence we get from the info.
+	curEpoch := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier).CurrentEpoch
 
+	// Move delegation rewards to perpetual gauge
+	ctx.Logger().Info("Move delegation rewards to gauges")
+	k.MoveSuperfluidDelegationRewardToGauges(ctx)
+
+	ctx.Logger().Info("Distribute Superfluid gauges")
+	k.distributeSuperfluidGauges(ctx)
+
+	// Update all LP tokens multipliers for the upcoming epoch.
+	// This affects staking reward distribution until the next epochs rewards.
+	// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
+	ctx.Logger().Info("Update all osmo equivalency multipliers")
+	for _, asset := range k.GetAllSuperfluidAssets(ctx) {
+		err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, curEpoch)
+		if err != nil {
+			// TODO: Revisit what we do here. (halt all distr, only skip this asset)
+			// Since at MVP of feature, we only have one pool of superfluid staking,
+			// we can punt this question.
+			// each of the errors feels like significant misconfig
+			return
+		}
+	}
+
+	// Refresh intermediary accounts' delegation amounts,
+	// making staking rewards follow the updated multiplier numbers.
+	ctx.Logger().Info("Refresh all superfluid delegation amounts")
+	k.RefreshIntermediaryDelegationAmounts(ctx)
 }
 
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
@@ -70,6 +81,23 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
 			return k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)
 		})
+	}
+}
+
+func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
+	gauges := k.ik.GetActiveGauges(ctx)
+
+	// only distribute to active gauges that are for perpetual synthetic denoms
+	distrGauges := []incentivestypes.Gauge{}
+	for _, gauge := range gauges {
+		isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
+		if isSynthetic && gauge.IsPerpetual {
+			distrGauges = append(distrGauges, gauge)
+		}
+	}
+	_, err := k.ik.Distribute(ctx, distrGauges)
+	if err != nil {
+		panic(err)
 	}
 }
 
