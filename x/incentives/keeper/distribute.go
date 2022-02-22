@@ -347,7 +347,6 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	distrInfo := newDistributionInfo()
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
-
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
 		// TODO: FIXME!!!
@@ -381,9 +380,23 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	if err != nil {
 		return nil, err
 	}
-
 	k.hooks.AfterEpochDistribution(ctx)
+
+	k.checkFinishDistribution(ctx, gauges)
 	return totalDistributedCoins, nil
+}
+
+func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
+	for _, gauge := range gauges {
+		// filled epoch is increased in this step and we compare with +1
+		// TODO: Wat? we increment filled epochs earlier, this looks wrong and like
+		// were not paying out the last epoch of rewards...
+		if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
+			if err := k.FinishDistribution(ctx, gauge); err != nil {
+				panic(err)
+			}
+		}
+	}
 }
 
 // GetModuleToDistributeCoins returns sum of to distribute coins for all of the module
