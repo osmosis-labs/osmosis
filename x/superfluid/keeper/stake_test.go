@@ -33,16 +33,14 @@ type assetTwap struct {
 	price sdk.Dec
 }
 
-type osmoEquivilentMultipler struct {
+type osmoEquivalentMultiplier struct {
 	denom string
 	price sdk.Dec
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
 	msgServer := lockupkeeper.NewMsgServerImpl(*suite.app.LockupKeeper)
-	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-	suite.Require().NoError(err)
-	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, coins)
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
 	suite.Require().NoError(err)
 	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	suite.Require().NoError(err)
@@ -979,7 +977,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 // 		validatorStats           []stakingtypes.BondStatus
 // 		delegatorNumber          int
 // 		superDelegations         []superfluidDelegation
-// 		osmoEquivilentMultiplers []osmoEquivilentMultipler
+// 		osmoEquivalentMultipliers []osmoEquivalentMultiplier
 // 		checkAccIndexes          []int64
 // 	}{
 // 		{
@@ -987,7 +985,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 // 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 // 			1,
 // 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-// 			[]osmoEquivilentMultipler{{"gamm/pool/1", sdk.NewDec(10)}},
+// 			[]osmoEquivalentMultiplier{{"gamm/pool/1", sdk.NewDec(10)}},
 // 			[]int64{0},
 // 		},
 // 	}
@@ -1023,7 +1021,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 // 				intermediaryDels = append(intermediaryDels, delegation.Shares)
 // 			}
 
-// 			for _, osmoEquivilentMultiplier := range tc.osmoEquivilentMultiplers {
+// 			for _, osmoEquivilentMultiplier := range tc.osmoEquivalentMultipliers {
 // 				suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 2, osmoEquivilentMultiplier.denom, osmoEquivilentMultiplier.price)
 // 			}
 // 			suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
