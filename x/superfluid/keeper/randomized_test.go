@@ -11,26 +11,41 @@ import (
 // randomly delegate and undelegate, simplified version of simulation
 func (suite *KeeperTestSuite) TestRandomized() {
 	suite.SetupTest()
+
 	unbondingTime := time.Second * 10
+	epoch := time.Second * 2
+
 	suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.Params{
 		UnbondingTime: unbondingTime,
 	})
 
 	state := struct {
 		validators []sdk.AccAddress
+		delegators []sdk.AccAddress
 	}{
 		validators: []sdk.AccAddress{
-			sdk.AccAddress("addr0---------------"),
-			sdk.AccAddress("addr1---------------"),
-			sdk.AccAddress("addr2---------------"),
-			sdk.AccAddress("addr3---------------"),
-			sdk.AccAddress("addr4---------------"),
-			sdk.AccAddress("addr5---------------"),
-			sdk.AccAddress("addr6---------------"),
-			sdk.AccAddress("addr7---------------"),
+			sdk.AccAddress("vali0---------------"),
+			sdk.AccAddress("vali1---------------"),
+			sdk.AccAddress("vali2---------------"),
+			sdk.AccAddress("vali3---------------"),
+			sdk.AccAddress("vali4---------------"),
+			sdk.AccAddress("vali5---------------"),
+			sdk.AccAddress("vali6---------------"),
+			sdk.AccAddress("vali7---------------"),
+		},
+		delegators: []sdk.AccAddress{
+			sdk.AccAddress("dele0---------------"),
+			sdk.AccAddress("dele1---------------"),
+			sdk.AccAddress("dele2---------------"),
+			sdk.AccAddress("dele3---------------"),
+			sdk.AccAddress("dele4---------------"),
+			sdk.AccAddress("dele5---------------"),
+			sdk.AccAddress("dele6---------------"),
+			sdk.AccAddress("dele7---------------"),
 		},
 	}
 
+	poolId := uint64(1)
 	sfDenom := "gamm/pool/1"
 
 	operations := []struct {
@@ -41,24 +56,54 @@ func (suite *KeeperTestSuite) TestRandomized() {
 			"delegate",
 			func(delegator sdk.AccAddress, lockID uint64, valAddr string) {
 
+				beforesupply := suite.app.BankKeeper.GetSupply(suite.ctx, bondDenom)
+				beforedelegation := suite.app.StakingKeeper.GetDelegation(suite.ctx, delegator, valAddr)
+				validator := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
+
 				// run SuperfluidDelegate
 				err := suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, delegator.String(), lockID, valAddr)
 
-				// ASSERT: should be error in one of the following conditions:
-				//       - delegator already used the lock for superfluid delegation
-				//       - lock is under unlocking state
-				//       - lock duration is less than unbondingtime
+				// ASSERT: should be error in any of the following conditions...
+				{
+
+					// delegator already used the lock for superfluid delegation
+					delegationExists := suite.app.LockupKeeper.HasAnySyntheticLockups(suite.ctx, lockID)
+
+					// lock is under unlocking state
+					lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockID)
+					isUnlocking := lock.IsUnlocking()
+
+					// lock duration is less than unbondingtime
+					tooSmallLockDuration := lock.Duration < unbondingTime
+
+					// ...then should be error
+					if delegationExists || isUnlocking || tooSmallLockDuration {
+						suite.Require().Error(err)
+						return
+					}
+				}
 
 				// ASSERT: should not be error if else
 				suite.Require().NoError(err)
 
-				// ASSERT: only one synthlock should be created
-
-				// ASSERT: intermediary account should be registered for the lock ID
-
 				// ASSERT: total supply of bonddenom should be increased for OSMOEquivalent amount
+				// TODO: too dependent on internal logic, refactor me
+				pool, _ := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+				asset, _ := pool.GetPoolAsset(bonddenom)
+				osmoEquivalent := asset.Amount.Quo(pool.GetTotalShares().Amount).Mul
+				sfasset := suite.app.SuperfluidKeeper.GetSuperfluidAsset(suite.ctx, sfDenom)
+				riskAdjusted := suite.app.SuperfluidKeeper.GetRiskAdjustedOsmoValue(suite.ctx, sfasset, osmoEquivalent(lock.Coins[0].Amount))
+
+				supply := suite.app.BankKeeper.GetSupply(suite.ctx, bonddenom)
+				suite.Require().Equal(beforesupply.Add(riskAdjusted), supply)
 
 				// ASSERT: delegation from the delegator should be increased for OSMOEquivalent amount
+				// XXX check if the args are correct
+				delegation := suite.app.StakingKeeper.GetDelegation(ctx, delegator, valAddr)
+				sharesAdded, _ := validator.SharesFromTokens(riskAdjusted)
+				suite.Require().Equal(beforedelegation.Shares.Add(sharesAdded), delegation.Shares)
+
+				// ASSERT: balance of the delegator should not be changed
 			},
 		},
 		{
@@ -101,9 +146,19 @@ func (suite *KeeperTestSuite) TestRandomized() {
 			},
 		},
 		{
+			"lock",
+			func(_ sdk.AccAddress, lockId uint64, _ string) {
+
+			},
+		},
+		{
 			"beginunlock",
-			func(delegator sdk.AccAddress, lockId uint64, _ string) {
-				// XXX
+			func(_ sdk.AccAddress, lockId uint64, _ string) {
+				// call BeginUnlock
+
+				// ASSERT: should be error on one of the followings:
+				//       - the lockup is used for superfluid delegation
+				//
 			},
 		},
 		{
