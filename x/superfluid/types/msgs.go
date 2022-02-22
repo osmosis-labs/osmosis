@@ -158,6 +158,11 @@ func (m MsgLockAndSuperfluidDelegate) ValidateBasic() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender should not be an empty address")
 	}
+
+	if m.Coins.Len() != 1 {
+		return ErrMultipleCoinsLockupNotSupported
+	}
+
 	if m.ValAddr == "" {
 		return fmt.Errorf("ValAddr should not be empty")
 	}
