@@ -8,23 +8,41 @@ order: 6
 
 ### MsgSuperfluidDelegate
 
-TODO: add events on code and add here
+| Type                | Attribute Key | Attribute Value |
+| ------------------- | ------------- | --------------- |
+| superfluid_delegate | lock_id       | {lock_id}       |
+| superfluid_delegate | validator     | {validator}     |
 
 ### MsgSuperfluidUndelegate
 
-TODO: add events on code and add here
+| Type                  | Attribute Key | Attribute Value |
+| --------------------- | ------------- | --------------- |
+| superfluid_undelegate | lock_id       | {lock_id}       |
 
 ### MsgSuperfluidUnbondLock
 
-TODO: add events on code and add here
+| Type                   | Attribute Key | Attribute Value |
+| ---------------------- | ------------- | --------------- |
+| superfluid_unbond_lock | lock_id       | {lock_id}       |
 
 ### MsgLockAndSuperfluidDelegate
 
-TODO: add events on code and add here
+| Type                | Attribute Key  | Attribute Value |
+| ------------------- | -------------- | --------------- |
+| lock_tokens         | period_lock_id | {periodLockID}  |
+| lock_tokens         | owner          | {owner}         |
+| lock_tokens         | amount         | {amount}        |
+| lock_tokens         | duration       | {duration}      |
+| lock_tokens         | unlock_time    | {unlockTime}    |
+| message             | action         | lock_tokens     |
+| message             | sender         | {owner}         |
+| transfer            | recipient      | {moduleAccount} |
+| transfer            | sender         | {owner}         |
+| transfer            | amount         | {amount}        |
+| superfluid_delegate | lock_id        | {lock_id}       |
+| superfluid_delegate | validator      | {validator}     |
 
 ## Proposals
-
-TODO: add events on code and add here
 
 ### SetSuperfluidAssetsProposal
 

@@ -191,7 +191,18 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	if err != nil {
+		return err
+	}
+
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.TypeEvtSuperfluidDelegate,
+		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockID)),
+		sdk.NewAttribute(types.AttributeValidator, valAddr),
+	))
+
+	return nil
 }
 
 func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
@@ -227,7 +238,17 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	}
 
 	// Create a new synthetic lockup representing the unstaking side.
-	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
+	err = k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
+	if err != nil {
+		return err
+	}
+
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.TypeEvtSuperfluidUndelegate,
+		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockID)),
+	))
+
+	return nil
 }
 
 func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
@@ -246,7 +267,17 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, s
 	if !synthLocks[0].IsUnlocking() {
 		return types.ErrBondingLockupNotSupported
 	}
-	return k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
+	err = k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
+	if err != nil {
+		return err
+	}
+
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.TypeEvtSuperfluidUnbondLock,
+		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", underlyingLockId)),
+	))
+
+	return nil
 }
 
 func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
