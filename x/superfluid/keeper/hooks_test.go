@@ -1,70 +1,35 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
-
-func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
-	coins := suite.app.GAMMKeeper.GetParams(suite.ctx).PoolCreationFee
-	poolAssets := []gammtypes.PoolAsset{}
-	for _, denom := range denoms {
-		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
-		poolAssets = append(poolAssets, gammtypes.PoolAsset{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin(denom, sdk.NewInt(1000000000000000000)),
-		})
-	}
-
-	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-	suite.Require().NoError(err)
-	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, acc1, coins)
-	suite.Require().NoError(err)
-
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(
-		suite.ctx, acc1, balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, poolAssets, "")
-	suite.Require().NoError(err)
-
-	return poolId
-}
 
 func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
 		superDelegations []superfluidDelegation
+		expRewards       sdk.Coins
 	}{
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+			sdk.Coins{},
 		},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
-			poolId := suite.createGammPool([]string{bondDenom, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
-
-			// setup validators
-			valAddrs := suite.SetupValidators(tc.validatorStats)
 			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
@@ -73,18 +38,14 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 			coins := sdk.Coins{sdk.NewInt64Coin("foo", 100000000000000)}
-			err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-			suite.Require().NoError(err)
-			err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, acc1, coins)
+			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, coins)
 			suite.Require().NoError(err)
 			_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, 1, "foo", sdk.NewInt(100000000000000), sdk.NewInt64Coin(bondDenom, 250000000000))
 			suite.Require().NoError(err)
 
 			// run epoch actions
-			suite.NotPanics(func() {
-				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-				suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 2)
-			})
+			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+			suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 2)
 
 			// check lptoken twap value set
 			newEpochTwap := suite.app.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.ctx, "gamm/pool/1")
@@ -254,9 +215,6 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
 
 			slashFactor := sdk.NewDecWithPrec(5, 2)
 

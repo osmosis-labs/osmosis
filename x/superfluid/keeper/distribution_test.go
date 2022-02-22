@@ -44,28 +44,28 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]int64{0},
-			[]gaugeChecker{{1, 0, "gamm/pool/1", true}},
+			[]gaugeChecker{{4, 0, "gamm/pool/1", true}},
 		},
 		{
 			"two LP tokens delegation to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/2", 1000000}},
 			[]int64{0},
-			[]gaugeChecker{{1, 0, "gamm/pool/1", true}, {2, 0, "gamm/pool/2", true}},
+			[]gaugeChecker{{4, 0, "gamm/pool/1", true}, {5, 0, "gamm/pool/2", true}},
 		},
 		{
 			"one LP token with two locks to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
 			[]int64{0},
-			[]gaugeChecker{{1, 0, "gamm/pool/1", true}},
+			[]gaugeChecker{{4, 0, "gamm/pool/1", true}},
 		},
 		{
 			"add unbonded validator case",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
 			[]int64{0},
-			[]gaugeChecker{{1, 0, "gamm/pool/1", true}, {2, 1, "gamm/pool/1", false}},
+			[]gaugeChecker{{4, 0, "gamm/pool/1", true}, {5, 1, "gamm/pool/1", false}},
 		},
 	}
 
@@ -99,11 +99,11 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(gauge.Id, gaugeCheck.gaugeId)
 				suite.Require().Equal(gauge.IsPerpetual, true)
-				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
+				suite.Require().Equal(lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
 					Denom:         keeper.StakingSyntheticDenom(gaugeCheck.lpDenom, valAddrs[gaugeCheck.valIndex].String()),
 					Duration:      unbondingDuration,
-				})
+				}, gauge.DistributeTo)
 				if gaugeCheck.rewarded {
 					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())
 				} else {
