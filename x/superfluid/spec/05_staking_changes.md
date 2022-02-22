@@ -15,8 +15,6 @@ We also want to avoid resource exhaustion attacks. We relegate concerns around u
 - Intermediary accounts are not created on SetSuperfluidAsset
 - They are created at-time-of-need on MsgSuperfluidDelegate
 - Concerns: What happens if you delegate to an unbonding or jailed validator.
+  Note: Isn't it same as normal delegation for unbonding validator?
 
 ## Future optimizations
-
-- Adjust the guarantee to expect there to be an intermediary account for every (active, SFD) + (ubd, SFD) pairs with at least one osmo delegated to it. (Optimistic optimization, requires intermediate delegation account creation on MsgSuperfluidDelegate)
-  - EDIT: Seems like this is actually what we do.
