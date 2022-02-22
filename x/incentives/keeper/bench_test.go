@@ -132,7 +132,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 			lockSecs = r.Intn(1 * 60 * 60 * 8)
 		}
 		duration := time.Duration(lockSecs) * time.Second
-		_, err := app.LockupKeeper.LockTokens(ctx, addr, simCoins, duration)
+		_, err := app.LockupKeeper.LockTokens(ctx, addr, duration, simCoins)
 		if err != nil {
 			fmt.Printf("Lock tokens, %v\n", err)
 			b.FailNow()

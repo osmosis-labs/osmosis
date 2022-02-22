@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, coins)
 	suite.Require().NoError(err)
 	suite.Require().NoError(err)
-	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
+	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, duration, coins)
 	suite.Require().NoError(err)
 	return lock
 }

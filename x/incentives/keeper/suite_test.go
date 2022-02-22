@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccA
 		accs[i] = suite.setupAddr(i, "", totalLockAmt)
 		for j := 0; j < len(user.lockAmounts); j++ {
 			_, err := suite.app.LockupKeeper.LockTokens(
-				suite.ctx, accs[i], user.lockAmounts[j], user.lockDurations[j])
+				suite.ctx, accs[i], user.lockDurations[j], user.lockAmounts[j])
 			suite.Require().NoError(err)
 		}
 	}
@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
 	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, duration, coins)
 	suite.Require().NoError(err)
 }
 
@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coi
 	bal := liquidBalance.Add(coinsPerLock...)
 	for i := 0; i < numLocks; i++ {
 		addr := suite.setupAddr(i, string(randPrefix), bal)
-		_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coinsPerLock, lockDuration)
+		_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr, lockDuration, coinsPerLock)
 		suite.Require().NoError(err)
 		addrs = append(addrs, addr)
 	}

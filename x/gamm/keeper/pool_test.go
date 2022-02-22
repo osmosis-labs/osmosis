@@ -203,7 +203,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolWithLockup() {
 	}, "")
 	suite.NoError(err)
 
-	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, acc1, sdk.Coins{sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply)}, time.Hour)
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, acc1, time.Hour, sdk.Coins{sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply)})
 	suite.NoError(err)
 
 	for _, lock := range suite.app.LockupKeeper.GetLocksDenom(suite.ctx, types.GetPoolShareDenom(poolId)) {
