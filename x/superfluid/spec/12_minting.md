@@ -35,3 +35,8 @@ This is called as a result of a user adding more assets to a lock that has alrea
 ### SlashLockupsForValidatorSlash (BeforeValidatorSlashed Hook)
 During slashing the invariant is likely to be temporraily broken if the referenced validator has any unbonding delegations. These unbonding delegations are slashed first, which means that the amount delegated by the `IntermediaryAccount` will be slashed by less than the `SyntheticLock`s held by the account.
 
+## See Also
+
+### GetTotalSyntheticAssetsLocked
+TODO - expand on this
+Uses `lockup` accumulator to find total amount of synthetic locks for a given `IntermediaryAccount` (Superfluid Asset + Validator pair)
