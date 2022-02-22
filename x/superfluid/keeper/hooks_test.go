@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
-			[]uint64{1, 2},
+			[]uint64{1, 1},
 			[]int64{0},
 			[]uint64{1, 2},
 			[]uint64{},

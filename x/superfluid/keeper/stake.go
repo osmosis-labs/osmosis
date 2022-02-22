@@ -52,10 +52,14 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		}
 
 		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
+		fmt.Println("----refrehsed amount")
+		fmt.Println(refreshedAmount)
 
 		if refreshedAmount.GT(currentAmount) {
 			//need to mint and delegate
 			adjustment := refreshedAmount.Sub(currentAmount)
+			fmt.Println("====adjustmnent")
+			fmt.Println(adjustment)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
 				panic(err)
