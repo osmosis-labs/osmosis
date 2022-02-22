@@ -358,13 +358,7 @@ func (k Keeper) createLock(ctx sdk.Context, addr sdk.AccAddress, duration time.D
 
 	// unlock time is set at the beginning of unlocking time
 	lock := types.NewPeriodLock(id, addr, duration, time.Time{}, coins)
-	k.setLock(ctx, lock)
-
-	// add lock refs into not unlocking queue
-	err := k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
-	if err != nil {
-		return types.PeriodLock{}, err
-	}
+	k.setLockAndResetLockRefs(ctx, lock)
 
 	return lock, nil
 }
