@@ -25,7 +25,7 @@ type MsgSuperfluidDelegate struct {
   - Check that `lock` is locked for at least the unbonding period
   - Check that this `LockID` is not already superfluided
   - Check that the same lock isn't being unbonded
-- Get the `IntermediaryAccount` for this `lock` `Denom` and `ValAddr` pair.
+- Get the `IntermediaryAccount` for this lock's `Denom` and `ValAddr` pair.
   - Create it + a new gauge for the synthetic denom, if it does not yet exist.
 - Create a SyntheticLockup.
 - Calculate `Osmo` to delegate on behalf of this `lock`, as `Osmo Equivalent Multiplier` * `# LP Shares` * `Risk Adjustment Factor`
@@ -55,4 +55,18 @@ type MsgSuperfluidUndelegate struct {
   - If this amount is less than 0.000001 `Osmo`, there is no delegated `Osmo` to undelegate and burn
 - Use `InstantUndelegate` to instantly remove delegation from `IntermediaryAccount` to `Validator`
 - Immediately burn undelegated `Osmo`
-- Delete the connection betweene `lockID` and `IntermediaryAccount`
+- Delete the connection between `lockID` and `IntermediaryAccount`
+
+## Superfluid LockAndSuperfluidDelegate
+
+```go
+type MsgLockAndSuperfluidDelegate struct {
+ Sender string
+ Coins sdk.Coins
+ ValAddr string
+}
+```
+
+**State Modifications:**
+
+- Creates a lockup with coins 
