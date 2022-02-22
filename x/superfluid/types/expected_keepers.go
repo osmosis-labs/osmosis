@@ -29,12 +29,6 @@ type LockupKeeper interface {
 
 	AddSecondaryIndex(ctx sdk.Context, lockID uint64, newSecondaryIndex string) error
 	RemoveSecondaryIndex(ctx sdk.Context, lockID uint64, removeSecondaryIndex string) error
-
-	// GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*lockuptypes.SyntheticLock, error)
-	// GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddress) []lockuptypes.SyntheticLock
-	// CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration, isUnlocking bool) error
-	// DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
-	// GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []lockuptypes.SyntheticLock
 }
 
 type LockupMsgServer interface {
