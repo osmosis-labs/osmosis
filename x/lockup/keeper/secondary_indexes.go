@@ -21,7 +21,7 @@ func (k Keeper) AddSecondaryIndex(ctx sdk.Context, lockID uint64, newSecondaryIn
 		return err
 	}
 
-	if lock.HasSecondaryIndex(ctx, newSecondaryIndex) {
+	if lock.HasSecondaryIndex(newSecondaryIndex) {
 		return types.ErrSecondaryIndexAlreadyAdded
 	}
 

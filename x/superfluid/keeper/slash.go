@@ -35,11 +35,11 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 	for _, acc := range accs {
 		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom, time.Second)
 		for _, lock := range locks {
-			if lock.HasSecondaryIndex(ctx, stakingSecondaryIndex(acc.Denom, acc.ValAddr)) {
+			if lock.HasSecondaryIndex(stakingSecondaryIndex(acc.Denom, acc.ValAddr)) {
 				k.slashLock(ctx, lock.ID, slashFactor)
 				continue
 			}
-			if lock.HasSecondaryIndex(ctx, unstakingSecondaryIndex(acc.Denom, acc.ValAddr)) {
+			if lock.HasSecondaryIndex(unstakingSecondaryIndex(acc.Denom, acc.ValAddr)) {
 				k.slashLock(ctx, lock.ID, slashFactor)
 				continue
 			}
