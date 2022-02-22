@@ -1,5 +1,5 @@
 <!--
-order: 11
+order: 10
 -->
 
 # Slashing
@@ -9,23 +9,23 @@ We first get a hook from the staking module, marking that a validator is about t
 The staking module handles slashing every delegation to that validator, which will handle slashing the delegation from every intermediary account.
 However, it is up to the superfluid module to then:
 
-* Slash every constituent superfluid staking position for this validator.
-* Slash every unbonding superfluid staking position to this validator.
+- Slash every constituent superfluid staking position for this validator.
+- Slash every unbonding superfluid staking position to this validator.
 
 We do this by:
 
-* Collect all intermediate accounts to this validator
-* For each IA, iterate over every lock to the underlying native denom.
-* If the lock has a synthetic lockup, it gets slashed.
-* The slash works by calculating the amount of tokens to slash.
-* It removes these from the underlying lock and the synthetic lock.
-* These coins are moved to the community pool.
+- Collect all intermediate accounts to this validator
+- For each IA, iterate over every lock to the underlying native denom.
+- If the lock has a synthetic lockup, it gets slashed.
+- The slash works by calculating the amount of tokens to slash.
+- It removes these from the underlying lock and the synthetic lock.
+- These coins are moved to the community pool.
 
 ## Slashing nuances
 
-* Slashed tokens go to the community pool, rather than being burned as in staking.
-* We slash every unbonding, rather than just unbondings that started after the infraction height.
-* We can "overslash" relative to the staking module. (For a slash factor of 5%, the staking module can often burn <5% of active delegation, but superfluid will always slash 5%)
+- Slashed tokens go to the community pool, rather than being burned as in staking.
+- We slash every unbonding, rather than just unbondings that started after the infraction height.
+- We can "overslash" relative to the staking module. (For a slash factor of 5%, the staking module can often burn <5% of active delegation, but superfluid will always slash 5%)
 
 We slash every unbonding, purely because lockup module tracks things by unbonding start time, whereas staking/slashing tracks things by height we begin unbonding at.
 Thus we get a problem that we cannot convert between these cleanly.
