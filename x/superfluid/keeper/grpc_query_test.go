@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,9 +33,6 @@ func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 
 func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	suite.SetupTest()
-
-	poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-	suite.Require().Equal(poolId, uint64(1))
 
 	// Generate delegator addresses
 	delAddrs := CreateRandomAccounts(2)
@@ -113,9 +109,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 
 func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
 	suite.SetupTest()
-
-	poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-	suite.Require().Equal(poolId, uint64(1))
 
 	// Generate delegator addresses
 	delAddrs := CreateRandomAccounts(2)

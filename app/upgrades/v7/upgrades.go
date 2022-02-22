@@ -38,6 +38,7 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 		params.CodeUploadAccess = wasmtypes.AllowNobody
 		wasmKeeper.SetParams(ctx, params)
 
+		ctx.Logger().Info("Merging lockups for similar durations")
 		// Merge similar duration lockups
 		lockupkeeper.MergeLockupsForSimilarDurations(
 			ctx, *lockupKeeper, accountKeeper,

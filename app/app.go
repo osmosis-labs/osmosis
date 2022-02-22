@@ -436,9 +436,15 @@ func NewOsmosisApp(
 		memKeys:           memKeys,
 	}
 
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic(fmt.Sprintf("error while reading wasm config: %s", err))
+	}
+
 	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers(homePath, appOpts, wasmEnabledProposals, wasmOpts)
+	app.InitNormalKeepers(wasmDir, wasmConfig, wasmEnabledProposals, wasmOpts)
 	app.SetupHooks()
 
 	/****  Module Options ****/
@@ -485,7 +491,8 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
+		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper,
+			app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	)
 
@@ -605,7 +612,8 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
+		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper,
+			app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper),
 		app.transferModule,
 	)
 
@@ -625,6 +633,7 @@ func NewOsmosisApp(
 	app.SetAnteHandler(
 		NewAnteHandler(
 			appOpts,
+			wasmConfig,
 			app.AccountKeeper, app.BankKeeper,
 			app.TxFeesKeeper, app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,

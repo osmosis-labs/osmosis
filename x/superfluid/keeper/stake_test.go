@@ -1,20 +1,19 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 type superfluidDelegation struct {
@@ -39,17 +38,6 @@ type osmoEquivilentMultipler struct {
 	price sdk.Dec
 }
 
-// CreateRandomAccounts is a function return a list of randomly generated AccAddresses
-func CreateRandomAccounts(accNum int) []sdk.AccAddress {
-	testAddrs := make([]sdk.AccAddress, accNum)
-	for i := 0; i < accNum; i++ {
-		pk := ed25519.GenPrivKey().PubKey()
-		testAddrs[i] = sdk.AccAddress(pk.Address())
-	}
-
-	return testAddrs
-}
-
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
 	msgServer := lockupkeeper.NewMsgServerImpl(*suite.app.LockupKeeper)
 	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
@@ -64,32 +52,19 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
+	delAddr := sdk.AccAddress(valAddr)
+	bondDenom := suite.app.StakingKeeper.GetParams(suite.ctx).BondDenom
+	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
 
-	validator, err := stakingtypes.NewValidator(valAddr, valPub, stakingtypes.NewDescription("moniker", "", "", "", ""))
-	suite.Require().NoError(err)
+	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, delAddr, selfBond)
+	sh := teststaking.NewHelper(suite.T(), suite.ctx, *suite.app.StakingKeeper)
+	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
+	sh.Handle(msg, true)
+	val, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
+	suite.Require().True(found)
+	val = val.UpdateStatus(bondStatus)
+	suite.app.StakingKeeper.SetValidator(suite.ctx, val)
 
-	amount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
-	issuedShares := amount.ToDec()
-	validator.Status = bondStatus
-	validator.Tokens = validator.Tokens.Add(amount)
-	validator.DelegatorShares = validator.DelegatorShares.Add(issuedShares)
-
-	suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
-	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
-	suite.app.StakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
-	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
-
-	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
-	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-	err = suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-	suite.Require().NoError(err)
-	if bondStatus == stakingtypes.Bonded {
-		err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, stakingtypes.BondedPoolName, coins)
-		suite.Require().NoError(err)
-	} else {
-		err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, stakingtypes.NotBondedPoolName, coins)
-		suite.Require().NoError(err)
-	}
 	return valAddr
 }
 
@@ -248,9 +223,6 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 		tc := tc
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
 			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
 
 			// Generate delegator addresses
@@ -411,9 +383,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
-			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
+			bondDenom := suite.app.StakingKeeper.GetParams(suite.ctx).BondDenom
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
@@ -521,9 +491,6 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 	suite.SetupTest()
 
-	poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-	suite.Require().Equal(poolId, uint64(1))
-
 	// Generate delegator addresses
 	delAddrs := CreateRandomAccounts(1)
 
@@ -548,6 +515,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		// undelegation needs to happen prior to SuperfluidUnbondLock
 		err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lock.ID)
 		suite.Require().NoError(err)
+		balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, lock.OwnerAddress())
+		suite.Require().Equal(0, balances.Len())
 
 		// check that unbonding synth has been created correctly after undelegation
 		unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
@@ -570,6 +539,10 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		suite.Require().NoError(err)
 		suite.Require().True(updatedLock.IsUnlocking())
 
+		// check if finsihed unlocking synth lock did not increase balance
+		balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, lock.OwnerAddress())
+		suite.Require().Equal(0, balances.Len())
+
 		// test that synth lock finish does not mean underlying lock is finished
 		suite.ctx = suite.ctx.WithBlockTime((startTime.Add(unbondingDuration)))
 		suite.app.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.ctx)
@@ -583,9 +556,14 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		// test after SuperfluidUnbondLock + lockup unbonding duration, lock is finished and does not exist
 		suite.ctx = suite.ctx.WithBlockTime(unbondLockStartTime.Add(unbondingDuration))
 		suite.app.LockupKeeper.WithdrawAllMaturedLocks(suite.ctx)
-		updatedLock, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
-		fmt.Println(updatedLock)
+		_, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 		suite.Require().Error(err)
+
+		// check if finished unlocking succesfully increased balance
+		balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, lock.OwnerAddress())
+		suite.Require().Equal(1, balances.Len())
+		suite.Require().Equal("gamm/pool/1", balances[0].Denom)
+		suite.Require().Equal(sdk.NewInt(1000000), balances[0].Amount)
 
 	}
 }
@@ -831,10 +809,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 // 		suite.Run(tc.name, func() {
 // 			suite.SetupTest()
 
-// 			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-// 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-// 			suite.Require().Equal(poolId, uint64(1))
-// 			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
+// params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+// bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
 
 // 			// Generate delegator addresses
 // 			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
