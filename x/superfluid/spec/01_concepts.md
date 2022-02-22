@@ -10,9 +10,7 @@ SyntheticLockups are synthetica of PeriodLocks, but different in the sense that 
 
 ## Intermediary Account
 
-Intermediary Accounts establishes the connections between the superfluid staked locks and delegations to the validator. Intermediary accounts exists for every denom + validator combination, so that it would group locks with the same denom + validator selection. Superfluid staking a lock would mint spot price equivalent amount of OSMO of the lock and send it to the intermediary account and the intermediarry accounts would be delegating to the specified validator.
-
-// TODO: This is spot OSMO equivalent of the value at the end of previous epoch not OSMO equivalent of right now.
+Intermediary Accounts establishes the connections between the superfluid staked locks and delegations to the validator. Intermediary accounts exists for every denom + validator combination, so that it would group locks with the same denom + validator selection. Superfluid staking a lock would mint equivalent amount of OSMO of the lock and send it to the intermediary account and the intermediarry accounts would be delegating to the specified validator.
 
 ## Intermediary Account Connection
 

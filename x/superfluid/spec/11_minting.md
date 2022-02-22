@@ -9,7 +9,7 @@ This authority is mediated through the `mintOsmoTokensAndDelegate` and `forceUnd
 
 ## Invariant
 
-Each of these mechanisms maintains a local invariant between the amount of Osmo minted and delegated by the `IntermediaryAccount`, and the quantity of the underlying asset held by locks associated to the account, modified by `OsmoEquivalentMultiplier` and `RiskAdjustment` for the underlying asset. Namely that total minted/delegated = `GetTotalSyntheticAssetsLocked` _ `GetOsmoEquivalentMultiplier` _ `GetRiskAdjustment`
+Each of these mechanisms maintains a local invariant between the amount of Osmo minted and delegated by the `IntermediaryAccount`, and the quantity of the underlying asset held by locks associated to the account, modified by `OsmoEquivalentMultiplier` and `RiskAdjustment` for the underlying asset. Namely that total minted/delegated = `GetTotalSyntheticAssetsLocked` \* `GetOsmoEquivalentMultiplier` \* `GetRiskAdjustment`
 
 This can be equivalently expressed as `GetExpectedDelegationAmount` being equal to the actual delegation amount.
 
@@ -18,11 +18,11 @@ This can be equivalently expressed as `GetExpectedDelegationAmount` being equal 
 ### SuperfluidDelegate
 
 In a `SuperfluidDelegate` transaction, we first verify that this lock is not already associated to an `IntermediaryAccount`, and then use `mintOsmoTokenAndDelegate` to properly balance the resulting change in `GetExpectedDelegationAmount` from the increase in `GetTotalSyntheticAssetsLocked`.
-i.e. we mint and delegate: `GetOsmoEquivalentMultiplier` _ `GetRiskAdjustment` _ `lock.Coins.Amount` new Osmo tokens.
+i.e. we mint and delegate: `GetOsmoEquivalentMultiplier` \* `GetRiskAdjustment` \* `lock.Coins.Amount` new Osmo tokens.
 
 ### SuperfluidUndelegate
 
-When a user submits a transaction to unlock their asset the invariant is maintained by using `forceUndelegateAndBurnOsmoTokens` to remove an amount of Osmo equal to `lockedCoin.Amount` _ `GetOsmoEquivalentMultiplier` _ `GetRiskAdjustment`.
+When a user submits a transaction to unlock their asset the invariant is maintained by using `forceUndelegateAndBurnOsmoTokens` to remove an amount of Osmo equal to `lockedCoin.Amount` \* `GetOsmoEquivalentMultiplier` \* `GetRiskAdjustment`.
 
 ## Hooks
 
@@ -32,7 +32,7 @@ In the `RefreshIntermediaryDelegationAmounts` method, calls are made to `mintOsm
 
 ### SuperfluidDelegateMore (AfterAddTokensToLock Hook)
 
-This is called as a result of a user adding more assets to a lock that has already been associated to an `IntermediaryAccount`. The invariant is maintained by using `mintOsmoTokenAndDelegate` to match the amount of new asset locked _ `GetOsmoEquivalentMultiplier` _ `GetRiskAdjustment` for the underlying asset.
+This is called as a result of a user adding more assets to a lock that has already been associated to an `IntermediaryAccount`. The invariant is maintained by using `mintOsmoTokenAndDelegate` to match the amount of new asset locked \_ `GetOsmoEquivalentMultiplier` \* `GetRiskAdjustment` for the underlying asset.
 
 ### SlashLockupsForValidatorSlash (BeforeValidatorSlashed Hook)
 
