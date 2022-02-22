@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
@@ -205,9 +204,6 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
-
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
 
@@ -356,9 +352,6 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		tc := tc
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
@@ -687,8 +680,6 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			suite.SetupTest()
 
 			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)

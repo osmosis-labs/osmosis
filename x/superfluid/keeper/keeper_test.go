@@ -27,6 +27,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.SetupDefaultPool()
 }
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {

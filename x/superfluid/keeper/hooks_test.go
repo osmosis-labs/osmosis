@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
@@ -56,7 +55,6 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			suite.SetupDefaultPool()
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
 
@@ -76,10 +74,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.Require().NoError(err)
 
 			// run epoch actions
-			suite.NotPanics(func() {
-				params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-				suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 2)
-			})
+			params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+			suite.app.SuperfluidKeeper.AfterEpochEnd(suite.ctx, params.RefreshEpochIdentifier, 2)
 
 			// check lptoken twap value set
 			newEpochTwap := suite.app.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.ctx, "gamm/pool/1")
@@ -249,9 +245,6 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
 
 			slashFactor := sdk.NewDecWithPrec(5, 2)
 
