@@ -124,9 +124,9 @@ require (
 require github.com/dgraph-io/badger/v2 v2.2007.3 // indirect
 
 replace (
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk  v0.44.3x-osmo-v5
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.44.4-0.20220221220505-473c15f3622e
-	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v4.rc0
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk  v0.44.3x-osmo-v5, tag: v0.44.3x-osmo-v5.rc1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.44.4-0.20220222221527-3d57be25a993
+	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v4.rc1
 	// Use osmosis-flavored IBCv2
 	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
 	// Use cosmos-compatible protobufs
