@@ -67,7 +67,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		}
 	}
 
-	lock, err := server.keeper.LockTokens(ctx, owner, msg.Coins, msg.Duration)
+	lock, err := server.keeper.LockTokens(ctx, owner, msg.Duration, msg.Coins)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

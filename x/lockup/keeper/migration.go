@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -14,19 +15,92 @@ var (
 	WeekDuration, _    = time.ParseDuration("168h")
 	TwoWeekDuration, _ = time.ParseDuration("336h")
 	BaselineDurations  = []time.Duration{DayDuration, WeekDuration, TwoWeekDuration}
+	AllowedDiff        = HourDuration
 )
 
-// baselineDurations is expected to be sorted by the caller
-func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Duration, duration time.Duration) (time.Duration, bool) {
-	for _, base := range baselineDurations {
+func MigrateLockups(
+	ctx sdk.Context,
+	k Keeper,
+) {
+	// reset accumulation store, and re-set it
+	k.ClearAccumulationStores(ctx)
+
+	// normals stores lockup id for each (owner addr, denom, normalized duration) triplet
+	normals := make(map[string]uint64)
+	key := func(addr sdk.AccAddress, denom string, duration time.Duration) string {
+		return fmt.Sprintf("%s/%s/%s", addr.String(), denom, strconv.FormatInt(int64(duration), 10))
+	}
+
+	// getNormalLock create or get normalized lock for given triplet
+	getNormalLock := func(addr sdk.AccAddress, denom string, normalizedDuration time.Duration) types.PeriodLock {
+		normalID, ok := normals[key(addr, denom, normalizedDuration)]
+		if ok {
+			normalLock, err := k.GetLockByID(ctx, normalID)
+			if err != nil {
+				panic(err)
+			}
+			return *normalLock
+		}
+		// crease a normalized lock if not exists
+		normalLock, err := k.createLock(ctx, addr, normalizedDuration, sdk.Coins{sdk.NewInt64Coin(denom, 0)})
+		if err != nil {
+			panic(err)
+		}
+		normals[key(addr, denom, normalizedDuration)] = normalLock.ID
+		return normalLock
+	}
+
+	tryNormalizeDuration := func(lock types.PeriodLock) (res time.Duration, ok bool) {
+		// multilocks and unlocking locks are not normalizable
+		if len(lock.Coins) != 1 || lock.IsUnlocking() {
+			return
+		}
+
+		// find out the normalizing base duration, if exists
 		// if base > duration, continue to next base size.
 		// if base <= duration, then we are in a duration that is greater than or equal to base size.
 		// If its within base + allowed diff, we set it to base.
-		if base <= duration && duration < base+allowedDiff {
-			return base, true
+		for _, base := range BaselineDurations {
+			if base <= lock.Duration && lock.Duration < base+AllowedDiff {
+				return base, true
+			}
+		}
+		return
+	}
+
+	mergeLockup := func(lock, normalLock types.PeriodLock) {
+		// increase normal lock Coins
+		normalLock.Coins = normalLock.Coins.Add(lock.Coins[0])
+		err := k.setLock(ctx, normalLock)
+		if err != nil {
+			panic(err)
+		}
+
+		// delete lock
+		err = k.deleteLock(ctx, lock)
+		if err != nil {
+			panic(err)
 		}
 	}
-	return duration, false
+
+	locks, err := k.GetPeriodLocks(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, lock := range locks {
+		// if qualified for merging, do merge
+		if normalizedDuration, ok := tryNormalizeDuration(lock); ok {
+			normalLock := getNormalLock(lock.OwnerAddress(), lock.Coins[0].Denom, normalizedDuration)
+			mergeLockup(lock, normalLock)
+			lock = normalLock
+		}
+
+		// increase accumulationstore
+		for _, coin := range lock.Coins {
+			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
+		}
+	}
 }
 
 // MergeLockupsForSimilarDurations iterates through every account. For each account,
@@ -36,76 +110,3 @@ func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Durat
 // If a lockup is far from any base duration, we don't change anything about it.
 // We define a lockup length as a "Similar duration to base duration D", if:
 // D <= lockup length <= D + durationDiff.
-func MergeLockupsForSimilarDurations(
-	ctx sdk.Context,
-	k Keeper,
-	ak types.AccountKeeper,
-	baselineDurations []time.Duration,
-	durationDiff time.Duration,
-) {
-	for _, acc := range ak.GetAllAccounts(ctx) {
-		addr := acc.GetAddress()
-		// We make at most one lock per (addr, denom, base duration) triplet, which we keep adding coins to.
-		// We call this the new "normalized lock", and the value in the map is the new lock ID.
-		normals := make(map[string]uint64)
-		for _, lock := range k.GetAccountPeriodLocks(ctx, addr) {
-			// ignore multilocks
-			if len(lock.Coins) > 1 {
-				continue
-			}
-			// ignore unlocking locks; they will be removed from the state anyway
-			if lock.IsUnlocking() {
-				continue
-			}
-			coin := lock.Coins[0]
-			normalizedDuration, ok := normalizeDuration(baselineDurations, durationDiff, lock.Duration)
-			if !ok {
-				continue
-			}
-
-			// serialize (addr, denom, duration) into a unique triplet for use in normals map.
-			key := addr.String() + "/" + coin.Denom + "/" + strconv.FormatInt(int64(normalizedDuration), 10)
-			normalID, ok := normals[key]
-
-			var normalLock types.PeriodLock
-			if !ok {
-				owner, err := sdk.AccAddressFromBech32(lock.Owner)
-				if err != nil {
-					panic(err)
-				}
-				// create a normalized lock that will absorb the locks in the duration window
-				normalID = k.GetLastLockID(ctx) + 1
-				normalLock = types.NewPeriodLock(normalID, owner, normalizedDuration, time.Time{}, lock.Coins)
-				err = k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, normalLock)
-				if err != nil {
-					panic(err)
-				}
-				k.SetLastLockID(ctx, normalID)
-				normals[key] = normalID
-			} else {
-				normalLockPtr, err := k.GetLockByID(ctx, normalID)
-				if err != nil {
-					panic(err)
-				}
-				normalLock = *normalLockPtr
-				normalLock.Coins[0].Amount = normalLock.Coins[0].Amount.Add(coin.Amount)
-			}
-
-			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(normalizedDuration), coin.Amount)
-
-			err := k.setLock(ctx, normalLock)
-			if err != nil {
-				panic(err)
-			}
-
-			k.deleteLock(ctx, lock.ID)
-			err = k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
-			if err != nil {
-				panic(err)
-			}
-
-			// don't call hooks, tokens are just moved from a lock to another
-		}
-	}
-}

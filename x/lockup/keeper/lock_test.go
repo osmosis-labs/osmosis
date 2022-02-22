@@ -149,29 +149,15 @@ func (suite *KeeperTestSuite) TestLock() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	lock := types.NewPeriodLock(1, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
 
 	// try lock without balance
-	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	_, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, time.Second, coins)
 	suite.Require().Error(err)
 
 	// lock with balance
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
-	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
-	suite.Require().NoError(err)
-
-	// lock with balance with same id
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
-	suite.Require().NoError(err)
-	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
-	suite.Require().Error(err)
-
-	// lock with balance with different id
-	lock = types.NewPeriodLock(2, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
-	suite.Require().NoError(err)
-	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, time.Second, coins)
 	suite.Require().NoError(err)
 }
 
@@ -182,20 +168,22 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	lock := types.NewPeriodLock(1, addr1, time.Second, now.Add(time.Second), coins)
 
 	// lock with balance
 	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
-	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, time.Second, coins)
 	suite.Require().NoError(err)
 
 	// begin unlock with lock object
+
 	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, nil)
 	suite.Require().NoError(err)
 
 	// unlock with lock object
-	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), lock)
+	lockp, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
+	suite.Require().NoError(err)
+	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), *lockp)
 	suite.Require().NoError(err)
 }
 
@@ -209,7 +197,7 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 	// lock with balance
 	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
-	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, coins, time.Second)
+	lock, err := suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, time.Second, coins)
 	suite.Require().NoError(err)
 
 	// check unlocking coins

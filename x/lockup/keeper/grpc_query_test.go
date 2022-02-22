@@ -11,7 +11,7 @@ import (
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
 	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, duration)
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, duration, coins)
 	suite.Require().NoError(err)
 }
 

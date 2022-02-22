@@ -45,9 +45,8 @@ func (suite *KeeperTestSuite) TestLockupMergeMigration() {
 	}
 
 	suite.Require().NotPanics(func() {
-		keeper.MergeLockupsForSimilarDurations(
-			suite.ctx, *suite.app.LockupKeeper, suite.app.AccountKeeper,
-			keeper.BaselineDurations, keeper.HourDuration,
+		keeper.MigrateLockups(
+			suite.ctx, *suite.app.LockupKeeper,
 		)
 	})
 

@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 
 	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, coins, time.Second)
+	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, time.Second, coins)
 	suite.Require().NoError(err)
 
 	// creation of lock via LockTokens

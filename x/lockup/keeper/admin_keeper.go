@@ -58,18 +58,7 @@ func (ak AdminKeeper) BreakLock(ctx sdk.Context, lockID uint64) error {
 		return err
 	}
 
-	ak.deleteLock(ctx, lockID)
+	err = ak.deleteLock(ctx, *lock)
 
-	refKeys, err := lockRefKeys(*lock)
-	if err != nil {
-		return err
-	}
-
-	for _, refKey := range refKeys {
-		err = ak.deleteLockRefByKey(ctx, refKey, lockID)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return err
 }

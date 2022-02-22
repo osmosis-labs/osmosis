@@ -39,9 +39,8 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 		wasmKeeper.SetParams(ctx, params)
 
 		// Merge similar duration lockups
-		lockupkeeper.MergeLockupsForSimilarDurations(
-			ctx, *lockupKeeper, accountKeeper,
-			lockupkeeper.BaselineDurations, lockupkeeper.HourDuration,
+		lockupkeeper.MigrateLockups(
+			ctx, *lockupKeeper,
 		)
 
 		// Set the supply offset from the developer vesting account

@@ -30,6 +30,12 @@ func (k Keeper) SetLastLockID(ctx sdk.Context, ID uint64) {
 	store.Set(types.KeyLastLockID, sdk.Uint64ToBigEndian(ID))
 }
 
+func (k Keeper) NextLockID(ctx sdk.Context) uint64 {
+	id := k.GetLastLockID(ctx) + 1
+	k.SetLastLockID(ctx, id)
+	return id
+}
+
 // lockStoreKey returns action store key from ID
 func lockStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
