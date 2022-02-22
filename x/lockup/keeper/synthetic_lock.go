@@ -186,18 +186,6 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom
 	return nil
 }
 
-// DeleteAllSyntheticLocksByLockup delete all the synthetic lockups by lockup id
-func (k Keeper) DeleteAllSyntheticLocksByLockup(ctx sdk.Context, lockID uint64) error {
-	syntheticLocks := k.GetAllSyntheticLockupsByLockup(ctx, lockID)
-	for _, synthLock := range syntheticLocks {
-		err := k.DeleteSyntheticLockup(ctx, lockID, synthLock.SynthDenom)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (k Keeper) DeleteAllMaturedSyntheticLocks(ctx sdk.Context) {
 	iterator := k.iteratorBeforeTime(ctx, combineKeys(types.KeyPrefixSyntheticLockTimestamp), ctx.BlockTime())
 	defer iterator.Close()
