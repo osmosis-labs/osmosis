@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
@@ -49,6 +50,25 @@ func (suite *KeeperTestSuite) SetupDefaultPool() {
 	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
 	poolId := suite.createGammPool([]string{bondDenom, "foo"})
 	suite.Require().Equal(poolId, uint64(1))
+}
+
+func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
+	epochIdentifier := suite.app.SuperfluidKeeper.GetParams(suite.ctx).RefreshEpochIdentifier
+	epoch := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, epochIdentifier)
+	newBlockTime := suite.ctx.BlockTime().Add(5 * time.Second)
+	if executeNextEpoch {
+		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
+		newBlockTime = endEpochTime.Add(time.Second)
+	}
+	header := tmproto.Header{Height: suite.ctx.BlockHeight() + 1, Time: newBlockTime}
+	reqBeginBlock := abci.RequestBeginBlock{Header: header}
+	suite.app.BeginBlocker(suite.ctx, reqBeginBlock)
+
+}
+
+func (suite *KeeperTestSuite) EndBlock() {
+	reqEndBlock := abci.RequestEndBlock{Height: suite.ctx.BlockHeight()}
+	suite.app.EndBlocker(suite.ctx, reqEndBlock)
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses

@@ -13,17 +13,9 @@ import (
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
-	params := k.GetParams(ctx)
-	if epochIdentifier == params.RefreshEpochIdentifier {
-		endedEpoch := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
-		// edge case where the epoch ends one block after it started, BlockAfterEpoch won't get called.
-		if endedEpoch.CurrentEpochStartHeight+1 == ctx.BlockHeight() {
-			k.BlockAfterEpoch(ctx)
-		}
-	}
 }
 
-func (k Keeper) BlockAfterEpoch(ctx sdk.Context) {
+func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	params := k.GetParams(ctx)
 	// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
 	// the supplied epoch number is wrong at time of commit. hence we get from the info.

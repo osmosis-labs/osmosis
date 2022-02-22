@@ -526,7 +526,9 @@ func NewOsmosisApp(
 		authz.ModuleName,
 		paramstypes.ModuleName, vestingtypes.ModuleName,
 		gammtypes.ModuleName, incentivestypes.ModuleName, lockuptypes.ModuleName, claimtypes.ModuleName,
-		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
+		poolincentivestypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
+		// superfluid has to be after distribution
+		superfluidtypes.ModuleName,
 		wasm.ModuleName,
 	)
 
