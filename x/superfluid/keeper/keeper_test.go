@@ -33,6 +33,16 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, suite.app.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.SetupDefaultPool()
+
+	unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
+
+	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
+		time.Hour * 24 * 14,
+		time.Hour,
+		time.Hour * 3,
+		time.Hour * 7,
+		unbondingDuration,
+	})
 }
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {

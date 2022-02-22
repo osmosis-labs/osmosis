@@ -21,6 +21,12 @@ func NewSuperfluidIntermediaryAccount(denom string, valAddr string, gaugeId uint
 	}
 }
 
+func (a SuperfluidIntermediaryAccount) Empty() bool {
+	// if intermediary account isn't set in state, we get the default intermediary account.
+	// if it set, then the denom is non-blank
+	return a.Denom == ""
+}
+
 func (a SuperfluidIntermediaryAccount) GetAccAddress() sdk.AccAddress {
 	return GetSuperfluidIntermediaryAccountAddr(a.Denom, a.ValAddr)
 }

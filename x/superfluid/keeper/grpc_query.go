@@ -206,8 +206,9 @@ func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.
 		return nil, err
 	}
 
-	intermediaryAcc, err := k.GetOrCreateIntermediaryAccount(ctx, req.Denom, req.ValidatorAddress)
-	if err != nil {
+	intermediaryAccAddress := types.GetSuperfluidIntermediaryAccountAddr(req.Denom, req.ValidatorAddress)
+	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddress)
+	if intermediaryAcc.Empty() {
 		return nil, err
 	}
 
@@ -217,7 +218,7 @@ func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.
 	}
 
 	delegation, found := k.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
-	if err != nil {
+	if !found {
 		return nil, stakingtypes.ErrNoDelegation
 	}
 
