@@ -23,8 +23,10 @@ Module provides below functionalities
 3. **[Messages](03_messages.md)**
 4. **[Epoch](04_epoch.md)**
 5. **[Staking Changes](05_staking_changes.md)**
-6. **[Events](06_events.md)**
-7. **[Hooks](07_hooks.md)**
-8. **[Queries](08_queries.md)**
-9. **[Params](09_params.md)**
-10. **[Endblocker](10_endblocker.md)**
+6. **[Hooks](06_hooks.md)**
+7. **[Proposals](07_proposals.md)**
+8. **[Events](08_events.md)**
+9. **[Queries](09_queries.md)**
+10. **[Params](10_params.md)**
+11. **[Slashing](11_slashing.md)**
+12. **[Minting](12_minting.md)**

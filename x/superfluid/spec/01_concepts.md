@@ -15,22 +15,3 @@ Intermediary Accounts establishes the connections between the superfluid staked 
 ## Intermediary Account Connection
 
 Intermediary Accounts Connection serves the role of tracking the locks that an Intermediary Account is dedicated to.
-
----
-
-Lets fill out this spec, and think about the entire state machine.
-
-Its a state machine which has inputs:
-
-- Epoch
-- Slashes
-- Gov props to add/remove superfluid assets
-- ??? Staking weight changes? (Validators going inactive)
-
-It has state:
-
-- Superfluid assets
-- Intermediary Accounts
-- Dedicated Gauges
-- Synthetic Locks
-- Historical osmo equivalent multipliers?
