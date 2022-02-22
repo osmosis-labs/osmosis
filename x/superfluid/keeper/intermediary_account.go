@@ -65,9 +65,8 @@ func (k Keeper) GetIntermediaryAccountsForVal(ctx sdk.Context, valAddr sdk.ValAd
 func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr string) (types.SuperfluidIntermediaryAccount, error) {
 	accountAddr := types.GetSuperfluidIntermediaryAccountAddr(denom, valAddr)
 	storeAccount := k.GetIntermediaryAccount(ctx, accountAddr)
-	// if storeAccount isn't set in state, we get the default storeAccount.
-	// if it set, then the denom is non-blank
-	if storeAccount.Denom != "" {
+	// if storeAccount is in state, we return it.
+	if !storeAccount.Empty() {
 		return storeAccount, nil
 	}
 	// Otherwise we create the intermediary account.

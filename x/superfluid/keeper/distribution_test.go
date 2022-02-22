@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			"two LP tokens delegation to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 0, "gamm/pool/2", 1000000}},
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/2", 1000000}},
 			[]int64{0},
 			[]gaugeChecker{{4, 0, "gamm/pool/1", true}, {5, 0, "gamm/pool/2", true}},
 		},
