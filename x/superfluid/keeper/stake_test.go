@@ -366,6 +366,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
+			bondDenom := suite.app.StakingKeeper.GetParams(suite.ctx).BondDenom
+
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
 
@@ -471,9 +473,6 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 //      4. test after SuperfluidUnbondLock + lockup time, the underlying lock is finished
 func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 	suite.SetupTest()
-
-	poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-	suite.Require().Equal(poolId, uint64(1))
 
 	// Generate delegator addresses
 	delAddrs := CreateRandomAccounts(1)
