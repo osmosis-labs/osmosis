@@ -4,7 +4,9 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -45,32 +47,19 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
+	delAddr := sdk.AccAddress(valAddr)
+	bondDenom := suite.app.StakingKeeper.GetParams(suite.ctx).BondDenom
+	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
 
-	validator, err := stakingtypes.NewValidator(valAddr, valPub, stakingtypes.NewDescription("moniker", "", "", "", ""))
-	suite.Require().NoError(err)
+	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, delAddr, selfBond)
+	sh := teststaking.NewHelper(suite.T(), suite.ctx, *suite.app.StakingKeeper)
+	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
+	sh.Handle(msg, true)
+	val, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
+	suite.Require().True(found)
+	val = val.UpdateStatus(bondStatus)
+	suite.app.StakingKeeper.SetValidator(suite.ctx, val)
 
-	amount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
-	issuedShares := amount.ToDec()
-	validator.Status = bondStatus
-	validator.Tokens = validator.Tokens.Add(amount)
-	validator.DelegatorShares = validator.DelegatorShares.Add(issuedShares)
-
-	suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
-	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
-	suite.app.StakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
-	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
-
-	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
-	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-	err = suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-	suite.Require().NoError(err)
-	if bondStatus == stakingtypes.Bonded {
-		err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, stakingtypes.BondedPoolName, coins)
-		suite.Require().NoError(err)
-	} else {
-		err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, stakingtypes.NotBondedPoolName, coins)
-		suite.Require().NoError(err)
-	}
 	return valAddr
 }
 
