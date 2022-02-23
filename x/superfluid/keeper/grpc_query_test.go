@@ -7,6 +7,13 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func (suite *KeeperTestSuite) TestGRPCParams() {
+	suite.SetupTest()
+	res, err := suite.app.SuperfluidKeeper.Params(sdk.WrapSDKContext(suite.ctx), &types.ParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
+}
+
 func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.SetupTest()
 

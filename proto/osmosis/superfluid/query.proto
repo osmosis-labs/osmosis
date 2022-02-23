@@ -7,12 +7,18 @@ import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "osmosis/superfluid/superfluid.proto";
+import "osmosis/superfluid/params.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  // Params returns the total set of minting parameters.
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/params";
+  }
+
   // Returns superfluid asset type
   rpc AssetType(AssetTypeRequest) returns (AssetTypeResponse) {
     option (google.api.http).get =
@@ -90,6 +96,12 @@ service Query {
   //   option (google.api.http).get =
   //       "/osmosis/superfluid/v1beta1/superfluid_unbondings_by_validator_denom";
   // }
+}
+
+message ParamsRequest {}
+message ParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
 message AssetTypeRequest { string denom = 1; };
