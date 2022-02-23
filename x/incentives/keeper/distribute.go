@@ -374,6 +374,8 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 	// Confusingly, there is no way to get all synthetic lockups. Thus we use a separate method `distributeSyntheticInternal` to separately get lockSum for synthetic lockups.
 	// All gauges have a precondition of being ByDuration.
 	distributeBaseDenom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
+	fmt.Println("distributeBaseDenom")
+	fmt.Println(distributeBaseDenom)
 	if _, ok := cache[distributeBaseDenom]; !ok {
 		cache[distributeBaseDenom] = k.getLocksToDistributionWithMaxDuration(
 			ctx, gauge.DistributeTo, time.Millisecond)
