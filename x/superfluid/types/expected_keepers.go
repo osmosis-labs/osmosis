@@ -1,7 +1,6 @@
 package types
 
 import (
-	context "context"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,10 +29,8 @@ type LockupKeeper interface {
 	CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration, isUnlocking bool) error
 	DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
 	GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []lockuptypes.SyntheticLock
-}
 
-type LockupMsgServer interface {
-	LockTokens(goCtx context.Context, msg *lockuptypes.MsgLockTokens) (*lockuptypes.MsgLockTokensResponse, error)
+	LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 }
 
 // GammKeeper defines the expected interface needed for superfluid module

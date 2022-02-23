@@ -237,7 +237,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 	app.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
 		*app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.EpochsKeeper, app.LockupKeeper, gammKeeper, app.IncentivesKeeper,
-		lockupkeeper.NewMsgServerImpl(*app.LockupKeeper))
+	)
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey],
