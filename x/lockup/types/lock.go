@@ -72,4 +72,3 @@ func NativeDenom(denom string) string {
 func IsSyntheticDenom(denom string) bool {
 	return NativeDenom(denom) != denom
 }
-
