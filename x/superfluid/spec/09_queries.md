@@ -4,19 +4,7 @@ order: 9
 
 # Queries
 
-```protobuf
-  rpc Params(ParamsRequest) returns (ParamsResponse) {}
-  
-  rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {}
-  
-  rpc AssetMultiplier(AssetMultiplierRequest) returns (AssetMultiplierResponse) {}
-  
-  rpc AllIntermediaryAccounts(AllIntermediaryAccountsRequest) returns (AllIntermediaryAccountsResponse) {}
-  
-  rpc ConnectedIntermediaryAccount(ConnectedIntermediaryAccountRequest) returns (ConnectedIntermediaryAccountResponse) {}
-
-  rpc SuperfluidDelegationAmount(SuperfluidDelegationAmountRequest) returns (SuperfluidDelegationAmountResponse) {}
-
+```protobuf  
   rpc SuperfluidDelegationsByDelegator(SuperfluidDelegationsByDelegatorRequest) returns (SuperfluidDelegationsByDelegatorResponse) {}
 
   rpc SuperfluidDelegationsByValidatorDenom(SuperfluidDelegationsByValidatorDenomRequest) returns (SuperfluidDelegationsByValidatorDenomResponse) {}
@@ -34,13 +22,13 @@ message ParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-enum Params {
-  SuperfluidAssetTypeNative = 0;
-  SuperfluidAssetTypeLPShare = 1;
+message Params {
+  sdk.Dec minimum_risk_factor = 1; // serialized as string
 }
 ```
 
-
+The params query returns the params for the superfluid module.  This currently contains:
+- `MinimumRiskFactor` which is an sdk.Dec that represents the discount to apply to all superfluid staked modules when calcultating their staking power.  For example, if a specific denom has an OSMO equivalent value of 100 OSMO, but the the `MinimumRiskFactor` param is 0.05, then the denom will only get 95 OSMO worth of staking power when staked.
 
 ## AssetType
 
@@ -110,3 +98,129 @@ To calculate the staking power of the denom, one needs to multiply the amount of
 
 `staking_power = amount * OsmoEquivalentMultipler * MinimumRiskFactor`
 
+## ConnectedIntermediaryAccount
+
+```protobuf
+message ConnectedIntermediaryAccountRequest {
+  uint64 lock_id = 1;
+}
+
+message ConnectedIntermediaryAccountResponse {
+  SuperfluidIntermediaryAccountInfo account = 1;
+}
+
+message SuperfluidIntermediaryAccount {
+  string denom = 1;
+  string val_addr = 2;
+  uint64 gauge_id = 3; // perpetual gauge for rewards distribution
+}
+```
+
+Every superfluid denom and validator pair has an associated "intermediary account", which does the actual delegation.  This query helps find the superfluid intermediary account for any superfluid position.
+
+That `lock_id` parameter passed in is the underlying lock id for the superfluid, NOT the synthetic lock id.
+
+This query can be used to find the validator a superfluid lock is delegated to.  The `gauge_id` also refers to the perpetual gauge that is used to pay out the superfluid positions associated with this intermediary account.
+
+## AllIntermediaryAccounts
+
+```protobuf
+message AllIntermediaryAccountsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+};
+
+message AllIntermediaryAccountsResponse {
+  repeated SuperfluidIntermediaryAccountInfo accounts = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+};
+```
+
+This query returns a list of all superfluid intermediary accounts.  It supports pagination.
+
+## SuperfluidDelegationAmount
+
+```protobuf
+message SuperfluidDelegationAmountRequest {
+  string delegator_address = 1;
+  string validator_address = 2;
+  string denom = 3;
+}
+
+message SuperfluidDelegationAmountResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [];
+}
+```
+
+This query returns the amount of underlying denom (i.e. lp share) for a triplet of delegator, validator, and denom.
+
+
+## SuperfluidDelegationAmount
+
+```protobuf
+message SuperfluidDelegationAmountRequest {
+  string delegator_address = 1;
+  string validator_address = 2;
+  string denom = 3;
+}
+
+message SuperfluidDelegationAmountResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [];
+}
+```
+
+This query returns the amount of underlying denom (i.e. lp share) for a triplet of delegator, validator, and denom.
+
+## SuperfluidDelegationsByDelegator
+
+```protobuf
+message SuperfluidDelegationsByDelegatorRequest {
+  string delegator_address = 1;
+}
+
+message SuperfluidDelegationsByDelegatorResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1;
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 2;
+}
+
+message SuperfluidDelegationRecord {
+  string delegator_address = 1;
+  string validator_address = 2;
+  cosmos.base.v1beta1.Coin delegation_amount = 3;
+}
+```
+
+This query returns a list of all the superfluid delegations of a specific delegator.  The return value includes, the validator delgated to and the delegated coins (both denom and amount).
+
+The return value of the query also includes the `total_delegated_coins` which is the sum of all the delegations of that validator.
+
+This query does require iteration that is linear with the number of delegations a delegator has made, but for now until we support many superfluid denoms, should be relatively bounded.  Once that increases, we will need to support pagination.
+
+## SuperfluidDelegationsByValidatorDenom
+
+```protobuf
+message SuperfluidDelegationsByValidatorDenomRequest {
+  string validator_address = 1;
+  string denom = 2;
+}
+
+message SuperfluidDelegationsByValidatorDenomResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1;
+}
+```
+
+This query returns a list of all superfluid delegations that are with a validator / superfluid denom pair.  This query requires a lot of iteration and should be used sparingly.  We will need to add pagination to make this usable.
+
+## EstimateSuperfluidDelegatedAmountByValidatorDenom
+
+```protobuf
+message EstimateSuperfluidDelegatedAmountByValidatorDenomRequest {
+  string validator_address = 1;
+  string denom = 2;
+}
+
+message EstimateSuperfluidDelegatedAmountByValidatorDenomResponse {
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 1;
+}
+```
+
+This query returns the total amount of delegated coins for a validator / superfluid denom pair.  This query does NOT involve iteration, so should be used instead of the above `SuperfluidDelegationsByValidatorDenom` whenever possible.  It is called an "Estimate" because it can have some slight rounding errors, due to conversions between sdk.Dec and sdk.Int", but for the most part it should be very close to the sum of the results of the previous query.
