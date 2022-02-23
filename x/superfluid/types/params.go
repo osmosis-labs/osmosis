@@ -11,7 +11,7 @@ import (
 // Parameter store keys
 var (
 	KeyMinimumRiskFactor     = []byte("MinimumRiskFactor")
-	defaultMinimumRiskFactor = sdk.NewDecWithPrec(5, 2) // 5%
+	defaultMinimumRiskFactor = sdk.NewDecWithPrec(5, 1) // 50%
 )
 
 // ParamTable for minting module.

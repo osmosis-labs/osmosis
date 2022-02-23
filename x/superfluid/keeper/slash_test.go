@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
@@ -62,7 +61,6 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
-			intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
 			locks := []lockuptypes.PeriodLock{}
 			slashFactor := sdk.NewDecWithPrec(5, 2)
 
@@ -71,10 +69,8 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 				valAddr := valAddrs[del.valIndex]
 				delAddr := delAddrs[del.delIndex]
 				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, del.lpDenom, del.lpAmount)
-				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
 
 				// save accounts and locks for future use
-				intermediaryAccs = append(intermediaryAccs, expAcc)
 				locks = append(locks, lock)
 			}
 
