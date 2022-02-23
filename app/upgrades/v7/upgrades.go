@@ -9,12 +9,18 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	mintkeeper "github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
+
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 	wasmKeeper *wasm.Keeper,
+	superfluidKeeper *superfluidkeeper.Keeper,
+	epochsKeeper *epochskeeper.Keeper,
 	lockupKeeper *lockupkeeper.Keeper,
 	mintKeeper *mintkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
@@ -44,6 +50,17 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 			ctx, *lockupKeeper, accountKeeper,
 			lockupkeeper.BaselineDurations, lockupkeeper.HourDuration,
 		)
+
+		ctx.Logger().Info("Migration for superfluid staking")
+		epochIndentifier := superfluidKeeper.GetParams(ctx).RefreshEpochIdentifier
+		currentEpoch := epochsKeeper.GetEpochInfo(ctx, epochIndentifier).CurrentEpoch
+		superfluidAsset := superfluidtypes.SuperfluidAsset{
+			Denom:     "gamm/pool/1",
+			AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
+		}
+
+		superfluidKeeper.SetSuperfluidAsset(ctx, superfluidAsset)
+		superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, superfluidAsset, currentEpoch)
 
 		// Set the supply offset from the developer vesting account
 		mintkeeper.SetInitialSupplyOffsetDuringMigration(ctx, *mintKeeper)
