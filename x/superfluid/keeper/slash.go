@@ -32,7 +32,6 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 	// for every intermediary account, we first slash the live tokens comprosing delegated to it,
 	// and then all of its unbonding delegations.
 	// We do these slashes as burns.
-	// TODO: Make it go to community pool.
 	for _, acc := range accs {
 		locks := k.lk.GetLocksLongerThanDurationDenom(ctx, acc.Denom, time.Second)
 		for _, lock := range locks {
@@ -42,7 +41,7 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 			if err != nil {
 				synthLock, err = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSyntheticDenom(acc.Denom, acc.ValAddr))
 				// synth lock doesn't exist for unbonding
-				// => no superlfuid staking on this lock ID, so continue
+				// => no superfluid staking on this lock ID, so continue
 				if err != nil {
 					continue
 				}

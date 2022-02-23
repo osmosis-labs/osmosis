@@ -115,8 +115,6 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
-		// TODO: "newEpochNumber" is wrong in the edge-case where the chain is down for over a day.
-		// However, since we don't use this epoch number right now, we don't deal with it.
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native

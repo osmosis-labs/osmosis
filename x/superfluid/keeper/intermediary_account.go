@@ -86,9 +86,10 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	intermediaryAcct := types.NewSuperfluidIntermediaryAccount(denom, valAddr, gaugeID)
 	k.SetIntermediaryAccount(ctx, intermediaryAcct)
 
-	// TODO: @Dev added this hasAccount gating, think through if theres an edge case that makes it not right
+	// If the intermediary account's address doesn't already have an auth account associated with it,
+	// create a new account. We use base accounts, as this is whats done for cosmwasm smart contract accounts.
+	// and in the off-chance someone manages to find a bug that forces the account's creation.
 	if !k.ak.HasAccount(ctx, intermediaryAcct.GetAccAddress()) {
-		// TODO: Why is this a base account, not a module account?
 		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, 0, 0))
 	}
 

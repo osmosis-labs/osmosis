@@ -49,8 +49,8 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			k.Logger(ctx).Info(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh."+
 				" It may have been previously bonded, but now unbonded.", mAddr.String(), acc.ValAddr))
 		} else {
+			// TODO: Be consistent withn TokensFromShares vs ValidateFromUnbondAmount
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
-
 		}
 
 		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
@@ -60,7 +60,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			adjustment := refreshedAmount.Sub(currentAmount)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
-				panic(err)
+				ctx.Logger().Error("Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
 			}
 		} else if currentAmount.GT(refreshedAmount) {
 			// In this case, we want to change the IA's delegated balance to be refreshed Amount
@@ -71,11 +71,12 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 
 			err := k.forceUndelegateAndBurnOsmoTokens(ctx, adjustment, acc)
 			if err != nil {
-				// TODO: We can't panic here. We can err-wrap though.
-				panic(err)
+				ctx.Logger().Error("Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
 			}
 		} else {
-			ctx.Logger().Info("Intermediary account already has correct delegation amount? sus. This whp implies the exact same spot price as the last epoch, and no delegation changes.")
+			ctx.Logger().Info("Intermediary account already has correct delegation amount?" +
+				" This with high probability implies the exact same spot price as the last epoch," +
+				"and no delegation changes.")
 		}
 	}
 }
@@ -191,18 +192,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
-	if err != nil {
-		return err
-	}
-
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		types.TypeEvtSuperfluidDelegate,
-		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockID)),
-		sdk.NewAttribute(types.AttributeValidator, valAddr),
-	))
-
-	return nil
+	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
 }
 
 func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
@@ -238,17 +228,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	}
 
 	// Create a new synthetic lockup representing the unstaking side.
-	err = k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
-	if err != nil {
-		return err
-	}
-
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		types.TypeEvtSuperfluidUndelegate,
-		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockID)),
-	))
-
-	return nil
+	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
 }
 
 func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
@@ -267,17 +247,7 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, s
 	if !synthLocks[0].IsUnlocking() {
 		return types.ErrBondingLockupNotSupported
 	}
-	err = k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
-	if err != nil {
-		return err
-	}
-
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		types.TypeEvtSuperfluidUnbondLock,
-		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", underlyingLockId)),
-	))
-
-	return nil
+	return k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
 }
 
 func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {

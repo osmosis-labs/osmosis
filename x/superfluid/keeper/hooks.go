@@ -1,10 +1,12 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 // Hooks wrapper struct for incentives keeper
@@ -39,6 +41,12 @@ func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, loc
 		err := h.k.SuperfluidDelegateMore(ctx, lockID, amount)
 		if err != nil {
 			h.k.Logger(ctx).Error(err.Error())
+		} else {
+			ctx.EventManager().EmitEvent(sdk.NewEvent(
+				types.TypeEvtSuperfluidIncreaseDelegation,
+				sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockID)),
+				sdk.NewAttribute(types.AttributeAmount, amount.String()),
+			))
 		}
 	}
 }
