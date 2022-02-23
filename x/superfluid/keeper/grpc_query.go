@@ -12,6 +12,17 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+// Params returns the superfluid module params
+func (k Keeper) Params(goCtx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	params := k.GetParams(ctx)
+
+	return &types.ParamsResponse{
+		Params: params,
+	}, nil
+}
+
 // AssetType Returns superfluid asset type
 func (k Keeper) AssetType(goCtx context.Context, req *types.AssetTypeRequest) (*types.AssetTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
