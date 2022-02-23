@@ -63,48 +63,50 @@ func MergeLockupsForSimilarDurations(
 				continue
 			}
 
-			// serialize (addr, denom, duration) into a unique triplet for use in normals map.
-			key := addr.String() + "/" + coin.Denom + "/" + strconv.FormatInt(int64(normalizedDuration), 10)
-			normalID, ok := normals[key]
+			// if there's changes to existing durations, we run migration logic, if not there's no need to run migration logic
+			if normalizedDuration != lock.Duration {
+				// serialize (addr, denom, duration) into a unique triplet for use in normals map.
+				key := addr.String() + "/" + coin.Denom + "/" + strconv.FormatInt(int64(normalizedDuration), 10)
+				normalID, ok := normals[key]
 
-			var normalLock types.PeriodLock
-			if !ok {
-				owner, err := sdk.AccAddressFromBech32(lock.Owner)
+				var normalLock types.PeriodLock
+				if !ok {
+					owner, err := sdk.AccAddressFromBech32(lock.Owner)
+					if err != nil {
+						panic(err)
+					}
+					// create a normalized lock that will absorb the locks in the duration window
+					normalID = k.GetLastLockID(ctx) + 1
+					normalLock = types.NewPeriodLock(normalID, owner, normalizedDuration, time.Time{}, lock.Coins)
+					err = k.addLockRefs(ctx, normalLock)
+					if err != nil {
+						panic(err)
+					}
+					k.SetLastLockID(ctx, normalID)
+					normals[key] = normalID
+				} else {
+					normalLockPtr, err := k.GetLockByID(ctx, normalID)
+					if err != nil {
+						panic(err)
+					}
+					normalLock = *normalLockPtr
+					normalLock.Coins[0].Amount = normalLock.Coins[0].Amount.Add(coin.Amount)
+				}
+
+				// k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+				// k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(normalizedDuration), coin.Amount)
+
+				err := k.setLock(ctx, normalLock)
 				if err != nil {
 					panic(err)
 				}
-				// create a normalized lock that will absorb the locks in the duration window
-				normalID = k.GetLastLockID(ctx) + 1
-				normalLock = types.NewPeriodLock(normalID, owner, normalizedDuration, time.Time{}, lock.Coins)
-				err = k.addLockRefs(ctx, normalLock)
+
+				k.deleteLock(ctx, lock.ID)
+				err = k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 				if err != nil {
 					panic(err)
 				}
-				k.SetLastLockID(ctx, normalID)
-				normals[key] = normalID
-			} else {
-				normalLockPtr, err := k.GetLockByID(ctx, normalID)
-				if err != nil {
-					panic(err)
-				}
-				normalLock = *normalLockPtr
-				normalLock.Coins[0].Amount = normalLock.Coins[0].Amount.Add(coin.Amount)
 			}
-
-			// k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-			// k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(normalizedDuration), coin.Amount)
-
-			err := k.setLock(ctx, normalLock)
-			if err != nil {
-				panic(err)
-			}
-
-			k.deleteLock(ctx, lock.ID)
-			err = k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
-			if err != nil {
-				panic(err)
-			}
-
 			// don't call hooks, tokens are just moved from a lock to another
 		}
 	}
