@@ -83,6 +83,8 @@ type IncentivesKeeper interface {
 
 	GetActiveGauges(ctx sdk.Context) []incentivestypes.Gauge
 	Distribute(ctx sdk.Context, gauges []incentivestypes.Gauge) (sdk.Coins, error)
+
+	GetParams(ctx sdk.Context) incentivestypes.Params
 }
 
 type EpochKeeper interface {

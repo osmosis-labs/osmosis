@@ -12,7 +12,7 @@ import (
 func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
 		// initialize osmo equivalent multipliers
-		epochIdentifier := k.GetParams(ctx).RefreshEpochIdentifier
+		epochIdentifier := k.GetEpochIdentifier(ctx)
 		currentEpoch := ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
 			k.SetSuperfluidAsset(ctx, asset)

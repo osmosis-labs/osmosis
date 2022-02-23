@@ -90,9 +90,9 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, va
 
 	// set OSMO TWAP price for LP token
 	suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 1, denom, sdk.NewDec(20))
-	params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
 	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
-		Identifier:   params.RefreshEpochIdentifier,
+		Identifier:   epochIdentifier,
 		CurrentEpoch: 2,
 	})
 
