@@ -249,7 +249,7 @@ func (k Keeper) distributeSyntheticInternal(
 	}
 
 	fmt.Println("computing sumlocksbydenom")
-	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, denom)
+	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, lockuptypes.NativeDenom(denom))
 	fmt.Println("lockSum:")
 	fmt.Println(lockSum)
 
