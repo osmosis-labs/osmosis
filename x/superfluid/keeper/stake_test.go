@@ -69,13 +69,13 @@ func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAc
 		// check delegation from intermediary account to validator
 		delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, acc.GetAccAddress(), valAddr)
 		suite.Require().True(found)
-		suite.Require().True(delegation.Shares.GTE(sdk.NewDec(19000000)))
+		suite.Require().True(delegation.Shares.GTE(sdk.NewDec(10000000)))
 
 		// check delegated tokens
 		validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
 		suite.Require().True(found)
 		delegatedTokens := validator.TokensFromShares(delegation.Shares).TruncateInt()
-		suite.Require().True(delegatedTokens.GTE(sdk.NewInt(19000000)))
+		suite.Require().True(delegatedTokens.GTE(sdk.NewInt(10000000)))
 	}
 }
 
@@ -142,21 +142,21 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			1,
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-			[]sdk.Dec{sdk.NewDec(19000000)}, // 95% x 2 x 1000000
+			[]sdk.Dec{sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
 		{
 			"with single validator and additional superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			1,
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
-			[]sdk.Dec{sdk.NewDec(38000000)}, // 95% x 2 x 1000000 x 2
+			[]sdk.Dec{sdk.NewDec(20000000)}, // 50% x 20 x 1000000 x 2
 		},
 		{
 			"with multiples validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			2,
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
-			[]sdk.Dec{sdk.NewDec(19000000), sdk.NewDec(19000000)}, // 95% x 2 x 1000000
+			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
 	}
 
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				// check delegation from intermediary account to validator
 				delegation, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, expAcc.GetAccAddress(), valAddr)
 				suite.Require().True(found)
-				suite.Require().Equal(delegation.Shares, tc.expInterDelegation[index])
+				suite.Require().Equal(tc.expInterDelegation[index], delegation.Shares)
 			}
 
 			// try delegating twice with same lockup
@@ -305,7 +305,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]uint64{},
 			[]uint64{2},
 			[]bool{true},
-			[]sdk.Dec{sdk.NewDec(19000000)},
+			[]sdk.Dec{sdk.NewDec(10000000)},
 		},
 		{
 			"try undelegating twice for same lock id",
