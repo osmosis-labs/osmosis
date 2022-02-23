@@ -225,33 +225,51 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // TODO: Make this code have way more re-use with distribute internal (post-v7)
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
+	fmt.Println("in distributeSyntheticInternal")
 	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 
 	qualifiedLocks := make([]lockuptypes.PeriodLock, 0, len(locks))
 	for _, lock := range locks {
+		fmt.Println("qualified lock:")
+		fmt.Println(lock)
 		// See if this lock has a synthetic lockup. If so, err == nil, and we add to qualifiedLocks
 		// otherwise it does not, and we continue.
+		fmt.Println("getting synth lockup")
 		_, err := k.lk.GetSyntheticLockup(ctx, lock.ID, denom)
 		if err != nil {
+			fmt.Println("error getting synth lockup. error:")
+			fmt.Println(err)
+			fmt.Println("continuing...")
 			continue
 		}
 		qualifiedLocks = append(qualifiedLocks, lock)
+		fmt.Println("appended to qualifiedLocks")
+		fmt.Println(qualifiedLocks)
 	}
 
+	fmt.Println("computing sumlocksbydenom")
 	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, denom)
+	fmt.Println("lockSum:")
+	fmt.Println(lockSum)
 
 	if lockSum.IsZero() {
+		fmt.Println("lockSum is zero")
 		return nil, nil
 	}
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	fmt.Println("remainCoins:")
+	fmt.Println(remainCoins)
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
 
+	fmt.Println("iterating qualified locks")
 	for _, lock := range qualifiedLocks {
+		fmt.Println("lock:")
+		fmt.Println(lock)
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
 			lockedCoin, err := lock.SingleCoin()
@@ -261,7 +279,10 @@ func (k Keeper) distributeSyntheticInternal(
 			}
 			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 			// check if the synthlock is qualified for GetLocksToDistribution
+			fmt.Println("calculating amount for payout")
 			amt := coin.Amount.Mul(lockedCoin.Amount).Quo(lockSum.Mul(sdk.NewIntFromUint64(remainEpochs)))
+			fmt.Println("amount:")
+			fmt.Println(amt)
 			if amt.IsPositive() {
 				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
 				distrCoins = distrCoins.Add(newlyDistributedCoin)
@@ -269,6 +290,7 @@ func (k Keeper) distributeSyntheticInternal(
 		}
 		distrCoins = distrCoins.Sort()
 		if distrCoins.Empty() {
+			fmt.Println("distrCoins is empty, continuing")
 			continue
 		}
 		// Update the amount for that address
@@ -281,6 +303,7 @@ func (k Keeper) distributeSyntheticInternal(
 	}
 
 	// increase filled epochs after distribution
+	fmt.Println("updating gauge post distribution")
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
 }
@@ -363,32 +386,52 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 
 // Distribute coins from gauge according to its conditions
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
+	fmt.Println("in Distribute")
+	fmt.Println("gauges:")
+	fmt.Println(gauges)
 	distrInfo := newDistributionInfo()
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
+		fmt.Println("distributing for gauge:")
+		fmt.Println(gauge)
 		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
+		fmt.Println("filtered locks:")
+		fmt.Println(filteredLocks)
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
 		var gaugeDistributedCoins sdk.Coins
 		var err error
 		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
+			fmt.Println("isSyntheticDenom")
+			fmt.Println("calling distributeSyntheticInternal")
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
+			fmt.Println("done with distributeSyntheticInternal")
+			fmt.Println(gaugeDistributedCoins)
 		} else {
+			fmt.Println("not isSyntheticDenom")
+			fmt.Println("calling distribute internal")
 			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
+			fmt.Println("done with distributeinternal")
+			fmt.Println(gaugeDistributedCoins)
 		}
 		if err != nil {
 			return nil, err
 		}
 		totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
+		fmt.Println("total for gauge:")
+		fmt.Println(totalDistributedCoins)
 	}
 
+	fmt.Println("calling doDistributionSends")
 	err := k.doDistributionSends(ctx, &distrInfo)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("afterepochdistribution hook")
 	k.hooks.AfterEpochDistribution(ctx)
 
+	fmt.Println("checkFinishDistribution")
 	k.checkFinishDistribution(ctx, gauges)
 	return totalDistributedCoins, nil
 }
