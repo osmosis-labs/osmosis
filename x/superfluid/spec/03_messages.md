@@ -57,7 +57,7 @@ type MsgSuperfluidUndelegate struct {
 - Immediately burn undelegated `Osmo`
 - Delete the connection between `lockID` and `IntermediaryAccount`
 
-## Superfluid LockAndSuperfluidDelegate
+## Lock and Superfluid Delegate
 
 ```go
 type MsgLockAndSuperfluidDelegate struct {
@@ -67,6 +67,31 @@ type MsgLockAndSuperfluidDelegate struct {
 }
 ```
 
+This is effectively a multimsg tx of lockup's `MsgLockTokens` and superfluid's `MsgSuperfluidDelegate`,
+but it is implemented as a single msg, because currently we don't have a way of passing the lockid
+outputted by `MsgLockTokens` as an input into the `MsgSuperfluidDelegate` prior to execution.
+
 **State Modifications:**
 
-- Creates a lockup with coins 
+- Ensures that Coins has a length of only 1 (we use sdk.Coins instead of sdk.Coin in order to allow more flexibility in the future)
+- Creates a lockup with Coins of a lock duration equivalent to the unstaking period from the staking module
+  - Uses the lockup module's MsgServer
+- Gets the lock id of the created lock, and uses it generate and execute a MsgSuperfluidDelegate message
+  - Uses the SuperfluidDelegate function on this msg server
+
+## Superfluid Unbond Lock
+
+```go
+type MsgSuperfluidUnbondLock struct {
+	Sender string
+	LockId uint64
+}
+```
+
+This message does all the functionality of `MsgSuperfluidUndelegate` but also starts unbonding the underlying
+lock as well, allowing both the unstaking and unlocking to complete at the same time.  Without using this function, a user will not be able to start unbonding their underlying lock until after the the unstaking has finished.
+
+**State Modifications:**
+
+- This runs the functionality of `MsgSuperfluidUndelegate`
+- It then triggers a force unbond of the underlying lock id
