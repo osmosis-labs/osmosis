@@ -27,7 +27,7 @@ osmosisd collect-gentxs --home=$HOME/.osmosisd/validator1
 
 
 # update staking genesis
-cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["staking"]["params"]["unbonding_time"]="120s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
+cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["staking"]["params"]["unbonding_time"]="240s"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
 
 # update crisis variable to uosmo
 cat $HOME/.osmosisd/validator1/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="uosmo"' > $HOME/.osmosisd/validator1/config/tmp_genesis.json && mv $HOME/.osmosisd/validator1/config/tmp_genesis.json $HOME/.osmosisd/validator1/config/genesis.json
