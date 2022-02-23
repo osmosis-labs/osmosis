@@ -78,10 +78,14 @@ type DistrKeeper interface {
 
 // IncentivesKeeper expected incentives keeper
 type IncentivesKeeper interface {
+	GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*incentivestypes.Gauge, error)
 	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 
+	GetUpcomingGauges(ctx sdk.Context) []incentivestypes.Gauge
 	GetActiveGauges(ctx sdk.Context) []incentivestypes.Gauge
+
+	BeginDistribution(ctx sdk.Context, gauge incentivestypes.Gauge) error
 	Distribute(ctx sdk.Context, gauges []incentivestypes.Gauge) (sdk.Coins, error)
 }
 

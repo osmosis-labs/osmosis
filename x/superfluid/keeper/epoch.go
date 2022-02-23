@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
@@ -13,9 +14,11 @@ import (
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
+	panic("plz i beg")
 }
 
 func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
+	fmt.Println("AfterEpochStartBeginBlock")
 	params := k.GetParams(ctx)
 	// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
 	// the supplied epoch number is wrong at time of commit. hence we get from the info.
@@ -61,7 +64,11 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 		// To avoid unexpected issues on WithdrawDelegationRewards and AddToGaugeRewards
 		// we use cacheCtx and apply the changes later
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			_, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
+			// bondDenom := k.sk.BondDenom(cacheCtx)
+			// balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
+			// fmt.Println("addr balance", balance)
+			coins, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
+			fmt.Println("withdraw delegation rewards", coins, err)
 			return err
 		})
 
@@ -71,18 +78,40 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
 			bondDenom := k.sk.BondDenom(cacheCtx)
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
-			return k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)
+			if balance.IsZero() {
+				return nil
+			}
+			err := k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)
+			// gauge, err := k.ik.GetGaugeByID(cacheCtx, acc.GaugeId)
+			// fmt.Println("gauge balance", gauge.Coins, gauge, err)
+			return err
 		})
 	}
 }
 
 func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
-	gauges := k.ik.GetActiveGauges(ctx)
+	// TODO: NONE OF THIS SHOULD BE NEEDED. IT SHOULD ALL BE DONE IN EPOCH,
+	// WHY IS EPOCH NOT GETTING CALLED
+	gauges := k.ik.GetUpcomingGauges(ctx)
+	for _, gauge := range gauges {
+		fmt.Println("gauge debug", ctx.BlockTime())
+		fmt.Println("gauge debug", gauge.StartTime)
+		fmt.Println("gauge debug", !ctx.BlockTime().Before(gauge.StartTime))
+
+		if !ctx.BlockTime().Before(gauge.StartTime) {
+			if err := k.ik.BeginDistribution(ctx, gauge); err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	gauges = k.ik.GetActiveGauges(ctx)
 
 	// only distribute to active gauges that are for perpetual synthetic denoms
 	distrGauges := []incentivestypes.Gauge{}
 	for _, gauge := range gauges {
 		isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
+		fmt.Println("plz", gauge.DistributeTo.Denom, isSynthetic, gauge.IsPerpetual)
 		if isSynthetic && gauge.IsPerpetual {
 			distrGauges = append(distrGauges, gauge)
 		}
@@ -116,8 +145,6 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
-		// TODO: "newEpochNumber" is wrong in the edge-case where the chain is down for over a day.
-		// However, since we don't use this epoch number right now, we don't deal with it.
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native

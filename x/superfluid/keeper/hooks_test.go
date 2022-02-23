@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
@@ -18,7 +18,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-			sdk.Coins{},
+			sdk.Coins{sdk.NewCoin("uion", sdk.OneInt())},
 		},
 	}
 
@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 
 			// gamm swap operation before refresh
 			suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 2, "gamm/pool/1", sdk.NewDec(10))
-			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+			acc1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address().Bytes())
 
 			coins := sdk.Coins{sdk.NewInt64Coin("foo", 100000000000000)}
 			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, coins)
@@ -58,6 +58,11 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().True(found)
 				suite.Require().Equal(delegation.Shares, sdk.NewDec(9500))
 				// TODO: Check reward distribution
+				gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, acc.GaugeId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expRewards, gauge.Coins)
+				suite.Require().Equal(tc.expRewards, suite.app.BankKeeper.GetAllBalances(suite.ctx, delAddrs[0]))
+				suite.Require().Equal(tc.expRewards, suite.app.BankKeeper.GetAllBalances(suite.ctx, acc.GetAccAddress()))
 			}
 		})
 	}

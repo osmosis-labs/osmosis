@@ -15,8 +15,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
@@ -35,15 +37,31 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	startTime := time.Unix(1645580000, 0)
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.SetupDefaultPool()
 
-	unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
+	// require distribution identifier = superfluid identifier, and identifier exists on chain.
+	distrIdentifier := suite.app.IncentivesKeeper.GetParams(suite.ctx).DistrEpochIdentifier
+	suite.Require().Equal(
+		distrIdentifier,
+		suite.app.SuperfluidKeeper.GetParams(suite.ctx).RefreshEpochIdentifier)
 
+	epochInfo := epochtypes.EpochInfo{
+		Identifier:              distrIdentifier,
+		StartTime:               startTime,
+		Duration:                time.Hour,
+		CurrentEpoch:            0,
+		CurrentEpochStartTime:   startTime,
+		CurrentEpochStartHeight: 1,
+	}
+	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochInfo)
+
+	unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
 	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
 		time.Hour * 24 * 14,
 		time.Hour,
@@ -51,6 +69,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 		time.Hour * 7,
 		unbondingDuration,
 	})
+
+	suite.BeginNewBlock(true)
 }
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {
@@ -69,6 +89,7 @@ func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
 	}
 	header := tmproto.Header{Height: suite.ctx.BlockHeight() + 1, Time: newBlockTime}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header}
+	suite.ctx = suite.ctx.WithBlockHeader(header).WithBlockHeight(header.Height).WithBlockTime(header.Time)
 	suite.app.BeginBlocker(suite.ctx, reqBeginBlock)
 
 }

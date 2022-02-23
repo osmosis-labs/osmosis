@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
@@ -13,9 +15,14 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.DistrEpochIdentifier {
+		fmt.Println("start incentives epoch")
 		// begin distribution if it's start time
 		gauges := k.GetUpcomingGauges(ctx)
 		for _, gauge := range gauges {
+			fmt.Println("gauge debug", ctx.BlockTime())
+			fmt.Println("gauge debug", gauge.StartTime)
+			fmt.Println("gauge debug", !ctx.BlockTime().Before(gauge.StartTime))
+
 			if !ctx.BlockTime().Before(gauge.StartTime) {
 				if err := k.BeginDistribution(ctx, gauge); err != nil {
 					panic(err)

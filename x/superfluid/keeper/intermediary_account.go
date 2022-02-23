@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -82,6 +84,7 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 		k.Logger(ctx).Error(err.Error())
 		return types.SuperfluidIntermediaryAccount{}, err
 	}
+	fmt.Println("gauge created", gaugeID)
 
 	intermediaryAcct := types.NewSuperfluidIntermediaryAccount(denom, valAddr, gaugeID)
 	k.SetIntermediaryAccount(ctx, intermediaryAcct)
