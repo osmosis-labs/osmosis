@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, va
 
 	// here we check if check `LockTokens` added to existing locks or created a new lock.
 	// if `LockTokens` created a new lock, we continue SuperfluidDelegate
-	// if lock has been existing before, we wouldn't have to call SuperfluidDelegate separately, as hooks on LockTokens would have automatically called SuperfluidDelegateMore
+	// if lock has been existing before, we wouldn't have to call SuperfluidDelegate separately, as hooks on LockTokens would have automatically called IncreaseSuperfluidDelegation
 	if lastLockID != lockID {
 		err = suite.app.SuperfluidKeeper.SuperfluidDelegate(suite.ctx, lock.Owner, lock.ID, valAddr.String())
 		suite.Require().NoError(err)

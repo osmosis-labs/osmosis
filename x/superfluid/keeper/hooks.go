@@ -38,7 +38,7 @@ func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, loc
 	intermediaryAccAddr := h.k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if !intermediaryAccAddr.Empty() {
 		// superfluid delegate for additional amount
-		err := h.k.SuperfluidDelegateMore(ctx, lockID, amount)
+		err := h.k.IncreaseSuperfluidDelegation(ctx, lockID, amount)
 		if err != nil {
 			h.k.Logger(ctx).Error(err.Error())
 		} else {

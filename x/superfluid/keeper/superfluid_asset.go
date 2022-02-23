@@ -20,8 +20,10 @@ func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asse
 	k.DeleteSuperfluidAsset(ctx, asset.Denom)
 }
 
+// Returns amount * (1 - k.RiskFactor(asset))
+// Fow now, the risk factor is a global constant.
+// It will move towards per pool functions.
 func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.SuperfluidAsset, amount sdk.Int) sdk.Int {
-	// TODO: we need to figure out how to do this later.
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
 	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt())
 }

@@ -81,7 +81,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) SuperfluidDelegateMore(ctx sdk.Context, lockID uint64, amount sdk.Coins) error {
+func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amount sdk.Coins) error {
 	acc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
 	if !found {
 		return nil
@@ -153,7 +153,7 @@ func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (sta
 	return validator, nil
 }
 
-// TODO: Merge a lot of logic with SuperfluidDelegateMore
+// TODO: Merge a lot of logic with IncreaseSuperfluidDelegation
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -288,6 +288,7 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 
 		// make delegation from module account to the validator
 		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
+		// For now, we don't worry since worst case it errors, in which case we revert mint.
 		_, err = k.sk.Delegate(cacheCtx,
 			intermediaryAccount.GetAccAddress(),
 			osmoAmount, stakingtypes.Unbonded, validator, true)
