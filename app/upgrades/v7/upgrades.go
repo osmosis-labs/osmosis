@@ -52,15 +52,12 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 		)
 
 		ctx.Logger().Info("Migration for superfluid staking")
-		epochIndentifier := superfluidKeeper.GetParams(ctx).RefreshEpochIdentifier
-		currentEpoch := epochsKeeper.GetEpochInfo(ctx, epochIndentifier).CurrentEpoch
+
 		superfluidAsset := superfluidtypes.SuperfluidAsset{
 			Denom:     "gamm/pool/1",
 			AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 		}
-
-		superfluidKeeper.SetSuperfluidAsset(ctx, superfluidAsset)
-		superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, superfluidAsset, currentEpoch)
+		superfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
 
 		// Set the supply offset from the developer vesting account
 		mintkeeper.SetInitialSupplyOffsetDuringMigration(ctx, *mintKeeper)
