@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
@@ -77,16 +78,28 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 }
 
 func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
+	fmt.Println("distributeSuperfluidGauges")
 	gauges := k.ik.GetActiveGauges(ctx)
+	fmt.Println("got active gauges")
+	fmt.Println(gauges)
 
 	// only distribute to active gauges that are for perpetual synthetic denoms
+	fmt.Println("looping through gauges")
 	distrGauges := []incentivestypes.Gauge{}
 	for _, gauge := range gauges {
+		fmt.Println("gauge:")
+		fmt.Println(gauge)
 		isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
+		fmt.Println("isSynthetic:")
+		fmt.Println(isSynthetic)
 		if isSynthetic && gauge.IsPerpetual {
+			fmt.Println("adding to distrGauges")
 			distrGauges = append(distrGauges, gauge)
 		}
 	}
+	fmt.Println("built up distrGauges:")
+	fmt.Println(distrGauges)
+	fmt.Println("distributeing to synth gauges")
 	_, err := k.ik.Distribute(ctx, distrGauges)
 	if err != nil {
 		panic(err)
