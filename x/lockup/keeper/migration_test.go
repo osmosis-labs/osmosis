@@ -37,7 +37,13 @@ func (suite *KeeperTestSuite) TestLockupMergeMigration() {
 	for _, baseDuration := range keeper.BaselineDurations {
 		for i := 0; i < 100; i++ {
 			addr, denom := addr(rand.Intn(5)), denom(rand.Intn(5))
-			duration := baseDuration + time.Duration(rand.Int63n(int64(keeper.HourDuration)))
+			// we create 20 lockups without jitter
+			var duration time.Duration
+			if i%20 == 0 {
+				duration = baseDuration
+			} else {
+				duration = baseDuration + time.Duration(rand.Int63n(int64(keeper.HourDuration)))
+			}
 			amount := rand.Int63n(100000)
 			add(addr, denom, baseDuration, amount)
 			suite.LockTokens(addr, sdk.Coins{sdk.NewInt64Coin(denom, amount)}, duration)
