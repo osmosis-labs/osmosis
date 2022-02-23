@@ -84,19 +84,14 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 	if gauge.IsUpcomingGauge(curTime) {
 		combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
-		return err
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	} else if gauge.IsActiveGauge(curTime) {
 		combinedKeys := combineKeys(types.KeyPrefixActiveGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
-		return err
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	} else {
 		combinedKeys := combineKeys(types.KeyPrefixFinishedGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
-		return err
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	}
-
-	return nil
 }
 
 // CreateGauge create a gauge and send coins to the gauge

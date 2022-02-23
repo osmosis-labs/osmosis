@@ -60,27 +60,15 @@ func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 
 // quick fix for getting native denom from synthetic denom
 func NativeDenom(denom string) string {
-	if strings.Contains(denom, "superbonding") {
-		return strings.Split(denom, "superbonding")[0]
+	if strings.Contains(denom, "/superbonding") {
+		return strings.Split(denom, "/superbonding")[0]
 	}
-	if strings.Contains(denom, "superunbonding") {
-		return strings.Split(denom, "superunbonding")[0]
+	if strings.Contains(denom, "/superunbonding") {
+		return strings.Split(denom, "/superunbonding")[0]
 	}
 	return denom
-}
-
-func SyntheticSuffix(denom string) string {
-	return strings.TrimLeft(denom, NativeDenom(denom))
 }
 
 func IsSyntheticDenom(denom string) bool {
 	return NativeDenom(denom) != denom
 }
-
-// func IsStakingSuffix(suffix string) bool {
-// 	return strings.Contains(suffix, "superbonding")
-// }
-
-// func IsUnstakingSuffix(suffix string) bool {
-// 	return strings.Contains(suffix, "superunbonding")
-// }

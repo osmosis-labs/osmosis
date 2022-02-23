@@ -38,6 +38,9 @@ func (suite *KeeperTestSuite) TestLockupMergeMigration() {
 		for i := 0; i < 100; i++ {
 			addr, denom := addr(rand.Intn(5)), denom(rand.Intn(5))
 			duration := baseDuration + time.Duration(rand.Int63n(int64(keeper.HourDuration)))
+			if rand.Intn(3) == 0 {
+				duration = baseDuration
+			}
 			amount := rand.Int63n(100000)
 			add(addr, denom, baseDuration, amount)
 			suite.LockTokens(addr, sdk.Coins{sdk.NewInt64Coin(denom, amount)}, duration)

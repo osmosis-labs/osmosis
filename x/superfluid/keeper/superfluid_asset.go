@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -32,4 +33,15 @@ func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.Superfluid
 func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount sdk.Dec) sdk.Dec {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
 	return amount.Quo(sdk.OneDec().Sub(minRiskFactor))
+}
+
+func (k Keeper) AddNewSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset) {
+	// initialize osmo equivalent multipliers
+	epochIdentifier := k.GetEpochIdentifier(ctx)
+	currentEpoch := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
+	_ = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+		k.SetSuperfluidAsset(ctx, asset)
+		err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, currentEpoch)
+		return err
+	})
 }

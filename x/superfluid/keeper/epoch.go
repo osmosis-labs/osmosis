@@ -7,39 +7,45 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+
+	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
-	params := k.GetParams(ctx)
-	if epochIdentifier == params.RefreshEpochIdentifier {
-		// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
-		// the supplied epoch number is wrong at time of commit. hence we get from the info.
-		endedEpochNumber := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
+}
 
-		// Move delegation rewards to perpetual gauge
-		ctx.Logger().Info("Move delegation rewards to gauges")
-		k.MoveSuperfluidDelegationRewardToGauges(ctx)
+func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
+	// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
+	// the supplied epoch number is wrong at time of commit. hence we get from the info.
+	curEpoch := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).CurrentEpoch
 
-		// Update all LP tokens multipliers for the upcoming epoch.
-		// This affects staking reward distribution until the next epochs rewards.
-		// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
-		ctx.Logger().Info("Update all osmo equivalency multipliers")
-		for _, asset := range k.GetAllSuperfluidAssets(ctx) {
-			err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, endedEpochNumber)
-			if err != nil {
-				// TODO: Revisit what we do here. (halt all distr, only skip this asset)
-				// Since at MVP of feature, we only have one pool of superfluid staking,
-				// we can punt this question.
-				// each of the errors feels like significant misconfig
-				return
-			}
+	// Move delegation rewards to perpetual gauge
+	ctx.Logger().Info("Move delegation rewards to gauges")
+	k.MoveSuperfluidDelegationRewardToGauges(ctx)
+
+	ctx.Logger().Info("Distribute Superfluid gauges")
+	k.distributeSuperfluidGauges(ctx)
+
+	// Update all LP tokens multipliers for the upcoming epoch.
+	// This affects staking reward distribution until the next epochs rewards.
+	// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
+	ctx.Logger().Info("Update all osmo equivalency multipliers")
+	for _, asset := range k.GetAllSuperfluidAssets(ctx) {
+		err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, curEpoch)
+		if err != nil {
+			// TODO: Revisit what we do here. (halt all distr, only skip this asset)
+			// Since at MVP of feature, we only have one pool of superfluid staking,
+			// we can punt this question.
+			// each of the errors feels like significant misconfig
+			return
 		}
-
-		// Refresh intermediary accounts' delegation amounts,
-		// making staking rewards follow the updated multiplier numbers.
-		ctx.Logger().Info("Refresh all superfluid delegation amounts")
-		k.RefreshIntermediaryDelegationAmounts(ctx)
 	}
+
+	// Refresh intermediary accounts' delegation amounts,
+	// making staking rewards follow the updated multiplier numbers.
+	ctx.Logger().Info("Refresh all superfluid delegation amounts")
+	k.RefreshIntermediaryDelegationAmounts(ctx)
 }
 
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
@@ -69,7 +75,24 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, endedEpochNumber int64) error {
+func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
+	gauges := k.ik.GetActiveGauges(ctx)
+
+	// only distribute to active gauges that are for perpetual synthetic denoms
+	distrGauges := []incentivestypes.Gauge{}
+	for _, gauge := range gauges {
+		isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
+		if isSynthetic && gauge.IsPerpetual {
+			distrGauges = append(distrGauges, gauge)
+		}
+	}
+	_, err := k.ik.Distribute(ctx, distrGauges)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, newEpochNumber int64) error {
 	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
@@ -92,8 +115,9 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
-		beginningEpochNumber := endedEpochNumber + 1
-		k.SetOsmoEquivalentMultiplier(ctx, beginningEpochNumber, asset.Denom, twap)
+		// TODO: "newEpochNumber" is wrong in the edge-case where the chain is down for over a day.
+		// However, since we don't use this epoch number right now, we don't deal with it.
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
 		k.Logger(ctx).Error("unsupported superfluid asset type")

@@ -8,6 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
@@ -20,7 +21,7 @@ type LockupKeeper interface {
 	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock
 	GetPeriodLocks(ctx sdk.Context) ([]lockuptypes.PeriodLock, error)
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
-	BeginForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock, coins sdk.Coins) error
+	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
 
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
 
@@ -79,8 +80,14 @@ type DistrKeeper interface {
 type IncentivesKeeper interface {
 	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
+
+	GetActiveGauges(ctx sdk.Context) []incentivestypes.Gauge
+	Distribute(ctx sdk.Context, gauges []incentivestypes.Gauge) (sdk.Coins, error)
+
+	GetParams(ctx sdk.Context) incentivestypes.Params
 }
 
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+	NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (int64, error)
 }

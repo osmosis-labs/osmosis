@@ -48,6 +48,7 @@ func MergeLockupsForSimilarDurations(
 		// We make at most one lock per (addr, denom, base duration) triplet, which we keep adding coins to.
 		// We call this the new "normalized lock", and the value in the map is the new lock ID.
 		normals := make(map[string]uint64)
+		locksToNormalize := []types.PeriodLock{}
 		for _, lock := range k.GetAccountPeriodLocks(ctx, addr) {
 			// ignore multilocks
 			if len(lock.Coins) > 1 {
@@ -57,6 +58,22 @@ func MergeLockupsForSimilarDurations(
 			if lock.IsUnlocking() {
 				continue
 			}
+			normalizedDuration, ok := normalizeDuration(baselineDurations, durationDiff, lock.Duration)
+			if !ok {
+				continue
+			}
+			coin := lock.Coins[0]
+			// In this pass, add lock to normals if exact match
+			key := addr.String() + "/" + coin.Denom + "/" + strconv.FormatInt(int64(normalizedDuration), 10)
+			_, normalExists := normals[key]
+			if normalizedDuration == lock.Duration && !normalExists {
+				normals[key] = lock.ID
+				continue
+			}
+			locksToNormalize = append(locksToNormalize, lock)
+		}
+
+		for _, lock := range locksToNormalize {
 			coin := lock.Coins[0]
 			normalizedDuration, ok := normalizeDuration(baselineDurations, durationDiff, lock.Duration)
 			if !ok {
@@ -76,7 +93,7 @@ func MergeLockupsForSimilarDurations(
 				// create a normalized lock that will absorb the locks in the duration window
 				normalID = k.GetLastLockID(ctx) + 1
 				normalLock = types.NewPeriodLock(normalID, owner, normalizedDuration, time.Time{}, lock.Coins)
-				err = k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, normalLock)
+				err = k.addLockRefs(ctx, normalLock)
 				if err != nil {
 					panic(err)
 				}
@@ -91,8 +108,8 @@ func MergeLockupsForSimilarDurations(
 				normalLock.Coins[0].Amount = normalLock.Coins[0].Amount.Add(coin.Amount)
 			}
 
-			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(normalizedDuration), coin.Amount)
+			// k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+			// k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(normalizedDuration), coin.Amount)
 
 			err := k.setLock(ctx, normalLock)
 			if err != nil {

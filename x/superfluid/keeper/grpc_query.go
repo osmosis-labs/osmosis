@@ -12,6 +12,17 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+// Params returns the superfluid module params
+func (k Keeper) Params(goCtx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	params := k.GetParams(ctx)
+
+	return &types.ParamsResponse{
+		Params: params,
+	}, nil
+}
+
 // AssetType Returns superfluid asset type
 func (k Keeper) AssetType(goCtx context.Context, req *types.AssetTypeRequest) (*types.AssetTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -33,8 +44,7 @@ func (k Keeper) AllAssets(goCtx context.Context, req *types.AllAssetsRequest) (*
 // AssetMultiplier returns superfluid asset multiplier
 func (k Keeper) AssetMultiplier(goCtx context.Context, req *types.AssetMultiplierRequest) (*types.AssetMultiplierResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	params := k.GetParams(ctx)
-	epochInfo := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
+	epochInfo := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx))
 
 	return &types.AssetMultiplierResponse{
 		OsmoEquivalentMultiplier: &types.OsmoEquivalentMultiplierRecord{
@@ -206,8 +216,9 @@ func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.
 		return nil, err
 	}
 
-	intermediaryAcc, err := k.GetOrCreateIntermediaryAccount(ctx, req.Denom, req.ValidatorAddress)
-	if err != nil {
+	intermediaryAccAddress := types.GetSuperfluidIntermediaryAccountAddr(req.Denom, req.ValidatorAddress)
+	intermediaryAcc := k.GetIntermediaryAccount(ctx, intermediaryAccAddress)
+	if intermediaryAcc.Empty() {
 		return nil, err
 	}
 
@@ -217,7 +228,7 @@ func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.
 	}
 
 	delegation, found := k.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
-	if err != nil {
+	if !found {
 		return nil, stakingtypes.ErrNoDelegation
 	}
 

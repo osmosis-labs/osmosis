@@ -63,7 +63,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 					sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
 				),
 			})
-			return &types.MsgLockTokensResponse{}, nil
+			return &types.MsgLockTokensResponse{ID: locks[0].ID}, nil
 		}
 	}
 
@@ -83,7 +83,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		),
 	})
 
-	return &types.MsgLockTokensResponse{}, nil
+	return &types.MsgLockTokensResponse{ID: lock.ID}, nil
 }
 
 func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBeginUnlocking) (*types.MsgBeginUnlockingResponse, error) {

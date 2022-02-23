@@ -89,9 +89,7 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 
 // removeTokensFromLock is called by lockup slash function - called by superfluid module only
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
-	// TODO: how to handle full slash for both normal lockup
-	// TODO: how to handle full slash for superfluid delegated lockup?
-
+	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
 	lock.Coins = lock.Coins.Sub(coins)
 
 	err := k.setLock(ctx, *lock)
@@ -113,7 +111,6 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 		// Note: we use native lock's duration on accumulation store
 		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), lock.Coins[0].Amount)
 	}
-
 	return nil
 }
 
@@ -330,12 +327,8 @@ func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodL
 		return err
 	}
 
-	// store refs by the status of unlock
-	if synthLock.IsUnlocking() {
-		return k.addSyntheticLockRefs(ctx, types.KeyPrefixUnlocking, lock, synthLock)
-	}
-
-	return k.addSyntheticLockRefs(ctx, types.KeyPrefixNotUnlocking, lock, synthLock)
+	// store synth lock refs
+	return k.addSyntheticLockRefs(ctx, lock, synthLock)
 }
 
 // setLockAndResetLockRefs sets the lock, and resets all of its lock references
@@ -346,12 +339,7 @@ func (k Keeper) setLockAndResetLockRefs(ctx sdk.Context, lock types.PeriodLock) 
 		return err
 	}
 
-	// store refs by the status of unlock
-	if lock.IsUnlocking() {
-		return k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
-	}
-
-	return k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	return k.addLockRefs(ctx, lock)
 }
 
 // setLock is a utility to store lock object into the store
@@ -390,7 +378,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	store.Set(lockStoreKey(lock.ID), bz)
 
 	// add lock refs into not unlocking queue
-	err = k.addLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	err = k.addLockRefs(ctx, lock)
 	if err != nil {
 		return err
 	}
@@ -431,10 +419,18 @@ func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
 	}
 
-	return k.BeginForceUnlock(ctx, lock, coins)
+	return k.beginForceUnlock(ctx, lock, coins)
 }
 
-func (k Keeper) BeginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+	return k.beginForceUnlock(ctx, *lock, coins)
+}
+
+func (k Keeper) beginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
 	// sanity check
 	if !coins.IsAllLTE(lock.Coins) {
 		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
@@ -465,7 +461,7 @@ func (k Keeper) BeginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins s
 	}
 
 	// add lock refs into unlocking queue
-	err = k.addLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	err = k.addLockRefs(ctx, lock)
 	if err != nil {
 		return err
 	}
