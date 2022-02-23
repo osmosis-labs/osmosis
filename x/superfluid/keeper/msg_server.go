@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -25,6 +26,13 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
+	if err != nil {
+		ctx.EventManager().EmitEvent(sdk.NewEvent(
+			types.TypeEvtSuperfluidDelegate,
+			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
+			sdk.NewAttribute(types.AttributeValidator, msg.ValAddr),
+		))
+	}
 	return &types.MsgSuperfluidDelegateResponse{}, err
 }
 
@@ -32,6 +40,12 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
+	if err != nil {
+		ctx.EventManager().EmitEvent(sdk.NewEvent(
+			types.TypeEvtSuperfluidUndelegate,
+			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
+		))
+	}
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
 
@@ -47,6 +61,12 @@ func (server msgServer) SuperfluidUnbondLock(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidUnbondLock(ctx, msg.LockId, msg.Sender)
+	if err != nil {
+		ctx.EventManager().EmitEvent(sdk.NewEvent(
+			types.TypeEvtSuperfluidUnbondLock,
+			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
+		))
+	}
 	return &types.MsgSuperfluidUnbondLockResponse{}, err
 }
 

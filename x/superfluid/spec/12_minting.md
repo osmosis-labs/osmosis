@@ -5,7 +5,7 @@ order: 12
 # Minting
 
 Superfluid module has the ability to arbitrarily mint and burn Osmo through the `bank` module. This is potentially dangerous so we strictly constrain it's ability to do so.
-This authority is mediated through the `mintOsmoTokensAndDelegate` and `forceUndelegateAndBurnOsmoTokens` keeper methods, which are in turn called by message handlers (`SuperfluidDelegate` and `SuperfluidUndelegate`) as well as by hooks on Epoch (`RefreshIntermediaryDelegationAmounts`) and Lockup (`SuperfluidDelegateMore`)
+This authority is mediated through the `mintOsmoTokensAndDelegate` and `forceUndelegateAndBurnOsmoTokens` keeper methods, which are in turn called by message handlers (`SuperfluidDelegate` and `SuperfluidUndelegate`) as well as by hooks on Epoch (`RefreshIntermediaryDelegationAmounts`) and Lockup (`IncreaseSuperfluidDelegation`)
 
 ## Invariant
 
@@ -30,7 +30,7 @@ When a user submits a transaction to unlock their asset the invariant is maintai
 
 In the `RefreshIntermediaryDelegationAmounts` method, calls are made to `mintOsmoTokensAndDelegate` or `forceUndelegateAndBurnOsmoTokens` to adjust the real delegation up or down to match `GetExpectedDelegationAmount`.
 
-### SuperfluidDelegateMore (AfterAddTokensToLock Hook)
+### IncreaseSuperfluidDelegation (AfterAddTokensToLock Hook)
 
 This is called as a result of a user adding more assets to a lock that has already been associated to an `IntermediaryAccount`. The invariant is maintained by using `mintOsmoTokenAndDelegate` to match the amount of new asset locked \* `GetOsmoEquivalentMultiplier` \* `GetRiskAdjustment` for the underlying asset.
 

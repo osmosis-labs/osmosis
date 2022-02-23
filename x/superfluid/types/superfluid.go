@@ -32,13 +32,8 @@ func (a SuperfluidIntermediaryAccount) GetAccAddress() sdk.AccAddress {
 }
 
 func GetSuperfluidIntermediaryAccountAddr(denom, valAddr string) sdk.AccAddress {
-	// TODO (pre-v7): Make this better namespaced.
+	// TODO: Make this better namespaced.
 	// if ValAddr's one day switch to potentially be 32 bytes, a malleability attack could be crafted.
-	// Options I (Dev) see:
-	// * length prefix ValAddr
-	// * add a special separator character (e.g. \x00) and assume neither denom or valAddr can contain it
-	// * assert right here that valAddr is length 20 and deal with a 32byte addr change later.
-	//
-	// (Dev) I prefer length prefix ValAddr
+	// We are launching with the address as is, so this will have to be done as a migration in the future.
 	return authtypes.NewModuleAddress(denom + valAddr)
 }
