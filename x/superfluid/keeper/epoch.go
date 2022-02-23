@@ -16,10 +16,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 }
 
 func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
-	params := k.GetParams(ctx)
 	// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
 	// the supplied epoch number is wrong at time of commit. hence we get from the info.
-	curEpoch := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier).CurrentEpoch
+	curEpoch := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx)).CurrentEpoch
 
 	// Move delegation rewards to perpetual gauge
 	ctx.Logger().Info("Move delegation rewards to gauges")

@@ -13,8 +13,7 @@ import (
 func RandomizedGenState(simState *module.SimulationState) {
 	superfluidGenesis := &types.GenesisState{
 		Params: types.Params{
-			RefreshEpochIdentifier: "second",
-			MinimumRiskFactor:      sdk.NewDecWithPrec(5, 2), // 5%
+			MinimumRiskFactor: sdk.NewDecWithPrec(5, 2), // 5%
 		},
 		SuperfluidAssets:          []types.SuperfluidAsset{},
 		OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplierRecord{},

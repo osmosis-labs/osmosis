@@ -33,8 +33,7 @@ func (k Keeper) AllAssets(goCtx context.Context, req *types.AllAssetsRequest) (*
 // AssetMultiplier returns superfluid asset multiplier
 func (k Keeper) AssetMultiplier(goCtx context.Context, req *types.AssetMultiplierRequest) (*types.AssetMultiplierResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	params := k.GetParams(ctx)
-	epochInfo := k.ek.GetEpochInfo(ctx, params.RefreshEpochIdentifier)
+	epochInfo := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx))
 
 	return &types.AssetMultiplierResponse{
 		OsmoEquivalentMultiplier: &types.OsmoEquivalentMultiplierRecord{

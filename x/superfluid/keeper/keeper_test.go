@@ -35,7 +35,9 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+
+	startTime := time.Unix(1645580000, 0)
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.SuperfluidKeeper)
@@ -60,7 +62,7 @@ func (suite *KeeperTestSuite) SetupDefaultPool() {
 }
 
 func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
-	epochIdentifier := suite.app.SuperfluidKeeper.GetParams(suite.ctx).RefreshEpochIdentifier
+	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
 	epoch := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, epochIdentifier)
 	newBlockTime := suite.ctx.BlockTime().Add(5 * time.Second)
 	if executeNextEpoch {

@@ -10,7 +10,7 @@ import (
 
 // BeginBlocker is called on every block
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper) {
-	numBlocksSinceEpochStart, err := ek.NumBlocksSinceEpochStart(ctx, k.GetParams(ctx).RefreshEpochIdentifier)
+	numBlocksSinceEpochStart, err := ek.NumBlocksSinceEpochStart(ctx, k.GetEpochIdentifier(ctx))
 	if err != nil {
 		panic(err)
 	}
