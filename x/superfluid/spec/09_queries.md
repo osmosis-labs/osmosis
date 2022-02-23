@@ -4,14 +4,6 @@ order: 9
 
 # Queries
 
-```protobuf  
-  rpc SuperfluidDelegationsByDelegator(SuperfluidDelegationsByDelegatorRequest) returns (SuperfluidDelegationsByDelegatorResponse) {}
-
-  rpc SuperfluidDelegationsByValidatorDenom(SuperfluidDelegationsByValidatorDenomRequest) returns (SuperfluidDelegationsByValidatorDenomResponse) {}
-
-  rpc EstimateSuperfluidDelegatedAmountByValidatorDenom(EstimateSuperfluidDelegatedAmountByValidatorDenomRequest)returns (EstimateSuperfluidDelegatedAmountByValidatorDenomResponse) {}
-```
-
 ## Params
 
 ```protobuf
