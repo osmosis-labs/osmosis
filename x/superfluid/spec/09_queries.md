@@ -5,37 +5,42 @@ order: 7
 # Queries
 
 ```protobuf
-  // Returns superfluid asset type
-  rpc AssetType(AssetTypeRequest) returns (AssetTypeResponse) {}
+  rpc Params(ParamsRequest) returns (ParamsResponse) {}
   
-  // Returns all superfluid asset types
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {}
   
-  // Returns superfluid asset Multiplier
   rpc AssetMultiplier(AssetMultiplierRequest) returns (AssetMultiplierResponse) {}
   
-  // Returns all superfluid intermediary account
   rpc AllIntermediaryAccounts(AllIntermediaryAccountsRequest) returns (AllIntermediaryAccountsResponse) {}
   
-  // Returns intermediary account connected to a superfluid staked lock by id
   rpc ConnectedIntermediaryAccount(ConnectedIntermediaryAccountRequest) returns (ConnectedIntermediaryAccountResponse) {}
 
-  // Returns the coins superfluid delegated for a delegator, validator, denom
-  // triplet
   rpc SuperfluidDelegationAmount(SuperfluidDelegationAmountRequest) returns (SuperfluidDelegationAmountResponse) {}
 
-  // Returns all the superfluid poistions for a specific delegator
   rpc SuperfluidDelegationsByDelegator(SuperfluidDelegationsByDelegatorRequest) returns (SuperfluidDelegationsByDelegatorResponse) {}
 
-  // Returns all the superfluid positions of a specific denom delegated to one
-  // validator
   rpc SuperfluidDelegationsByValidatorDenom(SuperfluidDelegationsByValidatorDenomRequest) returns (SuperfluidDelegationsByValidatorDenomResponse) {}
 
-  // Returns the amount of a specific denom delegated to a specific validator
-  // This is labeled an estimate, because the way it calculates the amount can
-  // lead rounding errors from the true delegated amount
   rpc EstimateSuperfluidDelegatedAmountByValidatorDenom(EstimateSuperfluidDelegatedAmountByValidatorDenomRequest)returns (EstimateSuperfluidDelegatedAmountByValidatorDenomResponse) {}
 ```
+
+## Params
+
+```protobuf
+message ParamsRequest {};
+
+message ParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+enum Params {
+  SuperfluidAssetTypeNative = 0;
+  SuperfluidAssetTypeLPShare = 1;
+}
+```
+
+
 
 ## AssetType
 
@@ -58,8 +63,7 @@ The AssetType query returns what type of superfluid asset a denom is.  AssetType
 we support more types of assets for superfluid staking than just LP shares.  Each AssetType has a different
 algorithm used to get its "Osmo equivalent value".
 
-We represent different types of superfluid assets as different enums.  Currently, only enum `1` is actually used.  Enum value `0` is reserved for the Native staking token for
-if we deprecate the legacy staking workflow to have native staking also go through the superfluid module. In the future, more enums will be added.
+We represent different types of superfluid assets as different enums.  Currently, only enum `1` is actually used.  Enum value `0` is reserved for the Native staking token for if we deprecate the legacy staking workflow to have native staking also go through the superfluid module. In the future, more enums will be added.
 
 If this query errors, that means that a denom is not allowed to be used for superfluid staking.
 
@@ -98,13 +102,11 @@ message OsmoEquivalentMultiplierRecord {
   string denom = 2;
   string multiplier = 3;
 }
-
 ```
 
-// The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we
-// treat an LP share as having, for all of epoch N. Eventually this is intended
-// to be set as the Time-weighted-average-osmo-backing for the entire duration
-// of epoch N-1. (Thereby locking whats in use for epoch N as based on the prior
-// epochs rewards) However for now, this is not the TWAP but instead the spot
-// price at the boundary.  For different types of assets in the future, it could
-// change.
+This query allows you to find the multiplier factor on a specific denom. The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we treat a denom as having, for all of epoch N.  For now, this is the spot price at the last epoch boundary, and this is reset every epoch.  We currently don't store historical multipliers, so the epoch parameter is kind of meaningless for now.
+
+To calculate the staking power of the denom, one needs to multiply the amount of the denom with `OsmoEquivalentMultipler` from this query with the `MinimumRiskFactor` from the Params query endpoint.
+
+`staking_power = amount * OsmoEquivalentMultipler * MinimumRiskFactor`
+
