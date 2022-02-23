@@ -880,6 +880,8 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 		v7.CreateUpgradeHandler(
 			app.mm, app.configurator,
 			app.WasmKeeper,
+			app.SuperfluidKeeper,
+			app.EpochsKeeper,
 			app.LockupKeeper,
 			app.MintKeeper,
 			app.AccountKeeper))
