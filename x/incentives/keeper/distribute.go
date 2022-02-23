@@ -239,7 +239,7 @@ func (k Keeper) distributeSyntheticInternal(
 		qualifiedLocks = append(qualifiedLocks, lock)
 	}
 
-	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, denom)
+	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, lockuptypes.NativeDenom(denom))
 
 	if lockSum.IsZero() {
 		return nil, nil
