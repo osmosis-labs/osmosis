@@ -32,7 +32,7 @@ service Query {
   rpc AssetMultiplier(AssetMultiplierRequest)
       returns (AssetMultiplierResponse) {
     option (google.api.http).get =
-        "/osmosis/superfluid/v1beta1/asset_multiplier/{denom}";
+        "/osmosis/superfluid/v1beta1/asset_multiplier";
   }
   // Returns all superfluid intermediary account
   rpc AllIntermediaryAccounts(AllIntermediaryAccountsRequest)
