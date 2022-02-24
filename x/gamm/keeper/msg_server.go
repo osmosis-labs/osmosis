@@ -11,16 +11,16 @@ import (
 )
 
 type msgServer struct {
-	keeper Keeper
+	keeper *Keeper
 }
 
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
-func NewBalancerMsgServerImpl(keeper Keeper) balancer.MsgServer {
+func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
