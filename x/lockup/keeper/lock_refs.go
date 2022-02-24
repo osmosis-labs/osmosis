@@ -6,7 +6,10 @@ import (
 )
 
 func (k Keeper) addLockRefs(ctx sdk.Context, lock types.PeriodLock) error {
-	refKeys, err := lockRefKeys(lock)
+	refKeys, err := durationLockRefKeys(lock)
+	if lock.IsUnlocking() {
+		refKeys, err = lockRefKeys(lock)
+	}
 	if err != nil {
 		return err
 	}

@@ -78,7 +78,7 @@ func (k Keeper) LockIteratorBeforeTime(ctx sdk.Context, isUnlocking bool, time t
 // LockIterator returns the iterator used for getting all locks
 func (k Keeper) LockIterator(ctx sdk.Context, isUnlocking bool) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
-	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp))
+	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockDuration))
 }
 
 // LockIteratorAfterTimeDenom returns the iterator to get locked coins by denom
@@ -120,7 +120,7 @@ func (k Keeper) AccountLockIteratorBeforeTime(ctx sdk.Context, isUnlocking bool,
 // AccountLockIterator returns the iterator used for getting all locks by account
 func (k Keeper) AccountLockIterator(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
-	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockTimestamp, addr))
+	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr))
 }
 
 // AccountLockIteratorAfterTimeDenom returns the iterator to get locked coins by account and denom

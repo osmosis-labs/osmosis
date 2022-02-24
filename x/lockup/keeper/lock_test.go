@@ -491,6 +491,7 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	// lock coins for 5 second, 1 seconds, and 3 seconds in that order
 	times := []time.Duration{time.Second * 5, time.Second, time.Second * 3}
 	sortedTimes := []time.Duration{time.Second, time.Second * 3, time.Second * 5}
+	sortedTimesIndex := []uint64{2, 3, 1}
 	unbondBlockTimes := make([]time.Time, len(times))
 
 	// setup locks for 5 second, 1 second, and 3 seconds, and begin unbonding them.
@@ -519,7 +520,7 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		suite.Require().Len(locks, len(times))
 		suite.Require().Equal(unlockedCoins, totalCoins)
 		for i := 0; i < len(times); i++ {
-			suite.Require().Equal(locks[i].ID, uint64(i+1))
+			suite.Require().Equal(sortedTimesIndex[i], locks[i].ID)
 		}
 
 		// check locks, these should now be sorted by unbonding completion time
