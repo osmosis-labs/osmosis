@@ -17,7 +17,7 @@ import (
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
 // the current block time.
 func (k Keeper) WithdrawAllMaturedLocks(ctx sdk.Context) {
-	k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, true, ctx.BlockTime()))
+	k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, ctx.BlockTime()))
 }
 
 func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
@@ -43,7 +43,7 @@ func (k Keeper) GetModuleBalance(ctx sdk.Context) sdk.Coins {
 func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
 	// all not unlocking + not finished unlocking
 	notUnlockingCoins := k.getCoinsFromIterator(ctx, k.LockIterator(ctx, false))
-	unlockingCoins := k.getCoinsFromIterator(ctx, k.LockIteratorAfterTime(ctx, true, ctx.BlockTime()))
+	unlockingCoins := k.getCoinsFromIterator(ctx, k.LockIteratorAfterTime(ctx, ctx.BlockTime()))
 	return notUnlockingCoins.Add(unlockingCoins...)
 }
 

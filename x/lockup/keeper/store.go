@@ -109,26 +109,26 @@ func (k Keeper) ClearAllAccumulationStores(ctx sdk.Context) {
 
 // GetAccountUnlockableCoins Returns whole unlockable coins which are not withdrawn yet
 func (k Keeper) GetAccountUnlockableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return k.getCoinsFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, true, addr, ctx.BlockTime()))
+	return k.getCoinsFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, addr, ctx.BlockTime()))
 }
 
 // GetAccountUnlockingCoins Returns whole unlocking coins
 func (k Keeper) GetAccountUnlockingCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return k.getCoinsFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, true, addr, ctx.BlockTime()))
+	return k.getCoinsFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, addr, ctx.BlockTime()))
 }
 
 // GetAccountLockedCoins Returns a locked coins that can't be withdrawn
 func (k Keeper) GetAccountLockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
 	// all account unlocking + not finished unlocking
 	notUnlockingCoins := k.getCoinsFromIterator(ctx, k.AccountLockIterator(ctx, false, addr))
-	unlockingCoins := k.getCoinsFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, true, addr, ctx.BlockTime()))
+	unlockingCoins := k.getCoinsFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, addr, ctx.BlockTime()))
 	return notUnlockingCoins.Add(unlockingCoins...)
 }
 
 // GetAccountLockedPastTime Returns the total locks of an account whose unlock time is beyond timestamp
 func (k Keeper) GetAccountLockedPastTime(ctx sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock {
 	// unlockings finish after specific time + not started locks that will finish after the time even though it start now
-	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, true, addr, timestamp))
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTime(ctx, addr, timestamp))
 	duration := time.Duration(0)
 	if timestamp.After(ctx.BlockTime()) {
 		duration = timestamp.Sub(ctx.BlockTime())
@@ -149,7 +149,7 @@ func (k Keeper) GetAccountLockedPastTimeNotUnlockingOnly(ctx sdk.Context, addr s
 // GetAccountUnlockedBeforeTime Returns the total unlocks of an account whose unlock time is before timestamp
 func (k Keeper) GetAccountUnlockedBeforeTime(ctx sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock {
 	// unlockings finish before specific time + not started locks that can finish before the time if start now
-	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, true, addr, timestamp))
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorBeforeTime(ctx, addr, timestamp))
 	if timestamp.Before(ctx.BlockTime()) {
 		return unlockings
 	}
@@ -161,7 +161,7 @@ func (k Keeper) GetAccountUnlockedBeforeTime(ctx sdk.Context, addr sdk.AccAddres
 // GetAccountLockedPastTimeDenom is equal to GetAccountLockedPastTime but denom specific
 func (k Keeper) GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock {
 	// unlockings finish after specific time + not started locks that will finish after the time even though it start now
-	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTimeDenom(ctx, true, addr, denom, timestamp))
+	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIteratorAfterTimeDenom(ctx, addr, denom, timestamp))
 	duration := time.Duration(0)
 	if timestamp.After(ctx.BlockTime()) {
 		duration = timestamp.Sub(ctx.BlockTime())
@@ -204,7 +204,7 @@ func (k Keeper) GetAccountLockedLongerDurationDenomNotUnlockingOnly(ctx sdk.Cont
 // GetLocksPastTimeDenom Returns the locks whose unlock time is beyond timestamp
 func (k Keeper) GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp time.Time) []types.PeriodLock {
 	// returns both unlocking started and not started assuming it started unlocking current time
-	unlockings := k.getLocksFromIterator(ctx, k.LockIteratorAfterTimeDenom(ctx, true, denom, timestamp))
+	unlockings := k.getLocksFromIterator(ctx, k.LockIteratorAfterTimeDenom(ctx, denom, timestamp))
 	duration := time.Duration(0)
 	if timestamp.After(ctx.BlockTime()) {
 		duration = timestamp.Sub(ctx.BlockTime())

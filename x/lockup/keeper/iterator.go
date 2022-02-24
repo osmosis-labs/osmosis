@@ -64,14 +64,14 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 }
 
 // LockIteratorAfterTime returns the iterator to get locked coins
-func (k Keeper) LockIteratorAfterTime(ctx sdk.Context, isUnlocking bool, time time.Time) sdk.Iterator {
-	unlockingPrefix := unlockingPrefix(isUnlocking)
+func (k Keeper) LockIteratorAfterTime(ctx sdk.Context, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp), time)
 }
 
 // LockIteratorBeforeTime returns the iterator to get unlockable coins
-func (k Keeper) LockIteratorBeforeTime(ctx sdk.Context, isUnlocking bool, time time.Time) sdk.Iterator {
-	unlockingPrefix := unlockingPrefix(isUnlocking)
+func (k Keeper) LockIteratorBeforeTime(ctx sdk.Context, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp), time)
 }
 
@@ -82,14 +82,14 @@ func (k Keeper) LockIterator(ctx sdk.Context, isUnlocking bool) sdk.Iterator {
 }
 
 // LockIteratorAfterTimeDenom returns the iterator to get locked coins by denom
-func (k Keeper) LockIteratorAfterTimeDenom(ctx sdk.Context, isUnlocking bool, denom string, time time.Time) sdk.Iterator {
-	unlockingPrefix := unlockingPrefix(isUnlocking)
+func (k Keeper) LockIteratorAfterTimeDenom(ctx sdk.Context, denom string, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom)), time)
 }
 
 // LockIteratorBeforeTimeDenom returns the iterator to get unlockable coins by denom
-func (k Keeper) LockIteratorBeforeTimeDenom(ctx sdk.Context, isUnlocking bool, denom string, time time.Time) sdk.Iterator {
-	unlockingPrefix := unlockingPrefix(isUnlocking)
+func (k Keeper) LockIteratorBeforeTimeDenom(ctx sdk.Context, denom string, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom)), time)
 }
 
@@ -106,14 +106,14 @@ func (k Keeper) LockIteratorDenom(ctx sdk.Context, isUnlocking bool, denom strin
 }
 
 // AccountLockIteratorAfterTime returns the iterator to get locked coins by account
-func (k Keeper) AccountLockIteratorAfterTime(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, time time.Time) sdk.Iterator {
-	unlockingPrefix := unlockingPrefix(isUnlocking)
+func (k Keeper) AccountLockIteratorAfterTime(ctx sdk.Context, addr sdk.AccAddress, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockTimestamp, addr), time)
 }
 
 // AccountLockIteratorBeforeTime returns the iterator to get unlockable coins by account
-func (k Keeper) AccountLockIteratorBeforeTime(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, time time.Time) sdk.Iterator {
-	unlockingPrefix := unlockingPrefix(isUnlocking)
+func (k Keeper) AccountLockIteratorBeforeTime(ctx sdk.Context, addr sdk.AccAddress, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockTimestamp, addr), time)
 }
 
@@ -124,14 +124,14 @@ func (k Keeper) AccountLockIterator(ctx sdk.Context, isUnlocking bool, addr sdk.
 }
 
 // AccountLockIteratorAfterTimeDenom returns the iterator to get locked coins by account and denom
-func (k Keeper) AccountLockIteratorAfterTimeDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, time time.Time) sdk.Iterator {
-	unlockingPrefix := unlockingPrefix(isUnlocking)
+func (k Keeper) AccountLockIteratorAfterTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockTimestamp, addr, []byte(denom)), time)
 }
 
 // AccountLockIteratorBeforeTimeDenom returns the iterator to get unlockable coins by account and denom
-func (k Keeper) AccountLockIteratorBeforeTimeDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, time time.Time) sdk.Iterator {
-	unlockingPrefix := unlockingPrefix(isUnlocking)
+func (k Keeper) AccountLockIteratorBeforeTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockTimestamp, addr, []byte(denom)), time)
 }
 
