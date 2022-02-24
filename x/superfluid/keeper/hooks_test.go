@@ -64,8 +64,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().True(found)
 				suite.Require().Equal(sdk.NewDec(5000), delegation.Shares)
 				// TODO: Check reward distribution
-				// balance := suite.app.BankKeeper.GetAllBalances(suite.ctx, delAddrs[0])
-				// suite.Require().NotEqual(sdk.Coins{}, balance, balance)
+				balance := suite.app.BankKeeper.GetAllBalances(suite.ctx, delAddrs[0])
+				suite.Require().NotEqual(sdk.Coins{}, balance, "balances %v", balance)
 			}
 		})
 	}

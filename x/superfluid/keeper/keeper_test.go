@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -68,6 +69,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	})
 
 	mintParams := suite.app.MintKeeper.GetParams(suite.ctx)
+	mintParams.EpochIdentifier = epochIdentifier
 	mintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          sdk.OneDec(),
 		PoolIncentives:   sdk.ZeroDec(),
@@ -76,6 +78,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 	suite.app.MintKeeper.SetParams(suite.ctx, mintParams)
 	suite.app.MintKeeper.SetMinter(suite.ctx, minttypes.NewMinter(sdk.NewDec(1_000_000)))
+
+	distributionParams := suite.app.DistrKeeper.GetParams(suite.ctx)
+	distributionParams.BaseProposerReward = sdk.ZeroDec()
+	distributionParams.BaseProposerReward = sdk.ZeroDec()
+	distributionParams.CommunityTax = sdk.ZeroDec()
+	suite.app.DistrKeeper.SetParams(suite.ctx, distributionParams)
 }
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {
@@ -85,6 +93,12 @@ func (suite *KeeperTestSuite) SetupDefaultPool() {
 }
 
 func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
+	// valAddr := []byte("smug")
+	// validators := suite.app.StakingKeeper.GetAllValidators(suite.ctx)
+	// if len(validators) >= 1 {
+	// 	suite.app.StakingKeeper.
+	// }
+
 	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
 	epoch := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, epochIdentifier)
 	newBlockTime := suite.ctx.BlockTime().Add(5 * time.Second)
@@ -95,7 +109,14 @@ func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
 	// fmt.Println(executeNextEpoch, suite.ctx.BlockTime(), newBlockTime)
 	header := tmproto.Header{Height: suite.ctx.BlockHeight() + 1, Time: newBlockTime}
 	suite.ctx = suite.ctx.WithBlockTime(newBlockTime).WithBlockHeight(suite.ctx.BlockHeight() + 1)
-	reqBeginBlock := abci.RequestBeginBlock{Header: header}
+	lastCommitInfo := abci.LastCommitInfo{
+		// Votes: []abci.VoteInfo{{
+		// 	Validator:       abci.Validator{Address: []byte("smug"), Power: 1000},
+		// 	SignedLastBlock: true},
+		// },
+	}
+	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
+	fmt.Println("beginning block ", suite.ctx.BlockHeight())
 	suite.app.BeginBlocker(suite.ctx, reqBeginBlock)
 }
 
