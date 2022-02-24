@@ -28,6 +28,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdAssetMultiplier(),
 		GetCmdAllIntermediaryAccounts(),
 		GetCmdConnectedIntermediaryAccount(),
+		GetCmdSuperfluidDelegationAmount(),
+		GetCmdTotalSuperfluidDelegations(),
 	)
 
 	return cmd
