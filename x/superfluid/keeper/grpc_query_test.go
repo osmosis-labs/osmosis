@@ -106,6 +106,11 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 			suite.Require().Len(delegationsRes.SuperfluidDelegationRecords, 1)
 		}
 	}
+
+	totalSuperfluidDelegationsRes, err := suite.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(suite.ctx), &types.TotalSuperfluidDelegationsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewInt(40000000), totalSuperfluidDelegationsRes.TotalDelegations)
+
 }
 
 func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {

@@ -47,6 +47,14 @@ service Query {
         "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
 
+  // Returns the total amount of osmo superfluidly staked
+  // response denominated in uosmo
+  rpc TotalSuperfluidDelegations(TotalSuperfluidDelegationsRequest)
+      returns (TotalSuperfluidDelegationsResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/all_superfluid_delegations";
+  }
+
   // Returns the coins superfluid delegated for a delegator, validator, denom
   // triplet
   rpc SuperfluidDelegationAmount(SuperfluidDelegationAmountRequest)
@@ -135,6 +143,16 @@ message AllIntermediaryAccountsResponse {
 message ConnectedIntermediaryAccountRequest { uint64 lock_id = 1; }
 message ConnectedIntermediaryAccountResponse {
   SuperfluidIntermediaryAccountInfo account = 1;
+}
+
+message TotalSuperfluidDelegationsRequest {}
+
+message TotalSuperfluidDelegationsResponse {
+  string totalDelegations = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"total_superfluid_delegations\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message SuperfluidDelegationAmountRequest {
