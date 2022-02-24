@@ -239,3 +239,33 @@ func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.
 		TotalDelegatedCoins: sdk.NewCoins(sdk.NewCoin(req.Denom, baseAmount)),
 	}, nil
 }
+
+func (k Keeper) TotalSuperfluidDelegations(goCtx context.Context, req *types.TotalSuperfluidDelegationsRequest) (*types.TotalSuperfluidDelegationsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	totalSuperfluidDelegated := sdk.NewInt(0)
+
+	intermediaryAccounts := k.GetAllIntermediaryAccounts(ctx)
+	for _, intermediaryAccount := range intermediaryAccounts {
+		valAddr, err := sdk.ValAddressFromBech32(intermediaryAccount.ValAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		val, found := k.sk.GetValidator(ctx, valAddr)
+		if !found {
+			return nil, stakingtypes.ErrNoValidatorFound
+		}
+
+		delegation, found := k.sk.GetDelegation(ctx, intermediaryAccount.GetAccAddress(), valAddr)
+		if !found {
+			return nil, stakingtypes.ErrNoDelegation
+		}
+
+		syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens).RoundInt()
+		totalSuperfluidDelegated = totalSuperfluidDelegated.Add(syntheticOsmoAmt)
+	}
+	return &types.TotalSuperfluidDelegationsResponse{
+		TotalDelgations: totalSuperfluidDelegated,
+	}, nil
+}
