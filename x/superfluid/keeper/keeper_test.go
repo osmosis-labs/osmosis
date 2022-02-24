@@ -17,6 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
@@ -65,6 +66,16 @@ func (suite *KeeperTestSuite) SetupTest() {
 		CurrentEpoch:            1,
 		EpochCountingStarted:    true,
 	})
+
+	mintParams := suite.app.MintKeeper.GetParams(suite.ctx)
+	mintParams.DistributionProportions = minttypes.DistributionProportions{
+		Staking:          sdk.OneDec(),
+		PoolIncentives:   sdk.ZeroDec(),
+		DeveloperRewards: sdk.ZeroDec(),
+		CommunityPool:    sdk.ZeroDec(),
+	}
+	suite.app.MintKeeper.SetParams(suite.ctx, mintParams)
+	suite.app.MintKeeper.SetMinter(suite.ctx, minttypes.NewMinter(sdk.NewDec(1_000_000)))
 }
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {

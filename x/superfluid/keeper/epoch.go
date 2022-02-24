@@ -16,6 +16,7 @@ import (
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
 }
 
+// This gets called in BeginBlock, on blocks where an epoch ended.
 func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	// cref [#830](https://github.com/osmosis-labs/osmosis/issues/830),
 	// the supplied epoch number is wrong at time of commit. hence we get from the info.
