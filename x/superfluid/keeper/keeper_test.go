@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v7/app"
@@ -93,11 +94,18 @@ func (suite *KeeperTestSuite) SetupDefaultPool() {
 }
 
 func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
-	// valAddr := []byte("smug")
-	// validators := suite.app.StakingKeeper.GetAllValidators(suite.ctx)
-	// if len(validators) >= 1 {
-	// 	suite.app.StakingKeeper.
-	// }
+	valAddr := []byte(":^) at this distribution workaround")
+	validators := suite.app.StakingKeeper.GetAllValidators(suite.ctx)
+	if len(validators) >= 1 {
+		valAddrFancy, err := validators[0].GetConsAddr()
+		suite.Require().NoError(err)
+		valAddr = valAddrFancy.Bytes()
+	} else {
+		valAddrFancy := suite.SetupValidator(stakingtypes.Bonded)
+		validator, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddrFancy)
+		valAddr2, _ := validator.GetConsAddr()
+		valAddr = valAddr2.Bytes()
+	}
 
 	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
 	epoch := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, epochIdentifier)
@@ -110,10 +118,10 @@ func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
 	header := tmproto.Header{Height: suite.ctx.BlockHeight() + 1, Time: newBlockTime}
 	suite.ctx = suite.ctx.WithBlockTime(newBlockTime).WithBlockHeight(suite.ctx.BlockHeight() + 1)
 	lastCommitInfo := abci.LastCommitInfo{
-		// Votes: []abci.VoteInfo{{
-		// 	Validator:       abci.Validator{Address: []byte("smug"), Power: 1000},
-		// 	SignedLastBlock: true},
-		// },
+		Votes: []abci.VoteInfo{{
+			Validator:       abci.Validator{Address: valAddr, Power: 1000},
+			SignedLastBlock: true},
+		},
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 	fmt.Println("beginning block ", suite.ctx.BlockHeight())
@@ -184,6 +192,18 @@ func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus)
 	suite.Require().True(found)
 	val = val.UpdateStatus(bondStatus)
 	suite.app.StakingKeeper.SetValidator(suite.ctx, val)
+
+	consAddr, err := val.GetConsAddr()
+	suite.Require().NoError(err)
+	signingInfo := slashingtypes.NewValidatorSigningInfo(
+		consAddr,
+		suite.ctx.BlockHeight(),
+		0,
+		time.Unix(0, 0),
+		false,
+		0,
+	)
+	suite.app.SlashingKeeper.SetValidatorSigningInfo(suite.ctx, consAddr, signingInfo)
 
 	return valAddr
 }
