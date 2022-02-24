@@ -19,6 +19,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
@@ -38,7 +39,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	startTime := time.Unix(1645580000, 0)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
-
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
@@ -52,6 +52,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 		time.Hour * 3,
 		time.Hour * 7,
 		unbondingDuration,
+	})
+
+	// TODO: Revisit if this is needed, it was added due to another bug in testing that is now fixed.
+	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
+	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochtypes.EpochInfo{
+		Identifier:              epochIdentifier,
+		StartTime:               startTime,
+		Duration:                time.Hour,
+		CurrentEpochStartTime:   startTime,
+		CurrentEpochStartHeight: 1,
+		CurrentEpoch:            1,
+		EpochCountingStarted:    true,
 	})
 }
 
@@ -69,10 +81,11 @@ func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
 		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
 		newBlockTime = endEpochTime.Add(time.Second)
 	}
+	// fmt.Println(executeNextEpoch, suite.ctx.BlockTime(), newBlockTime)
 	header := tmproto.Header{Height: suite.ctx.BlockHeight() + 1, Time: newBlockTime}
+	suite.ctx = suite.ctx.WithBlockTime(newBlockTime).WithBlockHeight(suite.ctx.BlockHeight() + 1)
 	reqBeginBlock := abci.RequestBeginBlock{Header: header}
 	suite.app.BeginBlocker(suite.ctx, reqBeginBlock)
-
 }
 
 func (suite *KeeperTestSuite) EndBlock() {

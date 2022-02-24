@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
@@ -90,11 +89,6 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, va
 
 	// set OSMO TWAP price for LP token
 	suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 1, denom, sdk.NewDec(20))
-	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
-	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochstypes.EpochInfo{
-		Identifier:   epochIdentifier,
-		CurrentEpoch: 2,
-	})
 
 	// create lockup of LP token
 	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -24,6 +26,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
+			fmt.Println("starting test")
 			suite.SetupTest()
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 			bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
@@ -43,6 +46,9 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, 1, "foo", sdk.NewInt(100000000000000), sdk.NewInt64Coin(bondDenom, 250000000000))
 			suite.Require().NoError(err)
 
+			suite.BeginNewBlock(false)
+			suite.BeginNewBlock(false)
+
 			// run epoch actions
 			suite.BeginNewBlock(true)
 
@@ -58,6 +64,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().True(found)
 				suite.Require().Equal(sdk.NewDec(5000), delegation.Shares)
 				// TODO: Check reward distribution
+				// balance := suite.app.BankKeeper.GetAllBalances(suite.ctx, delAddrs[0])
+				// suite.Require().NotEqual(sdk.Coins{}, balance, balance)
 			}
 		})
 	}

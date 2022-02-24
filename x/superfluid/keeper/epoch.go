@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
@@ -60,7 +61,8 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 		// To avoid unexpected issues on WithdrawDelegationRewards and AddToGaugeRewards
 		// we use cacheCtx and apply the changes later
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			_, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
+			balance, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
+			fmt.Println(balance)
 			return err
 		})
 
@@ -70,6 +72,7 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
 			bondDenom := k.sk.BondDenom(cacheCtx)
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
+			fmt.Println(balance)
 			return k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)
 		})
 	}
