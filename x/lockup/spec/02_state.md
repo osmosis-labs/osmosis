@@ -40,14 +40,17 @@ There are two big queues to store the lock references. (`a_prefix_key`)
 
 Regardless the lock has started unlocking or not, it stores below references. (`b_prefix_key`)
 
+1. `{KeyPrefixLockDuration}{Duration}`
+2. `{KeyPrefixAccountLockDuration}{Owner}{Duration}`
+3. `{KeyPrefixDenomLockDuration}{Denom}{Duration}`
+4. `{KeyPrefixAccountDenomLockDuration}{Owner}{Denom}{Duration}`
+
+If the lock is unlocking, it also stores the below referneces.
+
 1. `{KeyPrefixLockTimestamp}{LockEndTime}`
-2. `{KeyPrefixLockDuration}{Duration}`
-3. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
-4. `{KeyPrefixAccountLockDuration}{Owner}{Duration}`
-5. `{KeyPrefixDenomLockTimestamp}{Denom}{LockEndTime}`
-6. `{KeyPrefixDenomLockDuration}{Denom}{Duration}`
-7. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{Denom}{LockEndTime}`
-8. `{KeyPrefixAccountDenomLockDuration}{Owner}{Denom}{Duration}`
+2. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
+3. `{KeyPrefixDenomLockTimestamp}{Denom}{LockEndTime}`
+4. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{Denom}{LockEndTime}`
 
 For end time keys, they are converted to sortable string by using `sdk.FormatTimeBytes` function.
 
