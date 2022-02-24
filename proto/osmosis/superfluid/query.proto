@@ -70,9 +70,9 @@ service Query {
                                    "superfluid_delegations/{delegator_address}";
   }
 
-  rpc SuperfluidUndelegationsByDelgator(
-      SuperfluidUndelegationsByDelgatorRequest)
-      returns (SuperfluidUndelegationsByDelgatorResponse) {
+  rpc SuperfluidUndelegationsByDelegator(
+      SuperfluidUndelegationsByDelegatorRequest)
+      returns (SuperfluidUndelegationsByDelegatorResponse) {
     option (google.api.http).get =
         "/osmosis/superfluid/v1beta1/"
         "superfluid_undelegations_by_delegator/{delegator_address}";
@@ -192,12 +192,12 @@ message SuperfluidDelegationsByDelegatorResponse {
   ];
 }
 
-message SuperfluidUndelegationsByDelgatorRequest {
+message SuperfluidUndelegationsByDelegatorRequest {
   string delegator_address = 1;
   string denom = 2;
 }
 
-message SuperfluidUndelegationsByDelgatorResponse {
+message SuperfluidUndelegationsByDelegatorResponse {
   repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
       [ (gogoproto.nullable) = false ];
   repeated cosmos.base.v1beta1.Coin total_undelegated_coins = 2 [

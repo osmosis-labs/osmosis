@@ -165,8 +165,8 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 
 }
 
-// SuperfluidUndelegationsByDelgator returns total amount undelegating by delegator
-func (k Keeper) SuperfluidUndelegationsByDelgator(goCtx context.Context, req *types.SuperfluidUndelegationsByDelgatorRequest) (*types.SuperfluidUndelegationsByDelgatorResponse, error) {
+// SuperfluidUndelegationsByDelegator returns total amount undelegating by delegator
+func (k Keeper) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *types.SuperfluidUndelegationsByDelegatorRequest) (*types.SuperfluidUndelegationsByDelegatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
@@ -174,7 +174,7 @@ func (k Keeper) SuperfluidUndelegationsByDelgator(goCtx context.Context, req *ty
 		return nil, err
 	}
 
-	res := types.SuperfluidUndelegationsByDelgatorResponse{
+	res := types.SuperfluidUndelegationsByDelegatorResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
 		TotalUndelegatedCoins:       sdk.NewCoins(),
 	}
