@@ -22,7 +22,7 @@ service Query {
   // Returns superfluid asset type
   rpc AssetType(AssetTypeRequest) returns (AssetTypeResponse) {
     option (google.api.http).get =
-        "/osmosis/superfluid/v1beta1/asset_type/{denom}";
+        "/osmosis/superfluid/v1beta1/asset_type";
   }
   // Returns all superfluid asset types
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
