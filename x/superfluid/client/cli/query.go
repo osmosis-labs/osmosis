@@ -29,6 +29,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdAllIntermediaryAccounts(),
 		GetCmdConnectedIntermediaryAccount(),
 		GetCmdSuperfluidDelegationAmount(),
+		GetCmdSuperfluidDelegationsByDelegator(),
+		GetCmdSuperfluidUndelegationsByDelegator(),
 		GetCmdTotalSuperfluidDelegations(),
 	)
 
@@ -214,6 +216,66 @@ func GetCmdSuperfluidDelegationAmount() *cobra.Command {
 				DelegatorAddress: args[0],
 				ValidatorAddress: args[1],
 				Denom:            args[2],
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdSuperfluidDelegationsByDelegator returns the coins superfluid delegated for the specified delegator
+func GetCmdSuperfluidDelegationsByDelegator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "superfluid-delegation-amount [delegator_address]",
+		Short: "Query coins superfluid delegated for the specified delegator",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.SuperfluidDelegationsByDelegator(cmd.Context(), &types.SuperfluidDelegationsByDelegatorRequest{
+				DelegatorAddress: args[0],
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdSuperfluidUndelegationsByDelegator returns the coins superfluid undelegated for the specified delegator
+func GetCmdSuperfluidUndelegationsByDelegator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "superfluid-undelegation-amount [delegator_address]",
+		Short: "Query coins superfluid undelegated for the specified delegator",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.SuperfluidUndelegationsByDelgator(cmd.Context(), &types.SuperfluidUndelegationsByDelgatorRequest{
+				DelegatorAddress: args[0],
 			})
 
 			if err != nil {
