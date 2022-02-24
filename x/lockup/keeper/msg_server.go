@@ -11,11 +11,11 @@ import (
 )
 
 type msgServer struct {
-	keeper Keeper
+	keeper *Keeper
 }
 
 // NewMsgServerImpl returns an instance of MsgServer
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
