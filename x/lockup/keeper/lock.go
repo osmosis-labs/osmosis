@@ -108,8 +108,7 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
 	// all the synthetic lockups' accumulation should be decreased
 	for _, synthlock := range synthLocks {
-		// Note: we use native lock's duration on accumulation store
-		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), lock.Coins[0].Amount)
+		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), coins[0].Amount)
 	}
 	return nil
 }
