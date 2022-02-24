@@ -267,6 +267,6 @@ func (k Keeper) TotalSuperfluidDelegations(goCtx context.Context, req *types.Tot
 		totalSuperfluidDelegated = totalSuperfluidDelegated.Add(syntheticOsmoAmt)
 	}
 	return &types.TotalSuperfluidDelegationsResponse{
-		TotalDelgations: totalSuperfluidDelegated,
+		TotalDelegations: totalSuperfluidDelegated,
 	}, nil
 }
