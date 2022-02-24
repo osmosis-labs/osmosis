@@ -785,6 +785,8 @@ github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo h1:XyYyDTjPIu7qX2nhQp9mboj7Pa9FEnj
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo/go.mod h1:XUmW7wmubCRhIEAGtMGS+5IjiSSmcAwihoN/yPGd6Kk=
 github.com/osmosis-labs/wasmd v0.22.0-osmo-alpha-0 h1:605q+qoaMULEEy3XDjQVAobbnDGG/IU68rwoXqpMnSA=
 github.com/osmosis-labs/wasmd v0.22.0-osmo-alpha-0/go.mod h1:ku5ZRcrrlxUu01Bu5rE4HMnhwSh3peE8FhJh2fmfQGQ=
+github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2 h1:R4Vs6cqePWvZudQPMNKWEJWw6JSMIjJ1/RtV+lPDUgQ=
+github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2/go.mod h1:br6yXmCKm3/l3kv/Z54l6uM3t43OqTNgB6VzyuU7894=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
 github.com/otiai10/copy v1.6.0/go.mod h1:XWfuS3CrI0R6IE0FbgHsEazaXO8G0LpMp9o8tos0x4E=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
