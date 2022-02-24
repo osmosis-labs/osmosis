@@ -274,7 +274,7 @@ func GetCmdSuperfluidUndelegationsByDelegator() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.SuperfluidUndelegationsByDelgator(cmd.Context(), &types.SuperfluidUndelegationsByDelgatorRequest{
+			res, err := queryClient.SuperfluidUndelegationsByDelegator(cmd.Context(), &types.SuperfluidUndelegationsByDelegatorRequest{
 				DelegatorAddress: args[0],
 			})
 
