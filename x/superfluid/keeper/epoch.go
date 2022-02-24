@@ -70,6 +70,9 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
 			bondDenom := k.sk.BondDenom(cacheCtx)
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
+			if balance.IsZero() {
+				return nil
+			}
 			return k.ik.AddToGaugeRewards(cacheCtx, addr, sdk.Coins{balance}, acc.GaugeId)
 		})
 	}

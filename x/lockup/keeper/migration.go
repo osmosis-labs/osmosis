@@ -43,6 +43,7 @@ func MergeLockupsForSimilarDurations(
 	baselineDurations []time.Duration,
 	durationDiff time.Duration,
 ) {
+	numLocksCreated := 0
 	for _, acc := range ak.GetAllAccounts(ctx) {
 		addr := acc.GetAddress()
 		// We make at most one lock per (addr, denom, base duration) triplet, which we keep adding coins to.
@@ -99,6 +100,7 @@ func MergeLockupsForSimilarDurations(
 				}
 				k.SetLastLockID(ctx, normalID)
 				normals[key] = normalID
+				numLocksCreated += 1
 			} else {
 				normalLockPtr, err := k.GetLockByID(ctx, normalID)
 				if err != nil {
@@ -124,5 +126,8 @@ func MergeLockupsForSimilarDurations(
 
 			// don't call hooks, tokens are just moved from a lock to another
 		}
+		numLocksNormalized := len(locksToNormalize)
+		ctx.Logger().Info("normalized %d locks. This involved creating %d new locks.",
+			numLocksNormalized, numLocksCreated)
 	}
 }
