@@ -234,7 +234,7 @@ func GetCmdSuperfluidDelegationAmount() *cobra.Command {
 // GetCmdSuperfluidDelegationsByDelegator returns the coins superfluid delegated for the specified delegator
 func GetCmdSuperfluidDelegationsByDelegator() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "superfluid-delegation-amount [delegator_address]",
+		Use:   "superfluid-delegation-by-delegator [delegator_address]",
 		Short: "Query coins superfluid delegated for the specified delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -264,7 +264,7 @@ func GetCmdSuperfluidDelegationsByDelegator() *cobra.Command {
 // GetCmdSuperfluidUndelegationsByDelegator returns the coins superfluid undelegated for the specified delegator
 func GetCmdSuperfluidUndelegationsByDelegator() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "superfluid-undelegation-amount [delegator_address]",
+		Use:   "superfluid-undelegation-by-delegator [delegator_address]",
 		Short: "Query coins superfluid undelegated for the specified delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
