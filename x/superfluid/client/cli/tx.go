@@ -32,6 +32,7 @@ func GetTxCmd() *cobra.Command {
 		// NewSuperfluidRedelegateCmd(),
 		NewCmdSubmitSetSuperfluidAssetsProposal(),
 		NewCmdSubmitRemoveSuperfluidAssetsProposal(),
+		NewCmdLockAndSuperfluidDelegate(),
 	)
 
 	return cmd
@@ -333,4 +334,40 @@ func parseRemoveSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Cont
 		SuperfluidAssetDenoms: assets,
 	}
 	return content, nil
+}
+
+// NewCmdLockAndSuperfluidDelegate implements a command handler for simultaneous locking and superfluid delegation.
+func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "lock-and-superfluid-delegate [tokens] [val_addr] [flags]",
+		Short: "lock and superfluid delegate",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			sender := clientCtx.GetFromAddress()
+
+			coins, err := sdk.ParseCoinsNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			valAddr, err := sdk.ValAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgLockAndSuperfluidDelegate(sender, coins, valAddr)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
