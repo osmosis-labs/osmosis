@@ -91,11 +91,11 @@ func TestExportGenesis(t *testing.T) {
 			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
 		},
 		{
-			ID:       2,
-			Owner:    acc1.String(),
-			Duration: time.Hour,
+			ID:       11,
+			Owner:    acc2.String(),
+			Duration: time.Second * 5,
 			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
+			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
 		},
 		{
 			ID:       3,
@@ -105,11 +105,11 @@ func TestExportGenesis(t *testing.T) {
 			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
 		},
 		{
-			ID:       11,
-			Owner:    acc2.String(),
-			Duration: time.Second * 5,
+			ID:       2,
+			Owner:    acc1.String(),
+			Duration: time.Hour,
 			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
+			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
 		},
 	})
 }
