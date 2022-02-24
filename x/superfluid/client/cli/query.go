@@ -193,3 +193,64 @@ $ %s query superfluid connected-intermediary-account 1
 
 	return cmd
 }
+
+// GetCmdSuperfluidDelegationAmount returns the coins superfluid delegated for a
+// delegator, validator, denom
+func GetCmdSuperfluidDelegationAmount() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "superfluid-delegation-amount [delegator_address] [validator_address] [denom]",
+		Short: "Query coins superfluid delegated for a delegator, validator, denom",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.SuperfluidDelegationAmount(cmd.Context(), &types.SuperfluidDelegationAmountRequest{
+				DelegatorAddress: args[0],
+				ValidatorAddress: args[1],
+				Denom:            args[2],
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdTotalSuperfluidDelegations returns total amount of base denom delegated via superfluid staking
+func GetCmdTotalSuperfluidDelegations() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-superfluid-delegations",
+		Short: "Query total amount of osmo delegated via superfluid staking",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TotalSuperfluidDelegations(cmd.Context(), &types.TotalSuperfluidDelegationsRequest{})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

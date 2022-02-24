@@ -240,6 +240,7 @@ func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.
 	}, nil
 }
 
+// TotalSuperfluidDelegations returns total amount of osmo delegated via superfluid staking
 func (k Keeper) TotalSuperfluidDelegations(goCtx context.Context, req *types.TotalSuperfluidDelegationsRequest) (*types.TotalSuperfluidDelegationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
