@@ -21,8 +21,7 @@ service Query {
 
   // Returns superfluid asset type
   rpc AssetType(AssetTypeRequest) returns (AssetTypeResponse) {
-    option (google.api.http).get =
-        "/osmosis/superfluid/v1beta1/asset_type";
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_type";
   }
   // Returns all superfluid asset types
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
@@ -97,9 +96,6 @@ service Query {
         "/osmosis/superfluid/v1beta1/"
         "estimate_superfluid_delegation_amount_by_validator_denom";
   }
-
-
-
 
   // // Returns all the unbonding superfluid positions of a delegator
   // rpc SuperfluidUnbondingsByDelegator(SuperfluidUnbondingsByDelegatorRequest)
@@ -227,8 +223,6 @@ message EstimateSuperfluidDelegatedAmountByValidatorDenomResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
-
-
 
 // message SuperfluidUnbondingsByDelegatorRequest {
 //   string delegator_address = 1;
