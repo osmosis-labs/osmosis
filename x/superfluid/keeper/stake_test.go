@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, va
 	})
 
 	// set OSMO TWAP price for LP token
-	suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 1, denom, sdk.NewDec(20))
+	// suite.app.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.ctx, 1, denom, sdk.NewDec(20))
 
 	// create lockup of LP token
 	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}

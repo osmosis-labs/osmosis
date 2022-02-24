@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	distributionParams := suite.app.DistrKeeper.GetParams(suite.ctx)
 	distributionParams.BaseProposerReward = sdk.ZeroDec()
-	distributionParams.BaseProposerReward = sdk.ZeroDec()
+	distributionParams.BonusProposerReward = sdk.ZeroDec()
 	distributionParams.CommunityTax = sdk.ZeroDec()
 	suite.app.DistrKeeper.SetParams(suite.ctx, distributionParams)
 }
@@ -148,10 +148,10 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	coins := suite.app.GAMMKeeper.GetParams(suite.ctx).PoolCreationFee
 	poolAssets := []gammtypes.PoolAsset{}
 	for _, denom := range denoms {
-		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
+		coins = coins.Add(sdk.NewCoin(denom, gammtypes.OneShare.MulRaw(100)))
 		poolAssets = append(poolAssets, gammtypes.PoolAsset{
 			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin(denom, sdk.NewInt(1000000000000000000)),
+			Token:  sdk.NewCoin(denom, gammtypes.OneShare.MulRaw(100)),
 		})
 	}
 
@@ -167,6 +167,19 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	suite.Require().NoError(err)
 
 	return poolId
+}
+
+func (suite *KeeperTestSuite) SetTwapOfPool(poolId uint64, wantedOsmoInPool sdk.Dec) error {
+	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	if err != nil {
+		return err
+	}
+	desiredOsmoInPool := pool.GetTotalShares().Amount.ToDec().Mul(wantedOsmoInPool)
+	err = pool.UpdatePoolAssetBalance(sdk.NewCoin(suite.app.StakingKeeper.BondDenom(suite.ctx), desiredOsmoInPool.RoundInt()))
+	if err != nil {
+		return err
+	}
+	return suite.app.GAMMKeeper.SetPool(suite.ctx, pool)
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
@@ -204,6 +217,8 @@ func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus)
 		0,
 	)
 	suite.app.SlashingKeeper.SetValidatorSigningInfo(suite.ctx, consAddr, signingInfo)
+	// suite.app.StakingKeeper.
+	// suite.Require().Equal(sdk.NewInt(100), suite.app.StakingKeeper.TotalBondedTokens(suite.ctx))
 
 	return valAddr
 }

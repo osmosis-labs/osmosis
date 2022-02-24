@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
@@ -38,6 +40,7 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sd
 	}
 
 	decAmt := multiplier.Mul(amount.ToDec())
+	fmt.Printf("multiplier, decAmt, %s, %s \n", multiplier, decAmt)
 	asset := k.GetSuperfluidAsset(ctx, denom)
 	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
 }

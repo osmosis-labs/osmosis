@@ -21,6 +21,7 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk
 func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
 	// Get total number of Osmo this account should have delegated after refresh
 	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
+	fmt.Printf("total SFD %s\n", totalSuperfluidDelegation)
 	refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
 	return refreshedAmount
 }
@@ -51,9 +52,11 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		} else {
 			// TODO: Be consistent withn TokensFromShares vs ValidateFromUnbondAmount
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
+			fmt.Printf("current amt %s\n", currentAmount)
 		}
 
 		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
+		fmt.Printf("refreshed amt %s\n", refreshedAmount)
 
 		if refreshedAmount.GT(currentAmount) {
 			//need to mint and delegate

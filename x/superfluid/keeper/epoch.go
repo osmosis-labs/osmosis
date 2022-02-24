@@ -117,8 +117,9 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 			return err
 		}
-
+		fmt.Printf("osmo in pool %s\n", osmoPoolAsset)
 		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
+		fmt.Printf("Osmo backing per share %s\n", twap)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
