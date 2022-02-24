@@ -17,14 +17,18 @@ func unstakingSyntheticDenom(denom, valAddr string) string {
 }
 
 // quick fix for getting the validator addresss from a synthetic denom
-func ValidatorAddressFromSyntheticDenom(suffix string) (string, error) {
-	if strings.Contains(suffix, "superbonding") {
-		return strings.TrimLeft(suffix, "/superbonding/"), nil
+func ValidatorAddressFromSyntheticDenom(syntheticDenom string) (string, error) {
+	if strings.Contains(syntheticDenom, "superbonding") {
+		splitString := strings.Split(syntheticDenom, "/superbonding/")
+		lastComponent := splitString[len(splitString)-1]
+		return lastComponent, nil
 	}
-	if strings.Contains(suffix, "superunbonding") {
-		return strings.TrimLeft(suffix, "/superunbonding/"), nil
+	if strings.Contains(syntheticDenom, "superunbonding") {
+		splitString := strings.Split(syntheticDenom, "/superunbonding/")
+		lastComponent := splitString[len(splitString)-1]
+		return lastComponent, nil
 	}
-	return "", fmt.Errorf("%s is not a valid synthetic denom suffix", suffix)
+	return "", fmt.Errorf("%s is not a valid synthetic denom suffix", syntheticDenom)
 }
 
 type lockingStatus int64
