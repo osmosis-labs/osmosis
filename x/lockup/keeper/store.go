@@ -77,11 +77,10 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 }
 
 // deleteLockRefByKey removes lock ID from an array associated to provided key
-func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
+func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	lockIDKey := sdk.Uint64ToBigEndian(lockID)
 	store.Delete(combineKeys(key, lockIDKey))
-	return nil
 }
 
 func accumulationStorePrefix(denom string) (res []byte) {
