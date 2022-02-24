@@ -270,3 +270,51 @@ func (k Keeper) TotalSuperfluidDelegations(goCtx context.Context, req *types.Tot
 		TotalDelegations: totalSuperfluidDelegated,
 	}, nil
 }
+
+// SuperfluidUndelegationsByDelgatorDenom returns total amount undelegating by delegator + denom
+func (k Keeper) SuperfluidUndelegationsByDelgatorDenom(goCtx context.Context, req *types.SuperfluidUndelegationsByDelgatorDenomRequest) (*types.SuperfluidUndelegationsByDelgatorDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	res := types.SuperfluidUndelegationsByDelgatorDenomResponse{
+		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
+		TotalDelegatedCoins:         sdk.NewCoins(),
+	}
+
+	syntheticLocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
+
+	for _, syntheticLock := range syntheticLocks {
+		if strings.Contains(syntheticLock.SynthDenom, "superbonding") {
+			continue
+		}
+
+		// if it does not include denom requested we continue
+		if !strings.Contains(syntheticLock.SynthDenom, req.Denom) {
+			continue
+		}
+
+		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockId)
+		if err != nil {
+			return nil, err
+		}
+
+		baseDenom := periodLock.Coins.GetDenomByIndex(0)
+		lockedCoin := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
+		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
+		if err != nil {
+			return nil, err
+		}
+		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
+			types.SuperfluidDelegationRecord{
+				DelegatorAddress: req.DelegatorAddress,
+				ValidatorAddress: valAddr,
+				DelegationAmount: lockedCoin,
+			},
+		)
+	}
+	return &res, nil
+}
