@@ -70,6 +70,14 @@ service Query {
                                    "superfluid_delegations/{delegator_address}";
   }
 
+  rpc SuperfluidUndelegationsByDelgator(
+      SuperfluidUndelegationsByDelgatorRequest)
+      returns (SuperfluidUndelegationsByDelgatorResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/"
+        "superfluid_undelegations_by_delegator/{delegator_address}";
+  }
+
   // Returns all the superfluid positions of a specific denom delegated to one
   // validator
   rpc SuperfluidDelegationsByValidatorDenom(
@@ -90,13 +98,7 @@ service Query {
         "estimate_superfluid_delegation_amount_by_validator_denom";
   }
 
-  rpc SuperfluidUndelegationsByDelgatorDenom(
-      SuperfluidUndelegationsByDelgatorDenomRequest)
-      returns (SuperfluidUndelegationsByDelgatorDenomResponse) {
-    option (google.api.http).get =
-        "/osmosis/superfluid/v1beta1/"
-        "superfluid_undelegations_by_delegator";
-  }
+
 
 
   // // Returns all the unbonding superfluid positions of a delegator
@@ -190,6 +192,20 @@ message SuperfluidDelegationsByDelegatorResponse {
   ];
 }
 
+message SuperfluidUndelegationsByDelgatorRequest {
+  string delegator_address = 1;
+  string denom = 2;
+}
+
+message SuperfluidUndelegationsByDelgatorResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin total_undelegated_coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
 message SuperfluidDelegationsByValidatorDenomRequest {
   string validator_address = 1;
   string denom = 2;
@@ -212,19 +228,7 @@ message EstimateSuperfluidDelegatedAmountByValidatorDenomResponse {
   ];
 }
 
-message SuperfluidUndelegationsByDelgatorDenomRequest {
-  string delegator_address = 1;
-  string denom = 2;
-}
 
-message SuperfluidUndelegationsByDelgatorDenomResponse {
-  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
-      [ (gogoproto.nullable) = false ];
-  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-}
 
 // message SuperfluidUnbondingsByDelegatorRequest {
 //   string delegator_address = 1;
