@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
 	suite.Require().Equal(locks[0].IsUnlocking(), false)
 
 	// begin unlock
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, locks[0], nil)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, locks[0].ID, nil)
 	suite.Require().NoError(err)
 
 	// check locks
@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	// unlock lock just now
 	lock, err := lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.ctx, *lock)
+	err = lockKeeper.Unlock(suite.ctx, lock.ID)
 	suite.Require().Error(err)
 
 	// move start time to 1 second in the future.
@@ -122,19 +122,19 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	// Try to finish unlocking a lock, before starting unlock.
 	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.ctx, *lock)
+	err = lockKeeper.Unlock(suite.ctx, lock.ID)
 	suite.Require().Error(err)
 
 	// begin unlock
 	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.BeginUnlock(suite.ctx, *lock, nil)
+	err = lockKeeper.BeginUnlock(suite.ctx, lock.ID, nil)
 	suite.Require().NoError(err)
 
 	// unlock 1s after begin unlock
 	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second*2)), *lock)
+	err = lockKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second*2)), lock.ID)
 	suite.Require().NoError(err)
 
 	// check locks
@@ -191,14 +191,14 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	suite.Require().NoError(err)
 
 	// begin unlock with lock object
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, nil)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock.ID, nil)
 	suite.Require().NoError(err)
 
 	lockPtr, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 	suite.Require().NoError(err)
 
 	// unlock with lock object
-	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), *lockPtr)
+	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), lockPtr.ID)
 	suite.Require().NoError(err)
 }
 
@@ -226,17 +226,17 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 
 	// test exceeding coins
 	exceedingCoins := sdk.Coins{sdk.NewInt64Coin("stake", 15)}
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, exceedingCoins)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock.ID, exceedingCoins)
 	suite.Require().Error(err)
 
 	// test invalid coins
 	invalidCoins := sdk.Coins{sdk.NewInt64Coin("unknown", 1)}
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, invalidCoins)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock.ID, invalidCoins)
 	suite.Require().Error(err)
 
 	// begin unlock partial amount
 	partialCoins := sdk.Coins{sdk.NewInt64Coin("stake", 1)}
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, partialCoins)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock.ID, partialCoins)
 	suite.Require().NoError(err)
 
 	// check unlocking coins
@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 
 	// Finish unlocking partial unlock
 	partialUnlock := suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)[1]
-	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), partialUnlock)
+	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), partialUnlock.ID)
 	suite.Require().NoError(err)
 
 	// check unlocking coins

@@ -412,14 +412,18 @@ func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 }
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
-func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
 	// prohibit BeginUnlock if synthetic locks are referring to this
 	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
 	if k.HasAnySyntheticLockups(ctx, lock.ID) {
 		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
 	}
 
-	return k.beginForceUnlock(ctx, lock, coins)
+	return k.beginForceUnlock(ctx, *lock, coins)
 }
 
 func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
@@ -474,7 +478,12 @@ func (k Keeper) beginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins s
 }
 
 // Unlock is a utility to unlock coins from module account
-func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
+func (k Keeper) Unlock(ctx sdk.Context, lockID uint64) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
 	// validation for current time and unlock time
 	curTime := ctx.BlockTime()
 	if !lock.IsUnlocking() {
@@ -484,7 +493,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
-	return k.unlockInternalLogic(ctx, lock)
+	return k.unlockInternalLogic(ctx, *lock)
 }
 
 // ForceUnlock ignores unlock duration and immediately unlock and refund.
@@ -492,7 +501,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 // TODO: Revisit for Superfluid Staking
 func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	if !lock.IsUnlocking() {
-		err := k.BeginUnlock(ctx, lock, nil)
+		err := k.BeginUnlock(ctx, lock.ID, nil)
 		if err != nil {
 			return err
 		}
