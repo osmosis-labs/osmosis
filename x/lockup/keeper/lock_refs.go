@@ -6,7 +6,10 @@ import (
 )
 
 func (k Keeper) addLockRefs(ctx sdk.Context, lock types.PeriodLock) error {
-	refKeys, err := lockRefKeys(lock)
+	refKeys, err := durationLockRefKeys(lock)
+	if lock.IsUnlocking() {
+		refKeys, err = lockRefKeys(lock)
+	}
 	if err != nil {
 		return err
 	}
@@ -25,9 +28,7 @@ func (k Keeper) deleteLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types
 		return err
 	}
 	for _, refKey := range refKeys {
-		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
-			return err
-		}
+		k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID)
 	}
 	return nil
 }
@@ -54,9 +55,7 @@ func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lock types.PeriodLock, 
 	}
 	lockRefPrefix := unlockingPrefix(synthLock.IsUnlocking())
 	for _, refKey := range refKeys {
-		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockId); err != nil {
-			return err
-		}
+		k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockId)
 	}
 	return nil
 }
