@@ -61,6 +61,19 @@ func (suite *KeeperTestSuite) SetupDefaultPool() {
 	suite.Require().Equal(poolId, uint64(1))
 }
 
+func (suite *KeeperTestSuite) SetTwapOfPool(poolId uint64, twap sdk.Dec) error {
+	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	if err != nil {
+		return err
+	}
+	desiredOsmoInPool := pool.GetTotalShares().Amount.ToDec().Mul(twap)
+	err = pool.UpdatePoolAssetBalance(sdk.NewCoin(suite.app.StakingKeeper.BondDenom(suite.ctx), desiredOsmoInPool.RoundInt()))
+	if err != nil {
+		return err
+	}
+	return suite.app.GAMMKeeper.SetPool(suite.ctx, pool)
+}
+
 func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
 	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
 	epoch := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, epochIdentifier)

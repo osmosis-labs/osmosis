@@ -48,6 +48,7 @@ type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	GetSupplyOffset(ctx sdk.Context, denom string) sdk.Int
 	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
 	GetSupplyWithOffset(ctx sdk.Context, denom string) sdk.Coin

@@ -63,6 +63,8 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	// setup superfluid delegations
 	suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations)
 
+	totalDelegation := sdk.NewCoins()
+
 	// for each superfluid delegation, query the amount and make sure it is 1000000
 	for _, delegation := range superfluidDelegations {
 		res, err := suite.queryClient.SuperfluidDelegationAmount(sdk.WrapSDKContext(suite.ctx), &types.SuperfluidDelegationAmountRequest{
@@ -72,6 +74,8 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 		})
 		suite.Require().NoError(err)
 		suite.Require().Equal(res.Amount.AmountOf(delegation.lpDenom).Int64(), delegation.lpAmount)
+
+		totalDelegation = totalDelegation.Add(sdk.NewInt64Coin(delegation.lpDenom, delegation.lpAmount))
 	}
 
 	// for each delegator, query all their superfluid delegations and make sure they have 2 delegations
@@ -107,10 +111,15 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 		}
 	}
 
+	osmoValue := sdk.ZeroInt()
+
+	for _, coin := range totalDelegation {
+		osmoValue = osmoValue.Add(suite.app.SuperfluidKeeper.GetSuperfluidOSMOTokens(suite.ctx, coin.Denom, coin.Amount))
+	}
+
 	totalSuperfluidDelegationsRes, err := suite.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(suite.ctx), &types.TotalSuperfluidDelegationsRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewInt(40000000), totalSuperfluidDelegationsRes.TotalDelegations)
-
+	suite.Require().Equal(osmoValue, totalSuperfluidDelegationsRes.TotalDelegations, totalSuperfluidDelegationsRes.TotalDelegations.String())
 }
 
 func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {

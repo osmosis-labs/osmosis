@@ -11,9 +11,30 @@ import (
 // This function calculates the osmo equivalent worth of an LP share.
 // It is intended to eventually use the TWAP of the worth of an LP share
 // once that is exposed from the gamm module.
-func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.PoolI, osmoInPool gammtypes.PoolAsset) sdk.Dec {
-	twap := osmoInPool.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
-	return twap
+// CONTRACT: Passed in lpShareDenom MUST be a valid denom for a real gamm pool with OSMO in it
+func (k Keeper) CalculateOsmoBackingPerShare(ctx sdk.Context, lpShareDenom string) (sdk.Dec, error) {
+	// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
+	poolId := gammtypes.MustGetPoolIdFromShareDenom(lpShareDenom)
+	pool, err := k.gk.GetPool(ctx, poolId)
+	if err != nil {
+		// Pool has been unexpectedly deleted
+		k.Logger(ctx).Error(err.Error())
+		k.BeginUnwindSuperfluidAsset(ctx, 0, types.NewSuperfluidAsset(types.SuperfluidAssetTypeLPShare, lpShareDenom))
+		return sdk.ZeroDec(), err
+	}
+
+	// get OSMO amount
+	bondDenom := k.sk.BondDenom(ctx)
+	osmoPoolAsset, err := pool.GetPoolAsset(bondDenom)
+	if err != nil {
+		// Pool has unexpectedly removed Osmo from its assets.
+		k.Logger(ctx).Error(err.Error())
+		k.BeginUnwindSuperfluidAsset(ctx, 0, types.NewSuperfluidAsset(types.SuperfluidAssetTypeLPShare, lpShareDenom))
+		return sdk.ZeroDec(), err
+	}
+
+	twap := osmoPoolAsset.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
+	return twap, nil
 }
 
 func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom string, multiplier sdk.Dec) {

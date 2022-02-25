@@ -28,6 +28,7 @@ func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.Superflui
 func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
+
 		mAddr := acc.GetAccAddress()
 
 		valAddress, err := sdk.ValAddressFromBech32(acc.ValAddr)
@@ -326,8 +327,8 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		if err != nil {
 			return err
 		}
-		err = k.bk.BurnCoins(cacheCtx, types.ModuleName, undelegatedCoins)
 		bondDenom := k.sk.BondDenom(cacheCtx)
+		err = k.bk.BurnCoins(cacheCtx, types.ModuleName, undelegatedCoins)
 		k.bk.AddSupplyOffset(cacheCtx, bondDenom, undelegatedCoins.AmountOf(bondDenom))
 
 		return err

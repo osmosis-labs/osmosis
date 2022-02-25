@@ -33,7 +33,7 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 // lockup hooks
 // if you add tokens to a lock that is superfluid unbonding, nothing happens superfluid side.
 // This lock does as an edge case take on the slashing risk as well for historical slashes.
-// This is deemed as fine, governance can re-pay if it occurs on mainnet.
+// This is deemed as fine for now, as double sign slashes are extremely infrequent on mainnet.
 func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins) {
 	intermediaryAccAddr := h.k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if !intermediaryAccAddr.Empty() {
