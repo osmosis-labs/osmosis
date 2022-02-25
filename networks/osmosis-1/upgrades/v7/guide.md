@@ -18,7 +18,7 @@ sudo swapon /swapfile
 To persist swap after restart:
 ```sh
 sudo cp /etc/fstab /etc/fstab.bak
-echo '/swapfile none swap sw 0 0
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
 In depth swap setup instructions: https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-20-04
