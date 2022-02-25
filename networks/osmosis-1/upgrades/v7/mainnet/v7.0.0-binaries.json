@@ -1,0 +1,5 @@
+{
+    "binaries": {
+        "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v7.0.0/osmosisd-7.0.0-linux-amd64?checksum=sha256:d60a995cc93af424239f7a46d4e913a5da3a64409dfda6c2840fa3c16d246dd6"
+    }
+}
