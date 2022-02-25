@@ -9,12 +9,12 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSuperfluidDelegate{}, "osmosis/superfluid/superfluid-delegate", nil)
-	cdc.RegisterConcrete(&MsgSuperfluidUndelegate{}, "osmosis/superfluid/superfluid-undelegate", nil)
-	cdc.RegisterConcrete(&MsgLockAndSuperfluidDelegate{}, "osmosis/superfluid/lock-and-superfluid-delegate", nil)
-	cdc.RegisterConcrete(&MsgSuperfluidUnbondLock{}, "osmosis/superfluid/superfluid-unbond-lock", nil)
-	cdc.RegisterConcrete(&SetSuperfluidAssetsProposal{}, "osmosis/superfluid/set-superfluid-assets-proposal", nil)
-	cdc.RegisterConcrete(&RemoveSuperfluidAssetsProposal{}, "osmosis/superfluid/remove-superfluid-assets-proposal", nil)
+	cdc.RegisterConcrete(&MsgSuperfluidDelegate{}, "osmosis/superfluid-delegate", nil)
+	cdc.RegisterConcrete(&MsgSuperfluidUndelegate{}, "osmosis/superfluid-undelegate", nil)
+	cdc.RegisterConcrete(&MsgLockAndSuperfluidDelegate{}, "osmosis/lock-and-superfluid-delegate", nil)
+	cdc.RegisterConcrete(&MsgSuperfluidUnbondLock{}, "osmosis/superfluid-unbond-lock", nil)
+	cdc.RegisterConcrete(&SetSuperfluidAssetsProposal{}, "osmosis/set-superfluid-assets-proposal", nil)
+	cdc.RegisterConcrete(&RemoveSuperfluidAssetsProposal{}, "osmosis/del-superfluid-assets-proposal", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -22,7 +22,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgSuperfluidDelegate{},
 		&MsgSuperfluidUndelegate{},
-		// &MsgSuperfluidRedelegate{},
 		&MsgLockAndSuperfluidDelegate{},
 		&MsgSuperfluidUnbondLock{},
 	)
