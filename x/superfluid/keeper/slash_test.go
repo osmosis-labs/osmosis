@@ -3,15 +3,14 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
+		delegatorNumber       int
 		superDelegations      []superfluidDelegation
 		slashedValIndexes     []int64
 		expSlashedLockIndexes []int64
@@ -19,28 +18,32 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 		{
 			"with single validator and single superfluid delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			1,
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]int64{0},
 		},
 		{
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			2,
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 0, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]int64{0, 1},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations with single validator slash",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			2,
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
 			[]int64{0},
 			[]int64{0},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations with two validators slash",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			2,
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
 			[]int64{0, 1},
 			[]int64{0, 1},
 		},
@@ -52,24 +55,22 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
-			intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
 			locks := []lockuptypes.PeriodLock{}
 			slashFactor := sdk.NewDecWithPrec(5, 2)
 
 			// setup superfluid delegations
 			for _, del := range tc.superDelegations {
 				valAddr := valAddrs[del.valIndex]
-				lock := suite.SetupSuperfluidDelegate(valAddr, del.lpDenom)
-				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
+				delAddr := delAddrs[del.delIndex]
+				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, del.lpDenom, del.lpAmount)
 
 				// save accounts and locks for future use
-				intermediaryAccs = append(intermediaryAccs, expAcc)
 				locks = append(locks, lock)
 			}
 
@@ -103,25 +104,29 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
+		delegatorNumber       int
 		superDelegations      []superfluidDelegation
 		superUnbondingLockIds []uint64
 	}{
 		{
 			"happy path with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			1,
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1},
 		},
 		{
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			2,
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 0, "gamm/pool/1", 1000000}},
 			[]uint64{1, 2},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			2,
+			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
 			[]uint64{1, 2},
 		},
 	}
@@ -132,32 +137,31 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-			suite.Require().Equal(poolId, uint64(1))
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 			// setup superfluid delegations
-			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
 				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
 				suite.Require().NoError(err)
 				// superfluid undelegate
-				_, err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
+				err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
 				suite.Require().NoError(err)
 			}
 
 			// slash unbonding lockups for all intermediary accounts
-			for _, acc := range intermediaryAccs {
-				suite.NotPanics(func() {
-					suite.app.SuperfluidKeeper.SlashLockupsForUnbondingDelegationSlash(
-						suite.ctx,
-						acc.GetAccAddress().String(),
-						acc.ValAddr,
-						sdk.NewDecWithPrec(5, 2))
-				})
+			slashFactor := sdk.NewDecWithPrec(5, 2)
+			for i := 0; i < len(valAddrs); i++ {
+				suite.app.SuperfluidKeeper.SlashLockupsForValidatorSlash(
+					suite.ctx,
+					valAddrs[i],
+					suite.ctx.BlockHeight(),
+					slashFactor)
 			}
 
 			// check check unbonding lockup changes

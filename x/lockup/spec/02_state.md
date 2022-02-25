@@ -40,14 +40,17 @@ There are two big queues to store the lock references. (`a_prefix_key`)
 
 Regardless the lock has started unlocking or not, it stores below references. (`b_prefix_key`)
 
+1. `{KeyPrefixLockDuration}{Duration}`
+2. `{KeyPrefixAccountLockDuration}{Owner}{Duration}`
+3. `{KeyPrefixDenomLockDuration}{Denom}{Duration}`
+4. `{KeyPrefixAccountDenomLockDuration}{Owner}{Denom}{Duration}`
+
+If the lock is unlocking, it also stores the below referneces.
+
 1. `{KeyPrefixLockTimestamp}{LockEndTime}`
-2. `{KeyPrefixLockDuration}{Duration}`
-3. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
-4. `{KeyPrefixAccountLockDuration}{Owner}{Duration}`
-5. `{KeyPrefixDenomLockTimestamp}{Denom}{LockEndTime}`
-6. `{KeyPrefixDenomLockDuration}{Denom}{Duration}`
-7. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{Denom}{LockEndTime}`
-8. `{KeyPrefixAccountDenomLockDuration}{Owner}{Denom}{Duration}`
+2. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
+3. `{KeyPrefixDenomLockTimestamp}{Denom}{LockEndTime}`
+4. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{Denom}{LockEndTime}`
 
 For end time keys, they are converted to sortable string by using `sdk.FormatTimeBytes` function.
 
@@ -60,18 +63,28 @@ Here key is the prefix key to be used for iteration. It is combination of two pr
 ```go
 // addLockRefByKey make a lockID iterable with the prefix `key`
 func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
-	store := ctx.KVStore(k.storeKey)
-	lockIDBz := sdk.Uint64ToBigEndian(lockID)
-	endKey := combineKeys(key, lockIDBz)
-	if store.Has(endKey) {
-		return fmt.Errorf("lock with same ID exist: %d", lockID)
-	}
-	store.Set(endKey, lockIDBz)
-	return nil
+ store := ctx.KVStore(k.storeKey)
+ lockIDBz := sdk.Uint64ToBigEndian(lockID)
+ endKey := combineKeys(key, lockIDBz)
+ if store.Has(endKey) {
+  return fmt.Errorf("lock with same ID exist: %d", lockID)
+ }
+ store.Set(endKey, lockIDBz)
+ return nil
 }
 ```
 
 ### Synthetic Lockup
+
+Synthetic Lockups are a concept that serve the following roles:
+
+* Add "restrictions" to an underlying PeriodLock, so that its bond status must be managed by a module rather than a BeginUnlockMessage
+* Allow issuing of a locked, "synthetic" denom type
+* Allow distribution of rewards to locked synthetic denominations.
+
+The first goal can eventually be pushed into a new data structure, as it doesn't really relate to the synthetic component.
+
+This is then used for superfluid staking. (Old docs below):
 
 The goal of synthetic lockup is to support the querying of locks by denom especially for delegated staking. By combining native denom and synthetic suffix, lockup supports querying with synthetic denom with existing denom querying functions.
 
@@ -87,9 +100,9 @@ A `SyntheticLock` is a single unit of synthetic lockup. Each synthetic lockup ha
 
 ```go
 type SyntheticLock struct {
-	LockId  uint64
-	Suffix  string
-	EndTime time.Time
+ LockId  uint64
+ Suffix  string
+ EndTime time.Time
 }
 ```
 

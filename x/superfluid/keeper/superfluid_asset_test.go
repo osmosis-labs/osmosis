@@ -48,5 +48,5 @@ func (suite *KeeperTestSuite) TestGetRiskAdjustedOsmoValue() {
 		types.SuperfluidAsset{Denom: "gamm/pool/1", AssetType: types.SuperfluidAssetTypeLPShare},
 		sdk.NewInt(100),
 	)
-	suite.Require().Equal(adjustedValue, sdk.NewInt(95))
+	suite.Require().Equal(sdk.NewInt(50), adjustedValue)
 }

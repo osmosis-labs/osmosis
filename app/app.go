@@ -23,6 +23,7 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	// Utilities from the Cosmos-SDK other than Cosmos modules
@@ -289,7 +290,7 @@ var (
 		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 		poolincentivestypes.ModuleName:           nil,
-		superfluidtypes.ModuleName:               nil,
+		superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		txfeestypes.ModuleName:                   nil,
 		wasm.ModuleName:                          {authtypes.Burner},
 	}
@@ -436,9 +437,15 @@ func NewOsmosisApp(
 		memKeys:           memKeys,
 	}
 
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic(fmt.Sprintf("error while reading wasm config: %s", err))
+	}
+
 	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers(homePath, appOpts, wasmEnabledProposals, wasmOpts)
+	app.InitNormalKeepers(wasmDir, wasmConfig, wasmEnabledProposals, wasmOpts)
 	app.SetupHooks()
 
 	/****  Module Options ****/
@@ -467,7 +474,7 @@ func NewOsmosisApp(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper),
+		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -485,7 +492,8 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
+		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper,
+			app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	)
 
@@ -518,7 +526,9 @@ func NewOsmosisApp(
 		authz.ModuleName,
 		paramstypes.ModuleName, vestingtypes.ModuleName,
 		gammtypes.ModuleName, incentivestypes.ModuleName, lockuptypes.ModuleName, claimtypes.ModuleName,
-		poolincentivestypes.ModuleName, superfluidtypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
+		poolincentivestypes.ModuleName, bech32ibctypes.ModuleName, txfeestypes.ModuleName,
+		// superfluid has to be after distribution
+		superfluidtypes.ModuleName,
 		wasm.ModuleName,
 	)
 
@@ -593,7 +603,7 @@ func NewOsmosisApp(
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper),
+		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -605,7 +615,8 @@ func NewOsmosisApp(
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper),
+		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper,
+			app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper),
 		app.transferModule,
 	)
 
@@ -625,6 +636,8 @@ func NewOsmosisApp(
 	app.SetAnteHandler(
 		NewAnteHandler(
 			appOpts,
+			wasmConfig,
+			keys[wasm.StoreKey],
 			app.AccountKeeper, app.BankKeeper,
 			app.TxFeesKeeper, app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
@@ -637,6 +650,13 @@ func NewOsmosisApp(
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
+		}
+
+		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+
+		// Initialize pinned codes in wasmvm as they are not persisted there
+		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
+			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}
 
@@ -859,7 +879,12 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 		v7.UpgradeName,
 		v7.CreateUpgradeHandler(
 			app.mm, app.configurator,
-			app.WasmKeeper))
+			app.WasmKeeper,
+			app.SuperfluidKeeper,
+			app.EpochsKeeper,
+			app.LockupKeeper,
+			app.MintKeeper,
+			app.AccountKeeper))
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

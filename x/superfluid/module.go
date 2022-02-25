@@ -109,6 +109,7 @@ type AppModule struct {
 	stakingKeeper types.StakingKeeper
 	lockupKeeper  types.LockupKeeper
 	gammKeeper    types.GammKeeper
+	epochKeeper   types.EpochKeeper
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
@@ -116,6 +117,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 	stakingKeeper types.StakingKeeper,
 	lockupKeeper types.LockupKeeper,
 	gammKeeper types.GammKeeper,
+	epochKeeper types.EpochKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
@@ -126,6 +128,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 		stakingKeeper: stakingKeeper,
 		lockupKeeper:  lockupKeeper,
 		gammKeeper:    gammKeeper,
+		epochKeeper:   epochKeeper,
 	}
 }
 
@@ -175,7 +178,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	BeginBlocker(ctx, am.keeper, am.epochKeeper)
+}
 
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.

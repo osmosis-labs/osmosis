@@ -25,7 +25,7 @@ func genPoolAssets(r *rand.Rand) []gammtypes.PoolAsset {
 	return assets
 }
 
-func genPoolParams(r *rand.Rand) balancer.BalancerPoolParams {
+func genPoolParams(r *rand.Rand) balancer.PoolParams {
 	swapFeeInt := int64(r.Intn(1e5))
 	swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -33,7 +33,7 @@ func genPoolParams(r *rand.Rand) balancer.BalancerPoolParams {
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
 	// TODO: Randomly generate LBP params
-	return balancer.BalancerPoolParams{
+	return balancer.PoolParams{
 		SwapFee:                  swapFee,
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: nil,

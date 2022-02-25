@@ -4,12 +4,25 @@ order: 4
 
 # Epochs
 
-At the Osmosis rewards distribution epoch time, all superfluid staking rewards get distributed.
-The envisioned flow of how this works is as follows:
+Overall Epoch sequence
 
-* (Epochs) AfterEpochEnd hook runs for epoch N
-* (Mint) distributes rewards to all stakers at the epoch that just endeds prices
-* (Superfluid) Claim all staking rewards to every intermediary module accounts
-* (Superfluid) Update all TWAP values [updateEpochEnd][./../keeper/hooks.go]
-  * Here we are setting the TWAP value for epoch N+1, as the TWAP from the duration of epoch N.
-* (Superfluid) Update all the intermediary accounts staked amounts. (Mint/Burn coins as needed as well)
+* Epoch N ends, during AfterEpochEnd:
+  * Distribute gauge rewards for all non-superfluid gauges
+  * Mint new tokens
+    * Issue new Osmo, and send to various modules (distribution, incentives, etc.)
+    * 25% currently goes to `x/distribution` which funds `Staking` and `Superfluid` rewards
+    * Rewards for `Superfluid` are based on the just updated delegation amounts, and queued for payout in the next epoch
+* Epoch N ends, during BeginBlock **After** AfterEpochEnd:
+  * Claim staking rewards for every `Intermediary Account`, put them into gauges.
+  * Distribute Superfluid staking rewards from gauges to bonded Synthetic Lock owners
+  * Update `Osmo Equivalent Multiplier` value for each LP token
+    * (Currently spot price at epoch)
+  * Refresh delegation amounts for all `Intermediary Accounts`
+    * Calcultate the expected delegation for this account as `Osmo Equivalent Multipler` *`# LP Shares`* `Risk adjustment`
+      * If this is less than 0.000001 `Osmo` it will be rounded to 0
+    * Lookup current delegation amount for `Intermediary Account`
+      * If there is no delegation, treat the current delegation as 0
+    * If expected amount > current delegation:
+      * Mint new `Osmo` and `Delegate` to `Validator`
+    * If expected amount < current delegation:
+      * Use `InstantUndelegate` and burn the received `Osmo`

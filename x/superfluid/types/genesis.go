@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -13,9 +12,9 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params:           DefaultParams(),
-		SuperfluidAssets: []SuperfluidAsset{},
-		TwapPriceRecords: []EpochOsmoEquivalentTWAP{},
+		Params:                    DefaultParams(),
+		SuperfluidAssets:          []SuperfluidAsset{},
+		OsmoEquivalentMultipliers: []OsmoEquivalentMultiplierRecord{},
 	}
 }
 
@@ -34,8 +33,5 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	if gs.Params.RefreshEpochIdentifier == "" {
-		return errors.New("refresh identifier should NOT be empty")
-	}
 	return nil
 }

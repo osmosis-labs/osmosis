@@ -11,6 +11,11 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return params
 }
 
+// GetParams returns the total set params
+func (k Keeper) GetEpochIdentifier(ctx sdk.Context) (epochIdentifier string) {
+	return k.ik.GetParams(ctx).DistrEpochIdentifier
+}
+
 // SetParams sets the total set of params
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)

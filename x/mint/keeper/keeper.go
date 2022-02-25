@@ -51,7 +51,16 @@ func NewKeeper(
 	}
 }
 
+// SetInitialSupplyOffsetDuringMigration sets the supply offset based on the balance of the
+// Develope rVesting Module Account.  It should only be called one time during the initial
+// migration to v7
+func SetInitialSupplyOffsetDuringMigration(ctx sdk.Context, k Keeper) {
+	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
+	k.bankKeeper.AddSupplyOffset(ctx, moduleAccBalance.Denom, moduleAccBalance.Amount.Neg())
+}
+
 // CreateDeveloperVestingModuleAccount creates the module account for developer vesting.
+// Should only be called in initial genesis creation, never again
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
@@ -176,6 +185,12 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	if err != nil {
 		return err
 	}
+
+	// Take the current balance of the developer rewards pool and remove it from the supply offset
+	// We re-introduce the new supply at the end, in order to avoid any rounding discrepancies.
+	developerAccountBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintedCoin.Denom)
+	k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount)
+
 	if len(params.WeightedDeveloperRewardsReceivers) == 0 {
 		// fund community pool when rewards address is empty
 		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
@@ -206,6 +221,10 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 			}
 		}
 	}
+
+	// Take the new balance of the developer rewards pool and add it back to the supply offset deduction
+	developerAccountBalance = k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintedCoin.Denom)
+	k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
 	// subtract from original provision to ensure no coins left over after the allocations
 	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(devRewardCoins)

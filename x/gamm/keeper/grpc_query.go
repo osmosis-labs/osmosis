@@ -83,7 +83,7 @@ func (k Keeper) Pools(
 		}
 
 		// TODO: pools query should not be balancer specific
-		pool, ok := poolI.(*balancer.BalancerPool)
+		pool, ok := poolI.(*balancer.Pool)
 		if !ok {
 			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
 		}
@@ -134,7 +134,7 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 	}
 
 	switch pool := pool.(type) {
-	case *balancer.BalancerPool:
+	case *balancer.Pool:
 		any, err := codectypes.NewAnyWithValue(&pool.PoolParams)
 		if err != nil {
 			return nil, err

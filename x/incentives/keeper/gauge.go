@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -83,23 +84,20 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 	if gauge.IsUpcomingGauge(curTime) {
 		combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
-		return err
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	} else if gauge.IsActiveGauge(curTime) {
 		combinedKeys := combineKeys(types.KeyPrefixActiveGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
-		return err
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	} else {
 		combinedKeys := combineKeys(types.KeyPrefixFinishedGauges, timeKey)
-		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
-		return err
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 	}
-
-	return nil
 }
 
 // CreateGauge create a gauge and send coins to the gauge
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
+
+	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
 	if distrTo.LockQueryType == lockuptypes.ByDuration {
 		durationOk := false
@@ -112,6 +110,11 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		if !durationOk {
 			return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
 		}
+	}
+
+	// Ensure that the denom this gauge pays out to exists on-chain
+	if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
+		return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
 	}
 
 	gauge := types.Gauge{

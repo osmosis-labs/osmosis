@@ -5,11 +5,15 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-func (k Keeper) addLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types.PeriodLock) error {
-	refKeys, err := lockRefKeys(lock)
+func (k Keeper) addLockRefs(ctx sdk.Context, lock types.PeriodLock) error {
+	refKeys, err := durationLockRefKeys(lock)
+	if lock.IsUnlocking() {
+		refKeys, err = lockRefKeys(lock)
+	}
 	if err != nil {
 		return err
 	}
+	lockRefPrefix := unlockingPrefix(lock.IsUnlocking())
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
 			return err
@@ -24,19 +28,18 @@ func (k Keeper) deleteLockRefs(ctx sdk.Context, lockRefPrefix []byte, lock types
 		return err
 	}
 	for _, refKey := range refKeys {
-		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID); err != nil {
-			return err
-		}
+		k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), lock.ID)
 	}
 	return nil
 }
 
-// XXX
-func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, synthLock types.SyntheticLock) error {
-	refKeys, err := syntheticLockRefKeys(synthLock)
+// make references for
+func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
+	refKeys, err := syntheticLockRefKeys(lock, synthLock)
 	if err != nil {
 		return err
 	}
+	lockRefPrefix := unlockingPrefix(synthLock.IsUnlocking())
 	for _, refKey := range refKeys {
 		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockId); err != nil {
 			return err
@@ -45,15 +48,14 @@ func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, synt
 	return nil
 }
 
-func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lockRefPrefix []byte, synthLock types.SyntheticLock) error {
-	refKeys, err := syntheticLockRefKeys(synthLock)
+func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lock types.PeriodLock, synthLock types.SyntheticLock) error {
+	refKeys, err := syntheticLockRefKeys(lock, synthLock)
 	if err != nil {
 		return err
 	}
+	lockRefPrefix := unlockingPrefix(synthLock.IsUnlocking())
 	for _, refKey := range refKeys {
-		if err := k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockId); err != nil {
-			return err
-		}
+		k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockId)
 	}
 	return nil
 }

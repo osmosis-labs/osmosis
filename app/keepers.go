@@ -1,12 +1,8 @@
 package app
 
 import (
-	"fmt"
-	"path/filepath"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -113,8 +109,8 @@ func (app *OsmosisApp) InitSpecialKeepers(
 
 // Note: I put x/wasm here as I need to write it up to these other ones
 func (app *OsmosisApp) InitNormalKeepers(
-	homePath string,
-	appOpts servertypes.AppOptions,
+	wasmDir string,
+	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 ) {
@@ -240,7 +236,8 @@ func (app *OsmosisApp) InitNormalKeepers(
 
 	app.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
-		*app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.EpochsKeeper, app.LockupKeeper, gammKeeper, app.IncentivesKeeper)
+		*app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.EpochsKeeper, app.LockupKeeper, gammKeeper, app.IncentivesKeeper,
+		lockupkeeper.NewMsgServerImpl(app.LockupKeeper))
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey],
@@ -269,12 +266,6 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.GAMMKeeper,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
-
-	wasmDir := filepath.Join(homePath, "wasm")
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
-	if err != nil {
-		panic(fmt.Sprintf("error while reading wasm config: %s", err))
-	}
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -316,7 +307,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*app.PoolIncentivesKeeper)).
 		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IBCKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*app.TxFeesKeeper)).
-		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*app.SuperfluidKeeper))
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*app.SuperfluidKeeper, *app.EpochsKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {

@@ -30,7 +30,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			},
 		}
 
-		poolParams := &BalancerPoolParams{
+		poolParams := &PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}
@@ -149,7 +149,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "negative swap fee with zero exit fee",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolParams = &BalancerPoolParams{
+				msg.PoolParams = &PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 				}
@@ -192,7 +192,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "zero swap fee, zero exit fee",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolParams = &BalancerPoolParams{
+				msg.PoolParams = &PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 					SwapFee: sdk.NewDecWithPrec(0, 0),
 				}

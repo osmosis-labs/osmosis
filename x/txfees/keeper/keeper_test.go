@@ -100,7 +100,7 @@ func (suite *KeeperTestSuite) preparePool(assets []gammtypes.PoolAsset) uint64 {
 	suite.Require().Len(assets, 2)
 
 	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1,
-		balancertypes.BalancerPoolParams{
+		balancertypes.PoolParams{
 			SwapFee: sdk.NewDec(0),
 			ExitFee: sdk.NewDec(0),
 		}, assets, "")

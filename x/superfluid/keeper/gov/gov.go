@@ -1,15 +1,16 @@
-package keeper
+package gov
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func (k Keeper) HandleSetSuperfluidAssetsProposal(ctx sdk.Context, p *types.SetSuperfluidAssetsProposal) error {
+func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
-		k.SetSuperfluidAsset(ctx, asset)
+		k.AddNewSuperfluidAsset(ctx, asset)
 		event := sdk.NewEvent(
 			types.TypeEvtSetSuperfluidAsset,
 			sdk.NewAttribute(types.AttributeDenom, asset.Denom),
@@ -20,7 +21,7 @@ func (k Keeper) HandleSetSuperfluidAssetsProposal(ctx sdk.Context, p *types.SetS
 	return nil
 }
 
-func (k Keeper) HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, p *types.RemoveSuperfluidAssetsProposal) error {
+func HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveSuperfluidAssetsProposal) error {
 	for _, denom := range p.SuperfluidAssetDenoms {
 		asset := k.GetSuperfluidAsset(ctx, denom)
 		dummyAsset := types.SuperfluidAsset{}

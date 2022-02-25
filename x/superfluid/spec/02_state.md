@@ -4,9 +4,9 @@ order: 2
 
 # State
 
-## SuperfluidAsset
+## Superfluid Asset
 
-A superfluid asset is ...
+A superfluid asset is a alternative asset (non-OSMO) that is allowed by governance to be used for staking.
 
 It can only be updated by governance proposals. We validate at proposal creation time that the denom + pool exists.
 (Are we going to ignore edge cases around a reference pool getting deleted it)
@@ -15,20 +15,36 @@ It can only be updated by governance proposals. We validate at proposal creation
 
 Lots of questions to be answered here
 
+## Dedicated Gauges
+
+Each intermediary account has has dedicated gauge where it sends the delegation rewards to.
+Gauges are distributing the rewards to end users at the end of the epoch.
+
 ## Synthetic Lockups created
 
-Many questions to be answered here
+At the moment, one lock can only be fully bonded to one validator.
 
-## TWAP
+## Osmo Equivalent Multipliers
 
-** Clarify what we mean by TWAP. Namely the time-weighted average of the osmo backing of an LP share.
+The Osmo Equivalent Multiplier for an asset is the multiplier it has for its value relative to OSMO.
 
-The TWAP for an epoch is set at the beginning of the epoch. We refer to the TWAP for use in epoch N as the 24hr TWAP for the entire prior epoch (N-1). This is then set at the beginning of epoch N.
+Different types of assets can have different functions for calculating their multiplier. We currently support two asset types.
 
-Note, that we don't actually use the TWAP. We just use the spot price at the start of epoch N for now.
+1. Native Token
 
-## Latest OSMO equivalent TWAP
+The multiplier for OSMO is alway 1.
 
-Snapshot of OSMO equivalent that is updated at the end of epoch, can be queried by `GetLatestEpochOsmoEquivalentTWAP`.
+2. Gamm LP Shares
 
-Note: For now, it is updated with latest OSMO equivalent per LP token.
+Currently we use the spot price for an asset based on a designated osmo-basepair pool of an asset.
+The multiplier is set once per epoch, at the beginning of the epoch.
+In the future, we will switch this out to use a TWAP instead.
+
+# State changes
+
+The state of superfluid module state modifiers are classified into below categories.
+
+- [Proposals](07_proposals.md)
+- [Messages](03_messages.md)
+- [Epoch](04_epoch.md)
+- [Hooks](06_hooks.md)

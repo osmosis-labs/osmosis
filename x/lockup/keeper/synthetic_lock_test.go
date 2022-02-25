@@ -83,17 +83,17 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	suite.Require().Equal(amount.String(), "10")
 
 	// check queries for synthetic denom before creating synthetic lockup
-	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stakestakedtovalidator1", suite.ctx.BlockTime())
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "synthstakestakedtovalidator1", suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
-	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
+	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "synthstakestakedtovalidator1", time.Second)
 	suite.Require().Len(locks, 0)
-	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
+	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "synthstakestakedtovalidator1", time.Second)
 	suite.Require().Len(locks, 0)
-	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stakestakedtovalidator1", suite.ctx.BlockTime())
+	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "synthstakestakedtovalidator1", suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
-	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "synthstakestakedtovalidator1", time.Second)
 	suite.Require().Len(locks, 0)
-	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
+	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "synthstakestakedtovalidator1", time.Second)
 	suite.Require().Equal(amount.String(), "0")
 
 	// check non-denom related queries before creating synthetic lockup
@@ -114,18 +114,16 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	locks = suite.app.LockupKeeper.GetAccountUnlockedBeforeTime(suite.ctx, addr1, suite.ctx.BlockTime())
 	suite.Require().Len(locks, 0)
 
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", time.Second, false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1", time.Second, false)
 	suite.Require().NoError(err)
 
-	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().NoError(err)
 	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		UnderlyingLockId: 1,
-		Suffix:           "stakedtovalidator1",
+		SynthDenom:       "synthstakestakedtovalidator1",
 		EndTime:          time.Time{},
 		Duration:         time.Second,
-		Coins:            suite.app.LockupKeeper.SyntheticCoins(coins, "stakedtovalidator1"),
-		Owner:            addr1.String(),
 	})
 
 	expectedSynthLocks := []types.SyntheticLock{*synthLock}
@@ -138,7 +136,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	// check accumulation store is correctly updated for synthetic lockup
 	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 		LockQueryType: types.ByDuration,
-		Denom:         "stakestakedtovalidator1",
+		Denom:         "synthstakestakedtovalidator1",
 		Duration:      time.Second,
 	})
 	suite.Require().Equal(accum.String(), "10")
@@ -158,17 +156,17 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	suite.Require().Equal(amount.String(), "10")
 
 	// check queries for synthetic denom after creating synthetic lockup
-	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "stakestakedtovalidator1", suite.ctx.BlockTime())
+	locks = suite.app.LockupKeeper.GetAccountLockedPastTimeDenom(suite.ctx, addr1, "synthstakestakedtovalidator1", suite.ctx.BlockTime())
 	suite.Require().Equal(locks, expectedLocks)
-	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
+	locks = suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr1, "synthstakestakedtovalidator1", time.Second)
 	suite.Require().Equal(locks, expectedLocks)
-	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "stakestakedtovalidator1", time.Second)
+	locks = suite.app.LockupKeeper.GetAccountLockedLongerDurationDenom(suite.ctx, addr1, "synthstakestakedtovalidator1", time.Second)
 	suite.Require().Equal(locks, expectedLocks)
-	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "stakestakedtovalidator1", suite.ctx.BlockTime())
+	locks = suite.app.LockupKeeper.GetLocksPastTimeDenom(suite.ctx, "synthstakestakedtovalidator1", suite.ctx.BlockTime())
 	suite.Require().Equal(locks, expectedLocks)
-	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "synthstakestakedtovalidator1", time.Second)
 	suite.Require().Equal(locks, expectedLocks)
-	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "stakestakedtovalidator1", time.Second)
+	amount = suite.app.LockupKeeper.GetLockedDenom(suite.ctx, "synthstakestakedtovalidator1", time.Second)
 	suite.Require().Equal(amount.String(), "10")
 
 	// check non-denom related queries after creating synthetic lockup
@@ -190,60 +188,24 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	suite.Require().Len(locks, 0)
 
 	// try creating synthetic lockup with same lock and suffix
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", time.Second, false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1", time.Second, false)
 	suite.Require().Error(err)
 
 	// delete synthetic lockup
-	err = suite.app.LockupKeeper.DeleteSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
+	err = suite.app.LockupKeeper.DeleteSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().NoError(err)
 
-	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().Error(err)
 	suite.Require().Nil(synthLock)
 
 	// check accumulation store is correctly updated for synthetic lock
 	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 		LockQueryType: types.ByDuration,
-		Denom:         "stakestakedtovalidator1",
+		Denom:         "synthstakestakedtovalidator1",
 		Duration:      time.Second,
 	})
 	suite.Require().Equal(accum.String(), "0")
-}
-
-func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllSyntheticLocksByLockup() {
-	suite.SetupTest()
-
-	// lock coins
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-
-	// check locks
-	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].Coins, coins)
-
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", time.Second, false)
-	suite.Require().NoError(err)
-
-	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
-	suite.Require().NoError(err)
-	suite.Require().Equal(*synthLock, types.SyntheticLock{
-		UnderlyingLockId: 1,
-		Suffix:           "stakedtovalidator1",
-		EndTime:          time.Time{},
-		Duration:         time.Second,
-		Coins:            suite.app.LockupKeeper.SyntheticCoins(coins, "stakedtovalidator1"),
-		Owner:            addr1.String(),
-	})
-
-	err = suite.app.LockupKeeper.DeleteAllSyntheticLocksByLockup(suite.ctx, 1)
-	suite.Require().NoError(err)
-
-	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
-	suite.Require().Error(err)
-	suite.Require().Nil(synthLock)
 }
 
 func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks() {
@@ -260,46 +222,42 @@ func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks(
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].Coins, coins)
 
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator1", time.Second, false)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1", time.Second, false)
 	suite.Require().NoError(err)
 
-	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "stakedtovalidator2", time.Second, true)
+	err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator2", time.Second, true)
 	suite.Require().NoError(err)
 
-	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().NoError(err)
 	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		UnderlyingLockId: 1,
-		Suffix:           "stakedtovalidator1",
+		SynthDenom:       "synthstakestakedtovalidator1",
 		EndTime:          time.Time{},
 		Duration:         time.Second,
-		Coins:            suite.app.LockupKeeper.SyntheticCoins(coins, "stakedtovalidator1"),
-		Owner:            addr1.String(),
 	})
-	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator2")
+	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator2")
 	suite.Require().NoError(err)
 	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		UnderlyingLockId: 1,
-		Suffix:           "stakedtovalidator2",
+		SynthDenom:       "synthstakestakedtovalidator2",
 		EndTime:          suite.ctx.BlockTime().Add(time.Second),
 		Duration:         time.Second,
-		Coins:            suite.app.LockupKeeper.SyntheticCoins(coins, "stakedtovalidator2"),
-		Owner:            addr1.String(),
 	})
 
 	suite.app.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.ctx)
 
-	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
+	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator2")
+	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator2")
 	suite.Require().NoError(err)
 
 	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Second * 2))
 	suite.app.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.ctx)
 
-	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
+	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator2")
+	_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator2")
 	suite.Require().Error(err)
 }
 
@@ -320,41 +278,33 @@ func (suite *KeeperTestSuite) TestResetAllSyntheticLocks() {
 	suite.app.LockupKeeper.ResetAllSyntheticLocks(suite.ctx, []types.SyntheticLock{
 		{
 			UnderlyingLockId: 1,
-			Suffix:           "stakedtovalidator1",
+			SynthDenom:       "synthstakestakedtovalidator1",
 			EndTime:          time.Time{},
 			Duration:         time.Second,
-			Coins:            suite.app.LockupKeeper.SyntheticCoins(coins, "stakedtovalidator1"),
-			Owner:            addr1.String(),
 		},
 		{
 			UnderlyingLockId: 1,
-			Suffix:           "stakedtovalidator2",
+			SynthDenom:       "synthstakestakedtovalidator2",
 			EndTime:          suite.ctx.BlockTime().Add(time.Second),
 			Duration:         time.Second,
-			Coins:            suite.app.LockupKeeper.SyntheticCoins(coins, "stakedtovalidator2"),
-			Owner:            addr1.String(),
 		},
 	})
 
-	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator1")
+	synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator1")
 	suite.Require().NoError(err)
 	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		UnderlyingLockId: 1,
-		Suffix:           "stakedtovalidator1",
+		SynthDenom:       "synthstakestakedtovalidator1",
 		EndTime:          time.Time{},
 		Duration:         time.Second,
-		Coins:            suite.app.LockupKeeper.SyntheticCoins(coins, "stakedtovalidator1"),
-		Owner:            addr1.String(),
 	})
-	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "stakedtovalidator2")
+	synthLock, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.ctx, 1, "synthstakestakedtovalidator2")
 	suite.Require().NoError(err)
 	suite.Require().Equal(*synthLock, types.SyntheticLock{
 		UnderlyingLockId: 1,
-		Suffix:           "stakedtovalidator2",
+		SynthDenom:       "synthstakestakedtovalidator2",
 		EndTime:          suite.ctx.BlockTime().Add(time.Second),
 		Duration:         time.Second,
-		Coins:            suite.app.LockupKeeper.SyntheticCoins(coins, "stakedtovalidator2"),
-		Owner:            addr1.String(),
 	})
 
 	accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
@@ -365,13 +315,13 @@ func (suite *KeeperTestSuite) TestResetAllSyntheticLocks() {
 	suite.Require().Equal(accum.String(), "10")
 	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 		LockQueryType: types.ByDuration,
-		Denom:         "stakestakedtovalidator1",
+		Denom:         "synthstakestakedtovalidator1",
 		Duration:      time.Second,
 	})
 	suite.Require().Equal(accum.String(), "10")
 	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 		LockQueryType: types.ByDuration,
-		Denom:         "stakestakedtovalidator2",
+		Denom:         "synthstakestakedtovalidator2",
 		Duration:      time.Second,
 	})
 	suite.Require().Equal(accum.String(), "10")

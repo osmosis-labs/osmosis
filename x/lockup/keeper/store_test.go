@@ -17,8 +17,7 @@ func (suite *KeeperTestSuite) TestLockReferencesManagement() {
 	lockIDs2 := suite.app.LockupKeeper.GetLockRefs(suite.ctx, key2)
 	suite.Require().Equal(len(lockIDs2), 3)
 
-	err := suite.app.LockupKeeper.DeleteLockRefByKey(suite.ctx, key2, 1)
-	suite.Require().NoError(err)
+	suite.app.LockupKeeper.DeleteLockRefByKey(suite.ctx, key2, 1)
 	lockIDs2 = suite.app.LockupKeeper.GetLockRefs(suite.ctx, key2)
 	suite.Require().Equal(len(lockIDs2), 2)
 }

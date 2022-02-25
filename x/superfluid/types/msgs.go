@@ -8,9 +8,11 @@ import (
 
 // constants
 const (
-	TypeMsgSuperfluidDelegate   = "superfluid_delegate"
-	TypeMsgSuperfluidUndelegate = "superfluid_undelegate"
-	TypeMsgSuperfluidRedelegate = "superfluid_redelegate"
+	TypeMsgSuperfluidDelegate        = "superfluid_delegate"
+	TypeMsgSuperfluidUndelegate      = "superfluid_undelegate"
+	TypeMsgSuperfluidRedelegate      = "superfluid_redelegate"
+	TypeMsgSuperfluidUnbondLock      = "superfluid_unbond_underlying_lock"
+	TypeMsgLockAndSuperfluidDelegate = "lock_and_superfluid_delegate"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
@@ -107,3 +109,69 @@ func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 // 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 // 	return []sdk.AccAddress{sender}
 // }
+
+var _ sdk.Msg = &MsgSuperfluidUnbondLock{}
+
+// MsgSuperfluidUnbondLock creates a message to unbond a lock underlying a superfluid undelegation position.
+func NewMsgSuperfluidUnbondLock(sender sdk.AccAddress, lockID uint64) *MsgSuperfluidUnbondLock {
+	return &MsgSuperfluidUnbondLock{
+		Sender: sender.String(),
+		LockId: lockID,
+	}
+}
+
+func (m MsgSuperfluidUnbondLock) Route() string { return RouterKey }
+func (m MsgSuperfluidUnbondLock) Type() string {
+	return TypeMsgSuperfluidUnbondLock
+}
+func (m MsgSuperfluidUnbondLock) ValidateBasic() error {
+	if m.Sender == "" {
+		return fmt.Errorf("sender should not be an empty address")
+	}
+	if m.LockId == 0 {
+		return fmt.Errorf("lockID should be set")
+	}
+	return nil
+}
+func (m MsgSuperfluidUnbondLock) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgSuperfluidUnbondLock) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgLockAndSuperfluidDelegate{}
+
+// NewMsgLockAndSuperfluidDelegate creates a message to create a lockup lock and superfluid delegation
+func NewMsgLockAndSuperfluidDelegate(sender sdk.AccAddress, coins sdk.Coins, valAddr sdk.ValAddress) *MsgLockAndSuperfluidDelegate {
+	return &MsgLockAndSuperfluidDelegate{
+		Sender:  sender.String(),
+		Coins:   coins,
+		ValAddr: valAddr.String(),
+	}
+}
+
+func (m MsgLockAndSuperfluidDelegate) Route() string { return RouterKey }
+func (m MsgLockAndSuperfluidDelegate) Type() string  { return TypeMsgLockAndSuperfluidDelegate }
+func (m MsgLockAndSuperfluidDelegate) ValidateBasic() error {
+	if m.Sender == "" {
+		return fmt.Errorf("sender should not be an empty address")
+	}
+
+	if m.Coins.Len() != 1 {
+		return ErrMultipleCoinsLockupNotSupported
+	}
+
+	if m.ValAddr == "" {
+		return fmt.Errorf("ValAddr should not be empty")
+	}
+	return nil
+}
+func (m MsgLockAndSuperfluidDelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+func (m MsgLockAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}

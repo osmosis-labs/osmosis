@@ -29,6 +29,22 @@ func (p SyntheticLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
 }
 
+// OwnerAddress returns locks owner address
+func (p PeriodLock) OwnerAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
+	if len(p.Coins) != 1 {
+		return sdk.Coin{}, fmt.Errorf("PeriodLock %d has no single coin: %s", p.ID, p.Coins)
+	}
+	return p.Coins[0], nil
+}
+
 func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	sum := sdk.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
@@ -44,11 +60,15 @@ func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 
 // quick fix for getting native denom from synthetic denom
 func NativeDenom(denom string) string {
-	if strings.Contains(denom, "superbonding") {
-		return strings.Split(denom, "superbonding")[0]
+	if strings.Contains(denom, "/superbonding") {
+		return strings.Split(denom, "/superbonding")[0]
 	}
-	if strings.Contains(denom, "superunbonding") {
-		return strings.Split(denom, "superunbonding")[0]
+	if strings.Contains(denom, "/superunbonding") {
+		return strings.Split(denom, "/superunbonding")[0]
 	}
 	return denom
+}
+
+func IsSyntheticDenom(denom string) bool {
+	return NativeDenom(denom) != denom
 }

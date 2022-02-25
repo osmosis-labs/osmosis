@@ -58,11 +58,23 @@ message QueryCondition {
 }
 
 // SyntheticLock is a single unit of synthetic lockup
+// TODO: Change this to have
+// * underlying_lock_id
+// * synthetic_coin
+// * end_time
+// * duration
+// * owner
+// We then index synthetic locks by the denom, just like we do with normal
+// locks. Ideally we even get an interface, so we can re-use that same logic.
+// I currently have no idea how reward distribution is supposed to be working...
+// EVENTUALLY
+// we make a "constrained_coin" field, which is what the current "coins" field
+// is. Constrained coin field can be a #post-v7 feature, since we aren't
+// allowing partial unlocks of synthetic lockups.
 message SyntheticLock {
   // underlying native lockup id for this synthetic lockup
   uint64 underlying_lock_id = 1;
-  // synthetic suffix comes after native denom - used for querying
-  string suffix = 2;
+  string synth_denom = 2;
   // used for unbonding synthetic lockups, for active synthetic lockups, this
   // value is set to uninitialized value
   google.protobuf.Timestamp end_time = 3 [
@@ -76,10 +88,4 @@ message SyntheticLock {
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
-  // The coins from the underlying lock ID that are synthetically locked
-  repeated cosmos.base.v1beta1.Coin coins = 5 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  string owner = 6 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 }

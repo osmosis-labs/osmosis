@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestAccountLockedCoins() {
 	// check = unlockTime - 1s
 	res, err = suite.app.LockupKeeper.AccountLockedCoins(sdk.WrapSDKContext(suite.ctx), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
+	suite.Require().Equal(coins, res.Coins)
 
 	// check after 1 second = unlockTime
 	now := suite.ctx.BlockTime()

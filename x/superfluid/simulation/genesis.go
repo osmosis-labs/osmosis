@@ -3,7 +3,6 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -14,12 +13,10 @@ import (
 func RandomizedGenState(simState *module.SimulationState) {
 	superfluidGenesis := &types.GenesisState{
 		Params: types.Params{
-			RefreshEpochIdentifier: "second",
-			MinimumRiskFactor:      sdk.NewDecWithPrec(5, 2), // 5%
-			UnbondingDuration:      time.Second * 10,
+			MinimumRiskFactor: sdk.NewDecWithPrec(5, 2), // 5%
 		},
-		SuperfluidAssets: []types.SuperfluidAsset{},
-		TwapPriceRecords: []types.EpochOsmoEquivalentTWAP{},
+		SuperfluidAssets:          []types.SuperfluidAsset{},
+		OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplierRecord{},
 	}
 
 	bz, err := json.MarshalIndent(&superfluidGenesis.Params, "", " ")
