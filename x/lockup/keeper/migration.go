@@ -126,8 +126,8 @@ func MergeLockupsForSimilarDurations(
 
 			// don't call hooks, tokens are just moved from a lock to another
 		}
-		numLocksNormalized := len(locksToNormalize)
-		ctx.Logger().Info("normalized %d locks. This involved creating %d new locks.",
-			numLocksNormalized, numLocksCreated)
+		// numLocksNormalized := len(locksToNormalize)
+		// ctx.Logger().Info("normalized %d locks. This involved creating %d new locks.",
+		// numLocksNormalized, numLocksCreated)
 	}
 }
