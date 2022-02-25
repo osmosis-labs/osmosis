@@ -45,6 +45,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesis := testGenesis
 	pool_incentives.InitGenesis(ctx, *app.PoolIncentivesKeeper, &genesis)
+	assert.Equal(t, app.PoolIncentivesKeeper.GetDistrInfo(ctx), *testGenesis.DistrInfo)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
@@ -53,6 +54,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := pool_incentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
+
 	})
 }
 
