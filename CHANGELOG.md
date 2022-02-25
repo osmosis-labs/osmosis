@@ -51,7 +51,7 @@ The large features include:
 * Local mempool filters to charge higher gas for arbitrage txs
 * Allow partial unlocking of non-superfluid'd locks
 
-Upgrade instructions for node operators can be found [here](https://github.com/osmosis-labs/osmosis/blob/v5.x/networks/osmosis-1/upgrades/v5/guide.md)
+Upgrade instructions for node operators can be found [here](https://github.com/osmosis-labs/osmosis/blob/main/networks/osmosis-1/upgrades/v7/guide.md)
 
 The v7 release introduces Superfluid Staking! This allows governance-approved LP shares to be staked to help secure the network.
 
