@@ -35,13 +35,7 @@ If you choose to use cosmovisor, please continue with these instructions:
 To install Cosmovisor:
 
 ```sh
-cd $HOME
-git clone https://github.com/cosmos/cosmos-sdk
-cd cosmos-sdk
-git checkout v0.44.0
-make cosmovisor
-cp cosmovisor/cosmovisor $GOPATH/bin/cosmovisor
-cd $HOME
+go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v1.0.0
 ```
 
 After this, you must make the necessary folders for cosmosvisor in your daemon home directory (~/.osmosisd).
