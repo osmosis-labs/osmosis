@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -177,6 +178,7 @@ func (k Keeper) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *t
 	res := types.SuperfluidUndelegationsByDelegatorResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
 		TotalUndelegatedCoins:       sdk.NewCoins(),
+		SyntheticLocks:              []lockuptypes.SyntheticLock{},
 	}
 
 	syntheticLocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
@@ -204,6 +206,7 @@ func (k Keeper) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *t
 				DelegationAmount: lockedCoin,
 			},
 		)
+		res.SyntheticLocks = append(res.SyntheticLocks, syntheticLock)
 		res.TotalUndelegatedCoins = res.TotalUndelegatedCoins.Add(lockedCoin)
 	}
 	return &res, nil
