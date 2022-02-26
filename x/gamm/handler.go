@@ -9,7 +9,7 @@ import (
 )
 
 // NewHandler returns a handler for "gamm" type messages.
-func NewHandler(k keeper.Keeper) sdk.Handler {
+func NewHandler(k *keeper.Keeper) sdk.Handler {
 	msgServer := keeper.NewMsgServerImpl(k)
 	msgBalancerServer := keeper.NewBalancerMsgServerImpl(k)
 
