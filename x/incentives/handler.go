@@ -10,7 +10,7 @@ import (
 )
 
 // NewHandler returns msg handler for this module
-func NewHandler(k keeper.Keeper) sdk.Handler {
+func NewHandler(k *keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		msgServer := keeper.NewMsgServerImpl(k)
