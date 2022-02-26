@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "osmosis/superfluid/superfluid.proto";
 import "osmosis/superfluid/params.proto";
+import "osmosis/lockup/lock.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
@@ -200,6 +201,8 @@ message SuperfluidUndelegationsByDelegatorResponse {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  repeated osmosis.lockup.SyntheticLock synthetic_locks = 3
+      [ (gogoproto.nullable) = false ];
 }
 
 message SuperfluidDelegationsByValidatorDenomRequest {
