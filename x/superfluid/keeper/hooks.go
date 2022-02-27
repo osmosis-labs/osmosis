@@ -83,9 +83,10 @@ func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, 
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
-	fmt.Printf("slash factor %s, effective, %s", slashFactor, effectiveSlashFactor)
+	fmt.Printf("slash factor %s, effective, %s\n", slashFactor, effectiveSlashFactor)
 	if slashFactor == sdk.ZeroDec() {
 		return
 	}
+	fmt.Printf("We skipped zero check??? bigint %s\n", slashFactor.BigInt().String())
 	h.k.SlashLockupsForValidatorSlash(ctx, valAddr, infractionHeight, slashFactor)
 }
