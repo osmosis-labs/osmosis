@@ -107,7 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Minor improvements & Bug Fixes
 
 * [#1022](https://github.com/osmosis-labs/osmosis/pull/1022) upgrade iavl to v0.17.3-osmo-v4 - fix state export at an old height
-* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks 
+* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks
 * [#984](https://github.com/osmosis-labs/osmosis/pull/984) Add wasm support to Dockerfile
 
 ## [v7.0.2 - Carbon](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.2)
@@ -285,7 +285,7 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to Cosmos SDK v0.44.x
   * Numerous large updates, such as making module accounts be 32 bytes, Rosetta support, etc.
   * Adds & integrates the [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
-   See: [SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) For more details
+    See: [SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) For more details
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to IBC-v2
 * [\#560](https://github.com/osmosis-labs/osmosis/pull/560) Implements Osmosis [prop32](https://www.mintscan.io/osmosis/proposals/32) -- clawing back the final 20% of unclaimed osmo and ion airdrop.
 * [\#394](https://github.com/osmosis-labs/osmosis/pull/394) Allow whitelisted tx fee tokens based on conversion rate to OSMO
