@@ -252,9 +252,9 @@ func orderBeginBlockers() []string {
 		authz.ModuleName,
 		paramstypes.ModuleName, vestingtypes.ModuleName,
 		gammtypes.ModuleName, incentivestypes.ModuleName, lockuptypes.ModuleName, claimtypes.ModuleName,
-		poolincentivestypes.ModuleName, 
+		poolincentivestypes.ModuleName,
 		// superfluid must come after distribution and epochs
-		superfluidtypes.ModuleName, 
+		superfluidtypes.ModuleName,
 		bech32ibctypes.ModuleName, txfeestypes.ModuleName,
 		wasm.ModuleName,
 	}
