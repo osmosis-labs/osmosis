@@ -20,10 +20,10 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	github.com/tendermint/tendermint v0.34.15
+	github.com/tendermint/tendermint v0.34.16
 	github.com/tendermint/tm-db v0.6.6
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
-	google.golang.org/grpc v1.43.0
+	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -67,7 +67,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/gtank/merlin v0.1.1 // indirect
@@ -99,7 +99,7 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
-	github.com/rs/cors v1.8.0 // indirect
+	github.com/rs/cors v1.8.2 // indirect
 	github.com/rs/zerolog v1.26.0 // indirect
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/spf13/afero v1.6.0 // indirect
@@ -115,7 +115,7 @@ require (
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20211005001312-d4b1ae081e3b // indirect
+	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.7 // indirect
@@ -126,7 +126,7 @@ require (
 )
 
 replace (
-    // branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
+	// branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220221115656-75545ea8cb2d
