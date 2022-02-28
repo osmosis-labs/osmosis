@@ -83,7 +83,7 @@ func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, 
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
-	if slashFactor == sdk.ZeroDec() {
+	if slashFactor.IsZero() {
 		return
 	}
 	h.k.SlashLockupsForValidatorSlash(ctx, valAddr, infractionHeight, slashFactor)
