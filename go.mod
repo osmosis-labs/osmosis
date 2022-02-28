@@ -91,7 +91,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible 
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -130,7 +130,7 @@ replace (
 	// branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220221115656-75545ea8cb2d
+	github.com/cosmos/cosmos-sdk => github.com/Thunnini/cosmos-sdk v0.45.1-0.20220228170026-aeb780bc9121
 
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v3
 	// Use osmosis fork of ibc-go

@@ -95,6 +95,8 @@ github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7/go.mod h1:z4/
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
+github.com/Thunnini/cosmos-sdk v0.45.1-0.20220228170026-aeb780bc9121 h1:NSUptEGmG/+bOZCZ6qRqvD0lnV902o0VISv6ssekS+w=
+github.com/Thunnini/cosmos-sdk v0.45.1-0.20220228170026-aeb780bc9121/go.mod h1:HsD/JxengDcevHFRA+wlWgeM78Og3ZwYM+cya3yOa7c=
 github.com/VictoriaMetrics/fastcache v1.5.7/go.mod h1:ptDBkNMQI4RtmVo8VS/XwRY6RoTu1dAWCbrk+6WsEM8=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
@@ -777,8 +779,6 @@ github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnh
 github.com/ory/dockertest/v3 v3.6.2/go.mod h1:EFLcVUOl8qCwp9NyDAcCDtq/QviLtYswW/VbWzUnTNE=
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc2 h1:7xy1pLtNiF2KaRSkolayZf4z3OfCJsO3eqBtEAXg2VA=
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc2/go.mod h1:0JCaioRNOVUiw7c3MngmKACnumaQ2sjPenXCnwxCttI=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220221115656-75545ea8cb2d h1:Y0JpKFb4n04ViTMUGm7SO4OobWKr6dBB/l3cvuBe6EY=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220221115656-75545ea8cb2d/go.mod h1:HsD/JxengDcevHFRA+wlWgeM78Og3ZwYM+cya3yOa7c=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v3 h1:q2Qv3+DK52w5b68I96VApHI05jBu7HeQK/YDttKh/jY=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v3/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo h1:XyYyDTjPIu7qX2nhQp9mboj7Pa9FEnjg1RXw73Ctv5U=
