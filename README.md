@@ -12,7 +12,7 @@ This system spec has been tested by many users and validators and found to be co
 
 * Quad Core or larger AMD or Intel (amd64) CPU
   * ARM CPUs like the Apple M1 are not supported at this time.
-* 64GB RAM
+* 64GB RAM (A lot can be in swap)
 * 1TB NVMe Storage
 * 100MBPS bidirectional internet connection
 
