@@ -51,10 +51,6 @@ import (
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	// Authz: Authorization for accounts to perform actions on behalf of other accounts.
-
-	// Bank: allows users to transfer tokens
-
 	// Capability: allows developers to atomically define what a module can and cannot do
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
@@ -64,22 +60,15 @@ import (
 	// Evidence handling for double signing, misbehaviour, etc.
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	// Governance: Allows stakeholders to make decisions concering a Cosmos-SDK blockchain's economy and development
 
 	// Params: Parameters that are always available
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	// Slashing:
-
-	// Staking: Allows the Tendermint validator set to be chosen based on bonded stake.
 
 	// Upgrade:  Software upgrades handling and coordination.
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-
-	// IBC: Inter-blockchain communication
 
 	// Osmosis application prarmeters
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
@@ -90,28 +79,11 @@ import (
 	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 
-	// Modules that live in the Osmosis repository and are specific to Osmosis
-
-	// Epochs: gives Osmosis a sense of "clock time" so that events can be based on days instead of "number of blocks"
-
-	// Generalized Automated Market Maker
-
-	// Incentives: Allows Osmosis and foriegn chain communities to incentivize users to provide liquidity
-
-	// Lockup: allows tokens to be locked (made non-transferrable)
-
-	// Mint: Our modified version of github.com/cosmos/cosmos-sdk/x/mint
-
-	// Pool incentives:
-
 	// Superfluid: Allows users to stake gamm (bonded liquidity)
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
-	// Txfees: Allows Osmosis to charge transaction fees without harming IBC user experience
-
 	// Wasm: Allows Osmosis to interact with web assembly smart contracts
 	"github.com/CosmWasm/wasmd/x/wasm"
-	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses
 )
 
 const appName = "OsmosisApp"
