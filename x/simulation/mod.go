@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -37,7 +36,7 @@ func GenAndDeliverTxWithRandFees(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	txGen client.TxConfig,
-	msg legacytx.LegacyMsg,
+	//	msg legacytx.LegacyMsg,
 	coinsSpentInMsg sdk.Coins,
 	ctx sdk.Context,
 	simAccount simtypes.Account,
@@ -68,7 +67,7 @@ func GenAndDeliverTxWithRandFees(
 func GenAndDeliverTx(
 	app *baseapp.BaseApp,
 	txGen client.TxConfig,
-	msg legacytx.LegacyMsg,
+	//	msg legacytx.LegacyMsg,
 	fees sdk.Coins,
 	ctx sdk.Context,
 	simAccount simtypes.Account,

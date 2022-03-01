@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.0-alpha2.0.20220228204804-363308146302
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
-	github.com/cosmos/ibc-go/v3 v3.0.0-rc0
+	github.com/cosmos/ibc-go/v3 v3.0.0-alpha1.0.20220228135959-6d6888b9c5cf
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
@@ -133,13 +133,11 @@ require (
 
 replace (
 	// branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2
-
+	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.21.1-0.20220228173605-39d37b2fcdba
+github.com/osmosis-labs/bech32-ibc => github.com/notional-labs/bech32-ibc v0.0.0-20220301043803-338c3f41138d
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v3
 	// Use osmosis fork of ibc-go
-	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
+	github.com/cosmos/ibc-go/v3 => github.com/notional-labs/ibc-go/v3 v3.0.0-20220301031023-1e6d80f2a3bd
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	// use grpc compatible with cosmos protobufs
-	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

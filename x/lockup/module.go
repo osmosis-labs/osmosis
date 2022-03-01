@@ -13,10 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/client/rest"
+
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/simulation"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -72,11 +71,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 	return genState.Validate()
-}
-
-// RegisterRESTRoutes registers the capability module's REST service handlers.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
