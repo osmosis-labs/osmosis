@@ -16,7 +16,7 @@ This system spec has been tested by many users and validators and found to be co
 * 1TB NVMe Storage
 * 100MBPS bidirectional internet connection
 
-You can run Osmosis on lower-spec hardware, but you may find that it is not highly performant or prone to crashing.
+You can run Osmosis on lower-spec hardware for each component, but you may find that it is not highly performant or prone to crashing.
 
 ## Documentation
 For the most up to date documentation please visit [docs.osmosis.zone](https://docs.osmosis.zone/)
