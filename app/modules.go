@@ -69,13 +69,13 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	// IBC Transfer: Defines the "transfer" IBC port
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
+	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 
 	// IBC: Inter-blockchain communication
-	ibc "github.com/cosmos/ibc-go/v2/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	ibc "github.com/cosmos/ibc-go/v3/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
+	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 
 	// Osmosis application prarmeters
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"

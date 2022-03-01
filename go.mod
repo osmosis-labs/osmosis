@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/CosmWasm/wasmd v0.23.0
-	github.com/cosmos/cosmos-sdk v0.45.1
+	github.com/cosmos/cosmos-sdk v0.46.0-alpha2.0.20220228204804-363308146302
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ibc-go/v2 v2.0.2
@@ -23,9 +23,14 @@ require (
 	github.com/tendermint/tendermint v0.34.15
 	github.com/tendermint/tm-db v0.6.6
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
-	google.golang.org/grpc v1.43.0
+	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/opencontainers/image-spec v1.0.2 // indirect
+	github.com/opencontainers/runc v1.0.3 // indirect
 )
 
 require (
@@ -126,7 +131,7 @@ require (
 )
 
 replace (
-    // branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
+	// branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220221115656-75545ea8cb2d
