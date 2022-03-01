@@ -128,11 +128,6 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 	return gaugeID, gauge, coins, startTime2
 }
 
-// TODO: Delete all usages of this method
-func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (uint64, *types.Gauge, sdk.Coins, time.Time) {
-	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration)
-}
-
 func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coins, coinsPerLock sdk.Coins,
 	lockDuration time.Duration) []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, 0, numLocks)
@@ -147,15 +142,4 @@ func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coi
 		addrs = append(addrs, addr)
 	}
 	return addrs
-}
-
-func (suite *KeeperTestSuite) SetupLockAndGauge(isPerpetual bool) (sdk.AccAddress, uint64, sdk.Coins, time.Time) {
-	// create a gauge and locks
-	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-	suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
-
-	// create gauge
-	gaugeID, _, gaugeCoins, startTime := suite.SetupNewGauge(isPerpetual, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
-
-	return lockOwner, gaugeID, gaugeCoins, startTime
 }
