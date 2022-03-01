@@ -11,6 +11,7 @@ Whereas most Cosmos zones have focused the  ir incentive scheme on the delegator
 This system spec has been tested by many users and validators and found to be comfortable:
 
 * Quad Core or larger AMD or Intel (amd64) CPU
+  * ARM CPUs like the Apple M1 are not supported at this time.
 * 64GB RAM
 * 1TB NVMe Storage
 * 100MBPS bidirectional internet connection
