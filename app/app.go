@@ -60,7 +60,6 @@ import (
 	// Evidence handling for double signing, misbehaviour, etc.
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-
 	// Params: Parameters that are always available
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
