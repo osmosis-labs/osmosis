@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-const totalSuperfluidDelegationInvariantName = "total-intermediary-account-invariant-name"
+const totalSuperfluidDelegationInvariantName = "total-superfluid-delegation-invariant-name"
 
 // RegisterInvariants registers all governance invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
