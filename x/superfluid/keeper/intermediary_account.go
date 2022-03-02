@@ -113,11 +113,11 @@ func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, address sdk.AccAddres
 	prefixStore.Delete(address)
 }
 
-func (k Keeper) SetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64, acc types.SuperfluidIntermediaryAccount) {
+func (k Keeper) SetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64, acc sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
-	prefixStore.Set(sdk.Uint64ToBigEndian(lockId), acc.GetAccAddress())
+	prefixStore.Set(sdk.Uint64ToBigEndian(lockId), acc)
 }
 
 func (k Keeper) GetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64) sdk.AccAddress {
@@ -125,6 +125,22 @@ func (k Keeper) GetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId u
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
 	return prefixStore.Get(sdk.Uint64ToBigEndian(lockId))
+}
+
+func (k Keeper) GetAllLockIdIntermediaryAccountConnections(ctx sdk.Context) []types.LockIdIntermediaryAccountConnection {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
+
+	iterator := prefixStore.Iterator(nil, nil)
+
+	connections := []types.LockIdIntermediaryAccountConnection{}
+	for ; iterator.Valid(); iterator.Next() {
+		connections = append(connections, types.LockIdIntermediaryAccountConnection{
+			LockId:              sdk.BigEndianToUint64(iterator.Key()),
+			IntermediaryAccount: sdk.AccAddress(iterator.Value()).String(),
+		})
+	}
+	return connections
 }
 
 // Returns Superfluid Intermediate Account and a bool if found / not found

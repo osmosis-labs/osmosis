@@ -1,0 +1,72 @@
+package keeper
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+)
+
+const totalSuperfluidDelegationInvariantName = "total-intermediary-account-invariant-name"
+
+// RegisterInvariants registers all governance invariants
+func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
+	ir.RegisterRoute(types.ModuleName, totalSuperfluidDelegationInvariantName, TotalSuperfluidDelegationInvariant(keeper))
+}
+
+// AllInvariants runs all invariants of the gamm module
+func AllInvariants(keeper Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		return TotalSuperfluidDelegationInvariant(keeper)(ctx)
+	}
+}
+
+// TotalSuperfluidDelegationInvariant checks the sum of intermediary account delegation is same as sum of individual lockup delegation
+func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		accs := keeper.GetAllIntermediaryAccounts(ctx)
+		totalSuperfluidDelegationTokens := sdk.ZeroDec()
+
+		for _, acc := range accs {
+			valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
+			if err != nil {
+				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
+					"\tinvalid validator address exists"), true
+			}
+			validator, found := keeper.sk.GetValidator(ctx, valAddr)
+			if !found {
+				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
+					"\tvalidator does not exists for specified validator address on intermediary account"), true
+			}
+			delegation, found := keeper.sk.GetDelegation(ctx, acc.GetAccAddress(), valAddr)
+			if found {
+				tokens := validator.TokensFromShares(delegation.Shares)
+				totalSuperfluidDelegationTokens = totalSuperfluidDelegationTokens.Add(tokens)
+			}
+		}
+
+		totalExpectedSuperfluidAmount := sdk.ZeroInt()
+		connections := keeper.GetAllLockIdIntermediaryAccountConnections(ctx)
+		for _, connection := range connections {
+			lockId := connection.LockId
+			lock, err := keeper.lk.GetLockByID(ctx, lockId)
+			if err != nil || lock == nil {
+				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
+					"\tinvalid superfluid lock id exists with no actual lockup"), true
+			}
+			if len(lock.Coins) != 1 {
+				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
+					"\tonly single coin lockup is eligible for superfluid staking"), true
+			}
+			amount := keeper.GetSuperfluidOSMOTokens(ctx, lock.Coins[0].Denom, lock.Coins[0].Amount)
+			totalExpectedSuperfluidAmount = totalExpectedSuperfluidAmount.Add(amount)
+		}
+
+		if !totalExpectedSuperfluidAmount.ToDec().Equal(totalSuperfluidDelegationTokens) {
+			return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
+				"\ttotal superfluid intermediary account delegation amount does not match total sum of lockup delegations\n"), true
+		}
+
+		return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
+			"\ttotal superfluid intermediary account delegation amount matches total sum of lockup delegations\n"), false
+	}
+}
