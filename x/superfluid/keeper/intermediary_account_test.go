@@ -51,11 +51,15 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
 	acc := types.NewSuperfluidIntermediaryAccount("gamm/pool/1", valAddr.String(), 1)
-	suite.app.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(suite.ctx, 1, acc)
+	suite.app.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(suite.ctx, 1, acc.GetAccAddress())
 
 	// get account
 	addr = suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, 1)
 	suite.Require().Equal(addr.String(), acc.GetAccAddress().String())
+
+	// check get all
+	conns := suite.app.SuperfluidKeeper.GetAllLockIdIntermediaryAccountConnections(suite.ctx)
+	suite.Require().Len(conns, 1)
 
 	// delete account
 	suite.app.SuperfluidKeeper.DeleteLockIdIntermediaryAccountConnection(suite.ctx, 1)
@@ -63,4 +67,5 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	// get account
 	addr = suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, 1)
 	suite.Require().Equal(addr.String(), "")
+
 }

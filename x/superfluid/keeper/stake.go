@@ -177,7 +177,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 	// create connection record between lock id and intermediary account
-	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
+	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc.GetAccAddress())
 
 	// Register a synthetic lockup for superfluid staking
 	err = k.createSyntheticLockup(ctx, lockID, acc, bondedStatus)
