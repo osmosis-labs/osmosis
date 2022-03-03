@@ -61,6 +61,10 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
+			// TODO: utilize returned denoms
+			denoms := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			_ = denoms
+
 			locks := []lockuptypes.PeriodLock{}
 			slashFactor := sdk.NewDecWithPrec(5, 2)
 

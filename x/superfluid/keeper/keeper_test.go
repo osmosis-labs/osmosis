@@ -157,6 +157,61 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 	return valAddrs
 }
 
+func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) []string {
+	suite.app.GAMMKeeper.SetParams(suite.ctx, gammtypes.Params{
+		PoolCreationFee: sdk.Coins{},
+	})
+
+	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+	denoms := []string{}
+
+	for index, multiplier := range multipliers {
+		token := fmt.Sprintf("token%d", index)
+
+		params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
+		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).Quo(sdk.OneDec().Sub(params.MinimumRiskFactor)).RoundInt()
+
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, sdk.NewCoins(
+			sdk.NewCoin("uosmo", uosmoAmount.Mul(sdk.NewInt(10))),
+			sdk.NewInt64Coin(token, 100000),
+		))
+		suite.NoError(err)
+
+		var (
+			defaultFutureGovernor = ""
+
+			// pool assets
+			defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("uosmo", uosmoAmount),
+			}
+			defaultBarAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
+			}
+			poolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+		)
+
+		poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.NewDecWithPrec(1, 2),
+		}, poolAssets, defaultFutureGovernor)
+		suite.Require().NoError(err)
+
+		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+		suite.Require().NoError(err)
+
+		denom := pool.GetTotalShares().Denom
+		suite.app.SuperfluidKeeper.AddNewSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
+			Denom:     denom,
+			AssetType: types.SuperfluidAssetTypeLPShare,
+		})
+
+		denoms = append(denoms, denom)
+	}
+	return denoms
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
