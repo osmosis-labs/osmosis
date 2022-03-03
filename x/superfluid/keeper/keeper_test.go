@@ -7,22 +7,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
 type KeeperTestSuite struct {
@@ -31,6 +31,19 @@ type KeeperTestSuite struct {
 	ctx         sdk.Context
 	queryClient types.QueryClient
 	app         *app.OsmosisApp
+}
+
+func (suite *KeeperTestSuite) GetSuite() *suite.Suite {
+	return &suite.Suite
+}
+func (suite *KeeperTestSuite) GetCtx() sdk.Context {
+	return suite.ctx
+}
+func (suite *KeeperTestSuite) GetApp() *app.OsmosisApp {
+	return suite.app
+}
+func (suite *KeeperTestSuite) SetCtx(ctx sdk.Context) {
+	suite.ctx = ctx
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -53,31 +66,41 @@ func (suite *KeeperTestSuite) SetupTest() {
 		time.Hour * 7,
 		unbondingDuration,
 	})
+
+	// TODO: Revisit if this is needed, it was added due to another bug in testing that is now fixed.
+	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
+	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochtypes.EpochInfo{
+		Identifier:              epochIdentifier,
+		StartTime:               startTime,
+		Duration:                time.Hour,
+		CurrentEpochStartTime:   startTime,
+		CurrentEpochStartHeight: 1,
+		CurrentEpoch:            1,
+		EpochCountingStarted:    true,
+	})
+
+	mintParams := suite.app.MintKeeper.GetParams(suite.ctx)
+	mintParams.EpochIdentifier = epochIdentifier
+	mintParams.DistributionProportions = minttypes.DistributionProportions{
+		Staking:          sdk.OneDec(),
+		PoolIncentives:   sdk.ZeroDec(),
+		DeveloperRewards: sdk.ZeroDec(),
+		CommunityPool:    sdk.ZeroDec(),
+	}
+	suite.app.MintKeeper.SetParams(suite.ctx, mintParams)
+	suite.app.MintKeeper.SetMinter(suite.ctx, minttypes.NewMinter(sdk.NewDec(1_000_000)))
+
+	distributionParams := suite.app.DistrKeeper.GetParams(suite.ctx)
+	distributionParams.BaseProposerReward = sdk.ZeroDec()
+	distributionParams.BonusProposerReward = sdk.ZeroDec()
+	distributionParams.CommunityTax = sdk.ZeroDec()
+	suite.app.DistrKeeper.SetParams(suite.ctx, distributionParams)
 }
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {
 	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
 	poolId := suite.createGammPool([]string{bondDenom, "foo"})
 	suite.Require().Equal(poolId, uint64(1))
-}
-
-func (suite *KeeperTestSuite) BeginNewBlock(executeNextEpoch bool) {
-	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
-	epoch := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, epochIdentifier)
-	newBlockTime := suite.ctx.BlockTime().Add(5 * time.Second)
-	if executeNextEpoch {
-		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
-		newBlockTime = endEpochTime.Add(time.Second)
-	}
-	header := tmproto.Header{Height: suite.ctx.BlockHeight() + 1, Time: newBlockTime}
-	reqBeginBlock := abci.RequestBeginBlock{Header: header}
-	suite.app.BeginBlocker(suite.ctx, reqBeginBlock)
-
-}
-
-func (suite *KeeperTestSuite) EndBlock() {
-	reqEndBlock := abci.RequestEndBlock{Height: suite.ctx.BlockHeight()}
-	suite.app.EndBlocker(suite.ctx, reqEndBlock)
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
@@ -125,28 +148,10 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 	return msgResponse.ID
 }
 
-func (suite *KeeperTestSuite) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
-	valPub := secp256k1.GenPrivKey().PubKey()
-	valAddr := sdk.ValAddress(valPub.Address())
-	bondDenom := suite.app.StakingKeeper.GetParams(suite.ctx).BondDenom
-	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
-
-	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sdk.AccAddress(valAddr), selfBond)
-	sh := teststaking.NewHelper(suite.T(), suite.ctx, *suite.app.StakingKeeper)
-	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
-	sh.Handle(msg, true)
-	val, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
-	suite.Require().True(found)
-	val = val.UpdateStatus(bondStatus)
-	suite.app.StakingKeeper.SetValidator(suite.ctx, val)
-
-	return valAddr
-}
-
 func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
 	valAddrs := []sdk.ValAddress{}
 	for _, status := range bondStatuses {
-		valAddr := suite.SetupValidator(status)
+		valAddr := apptesting.SetupValidator(suite, status)
 		valAddrs = append(valAddrs, valAddr)
 	}
 	return valAddrs
