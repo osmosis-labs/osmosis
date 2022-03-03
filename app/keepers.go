@@ -501,3 +501,32 @@ func (app *OsmosisApp) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino 
 
 	return paramsKeeper
 }
+
+func KVStoreKeys() []string {
+	return []string{
+		authtypes.StoreKey,
+		banktypes.StoreKey,
+		stakingtypes.StoreKey,
+		minttypes.StoreKey,
+		distrtypes.StoreKey,
+		slashingtypes.StoreKey,
+		govtypes.StoreKey,
+		paramstypes.StoreKey,
+		ibchost.StoreKey,
+		upgradetypes.StoreKey,
+		evidencetypes.StoreKey,
+		ibctransfertypes.StoreKey,
+		capabilitytypes.StoreKey,
+		gammtypes.StoreKey,
+		lockuptypes.StoreKey,
+		claimtypes.StoreKey,
+		incentivestypes.StoreKey,
+		epochstypes.StoreKey,
+		poolincentivestypes.StoreKey,
+		authzkeeper.StoreKey,
+		txfeestypes.StoreKey,
+		superfluidtypes.StoreKey,
+		bech32ibctypes.StoreKey,
+		wasm.StoreKey,
+	}
+}
