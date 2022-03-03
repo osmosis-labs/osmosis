@@ -33,7 +33,8 @@ func SetupValidator(suite SuiteI, bondStatus stakingtypes.BondStatus) sdk.ValAdd
 	bondDenom := suite.GetApp().StakingKeeper.GetParams(suite.GetCtx()).BondDenom
 	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
 
-	simapp.FundAccount(suite.GetApp().BankKeeper, suite.GetCtx(), sdk.AccAddress(valAddr), selfBond)
+	err := simapp.FundAccount(suite.GetApp().BankKeeper, suite.GetCtx(), sdk.AccAddress(valAddr), selfBond)
+	suite.GetSuite().Require().NoError(err)
 	sh := teststaking.NewHelper(suite.GetSuite().T(), suite.GetCtx(), *suite.GetApp().StakingKeeper)
 	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
 	sh.Handle(msg, true)
