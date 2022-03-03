@@ -27,8 +27,10 @@ var (
 	KeyTotalLiquidity = []byte{0x03}
 )
 
+const trim = "gamm/pool/"
+
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
-	numberStr := strings.TrimLeft(denom, "gamm/pool/")
+	numberStr := strings.TrimPrefix(denom, trim)
 	number, err := strconv.Atoi(numberStr)
 	if err != nil {
 		panic(err)
@@ -37,7 +39,7 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 }
 
 func ValidatePoolShareDenom(denom string) error {
-	numberStr := strings.TrimLeft(denom, "gamm/pool/")
+	numberStr := strings.TrimPrefix(denom, trim)
 	_, err := strconv.Atoi(numberStr)
 	if err != nil {
 		return err

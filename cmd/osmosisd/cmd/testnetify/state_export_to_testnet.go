@@ -7,7 +7,6 @@ import (
 
 var (
 	flagTestnetParams = "empty"
-	valConsBech32     = "osmovalcons"
 )
 
 // TODO: Add params for min num validators for consensus
@@ -44,8 +43,6 @@ func defaultTestnetParams() TestnetParams {
 	consensusPubkey := "2OpBuqaXvXQ+lSxAoT1S7Jfyr56KiakTzvuFiuJK+X4="
 	// mnemonic kitchen comic flower drip sick prize account cheese truth income weekend nominee segment punch call satisfy captain earth ethics wasp clump tunnel orchard advance
 	operatorPubkey := "osmopub1addwnpepq0wv95fxk32z90u42t3df2l5pdtngvg20rkalv5vt2d7n5q5ekk35d8hh20"
-	operatorValOper := "osmovaloper1qye772qje88p7ggtzrvl9nxvty6dkuusvpqhac"
-	operatorValOper += ""
 	return TestnetParams{
 		ValidatorConsensusPubkeys: []string{consensusPubkey},
 		ValidatorOperatorPubkeys:  []string{operatorPubkey},

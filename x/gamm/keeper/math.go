@@ -10,11 +10,7 @@ import (
 // TODO: Analyze choice here
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
-// Singletons
-var zero sdk.Dec = sdk.ZeroDec()
-var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
-var one sdk.Dec = sdk.OneDec()
-var two sdk.Dec = sdk.MustNewDecFromStr("2")
+
 
 // calcSpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.

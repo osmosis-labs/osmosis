@@ -59,7 +59,7 @@ func SetupValidator(suite SuiteI, bondStatus stakingtypes.BondStatus) sdk.ValAdd
 }
 
 func BeginNewBlock(suite SuiteI, executeNextEpoch bool) {
-	valAddr := []byte(":^) at this distribution workaround")
+	var valAddr []byte
 	validators := suite.GetApp().StakingKeeper.GetAllValidators(suite.GetCtx())
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()

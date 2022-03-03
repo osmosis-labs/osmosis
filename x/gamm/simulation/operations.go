@@ -70,19 +70,6 @@ func WeightedOperations(
 	}
 }
 
-func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) string {
-	choice := r.Int31n(4)
-	if choice == 0 { // No governor
-		return ""
-	} else if choice == 1 { // Single address governor
-		return addr.String()
-	} else if choice == 2 { // LP token governor
-		return "1d"
-	} else { // Other token governor
-		token := tokenList[r.Intn(len(tokenList))]
-		return token + ",1d"
-	}
-}
 
 func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
 	// selecting random number between [2, Min(coins.Len, 6)]

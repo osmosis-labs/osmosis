@@ -101,28 +101,6 @@ func queryAccountUnlockableCoins(ctx sdk.Context, req abci.RequestQuery, k Keepe
 	return res, nil
 }
 
-func queryAccountUnlockingCoins(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	var params types.AccountUnlockableCoinsRequest
-
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	owner, err := sdk.AccAddressFromBech32(params.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	coins := k.GetAccountUnlockingCoins(ctx, owner)
-
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return res, nil
-}
 
 func queryAccountLockedCoins(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.AccountLockedCoinsRequest

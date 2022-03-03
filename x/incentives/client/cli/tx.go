@@ -53,7 +53,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return err
 			}
 
-			startTime := time.Time{}
+			startTime := time.Time{} //nolint:ineffassign
 			timeStr, err := cmd.Flags().GetString(FlagStartTime)
 			if err != nil {
 				return err
@@ -65,7 +65,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 			} else if timeRFC, err := time.Parse(time.RFC3339, timeStr); err == nil { // RFC time
 				startTime = timeRFC
 			} else { // invalid input
-				return errors.New("Invalid start time format")
+				return errors.New("invalid start time format")
 			}
 
 			epochs, err := cmd.Flags().GetUint64(FlagEpochs)

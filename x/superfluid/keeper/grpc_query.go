@@ -114,10 +114,10 @@ func (k Keeper) SuperfluidDelegationAmount(goCtx context.Context, req *types.Sup
 	periodLocks := k.lk.GetAccountLockedLongerDurationDenomNotUnlockingOnly(ctx, delAddr, syntheticDenom, time.Second)
 
 	if len(periodLocks) == 0 {
-		return &types.SuperfluidDelegationAmountResponse{sdk.NewCoins()}, nil
+		return &types.SuperfluidDelegationAmountResponse{Amount: sdk.NewCoins()}, nil
 	}
 
-	return &types.SuperfluidDelegationAmountResponse{periodLocks[0].GetCoins()}, nil
+	return &types.SuperfluidDelegationAmountResponse{Amount: periodLocks[0].GetCoins()}, nil
 }
 
 // SuperfluidDelegationsByDelegator returns all the superfluid poistions for a specific delegator

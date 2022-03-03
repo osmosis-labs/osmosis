@@ -50,19 +50,6 @@ func syntheticLockTimeStoreKey(lockID uint64, synthDenom string, endTime time.Ti
 		[]byte(synthDenom))
 }
 
-// getLockRefs get lock IDs specified on the prefix and timestamp key
-func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, key)
-	defer iterator.Close()
-
-	lockIDs := []uint64{}
-	for ; iterator.Valid(); iterator.Next() {
-		lockID := sdk.BigEndianToUint64(iterator.Value())
-		lockIDs = append(lockIDs, lockID)
-	}
-	return lockIDs
-}
 
 // addLockRefByKey make a lockID iterable with the prefix `key`
 func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
