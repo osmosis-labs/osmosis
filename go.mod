@@ -126,7 +126,7 @@ require (
 )
 
 replace (
-    // branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
+	// branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220303025721-7f1c77addd36
@@ -138,6 +138,8 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// enable building wihh rocksdb
 	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.2.0
+
+	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint v0.34.14-starving-waiters
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
