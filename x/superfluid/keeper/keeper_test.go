@@ -27,6 +27,7 @@ import (
 
 type KeeperTestSuite struct {
 	suite.Suite
+	helper apptesting.KeeperTestHelper
 
 	ctx         sdk.Context
 	queryClient types.QueryClient
@@ -48,7 +49,12 @@ func (suite *KeeperTestSuite) SetCtx(ctx sdk.Context) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
-
+	suite.helper = apptesting.KeeperTestHelper{
+		Suite: suite.Suite,
+		App:   suite.app,
+		Ctx:   suite.ctx,
+	}
+	suite.Require()
 	startTime := time.Unix(1645580000, 0)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
 
@@ -151,7 +157,7 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
 	valAddrs := []sdk.ValAddress{}
 	for _, status := range bondStatuses {
-		valAddr := apptesting.SetupValidator(suite, status)
+		valAddr := suite.helper.SetupValidator(status)
 		valAddrs = append(valAddrs, valAddr)
 	}
 	return valAddrs

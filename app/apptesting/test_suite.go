@@ -19,70 +19,70 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// TODO: Consider an embedded struct here rather than an interface
-type SuiteI interface {
-	GetSuite() *suite.Suite
-	GetCtx() sdk.Context
-	SetCtx(sdk.Context)
-	GetApp() *app.OsmosisApp
+type KeeperTestHelper struct {
+	Suite suite.Suite
+
+	App *app.OsmosisApp
+	Ctx sdk.Context
 }
 
-func SetupValidator(suite SuiteI, bondStatus stakingtypes.BondStatus) sdk.ValAddress {
+func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
-	bondDenom := suite.GetApp().StakingKeeper.GetParams(suite.GetCtx()).BondDenom
+	bondDenom := keeperTestHelper.App.StakingKeeper.GetParams(keeperTestHelper.Ctx).BondDenom
 	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
 
-	err := simapp.FundAccount(suite.GetApp().BankKeeper, suite.GetCtx(), sdk.AccAddress(valAddr), selfBond)
-	suite.GetSuite().Require().NoError(err)
-	sh := teststaking.NewHelper(suite.GetSuite().T(), suite.GetCtx(), *suite.GetApp().StakingKeeper)
+	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, sdk.AccAddress(valAddr), selfBond)
+	keeperTestHelper.Suite.Require().NoError(err)
+
+	sh := teststaking.NewHelper(keeperTestHelper.Suite.T(), keeperTestHelper.Ctx, *keeperTestHelper.App.StakingKeeper)
 	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
 	sh.Handle(msg, true)
-	val, found := suite.GetApp().StakingKeeper.GetValidator(suite.GetCtx(), valAddr)
-	suite.GetSuite().Require().True(found)
+	val, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddr)
+	keeperTestHelper.Suite.Require().True(found)
 	val = val.UpdateStatus(bondStatus)
-	suite.GetApp().StakingKeeper.SetValidator(suite.GetCtx(), val)
+	keeperTestHelper.App.StakingKeeper.SetValidator(keeperTestHelper.Ctx, val)
 
 	consAddr, err := val.GetConsAddr()
-	suite.GetSuite().Require().NoError(err)
+	keeperTestHelper.Suite.Require().NoError(err)
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
 		consAddr,
-		suite.GetCtx().BlockHeight(),
+		keeperTestHelper.Ctx.BlockHeight(),
 		0,
 		time.Unix(0, 0),
 		false,
 		0,
 	)
-	suite.GetApp().SlashingKeeper.SetValidatorSigningInfo(suite.GetCtx(), consAddr, signingInfo)
+	keeperTestHelper.App.SlashingKeeper.SetValidatorSigningInfo(keeperTestHelper.Ctx, consAddr, signingInfo)
 
 	return valAddr
 }
 
-func BeginNewBlock(suite SuiteI, executeNextEpoch bool) {
+func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	valAddr := []byte(":^) at this distribution workaround")
-	validators := suite.GetApp().StakingKeeper.GetAllValidators(suite.GetCtx())
+	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
-		suite.GetSuite().Require().NoError(err)
+		keeperTestHelper.Suite.Require().NoError(err)
 		valAddr = valAddrFancy.Bytes()
 	} else {
-		valAddrFancy := SetupValidator(suite, stakingtypes.Bonded)
-		validator, _ := suite.GetApp().StakingKeeper.GetValidator(suite.GetCtx(), valAddrFancy)
+		valAddrFancy := keeperTestHelper.SetupValidator(stakingtypes.Bonded)
+		validator, _ := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddrFancy)
 		valAddr2, _ := validator.GetConsAddr()
 		valAddr = valAddr2.Bytes()
 	}
 
-	epochIdentifier := suite.GetApp().SuperfluidKeeper.GetEpochIdentifier(suite.GetCtx())
-	epoch := suite.GetApp().EpochsKeeper.GetEpochInfo(suite.GetCtx(), epochIdentifier)
-	newBlockTime := suite.GetCtx().BlockTime().Add(5 * time.Second)
+	epochIdentifier := keeperTestHelper.App.SuperfluidKeeper.GetEpochIdentifier(keeperTestHelper.Ctx)
+	epoch := keeperTestHelper.App.EpochsKeeper.GetEpochInfo(keeperTestHelper.Ctx, epochIdentifier)
+	newBlockTime := keeperTestHelper.Ctx.BlockTime().Add(5 * time.Second)
 	if executeNextEpoch {
 		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
 		newBlockTime = endEpochTime.Add(time.Second)
 	}
-	// fmt.Println(executeNextEpoch, suite.ctx.BlockTime(), newBlockTime)
-	header := tmproto.Header{Height: suite.GetCtx().BlockHeight() + 1, Time: newBlockTime}
-	newCtx := suite.GetCtx().WithBlockTime(newBlockTime).WithBlockHeight(suite.GetCtx().BlockHeight() + 1)
-	suite.SetCtx(newCtx)
+	// fmt.Println(executeNextEpoch, keeperTestHelper.Ctx.BlockTime(), newBlockTime)
+	header := tmproto.Header{Height: keeperTestHelper.Ctx.BlockHeight() + 1, Time: newBlockTime}
+	newCtx := keeperTestHelper.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
+	keeperTestHelper.Ctx = newCtx
 	lastCommitInfo := abci.LastCommitInfo{
 		Votes: []abci.VoteInfo{{
 			Validator:       abci.Validator{Address: valAddr, Power: 1000},
@@ -91,11 +91,11 @@ func BeginNewBlock(suite SuiteI, executeNextEpoch bool) {
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 
-	fmt.Println("beginning block ", suite.GetCtx().BlockHeight())
-	suite.GetApp().BeginBlocker(suite.GetCtx(), reqBeginBlock)
+	fmt.Println("beginning block ", keeperTestHelper.Ctx.BlockHeight())
+	keeperTestHelper.App.BeginBlocker(keeperTestHelper.Ctx, reqBeginBlock)
 }
 
-func EndBlock(suite SuiteI) {
-	reqEndBlock := abci.RequestEndBlock{Height: suite.GetCtx().BlockHeight()}
-	suite.GetApp().EndBlocker(suite.GetCtx(), reqEndBlock)
+func (keeperTestHelper *KeeperTestHelper) EndBlock() {
+	reqEndBlock := abci.RequestEndBlock{Height: keeperTestHelper.Ctx.BlockHeight()}
+	keeperTestHelper.App.EndBlocker(keeperTestHelper.Ctx, reqEndBlock)
 }
