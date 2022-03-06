@@ -181,6 +181,7 @@ func InitTestnet(
 			return err
 		}
 
+		//nolint:staticcheck // it is unclear how to update this to use the latest interfaces
 		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
