@@ -70,7 +70,6 @@ func WeightedOperations(
 	}
 }
 
-
 func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
 	// selecting random number between [2, Min(coins.Len, 6)]
 	numCoins := 2 + r.Intn(Min(coins.Len(), 6)-1)

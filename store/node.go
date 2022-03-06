@@ -233,7 +233,6 @@ func (node Node) find(key []byte) (idx int, match bool) {
 	return len(node.Children), false
 }
 
-
 func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
 	node.Children[idx] = &Child{node.Children[idx].Index, acc}
 	return node

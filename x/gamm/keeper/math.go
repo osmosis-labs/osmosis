@@ -10,8 +10,6 @@ import (
 // TODO: Analyze choice here
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
-
-
 // calcSpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
 // so spot_price = (B_in / W_in) / (B_out / W_out)

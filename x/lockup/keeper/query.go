@@ -101,7 +101,6 @@ func queryAccountUnlockableCoins(ctx sdk.Context, req abci.RequestQuery, k Keepe
 	return res, nil
 }
 
-
 func queryAccountLockedCoins(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.AccountLockedCoinsRequest
 
