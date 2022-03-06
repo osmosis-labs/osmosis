@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
@@ -44,7 +45,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.Require().NoError(err)
 
 			// run epoch actions
-			suite.BeginNewBlock(true)
+			apptesting.BeginNewBlock(suite, true)
 
 			// check lptoken twap value set
 			newEpochTwap := suite.app.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.ctx, "gamm/pool/1")
@@ -58,6 +59,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().True(found)
 				suite.Require().Equal(sdk.NewDec(5000), delegation.Shares)
 				// TODO: Check reward distribution
+				// suite.Require().NotEqual(sdk.Coins{}, )
 			}
 		})
 	}
