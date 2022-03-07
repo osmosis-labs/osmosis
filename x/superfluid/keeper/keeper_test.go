@@ -140,7 +140,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
-	msgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
+	msgServer := lockupkeeper.LockKeeperImpl(suite.App.LockupKeeper)
 	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
 	suite.Require().NoError(err)
 	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
