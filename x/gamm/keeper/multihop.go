@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -16,17 +18,27 @@ func (k Keeper) MultihopSwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
-	for i, route := range routes {
-		_outMinAmount := sdk.NewInt(1)
-		if len(routes)-1 == i {
-			_outMinAmount = tokenOutMinAmount
-		}
-
-		tokenOutAmount, _, err = k.SwapExactAmountIn(ctx, sender, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount)
+	for _, route := range routes {
+		pool, err := k.GetPool(ctx, route.PoolId)
 		if err != nil {
 			return sdk.Int{}, err
 		}
-		tokenIn = sdk.NewCoin(route.TokenOutDenom, tokenOutAmount)
+		tokenOutAmount, err = pool.CalcOutAmtGivenIn(ctx, tokenIn, route.TokenOutDenom, pool.GetPoolSwapFee())
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		tokenOut := sdk.NewDecCoin(route.TokenOutDenom, tokenOutAmount)
+		// Note to self, make DoTransfersForSwap signal to underlying AMM that swap happening
+		err = k.DoTransfersForSwap(ctx, sender, route.PoolId, tokenIn, tokenOut)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		tokenIn = tokenOut
+	}
+	if tokenOutAmount.LT(tokenOutMinAmount) {
+		return sdk.Int{}, errors.New("...")
 	}
 	return
 }
@@ -42,30 +54,31 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	insExpected, err := k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
-	if err != nil {
-		return sdk.Int{}, err
-	}
+	panic("wave")
+	// insExpected, err := k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
+	// if err != nil {
+	// 	return sdk.Int{}, err
+	// }
 
-	insExpected[0] = tokenInMaxAmount
+	// insExpected[0] = tokenInMaxAmount
 
-	for i, route := range routes {
-		_tokenOut := tokenOut
-		if i != len(routes)-1 {
-			_tokenOut = sdk.NewCoin(routes[i+1].TokenInDenom, insExpected[i+1])
-		}
+	// for i, route := range routes {
+	// 	_tokenOut := tokenOut
+	// 	if i != len(routes)-1 {
+	// 		_tokenOut = sdk.NewCoin(routes[i+1].TokenInDenom, insExpected[i+1])
+	// 	}
 
-		_tokenInAmount, _, err := k.SwapExactAmountOut(ctx, sender, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut)
-		if err != nil {
-			return sdk.Int{}, err
-		}
+	// 	_tokenInAmount, _, err := k.SwapExactAmountOut(ctx, sender, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut)
+	// 	if err != nil {
+	// 		return sdk.Int{}, err
+	// 	}
 
-		if i == 0 {
-			tokenInAmount = _tokenInAmount
-		}
-	}
+	// 	if i == 0 {
+	// 		tokenInAmount = _tokenInAmount
+	// 	}
+	// }
 
-	return
+	// return
 }
 
 // TODO: Document this function
@@ -80,12 +93,10 @@ func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.S
 			return nil, err
 		}
 
-		tokenInAmount := calcInGivenOut(
-			inAsset.Token.Amount.ToDec(),
-			inAsset.Weight.ToDec(),
-			outAsset.Token.Amount.ToDec(),
-			outAsset.Weight.ToDec(),
-			tokenOut.Amount.ToDec(),
+		tokenInAmount := pool.CalcInAmtGivenOut(
+			ctx,
+			tokenInDenom,
+			tokenOut.Coin,
 			pool.GetPoolSwapFee(),
 		).TruncateInt()
 

@@ -109,6 +109,11 @@ func (k Keeper) JoinPool(
 		return err
 	}
 
+	numShares := k.GetPoolTotalShares(ctx, poolId)
+	balances := pool.GetTotalLpBalance(ctx)
+	convertTokenInMaxsToSupplyFractions(tokenInMaxs, balances)
+	lpPercent := min(fractions)
+
 	totalSharesAmount := pool.GetTotalShares().Amount
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
