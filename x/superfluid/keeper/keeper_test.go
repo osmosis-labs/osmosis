@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -26,40 +27,39 @@ import (
 )
 
 type KeeperTestSuite struct {
-	suite.Suite
+	apptesting.KeeperTestHelper
 
-	ctx         sdk.Context
 	queryClient types.QueryClient
-	app         *app.OsmosisApp
 }
 
 func (suite *KeeperTestSuite) GetSuite() *suite.Suite {
 	return &suite.Suite
 }
 func (suite *KeeperTestSuite) GetCtx() sdk.Context {
-	return suite.ctx
+	return suite.Ctx
 }
 func (suite *KeeperTestSuite) GetApp() *app.OsmosisApp {
-	return suite.app
+	return suite.App
 }
-func (suite *KeeperTestSuite) SetCtx(ctx sdk.Context) {
-	suite.ctx = ctx
+func (suite *KeeperTestSuite) SetCtx(Ctx sdk.Context) {
+	suite.Ctx = Ctx
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app = app.Setup(false)
+	suite.App = app.Setup(false)
 
 	startTime := time.Unix(1645580000, 0)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.SuperfluidKeeper)
+	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
+	a := suite.App.StakingKeeper.GetParams(suite.Ctx).BondDenom
+	fmt.Println(a)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.App.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.SetupDefaultPool()
 
-	unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
+	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 
-	suite.app.IncentivesKeeper.SetLockableDurations(suite.ctx, []time.Duration{
+	suite.App.IncentivesKeeper.SetLockableDurations(suite.Ctx, []time.Duration{
 		time.Hour * 24 * 14,
 		time.Hour,
 		time.Hour * 3,
@@ -68,8 +68,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	})
 
 	// TODO: Revisit if this is needed, it was added due to another bug in testing that is now fixed.
-	epochIdentifier := suite.app.SuperfluidKeeper.GetEpochIdentifier(suite.ctx)
-	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochtypes.EpochInfo{
+	epochIdentifier := suite.App.SuperfluidKeeper.GetEpochIdentifier(suite.Ctx)
+	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochtypes.EpochInfo{
 		Identifier:              epochIdentifier,
 		StartTime:               startTime,
 		Duration:                time.Hour,
@@ -79,7 +79,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		EpochCountingStarted:    true,
 	})
 
-	mintParams := suite.app.MintKeeper.GetParams(suite.ctx)
+	mintParams := suite.App.MintKeeper.GetParams(suite.Ctx)
 	mintParams.EpochIdentifier = epochIdentifier
 	mintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          sdk.OneDec(),
@@ -87,18 +87,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 		DeveloperRewards: sdk.ZeroDec(),
 		CommunityPool:    sdk.ZeroDec(),
 	}
-	suite.app.MintKeeper.SetParams(suite.ctx, mintParams)
-	suite.app.MintKeeper.SetMinter(suite.ctx, minttypes.NewMinter(sdk.NewDec(1_000_000)))
+	suite.App.MintKeeper.SetParams(suite.Ctx, mintParams)
+	suite.App.MintKeeper.SetMinter(suite.Ctx, minttypes.NewMinter(sdk.NewDec(1_000_000)))
 
-	distributionParams := suite.app.DistrKeeper.GetParams(suite.ctx)
+	distributionParams := suite.App.DistrKeeper.GetParams(suite.Ctx)
 	distributionParams.BaseProposerReward = sdk.ZeroDec()
 	distributionParams.BonusProposerReward = sdk.ZeroDec()
 	distributionParams.CommunityTax = sdk.ZeroDec()
-	suite.app.DistrKeeper.SetParams(suite.ctx, distributionParams)
+	suite.App.DistrKeeper.SetParams(suite.Ctx, distributionParams)
 }
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {
-	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
+	bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
 	poolId := suite.createGammPool([]string{bondDenom, "foo"})
 	suite.Require().Equal(poolId, uint64(1))
 }
@@ -115,7 +115,7 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 }
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
-	coins := suite.app.GAMMKeeper.GetParams(suite.ctx).PoolCreationFee
+	coins := suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee
 	poolAssets := []gammtypes.PoolAsset{}
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
@@ -126,11 +126,11 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	}
 
 	acc1 := CreateRandomAccounts(1)[0]
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, coins)
+	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, coins)
 	suite.Require().NoError(err)
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(
-		suite.ctx, acc1, balancer.PoolParams{
+	poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(
+		suite.Ctx, acc1, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, poolAssets, "")
@@ -140,10 +140,10 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
-	msgServer := lockupkeeper.NewMsgServerImpl(suite.app.LockupKeeper)
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
+	msgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
+	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
 	suite.Require().NoError(err)
-	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	suite.Require().NoError(err)
 	return msgResponse.ID
 }
@@ -151,7 +151,7 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
 	valAddrs := []sdk.ValAddress{}
 	for _, status := range bondStatuses {
-		valAddr := apptesting.SetupValidator(suite, status)
+		valAddr := suite.SetupValidator(status)
 		valAddrs = append(valAddrs, valAddr)
 	}
 	return valAddrs
