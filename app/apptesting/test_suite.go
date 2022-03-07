@@ -58,7 +58,6 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 	return valAddr
 }
 
-
 func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	valAddr := []byte(":^) at this distribution workaround")
 	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
