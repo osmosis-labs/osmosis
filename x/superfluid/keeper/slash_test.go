@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 )
 
 func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
@@ -89,6 +90,10 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 				// Note: this calls BeforeValidatorSlashed hook
 			}
 
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*suite.app.SuperfluidKeeper)(suite.ctx)
+			suite.Require().False(broken, reason)
+
 			// check lock changes after validator & lockups slashing
 			for _, lockIndex := range tc.expSlashedLockIndexes {
 				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, locks[lockIndex].ID)
@@ -168,6 +173,10 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 					suite.Ctx.BlockHeight(),
 					slashFactor)
 			}
+
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*suite.app.SuperfluidKeeper)(suite.ctx)
+			suite.Require().False(broken, reason)
 
 			// check check unbonding lockup changes
 			for _, lockId := range tc.superUnbondingLockIds {
