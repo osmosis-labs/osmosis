@@ -39,6 +39,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v6.4.1](https://github.com/osmosis-labs/osmosis/releases/tag/v6.4.1)
+
+## Minor improvements & Bug Fixes
+
+- [#1054](https://github.com/osmosis-labs/osmosis/pull/1054) Upgrade IAVL and SDK to v0.17.3-osmo-v4
+
+## IAVL Upgrades
+
+- [iavl-33](https://github.com/osmosis-labs/iavl/pull/33) revert #23 (sync access to fast node cache), fix bug related to old height export
+
+## SDK Upgrades
+
+- [sdk-133](https://github.com/osmosis-labs/cosmos-sdk/pull/133) upgrade iavl to v0.17.3-osmo-v4 for v6.4.x
+
 ## [v6.4.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.4.0)
 
 ## Minor improvements & Bug Fixes
