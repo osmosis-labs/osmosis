@@ -98,6 +98,10 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			// move intermediary account delegation rewards to gauges
 			suite.app.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(suite.ctx)
 
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*suite.app.SuperfluidKeeper)(suite.ctx)
+			suite.Require().False(broken, reason)
+
 			// check gauge balance
 			for _, gaugeCheck := range tc.gaugeChecks {
 				gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeCheck.gaugeId)

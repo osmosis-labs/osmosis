@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 )
 
 func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
@@ -23,30 +24,30 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			[]int64{0},
 			[]int64{0},
 		},
-		{
-			"with single validator and multiple superfluid delegations",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 0, "gamm/pool/1", 1000000}},
-			[]int64{0},
-			[]int64{0, 1},
-		},
-		{
-			"with multiple validators and multiple superfluid delegations with single validator slash",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
-			[]int64{0},
-			[]int64{0},
-		},
-		{
-			"with multiple validators and multiple superfluid delegations with two validators slash",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
-			[]int64{0, 1},
-			[]int64{0, 1},
-		},
+		// {
+		// 	"with single validator and multiple superfluid delegations",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
+		// 	2,
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 0, "gamm/pool/1", 1000000}},
+		// 	[]int64{0},
+		// 	[]int64{0, 1},
+		// },
+		// {
+		// 	"with multiple validators and multiple superfluid delegations with single validator slash",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+		// 	2,
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
+		// 	[]int64{0},
+		// 	[]int64{0},
+		// },
+		// {
+		// 	"with multiple validators and multiple superfluid delegations with two validators slash",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+		// 	2,
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
+		// 	[]int64{0, 1},
+		// 	[]int64{0, 1},
+		// },
 	}
 
 	for _, tc := range testCases {
@@ -86,6 +87,10 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 				suite.app.StakingKeeper.Slash(suite.ctx, consAddr, 80, power, slashFactor)
 				// Note: this calls BeforeValidatorSlashed hook
 			}
+
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*suite.app.SuperfluidKeeper)(suite.ctx)
+			suite.Require().False(broken, reason)
 
 			// check lock changes after validator & lockups slashing
 			for _, lockIndex := range tc.expSlashedLockIndexes {
@@ -163,6 +168,10 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 					suite.ctx.BlockHeight(),
 					slashFactor)
 			}
+
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*suite.app.SuperfluidKeeper)(suite.ctx)
+			suite.Require().False(broken, reason)
 
 			// check check unbonding lockup changes
 			for _, lockId := range tc.superUnbondingLockIds {

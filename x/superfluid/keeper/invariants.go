@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -65,8 +67,10 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 		}
 
 		if !totalExpectedSuperfluidAmount.Equal(totalSuperfluidDelegationTokens.RoundInt()) {
-			return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
-				"\ttotal superfluid intermediary account delegation amount does not match total sum of lockup delegations\n"), true
+			return sdk.FormatInvariant(types.ModuleName,
+					totalSuperfluidDelegationInvariantName,
+					fmt.Sprintf("\ttotal superfluid intermediary account delegation amount does not match total sum of lockup delegations: %s != %s\n", totalExpectedSuperfluidAmount.String(), totalSuperfluidDelegationTokens.String())),
+				true
 		}
 
 		return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
