@@ -20,7 +20,7 @@ import (
 )
 
 type KeeperTestHelper struct {
-	Suite suite.Suite
+	suite.Suite
 
 	App *app.OsmosisApp
 	Ctx sdk.Context
@@ -33,13 +33,13 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
 
 	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, sdk.AccAddress(valAddr), selfBond)
-	keeperTestHelper.Suite.Require().NoError(err)
+	keeperTestHelper.Require().NoError(err)
 
 	sh := teststaking.NewHelper(keeperTestHelper.Suite.T(), keeperTestHelper.Ctx, *keeperTestHelper.App.StakingKeeper)
 	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
 	sh.Handle(msg, true)
 	val, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddr)
-	keeperTestHelper.Suite.Require().True(found)
+	keeperTestHelper.Require().True(found)
 	val = val.UpdateStatus(bondStatus)
 	keeperTestHelper.App.StakingKeeper.SetValidator(keeperTestHelper.Ctx, val)
 
@@ -63,7 +63,7 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
-		keeperTestHelper.Suite.Require().NoError(err)
+		keeperTestHelper.Require().NoError(err)
 		valAddr = valAddrFancy.Bytes()
 	} else {
 		valAddrFancy := keeperTestHelper.SetupValidator(stakingtypes.Bonded)

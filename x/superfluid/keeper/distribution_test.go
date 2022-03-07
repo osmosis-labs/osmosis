@@ -10,19 +10,19 @@ import (
 )
 
 func (suite *KeeperTestSuite) allocateRewardsToValidator(valAddr sdk.ValAddress) {
-	validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
+	validator, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddr)
 	suite.Require().True(found)
 
 	// allocate reward tokens to distribution module
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000))}
-	suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-	suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, distrtypes.ModuleName, coins)
+	suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, coins)
+	suite.App.BankKeeper.SendCoinsFromModuleToModule(suite.Ctx, minttypes.ModuleName, distrtypes.ModuleName, coins)
 
 	// allocate rewards to validator
-	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+	suite.Ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
 	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
-	suite.app.DistrKeeper.AllocateTokensToValidator(suite.ctx, validator, decTokens)
-	suite.app.DistrKeeper.IncrementValidatorPeriod(suite.ctx, validator)
+	suite.App.DistrKeeper.AllocateTokensToValidator(suite.Ctx, validator, decTokens)
+	suite.App.DistrKeeper.IncrementValidatorPeriod(suite.Ctx, validator)
 }
 
 func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// setup superfluid delegations
 			suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
-			unbondingDuration := suite.app.StakingKeeper.GetParams(suite.ctx).UnbondingTime
+			unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {
@@ -96,11 +96,11 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			}
 
 			// move intermediary account delegation rewards to gauges
-			suite.app.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(suite.ctx)
+			suite.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(suite.Ctx)
 
 			// check gauge balance
 			for _, gaugeCheck := range tc.gaugeChecks {
-				gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeCheck.gaugeId)
+				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeCheck.gaugeId)
 				suite.Require().NoError(err)
 				suite.Require().Equal(gauge.Id, gaugeCheck.gaugeId)
 				suite.Require().Equal(gauge.IsPerpetual, true)
@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 				} else {
 					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsZero())
 				}
-				suite.Require().Equal(gauge.StartTime, suite.ctx.BlockTime())
+				suite.Require().Equal(gauge.StartTime, suite.Ctx.BlockTime())
 				suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
 				suite.Require().Equal(gauge.FilledEpochs, uint64(0))
 				suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
