@@ -76,20 +76,20 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 
 			// slash validator
 			for _, valIndex := range tc.slashedValIndexes {
-				validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddrs[valIndex])
+				validator, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddrs[valIndex])
 				suite.Require().True(found)
-				suite.ctx = suite.ctx.WithBlockHeight(100)
+				suite.Ctx = suite.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				suite.Require().NoError(err)
 				// slash by slash factor
 				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
-				suite.app.StakingKeeper.Slash(suite.ctx, consAddr, 80, power, slashFactor)
+				suite.App.StakingKeeper.Slash(suite.Ctx, consAddr, 80, power, slashFactor)
 				// Note: this calls BeforeValidatorSlashed hook
 			}
 
 			// check lock changes after validator & lockups slashing
 			for _, lockIndex := range tc.expSlashedLockIndexes {
-				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, locks[lockIndex].ID)
+				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, locks[lockIndex].ID)
 				suite.Require().NoError(err)
 				suite.Require().Equal(
 					gotLock.Coins.AmountOf("gamm/pool/1").String(),
@@ -147,26 +147,26 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
-				lock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
+				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
 				suite.Require().NoError(err)
 				// superfluid undelegate
-				err = suite.app.SuperfluidKeeper.SuperfluidUndelegate(suite.ctx, lock.Owner, lockId)
+				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockId)
 				suite.Require().NoError(err)
 			}
 
 			// slash unbonding lockups for all intermediary accounts
 			slashFactor := sdk.NewDecWithPrec(5, 2)
 			for i := 0; i < len(valAddrs); i++ {
-				suite.app.SuperfluidKeeper.SlashLockupsForValidatorSlash(
-					suite.ctx,
+				suite.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
+					suite.Ctx,
 					valAddrs[i],
-					suite.ctx.BlockHeight(),
+					suite.Ctx.BlockHeight(),
 					slashFactor)
 			}
 
 			// check check unbonding lockup changes
 			for _, lockId := range tc.superUnbondingLockIds {
-				gotLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lockId)
+				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
 				suite.Require().NoError(err)
 				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(950000).String())
 			}
