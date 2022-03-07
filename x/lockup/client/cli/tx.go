@@ -125,15 +125,30 @@ func NewBeginUnlockByIDCmd() *cobra.Command {
 				return err
 			}
 
+			coins := sdk.Coins(nil)
+			amountStr, err := cmd.Flags().GetString(FlagAmount)
+			if err != nil {
+				return err
+			}
+
+			if amountStr != "" {
+				coins, err = sdk.ParseCoinsNormalized(amountStr)
+				if err != nil {
+					return err
+				}
+			}
+
 			msg := types.NewMsgBeginUnlocking(
 				clientCtx.GetFromAddress(),
 				uint64(id),
-				nil,
+				coins,
 			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
+
+	cmd.Flags().AddFlagSet(FlagSetUnlockTokens())
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
