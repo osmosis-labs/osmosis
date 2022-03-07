@@ -47,11 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## IAVL Upgrades
 
-- [iavl-33](https://github.com/osmosis-labs/iavl/pull/33)
+- [iavl-33](https://github.com/osmosis-labs/iavl/pull/33) revert #23 (sync access to fast node cache), fix bug related to old height export
 
 ## SDK Upgrades
 
-- [sdk-133](https://github.com/osmosis-labs/cosmos-sdk/pull/133)
+- [sdk-133](https://github.com/osmosis-labs/cosmos-sdk/pull/133) upgrade iavl to v0.17.3-osmo-v4 for v6.4.x
 
 ## [v6.4.0](https://github.com/osmosis-labs/osmosis/releases/tag/v6.4.0)
 
