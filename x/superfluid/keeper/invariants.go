@@ -44,6 +44,8 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 			}
 		}
 
+		// Compute the total delegation amount expected
+		// from every lockID intermediary account connections
 		totalExpectedSuperfluidAmount := sdk.ZeroInt()
 		connections := keeper.GetAllLockIdIntermediaryAccountConnections(ctx)
 		for _, connection := range connections {
