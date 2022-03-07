@@ -26,6 +26,7 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 		accs := keeper.GetAllIntermediaryAccounts(ctx)
 		totalSuperfluidDelegationTokens := sdk.ZeroDec()
 
+		// Compute the total amount delegated from all intermediary accounts
 		for _, acc := range accs {
 			valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
 			if err != nil {
