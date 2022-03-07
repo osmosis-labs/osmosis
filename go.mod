@@ -2,6 +2,7 @@ module github.com/osmosis-labs/osmosis/v7
 
 go 1.17
 
+// Direct dependencies
 require (
 	github.com/CosmWasm/wasmd v0.23.0
 	github.com/cosmos/cosmos-sdk v0.45.1
@@ -28,7 +29,12 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+<<<<<<< HEAD
+=======
+// Indirect dependencies
+>>>>>>> b2278ed (move gorocksdb lib into indirect and annotate go.mod (#1053))
 require (
+	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
 	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
