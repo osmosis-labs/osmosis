@@ -13,7 +13,7 @@ import (
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
-		msgServer := keeper.NewMsgServerImpl(&k)
+		msgServer := keeper.LockKeeperImpl(&k)
 
 		switch msg := msg.(type) {
 		case *types.MsgLockTokens:

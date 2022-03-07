@@ -435,8 +435,8 @@ func (c *msgClient) BeginUnlocking(ctx context.Context, in *MsgBeginUnlocking, o
 	return out, nil
 }
 
-// MsgServer is the server API for Msg service.
-type MsgServer interface {
+// LockKeeper is the server API for Msg service.
+type LockKeeper interface {
 	// LockTokens lock tokens
 	LockTokens(context.Context, *MsgLockTokens) (*MsgLockTokensResponse, error)
 	// BeginUnlockingAll begin unlocking all tokens
@@ -459,7 +459,7 @@ func (*UnimplementedMsgServer) BeginUnlocking(ctx context.Context, req *MsgBegin
 	return nil, status.Errorf(codes.Unimplemented, "method BeginUnlocking not implemented")
 }
 
-func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
+func RegisterMsgServer(s grpc1.Server, srv LockKeeper) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
@@ -469,14 +469,14 @@ func _Msg_LockTokens_Handler(srv interface{}, ctx context.Context, dec func(inte
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).LockTokens(ctx, in)
+		return srv.(LockKeeper).LockTokens(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Msg/LockTokens",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).LockTokens(ctx, req.(*MsgLockTokens))
+		return srv.(LockKeeper).LockTokens(ctx, req.(*MsgLockTokens))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -487,14 +487,14 @@ func _Msg_BeginUnlockingAll_Handler(srv interface{}, ctx context.Context, dec fu
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).BeginUnlockingAll(ctx, in)
+		return srv.(LockKeeper).BeginUnlockingAll(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Msg/BeginUnlockingAll",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).BeginUnlockingAll(ctx, req.(*MsgBeginUnlockingAll))
+		return srv.(LockKeeper).BeginUnlockingAll(ctx, req.(*MsgBeginUnlockingAll))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -505,21 +505,21 @@ func _Msg_BeginUnlocking_Handler(srv interface{}, ctx context.Context, dec func(
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).BeginUnlocking(ctx, in)
+		return srv.(LockKeeper).BeginUnlocking(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Msg/BeginUnlocking",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).BeginUnlocking(ctx, req.(*MsgBeginUnlocking))
+		return srv.(LockKeeper).BeginUnlocking(ctx, req.(*MsgBeginUnlocking))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.lockup.Msg",
-	HandlerType: (*MsgServer)(nil),
+	HandlerType: (*LockKeeper)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "LockTokens",
