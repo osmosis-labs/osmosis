@@ -157,22 +157,24 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 	return valAddrs
 }
 
-func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) []string {
+func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
 	suite.app.GAMMKeeper.SetParams(suite.ctx, gammtypes.Params{
 		PoolCreationFee: sdk.Coins{},
 	})
 
+	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
+
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 	denoms := []string{}
+	poolIds := []uint64{}
 
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
 
-		params := suite.app.SuperfluidKeeper.GetParams(suite.ctx)
-		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).Quo(sdk.OneDec().Sub(params.MinimumRiskFactor)).RoundInt()
+		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
 
 		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, sdk.NewCoins(
-			sdk.NewCoin("uosmo", uosmoAmount.Mul(sdk.NewInt(10))),
+			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
 		))
 		suite.NoError(err)
@@ -183,7 +185,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 			// pool assets
 			defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
 				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("uosmo", uosmoAmount),
+				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
 			defaultBarAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
 				Weight: sdk.NewInt(100),
@@ -207,9 +209,16 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		})
 
+		// register a LP token as a superfluid asset
+		suite.app.SuperfluidKeeper.AddNewSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
+			Denom:     denom,
+			AssetType: types.SuperfluidAssetTypeLPShare,
+		})
+
+		poolIds = append(poolIds, poolId)
 		denoms = append(denoms, denom)
 	}
-	return denoms
+	return denoms, poolIds
 }
 
 func TestKeeperTestSuite(t *testing.T) {

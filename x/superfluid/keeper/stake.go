@@ -327,6 +327,9 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 			return err
 		}
 		err = k.bk.BurnCoins(cacheCtx, types.ModuleName, undelegatedCoins)
+		if err != nil {
+			return err
+		}
 		bondDenom := k.sk.BondDenom(cacheCtx)
 		k.bk.AddSupplyOffset(cacheCtx, bondDenom, undelegatedCoins.AmountOf(bondDenom))
 
