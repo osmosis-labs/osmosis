@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
 	acc := types.NewSuperfluidIntermediaryAccount("gamm/pool/1", valAddr.String(), 1)
-	suite.app.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(suite.ctx, 1, acc.GetAccAddress())
+	suite.app.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(suite.ctx, 1, acc)
 
 	// get account
 	addr = suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.ctx, 1)

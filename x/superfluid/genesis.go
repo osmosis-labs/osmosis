@@ -21,13 +21,21 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetOsmoEquivalentMultiplier(ctx, multiplierRecord.EpochNumber, multiplierRecord.Denom, multiplierRecord.Multiplier)
 	}
 
+	for _, intermediaryAcc := range genState.IntermediaryAccounts {
+		k.SetIntermediaryAccount(ctx, intermediaryAcc)
+	}
+
 	// initialize lock id and intermediary connections
 	for _, connection := range genState.IntemediaryAccountConnections {
 		acc, err := sdk.AccAddressFromBech32(connection.IntermediaryAccount)
 		if err != nil {
 			panic(err)
 		}
-		k.SetLockIdIntermediaryAccountConnection(ctx, connection.LockId, acc)
+		intermediaryAcc := k.GetIntermediaryAccount(ctx, acc)
+		if intermediaryAcc.Denom == "" {
+			panic("connection to invalid intermediary account found")
+		}
+		k.SetLockIdIntermediaryAccountConnection(ctx, connection.LockId, intermediaryAcc)
 	}
 }
 
@@ -36,6 +44,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		SuperfluidAssets:              k.GetAllSuperfluidAssets(ctx),
 		OsmoEquivalentMultipliers:     k.GetAllOsmoEquivalentMultipliers(ctx),
+		IntermediaryAccounts:          k.GetAllIntermediaryAccounts(ctx),
 		IntemediaryAccountConnections: k.GetAllLockIdIntermediaryAccountConnections(ctx),
 	}
 }
