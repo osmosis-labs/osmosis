@@ -113,11 +113,11 @@ func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, address sdk.AccAddres
 	prefixStore.Delete(address)
 }
 
-func (k Keeper) SetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64, acc sdk.AccAddress) {
+func (k Keeper) SetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64, acc types.SuperfluidIntermediaryAccount) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
-	prefixStore.Set(sdk.Uint64ToBigEndian(lockId), acc)
+	prefixStore.Set(sdk.Uint64ToBigEndian(lockId), acc.GetAccAddress())
 }
 
 func (k Keeper) GetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64) sdk.AccAddress {
