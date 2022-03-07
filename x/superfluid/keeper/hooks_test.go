@@ -142,14 +142,14 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 
 // 			for index, lockId := range tc.unbondingLockIds {
 // 				// get intermediary account
-// 				accAddr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
-// 				intermediaryAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
+// 				accAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
+// 				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
 // 				valAddr := intermediaryAcc.ValAddr
 
 // 				// unlock native lockup
-// 				lock, err := suite.app.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+// 				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
 // 				if err == nil {
-// 					err = suite.app.LockupKeeper.BeginUnlock(suite.Ctx, *lock, nil)
+// 					err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, *lock, nil)
 // 				}
 
 // 				if tc.expUnbondingErr[index] {
@@ -159,16 +159,16 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 				suite.Require().NoError(err)
 
 // 				// check lockId and intermediary account connection deletion
-// 				addr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
+// 				addr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
 // 				suite.Require().Equal(addr.String(), "")
 
 // 				// check bonding synthetic lockup deletion
-// 				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+// 				_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().Error(err)
 
 // 				// check unbonding synthetic lockup creation
-// 				unbondingDuration := suite.app.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
-// 				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+// 				unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+// 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().NoError(err)
 // 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
 // 				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))

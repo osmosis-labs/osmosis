@@ -158,11 +158,11 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 }
 
 func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
-	suite.app.GAMMKeeper.SetParams(suite.ctx, gammtypes.Params{
+	suite.App.GAMMKeeper.SetParams(suite.Ctx, gammtypes.Params{
 		PoolCreationFee: sdk.Coins{},
 	})
 
-	bondDenom := suite.app.StakingKeeper.BondDenom(suite.ctx)
+	bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 	denoms := []string{}
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
 
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, sdk.NewCoins(
+		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, sdk.NewCoins(
 			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
 		))
@@ -194,23 +194,23 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 			poolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
 
-		poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
+		poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(suite.Ctx, acc1, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, poolAssets, defaultFutureGovernor)
 		suite.Require().NoError(err)
 
-		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+		pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 		suite.Require().NoError(err)
 
 		denom := pool.GetTotalShares().Denom
-		suite.app.SuperfluidKeeper.AddNewSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
+		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		})
 
 		// register a LP token as a superfluid asset
-		suite.app.SuperfluidKeeper.AddNewSuperfluidAsset(suite.ctx, types.SuperfluidAsset{
+		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		})
