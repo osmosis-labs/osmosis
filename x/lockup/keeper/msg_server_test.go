@@ -9,55 +9,92 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-// TODO: Make table driven
 func (suite *KeeperTestSuite) TestMsgLockTokens() {
-	suite.SetupTest()
+	type param struct {
+		coinsToLock         sdk.Coins
+		lockOwner           sdk.AccAddress
+		duration            time.Duration
+		coinsInOwnerAddress sdk.Coins
+	}
 
-	// lock coins
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "creation of lock via lockTokens",
+			param: param{
+				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
+				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:            time.Second,
+				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+			},
+			expectPass: true,
+		},
+		{
+			name: "locking more coins than are in the address",
+			param: param{
+				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 20)},       // setup wallet
+				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:            time.Second,
+				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+			},
+			expectPass: false,
+		},
+	}
 
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
-	suite.Require().NoError(err)
-	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr1, coins, time.Second)
-	suite.Require().NoError(err)
+	for _, test := range tests {
+		suite.SetupTest()
 
-	// creation of lock via LockTokens
-	msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
-	_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(addr1, time.Second, coins))
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
+		suite.Require().NoError(err)
 
-	// check locks
-	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].Coins, coins)
-	// check accumulation store is correctly updated
-	accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "stake",
-		Duration:      time.Second,
-	})
-	suite.Require().Equal(accum.String(), "10")
+		_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, test.param.lockOwner, test.param.coinsToLock, test.param.duration)
 
-	// add more tokens to lock via LockTokens
-	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, addCoins)
-	suite.Require().NoError(err)
+		if test.expectPass {
+			// creation of lock via LockTokens
+			msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
+			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
-	_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(addr1, locks[0].Duration, addCoins))
-	suite.Require().NoError(err)
+			// Check Locks
+			locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+			suite.Require().NoError(err)
+			suite.Require().Len(locks, 1)
+			suite.Require().Equal(locks[0].Coins, test.param.coinsToLock)
 
-	// check locks after adding tokens to lock
-	locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].Coins, coins.Add(addCoins...))
+			// check accumulation store is correctly updated
+			accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+				LockQueryType: types.ByDuration,
+				Denom:         "stake",
+				Duration:      test.param.duration,
+			})
+			suite.Require().Equal(accum.String(), "10")
 
-	// check accumulation store is correctly updated
-	accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "stake",
-		Duration:      time.Second,
-	})
-	suite.Require().Equal(accum.String(), "20")
+			// add more tokens to lock via LockTokens
+			err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
+			suite.Require().NoError(err)
+
+			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(test.param.lockOwner, locks[0].Duration, test.param.coinsToLock))
+			suite.Require().NoError(err)
+
+			// check locks after adding tokens to lock
+			locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+			suite.Require().NoError(err)
+			suite.Require().Len(locks, 1)
+			suite.Require().Equal(locks[0].Coins, test.param.coinsToLock.Add(test.param.coinsToLock...))
+
+			// check accumulation store is correctly updated
+			accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+				LockQueryType: types.ByDuration,
+				Denom:         "stake",
+				Duration:      test.param.duration,
+			})
+			suite.Require().Equal(accum.String(), "20")
+
+		} else {
+			// Fail simple lock token
+			suite.Require().Error(err)
+		}
+	}
 }
