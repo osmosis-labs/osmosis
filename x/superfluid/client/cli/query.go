@@ -24,6 +24,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		GetCmdQueryParams(),
 		GetCmdAllSuperfluidAssets(),
 		GetCmdAssetMultiplier(),
 		GetCmdAllIntermediaryAccounts(),
@@ -33,6 +34,38 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdSuperfluidUndelegationsByDelegator(),
 		GetCmdTotalSuperfluidDelegations(),
 	)
+
+	return cmd
+}
+
+// GetCmdQueryParams implements a command to fetch superfluid parameters.
+func GetCmdQueryParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params",
+		Short: "Query the current superfluid parameters",
+		Args:  cobra.NoArgs,
+		Long: strings.TrimSpace(`Query parameters for the superfluid module:
+
+$ <appd> query superfluid params
+`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryParamsRequest{}
+			res, err := queryClient.Params(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(&res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
