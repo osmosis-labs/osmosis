@@ -29,10 +29,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-<<<<<<< HEAD
-=======
 // Indirect dependencies
->>>>>>> b2278ed (move gorocksdb lib into indirect and annotate go.mod (#1053))
 require (
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
@@ -132,7 +129,7 @@ require (
 )
 
 replace (
-    // branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
+	// branch: v0.22.0-osmo-v7, current tag: v0.22.0-osmo-v7.2.0
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220303025721-7f1c77addd36
