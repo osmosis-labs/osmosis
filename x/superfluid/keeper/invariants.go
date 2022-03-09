@@ -66,7 +66,7 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 			totalExpectedSuperfluidAmount = totalExpectedSuperfluidAmount.Add(amount)
 		}
 
-		if !totalExpectedSuperfluidAmount.Equal(totalSuperfluidDelegationTokens.RoundInt()) {
+		if !totalExpectedSuperfluidAmount.Equal(totalSuperfluidDelegationTokens.TruncateInt()) {
 			return sdk.FormatInvariant(types.ModuleName,
 					totalSuperfluidDelegationInvariantName,
 					fmt.Sprintf("\ttotal superfluid intermediary account delegation amount does not match total sum of lockup delegations: %s != %s\n", totalExpectedSuperfluidAmount.String(), totalSuperfluidDelegationTokens.String())),
