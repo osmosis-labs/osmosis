@@ -16,7 +16,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 // Query defines the gRPC querier service.
 service Query {
   // Params returns the total set of minting parameters.
-  rpc Params(QueryParamsRequest) returns (ParamsResponse) {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/params";
   }
 
