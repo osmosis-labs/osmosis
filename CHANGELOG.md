@@ -41,6 +41,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Minor improvements & Bug Fixes
+
+* [#1061](https://github.com/osmosis-labs/osmosis/pull/1061) upgrade iavl to v0.17.3-osmo-v5 with concurrent map write fix
+
+### SDK fork updates
+
+* [sdk-#135](https://github.com/osmosis-labs/cosmos-sdk/pull/135) upgrade iavl to v0.17.3-osmo-v5 with concurrent map write fix
+
+### IAVL fork updates
+
+* [iavl-34](https://github.com/osmosis-labs/iavl/pull/34) fix concurrent map panic when querying and committing
+
 ## [v7.0.3](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.3)
 
 ### Minor improvements & Bug Fixes
