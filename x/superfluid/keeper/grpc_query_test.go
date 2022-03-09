@@ -9,7 +9,7 @@ import (
 
 func (suite *KeeperTestSuite) TestGRPCParams() {
 	suite.SetupTest()
-	res, err := suite.App.SuperfluidKeeper.Params(sdk.WrapSDKContext(suite.Ctx), &types.ParamsRequest{})
+	res, err := suite.App.SuperfluidKeeper.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
 }
