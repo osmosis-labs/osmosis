@@ -14,12 +14,12 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // Params returns the superfluid module params
-func (k Keeper) Params(goCtx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	params := k.GetParams(ctx)
 
-	return &types.ParamsResponse{
+	return &types.QueryParamsResponse{
 		Params: params,
 	}, nil
 }
