@@ -82,28 +82,28 @@ func (k Keeper) MultihopSwapExactAmountOut(
 }
 
 // TODO: Document this function
-func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) ([]sdk.Int, error) {
-	insExpected := make([]sdk.Int, len(routes))
-	for i := len(routes) - 1; i >= 0; i-- {
-		route := routes[i]
+// func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) ([]sdk.Int, error) {
+// 	insExpected := make([]sdk.Int, len(routes))
+// 	for i := len(routes) - 1; i >= 0; i-- {
+// 		route := routes[i]
 
-		pool, inAsset, outAsset, err :=
-			k.getPoolAndInOutAssets(ctx, route.PoolId, route.TokenInDenom, tokenOut.Denom)
-		if err != nil {
-			return nil, err
-		}
+// 		pool, inAsset, outAsset, err :=
+// 			k.getPoolAndInOutAssets(ctx, route.PoolId, route.TokenInDenom, tokenOut.Denom)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		tokenInAmount := pool.CalcInAmtGivenOut(
-			ctx,
-			tokenInDenom,
-			tokenOut.Coin,
-			pool.GetPoolSwapFee(),
-		).TruncateInt()
+// 		tokenInAmount := pool.CalcInAmtGivenOut(
+// 			ctx,
+// 			tokenInDenom,
+// 			tokenOut.Coin,
+// 			pool.GetPoolSwapFee(),
+// 		).TruncateInt()
 
-		insExpected[i] = tokenInAmount
+// 		insExpected[i] = tokenInAmount
 
-		tokenOut = sdk.NewCoin(route.TokenInDenom, tokenInAmount)
-	}
+// 		tokenOut = sdk.NewCoin(route.TokenInDenom, tokenInAmount)
+// 	}
 
-	return insExpected, nil
-}
+// 	return insExpected, nil
+// }
