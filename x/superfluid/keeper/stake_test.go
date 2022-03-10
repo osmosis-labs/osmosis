@@ -47,8 +47,8 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegations(delAddrs []sdk.AccAddre
 		delAddr := delAddrs[del.delIndex]
 		valAddr := valAddrs[del.valIndex]
 		lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
-		expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
-		gotAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, expAcc.GetAccAddress())
+		address := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
+		gotAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, address)
 
 		// save accounts for future use
 		if flagIntermediaryAcc[gotAcc.String()] == false {
