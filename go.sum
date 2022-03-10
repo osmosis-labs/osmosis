@@ -777,8 +777,8 @@ github.com/osmosis-labs/iavl v0.17.3-osmo-v4 h1:U1HA2WEMAYVPjeJlfClH10ajv6O0C1C1
 github.com/osmosis-labs/iavl v0.17.3-osmo-v4/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo h1:XyYyDTjPIu7qX2nhQp9mboj7Pa9FEnjg1RXw73Ctv5U=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo/go.mod h1:XUmW7wmubCRhIEAGtMGS+5IjiSSmcAwihoN/yPGd6Kk=
-github.com/osmosis-labs/tendermint v0.34.14-starving-waiters h1:IcTUQd/pg3JRX5lvq1jPghHs+6OQUu3IvwV3f8W6M0o=
-github.com/osmosis-labs/tendermint v0.34.14-starving-waiters/go.mod h1:FrwVm3TvsVicI9Z7FlucHV6Znfd5KBc/Lpp69cCwtk0=
+github.com/osmosis-labs/tendermint v0.34.14-starving-waiters-pprofd h1:UIq3Tme+5sfa/pf0LsEaShJFPdWR7MSkt6cA1HSkhac=
+github.com/osmosis-labs/tendermint v0.34.14-starving-waiters-pprofd/go.mod h1:FrwVm3TvsVicI9Z7FlucHV6Znfd5KBc/Lpp69cCwtk0=
 github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2 h1:R4Vs6cqePWvZudQPMNKWEJWw6JSMIjJ1/RtV+lPDUgQ=
 github.com/osmosis-labs/wasmd v0.22.0-osmo-v7.2/go.mod h1:br6yXmCKm3/l3kv/Z54l6uM3t43OqTNgB6VzyuU7894=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=

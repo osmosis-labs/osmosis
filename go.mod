@@ -139,7 +139,7 @@ replace (
 	// enable building wihh rocksdb
 	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.2.0
 
-	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint v0.34.14-starving-waiters
+	github.com/tendermint/tendermint => github.com/osmosis-labs/tendermint v0.34.14-starving-waiters-pprofd
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
