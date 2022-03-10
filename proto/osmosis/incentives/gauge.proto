@@ -17,6 +17,7 @@ message Gauge {
   // these queries
   osmosis.lockup.QueryCondition distribute_to = 3
       [ (gogoproto.nullable) = false ];
+  // total amount of Coins that has been in the gauge.
   repeated cosmos.base.v1beta1.Coin coins = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"

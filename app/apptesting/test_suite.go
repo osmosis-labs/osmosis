@@ -11,6 +11,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -98,4 +99,19 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 func (keeperTestHelper *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: keeperTestHelper.Ctx.BlockHeight()}
 	keeperTestHelper.App.EndBlocker(keeperTestHelper.Ctx, reqEndBlock)
+}
+
+func (keeperTestHelper *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress) {
+	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddr)
+	keeperTestHelper.Require().True(found)
+
+	// allocate reward tokens to distribution module
+	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000))}
+	simapp.FundModuleAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, distrtypes.ModuleName, coins)
+
+	// allocate rewards to validator
+	keeperTestHelper.Ctx = keeperTestHelper.Ctx.WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
+	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
+	keeperTestHelper.App.DistrKeeper.AllocateTokensToValidator(keeperTestHelper.Ctx, validator, decTokens)
+	keeperTestHelper.App.DistrKeeper.IncrementValidatorPeriod(keeperTestHelper.Ctx, validator)
 }

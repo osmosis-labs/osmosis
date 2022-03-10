@@ -50,8 +50,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	startTime := time.Unix(1645580000, 0)
 	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
-	a := suite.App.StakingKeeper.GetParams(suite.Ctx).BondDenom
-	fmt.Println(a)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.App.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
