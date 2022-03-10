@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
@@ -119,8 +118,6 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
-		fmt.Println(poolId)
-		fmt.Println(twap)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
