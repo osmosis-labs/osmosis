@@ -58,7 +58,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
 	// Evidence handling for double signing, misbehaviour, etc.
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	// Params: Parameters that are always available
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -130,9 +129,7 @@ var (
 	maccPerms = moduleAaccountPermissions
 
 	// module accounts that are allowed to receive tokens
-	allowedReceivingModAcc = map[string]bool{
-		distrtypes.ModuleName: true,
-	}
+	allowedReceivingModAcc = map[string]bool{}
 )
 
 var _ App = (*OsmosisApp)(nil)
