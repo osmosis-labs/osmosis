@@ -143,7 +143,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 	// create pool
 	res, err = queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Equal("5000000bar,5000000baz,5000000foo", sdk.Coins(res.Liquidity).String())
+	suite.Require().Equal("5000000bar,5000000baz,5000000foo,5000000uosmo", sdk.Coins(res.Liquidity).String())
 }
 
 func (suite *KeeperTestSuite) TestQueryBalancerPoolPoolAssets() {
@@ -171,17 +171,23 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolPoolAssets() {
 			Weight: sdk.NewInt(100 * GuaranteedWeightPrecision),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
 		},
+		{
+			Weight: sdk.NewInt(400 * GuaranteedWeightPrecision),
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+		},
 	*/
 	PoolAssets := res.PoolAssets
-	suite.Require().Equal(3, len(PoolAssets))
+	suite.Require().Equal(4, len(PoolAssets))
 
 	suite.Require().Equal(sdk.NewInt(200*types.GuaranteedWeightPrecision), PoolAssets[0].Weight)
 	suite.Require().Equal(sdk.NewInt(300*types.GuaranteedWeightPrecision), PoolAssets[1].Weight)
 	suite.Require().Equal(sdk.NewInt(100*types.GuaranteedWeightPrecision), PoolAssets[2].Weight)
+	suite.Require().Equal(sdk.NewInt(400*types.GuaranteedWeightPrecision), PoolAssets[3].Weight)
 
 	suite.Require().Equal("5000000bar", PoolAssets[0].Token.String())
 	suite.Require().Equal("5000000baz", PoolAssets[1].Token.String())
 	suite.Require().Equal("5000000foo", PoolAssets[2].Token.String())
+	suite.Require().Equal("5000000uosmo", PoolAssets[3].Token.String())
 }
 
 func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {

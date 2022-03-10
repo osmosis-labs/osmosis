@@ -72,6 +72,10 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 			Weight: sdk.NewInt(300),
 			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
 		},
+		{
+			Weight: sdk.NewInt(400),
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+		},
 	}, "")
 	suite.NoError(err)
 	return poolId
