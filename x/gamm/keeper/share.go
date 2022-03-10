@@ -21,8 +21,6 @@ func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, pool types.PoolI, addr s
 		return err
 	}
 
-	pool.AddTotalShares(amount)
-
 	return nil
 }
 
@@ -41,8 +39,6 @@ func (k Keeper) BurnPoolShareFromAccount(ctx sdk.Context, pool types.PoolI, addr
 	if err != nil {
 		return err
 	}
-
-	pool.SubTotalShares(amount)
 
 	return nil
 }

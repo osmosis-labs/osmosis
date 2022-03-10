@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmomath"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // solveConstantFunctionInvariant solves the constant function of an AMM
@@ -33,25 +32,6 @@ func solveConstantFunctionInvariant(
 	foo := osmomath.Pow(y, weightRatio)
 	multiplier := sdk.OneDec().Sub(foo)
 	return tokenBalanceUnknownBefore.Mul(multiplier)
-}
-
-func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
-	Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
-	Aasset, found1 := types.GetPoolAssetByDenom(p.PoolAssets, tokenADenom)
-	Basset, found2 := types.GetPoolAssetByDenom(p.PoolAssets, tokenBDenom)
-	if !(found1 && found2) {
-		return Aasset, Basset, errors.New("TODO: fill message here")
-	}
-	return Aasset, Basset, nil
-}
-
-func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
-	tokenA sdk.Coin, Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
-	if len(tokensA) != 1 {
-		return tokenA, Aasset, Basset, errors.New("TODO: Fill message here")
-	}
-	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokensA[0].Denom, tokenBDenom)
-	return tokensA[0], Aasset, Basset, err
 }
 
 // CalcOutAmtGivenIn calculates token to be swapped out given
@@ -102,9 +82,36 @@ func (p Pool) CalcInAmtGivenOut(
 	return sdk.NewDecCoinFromDec(tokenInDenom, tokenAmountInBeforeFee), nil
 }
 
-// TODO: Copy paste correct code here
+// ApplySwap
+func (p *Pool) ApplySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
+	// Also ensures that len(tokensIn) = 0 = len(tokensOut)
+	inPoolAsset, outPoolAsset, err := p.parsePoolAssetsCoins(tokensIn, tokensOut)
+	if err != nil {
+		return err
+	}
+	inPoolAsset.Token.Amount = inPoolAsset.Token.Amount.Add(tokensIn[0].Amount)
+	outPoolAsset.Token.Amount = outPoolAsset.Token.Amount.Sub(tokensOut[0].Amount)
+
+	return p.UpdatePoolAssetBalances(sdk.NewCoins(
+		inPoolAsset.Token,
+		outPoolAsset.Token,
+	))
+}
+
+// SpotPrice returns the spot price of the pool
+// This is the weight-adjusted balance of the tokens in the pool.
+// so spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
 func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset string, baseAsset string) (sdk.Dec, error) {
-	return sdk.ZeroDec(), nil
+	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	numerator := base.Token.Amount.ToDec().QuoInt(base.Weight)
+	denom := quote.Token.Amount.ToDec().QuoInt(quote.Weight)
+	ratio := numerator.Quo(denom)
+
+	return ratio, nil
 }
 
 func feeRatio(
@@ -138,6 +145,35 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 	return sdk.ZeroInt(), errors.New("TODO: Implement")
 }
 
-func (p *Pool) ExitPool(ctx sdk.Context, numShares sdk.Int) (exitedCoins sdk.Coins, err error) {
-	return sdk.Coins{}, errors.New("TODO: Implement")
+func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
+	totalShares := p.GetTotalShares()
+	if exitingShares.GTE(totalShares) {
+		return sdk.Coins{}, errors.New(("too many shares out"))
+	}
+
+	refundedShares := exitingShares
+	if !exitFee.IsZero() {
+		// exitingShares * (1 - exit fee)
+		// Todo: make a -1 constant
+		oneSubExitFee := sdk.OneDec().Sub(exitFee)
+		refundedShares = oneSubExitFee.MulInt(exitingShares).TruncateInt()
+	}
+
+	shareOutRatio := totalShares.ToDec().QuoInt(refundedShares)
+	// Make it shareOutRatio * pool LP balances
+	exitedCoins = sdk.Coins{}
+	balances := p.GetTotalLpBalances(ctx)
+	for _, asset := range balances {
+		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
+		if exitAmt.LTE(sdk.ZeroInt()) {
+			continue
+		}
+		exitedCoins = exitedCoins.Add(sdk.NewCoin(asset.Denom, exitAmt))
+		// update pool assets for this exit amount.
+		newAmt := asset.Amount.Sub(exitAmt)
+		p.UpdatePoolAssetBalance(sdk.NewCoin(asset.Denom, newAmt))
+	}
+
+	p.TotalShares = sdk.NewCoin(p.TotalShares.Denom, totalShares.Sub(exitingShares))
+	return exitedCoins, nil
 }

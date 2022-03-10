@@ -77,7 +77,7 @@ func (pa Pool) GetTotalLpBalances(_ sdk.Context) sdk.Coins {
 	return types.PoolAssetsCoins(pa.PoolAssets)
 }
 
-func (pa Pool) GetPoolExitFee() sdk.Dec {
+func (pa Pool) GetExitFee(_ sdk.Context) sdk.Dec {
 	return pa.PoolParams.ExitFee
 }
 
@@ -222,6 +222,34 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, types.PoolAsset, error) 
 	}
 
 	return i, pa.PoolAssets[i], nil
+}
+
+func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
+	Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	Aasset, found1 := types.GetPoolAssetByDenom(p.PoolAssets, tokenADenom)
+	Basset, found2 := types.GetPoolAssetByDenom(p.PoolAssets, tokenBDenom)
+	if !(found1 && found2) {
+		return Aasset, Basset, errors.New("TODO: fill message here")
+	}
+	return Aasset, Basset, nil
+}
+
+func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
+	tokenA sdk.Coin, Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	if len(tokensA) != 1 {
+		return tokenA, Aasset, Basset, errors.New("TODO: Fill message here")
+	}
+	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokensA[0].Denom, tokenBDenom)
+	return tokensA[0], Aasset, Basset, err
+}
+
+func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
+	Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	if len(tokensB) != 1 {
+		return Aasset, Basset, errors.New("TODO: Fill message here")
+	}
+	_, Aasset, Basset, err = p.parsePoolAssets(tokensA, tokensB[0].Denom)
+	return Aasset, Basset, err
 }
 
 func (pa *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {

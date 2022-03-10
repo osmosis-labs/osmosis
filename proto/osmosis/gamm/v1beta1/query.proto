@@ -118,7 +118,8 @@ message QuerySpotPriceRequest {
   string tokenInDenom = 2 [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
   string tokenOutDenom = 3
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
-  bool withSwapFee = 4 [ (gogoproto.moretags) = "yaml:\"with_swap_fee\"" ];
+  reserved 4;
+  reserved "withSwapFee";
 }
 message QuerySpotPriceResponse {
   // String of the Dec. Ex) 10.203uatom

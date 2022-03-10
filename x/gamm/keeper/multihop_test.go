@@ -57,8 +57,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 					if i != 0 {
 						tokenInDenom = test.param.routes[i-1].TokenOutDenom
 					}
+					pool, err := keeper.GetPool(suite.ctx, route.PoolId)
+					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, route.PoolId, tokenInDenom, route.TokenOutDenom)
+					sp, err := pool.SpotPrice(suite.ctx, tokenInDenom, route.TokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
@@ -76,8 +78,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 					if i != 0 {
 						tokenInDenom = test.param.routes[i-1].TokenOutDenom
 					}
+					pool, err := keeper.GetPool(suite.ctx, route.PoolId)
+					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, route.PoolId, tokenInDenom, route.TokenOutDenom)
+					sp, err := pool.SpotPrice(suite.ctx, tokenInDenom, route.TokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
@@ -145,8 +149,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 					if i != len(test.param.routes)-1 {
 						tokenOutDenom = test.param.routes[i+1].TokenInDenom
 					}
+					pool, err := keeper.GetPool(suite.ctx, route.PoolId)
+					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, route.PoolId, route.TokenInDenom, tokenOutDenom)
+					sp, err := pool.SpotPrice(suite.ctx, route.TokenInDenom, tokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
@@ -164,8 +170,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 					if i != len(test.param.routes)-1 {
 						tokenOutDenom = test.param.routes[i+1].TokenInDenom
 					}
+					pool, err := keeper.GetPool(suite.ctx, route.PoolId)
+					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, route.PoolId, route.TokenInDenom, tokenOutDenom)
+					sp, err := pool.SpotPrice(suite.ctx, route.TokenInDenom, tokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
