@@ -16,6 +16,7 @@ func (k Keeper) SwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
+	swapFeeMultiplier sdk.Dec,
 ) (tokenOutAmount sdk.Int, spotPriceAfter sdk.Dec, err error) {
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
@@ -40,7 +41,7 @@ func (k Keeper) SwapExactAmountIn(
 		outPoolAsset.Token.Amount.ToDec(),
 		outPoolAsset.Weight.ToDec(),
 		tokenIn.Amount.ToDec(),
-		pool.GetPoolSwapFee(),
+		pool.GetPoolSwapFee().Mul(swapFeeMultiplier),
 	).TruncateInt()
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -70,6 +71,7 @@ func (k Keeper) SwapExactAmountOut(
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
+	swapFeeMultiplier sdk.Dec,
 ) (tokenInAmount sdk.Int, spotPriceAfter sdk.Dec, err error) {
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
@@ -97,7 +99,7 @@ func (k Keeper) SwapExactAmountOut(
 		outPoolAsset.Token.Amount.ToDec(),
 		outPoolAsset.Weight.ToDec(),
 		tokenOut.Amount.ToDec(),
-		pool.GetPoolSwapFee(),
+		pool.GetPoolSwapFee().Mul(swapFeeMultiplier),
 	).TruncateInt()
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")

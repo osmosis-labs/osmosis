@@ -16,13 +16,20 @@ func (k Keeper) MultihopSwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
+
+	swapFeeMultiplier := sdk.OneDec()
+
+	if types.SwapAmountInRoutes(routes).IsOsmoRoutedMultihop() {
+		swapFeeMultiplier = sdk.NewDecWithPrec(5, 1)
+	}
+
 	for i, route := range routes {
 		_outMinAmount := sdk.NewInt(1)
 		if len(routes)-1 == i {
 			_outMinAmount = tokenOutMinAmount
 		}
 
-		tokenOutAmount, _, err = k.SwapExactAmountIn(ctx, sender, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount)
+		tokenOutAmount, _, err = k.SwapExactAmountIn(ctx, sender, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount, swapFeeMultiplier)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -49,13 +56,19 @@ func (k Keeper) MultihopSwapExactAmountOut(
 
 	insExpected[0] = tokenInMaxAmount
 
+	swapFeeMultiplier := sdk.OneDec()
+
+	if types.SwapAmountOutRoutes(routes).IsOsmoRoutedMultihop() {
+		swapFeeMultiplier = sdk.NewDecWithPrec(5, 1)
+	}
+
 	for i, route := range routes {
 		_tokenOut := tokenOut
 		if i != len(routes)-1 {
 			_tokenOut = sdk.NewCoin(routes[i+1].TokenInDenom, insExpected[i+1])
 		}
 
-		_tokenInAmount, _, err := k.SwapExactAmountOut(ctx, sender, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut)
+		_tokenInAmount, _, err := k.SwapExactAmountOut(ctx, sender, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut, swapFeeMultiplier)
 		if err != nil {
 			return sdk.Int{}, err
 		}

@@ -46,7 +46,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			_, _, err = suite.App.GAMMKeeper.SwapExactAmountOut(
 				suite.Ctx, acc1,
 				poolIds[0], poolAssets[1].Token.Denom, poolAssets[1].Token.Amount,
-				sdk.NewCoin(poolAssets[0].Token.Denom, poolAssets[0].Token.Amount.Quo(sdk.NewInt(4))))
+				sdk.NewCoin(poolAssets[0].Token.Denom, poolAssets[0].Token.Amount.Quo(sdk.NewInt(4))),
+				sdk.OneDec())
 			suite.Require().NoError(err)
 
 			// run epoch actions

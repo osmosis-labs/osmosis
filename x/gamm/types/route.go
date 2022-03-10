@@ -1,6 +1,9 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+)
 
 type SwapAmountInRoutes []SwapAmountInRoute
 
@@ -19,6 +22,10 @@ func (routes SwapAmountInRoutes) Validate() error {
 	return nil
 }
 
+func (routes SwapAmountInRoutes) IsOsmoRoutedMultihop() bool {
+	return len(routes) == 2 && (routes[0].TokenOutDenom == appparams.BaseCoinUnit)
+}
+
 type SwapAmountOutRoutes []SwapAmountOutRoute
 
 func (routes SwapAmountOutRoutes) Validate() error {
@@ -34,4 +41,8 @@ func (routes SwapAmountOutRoutes) Validate() error {
 	}
 
 	return nil
+}
+
+func (routes SwapAmountOutRoutes) IsOsmoRoutedMultihop() bool {
+	return len(routes) == 2 && (routes[1].TokenInDenom == appparams.BaseCoinUnit)
 }

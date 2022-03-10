@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
 	err = suite.app.GAMMKeeper.CleanupBalancerPool(suite.ctx, []uint64{poolId}, []string{})
 	suite.NoError(err)
 
-	_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, sdk.NewCoin("foo", sdk.NewInt(1)), "bar", sdk.NewInt(1))
+	_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, sdk.NewCoin("foo", sdk.NewInt(1)), "bar", sdk.NewInt(1), sdk.OneDec())
 	suite.Error(err)
 }
 
