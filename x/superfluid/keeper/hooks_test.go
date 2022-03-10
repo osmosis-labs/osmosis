@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolIds[0])
 			suite.Require().NoError(err)
 			poolAssets := pool.GetAllPoolAssets()
-			suite.balancerTestHelper.SwapAndSetSpotPrice(poolIds[0], poolAssets[1], poolAssets[0])
+			suite.SwapAndSetSpotPrice(poolIds[0], poolAssets[1], poolAssets[0])
 
 			// run epoch actions
 			suite.BeginNewBlock(true)

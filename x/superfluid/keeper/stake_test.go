@@ -86,7 +86,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegate(delAddr sdk.AccAddress, va
 	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}
 	lastLockID := suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
 
-	lockID := suite.lockupTestHelper.LockTokens(delAddr, coins, unbondingDuration)
+	lockID := suite.LockTokens(delAddr, coins, unbondingDuration)
 	lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 	suite.Require().NoError(err)
 

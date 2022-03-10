@@ -10,8 +10,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting/balancertesting"
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting/lockuptesting"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -27,18 +25,11 @@ import (
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
-	balancerTestHelper balancertesting.BalancerTestHelper
-	lockupTestHelper   lockuptesting.LockupTestHelper
-
 	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.App = app.Setup(false)
-
-	// make reference to keepertesthelpers
-	suite.balancerTestHelper.KeeperTestHelper = &suite.KeeperTestHelper
-	suite.lockupTestHelper.KeeperTestHelper = &suite.KeeperTestHelper
 
 	startTime := time.Unix(1645580000, 0)
 	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
@@ -139,7 +130,7 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 }
 
 func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
-	pools := suite.balancerTestHelper.SetupGammPoolsWithBondDenomMultiplier(multipliers)
+	pools := suite.SetupGammPoolsWithBondDenomMultiplier(multipliers)
 
 	denoms := []string{}
 	poolIds := []uint64{}
