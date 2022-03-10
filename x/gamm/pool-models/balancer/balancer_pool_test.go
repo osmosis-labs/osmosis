@@ -35,15 +35,6 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool Pool) {
 		pool.GetTotalWeight().String())
 }
 
-func TestBalancerPoolShareDenom(t *testing.T) {
-	var poolId uint64 = 10
-
-	pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
-	require.NoError(t, err)
-
-	require.Equal(t, "gamm/pool/10", pacc.GetTotalShares().Denom)
-}
-
 func TestBalancerPoolParams(t *testing.T) {
 	// Tests that creating a pool with the given pair of swapfee and exit fee
 	// errors or succeeds as intended. Furthermore, it checks that

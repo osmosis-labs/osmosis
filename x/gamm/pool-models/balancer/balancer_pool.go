@@ -13,6 +13,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+var _ types.PoolI = &Pool{}
+
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
 // Invariants that are assumed to be satisfied and not checked:
 // (This is handled in ValidateBasic)
@@ -67,8 +69,12 @@ func (pa Pool) GetId() uint64 {
 	return pa.Id
 }
 
-func (pa Pool) GetPoolSwapFee() sdk.Dec {
+func (pa Pool) GetSwapFee(_ sdk.Context) sdk.Dec {
 	return pa.PoolParams.SwapFee
+}
+
+func (pa Pool) GetTotalLpBalances(_ sdk.Context) sdk.Coins {
+	return types.PoolAssetsCoins(pa.PoolAssets)
 }
 
 func (pa Pool) GetPoolExitFee() sdk.Dec {
@@ -83,8 +89,8 @@ func (pa Pool) GetTotalWeight() sdk.Int {
 	return pa.TotalWeight
 }
 
-func (pa Pool) GetTotalShares() sdk.Coin {
-	return pa.TotalShares
+func (pa Pool) GetTotalShares() sdk.Int {
+	return pa.TotalShares.Amount
 }
 
 func (pa *Pool) AddTotalShares(amt sdk.Int) {
