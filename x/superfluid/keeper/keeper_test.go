@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -11,6 +10,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v7/app/apptesting/balancertesting"
+	"github.com/osmosis-labs/osmosis/v7/app/apptesting/lockuptesting"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -18,35 +19,26 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-
 	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
-	queryClient types.QueryClient
-}
+	balancerTestHelper balancertesting.BalancerTestHelper
+	lockupTestHelper   lockuptesting.LockupTestHelper
 
-func (suite *KeeperTestSuite) GetSuite() *suite.Suite {
-	return &suite.Suite
-}
-func (suite *KeeperTestSuite) GetCtx() sdk.Context {
-	return suite.Ctx
-}
-func (suite *KeeperTestSuite) GetApp() *app.OsmosisApp {
-	return suite.App
-}
-func (suite *KeeperTestSuite) SetCtx(Ctx sdk.Context) {
-	suite.Ctx = Ctx
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.App = app.Setup(false)
+
+	// make reference to keepertesthelpers
+	suite.balancerTestHelper.KeeperTestHelper = &suite.KeeperTestHelper
+	suite.lockupTestHelper.KeeperTestHelper = &suite.KeeperTestHelper
 
 	startTime := time.Unix(1645580000, 0)
 	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
@@ -137,15 +129,6 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	return poolId
 }
 
-func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
-	msgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
-	suite.Require().NoError(err)
-	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
-	suite.Require().NoError(err)
-	return msgResponse.ID
-}
-
 func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
 	valAddrs := []sdk.ValAddress{}
 	for _, status := range bondStatuses {
@@ -156,52 +139,13 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 }
 
 func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
-	suite.App.GAMMKeeper.SetParams(suite.Ctx, gammtypes.Params{
-		PoolCreationFee: sdk.Coins{},
-	})
+	pools := suite.balancerTestHelper.SetupGammPoolsWithBondDenomMultiplier(multipliers)
 
-	bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
-
-	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 	denoms := []string{}
 	poolIds := []uint64{}
-
-	for index, multiplier := range multipliers {
-		token := fmt.Sprintf("token%d", index)
-
-		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
-
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, sdk.NewCoins(
-			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
-			sdk.NewInt64Coin(token, 100000),
-		))
-		suite.NoError(err)
-
-		var (
-			defaultFutureGovernor = ""
-
-			// pool assets
-			defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
-			}
-			defaultBarAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
-			}
-			poolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
-		)
-
-		poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(suite.Ctx, acc1, balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, poolAssets, defaultFutureGovernor)
-		suite.Require().NoError(err)
-
-		pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
-		suite.Require().NoError(err)
-
+	for _, pool := range pools {
 		denom := pool.GetTotalShares().Denom
+
 		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,
 			AssetType: types.SuperfluidAssetTypeLPShare,
@@ -213,9 +157,10 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		})
 
-		poolIds = append(poolIds, poolId)
 		denoms = append(denoms, denom)
+		poolIds = append(poolIds, pool.GetId())
 	}
+
 	return denoms, poolIds
 }
 
