@@ -15,6 +15,34 @@ type PoolI interface {
 
 	GetAddress() sdk.AccAddress
 	String() string
+	GetId() uint64
+	// Todo: may have to generalize this later
+	// Also todo: come up with better name here
+	GetSwapFee(ctx sdk.Context) sdk.Dec
+	// Todo: These may not be needed
+	NumAssets() int
+	IsActive(curBlockTime time.Time) bool
+	// Returns the coins in the pool owned by all LP shareholders
+	GetTotalLpBalances(ctx sdk.Context) sdk.Coins
+	GetTotalShares() sdk.Int
+
+	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.DecCoin, err error)
+	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.DecCoin, err error)
+
+	SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error)
+
+	// JoinPool joins the pool, and uses all of the tokensIn provided.
+	// The AMM swaps to whatever the ratio should be and returns the number of shares created.
+	JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
+	ExitPool(ctx sdk.Context, numShares sdk.Int) (exitedCoins sdk.Coins, err error)
+}
+
+// LegacyPoolI defines an interface for pools that hold tokens.
+type LegacyPoolI interface {
+	proto.Message
+
+	GetAddress() sdk.AccAddress
+	String() string
 
 	GetId() uint64
 	GetPoolSwapFee() sdk.Dec
