@@ -1,5 +1,7 @@
 package cosmwasm
 
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
 type Swap struct {
 	PoolId   uint64 `json:"pool_id"`
 	DenomIn  string `json:"denom_in"`
@@ -12,8 +14,8 @@ type Step struct {
 }
 
 type SwapAmount struct {
-	In  string `json:"in,omitempty"`
-	Out string `json:"out,omitempty"`
+	In  *sdk.Int `json:"in,omitempty"`
+	Out *sdk.Int `json:"out,omitempty"`
 }
 
 type SwapAmountWithLimit struct {
@@ -22,11 +24,11 @@ type SwapAmountWithLimit struct {
 }
 
 type ExactIn struct {
-	Input     string `json:"input"`
-	MinOutput string `json:"min_output"`
+	Input     sdk.Int `json:"input"`
+	MinOutput sdk.Int `json:"min_output"`
 }
 
 type ExactOut struct {
-	MaxInput string `json:"max_input"`
-	Output   string `json:"output"`
+	MaxInput sdk.Int `json:"max_input"`
+	Output   sdk.Int `json:"output"`
 }
