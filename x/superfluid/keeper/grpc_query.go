@@ -80,6 +80,17 @@ func (k Keeper) ConnectedIntermediaryAccount(goCtx context.Context, req *types.C
 	address := k.GetLockIdIntermediaryAccountConnection(ctx, req.LockId)
 	acc := k.GetIntermediaryAccount(ctx, address)
 
+	if len(acc.Denom) == 0 && acc.GaugeId == uint64(0) && len(acc.ValAddr) == 0 {
+		return &types.ConnectedIntermediaryAccountResponse{
+			Account: &types.SuperfluidIntermediaryAccountInfo{
+				Denom:   acc.Denom,
+				ValAddr: acc.ValAddr,
+				GaugeId: acc.GaugeId,
+				Address: "",
+			},
+		}, nil
+	}
+
 	return &types.ConnectedIntermediaryAccountResponse{
 		Account: &types.SuperfluidIntermediaryAccountInfo{
 			Denom:   acc.Denom,
