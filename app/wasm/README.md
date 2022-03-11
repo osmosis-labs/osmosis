@@ -1,4 +1,4 @@
-# Wasm Tests
+# CosmWasm integration
 
 This contains a few high level test that `x/wasm` is properly integrated.
 
