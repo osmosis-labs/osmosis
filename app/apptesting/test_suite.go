@@ -107,12 +107,12 @@ func (keeperTestHelper *KeeperTestHelper) EndBlock() {
 	keeperTestHelper.App.EndBlocker(keeperTestHelper.Ctx, reqEndBlock)
 }
 
-func (keeperTestHelper *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress) {
+func (keeperTestHelper *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
 	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddr)
 	keeperTestHelper.Require().True(found)
 
 	// allocate reward tokens to distribution module
-	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000))}
+	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, rewardAmt)}
 	err := simapp.FundModuleAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, distrtypes.ModuleName, coins)
 	keeperTestHelper.Require().NoError(err)
 

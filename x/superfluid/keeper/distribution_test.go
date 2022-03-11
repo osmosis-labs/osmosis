@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {
-				suite.AllocateRewardsToValidator(valAddrs[valIndex])
+				suite.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
 			}
 
 			// move intermediary account delegation rewards to gauges
