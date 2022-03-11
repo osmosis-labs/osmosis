@@ -787,16 +787,8 @@ github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnh
 github.com/ory/dockertest/v3 v3.6.2/go.mod h1:EFLcVUOl8qCwp9NyDAcCDtq/QviLtYswW/VbWzUnTNE=
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc2 h1:7xy1pLtNiF2KaRSkolayZf4z3OfCJsO3eqBtEAXg2VA=
 github.com/osmosis-labs/bech32-ibc v0.2.0-rc2/go.mod h1:0JCaioRNOVUiw7c3MngmKACnumaQ2sjPenXCnwxCttI=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220221115656-75545ea8cb2d h1:Y0JpKFb4n04ViTMUGm7SO4OobWKr6dBB/l3cvuBe6EY=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220221115656-75545ea8cb2d/go.mod h1:HsD/JxengDcevHFRA+wlWgeM78Og3ZwYM+cya3yOa7c=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220303025721-7f1c77addd36 h1:NXmRt2dx6rAA2Q3G8wBVxpkcNEQvJCztihxdmZy1cd4=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220303025721-7f1c77addd36/go.mod h1:UXp4GVQX3+u5iP1VQ7YZtGuLs0Fj5RBSSIi3xMYdUWI=
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220309184504-1640058bad8a h1:xxsTTY8O+PHAQieff4t5PQPCd5Fum1qk8jajcZrKSjw=
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220309184504-1640058bad8a/go.mod h1:7hy9bXGNkZVlq7MtejLafgPRuTnidBkyBnTEaMCj6Jc=
-github.com/osmosis-labs/iavl v0.17.3-osmo-v3 h1:q2Qv3+DK52w5b68I96VApHI05jBu7HeQK/YDttKh/jY=
-github.com/osmosis-labs/iavl v0.17.3-osmo-v3/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
-github.com/osmosis-labs/iavl v0.17.3-osmo-v4 h1:U1HA2WEMAYVPjeJlfClH10ajv6O0C1C1jk/SQxDPwyM=
-github.com/osmosis-labs/iavl v0.17.3-osmo-v4/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v5 h1:B6Saw2AK0StgfSSgi2rUc5B8MDa1vV1nGJUyYM7THus=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v5/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo h1:XyYyDTjPIu7qX2nhQp9mboj7Pa9FEnjg1RXw73Ctv5U=
@@ -951,8 +943,9 @@ github.com/spf13/cobra v0.0.5/go.mod h1:3K3wKZymM7VvHMDS9+Akkh4K60UwM26emMESw8tL
 github.com/spf13/cobra v1.0.0/go.mod h1:/6GTrnGXV9HjY+aR4k0oJ5tcvakLuG6EuKReYlHNrgE=
 github.com/spf13/cobra v1.1.1/go.mod h1:WnodtKOvamDL/PwE2M4iKs8aMDBZ5Q5klgD3qfVJQMI=
 github.com/spf13/cobra v1.2.1/go.mod h1:ExllRjgxM/piMAM+3tAZvg8fsklGAf3tPfi+i8t68Nk=
-github.com/spf13/cobra v1.3.0 h1:R7cSvGu+Vv+qX0gW5R/85dx2kmmJT5z5NM8ifdYjdn0=
 github.com/spf13/cobra v1.3.0/go.mod h1:BrRVncBjOJa/eUcVVm9CE+oC6as8k+VYr4NY7WCi9V4=
+github.com/spf13/cobra v1.4.0 h1:y+wJpx64xcgO1V+RcnwW0LEHxTKRi2ZDPSBjWnrg88Q=
+github.com/spf13/cobra v1.4.0/go.mod h1:Wo4iy3BUC+X2Fybo0PDqwJIv3dNRiZLHQymsfxlB84g=
 github.com/spf13/jwalterweatherman v1.0.0/go.mod h1:cQK4TGJAtQXfYWX+Ddv3mKDzgVb68N+wFjFa4jdeBTo=
 github.com/spf13/jwalterweatherman v1.1.0 h1:ue6voC5bR5F8YxI5S67j9i582FU4Qvo2bmqnqMYADFk=
 github.com/spf13/jwalterweatherman v1.1.0/go.mod h1:aNWZUN0dPAAO/Ljvb5BEdw96iTZ0EXowPYD95IqWIGo=
