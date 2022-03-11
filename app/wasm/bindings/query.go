@@ -23,7 +23,7 @@ type FullDenom struct {
 }
 
 type PoolState struct {
-	PoolId int `json:"id"`
+	PoolId uint64 `json:"id"`
 }
 
 type SpotPrice struct {

@@ -1,13 +1,13 @@
 package cosmwasm
 
 type Swap struct {
-	PoolId   int    `json:"pool_id"`
+	PoolId   uint64 `json:"pool_id"`
 	DenomIn  string `json:"denom_in"`
 	DenomOut string `json:"denom_out"`
 }
 
 type Step struct {
-	PoolId   int    `json:"pool_id"`
+	PoolId   uint64 `json:"pool_id"`
 	DenomOut string `json:"denom_out"`
 }
 
