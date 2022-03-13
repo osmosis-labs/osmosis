@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 			}
 
 			// check invariant is fine
-			reason, broken := keeper.AllInvariants(*suite.app.SuperfluidKeeper)(suite.ctx)
+			reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
 			suite.Require().False(broken, reason)
 
 			// try delegating twice with same lockup
@@ -390,7 +390,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 			}
 
 			// check invariant is fine
-			reason, broken := keeper.AllInvariants(*suite.app.SuperfluidKeeper)(suite.ctx)
+			reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
 			suite.Require().False(broken, reason)
 
 			// check remaining intermediary account delegation
@@ -508,7 +508,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		suite.Require().Equal(sdk.NewInt(1000000), balances[0].Amount)
 
 		// check invariant is fine
-		reason, broken := keeper.AllInvariants(*suite.app.SuperfluidKeeper)(suite.ctx)
+		reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
 		suite.Require().False(broken, reason)
 	}
 }
