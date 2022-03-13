@@ -1,4 +1,4 @@
-package cosmwasm
+package wasm
 
 // OsmosisQuery contains osmosis custom queries.
 // See https://github.com/confio/osmosis-bindings/blob/main/packages/bindings/src/query.rs
