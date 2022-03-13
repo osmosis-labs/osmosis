@@ -1,4 +1,4 @@
-package cosmwasm
+package wasm
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
