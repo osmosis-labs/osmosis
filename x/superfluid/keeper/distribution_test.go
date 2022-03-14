@@ -2,28 +2,10 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 )
-
-func (suite *KeeperTestSuite) allocateRewardsToValidator(valAddr sdk.ValAddress) {
-	validator, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddr)
-	suite.Require().True(found)
-
-	// allocate reward tokens to distribution module
-	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000))}
-	suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, coins)
-	suite.App.BankKeeper.SendCoinsFromModuleToModule(suite.Ctx, minttypes.ModuleName, distrtypes.ModuleName, coins)
-
-	// allocate rewards to validator
-	suite.Ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
-	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
-	suite.App.DistrKeeper.AllocateTokensToValidator(suite.Ctx, validator, decTokens)
-	suite.App.DistrKeeper.IncrementValidatorPeriod(suite.Ctx, validator)
-}
 
 func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 	type gaugeChecker struct {
@@ -92,7 +74,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {
-				suite.allocateRewardsToValidator(valAddrs[valIndex])
+				suite.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
 			}
 
 			// move intermediary account delegation rewards to gauges

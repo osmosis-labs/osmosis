@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -18,11 +17,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-
 	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
@@ -32,26 +28,11 @@ type KeeperTestSuite struct {
 	queryClient types.QueryClient
 }
 
-func (suite *KeeperTestSuite) GetSuite() *suite.Suite {
-	return &suite.Suite
-}
-func (suite *KeeperTestSuite) GetCtx() sdk.Context {
-	return suite.Ctx
-}
-func (suite *KeeperTestSuite) GetApp() *app.OsmosisApp {
-	return suite.App
-}
-func (suite *KeeperTestSuite) SetCtx(Ctx sdk.Context) {
-	suite.Ctx = Ctx
-}
-
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.App = app.Setup(false)
 
 	startTime := time.Unix(1645580000, 0)
 	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
-	a := suite.App.StakingKeeper.GetParams(suite.Ctx).BondDenom
-	fmt.Println(a)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.App.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
@@ -139,15 +120,6 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	return poolId
 }
 
-func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
-	msgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
-	suite.Require().NoError(err)
-	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
-	suite.Require().NoError(err)
-	return msgResponse.ID
-}
-
 func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
 	valAddrs := []sdk.ValAddress{}
 	for _, status := range bondStatuses {
@@ -157,6 +129,35 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 	return valAddrs
 }
 
+<<<<<<< HEAD
+=======
+func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
+	pools := suite.SetupGammPoolsWithBondDenomMultiplier(multipliers)
+
+	denoms := []string{}
+	poolIds := []uint64{}
+	for _, pool := range pools {
+		denom := pool.GetTotalShares().Denom
+
+		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+			Denom:     denom,
+			AssetType: types.SuperfluidAssetTypeLPShare,
+		})
+
+		// register a LP token as a superfluid asset
+		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+			Denom:     denom,
+			AssetType: types.SuperfluidAssetTypeLPShare,
+		})
+
+		denoms = append(denoms, denom)
+		poolIds = append(poolIds, pool.GetId())
+	}
+
+	return denoms, poolIds
+}
+
+>>>>>>> 00b4b2c (Test improvisation for Superfluid (#1070))
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
