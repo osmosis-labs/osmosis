@@ -120,16 +120,22 @@ func (keeperTestHelper *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk
 	keeperTestHelper.Ctx = keeperTestHelper.Ctx.WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
 	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
 	keeperTestHelper.App.DistrKeeper.AllocateTokensToValidator(keeperTestHelper.Ctx, validator, decTokens)
-	keeperTestHelper.App.DistrKeeper.IncrementValidatorPeriod(keeperTestHelper.Ctx, validator)
 }
 
+// SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
 func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
 	keeperTestHelper.App.GAMMKeeper.SetParams(keeperTestHelper.Ctx, gammtypes.Params{
 		PoolCreationFee: sdk.Coins{},
 	})
 
 	bondDenom := keeperTestHelper.App.StakingKeeper.BondDenom(keeperTestHelper.Ctx)
+	//TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+
+	//fund account with pool creation fee
+	poolCreationFee := keeperTestHelper.App.GAMMKeeper.GetParams(keeperTestHelper.Ctx)
+	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, poolCreationFee.PoolCreationFee)
+	keeperTestHelper.Require().NoError(err)
 
 	pools := []gammtypes.PoolI{}
 
