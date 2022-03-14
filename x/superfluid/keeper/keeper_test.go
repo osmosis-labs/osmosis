@@ -157,6 +157,70 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 	return valAddrs
 }
 
+func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
+	suite.App.GAMMKeeper.SetParams(suite.Ctx, gammtypes.Params{
+		PoolCreationFee: sdk.Coins{},
+	})
+
+	bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
+
+	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+	denoms := []string{}
+	poolIds := []uint64{}
+
+	for index, multiplier := range multipliers {
+		token := fmt.Sprintf("token%d", index)
+
+		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
+
+		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, sdk.NewCoins(
+			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
+			sdk.NewInt64Coin(token, 100000),
+		))
+		suite.NoError(err)
+
+		var (
+			defaultFutureGovernor = ""
+
+			// pool assets
+			defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
+			}
+			defaultBarAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
+			}
+			poolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+		)
+
+		poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(suite.Ctx, acc1, balancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.NewDecWithPrec(1, 2),
+		}, poolAssets, defaultFutureGovernor)
+		suite.Require().NoError(err)
+
+		pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+		suite.Require().NoError(err)
+
+		denom := pool.GetTotalShares().Denom
+		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+			Denom:     denom,
+			AssetType: types.SuperfluidAssetTypeLPShare,
+		})
+
+		// register a LP token as a superfluid asset
+		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+			Denom:     denom,
+			AssetType: types.SuperfluidAssetTypeLPShare,
+		})
+
+		poolIds = append(poolIds, poolId)
+		denoms = append(denoms, denom)
+	}
+	return denoms, poolIds
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
