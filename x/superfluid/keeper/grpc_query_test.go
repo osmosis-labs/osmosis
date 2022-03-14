@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	}
 
 	// setup superfluid delegations
-	suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
+	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
 
 	// for each superfluid delegation, query the amount and make sure it is 1000000
 	for _, delegation := range superfluidDelegations {
@@ -108,6 +108,20 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	totalSuperfluidDelegationsRes, err := suite.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(suite.Ctx), &types.TotalSuperfluidDelegationsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewInt(40000000), totalSuperfluidDelegationsRes.TotalDelegations)
+
+	for _, lockID := range locks {
+		connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: lockID.ID})
+		suite.Require().NoError(err)
+		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Denom)
+		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Address)
+		suite.Require().NotEqual(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
+
+	}
+	connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: 123})
+	suite.Require().NoError(err)
+	suite.Require().Equal("", connectedIntermediaryAccountRes.Account.Denom)
+	suite.Require().Equal("", connectedIntermediaryAccountRes.Account.ValAddr)
+	suite.Require().Equal(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
 }
 
 func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
@@ -171,4 +185,8 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	})
 	suite.Require().NoError(err)
 	suite.Require().Len(delegationsRes.SuperfluidDelegationRecords, 1)
+
+	totalSuperfluidDelegationsRes, err := suite.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(suite.Ctx), &types.TotalSuperfluidDelegationsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(totalSuperfluidDelegationsRes.TotalDelegations, sdk.NewInt(30000000))
 }

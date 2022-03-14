@@ -318,7 +318,7 @@ func (k Keeper) TotalSuperfluidDelegations(goCtx context.Context, req *types.Tot
 
 		delegation, found := k.sk.GetDelegation(ctx, intermediaryAccount.GetAccAddress(), valAddr)
 		if !found {
-			return nil, stakingtypes.ErrNoDelegation
+			continue
 		}
 
 		syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens).RoundInt()
