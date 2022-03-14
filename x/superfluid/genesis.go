@@ -25,7 +25,15 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
+<<<<<<< HEAD
 		SuperfluidAssets:          k.GetAllSuperfluidAssets(ctx),
 		OsmoEquivalentMultipliers: k.GetAllOsmoEquivalentMultipliers(ctx),
+=======
+		Params:                        k.GetParams(ctx),
+		SuperfluidAssets:              k.GetAllSuperfluidAssets(ctx),
+		OsmoEquivalentMultipliers:     k.GetAllOsmoEquivalentMultipliers(ctx),
+		IntermediaryAccounts:          k.GetAllIntermediaryAccounts(ctx),
+		IntemediaryAccountConnections: k.GetAllLockIdIntermediaryAccountConnections(ctx),
+>>>>>>> 86b4836 (genesis import export check for superfluid (#1088))
 	}
 }
