@@ -15,13 +15,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-<<<<<<< HEAD
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-			sdk.Coins{},
-=======
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			sdk.Coins{{Amount: sdk.NewInt(999990), Denom: "stake"}},
->>>>>>> 00b4b2c (Test improvisation for Superfluid (#1070))
 		},
 	}
 
@@ -29,24 +24,6 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 			valAddrs := suite.SetupValidators(tc.validatorStats)
-<<<<<<< HEAD
-			bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
-
-			// Generate delegator addresses
-			delAddrs := CreateRandomAccounts(1)
-			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
-			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
-
-			// gamm swap operation before refresh
-			suite.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.Ctx, 2, "gamm/pool/1", sdk.NewDec(10))
-			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-
-			coins := sdk.Coins{sdk.NewInt64Coin("foo", 100000000000000)}
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, coins)
-			suite.Require().NoError(err)
-			_, _, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, acc1, 1, "foo", sdk.NewInt(100000000000000), sdk.NewInt64Coin(bondDenom, 250000000000))
-			suite.Require().NoError(err)
-=======
 
 			// we create two additional pools: total three pools, 10 gauges
 			denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
@@ -61,16 +38,11 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.Require().NoError(err)
 			poolAssets := pool.GetAllPoolAssets()
 			suite.SwapAndSetSpotPrice(poolIds[0], poolAssets[1], poolAssets[0])
->>>>>>> 00b4b2c (Test improvisation for Superfluid (#1070))
 
 			// run epoch actions
 			suite.BeginNewBlock(true)
 
 			// check lptoken twap value set
-<<<<<<< HEAD
-			newEpochTwap := suite.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.Ctx, "gamm/pool/1")
-			suite.Require().Equal(newEpochTwap.String(), "0.009999997500000000")
-=======
 			newEpochMultiplier := suite.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
 			suite.Require().Equal(newEpochMultiplier, sdk.NewDec(15))
 
@@ -86,7 +58,6 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
 			suite.Require().Equal(gauge.FilledEpochs, uint64(1))
 			suite.Require().Equal(gauge.DistributedCoins, tc.expRewards)
->>>>>>> 00b4b2c (Test improvisation for Superfluid (#1070))
 
 			// check delegation changes
 			for _, acc := range intermediaryAccs {
@@ -94,13 +65,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().NoError(err)
 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, acc.GetAccAddress(), valAddr)
 				suite.Require().True(found)
-<<<<<<< HEAD
-				suite.Require().Equal(sdk.NewDec(5000), delegation.Shares)
-				// TODO: Check reward distribution
-				// suite.Require().NotEqual(sdk.Coins{}, )
-=======
 				suite.Require().Equal(sdk.NewDec(7500000), delegation.Shares)
->>>>>>> 00b4b2c (Test improvisation for Superfluid (#1070))
 			}
 			balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, delAddrs[0])
 			suite.Require().Equal(tc.expRewards, balance)

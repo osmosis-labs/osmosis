@@ -129,8 +129,6 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 	return valAddrs
 }
 
-<<<<<<< HEAD
-=======
 func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
 	pools := suite.SetupGammPoolsWithBondDenomMultiplier(multipliers)
 
@@ -157,7 +155,6 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	return denoms, poolIds
 }
 
->>>>>>> 00b4b2c (Test improvisation for Superfluid (#1070))
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
