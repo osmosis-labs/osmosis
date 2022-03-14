@@ -321,6 +321,7 @@ Example:
 			app := app.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now().UTC()})
 
+			// Remove module accounts from snapshots
 			for addr, account := range snapshotAccs {
 
 				accAddr, err := sdk.AccAddressFromBech32(account.Address)
@@ -329,22 +330,11 @@ Example:
 				}
 				acc := app.AccountKeeper.GetAccount(ctx, accAddr)
 
-				err = *authtypes.ModuleAccount(acc)
-				//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
-				if err != nil {
-					continue
+				if _, ok := acc.(*authtypes.ModuleAccount); ok {
+					//Else, remove account from list - how do we remove an item from a map in go?
+					//ASSUMING THAT "addr" IS THE KEY
+					delete(snapshotAccs, addr)
 				}
-
-				//Repeat same casting/error check but w/o * in front of the cast, just to be comprehensive
-				err = authtypes.ModuleAccount(acc)
-				//If there IS an error (meaning acc is NOT a module account), continue to next acc (i.e. don't remove)
-				if err != nil {
-					continue
-				}
-
-				//Else, remove account from list - how do we remove an item from a map in go?
-				//ASSUMING THAT "addr" IS THE KEY
-				delete(snapshotAccs, addr)
 			}
 
 			snapshot := DeriveSnapshot{
