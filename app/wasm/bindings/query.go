@@ -1,5 +1,9 @@
 package wasm
 
+import (
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+)
+
 // OsmosisQuery contains osmosis custom queries.
 // See https://github.com/confio/osmosis-bindings/blob/main/packages/bindings/src/query.rs
 type OsmosisQuery struct {
@@ -35,4 +39,26 @@ type EstimatePrice struct {
 	First  Swap
 	Route  []Step
 	Amount SwapAmount
+}
+
+type FullDenomResponse struct {
+	Denom string `json:"denom"`
+}
+
+type PoolStateResponse struct {
+	/// The various assets that be swapped. Including current liquidity.
+	Assets []wasmvmtypes.Coin `json:"assets"`
+	/// The number of LP shares and their amount
+	Shares wasmvmtypes.Coin `json:"shares"`
+}
+
+type SpotPriceResponse struct {
+	/// How many output we would get for 1 input
+	price string `json:"price"`
+}
+
+type EstimatePriceResponse struct {
+	// If you query with SwapAmount::Input, this is SwapAmount::Output.
+	// If you query with SwapAmount::Output, this is SwapAmount::Input.
+	amount SwapAmount `json:"swap_amount"`
 }
