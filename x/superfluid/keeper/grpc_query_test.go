@@ -61,11 +61,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	}
 
 	// setup superfluid delegations
-<<<<<<< HEAD
-	suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations)
-=======
-	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
->>>>>>> 052bc20 (Superfluid Misc: Improve grpc_query (#1084))
+	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations)
 
 	// for each superfluid delegation, query the amount and make sure it is 1000000
 	for _, delegation := range superfluidDelegations {
@@ -115,8 +111,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewInt(40000000), totalSuperfluidDelegationsRes.TotalDelegations)
 
-<<<<<<< HEAD
-=======
 	for _, lockID := range locks {
 		connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: lockID.ID})
 		suite.Require().NoError(err)
@@ -130,7 +124,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	suite.Require().Equal("", connectedIntermediaryAccountRes.Account.Denom)
 	suite.Require().Equal("", connectedIntermediaryAccountRes.Account.ValAddr)
 	suite.Require().Equal(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
->>>>>>> 052bc20 (Superfluid Misc: Improve grpc_query (#1084))
 }
 
 func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
