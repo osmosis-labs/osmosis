@@ -176,7 +176,7 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".osmosisd")
 }
 
-// NewOsmosis returns a reference to an initialized Osmosis.
+// NewOsmosisApp returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger,
 	db dbm.DB,
@@ -191,7 +191,6 @@ func NewOsmosisApp(
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
