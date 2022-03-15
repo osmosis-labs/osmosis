@@ -1,10 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
@@ -17,8 +15,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-			sdk.Coins{},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			sdk.Coins{{Amount: sdk.NewInt(999990), Denom: "stake"}},
 		},
 	}
 
@@ -26,29 +24,40 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 			valAddrs := suite.SetupValidators(tc.validatorStats)
-			bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
+
+			// we create two additional pools: total three pools, 10 gauges
+			denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
-			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
+			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
-			// gamm swap operation before refresh
-			suite.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.Ctx, 2, "gamm/pool/1", sdk.NewDec(10))
-			acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-
-			coins := sdk.Coins{sdk.NewInt64Coin("foo", 100000000000000)}
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, coins)
+			// run swap and set spot price
+			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolIds[0])
 			suite.Require().NoError(err)
-			_, _, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, acc1, 1, "foo", sdk.NewInt(100000000000000), sdk.NewInt64Coin(bondDenom, 250000000000))
-			suite.Require().NoError(err)
+			poolAssets := pool.GetAllPoolAssets()
+			suite.SwapAndSetSpotPrice(poolIds[0], poolAssets[1], poolAssets[0])
 
 			// run epoch actions
 			suite.BeginNewBlock(true)
 
 			// check lptoken twap value set
-			newEpochTwap := suite.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.Ctx, "gamm/pool/1")
-			suite.Require().Equal(newEpochTwap.String(), "0.009999997500000000")
+			newEpochMultiplier := suite.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
+			suite.Require().Equal(newEpochMultiplier, sdk.NewDec(15))
+
+			// check gauge creation in new block
+			intermediaryAccAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, locks[0].ID)
+			intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, intermediaryAccAddr)
+			gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, intermediaryAcc.GaugeId)
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(gauge.Id, intermediaryAcc.GaugeId)
+			suite.Require().Equal(gauge.IsPerpetual, true)
+			suite.Require().Equal(gauge.Coins, tc.expRewards)
+			suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
+			suite.Require().Equal(gauge.FilledEpochs, uint64(1))
+			suite.Require().Equal(gauge.DistributedCoins, tc.expRewards)
 
 			// check delegation changes
 			for _, acc := range intermediaryAccs {
@@ -56,10 +65,10 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().NoError(err)
 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, acc.GetAccAddress(), valAddr)
 				suite.Require().True(found)
-				suite.Require().Equal(sdk.NewDec(5000), delegation.Shares)
-				// TODO: Check reward distribution
-				// suite.Require().NotEqual(sdk.Coins{}, )
+				suite.Require().Equal(sdk.NewDec(7500000), delegation.Shares)
 			}
+			balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, delAddrs[0])
+			suite.Require().Equal(tc.expRewards, balance)
 		})
 	}
 }
@@ -136,14 +145,14 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 
 // 			for index, lockId := range tc.unbondingLockIds {
 // 				// get intermediary account
-// 				accAddr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
-// 				intermediaryAcc := suite.app.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
+// 				accAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
+// 				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
 // 				valAddr := intermediaryAcc.ValAddr
 
 // 				// unlock native lockup
-// 				lock, err := suite.app.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+// 				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
 // 				if err == nil {
-// 					err = suite.app.LockupKeeper.BeginUnlock(suite.Ctx, *lock, nil)
+// 					err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, *lock, nil)
 // 				}
 
 // 				if tc.expUnbondingErr[index] {
@@ -153,16 +162,16 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 				suite.Require().NoError(err)
 
 // 				// check lockId and intermediary account connection deletion
-// 				addr := suite.app.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
+// 				addr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
 // 				suite.Require().Equal(addr.String(), "")
 
 // 				// check bonding synthetic lockup deletion
-// 				_, err = suite.app.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+// 				_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().Error(err)
 
 // 				// check unbonding synthetic lockup creation
-// 				unbondingDuration := suite.app.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
-// 				synthLock, err := suite.app.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+// 				unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+// 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().NoError(err)
 // 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
 // 				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
@@ -187,7 +196,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			"happy path with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			1,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1},
 			[]int64{0},
 			[]uint64{1},
@@ -197,7 +206,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 0, "gamm/pool/1", 1000000}},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
 			[]uint64{1, 2},
 			[]int64{0},
 			[]uint64{1, 2},
@@ -207,7 +216,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			"with multiple validators and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 			[]int64{0},
 			[]uint64{1},
@@ -228,8 +237,11 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
+
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
 			// setup superfluid delegations
-			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
@@ -258,14 +270,14 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			for _, lockId := range tc.expSlashedLockIds {
 				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
 				suite.Require().NoError(err)
-				suite.Require().Equal(sdk.NewInt(950000).String(), gotLock.Coins.AmountOf("gamm/pool/1").String())
+				suite.Require().Equal(sdk.NewInt(950000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
 			}
 
 			// check unslashed lockups
 			for _, lockId := range tc.expUnslashedLockIds {
 				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
 				suite.Require().NoError(err)
-				suite.Require().Equal(sdk.NewInt(1000000).String(), gotLock.Coins.AmountOf("gamm/pool/1").String())
+				suite.Require().Equal(sdk.NewInt(1000000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
 			}
 		})
 	}

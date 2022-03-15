@@ -62,6 +62,8 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
 			locks := []lockuptypes.PeriodLock{}
 			slashFactor := sdk.NewDecWithPrec(5, 2)
 
@@ -69,7 +71,7 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			for _, del := range tc.superDelegations {
 				valAddr := valAddrs[del.valIndex]
 				delAddr := delAddrs[del.delIndex]
-				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, del.lpDenom, del.lpAmount)
+				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
 
 				// save accounts and locks for future use
 				locks = append(locks, lock)
@@ -97,7 +99,7 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, locks[lockIndex].ID)
 				suite.Require().NoError(err)
 				suite.Require().Equal(
-					gotLock.Coins.AmountOf("gamm/pool/1").String(),
+					gotLock.Coins.AmountOf(denoms[0]).String(),
 					sdk.NewDec(1000000).Mul(sdk.OneDec().Sub(slashFactor)).TruncateInt().String(),
 				)
 			}
@@ -117,21 +119,21 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			"happy path with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			1,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1},
 		},
 		{
 			"with single validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 0, "gamm/pool/1", 1000000}},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
 			[]uint64{1, 2},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 		},
 	}
@@ -147,8 +149,11 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
+
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
 			// setup superfluid delegations
-			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
@@ -177,7 +182,7 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			for _, lockId := range tc.superUnbondingLockIds {
 				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
 				suite.Require().NoError(err)
-				suite.Require().Equal(gotLock.Coins.AmountOf("gamm/pool/1").String(), sdk.NewInt(950000).String())
+				suite.Require().Equal(gotLock.Coins[0].Amount.String(), sdk.NewInt(950000).String())
 			}
 		})
 	}
