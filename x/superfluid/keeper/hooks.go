@@ -88,3 +88,9 @@ func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, i
 	}
 	h.k.SlashLockupsForValidatorSlash(ctx, valAddr, infractionHeight, slashFactor)
 }
+func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
+	// if slashFactor.IsZero() {
+	// 	return
+	// }
+	// h.k.RefreshIntermediaryDelegationAmounts(ctx)
+}
