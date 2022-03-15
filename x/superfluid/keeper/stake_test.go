@@ -1,14 +1,17 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type superfluidDelegation struct {
@@ -663,260 +666,263 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 // 	}
 // }
 
-// func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts1() {
-// 	testCases := []struct {
-// 		name             string
-// 		validatorStats   []stakingtypes.BondStatus
-// 		delegatorNumber  int
-// 		superDelegations []superfluidDelegation
-// 		roundOneTwaps    []assetTwap
-// 		roundTwoTwaps    []assetTwap
-// 		checkAccIndexes  []int64
-// 	}{
-// 		{
-// 			"with single validator and single delegation",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-// 			1,
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
-// 			[]assetTwap{},
-// 			[]int64{0},
-// 		},
-// 		{
-// 			"with single validator and additional delegations",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-// 			2,
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(20)}},
-// 			[]assetTwap{},
-// 			[]int64{0},
-// 		},
-// 		{
-// 			"with multiple validator and multiple superfluid delegations",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
-// 			[]assetTwap{},
-// 			[]int64{0, 1},
-// 		},
-// 		{
-// 			"with single validator and multiple denom superfluid delegations",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/2", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
-// 			[]assetTwap{},
-// 			[]int64{0, 1},
-// 		},
-// 		{
-// 			"with multiple validators and multiple denom superfluid delegations",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/2", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
-// 			[]assetTwap{},
-// 			[]int64{0, 1},
-// 		},
-// 		{
-// 			"zero price twap check",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
-// 			[]assetTwap{},
-// 			[]int64{0},
-// 		},
-// 		{
-// 			"refresh case from zero to non-zero",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
-// 			[]int64{0},
-// 		},
-// 		{
-// 			"dust price twap check",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
-// 			[]assetTwap{},
-// 			[]int64{0},
-// 		},
-// 		{
-// 			"refresh case from dust to non-dust",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-// 			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
-// 			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
-// 			[]int64{0},
-// 		},
-// 	}
+func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts1() {
+	testCases := []struct {
+		name             string
+		validatorStats   []stakingtypes.BondStatus
+		delegatorNumber  int
+		superDelegations []superfluidDelegation
+		roundOneTwaps    []assetTwap
+		roundTwoTwaps    []assetTwap
+		checkAccIndexes  []int64
+	}{
+		{
+			"with single validator and single delegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+			[]assetTwap{},
+			[]int64{0},
+		},
+		// {
+		// 	"with single validator and additional delegations",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
+		// 	2,
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/1", 1000000}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(20)}},
+		// 	[]assetTwap{},
+		// 	[]int64{0},
+		// },
+		// {
+		// 	"with multiple validator and multiple superfluid delegations",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/1", 1000000}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+		// 	[]assetTwap{},
+		// 	[]int64{0, 1},
+		// },
+		// {
+		// 	"with single validator and multiple denom superfluid delegations",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 0, "gamm/pool/2", 1000000}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
+		// 	[]assetTwap{},
+		// 	[]int64{0, 1},
+		// },
+		// {
+		// 	"with multiple validators and multiple denom superfluid delegations",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {0, 1, "gamm/pool/2", 1000000}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}, {"gamm/pool/2", sdk.NewDec(10)}},
+		// 	[]assetTwap{},
+		// 	[]int64{0, 1},
+		// },
+		// {
+		// 	"zero price twap check",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
+		// 	[]assetTwap{},
+		// 	[]int64{0},
+		// },
+		// {
+		// 	"refresh case from zero to non-zero",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(0)}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+		// 	[]int64{0},
+		// },
+		// {
+		// 	"dust price twap check",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
+		// 	[]assetTwap{},
+		// 	[]int64{0},
+		// },
+		// {
+		// 	"refresh case from dust to non-dust",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDecWithPrec(1, 10)}}, // 10^-10
+		// 	[]assetTwap{{"gamm/pool/1", sdk.NewDec(10)}},
+		// 	[]int64{0},
+		// },
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
-// 		suite.Run(tc.name, func() {
-// 			suite.SetupTest()
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
 
-// params := suite.App.SuperfluidKeeper.GetParams(suite.Ctx)
-// bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
+			params := suite.App.SuperfluidKeeper.GetParams(suite.Ctx)
+			bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
 
-// 			// Generate delegator addresses
-// 			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
 
-// 			// setup validators
-// 			valAddrs := suite.SetupValidators(tc.validatorStats)
-// 			// setup superfluid delegations
-// 			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
-// 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
-// 			intermediaryDels := []sdk.Dec{}
+			// setup validators
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 
-// 			for _, intAccIndex := range tc.checkAccIndexes {
-// 				expAcc := intermediaryAccs[intAccIndex]
-// 				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
-// 				suite.Require().NoError(err)
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
-// 				// check delegation from intermediary account to validator
-// 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
-// 				fmt.Println("====delegation share")
-// 				fmt.Println(delegation.Shares)
-// 				suite.Require().True(found)
-// 				intermediaryDels = append(intermediaryDels, delegation.Shares)
-// 			}
+			// setup superfluid delegations
+			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+			intermediaryDels := []sdk.Dec{}
 
-// 			// twap price change before refresh
-// 			twapByDenom := make(map[string]sdk.Dec)
-// 			for _, twap := range tc.roundOneTwaps {
-// 				twapByDenom[twap.denom] = twap.price
-// 				suite.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.Ctx, 2, twap.denom, twap.price)
-// 			}
+			for _, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intermediaryAccs[intAccIndex]
+				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
+				suite.Require().NoError(err)
 
-// 			suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochstypes.EpochInfo{
-// 				Identifier:   params.RefreshEpochIdentifier,
-// 				CurrentEpoch: 2,
-// 			})
+				// check delegation from intermediary account to validator
+				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
+				fmt.Println("====delegation share")
+				fmt.Println(delegation.Shares)
+				suite.Require().True(found)
+				intermediaryDels = append(intermediaryDels, delegation.Shares)
+			}
 
-// 			// get pre-superfluid delgations osmo supply and supplyWithOffset
-// 			presupply := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
-// 			presupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
+			// twap price change before refresh
+			twapByDenom := make(map[string]sdk.Dec)
+			for _, twap := range tc.roundOneTwaps {
+				twapByDenom[twap.denom] = twap.price
+				suite.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.Ctx, 2, twap.denom, twap.price)
+			}
 
-// 			// refresh intermediary account delegations
-// 			suite.NotPanics(func() {
-// 				suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
-// 			})
+			suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochstypes.EpochInfo{
+				Identifier:   params.RefreshEpochIdentifier,
+				CurrentEpoch: 2,
+			})
 
-// 			// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
-// 			postsupply := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
-// 			postsupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
-// 			suite.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
-// 			suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
+			// get pre-superfluid delgations osmo supply and supplyWithOffset
+			presupply := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
+			presupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
 
-// 			originTwap := sdk.NewDec(20)
-// 			targetDelegations := []sdk.Dec{}
-// 			targetAmounts := []sdk.Int{}
-// 			for index, intAccIndex := range tc.checkAccIndexes {
-// 				expAcc := intermediaryAccs[intAccIndex]
-// 				twap, ok := twapByDenom[expAcc.Denom]
-// 				if !ok {
-// 					twap = originTwap
-// 				}
+			// refresh intermediary account delegations
+			suite.NotPanics(func() {
+				suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
+			})
 
-// 				targetDelegation := intermediaryDels[index].Mul(twap).Quo(originTwap)
-// 				fmt.Println("===targetDelegation")
-// 				fmt.Println(targetDelegation)
-// 				lpTokenAmount := sdk.NewInt(1000000)
-// 				decAmt := twap.Mul(lpTokenAmount.ToDec())
-// 				asset := suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, expAcc.Denom)
-// 				targetAmount := suite.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(suite.Ctx, asset, decAmt.RoundInt())
-// 				fmt.Println("=====targetAmount")
-// 				fmt.Println(targetAmount)
-// 				targetDelegations = append(targetDelegations, targetDelegation)
-// 				targetAmounts = append(targetAmounts, targetAmount)
-// 			}
+			// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
+			postsupply := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
+			postsupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
+			suite.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
+			suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
 
-// 			for index, intAccIndex := range tc.checkAccIndexes {
-// 				expAcc := intermediaryAccs[intAccIndex]
-// 				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
-// 				suite.Require().NoError(err)
+			originTwap := sdk.NewDec(20)
+			targetDelegations := []sdk.Dec{}
+			targetAmounts := []sdk.Int{}
+			for index, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intermediaryAccs[intAccIndex]
+				twap, ok := twapByDenom[expAcc.Denom]
+				if !ok {
+					twap = originTwap
+				}
 
-// 				targetAmount := targetAmounts[index]
-// 				targetDelegation := targetDelegations[index]
+				targetDelegation := intermediaryDels[index].Mul(twap).Quo(originTwap)
+				fmt.Println("===targetDelegation")
+				fmt.Println(targetDelegation)
+				lpTokenAmount := sdk.NewInt(1000000)
+				decAmt := twap.Mul(lpTokenAmount.ToDec())
+				asset := suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, expAcc.Denom)
+				targetAmount := suite.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(suite.Ctx, asset, decAmt.RoundInt())
+				fmt.Println("=====targetAmount")
+				fmt.Println(targetAmount)
+				targetDelegations = append(targetDelegations, targetDelegation)
+				targetAmounts = append(targetAmounts, targetAmount)
+			}
 
-// 				// check delegation changes
-// 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
-// 				fmt.Println("===changed delegation")
-// 				fmt.Println(delegation)
-// 				if targetAmount.IsPositive() {
-// 					suite.Require().True(found)
-// 					suite.Require().Equal(delegation.Shares, targetDelegation)
-// 				} else {
-// 					suite.Require().False(found)
-// 				}
-// 			}
+			for index, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intermediaryAccs[intAccIndex]
+				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
+				suite.Require().NoError(err)
 
-// 			// start new epoch
-// 			suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochstypes.EpochInfo{
-// 				Identifier:   params.RefreshEpochIdentifier,
-// 				CurrentEpoch: 3,
-// 			})
+				targetAmount := targetAmounts[index]
+				targetDelegation := targetDelegations[index]
 
-// 			// if roundTwo twaps exists, execute round two twaps and finish tests
-// 			if len(tc.roundTwoTwaps) > 0 {
-// 				twap2ByDenom := make(map[string]sdk.Dec)
-// 				for _, twap := range tc.roundTwoTwaps {
-// 					twap2ByDenom[twap.denom] = twap.price
-// 					suite.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.Ctx, 3, twap.denom, twap.price)
-// 				}
-// 				// refresh intermediary account delegations
-// 				suite.NotPanics(func() {
-// 					suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
-// 				})
+				// check delegation changes
+				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
+				fmt.Println("===changed delegation")
+				fmt.Println(delegation)
+				if targetAmount.IsPositive() {
+					suite.Require().True(found)
+					suite.Require().Equal(delegation.Shares, targetDelegation)
+				} else {
+					suite.Require().False(found)
+				}
+			}
 
-// 				for index, intAccIndex := range tc.checkAccIndexes {
-// 					expAcc := intermediaryAccs[intAccIndex]
-// 					valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
-// 					suite.Require().NoError(err)
+			// start new epoch
+			suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochstypes.EpochInfo{
+				Identifier:   params.RefreshEpochIdentifier,
+				CurrentEpoch: 3,
+			})
 
-// 					targetDelegation := intermediaryDels[index].Mul(twap2ByDenom[expAcc.Denom]).Quo(originTwap)
+			// if roundTwo twaps exists, execute round two twaps and finish tests
+			if len(tc.roundTwoTwaps) > 0 {
+				twap2ByDenom := make(map[string]sdk.Dec)
+				for _, twap := range tc.roundTwoTwaps {
+					twap2ByDenom[twap.denom] = twap.price
+					suite.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.Ctx, 3, twap.denom, twap.price)
+				}
+				// refresh intermediary account delegations
+				suite.NotPanics(func() {
+					suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
+				})
 
-// 					// check delegation changes
-// 					delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
+				for index, intAccIndex := range tc.checkAccIndexes {
+					expAcc := intermediaryAccs[intAccIndex]
+					valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
+					suite.Require().NoError(err)
 
-// 					suite.Require().True(found)
-// 					suite.Require().Equal(delegation.Shares, targetDelegation)
-// 				}
-// 				return
-// 			}
+					targetDelegation := intermediaryDels[index].Mul(twap2ByDenom[expAcc.Denom]).Quo(originTwap)
 
-// 			// unbond all lockups
-// 			for _, lock := range locks {
-// 				// superfluid undelegate
-// 				err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lock.ID)
-// 				suite.Require().NoError(err)
-// 			}
-// 			unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+					// check delegation changes
+					delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
 
-// 			// check intermediary account changes after unbonding operations
-// 			for _, intAccIndex := range tc.checkAccIndexes {
-// 				expAcc := intermediaryAccs[intAccIndex]
-// 				suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(unbondingDuration + time.Second))
-// 				suite.App.EndBlocker(suite.Ctx, abci.RequestEndBlock{Height: suite.Ctx.BlockHeight()})
+					suite.Require().True(found)
+					suite.Require().Equal(delegation.Shares, targetDelegation)
+				}
+				return
+			}
 
-// 				unbonded := suite.App.BankKeeper.GetBalance(suite.Ctx, expAcc.GetAccAddress(), sdk.DefaultBondDenom)
-// 				suite.Require().True(unbonded.IsZero())
-// 			}
+			// unbond all lockups
+			for _, lock := range locks {
+				// superfluid undelegate
+				err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lock.ID)
+				suite.Require().NoError(err)
+			}
+			unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 
-// 			// refresh intermediary account delegations
-// 			suite.NotPanics(func() {
-// 				suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
-// 			})
+			// check intermediary account changes after unbonding operations
+			for _, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intermediaryAccs[intAccIndex]
+				suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(unbondingDuration + time.Second))
+				suite.App.EndBlocker(suite.Ctx, abci.RequestEndBlock{Height: suite.Ctx.BlockHeight()})
 
-// 			// check changes after refresh operation
-// 			for _, intAccIndex := range tc.checkAccIndexes {
-// 				expAcc := intermediaryAccs[intAccIndex]
-// 				// check unbonded amount is removed after refresh operation
-// 				refreshed := suite.App.BankKeeper.GetBalance(suite.Ctx, expAcc.GetAccAddress(), sdk.DefaultBondDenom)
-// 				suite.Require().True(refreshed.IsZero())
-// 			}
-// 		})
-// 	}
-// }
+				unbonded := suite.App.BankKeeper.GetBalance(suite.Ctx, expAcc.GetAccAddress(), sdk.DefaultBondDenom)
+				suite.Require().True(unbonded.IsZero())
+			}
+
+			// refresh intermediary account delegations
+			suite.NotPanics(func() {
+				suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
+			})
+
+			// check changes after refresh operation
+			for _, intAccIndex := range tc.checkAccIndexes {
+				expAcc := intermediaryAccs[intAccIndex]
+				// check unbonded amount is removed after refresh operation
+				refreshed := suite.App.BankKeeper.GetBalance(suite.Ctx, expAcc.GetAccAddress(), sdk.DefaultBondDenom)
+				suite.Require().True(refreshed.IsZero())
+			}
+		})
+	}
+}
 
 // func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 // 	testCases := []struct {
