@@ -123,6 +123,8 @@ import (
 	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
+
+	owasm "github.com/osmosis-labs/osmosis/v7/app/wasm"
 )
 
 type appKeepers struct {
@@ -368,6 +370,10 @@ func (app *OsmosisApp) InitNormalKeepers(
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate"
+
+	owasmQueryPlugin := owasm.NewQueryPlugin(app.GAMMKeeper)
+	wasmOpts = append(owasm.RegisterCustomPlugins(owasmQueryPlugin), wasmOpts...)
+
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
