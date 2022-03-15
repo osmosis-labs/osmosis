@@ -12,13 +12,15 @@ Overall Epoch sequence
     * Issue new Osmo, and send to various modules (distribution, incentives, etc.)
     * 25% currently goes to `x/distribution` which funds `Staking` and `Superfluid` rewards
     * Rewards for `Superfluid` are based on the just updated delegation amounts, and queued for payout in the next epoch
-* Epoch N ends, during BeginBlock **After** AfterEpochEnd:
+* BeginBlock for Distribution
+  * Distribute staking rewards to all of the 'lazy accounting' accumulators. (F1)
+* Epoch N ends, during BeginBlock for superfluid **After** AfterEpochEnd:
   * Claim staking rewards for every `Intermediary Account`, put them into gauges.
   * Distribute Superfluid staking rewards from gauges to bonded Synthetic Lock owners
   * Update `Osmo Equivalent Multiplier` value for each LP token
     * (Currently spot price at epoch)
   * Refresh delegation amounts for all `Intermediary Accounts`
-    * Calcultate the expected delegation for this account as `Osmo Equivalent Multipler` *`# LP Shares`* `Risk adjustment`
+    * Calculate the expected delegation for this account as `Osmo Equivalent Multipler` *`# LP Shares`* `Risk adjustment`
       * If this is less than 0.000001 `Osmo` it will be rounded to 0
     * Lookup current delegation amount for `Intermediary Account`
       * If there is no delegation, treat the current delegation as 0
