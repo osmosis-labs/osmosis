@@ -226,6 +226,10 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				suite.Require().Equal(tc.expInterDelegation[index], delegation.Shares)
 			}
 
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
+			suite.Require().False(broken, reason)
+
 			// try delegating twice with same lockup
 			for _, lock := range locks {
 				err := suite.App.SuperfluidKeeper.SuperfluidDelegate(suite.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
@@ -385,6 +389,10 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 			}
 
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
+			suite.Require().False(broken, reason)
+
 			// check remaining intermediary account delegation
 			for index, expDelegation := range tc.expInterDelegation {
 				acc := intermediaryAccs[index]
@@ -499,6 +507,9 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		suite.Require().Equal(denoms[0], balances[0].Denom)
 		suite.Require().Equal(sdk.NewInt(1000000), balances[0].Amount)
 
+		// check invariant is fine
+		reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
+		suite.Require().False(broken, reason)
 	}
 }
 
