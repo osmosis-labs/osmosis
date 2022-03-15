@@ -16,40 +16,14 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 		slashedValIndexes     []int64
 		expSlashedLockIndexes []int64
 	}{
-		{
-			"with single validator and single superfluid delegation",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			1,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-			[]int64{0},
-			[]int64{0},
-		},
-<<<<<<< HEAD
-		{
-			"with single validator and multiple superfluid delegations",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 0, "gamm/pool/1", 1000000}},
-			[]int64{0},
-			[]int64{0, 1},
-		},
-		{
-			"with multiple validators and multiple superfluid delegations with single validator slash",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
-			[]int64{0},
-			[]int64{0},
-		},
-		{
-			"with multiple validators and multiple superfluid delegations with two validators slash",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-			2,
-			[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}, {1, 1, "gamm/pool/1", 1000000}},
-			[]int64{0, 1},
-			[]int64{0, 1},
-		},
-=======
+		// {
+		// 	"with single validator and single superfluid delegation",
+		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
+		// 	1,
+		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
+		// 	[]int64{0},
+		// 	[]int64{0},
+		// },
 		// {
 		// 	"with single validator and multiple superfluid delegations",
 		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
@@ -74,7 +48,6 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 		// 	[]int64{0, 1},
 		// 	[]int64{0, 1},
 		// },
->>>>>>> a454116 (Genesis upgrade and add invariant cherry pick (#1081))
 	}
 
 	for _, tc := range testCases {
