@@ -54,8 +54,6 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		}
 
 		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
-		fmt.Println("refreshedAmount", refreshedAmount.String())
-		fmt.Println("currentAmount", currentAmount.String())
 
 		if refreshedAmount.GT(currentAmount) {
 			//need to mint and delegate
@@ -323,7 +321,7 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		if err != nil {
 			return err
 		}
-		fmt.Println("undelegatedCoins", undelegatedCoins.String())
+
 		// TODO: Should we compare undelegatedCoins vs osmoAmount?
 		err = k.bk.SendCoinsFromAccountToModule(cacheCtx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
 		if err != nil {
