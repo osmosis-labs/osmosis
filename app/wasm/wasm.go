@@ -6,13 +6,17 @@ import (
 )
 
 func RegisterCustomPlugins(
-	wasmQueryPlugin ViewKeeper,
+	wasmQueryPlugin *QueryPlugin,
 ) []wasmkeeper.Option {
 	queryPluginOpt := wasmkeeper.WithQueryPlugins(&wasmkeeper.QueryPlugins{
 		Custom: CustomQuerier(wasmQueryPlugin),
 	})
+	messagePluginOpt := wasmkeeper.WithMessageEncoders(&wasmkeeper.MessageEncoders{
+		Custom: CustomEncoder(wasmQueryPlugin),
+	})
 
 	return []wasm.Option{
 		queryPluginOpt,
+		messagePluginOpt,
 	}
 }
