@@ -1,4 +1,4 @@
-package wasm
+package wasmbindings
 
 type OsmosisMsg struct {
 	/// Contracts can mint native tokens that have an auto-generated denom

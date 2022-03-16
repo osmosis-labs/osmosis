@@ -369,7 +369,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate"
+	supportedFeatures := "iterator,staking,stargate,osmosis"
 
 	owasmQueryPlugin := owasm.NewQueryPlugin(app.GAMMKeeper)
 	wasmOpts = append(owasm.RegisterCustomPlugins(owasmQueryPlugin), wasmOpts...)

@@ -1,4 +1,4 @@
-package wasm
+package wasmbindings
 
 import (
 	"encoding/json"
