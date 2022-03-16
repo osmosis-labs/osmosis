@@ -16,6 +16,11 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			// bond denom staked in pool = 15_000_000
+			// with risk adjustment, the actual bond denom staked via superfluid would be 15_000_000 * (1 - 0.5) = 10_000_000
+			// delegation rewards are calculated using the equation (current period cumulative reward ratio - last period cumulative reward ratio) * asset amount
+			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 10_000_000
+			// thus we expect 999_990 stake as rewards
 			sdk.Coins{{Amount: sdk.NewInt(999990), Denom: "stake"}},
 		},
 	}
