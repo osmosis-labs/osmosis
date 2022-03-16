@@ -15,5 +15,11 @@ for contract in hackatom reflect; do
   wget -O "${contract}.wasm" "$url"
 done
 
+# TODO: allow better customization
+osmo_tag="v0.2.0"
+url="https://github.com/confio/osmosis-bindings/releases/download/v0.2.0/osmo_reflect.wasm"
+echo "Downloading $url ..."
+wget -O "osmo_reflect.wasm" "$url"
+
 rm -f version.txt
 echo "$tag" >version.txt
