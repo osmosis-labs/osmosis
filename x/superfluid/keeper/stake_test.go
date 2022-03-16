@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -836,8 +835,6 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 
 				// check delegation changes
 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
-				fmt.Println("===changed delegation")
-				fmt.Println(delegation)
 				if targetAmount.IsPositive() {
 					suite.Require().True(found)
 					suite.Require().Equal(delegation.Shares, targetDelegation)
