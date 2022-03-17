@@ -36,9 +36,9 @@ type SpotPrice struct {
 }
 
 type EstimatePrice struct {
-	First  Swap
-	Route  []Step
-	Amount SwapAmount
+	First  Swap       `json:"first"`
+	Route  []Step     `json:"route"`
+	Amount SwapAmount `json:"amount"`
 }
 
 type FullDenomResponse struct {
@@ -54,11 +54,11 @@ type PoolStateResponse struct {
 
 type SpotPriceResponse struct {
 	/// How many output we would get for 1 input
-	price string `json:"price"`
+	Price string `json:"price"`
 }
 
 type EstimatePriceResponse struct {
 	// If you query with SwapAmount::Input, this is SwapAmount::Output.
 	// If you query with SwapAmount::Output, this is SwapAmount::Input.
-	amount SwapAmount `json:"swap_amount"`
+	Amount SwapAmount `json:"swap_amount"`
 }

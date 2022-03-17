@@ -2,19 +2,16 @@ package wasm
 
 import (
 	"encoding/json"
-	bindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
-	"github.com/osmosis-labs/osmosis/v7/app/wasm/types"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+
+	bindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
 
-type ViewKeeper interface {
-	GetPoolState(ctx sdk.Context, poolId uint64) (*types.PoolState, error)
-}
-
-func CustomQuerier(osmoKeeper ViewKeeper) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
+func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 		var contractQuery bindings.OsmosisQuery
 		if err := json.Unmarshal(request, &contractQuery); err != nil {
@@ -39,6 +36,30 @@ func CustomQuerier(osmoKeeper ViewKeeper) func(ctx sdk.Context, request json.Raw
 			bz, err := json.Marshal(res)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo pool state query response")
+			}
+			return bz, nil
+		} else if contractQuery.SpotPrice != nil {
+			spotPrice, err := osmoKeeper.GetSpotPrice(ctx, contractQuery.SpotPrice)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo spot price query")
+			}
+
+			res := bindings.SpotPriceResponse{Price: spotPrice.String()}
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo spot price query response")
+			}
+			return bz, nil
+		} else if contractQuery.EstimatePrice != nil {
+			swapAmount, err := osmoKeeper.EstimatePrice(ctx, contractQuery.EstimatePrice)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo estimate price query")
+			}
+
+			res := bindings.EstimatePriceResponse{Amount: *swapAmount}
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo estimate price query response")
 			}
 			return bz, nil
 		}

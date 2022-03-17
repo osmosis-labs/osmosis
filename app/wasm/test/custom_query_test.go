@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/wasm"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"io/ioutil"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -84,6 +85,71 @@ func TestQueryPool(t *testing.T) {
 	expected = wasm.ConvertSdkCoinsToWasmCoins(pool2Funds)
 	require.EqualValues(t, expected, resp.Assets)
 	assertValidShares(t, resp.Shares, atomPool)
+}
+
+func TestQuerySpotPrice(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+	swapFee := 0. // FIXME: Set / support an actual fee
+	epsilon := 1e-6
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	require.NotEmpty(t, reflect)
+
+	// query spot price
+	query := wasmbindings.OsmosisQuery{
+		SpotPrice: &wasmbindings.SpotPrice{
+			Swap: wasmbindings.Swap{
+				PoolId:   starPool,
+				DenomIn:  "ustar",
+				DenomOut: "uosmo",
+			},
+			WithSwapFee: false,
+		},
+	}
+	resp := wasmbindings.SpotPriceResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	price, err := strconv.ParseFloat(resp.Price, 64)
+	require.NoError(t, err)
+
+	uosmo, err := poolFunds[0].Amount.ToDec().Float64()
+	require.NoError(t, err)
+	ustar, err := poolFunds[1].Amount.ToDec().Float64()
+	require.NoError(t, err)
+
+	expected := ustar / uosmo
+	require.InEpsilonf(t, expected, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
+
+	// and the reverse conversion (with swap fee)
+	// query spot price
+	query = wasmbindings.OsmosisQuery{
+		SpotPrice: &wasmbindings.SpotPrice{
+			Swap: wasmbindings.Swap{
+				PoolId:   starPool,
+				DenomIn:  "uosmo",
+				DenomOut: "ustar",
+			},
+			WithSwapFee: true,
+		},
+	}
+	resp = wasmbindings.SpotPriceResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	price, err = strconv.ParseFloat(resp.Price, 32)
+	require.NoError(t, err)
+
+	expected = 1. / expected
+	require.InEpsilonf(t, expected+swapFee, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
 }
 
 type ReflectQuery struct {
