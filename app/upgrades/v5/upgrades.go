@@ -30,9 +30,9 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 		// https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md#in-place-store-migrations
 		ibcConnections.SetParams(ctx, ibcconnectiontypes.DefaultParams())
 
-		totalLiquidity := gamm.GetLegacyTotalLiquidity(ctx)
-		gamm.DeleteLegacyTotalLiquidity(ctx)
-		gamm.SetTotalLiquidity(ctx, totalLiquidity)
+		// totalLiquidity := gamm.GetLegacyTotalLiquidity(ctx)
+		// gamm.DeleteLegacyTotalLiquidity(ctx)
+		// gamm.SetTotalLiquidity(ctx, totalLiquidity)
 
 		// Set all modules "old versions" to 1.
 		// Then the run migrations logic will handle running their upgrade logics

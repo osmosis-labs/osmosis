@@ -104,6 +104,7 @@ message MsgSwapExactAmountOut {
 message MsgSwapExactAmountOutResponse {}
 
 // ===================== MsgJoinSwapExternAmountIn
+// TODO: Delete this one
 message MsgJoinSwapExternAmountIn {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];

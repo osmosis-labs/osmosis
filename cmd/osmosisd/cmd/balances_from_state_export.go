@@ -60,10 +60,10 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 	for _, coin := range originCoins {
 		if pools[coin.Denom] != nil {
 			pool := pools[coin.Denom]
-			assets := pool.GetAllPoolAssets()
+			assets := pool.GetTotalLpBalances(sdk.Context{})
 			for _, asset := range assets {
-				balances = balances.Add(sdk.NewCoin(asset.Token.Denom, asset.Token.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares().Amount)))
-				if pools[asset.Token.Denom] != nil { // this happens when there's a pool for LP token swap
+				balances = balances.Add(sdk.NewCoin(asset.Denom, asset.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares())))
+				if pools[asset.Denom] != nil { // this happens when there's a pool for LP token swap
 					convertAgain = true
 				}
 			}
@@ -294,7 +294,7 @@ Example:
 				if err != nil {
 					panic(err)
 				}
-				pools[pool.GetTotalShares().Denom] = pool
+				pools[gammtypes.GetPoolShareDenom(pool.GetId())] = pool
 			}
 
 			// convert balances to underlying coins and sum up balances to total balance
