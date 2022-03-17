@@ -371,8 +371,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
 
-	owasmQueryPlugin := owasm.NewQueryPlugin(app.GAMMKeeper)
-	wasmOpts = append(owasm.RegisterCustomPlugins(owasmQueryPlugin), wasmOpts...)
+	wasmOpts = append(owasm.RegisterCustomPlugins(app.GAMMKeeper, app.BankKeeper), wasmOpts...)
 
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
