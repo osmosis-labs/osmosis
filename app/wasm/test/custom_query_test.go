@@ -53,14 +53,14 @@ func TestQueryFullDenom(t *testing.T) {
 	// query full denom
 	query := wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: actor.String(),
+			Contract: reflect.String(),
 			SubDenom: "ustart",
 		},
 	}
 	resp := wasmbindings.FullDenomResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
-	expected := fmt.Sprintf("cw/%s/ustart", actor.String())
+	expected := fmt.Sprintf("cw/%s/ustart", reflect.String())
 	require.EqualValues(t, expected, resp.Denom)
 }
 
