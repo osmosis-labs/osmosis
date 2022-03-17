@@ -14,6 +14,47 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
 
+func TestMintMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
+
+	// lucky was broke
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Empty(t, balances)
+
+	amount, ok := sdk.NewIntFromString("808010808")
+	require.True(t, ok)
+	msg := wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+		SubDenom:  "SUN",
+		Amount:    amount,
+		Recipient: lucky.String(),
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 1)
+	coin := balances[0]
+	require.Equal(t, amount, coin.Amount)
+	require.Contains(t, coin.Denom, "cw/")
+
+	// query the denom and see if it matches
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+}
+
 type BaseState struct {
 	StarPool  uint64
 	AtomPool  uint64
@@ -261,7 +302,13 @@ func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contr
 	reflectBz, err := json.Marshal(reflectMsg)
 	require.NoError(t, err)
 
+	// no funds sent if amount is 0
+	var coins sdk.Coins
+	if !funds.Amount.IsNil() {
+		coins = sdk.Coins{funds}
+	}
+
 	contractKeeper := keeper.NewDefaultPermissionKeeper(osmosis.WasmKeeper)
-	_, err = contractKeeper.Execute(ctx, contract, sender, reflectBz, sdk.Coins{funds})
+	_, err = contractKeeper.Execute(ctx, contract, sender, reflectBz, coins)
 	return err
 }

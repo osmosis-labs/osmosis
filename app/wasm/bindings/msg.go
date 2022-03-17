@@ -1,5 +1,7 @@
 package wasmbindings
 
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
 type OsmosisMsg struct {
 	/// Contracts can mint native tokens that have an auto-generated denom
 	/// namespaced under the contract's address. A contract may create any number
@@ -11,9 +13,9 @@ type OsmosisMsg struct {
 
 type MintTokens struct {
 	/// Must be 2-32 alphanumeric characters
-	SubDenom  string `json:"sub_denom"`
-	Amount    string `json:"amount"`
-	Recipient string `json:"recipient"`
+	SubDenom  string  `json:"sub_denom"`
+	Amount    sdk.Int `json:"amount"`
+	Recipient string  `json:"recipient"`
 }
 
 type SwapMsg struct {

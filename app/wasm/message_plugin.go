@@ -52,8 +52,27 @@ func (m *MintTokenMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAd
 }
 
 func (m *MintTokenMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) ([]sdk.Event, [][]byte, error) {
-	// TODO
-	return nil, nil, wasmvmtypes.UnsupportedRequest{Kind: "TODO: mintTokens"}
+	rcpt, err := parseAddress(mint.Recipient)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	denom, err := GetFullDenom(contractAddr.String(), mint.SubDenom)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "mint token denom")
+	}
+	coins := []sdk.Coin{sdk.NewCoin(denom, mint.Amount)}
+
+	err = m.bank.MintCoins(ctx, gammtypes.ModuleName, coins)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "minting coins from message")
+	}
+	err = m.bank.SendCoinsFromModuleToAccount(ctx, gammtypes.ModuleName, rcpt, coins)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "sending newly minted coins from message")
+	}
+
+	return nil, nil, nil
 }
 
 func (m *MintTokenMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) ([]sdk.Event, [][]byte, error) {
@@ -96,20 +115,27 @@ func (m *MintTokenMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAdd
 }
 
 // this is a function, not method, so the message_plugin can use it
-func GetFullDenom(ctx sdk.Context, contract string, subDenom string) (*string, error) {
+func GetFullDenom(contract string, subDenom string) (string, error) {
 	// Address validation
-	contractAddress, err := sdk.AccAddressFromBech32(contract)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "address from bech32")
+	if _, err := parseAddress(contract); err != nil {
+		return "", err
 	}
-	err = sdk.VerifyAddressFormat(contractAddress)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "verify address format")
-	}
+
 	// TODO: sub-denom validations
 	// - sub denom length (min/max) checks
 	// - sub denom chars
 	fullDenom := fmt.Sprintf("cw/%s/%s", contract, subDenom)
+	return fullDenom, nil
+}
 
-	return &fullDenom, nil
+func parseAddress(addr string) (sdk.AccAddress, error) {
+	parsed, err := sdk.AccAddressFromBech32(addr)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "address from bech32")
+	}
+	err = sdk.VerifyAddressFormat(parsed)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "verify address format")
+	}
+	return parsed, nil
 }
