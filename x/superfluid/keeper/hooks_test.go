@@ -9,15 +9,18 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
+		delegatorNumber  int
 		superDelegations []superfluidDelegation
 		expRewards       sdk.Coins
 	}{
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			// bond denom staked in pool = 15_000_000
-			// with risk adjustment, the actual bond denom staked via superfluid would be 15_000_000 * (1 - 0.5) = 10_000_000
+			// with risk adjustment, the actual bond denom staked via superfluid would be 15_000_000 * (1 - 0.5) = 7_500_000
+			// we do a arbitrary swap to set spot price, which adjusts superfluid staked equivilent base denom 20_000_000 * (1 - 0.5) = 10_000_000 during begin block
 			// delegation rewards are calculated using the equation (current period cumulative reward ratio - last period cumulative reward ratio) * asset amount
 			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 10_000_000
 			// thus we expect 999_990 stake as rewards
@@ -30,11 +33,10 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.SetupTest()
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
-			// we create two additional pools: total three pools, 10 gauges
-			denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
 
 			// Generate delegator addresses
-			delAddrs := CreateRandomAccounts(1)
+			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
 			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
@@ -45,7 +47,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.SwapAndSetSpotPrice(poolIds[0], poolAssets[1], poolAssets[0])
 
 			// run epoch actions
-			suite.BeginNewBlock(true)
+			suite.BeginNewBlock(true, valAddrs[0])
 
 			// check lptoken twap value set
 			newEpochMultiplier := suite.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])

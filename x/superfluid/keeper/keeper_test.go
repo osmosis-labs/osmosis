@@ -36,7 +36,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.App.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
-	suite.SetupDefaultPool()
 
 	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 

@@ -65,18 +65,18 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 	return valAddr
 }
 
-func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
+func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool, proposer sdk.ValAddress) {
 	valAddr := []byte(":^) at this distribution workaround")
-	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
-	if len(validators) >= 1 {
-		valAddrFancy, err := validators[0].GetConsAddr()
-		keeperTestHelper.Require().NoError(err)
-		valAddr = valAddrFancy.Bytes()
-	} else {
+	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, proposer)
+	if !found {
 		valAddrFancy := keeperTestHelper.SetupValidator(stakingtypes.Bonded)
 		validator, _ := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddrFancy)
 		valAddr2, _ := validator.GetConsAddr()
 		valAddr = valAddr2.Bytes()
+	} else {
+		valConsAddr, err := validator.GetConsAddr()
+		keeperTestHelper.Require().NoError(err)
+		valAddr = valConsAddr.Bytes()
 	}
 
 	epochIdentifier := keeperTestHelper.App.SuperfluidKeeper.GetEpochIdentifier(keeperTestHelper.Ctx)
