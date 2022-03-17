@@ -28,7 +28,7 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 			}
 
 			res := bindings.FullDenomResponse{
-				Denom: *fullDenom,
+				Denom: fullDenom,
 			}
 			bz, err := json.Marshal(res)
 			if err != nil {

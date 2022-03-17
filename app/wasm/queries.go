@@ -27,20 +27,20 @@ func NewQueryPlugin(
 	}
 }
 
-func (qp QueryPlugin) GetFullDenom(ctx sdk.Context, contract string, subDenom string) (*string, error) {
+func (qp QueryPlugin) GetFullDenom(ctx sdk.Context, contract string, subDenom string) (string, error) {
 	err := ValidateAddress(contract)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "validate address")
+		return "", sdkerrors.Wrap(err, "validate address")
 	}
 	err = ValidateSubDenom(subDenom)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "validate sub-denom")
+		return "", sdkerrors.Wrap(err, "validate sub-denom")
 	}
 
 	// TODO: Confirm "cw" prefix
 	fullDenom := fmt.Sprintf("cw/%s/%s", contract, subDenom)
 
-	return &fullDenom, nil
+	return fullDenom, nil
 }
 
 func ValidateAddress(address string) error {
