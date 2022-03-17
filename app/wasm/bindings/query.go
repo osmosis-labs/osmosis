@@ -36,9 +36,10 @@ type SpotPrice struct {
 }
 
 type EstimatePrice struct {
-	First  Swap       `json:"first"`
-	Route  []Step     `json:"route"`
-	Amount SwapAmount `json:"amount"`
+	Contract string     `json:"contract"`
+	First    Swap       `json:"first"`
+	Route    []Step     `json:"route"`
+	Amount   SwapAmount `json:"amount"`
 }
 
 type FullDenomResponse struct {

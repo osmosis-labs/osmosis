@@ -1,6 +1,7 @@
 package wasm
 
 import (
+	"fmt"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"math"
 
@@ -24,6 +25,26 @@ func NewQueryPlugin(
 	return &QueryPlugin{
 		gammKeeper: gammK,
 	}
+}
+
+func (qp QueryPlugin) GetFullDenom(ctx sdk.Context, contract string, subDenom string) (*string, error) {
+	// Address validation
+	contractAddress, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "address from bech32")
+	}
+	err = sdk.VerifyAddressFormat(contractAddress)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "verify address format")
+	}
+	// TODO: sub-denom validations
+	// - sub denom length (min/max) checks
+	// - sub denom chars
+	// -
+	// TODO: Confirm "cw" prefix
+	fullDenom := fmt.Sprintf("cw/%s/%s", contract, subDenom)
+
+	return &fullDenom, nil
 }
 
 func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolId uint64) (*types.PoolState, error) {
@@ -60,7 +81,7 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *bindings.SpotPric
 }
 
 func (qp QueryPlugin) EstimatePrice(ctx sdk.Context, estimatePrice *bindings.EstimatePrice) (*bindings.SwapAmount, error) {
-	sender := "" // FIXME: https://github.com/confio/osmosis-bindings/pull/14
+	sender := estimatePrice.Contract
 	poolId := estimatePrice.First.PoolId
 	denomIn := estimatePrice.First.DenomIn
 	denomOut := estimatePrice.First.DenomOut
