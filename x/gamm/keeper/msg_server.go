@@ -93,7 +93,7 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 		return nil, err
 	}
 
-	err = server.keeper.ExitPool(ctx, sender, msg.PoolId, msg.ShareInAmount, msg.TokenOutMins)
+	_, err = server.keeper.ExitPool(ctx, sender, msg.PoolId, msg.ShareInAmount, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
