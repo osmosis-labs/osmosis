@@ -9,21 +9,25 @@ import (
 )
 
 var (
-	swap = Swap{
+	swapJson = []byte("{ \"pool_id\": 1, \"denom_in\": \"denomIn\", \"denom_out\": \"denomOut\" }")
+	swap     = Swap{
 		PoolId:   1,
-		DenomIn:  "denom_in",
-		DenomOut: "denom_out",
+		DenomIn:  "denomIn",
+		DenomOut: "denomOut",
 	}
-	step = Step{
+	stepJson = []byte("{ \"pool_id\": 2, \"denom_out\": \"denomOut\" }")
+	step     = Step{
 		PoolId:   2,
-		DenomOut: "denom_out",
+		DenomOut: "denomOut",
 	}
-	in           = sdk.NewInt(123)
-	out          = sdk.NewInt(456)
-	swapAmountIn = SwapAmount{
+	swapAmountInJson = []byte("{ \"in\": \"123\", \"out\": null }")
+	in               = sdk.NewInt(123)
+	swapAmountIn     = SwapAmount{
 		In: &in,
 	}
-	swapAmountOut = SwapAmount{
+	swapAmountOutJson = []byte("{ \"out\": \"456\" }")
+	out               = sdk.NewInt(456)
+	swapAmountOut     = SwapAmount{
 		Out: &out,
 	}
 	exactIn = ExactIn{
@@ -34,10 +38,12 @@ var (
 		MaxInput: sdk.NewInt(131415),
 		Output:   sdk.NewInt(161718),
 	}
-	swapAmountExactIn = SwapAmountWithLimit{
+	swapAmountExactInJson = []byte("{ \"exact_in\": { \"input\": \"789\", \"min_output\": \"101112\" } }")
+	swapAmountExactIn     = SwapAmountWithLimit{
 		ExactIn: &exactIn,
 	}
-	swapAmountExactOut = SwapAmountWithLimit{
+	swapAmountExactOutJson = []byte("{ \"exact_in\": null, \"exact_out\": { \"max_input\": \"131415\", \"output\": \"161718\" } }")
+	swapAmountExactOut     = SwapAmountWithLimit{
 		ExactOut: &exactOut,
 	}
 )
@@ -116,6 +122,56 @@ func TestTypesEncodeDecode(t *testing.T) {
 	// Unmarshal
 	var swapAmountWithLimit2 SwapAmountWithLimit
 	err = json.Unmarshal(bzSwapAmountWithLimit2, &swapAmountWithLimit2)
+	require.NoError(t, err)
+	// Check
+	assert.Equal(t, swapAmountExactOut, swapAmountWithLimit2)
+}
+
+func TestTypesDecode(t *testing.T) {
+	// Swap
+	// Unmarshal
+	var swap1 Swap
+	err := json.Unmarshal([]byte(swapJson), &swap1)
+	require.NoError(t, err)
+	// Check
+	assert.Equal(t, swap, swap1)
+
+	// Step
+	// Unmarshal
+	var step1 Step
+	err = json.Unmarshal(stepJson, &step1)
+	require.NoError(t, err)
+	// Check
+	assert.Equal(t, step, step1)
+
+	// SwapAmount in
+	// Unmarshal
+	var swapAmount1 SwapAmount
+	err = json.Unmarshal(swapAmountInJson, &swapAmount1)
+	require.NoError(t, err)
+	// Check
+	assert.Equal(t, swapAmountIn, swapAmount1)
+
+	// SwapAmount out
+	// Unmarshal
+	var swapAmount2 SwapAmount
+	err = json.Unmarshal(swapAmountOutJson, &swapAmount2)
+	require.NoError(t, err)
+	// Check
+	assert.Equal(t, swapAmountOut, swapAmount2)
+
+	// SwapAmount exact in
+	// Unmarshal
+	var swapAmountWithLimit1 SwapAmountWithLimit
+	err = json.Unmarshal(swapAmountExactInJson, &swapAmountWithLimit1)
+	require.NoError(t, err)
+	// Check
+	assert.Equal(t, swapAmountExactIn, swapAmountWithLimit1)
+
+	// SwapAmount exact out
+	// Unmarshal
+	var swapAmountWithLimit2 SwapAmountWithLimit
+	err = json.Unmarshal(swapAmountExactOutJson, &swapAmountWithLimit2)
 	require.NoError(t, err)
 	// Check
 	assert.Equal(t, swapAmountExactOut, swapAmountWithLimit2)

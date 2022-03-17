@@ -21,7 +21,6 @@ type BaseState struct {
 }
 
 func TestSwapMsg(t *testing.T) {
-
 	// table tests with this setup
 	cases := map[string]struct {
 		msg        func(BaseState) *wasmbindings.SwapMsg
