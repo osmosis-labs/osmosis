@@ -17,7 +17,7 @@ type MintTokens struct {
 }
 
 type SwapMsg struct {
-	First  Swap                `json:"swap"`
+	First  Swap                `json:"first"`
 	Route  []Step              `json:"route"`
 	Amount SwapAmountWithLimit `json:"amount"`
 }
