@@ -28,23 +28,40 @@ func NewQueryPlugin(
 }
 
 func (qp QueryPlugin) GetFullDenom(ctx sdk.Context, contract string, subDenom string) (*string, error) {
-	// Address validation
-	contractAddress, err := sdk.AccAddressFromBech32(contract)
+	err := ValidateAddress(contract)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "address from bech32")
+		return nil, sdkerrors.Wrap(err, "validate address")
 	}
-	err = sdk.VerifyAddressFormat(contractAddress)
+	err = ValidateSubDenom(subDenom)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "verify address format")
+		return nil, sdkerrors.Wrap(err, "validate sub-denom")
 	}
-	// TODO: sub-denom validations
-	// - sub denom length (min/max) checks
-	// - sub denom chars
-	// -
+
 	// TODO: Confirm "cw" prefix
 	fullDenom := fmt.Sprintf("cw/%s/%s", contract, subDenom)
 
 	return &fullDenom, nil
+}
+
+func ValidateAddress(address string) error {
+	addr, err := sdk.AccAddressFromBech32(address)
+	if err != nil {
+		return sdkerrors.Wrap(err, "address from bech32")
+	}
+
+	err = sdk.VerifyAddressFormat(addr)
+	if err != nil {
+		return sdkerrors.Wrap(err, "verify address format")
+	}
+	return nil
+}
+
+func ValidateSubDenom(subDenom string) error {
+	if len(subDenom) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty sub-denom")
+	}
+	// TODO: Extra validations
+	return nil
 }
 
 func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolId uint64) (*types.PoolState, error) {
