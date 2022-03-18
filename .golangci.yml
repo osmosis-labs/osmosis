@@ -84,7 +84,7 @@ linters:
     - unused
     - varcheck
 #    - varnamelen <- disabled because defies idiom
-    - wastedassign
+#    - wastedassign
     - whitespace
 #    - wrapcheck 
 #    - wsl
