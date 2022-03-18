@@ -14,10 +14,10 @@ linters:
     - bidichk
     - bodyclose
     - contextcheck
-#    - cyclop
+#o    - cyclop
     - deadcode
     - depguard
-    - dogsled
+#    - dogsled <- disabled because we would like to participate in the iditerod
     - dupl
     - durationcheck
     - errcheck
@@ -35,7 +35,7 @@ linters:
     - gocognit
     - goconst
     - gocritic
-    - gocyclo
+#    - gocyclo <- disabled because it won't work with how we cosmos
     - godot
 #    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
 #    - goerr113 <- disabled due to lack of comprehension
