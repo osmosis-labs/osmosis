@@ -60,7 +60,7 @@ linters:
     - nestif
     - nilerr
     - nilnil
-    - nlreturn
+#    - nlreturn <- disabled as it doesn't auto-fix something simple and doesn't add anything useful
     - noctx
     - nolintlint
     - paralleltest
