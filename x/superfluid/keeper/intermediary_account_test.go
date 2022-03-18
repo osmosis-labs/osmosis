@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
 				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, denom, superDelegation.lpAmount)
 
 				// check that intermediary Account connection is established
-				interAccConnection := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
+				interAccConnection := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lock.ID)
 				suite.Require().Equal(expAcc.GetAccAddress(), interAccConnection)
 
 				interAcc = suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, interAccConnection)
@@ -112,27 +112,27 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	suite.SetupTest()
 
 	// get account
-	addr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, 1)
+	addr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, 1)
 	suite.Require().Equal(addr.String(), "")
 
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
 	acc := types.NewSuperfluidIntermediaryAccount("gamm/pool/1", valAddr.String(), 1)
-	suite.App.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(suite.Ctx, 1, acc)
+	suite.App.SuperfluidKeeper.SetLockIDIntermediaryAccountConnection(suite.Ctx, 1, acc)
 
 	// get account
-	addr = suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, 1)
+	addr = suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, 1)
 	suite.Require().Equal(addr.String(), acc.GetAccAddress().String())
 
 	// check get all
-	conns := suite.App.SuperfluidKeeper.GetAllLockIdIntermediaryAccountConnections(suite.Ctx)
+	conns := suite.App.SuperfluidKeeper.GetAllLockIDIntermediaryAccountConnections(suite.Ctx)
 	suite.Require().Len(conns, 1)
 
 	// delete account
-	suite.App.SuperfluidKeeper.DeleteLockIdIntermediaryAccountConnection(suite.Ctx, 1)
+	suite.App.SuperfluidKeeper.DeleteLockIDIntermediaryAccountConnection(suite.Ctx, 1)
 
 	// get account
-	addr = suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, 1)
+	addr = suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, 1)
 	suite.Require().Equal(addr.String(), "")
 
 }

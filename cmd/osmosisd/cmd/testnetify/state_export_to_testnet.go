@@ -76,6 +76,7 @@ func replaceValidatorDetails(genesis app.GenesisState, params TestnetParams) {
 	}
 }
 
+//nolint:unparam
 func getValidatorDetailsToReplace(genesis app.GenesisState, params TestnetParams) []ValidatorDetails {
 	// TODO: Don't hardcode to sentinel, instead all validators from chain
 	// and get top N validators

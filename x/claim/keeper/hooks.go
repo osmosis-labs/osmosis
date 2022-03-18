@@ -55,10 +55,10 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // gov hooks.
-func (h Hooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalId uint64) {
+func (h Hooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
 }
 
-func (h Hooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalId uint64) {
+func (h Hooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
 }
 
 // gamm hooks.

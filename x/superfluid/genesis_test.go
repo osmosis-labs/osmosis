@@ -88,7 +88,7 @@ func TestInitGenesis(t *testing.T) {
 	accounts := app.SuperfluidKeeper.GetAllIntermediaryAccounts(ctx)
 	require.Equal(t, accounts, genesis.IntermediaryAccounts)
 
-	connections := app.SuperfluidKeeper.GetAllLockIdIntermediaryAccountConnections(ctx)
+	connections := app.SuperfluidKeeper.GetAllLockIDIntermediaryAccountConnections(ctx)
 	require.Equal(t, connections, genesis.IntemediaryAccountConnections)
 }
 

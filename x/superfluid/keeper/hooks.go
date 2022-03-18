@@ -35,7 +35,7 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 // This lock does as an edge case take on the slashing risk as well for historical slashes.
 // This is deemed as fine, governance can re-pay if it occurs on mainnet.
 func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins) {
-	intermediaryAccAddr := h.k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	intermediaryAccAddr := h.k.GetLockIDIntermediaryAccountConnection(ctx, lockID)
 	if !intermediaryAccAddr.Empty() {
 		// superfluid delegate for additional amount
 		err := h.k.IncreaseSuperfluidDelegation(ctx, lockID, amount)

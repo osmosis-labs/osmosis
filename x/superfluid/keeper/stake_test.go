@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidDelegations(delAddrs []sdk.AccAddre
 		delAddr := delAddrs[del.delIndex]
 		valAddr := valAddrs[del.valIndex]
 		lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
-		address := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
+		address := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lock.ID)
 		gotAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, address)
 
 		// save accounts for future use
@@ -183,14 +183,14 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				// check synthetic lockup creation
 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
 				suite.Require().NoError(err)
-				suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
+				suite.Require().Equal(synthLock.underlyingLockID, lock.ID)
 				suite.Require().Equal(synthLock.SynthDenom, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
 				suite.Require().Equal(synthLock.EndTime, time.Time{})
 
 				expAcc := types.NewSuperfluidIntermediaryAccount(lock.Coins[0].Denom, valAddr.String(), 0)
 
 				// Check lockID connection with intermediary account
-				intAcc := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
+				intAcc := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lock.ID)
 				suite.Require().Equal(intAcc.String(), expAcc.GetAccAddress().String())
 			}
 
@@ -345,7 +345,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 			for index, lockId := range tc.superUnbondingLockIds {
 				// get intermediary account
-				accAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
+				accAddr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lockId)
 				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
 				valAddr := intermediaryAcc.ValAddr
 
@@ -373,7 +373,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
 
 				// check lockId and intermediary account connection deletion
-				addr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
+				addr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lockId)
 				suite.Require().Equal(addr.String(), "")
 
 				// check bonding synthetic lockup deletion
@@ -384,7 +384,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 				suite.Require().NoError(err)
-				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
+				suite.Require().Equal(synthLock.underlyingLockID, lockId)
 				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 			}
@@ -446,7 +446,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 	for _, lock := range locks {
 		startTime := time.Now()
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime)
-		accAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
+		accAddr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lock.ID)
 		intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
 		valAddr := intermediaryAcc.ValAddr
 
@@ -464,7 +464,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 		synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 		suite.Require().NoError(err)
-		suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
+		suite.Require().Equal(synthLock.underlyingLockID, lock.ID)
 		suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 		suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 
@@ -603,14 +603,14 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 // 				params := suite.App.SuperfluidKeeper.GetParams(suite.Ctx)
 // 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, srd.lockId, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
 // 				suite.Require().NoError(err)
-// 				suite.Require().Equal(synthLock.UnderlyingLockId, srd.lockId)
+// 				suite.Require().Equal(synthLock.underlyingLockID, srd.lockId)
 // 				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
 // 				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(params.UnbondingDuration))
 
 // 				// check synthetic lockup creation
 // 				synthLock2, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, srd.lockId, keeper.StakingSuffix(valAddrs[srd.newValIndex].String()))
 // 				suite.Require().NoError(err)
-// 				suite.Require().Equal(synthLock2.UnderlyingLockId, srd.lockId)
+// 				suite.Require().Equal(synthLock2.underlyingLockID, srd.lockId)
 // 				suite.Require().Equal(synthLock2.Suffix, keeper.StakingSuffix(valAddrs[srd.newValIndex].String()))
 // 				suite.Require().Equal(synthLock2.EndTime, time.Time{})
 
@@ -640,7 +640,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 // 				suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
 
 // 				// Check lockID connection with intermediary account
-// 				intAcc := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, srd.lockId)
+// 				intAcc := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, srd.lockId)
 // 				suite.Require().Equal(intAcc.String(), expAcc.GetAccAddress().String())
 
 // 				// check delegation from intermediary account to validator

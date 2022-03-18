@@ -35,7 +35,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		if intermediaryAcc.Denom == "" {
 			panic("connection to invalid intermediary account found")
 		}
-		k.SetLockIdIntermediaryAccountConnection(ctx, connection.LockId, intermediaryAcc)
+		k.SetLockIDIntermediaryAccountConnection(ctx, connection.LockId, intermediaryAcc)
 	}
 }
 
@@ -46,6 +46,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		SuperfluidAssets:              k.GetAllSuperfluidAssets(ctx),
 		OsmoEquivalentMultipliers:     k.GetAllOsmoEquivalentMultipliers(ctx),
 		IntermediaryAccounts:          k.GetAllIntermediaryAccounts(ctx),
-		IntemediaryAccountConnections: k.GetAllLockIdIntermediaryAccountConnections(ctx),
+		IntemediaryAccountConnections: k.GetAllLockIDIntermediaryAccountConnections(ctx),
 	}
 }

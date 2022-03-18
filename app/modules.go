@@ -306,6 +306,7 @@ var modulesOrderInitGenesis = []string{
 }
 
 // simulationModules returns modules for simulation manager.
+//nolint:unparam
 func simulationModules(app *OsmosisApp, encodingConfig appparams.EncodingConfig, skipGenesisInvariants bool) []module.AppModuleSimulation {
 	appCodec := encodingConfig.Marshaler
 

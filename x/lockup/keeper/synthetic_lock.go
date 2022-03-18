@@ -15,9 +15,9 @@ func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, synthLock *types.Synth
 	if err != nil {
 		return err
 	}
-	store.Set(syntheticLockStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom), bz)
+	store.Set(syntheticLockStoreKey(synthLock.underlyingLockID, synthLock.SynthDenom), bz)
 	if !synthLock.EndTime.Equal(time.Time{}) {
-		store.Set(syntheticLockTimeStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom, synthLock.EndTime), bz)
+		store.Set(syntheticLockTimeStoreKey(synthLock.underlyingLockID, synthLock.SynthDenom, synthLock.EndTime), bz)
 	}
 	return nil
 }
@@ -32,7 +32,7 @@ func (k Keeper) deleteSyntheticLockupObject(ctx sdk.Context, lockID uint64, synt
 }
 
 func (k Keeper) GetUnderlyingLock(ctx sdk.Context, synthlock types.SyntheticLock) types.PeriodLock {
-	lock, err := k.GetLockByID(ctx, synthlock.UnderlyingLockId)
+	lock, err := k.GetLockByID(ctx, synthlock.underlyingLockID)
 	if err != nil {
 		panic(err) // Synthetic lock MUST have underlying lock
 	}
@@ -127,7 +127,7 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 
 	// set synthetic lockup object
 	synthLock := types.SyntheticLock{
-		UnderlyingLockId: lockID,
+		underlyingLockID: lockID,
 		SynthDenom:       synthDenom,
 		EndTime:          endTime,
 		Duration:         unlockDuration,
@@ -193,7 +193,7 @@ func (k Keeper) DeleteAllMaturedSyntheticLocks(ctx sdk.Context) {
 		if err != nil {
 			panic(err)
 		}
-		err = k.DeleteSyntheticLockup(ctx, synthLock.UnderlyingLockId, synthLock.SynthDenom)
+		err = k.DeleteSyntheticLockup(ctx, synthLock.underlyingLockID, synthLock.SynthDenom)
 		if err != nil {
 			// TODO: When underlying lock is deleted for a reason while synthetic lockup exists, panic could happen
 			panic(err)

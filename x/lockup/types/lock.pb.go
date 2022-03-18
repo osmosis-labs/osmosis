@@ -222,7 +222,7 @@ func (m *QueryCondition) GetTimestamp() time.Time {
 // allowing partial unlocks of synthetic lockups.
 type SyntheticLock struct {
 	// underlying native lockup id for this synthetic lockup
-	UnderlyingLockId uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockId,proto3" json:"underlying_lock_id,omitempty"`
+	underlyingLockID uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockID,proto3" json:"underlying_lock_id,omitempty"`
 	SynthDenom       string `protobuf:"bytes,2,opt,name=synth_denom,json=synthDenom,proto3" json:"synth_denom,omitempty"`
 	// used for unbonding synthetic lockups, for active synthetic lockups, this
 	// value is set to uninitialized value
@@ -263,9 +263,9 @@ func (m *SyntheticLock) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SyntheticLock proto.InternalMessageInfo
 
-func (m *SyntheticLock) GetUnderlyingLockId() uint64 {
+func (m *SyntheticLock) GetunderlyingLockID() uint64 {
 	if m != nil {
-		return m.UnderlyingLockId
+		return m.underlyingLockID
 	}
 	return 0
 }
@@ -501,8 +501,8 @@ func (m *SyntheticLock) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.UnderlyingLockId != 0 {
-		i = encodeVarintLock(dAtA, i, uint64(m.UnderlyingLockId))
+	if m.underlyingLockID != 0 {
+		i = encodeVarintLock(dAtA, i, uint64(m.underlyingLockID))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -572,8 +572,8 @@ func (m *SyntheticLock) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.UnderlyingLockId != 0 {
-		n += 1 + sovLock(uint64(m.UnderlyingLockId))
+	if m.underlyingLockID != 0 {
+		n += 1 + sovLock(uint64(m.underlyingLockID))
 	}
 	l = len(m.SynthDenom)
 	if l > 0 {
@@ -991,9 +991,9 @@ func (m *SyntheticLock) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UnderlyingLockId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field underlyingLockID", wireType)
 			}
-			m.UnderlyingLockId = 0
+			m.underlyingLockID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowLock
@@ -1003,7 +1003,7 @@ func (m *SyntheticLock) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UnderlyingLockId |= uint64(b&0x7F) << shift
+				m.underlyingLockID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

@@ -28,11 +28,11 @@ linters:
     - exportloopref
     - forbidigo
     - forcetypeassert
-    - funlen
+#    - funlen <- some of our functions are longer than this by necessity
     - gci
 #    - gochecknoglobals <- disabled because we want some globals
 #    - gochecknoinits <- disabled because we want to use init()
-    - gocognit
+#    - gocognit <- disabled for same reason as gocyclo
     - goconst
     - gocritic
 #    - gocyclo <- disabled because it won't work with how we cosmos

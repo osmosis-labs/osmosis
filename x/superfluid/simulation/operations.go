@@ -100,7 +100,7 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 				types.ModuleName, types.TypeMsgSuperfluidDelegate, "not able to do superfluid staking if asset Multiplier is zero"), nil, nil
 		}
 
-		if !k.GetLockIdIntermediaryAccountConnection(ctx, lock.ID).Empty() {
+		if !k.GetLockIDIntermediaryAccountConnection(ctx, lock.ID).Empty() {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSuperfluidDelegate, "Lock is already used for superfluid staking"), nil, nil
 		}
@@ -128,7 +128,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 				types.ModuleName, types.TypeMsgSuperfluidUndelegate, "Account have no period lock"), nil, nil
 		}
 
-		if k.GetLockIdIntermediaryAccountConnection(ctx, lock.ID).Empty() {
+		if k.GetLockIDIntermediaryAccountConnection(ctx, lock.ID).Empty() {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgSuperfluidUndelegate, "Lock is not used for superfluid staking"), nil, nil
 		}
@@ -163,7 +163,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 // 				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Account have no period lock"), nil, nil
 // 		}
 
-// 		if k.GetLockIdIntermediaryAccountConnection(ctx, lock.ID).Empty() {
+// 		if k.GetLockIDIntermediaryAccountConnection(ctx, lock.ID).Empty() {
 // 			return simtypes.NoOpMsg(
 // 				types.ModuleName, types.TypeMsgSuperfluidRedelegate, "Lock is not used for superfluid staking"), nil, nil
 // 		}

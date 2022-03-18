@@ -113,21 +113,21 @@ func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, address sdk.AccAddres
 	prefixStore.Delete(address)
 }
 
-func (k Keeper) SetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64, acc types.SuperfluidIntermediaryAccount) {
+func (k Keeper) SetLockIDIntermediaryAccountConnection(ctx sdk.Context, lockID uint64, acc types.SuperfluidIntermediaryAccount) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
-	prefixStore.Set(sdk.Uint64ToBigEndian(lockId), acc.GetAccAddress())
+	prefixStore.Set(sdk.Uint64ToBigEndian(lockID), acc.GetAccAddress())
 }
 
-func (k Keeper) GetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64) sdk.AccAddress {
+func (k Keeper) GetLockIDIntermediaryAccountConnection(ctx sdk.Context, lockID uint64) sdk.AccAddress {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
-	return prefixStore.Get(sdk.Uint64ToBigEndian(lockId))
+	return prefixStore.Get(sdk.Uint64ToBigEndian(lockID))
 }
 
-func (k Keeper) GetAllLockIdIntermediaryAccountConnections(ctx sdk.Context) []types.LockIdIntermediaryAccountConnection {
+func (k Keeper) GetAllLockIDIntermediaryAccountConnections(ctx sdk.Context) []types.LockIdIntermediaryAccountConnection {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
@@ -144,16 +144,16 @@ func (k Keeper) GetAllLockIdIntermediaryAccountConnections(ctx sdk.Context) []ty
 }
 
 // Returns Superfluid Intermediate Account and a bool if found / not found.
-func (k Keeper) GetIntermediaryAccountFromLockId(ctx sdk.Context, lockId uint64) (types.SuperfluidIntermediaryAccount, bool) {
-	addr := k.GetLockIdIntermediaryAccountConnection(ctx, lockId)
+func (k Keeper) GetIntermediaryAccountFromLockID(ctx sdk.Context, lockId uint64) (types.SuperfluidIntermediaryAccount, bool) {
+	addr := k.GetLockIDIntermediaryAccountConnection(ctx, lockId)
 	if addr.Empty() {
 		return types.SuperfluidIntermediaryAccount{}, false
 	}
 	return k.GetIntermediaryAccount(ctx, addr), true
 }
 
-func (k Keeper) DeleteLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64) {
+func (k Keeper) DeleteLockIDIntermediaryAccountConnection(ctx sdk.Context, lockID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
-	prefixStore.Delete(sdk.Uint64ToBigEndian(lockId))
+	prefixStore.Delete(sdk.Uint64ToBigEndian(lockID))
 }

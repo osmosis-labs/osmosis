@@ -85,7 +85,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 }
 
 func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amount sdk.Coins) error {
-	acc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
+	acc, found := k.GetIntermediaryAccountFromLockID(ctx, lockID)
 	if !found {
 		return nil
 	}
@@ -180,7 +180,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 	// create connection record between lock id and intermediary account
-	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
+	k.SetLockIDIntermediaryAccountConnection(ctx, lockID, acc)
 
 	// Register a synthetic lockup for superfluid staking
 	err = k.createSyntheticLockup(ctx, lockID, acc, bondedStatus)
@@ -210,11 +210,11 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	lockedCoin := lock.Coins[0]
 
 	// get the intermediate acct asscd. with lock id, and delete the connection.
-	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
+	intermediaryAcc, found := k.GetIntermediaryAccountFromLockID(ctx, lockID)
 	if !found {
 		return types.ErrNotSuperfluidUsedLockup
 	}
-	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
+	k.DeleteLockIDIntermediaryAccountConnection(ctx, lockID)
 
 	// Delete the old synthetic lockup, and create a new synthetic lockup representing the unstaking
 	synthdenom := stakingSyntheticDenom(lockedCoin.Denom, intermediaryAcc.ValAddr)
@@ -234,8 +234,8 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
 }
 
-func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
-	lock, err := k.lk.GetLockByID(ctx, underlyingLockId)
+func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockID uint64, sender string) error {
+	lock, err := k.lk.GetLockByID(ctx, underlyingLockID)
 	if err != nil {
 		return err
 	}
@@ -243,14 +243,14 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, s
 	if err != nil {
 		return err
 	}
-	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, underlyingLockId)
+	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, underlyingLockID)
 	if len(synthLocks) != 1 {
 		return types.ErrNotSuperfluidUsedLockup
 	}
 	if !synthLocks[0].IsUnlocking() {
 		return types.ErrBondingLockupNotSupported
 	}
-	return k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
+	return k.lk.BeginForceUnlock(ctx, underlyingLockID, sdk.Coins{})
 }
 
 func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
@@ -260,7 +260,7 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 	// we check (1) by looking for presence of an intermediary account lock ID connection
 	// we check (2) (and re-check 1 for suredness) by looking for the existence of
 	// synthetic locks for this.
-	intermediaryAccAddr := k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+	intermediaryAccAddr := k.GetLockIDIntermediaryAccountConnection(ctx, lockID)
 	if !intermediaryAccAddr.Empty() {
 		return true
 	}

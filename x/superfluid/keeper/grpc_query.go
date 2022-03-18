@@ -77,7 +77,7 @@ func (k Keeper) AllIntermediaryAccounts(goCtx context.Context, req *types.AllInt
 // ConnectedIntermediaryAccount returns intermediary account connected to a superfluid staked lock by id.
 func (k Keeper) ConnectedIntermediaryAccount(goCtx context.Context, req *types.ConnectedIntermediaryAccountRequest) (*types.ConnectedIntermediaryAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	address := k.GetLockIdIntermediaryAccountConnection(ctx, req.LockId)
+	address := k.GetLockIDIntermediaryAccountConnection(ctx, req.LockId)
 	acc := k.GetIntermediaryAccount(ctx, address)
 
 	if len(acc.Denom) == 0 && acc.GaugeId == uint64(0) && len(acc.ValAddr) == 0 {
@@ -153,7 +153,7 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 			continue
 		}
 
-		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockId)
+		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.underlyingLockID)
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +198,7 @@ func (k Keeper) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *t
 			continue
 		}
 
-		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockId)
+		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.underlyingLockID)
 		if err != nil {
 			return nil, err
 		}

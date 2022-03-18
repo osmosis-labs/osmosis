@@ -39,16 +39,17 @@ const (
 )
 
 func (k Keeper) createSyntheticLockup(ctx sdk.Context,
-	underlyingLockId uint64, intermediateAcc types.SuperfluidIntermediaryAccount, lockingStat lockingStatus) error {
+	underlyingLockID uint64, intermediateAcc types.SuperfluidIntermediaryAccount, lockingStat lockingStatus) error {
 	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
 	if lockingStat == unlockingStatus {
 		isUnlocking := true
 		synthdenom := unstakingSyntheticDenom(intermediateAcc.Denom, intermediateAcc.ValAddr)
-		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unbondingDuration, isUnlocking)
-	} else {
+		return k.lk.CreateSyntheticLockup(ctx, underlyingLockID, synthdenom, unbondingDuration, isUnlocking)
+	}
+	{
 		notUnlocking := false
 		synthdenom := stakingSyntheticDenom(intermediateAcc.Denom, intermediateAcc.ValAddr)
 
-		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unbondingDuration, notUnlocking)
+		return k.lk.CreateSyntheticLockup(ctx, underlyingLockID, synthdenom, unbondingDuration, notUnlocking)
 	}
 }

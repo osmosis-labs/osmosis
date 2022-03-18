@@ -407,7 +407,7 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 	for i := uint64(1); i <= 3; i++ {
 		// testing not unlocking synthlock, with same duration with underlying
 		synthlock := types.SyntheticLock{
-			UnderlyingLockId: i,
+			underlyingLockID: i,
 			SynthDenom:       fmt.Sprintf("synth1/%d", i),
 			Duration:         time.Second * time.Duration(i),
 		}

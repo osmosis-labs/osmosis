@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.Require().Equal(newEpochMultiplier, sdk.NewDec(15))
 
 			// check gauge creation in new block
-			intermediaryAccAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, locks[0].ID)
+			intermediaryAccAddr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, locks[0].ID)
 			intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, intermediaryAccAddr)
 			gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, intermediaryAcc.GaugeId)
 
@@ -145,7 +145,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 
 // 			for index, lockId := range tc.unbondingLockIds {
 // 				// get intermediary account
-// 				accAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
+// 				accAddr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lockId)
 // 				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
 // 				valAddr := intermediaryAcc.ValAddr
 
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 				suite.Require().NoError(err)
 
 // 				// check lockId and intermediary account connection deletion
-// 				addr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
+// 				addr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lockId)
 // 				suite.Require().Equal(addr.String(), "")
 
 // 				// check bonding synthetic lockup deletion
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 				unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 // 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().NoError(err)
-// 				suite.Require().Equal(synthLock.UnderlyingLockId, lockId)
+// 				suite.Require().Equal(synthLock.underlyingLockID, lockId)
 // 				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 // 			}
