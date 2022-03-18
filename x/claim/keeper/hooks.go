@@ -62,18 +62,18 @@ func (h Hooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalId uint64
 }
 
 // gamm hooks.
-func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolID uint64) {
 	h.k.AfterAddLiquidity(ctx, sender)
 }
 
-func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolID uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
 	h.k.AfterAddLiquidity(ctx, sender)
 }
 
-func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolID uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
 }
 
-func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolID uint64, input sdk.Coins, output sdk.Coins) {
 	h.k.AfterSwap(ctx, sender)
 }
 

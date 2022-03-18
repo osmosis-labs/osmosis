@@ -49,7 +49,7 @@ linters:
     - gosec
     - gosimple
     - govet
-    - ifshort
+#   - ifshort <- seems to be of questionable value
     - importas
     - ineffassign
 #    - ireturn <- disabled because we want to return interfaces

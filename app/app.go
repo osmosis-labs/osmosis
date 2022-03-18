@@ -59,6 +59,8 @@ import (
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
 	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
+
+	// Imports the statik file system for the docs.
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 
 	// Superfluid: Allows users to stake gamm (bonded liquidity).
