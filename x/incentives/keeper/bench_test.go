@@ -68,7 +68,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	b.StopTimer()
 
 	blockStartTime := time.Now().UTC()
-	app, cleanupFn := app.SetupTestingAppWithLevelDb(false)
+	app, cleanupFn := app.SetupTestingAppWithLevelDB(false)
 	defer cleanupFn()
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: blockStartTime})
 

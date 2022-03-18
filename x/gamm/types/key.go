@@ -51,10 +51,10 @@ func GetDenomPrefix(denom string) []byte {
 	return append(KeyTotalLiquidity, []byte(denom)...)
 }
 
-func GetPoolShareDenom(poolId uint64) string {
-	return fmt.Sprintf("gamm/pool/%d", poolId)
+func GetPoolShareDenom(poolID uint64) string {
+	return fmt.Sprintf("gamm/pool/%d", poolID)
 }
 
-func GetKeyPrefixPools(poolId uint64) []byte {
-	return append(KeyPrefixPools, sdk.Uint64ToBigEndian(poolId)...)
+func GetKeyPrefixPools(poolID uint64) []byte {
+	return append(KeyPrefixPools, sdk.Uint64ToBigEndian(poolID)...)
 }

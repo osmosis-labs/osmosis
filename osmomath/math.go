@@ -11,7 +11,7 @@ import (
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 // Singletons.
-var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
+var oneHalf sdk.Dec = sdk.MustNewDecFromStr("0.5")
 
 var (
 	one sdk.Dec = sdk.OneDec()
@@ -78,7 +78,7 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 
 	// Common case optimization
 	// Optimize for it being equal to one-half
-	if exp.Equal(one_half) {
+	if exp.Equal(oneHalf) {
 		output, err := base.ApproxSqrt()
 		if err != nil {
 			panic(err)

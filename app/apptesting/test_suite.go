@@ -62,7 +62,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 }
 
 func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
-	valAddr := []byte(":^) at this distribution workaround") // nolint:ineffassign,staticcheck
+	valAddr := []byte(":^) at this distribution workaround") // nolint:ineffassign,staticcheck,wastedassign
 	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
@@ -151,24 +151,24 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 			defaultFutureGovernor = ""
 
 			// pool assets
-			defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+			defaultFooAsset = gammtypes.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
-			defaultBarAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+			defaultBarAsset = gammtypes.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
 			}
-			poolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+			poolAssets = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
 
-		poolId, err := keeperTestHelper.App.GAMMKeeper.CreateBalancerPool(keeperTestHelper.Ctx, acc1, balancer.PoolParams{
+		poolID, err := keeperTestHelper.App.GAMMKeeper.CreateBalancerPool(keeperTestHelper.Ctx, acc1, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, poolAssets, defaultFutureGovernor)
 		keeperTestHelper.Require().NoError(err)
 
-		pool, err := keeperTestHelper.App.GAMMKeeper.GetPool(keeperTestHelper.Ctx, poolId)
+		pool, err := keeperTestHelper.App.GAMMKeeper.GetPool(keeperTestHelper.Ctx, poolID)
 		keeperTestHelper.Require().NoError(err)
 
 		pools = append(pools, pool)
@@ -178,7 +178,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 
 // SwapAndSetSpotPrice runs a swap to set Spot price of a pool using arbitrary values
 // returns spot price after the arbitrary swap.
-func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset gammtypes.PoolAsset, toAsset gammtypes.PoolAsset) sdk.Dec {
+func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolID uint64, fromAsset gammtypes.PoolAsset, toAsset gammtypes.PoolAsset) sdk.Dec {
 	// create a dummy account
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
@@ -189,11 +189,11 @@ func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fro
 
 	_, _, err = keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
 		keeperTestHelper.Ctx, acc1,
-		poolId, fromAsset.Token.Denom, fromAsset.Token.Amount,
+		poolID, fromAsset.Token.Denom, fromAsset.Token.Amount,
 		sdk.NewCoin(toAsset.Token.Denom, toAsset.Token.Amount.Quo(sdk.NewInt(4))))
 	keeperTestHelper.Require().NoError(err)
 
-	spotPrice, err := keeperTestHelper.App.GAMMKeeper.CalculateSpotPrice(keeperTestHelper.Ctx, poolId, toAsset.Token.Denom, fromAsset.Token.Denom)
+	spotPrice, err := keeperTestHelper.App.GAMMKeeper.CalculateSpotPrice(keeperTestHelper.Ctx, poolID, toAsset.Token.Denom, fromAsset.Token.Denom)
 	keeperTestHelper.Require().NoError(err)
 	return spotPrice
 }

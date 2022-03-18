@@ -23,20 +23,20 @@ func StateExportToTestnetGenesis() *cobra.Command {
 				return err
 			}
 
-			state_export_path := args[0]
-			file, err := ioutil.ReadFile(state_export_path)
+			stateExportPath := args[0]
+			file, err := ioutil.ReadFile(stateExportPath)
 			if err != nil {
 				// failed to read file
 				return err
 			}
 			var genesis app.GenesisState
-			err = json.Unmarshal([]byte(file), &genesis)
+			err = json.Unmarshal(file, &genesis)
 			if err != nil {
 				return err
 			}
 
 			replaceValidatorDetails(genesis, testnetParams)
-			updateChainId(genesis)
+			updateChainID(genesis)
 			clearIBC(genesis)
 
 			cmd.Println("Writing new genesis to: ", testnetParams.OutputExportFilepath)

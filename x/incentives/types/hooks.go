@@ -3,10 +3,10 @@ package types
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type IncentiveHooks interface {
-	AfterCreateGauge(ctx sdk.Context, gaugeId uint64)
-	AfterAddToGauge(ctx sdk.Context, gaugeId uint64)
-	AfterStartDistribution(ctx sdk.Context, gaugeId uint64)
-	AfterFinishDistribution(ctx sdk.Context, gaugeId uint64)
+	AfterCreateGauge(ctx sdk.Context, gaugeID uint64)
+	AfterAddToGauge(ctx sdk.Context, gaugeID uint64)
+	AfterStartDistribution(ctx sdk.Context, gaugeID uint64)
+	AfterFinishDistribution(ctx sdk.Context, gaugeID uint64)
 	AfterEpochDistribution(ctx sdk.Context)
 }
 
@@ -19,27 +19,27 @@ func NewMultiIncentiveHooks(hooks ...IncentiveHooks) MultiIncentiveHooks {
 	return hooks
 }
 
-func (h MultiIncentiveHooks) AfterCreateGauge(ctx sdk.Context, gaugeId uint64) {
+func (h MultiIncentiveHooks) AfterCreateGauge(ctx sdk.Context, gaugeID uint64) {
 	for i := range h {
-		h[i].AfterCreateGauge(ctx, gaugeId)
+		h[i].AfterCreateGauge(ctx, gaugeID)
 	}
 }
 
-func (h MultiIncentiveHooks) AfterAddToGauge(ctx sdk.Context, gaugeId uint64) {
+func (h MultiIncentiveHooks) AfterAddToGauge(ctx sdk.Context, gaugeID uint64) {
 	for i := range h {
-		h[i].AfterAddToGauge(ctx, gaugeId)
+		h[i].AfterAddToGauge(ctx, gaugeID)
 	}
 }
 
-func (h MultiIncentiveHooks) AfterStartDistribution(ctx sdk.Context, gaugeId uint64) {
+func (h MultiIncentiveHooks) AfterStartDistribution(ctx sdk.Context, gaugeID uint64) {
 	for i := range h {
-		h[i].AfterStartDistribution(ctx, gaugeId)
+		h[i].AfterStartDistribution(ctx, gaugeID)
 	}
 }
 
-func (h MultiIncentiveHooks) AfterFinishDistribution(ctx sdk.Context, gaugeId uint64) {
+func (h MultiIncentiveHooks) AfterFinishDistribution(ctx sdk.Context, gaugeID uint64) {
 	for i := range h {
-		h[i].AfterFinishDistribution(ctx, gaugeId)
+		h[i].AfterFinishDistribution(ctx, gaugeID)
 	}
 }
 

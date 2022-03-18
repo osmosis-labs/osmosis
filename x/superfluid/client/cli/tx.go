@@ -52,7 +52,7 @@ func NewSuperfluidDelegateCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			lockId, err := strconv.Atoi(args[0])
+			lockID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
@@ -64,7 +64,7 @@ func NewSuperfluidDelegateCmd() *cobra.Command {
 
 			msg := types.NewMsgSuperfluidDelegate(
 				clientCtx.GetFromAddress(),
-				uint64(lockId),
+				uint64(lockID),
 				valAddr,
 			)
 
@@ -90,14 +90,14 @@ func NewSuperfluidUndelegateCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			lockId, err := strconv.Atoi(args[0])
+			lockID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgSuperfluidUndelegate(
 				clientCtx.GetFromAddress(),
-				uint64(lockId),
+				uint64(lockID),
 			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
@@ -122,14 +122,14 @@ func NewSuperfluidUnbondLockCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			lockId, err := strconv.Atoi(args[0])
+			lockID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgSuperfluidUnbondLock(
 				clientCtx.GetFromAddress(),
-				uint64(lockId),
+				uint64(lockID),
 			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
@@ -154,7 +154,7 @@ func NewSuperfluidUnbondLockCmd() *cobra.Command {
 
 // 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-// 			lockId, err := strconv.Atoi(args[0])
+// 			lockID, err := strconv.Atoi(args[0])
 // 			if err != nil {
 // 				return err
 // 			}
@@ -166,7 +166,7 @@ func NewSuperfluidUnbondLockCmd() *cobra.Command {
 
 // 			msg := types.NewMsgSuperfluidRedelegate(
 // 				clientCtx.GetFromAddress(),
-// 				uint64(lockId),
+// 				uint64(lockID),
 // 				valAddr,
 // 			)
 

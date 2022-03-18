@@ -95,8 +95,7 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
 	lock.Coins = lock.Coins.Sub(coins)
 
-	err := k.setLock(ctx, *lock)
-	if err != nil {
+	if err := k.setLock(ctx, *lock); err != nil {
 		return err
 	}
 
@@ -336,8 +335,7 @@ func (k Keeper) setSyntheticLockAndResetRefs(ctx sdk.Context, lock types.PeriodL
 // setLockAndResetLockRefs sets the lock, and resets all of its lock references
 // This puts the lock into a 'clean' state, aside from the AccumulationStore.
 func (k Keeper) setLockAndResetLockRefs(ctx sdk.Context, lock types.PeriodLock) error {
-	err := k.setLock(ctx, lock)
-	if err != nil {
+	if err := k.setLock(ctx, lock); err != nil {
 		return err
 	}
 

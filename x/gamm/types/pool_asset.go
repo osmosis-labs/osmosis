@@ -46,8 +46,8 @@ func (asset PoolAsset) prettify() poolAssetPretty {
 
 // MarshalYAML returns the YAML representation of a PoolAsset.
 // This is assumed to not be called on a stand-alone instance, so it removes the first marshalled line.
-func (pa PoolAsset) MarshalYAML() (interface{}, error) {
-	bz, err := yaml.Marshal(pa.prettify())
+func (assets PoolAsset) MarshalYAML() (interface{}, error) {
+	bz, err := yaml.Marshal(assets.prettify())
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +59,10 @@ func (pa PoolAsset) MarshalYAML() (interface{}, error) {
 // Doesn't deep copy the underlying weights, but it does place the assets
 // into a new slice.
 func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
-	assets_copy := make([]PoolAsset, len(assets))
-	copy(assets_copy, assets)
-	SortPoolAssetsByDenom(assets_copy)
-	return assets_copy
+	assetsCopy := make([]PoolAsset, len(assets))
+	copy(assetsCopy, assets)
+	SortPoolAssetsByDenom(assetsCopy)
+	return assetsCopy
 }
 
 // SortPoolAssetsByDenom sorts pool assets in place, by weight.

@@ -97,7 +97,7 @@ func getValidatorDetailsToReplace(genesis app.GenesisState, params TestnetParams
 	}
 }
 
-func updateChainId(genesis app.GenesisState) {
+func updateChainID(genesis app.GenesisState) {
 	// TODO: Implement
 }
 

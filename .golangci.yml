@@ -24,21 +24,21 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exhaustivestruct
+#    - exhaustivestruct <- disabled because we don't want to use every element of every struct
     - exportloopref
     - forbidigo
     - forcetypeassert
     - funlen
     - gci
-    - gochecknoglobals
+#    - gochecknoglobals <- disabled because we want some globals
     - gochecknoinits
     - gocognit
     - goconst
     - gocritic
     - gocyclo
     - godot
-    - godox
-    - goerr113
+#    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
+#    - goerr113 <- disabled due to lack of comprehension
     - gofmt
     - gofumpt
     - goheader
@@ -52,8 +52,8 @@ linters:
     - ifshort
     - importas
     - ineffassign
-    - ireturn
-    - lll
+#    - ireturn <- disabled because we want to return interfaces
+#    - lll <- disabled as it is a bit much.  Maybe we have a desired limit?
     - makezero
     - misspell
     - nakedret
@@ -62,7 +62,7 @@ linters:
     - nilnil
 #    - nlreturn <- disabled as it doesn't auto-fix something simple and doesn't add anything useful
     - noctx
-    - nolintlint
+#    - nolintlint <- disabled because we use nolint in some places
     - paralleltest
     - prealloc
     - predeclared
@@ -73,7 +73,7 @@ linters:
     - staticcheck
     - structcheck
     - stylecheck
-    - tagliatelle
+#    - tagliatelle <- disabled for defying cosmos idiom
     - tenv
     - testpackage
     - thelper
@@ -83,11 +83,11 @@ linters:
     - unparam
     - unused
     - varcheck
-#    - varnamelen
+#    - varnamelen <- disabled because defies idiom
     - wastedassign
     - whitespace
 #    - wrapcheck 
-    - wsl
+#    - wsl
 
 issues:
   exclude-rules:

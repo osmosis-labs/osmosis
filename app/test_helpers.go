@@ -34,9 +34,9 @@ func Setup(isCheckTx bool) *OsmosisApp {
 	return app
 }
 
-// SetupTestingAppWithLevelDb initializes a new OsmosisApp intended for testing,
+// SetupTestingAppWithLevelDB initializes a new OsmosisApp intended for testing,
 // with LevelDB as a db.
-func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
+func SetupTestingAppWithLevelDB(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
 	dir := "osmosis_testing"
 	db, err := sdk.NewLevelDB("osmosis_leveldb_testing", dir)
 	if err != nil {
