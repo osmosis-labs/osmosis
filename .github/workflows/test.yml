@@ -1,22 +1,53 @@
-name: Tests / Code Coverage
-#  Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
+#  Tests & Code Coverage workflow runs unit tests and uploads a code coverage report
 #  This workflow is run on pushes to master & every Pull Requests where a .go, .mod, .sum have been changed
+
+name: Tests & Code Coverage
+
 on:
   pull_request:
   push:
     branches:
       - '**'	
+
 jobs:
+
+  should_run_test:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - 
+        id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          cancel_others: 'true'  # workflow-runs from outdated commits will be cancelled.
+          concurrent_skipping: 'same_content'
+          skip_after_successful_duplicate: 'true'
+          paths: '["**/*.go", "**/*.mod", "**/*.sum"]' 
+          do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
+      - 
+        name: Skipping test
+        run: echo Should I skip tests? ${{ steps.skip_check.outputs.should_skip }}
+  
   test:
+    needs: should_run_test
+    if: ${{ needs.should_run_test.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - 
+        name: Check out repository code
+        uses: actions/checkout@v2
+      - 
+        name: Setup Golang
+        uses: actions/setup-go@v2.1.4
         with:
           go-version: 1.17
-      - name: Display go version
+      - 
+        name: Display go version
         run: go version
-      - name: Run all tests
+      - 
+        name: Run all tests
         run: go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic `go list ./... | grep -v simapp`
-      - name: Codecov
+      - 
+        name: Codecov
         uses: codecov/codecov-action@v1.5.2
