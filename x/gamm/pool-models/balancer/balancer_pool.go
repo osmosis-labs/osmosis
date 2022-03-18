@@ -18,17 +18,17 @@ import (
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
 // * poolID doesn't already exist.
-func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []types.PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
-	poolAddr := types.NewPoolAddress(poolId)
+func NewBalancerPool(poolID uint64, balancerPoolParams PoolParams, assets []types.PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
+	poolAddr := types.NewPoolAddress(poolID)
 
 	// pool thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
 	pool := &Pool{
 		Address:            poolAddr.String(),
-		Id:                 poolId,
+		Id:                 poolID,
 		PoolParams:         PoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
-		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), sdk.ZeroInt()),
+		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolID), sdk.ZeroInt()),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
@@ -57,12 +57,12 @@ func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []type
 func (pa Pool) GetAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(pa.Address)
 	if err != nil {
-		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", pa.GetId()))
+		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", pa.GetID()))
 	}
 	return addr
 }
 
-func (pa Pool) GetId() uint64 {
+func (pa Pool) GetID() uint64 {
 	return pa.Id
 }
 

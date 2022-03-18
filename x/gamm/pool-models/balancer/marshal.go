@@ -9,7 +9,7 @@ import (
 
 type balancerPoolPretty struct {
 	Address            sdk.AccAddress    `json:"address" yaml:"address"`
-	Id                 uint64            `json:"id" yaml:"id"`
+	ID                 uint64            `json:"id" yaml:"id"`
 	PoolParams         PoolParams        `json:"pool_params" yaml:"pool_params"`
 	FuturePoolGovernor string            `json:"future_pool_governor" yaml:"future_pool_governor"`
 	TotalWeight        sdk.Dec           `json:"total_weight" yaml:"total_weight"`
@@ -36,7 +36,7 @@ func (pa Pool) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(balancerPoolPretty{
 		Address:            accAddr,
-		Id:                 pa.Id,
+		ID:                 pa.Id,
 		PoolParams:         pa.PoolParams,
 		FuturePoolGovernor: pa.FuturePoolGovernor,
 		TotalWeight:        decTotalWeight,
@@ -53,7 +53,7 @@ func (pa *Pool) UnmarshalJSON(bz []byte) error {
 	}
 
 	pa.Address = alias.Address.String()
-	pa.Id = alias.Id
+	pa.Id = alias.ID
 	pa.PoolParams = alias.PoolParams
 	pa.FuturePoolGovernor = alias.FuturePoolGovernor
 	pa.TotalWeight = alias.TotalWeight.RoundInt()

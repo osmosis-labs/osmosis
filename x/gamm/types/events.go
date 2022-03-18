@@ -7,7 +7,7 @@ const (
 	TypeEvtTokenSwapped = "token_swapped"
 
 	AttributeValueCategory = ModuleName
-	AttributeKeyPoolId     = "pool_id"
+	AttributeKeyPoolID     = "pool_id"
 	AttributeKeySwapFee    = "swap_fee"
 	AttributeKeyTokensIn   = "tokens_in"
 	AttributeKeyTokensOut  = "tokens_out"

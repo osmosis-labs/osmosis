@@ -18,10 +18,10 @@ const (
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
 
 // NewMsgSuperfluidDelegate creates a message to do superfluid delegation.
-func NewMsgSuperfluidDelegate(sender sdk.AccAddress, lockId uint64, valAddr sdk.ValAddress) *MsgSuperfluidDelegate {
+func NewMsgSuperfluidDelegate(sender sdk.AccAddress, lockID uint64, valAddr sdk.ValAddress) *MsgSuperfluidDelegate {
 	return &MsgSuperfluidDelegate{
 		Sender:  sender.String(),
-		LockId:  lockId,
+		LockId:  lockID,
 		ValAddr: valAddr.String(),
 	}
 }
@@ -54,10 +54,10 @@ func (m MsgSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgSuperfluidUndelegate{}
 
 // NewMsgSuperfluidUndelegate creates a message to do superfluid undelegation.
-func NewMsgSuperfluidUndelegate(sender sdk.AccAddress, lockId uint64) *MsgSuperfluidUndelegate {
+func NewMsgSuperfluidUndelegate(sender sdk.AccAddress, lockID uint64) *MsgSuperfluidUndelegate {
 	return &MsgSuperfluidUndelegate{
 		Sender: sender.String(),
-		LockId: lockId,
+		LockId: lockID,
 	}
 }
 

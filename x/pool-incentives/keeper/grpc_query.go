@@ -25,13 +25,13 @@ func (k Keeper) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (
 	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
 
 	for i, duration := range lockableDurations {
-		gaugeId, err := k.GetPoolGaugeId(sdkCtx, req.PoolId, duration)
+		gaugeID, err := k.GetPoolGaugeID(sdkCtx, req.PoolId, duration)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		gaugeIdsWithDuration[i] = &types.QueryGaugeIdsResponse_GaugeIdWithDuration{
-			GaugeId:  gaugeId,
+			GaugeId:  gaugeID,
 			Duration: duration,
 		}
 	}
@@ -69,10 +69,10 @@ func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivize
 
 	for _, record := range distrInfo.Records {
 		for _, lockableDuration := range lockableDurations {
-			poolId, err := k.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
+			poolID, err := k.GetPoolIDFromGaugeID(sdkCtx, record.GaugeId, lockableDuration)
 			if err == nil {
 				incentivizedPool := types.IncentivizedPool{
-					PoolId:           poolId,
+					PoolId:           poolID,
 					LockableDuration: lockableDuration,
 					GaugeId:          record.GaugeId,
 				}

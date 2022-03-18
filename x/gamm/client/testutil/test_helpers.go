@@ -68,7 +68,7 @@ func MsgCreatePool(
 // MsgJoinPool broadcast pool join message.
 func MsgJoinPool(clientCtx client.Context, owner fmt.Stringer, poolID uint64, shareAmtOut string, maxAmountsIn []string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
-		fmt.Sprintf("--%s=%d", gammcli.FlagPoolId, poolID),
+		fmt.Sprintf("--%s=%d", gammcli.FlagPoolID, poolID),
 		fmt.Sprintf("--%s=%s", gammcli.FlagShareAmountOut, shareAmtOut),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
 	}
@@ -83,7 +83,7 @@ func MsgJoinPool(clientCtx client.Context, owner fmt.Stringer, poolID uint64, sh
 // MsgExitPool broadcast a pool exit message.
 func MsgExitPool(clientCtx client.Context, owner fmt.Stringer, poolID uint64, shareAmtIn string, minAmountsOut []string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
-		fmt.Sprintf("--%s=%d", gammcli.FlagPoolId, poolID),
+		fmt.Sprintf("--%s=%d", gammcli.FlagPoolID, poolID),
 		fmt.Sprintf("--%s=%s", gammcli.FlagShareAmountIn, shareAmtIn),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, owner.String()),
 	}

@@ -222,7 +222,7 @@ func (m *QueryCondition) GetTimestamp() time.Time {
 // allowing partial unlocks of synthetic lockups.
 type SyntheticLock struct {
 	// underlying native lockup id for this synthetic lockup
-	underlyingLockID uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockID,proto3" json:"underlying_lock_id,omitempty"`
+	UnderlyingLockID uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockID,proto3" json:"underlying_lock_id,omitempty"`
 	SynthDenom       string `protobuf:"bytes,2,opt,name=synth_denom,json=synthDenom,proto3" json:"synth_denom,omitempty"`
 	// used for unbonding synthetic lockups, for active synthetic lockups, this
 	// value is set to uninitialized value

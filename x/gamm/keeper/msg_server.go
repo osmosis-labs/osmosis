@@ -46,7 +46,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(poolId, 10)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -74,7 +74,7 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtPoolJoined,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(msg.PoolId, 10)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -102,7 +102,7 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtPoolExited,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(msg.PoolId, 10)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

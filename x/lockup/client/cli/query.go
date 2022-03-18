@@ -42,7 +42,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
 		GetCmdTotalLockedByDenom(),
-		GetCmdOutputLocksJson(),
+		GetCmdOutputLocksJSON(),
 		GetCmdSyntheticLockupsByLockupID(),
 	)
 
@@ -233,6 +233,7 @@ $ %s query lockup account-locked-coins <address>
 }
 
 // GetCmdAccountLockedPastTime returns locked records of an account with unlock time beyond timestamp.
+//nolint:dupl
 func GetCmdAccountLockedPastTime() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-pastime <address> <timestamp>",
@@ -276,6 +277,7 @@ $ %s query lockup account-locked-pastime <address> <timestamp>
 }
 
 // GetCmdAccountLockedPastTimeNotUnlockingOnly returns locked records of an account with unlock time beyond timestamp within not unlocking queue.
+//nolint:dupl
 func GetCmdAccountLockedPastTimeNotUnlockingOnly() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-pastime-not-unlocking <address> <timestamp>",
@@ -319,6 +321,7 @@ $ %s query lockup account-locked-pastime-not-unlocking <address> <timestamp>
 }
 
 // GetCmdAccountUnlockedBeforeTime returns unlocked records with unlock time before timestamp.
+//nolint:dupl
 func GetCmdAccountUnlockedBeforeTime() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-beforetime <address> <timestamp>",
@@ -666,8 +669,8 @@ $ %s query lockup total-locked-of-denom <denom>
 	return cmd
 }
 
-// GetCmdOutputLocksJson outputs all locks into a file called lock_export.json.
-func GetCmdOutputLocksJson() *cobra.Command {
+// GetCmdOutputLocksJSON outputs all locks into a file called lock_export.json.
+func GetCmdOutputLocksJSON() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "output-all-locks <max lock ID>",
 		Short: "output all locks into a json file",
@@ -693,13 +696,13 @@ $ %s query lockup output-all-locks <max lock ID>
 
 			// status
 			const (
-				doesnt_exist_status = iota
-				unbonding_status
-				bonded_status
+				doesntExistStatus = iota
+				unbondingStatus
+				bondedStatus
 			)
 
 			type LockResult struct {
-				Id            int
+				ID            int
 				Status        int // one of {doesnt_exist, }
 				Denom         string
 				Amount        sdk.Int
@@ -710,18 +713,18 @@ $ %s query lockup output-all-locks <max lock ID>
 
 			results := []LockResult{}
 			for i := 0; i <= int(maxLockID); i++ {
-				curLockResult := LockResult{Id: i}
+				curLockResult := LockResult{ID: i}
 				res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: uint64(i)})
 				if err != nil {
-					curLockResult.Status = doesnt_exist_status
+					curLockResult.Status = doesntExistStatus
 					results = append(results, curLockResult)
 					continue
 				}
 				// 1527019420 is hardcoded time well before launch, but well after year 1
 				if res.Lock.EndTime.Before(time.Unix(1527019420, 0)) {
-					curLockResult.Status = bonded_status
+					curLockResult.Status = bondedStatus
 				} else {
-					curLockResult.Status = unbonding_status
+					curLockResult.Status = unbondingStatus
 					curLockResult.UnbondEndTime = res.Lock.EndTime
 					curLockResult.Denom = res.Lock.Coins[0].Denom
 					curLockResult.Amount = res.Lock.Coins[0].Amount
@@ -734,7 +737,7 @@ $ %s query lockup output-all-locks <max lock ID>
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile("lock_export.json", []byte(bz), 0o777)
+			err = ioutil.WriteFile("lock_export.json", bz, 0o600)
 			if err != nil {
 				return err
 			}

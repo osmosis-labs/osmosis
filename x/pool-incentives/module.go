@@ -1,4 +1,4 @@
-package pool_incentives
+package poolincentives
 
 import (
 	"context"

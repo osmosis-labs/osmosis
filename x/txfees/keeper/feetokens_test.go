@@ -120,8 +120,8 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 				_, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(tc.feeToken, 10))
 				suite.Require().NoError(err, "test: %s", tc.name)
 				// make sure the queried poolId is the same as expected
-				queriedPoolId, err := suite.queryClient.DenomPoolId(suite.ctx.Context(),
-					&types.QueryDenomPoolIdRequest{
+				queriedPoolId, err := suite.queryClient.DenomPoolID(suite.ctx.Context(),
+					&types.QueryDenomPoolIDRequest{
 						Denom: tc.feeToken,
 					},
 				)
@@ -135,8 +135,8 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 				_, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(tc.feeToken, 10))
 				suite.Require().Error(err, "test: %s", tc.name)
 				// make sure the queried poolId errors
-				_, err = suite.queryClient.DenomPoolId(suite.ctx.Context(),
-					&types.QueryDenomPoolIdRequest{
+				_, err = suite.queryClient.DenomPoolID(suite.ctx.Context(),
+					&types.QueryDenomPoolIDRequest{
 						Denom: tc.feeToken,
 					},
 				)

@@ -44,7 +44,7 @@ func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, loc
 		} else {
 			ctx.EventManager().EmitEvent(sdk.NewEvent(
 				types.TypeEvtSuperfluidIncreaseDelegation,
-				sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockID)),
+				sdk.NewAttribute(types.AttributeLockID, fmt.Sprintf("%d", lockID)),
 				sdk.NewAttribute(types.AttributeAmount, amount.String()),
 			))
 		}

@@ -41,7 +41,7 @@ func (k Keeper) addSyntheticLockRefs(ctx sdk.Context, lock types.PeriodLock, syn
 	}
 	lockRefPrefix := unlockingPrefix(synthLock.IsUnlocking())
 	for _, refKey := range refKeys {
-		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.underlyingLockID); err != nil {
+		if err := k.addLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockID); err != nil {
 			return err
 		}
 	}
@@ -55,7 +55,7 @@ func (k Keeper) deleteSyntheticLockRefs(ctx sdk.Context, lock types.PeriodLock, 
 	}
 	lockRefPrefix := unlockingPrefix(synthLock.IsUnlocking())
 	for _, refKey := range refKeys {
-		k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.underlyingLockID)
+		k.deleteLockRefByKey(ctx, combineKeys(lockRefPrefix, refKey), synthLock.UnderlyingLockID)
 	}
 	return nil
 }

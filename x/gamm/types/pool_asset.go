@@ -46,8 +46,8 @@ func (asset PoolAsset) prettify() poolAssetPretty {
 
 // MarshalYAML returns the YAML representation of a PoolAsset.
 // This is assumed to not be called on a stand-alone instance, so it removes the first marshalled line.
-func (assets PoolAsset) MarshalYAML() (interface{}, error) {
-	bz, err := yaml.Marshal(assets.prettify())
+func (asset PoolAsset) MarshalYAML() (interface{}, error) {
+	bz, err := yaml.Marshal(asset.prettify())
 	if err != nil {
 		return nil, err
 	}

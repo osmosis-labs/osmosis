@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 				unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 // 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().NoError(err)
-// 				suite.Require().Equal(synthLock.underlyingLockID, lockId)
+// 				suite.Require().Equal(synthLock.UnderlyingLockID, lockId)
 // 				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 // 			}

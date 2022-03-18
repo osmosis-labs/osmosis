@@ -19,7 +19,7 @@ func (k Keeper) FeeTokens(ctx context.Context, _ *types.QueryFeeTokensRequest) (
 	return &types.QueryFeeTokensResponse{FeeTokens: feeTokens}, nil
 }
 
-func (k Keeper) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {
+func (k Keeper) DenomPoolID(ctx context.Context, req *types.QueryDenomPoolIDRequest) (*types.QueryDenomPoolIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -31,7 +31,7 @@ func (k Keeper) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequ
 		return nil, err
 	}
 
-	return &types.QueryDenomPoolIdResponse{PoolID: feeToken.GetPoolID()}, nil
+	return &types.QueryDenomPoolIDResponse{PoolID: feeToken.GetPoolID()}, nil
 }
 
 func (k Keeper) BaseDenom(ctx context.Context, _ *types.QueryBaseDenomRequest) (*types.QueryBaseDenomResponse, error) {

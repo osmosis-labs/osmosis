@@ -13,11 +13,11 @@ func NewSuperfluidAsset(assetType SuperfluidAssetType, denom string) SuperfluidA
 	}
 }
 
-func NewSuperfluidIntermediaryAccount(denom string, valAddr string, gaugeId uint64) SuperfluidIntermediaryAccount {
+func NewSuperfluidIntermediaryAccount(denom string, valAddr string, gaugeID uint64) SuperfluidIntermediaryAccount {
 	return SuperfluidIntermediaryAccount{
 		Denom:   denom,
 		ValAddr: valAddr,
-		GaugeId: gaugeId,
+		GaugeId: gaugeID,
 	}
 }
 

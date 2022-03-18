@@ -269,7 +269,7 @@ func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.S
 		}
 
 		// Add to the accumlation store cache
-		lock, err := k.GetLockByID(ctx, synthLock.underlyingLockID)
+		lock, err := k.GetLockByID(ctx, synthLock.UnderlyingLockID)
 		if err != nil {
 			return err
 		}

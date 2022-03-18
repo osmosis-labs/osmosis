@@ -1,4 +1,4 @@
-package txfee_filters
+package filters
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

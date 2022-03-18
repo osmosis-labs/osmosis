@@ -30,9 +30,10 @@ func NewTxCmd() *cobra.Command {
 	return txCmd
 }
 
+//nolint:dupl
 func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-pool-incentives [gaugeIds] [weights]",
+		Use:   "update-pool-incentives [gaugeIDs] [weights]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit an update to the records for pool incentives",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -42,7 +43,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 			}
 
 			// TODO: Make a parse uint64 slice function
-			gaugeIds, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
+			gaugeIDs, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
 			if err != nil {
 				return err
 			}
@@ -52,18 +53,18 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			if len(gaugeIds) != len(weights) {
+			if len(gaugeIDs) != len(weights) {
 				return fmt.Errorf("the length of gauge ids and weights not matched")
 			}
 
-			if len(gaugeIds) == 0 {
+			if len(gaugeIDs) == 0 {
 				return fmt.Errorf("records is empty")
 			}
 
 			var records []types.DistrRecord
-			for i, gaugeId := range gaugeIds {
+			for i, gaugeID := range gaugeIDs {
 				records = append(records, types.DistrRecord{
-					GaugeId: gaugeId,
+					GaugeId: gaugeID,
 					Weight:  weights[i],
 				})
 			}
@@ -113,9 +114,10 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	return cmd
 }
 
+//nolint:dupl
 func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "replace-pool-incentives [gaugeIds] [weights]",
+		Use:   "replace-pool-incentives [gaugeIDs] [weights]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit a full replacement to the records for pool incentives",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -124,7 +126,7 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			gaugeIds, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
+			gaugeIDs, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
 			if err != nil {
 				return err
 			}
@@ -134,18 +136,18 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			if len(gaugeIds) != len(weights) {
+			if len(gaugeIDs) != len(weights) {
 				return fmt.Errorf("the length of gauge ids and weights not matched")
 			}
 
-			if len(gaugeIds) == 0 {
+			if len(gaugeIDs) == 0 {
 				return fmt.Errorf("records is empty")
 			}
 
 			var records []types.DistrRecord
-			for i, gaugeId := range gaugeIds {
+			for i, gaugeID := range gaugeIDs {
 				records = append(records, types.DistrRecord{
-					GaugeId: gaugeId,
+					GaugeId: gaugeID,
 					Weight:  weights[i],
 				})
 			}

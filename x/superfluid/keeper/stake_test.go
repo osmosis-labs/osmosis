@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 				// check synthetic lockup creation
 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
 				suite.Require().NoError(err)
-				suite.Require().Equal(synthLock.underlyingLockID, lock.ID)
+				suite.Require().Equal(synthLock.UnderlyingLockID, lock.ID)
 				suite.Require().Equal(synthLock.SynthDenom, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
 				suite.Require().Equal(synthLock.EndTime, time.Time{})
 
@@ -384,7 +384,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 				suite.Require().NoError(err)
-				suite.Require().Equal(synthLock.underlyingLockID, lockId)
+				suite.Require().Equal(synthLock.UnderlyingLockID, lockId)
 				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 			}
@@ -464,7 +464,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 		synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 		suite.Require().NoError(err)
-		suite.Require().Equal(synthLock.underlyingLockID, lock.ID)
+		suite.Require().Equal(synthLock.UnderlyingLockID, lock.ID)
 		suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 		suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 
@@ -603,7 +603,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 // 				params := suite.App.SuperfluidKeeper.GetParams(suite.Ctx)
 // 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, srd.lockId, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
 // 				suite.Require().NoError(err)
-// 				suite.Require().Equal(synthLock.underlyingLockID, srd.lockId)
+// 				suite.Require().Equal(synthLock.UnderlyingLockID, srd.lockId)
 // 				suite.Require().Equal(synthLock.Suffix, keeper.UnstakingSuffix(valAddrs[srd.oldValIndex].String()))
 // 				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(params.UnbondingDuration))
 

@@ -57,7 +57,7 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 
 func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.SyntheticLock, slashFactor sdk.Dec) {
 	// Only single token lock is allowed here
-	lock, _ := k.lk.GetLockByID(ctx, synthLock.underlyingLockID)
+	lock, _ := k.lk.GetLockByID(ctx, synthLock.UnderlyingLockID)
 	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
 	slashCoins := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt))
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {

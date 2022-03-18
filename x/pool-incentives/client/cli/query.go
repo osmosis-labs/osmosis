@@ -57,13 +57,13 @@ $ %s query pool-incentives gauge-ids 1
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			poolID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			res, err := queryClient.GaugeIds(cmd.Context(), &types.QueryGaugeIdsRequest{
-				PoolId: poolId,
+				PoolId: poolID,
 			})
 			if err != nil {
 				return err

@@ -79,7 +79,7 @@ func (k Keeper) Pools(
 		// TODO: pools query should not be balancer specific
 		pool, ok := poolI.(*balancer.Pool)
 		if !ok {
-			return fmt.Errorf("pool (%d) is not basic pool", pool.GetId())
+			return fmt.Errorf("pool (%d) is not basic pool", pool.GetID())
 		}
 
 		any, err := codectypes.NewAnyWithValue(pool)

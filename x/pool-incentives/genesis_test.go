@@ -1,4 +1,4 @@
-package pool_incentives_test
+package poolincentives_test
 
 import (
 	"testing"

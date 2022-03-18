@@ -89,7 +89,7 @@ $ %s query txfees denom-pool-id [denom]
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.DenomPoolId(cmd.Context(), &types.QueryDenomPoolIdRequest{
+			res, err := queryClient.DenomPoolID(cmd.Context(), &types.QueryDenomPoolIDRequest{
 				Denom: args[0],
 			})
 			if err != nil {

@@ -90,10 +90,10 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 // 3) the records only pay to gauges that exist.
 func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	lastGaugeID := uint64(0)
-	gaugeIdFlags := make(map[uint64]bool)
+	gaugeIDFlags := make(map[uint64]bool)
 
 	for _, record := range records {
-		if gaugeIdFlags[record.GaugeId] {
+		if gaugeIDFlags[record.GaugeId] {
 			return sdkerrors.Wrapf(
 				types.ErrDistrRecordRegisteredGauge,
 				"Gauge ID #%d has duplications.",
@@ -124,7 +124,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 			}
 		}
 
-		gaugeIdFlags[record.GaugeId] = true
+		gaugeIDFlags[record.GaugeId] = true
 	}
 	return nil
 }

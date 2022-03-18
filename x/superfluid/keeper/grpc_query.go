@@ -153,7 +153,7 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 			continue
 		}
 
-		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.underlyingLockID)
+		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockID)
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +198,7 @@ func (k Keeper) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *t
 			continue
 		}
 
-		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.underlyingLockID)
+		periodLock, err := k.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockID)
 		if err != nil {
 			return nil, err
 		}

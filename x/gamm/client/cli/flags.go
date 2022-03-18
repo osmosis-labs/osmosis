@@ -20,7 +20,7 @@ const (
 	PoolFileDuration                 = "duration"
 	PoolFileTargetPoolWeights        = "target-pool-weights"
 
-	FlagPoolId = "pool-id"
+	FlagPoolID = "pool-id"
 	// Will be parsed to sdk.Int.
 	FlagShareAmountOut = "share-amount-out"
 	// Will be parsed to []sdk.Coin.
@@ -80,7 +80,7 @@ func FlagSetCreatePool() *flag.FlagSet {
 func FlagSetJoinPool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagPoolId, 0, "The id of pool")
+	fs.Uint64(FlagPoolID, 0, "The id of pool")
 	fs.String(FlagShareAmountOut, "", "Minimum amount of Gamm tokens to receive")
 	fs.StringArray(FlagMaxAmountsIn, []string{""}, "Maximum amount of each denom to send into the pool (specify multiple denoms with: --max-amounts-in=1uosmo --max-amounts-in=1uion)")
 
@@ -90,7 +90,7 @@ func FlagSetJoinPool() *flag.FlagSet {
 func FlagSetExitPool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagPoolId, 0, "The id of pool")
+	fs.Uint64(FlagPoolID, 0, "The id of pool")
 	fs.String(FlagShareAmountIn, "", "TODO: add description")
 	fs.StringArray(FlagMinAmountsOut, []string{""}, "TODO: add description")
 
@@ -100,7 +100,7 @@ func FlagSetExitPool() *flag.FlagSet {
 func FlagSetJoinSwapExternAmount() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagPoolId, 0, "The id of pool")
+	fs.Uint64(FlagPoolID, 0, "The id of pool")
 
 	return fs
 }

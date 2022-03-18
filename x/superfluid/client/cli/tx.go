@@ -179,6 +179,7 @@ func NewSuperfluidUnbondLockCmd() *cobra.Command {
 // }
 
 // NewCmdSubmitSetSuperfluidAssetsProposal implements a command handler for submitting a superfluid asset set proposal transaction.
+//nolint:dupl
 func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-superfluid-assets-proposal [flags]",
@@ -228,6 +229,7 @@ func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
 }
 
 // NewCmdSubmitRemoveSuperfluidAssetsProposal implements a command handler for submitting a superfluid asset remove proposal transaction.
+//nolint:dupl
 func NewCmdSubmitRemoveSuperfluidAssetsProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-superfluid-assets-proposal [flags]",

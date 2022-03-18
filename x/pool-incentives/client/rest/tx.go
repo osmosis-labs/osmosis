@@ -27,6 +27,7 @@ func ProposalUpdatePoolIncentivesRESTHandler(clientCtx client.Context) govrest.P
 	}
 }
 
+//nolint:dupl
 func newUpdatePoolIncentivesHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req UpdatePoolIncentivesRequest
@@ -73,6 +74,7 @@ func ProposalReplacePoolIncentivesRESTHandler(clientCtx client.Context) govrest.
 	}
 }
 
+//nolint:dupl
 func newReplacePoolIncentivesHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ReplacePoolIncentivesRequest

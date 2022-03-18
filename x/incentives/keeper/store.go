@@ -21,14 +21,14 @@ func (k Keeper) GetLastGaugeID(ctx sdk.Context) uint64 {
 }
 
 // SetLastGaugeID save ID used by last gauge.
-func (k Keeper) SetLastGaugeID(ctx sdk.Context, ID uint64) {
+func (k Keeper) SetLastGaugeID(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.KeyLastGaugeID, sdk.Uint64ToBigEndian(ID))
+	store.Set(types.KeyLastGaugeID, sdk.Uint64ToBigEndian(id))
 }
 
 // gaugeStoreKey returns action store key from ID.
-func gaugeStoreKey(ID uint64) []byte {
-	return combineKeys(types.KeyPrefixPeriodGauge, sdk.Uint64ToBigEndian(ID))
+func gaugeStoreKey(id uint64) []byte {
+	return combineKeys(types.KeyPrefixPeriodGauge, sdk.Uint64ToBigEndian(id))
 }
 
 func gaugeDenomStoreKey(denom string) []byte {
@@ -91,11 +91,11 @@ func (k Keeper) getAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
 }
 
 // deleteGaugeIDForDenom deletes ID from the list of gauge ID's associated with denomination `denom`.
-func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
-	return k.deleteGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
+func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, id uint64, denom string) error {
+	return k.deleteGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), id)
 }
 
 // addGaugeIDForDenom adds ID to the list of gauge ID's associated with denomination `denom`.
-func (k Keeper) addGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
-	return k.addGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
+func (k Keeper) addGaugeIDForDenom(ctx sdk.Context, id uint64, denom string) error {
+	return k.addGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), id)
 }

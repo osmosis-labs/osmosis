@@ -29,7 +29,7 @@ var (
 
 const trim = "gamm/pool/"
 
-func MustGetPoolIdFromShareDenom(denom string) uint64 {
+func MustGetPoolIDFromShareDenom(denom string) uint64 {
 	numberStr := strings.TrimPrefix(denom, trim)
 	number, err := strconv.Atoi(numberStr)
 	if err != nil {

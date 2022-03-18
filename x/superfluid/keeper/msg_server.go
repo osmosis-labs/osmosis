@@ -29,7 +29,7 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 	if err != nil {
 		ctx.EventManager().EmitEvent(sdk.NewEvent(
 			types.TypeEvtSuperfluidDelegate,
-			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
+			sdk.NewAttribute(types.AttributeLockID, fmt.Sprintf("%d", msg.LockId)),
 			sdk.NewAttribute(types.AttributeValidator, msg.ValAddr),
 		))
 	}
@@ -43,7 +43,7 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 	if err != nil {
 		ctx.EventManager().EmitEvent(sdk.NewEvent(
 			types.TypeEvtSuperfluidUndelegate,
-			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
+			sdk.NewAttribute(types.AttributeLockID, fmt.Sprintf("%d", msg.LockId)),
 		))
 	}
 	return &types.MsgSuperfluidUndelegateResponse{}, err
@@ -64,7 +64,7 @@ func (server msgServer) SuperfluidUnbondLock(goCtx context.Context, msg *types.M
 	if err != nil {
 		ctx.EventManager().EmitEvent(sdk.NewEvent(
 			types.TypeEvtSuperfluidUnbondLock,
-			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
+			sdk.NewAttribute(types.AttributeLockID, fmt.Sprintf("%d", msg.LockId)),
 		))
 	}
 	return &types.MsgSuperfluidUnbondLockResponse{}, err

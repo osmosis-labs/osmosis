@@ -39,6 +39,7 @@ func (k Keeper) GaugeByID(goCtx context.Context, req *types.GaugeByIDRequest) (*
 }
 
 // Gauges returns gauges both upcoming and active.
+//nolint:dupl
 func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.GaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauges := []types.Gauge{}
@@ -62,6 +63,7 @@ func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.
 }
 
 // ActiveGauges returns active gauges.
+//nolint:dupl
 func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesRequest) (*types.ActiveGaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauges := []types.Gauge{}
@@ -108,6 +110,7 @@ func (k Keeper) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGau
 }
 
 // UpcomingGauges returns scheduled gauges.
+//nolint:dupl
 func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesRequest) (*types.UpcomingGaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauges := []types.Gauge{}
@@ -142,8 +145,8 @@ func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) 
 		return nil, err
 	}
 	locks := make([]lockuptypes.PeriodLock, 0, len(req.LockIds))
-	for _, lockId := range req.LockIds {
-		lock, err := k.lk.GetLockByID(ctx, lockId)
+	for _, lockID := range req.LockIds {
+		lock, err := k.lk.GetLockByID(ctx, lockID)
 		if err != nil {
 			return nil, err
 		}

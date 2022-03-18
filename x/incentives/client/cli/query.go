@@ -38,6 +38,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 }
 
 // GetCmdGauges returns full available gauges.
+//nolint:dupl
 func GetCmdGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauges",
@@ -195,6 +196,7 @@ $ %s query incentives gauge-by-id 1
 }
 
 // GetCmdActiveGauges returns active gauges.
+//nolint:dupl
 func GetCmdActiveGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "active-gauges",
@@ -277,6 +279,7 @@ $ %s query incentives active-gauges-per-denom [denom]
 }
 
 // GetCmdUpcomingGauges returns scheduled gauges.
+//nolint:dupl
 func GetCmdUpcomingGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges",
@@ -349,14 +352,14 @@ $ %s query incentives rewards-estimation
 				return err
 			}
 
-			lockIdStrs := strings.Split(lockIdsCombined, ",")
-			lockIds := []uint64{}
-			for _, lockIdStr := range lockIdStrs {
-				lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
+			lockIDStrs := strings.Split(lockIdsCombined, ",")
+			lockIDs := []uint64{}
+			for _, lockIDStr := range lockIDStrs {
+				lockID, err := strconv.ParseUint(lockIDStr, 10, 64)
 				if err != nil {
 					return err
 				}
-				lockIds = append(lockIds, lockId)
+				lockIDs = append(lockIDs, lockID)
 			}
 
 			endEpoch, err := cmd.Flags().GetInt64(FlagEndEpoch)
@@ -366,7 +369,7 @@ $ %s query incentives rewards-estimation
 
 			res, err := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
 				Owner:    owner, // owner is used only when lockIds are empty
-				LockIds:  lockIds,
+				LockIds:  lockIDs,
 				EndEpoch: endEpoch,
 			})
 			if err != nil {

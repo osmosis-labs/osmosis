@@ -161,13 +161,13 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "No gauge exists"), nil, nil
 		}
-		gaugeId := RandomGauge(ctx, r, k).Id
+		gaugeID := RandomGauge(ctx, r, k).Id
 
 		rewards := genRewardCoins(r, simCoins)
 
 		msg := types.MsgAddToGauge{
 			Owner:   simAccount.Address.String(),
-			GaugeId: gaugeId,
+			GaugeId: gaugeID,
 			Rewards: rewards,
 		}
 

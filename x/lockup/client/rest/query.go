@@ -108,6 +108,7 @@ func queryAccountLockedCoinsFn(clientCtx client.Context) http.HandlerFunc {
 	}
 }
 
+//nolint:dupl
 func queryAccountLockedPastTimeFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -143,6 +144,7 @@ func queryAccountLockedPastTimeFn(clientCtx client.Context) http.HandlerFunc {
 	}
 }
 
+//nolint:dupl
 func queryAccountUnlockedBeforeTimeFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

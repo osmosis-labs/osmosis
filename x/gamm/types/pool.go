@@ -43,8 +43,8 @@ var (
 	GuaranteedWeightPrecision int64   = 1 << 30
 )
 
-func NewPoolAddress(poolId uint64) sdk.AccAddress {
-	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
+func NewPoolAddress(poolID uint64) sdk.AccAddress {
+	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolID)...)
 	return address.Module(ModuleName, key)
 }
 

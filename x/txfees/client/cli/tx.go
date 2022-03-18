@@ -40,14 +40,14 @@ func NewCmdSubmitUpdateFeeTokenProposal() *cobra.Command {
 			}
 
 			denom := args[0]
-			pool_id, err := strconv.ParseUint(args[1], 10, 64)
+			poolID, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			feeToken := types.FeeToken{
 				Denom:  denom,
-				PoolID: pool_id,
+				PoolID: poolID,
 			}
 
 			title, err := cmd.Flags().GetString(cli.FlagTitle)

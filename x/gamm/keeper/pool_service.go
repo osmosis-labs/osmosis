@@ -477,11 +477,11 @@ func (k Keeper) ExitSwapShareAmountIn(
 func (k Keeper) ExitSwapExternAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId uint64,
+	poolID uint64,
 	tokenOut sdk.Coin,
 	shareInMaxAmount sdk.Int,
 ) (shareInAmount sdk.Int, err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return sdk.Int{}, err
 	}

@@ -91,6 +91,7 @@ Where pool.json contains:
 	return cmd
 }
 
+//nolint:dupl
 func NewJoinPoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "join-pool",
@@ -116,13 +117,14 @@ func NewJoinPoolCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetJoinPool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagPoolID)
 	_ = cmd.MarkFlagRequired(FlagShareAmountOut)
 	_ = cmd.MarkFlagRequired(FlagMaxAmountsIn)
 
 	return cmd
 }
 
+//nolint:dupl
 func NewExitPoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exit-pool",
@@ -148,13 +150,14 @@ func NewExitPoolCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetExitPool())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagPoolID)
 	_ = cmd.MarkFlagRequired(FlagShareAmountIn)
 	_ = cmd.MarkFlagRequired(FlagMinAmountsOut)
 
 	return cmd
 }
 
+//nolint:dupl
 func NewSwapExactAmountInCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
@@ -185,6 +188,7 @@ func NewSwapExactAmountInCmd() *cobra.Command {
 	return cmd
 }
 
+//nolint:dupl
 func NewSwapExactAmountOutCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "swap-exact-amount-out [token-out] [token-in-max-amount]",
@@ -239,7 +243,7 @@ func NewJoinSwapExternAmountIn() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
 	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagPoolID)
 
 	return cmd
 }
@@ -268,7 +272,7 @@ func NewJoinSwapShareAmountOut() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
 	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagPoolID)
 
 	return cmd
 }
@@ -297,7 +301,7 @@ func NewExitSwapExternAmountOut() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
 	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagPoolID)
 
 	return cmd
 }
@@ -326,7 +330,7 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(FlagSetJoinSwapExternAmount())
 	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagPoolID)
 
 	return cmd
 }
@@ -430,8 +434,9 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 	return txf, msg, nil
 }
 
+//nolint:dupl
 func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
+	poolID, err := fs.GetUint64(FlagPoolID)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -470,8 +475,9 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	return txf, msg, nil
 }
 
+//nolint:dupl
 func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
+	poolID, err := fs.GetUint64(FlagPoolID)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -619,7 +625,7 @@ func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, tokenOutStr, tokenI
 }
 
 func NewBuildJoinSwapExternAmountInMsg(clientCtx client.Context, tokenInStr, shareOutMinAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
+	poolID, err := fs.GetUint64(FlagPoolID)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -644,7 +650,7 @@ func NewBuildJoinSwapExternAmountInMsg(clientCtx client.Context, tokenInStr, sha
 }
 
 func NewBuildJoinSwapShareAmountOutMsg(clientCtx client.Context, tokenInDenom, tokenInMaxAmtStr, shareOutAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
+	poolID, err := fs.GetUint64(FlagPoolID)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -671,7 +677,7 @@ func NewBuildJoinSwapShareAmountOutMsg(clientCtx client.Context, tokenInDenom, t
 }
 
 func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, tokenOutStr, shareInMaxAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
+	poolID, err := fs.GetUint64(FlagPoolID)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -697,7 +703,7 @@ func NewBuildExitSwapExternAmountOutMsg(clientCtx client.Context, tokenOutStr, s
 }
 
 func NewBuildExitSwapShareAmountInMsg(clientCtx client.Context, tokenOutDenom, shareInAmtStr, tokenOutMinAmountStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolID, err := fs.GetUint64(FlagPoolId)
+	poolID, err := fs.GetUint64(FlagPoolID)
 	if err != nil {
 		return txf, nil, err
 	}

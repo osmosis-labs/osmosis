@@ -210,13 +210,13 @@ $ %s query superfluid connected-intermediary-account 1
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			lockId, err := strconv.Atoi(args[0])
+			lockID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
 			res, err := queryClient.ConnectedIntermediaryAccount(cmd.Context(), &types.ConnectedIntermediaryAccountRequest{
-				LockId: uint64(lockId),
+				LockId: uint64(lockID),
 			})
 			if err != nil {
 				return err

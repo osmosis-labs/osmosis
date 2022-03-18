@@ -98,7 +98,7 @@ func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
 func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, newEpochNumber int64) error {
 	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
-		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
+		poolId := gammtypes.MustGetPoolIDFromShareDenom(asset.Denom)
 		pool, err := k.gk.GetPool(ctx, poolId)
 		if err != nil {
 			// Pool has been unexpectedly deleted

@@ -17,7 +17,7 @@ service Query {
     option (google.api.http).get = "/osmosis/txfees/v1beta1/fee_tokens";
   }
 
-  rpc DenomPoolId(QueryDenomPoolIdRequest) returns (QueryDenomPoolIdResponse) {
+  rpc DenomPoolID(QueryDenomPoolIDRequest) returns (QueryDenomPoolIDResponse) {
     option (google.api.http).get =
         "/osmosis/txfees/v1beta1/denom_pool_id/{denom}";
   }
@@ -36,10 +36,10 @@ message QueryFeeTokensResponse {
   ];
 }
 
-message QueryDenomPoolIdRequest {
+message QueryDenomPoolIDRequest {
   string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
 }
-message QueryDenomPoolIdResponse {
+message QueryDenomPoolIDResponse {
   uint64 poolID = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 

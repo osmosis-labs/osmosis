@@ -71,7 +71,7 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	poolKey := types.GetKeyPrefixPools(pool.GetId())
+	poolKey := types.GetKeyPrefixPools(pool.GetID())
 	store.Set(poolKey, bz)
 
 	return nil

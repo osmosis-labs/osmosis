@@ -110,22 +110,22 @@ func (m *QueryFeeTokensResponse) GetFeeTokens() []FeeToken {
 	return nil
 }
 
-type QueryDenomPoolIdRequest struct {
+type QueryDenomPoolIDRequest struct {
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
 }
 
-func (m *QueryDenomPoolIdRequest) Reset()         { *m = QueryDenomPoolIdRequest{} }
-func (m *QueryDenomPoolIdRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryDenomPoolIdRequest) ProtoMessage()    {}
-func (*QueryDenomPoolIdRequest) Descriptor() ([]byte, []int) {
+func (m *QueryDenomPoolIDRequest) Reset()         { *m = QueryDenomPoolIDRequest{} }
+func (m *QueryDenomPoolIDRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDenomPoolIDRequest) ProtoMessage()    {}
+func (*QueryDenomPoolIDRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6cbc1b48c44dfdd6, []int{2}
 }
-func (m *QueryDenomPoolIdRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryDenomPoolIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryDenomPoolIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryDenomPoolIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryDenomPoolIdRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryDenomPoolIDRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -135,41 +135,41 @@ func (m *QueryDenomPoolIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *QueryDenomPoolIdRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryDenomPoolIdRequest.Merge(m, src)
+func (m *QueryDenomPoolIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDenomPoolIDRequest.Merge(m, src)
 }
-func (m *QueryDenomPoolIdRequest) XXX_Size() int {
+func (m *QueryDenomPoolIDRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryDenomPoolIdRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryDenomPoolIdRequest.DiscardUnknown(m)
+func (m *QueryDenomPoolIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDenomPoolIDRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryDenomPoolIdRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryDenomPoolIDRequest proto.InternalMessageInfo
 
-func (m *QueryDenomPoolIdRequest) GetDenom() string {
+func (m *QueryDenomPoolIDRequest) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-type QueryDenomPoolIdResponse struct {
+type QueryDenomPoolIDResponse struct {
 	PoolID uint64 `protobuf:"varint,1,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 }
 
-func (m *QueryDenomPoolIdResponse) Reset()         { *m = QueryDenomPoolIdResponse{} }
-func (m *QueryDenomPoolIdResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryDenomPoolIdResponse) ProtoMessage()    {}
-func (*QueryDenomPoolIdResponse) Descriptor() ([]byte, []int) {
+func (m *QueryDenomPoolIDResponse) Reset()         { *m = QueryDenomPoolIDResponse{} }
+func (m *QueryDenomPoolIDResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDenomPoolIDResponse) ProtoMessage()    {}
+func (*QueryDenomPoolIDResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6cbc1b48c44dfdd6, []int{3}
 }
-func (m *QueryDenomPoolIdResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryDenomPoolIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryDenomPoolIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryDenomPoolIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryDenomPoolIdResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryDenomPoolIDResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -179,19 +179,19 @@ func (m *QueryDenomPoolIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryDenomPoolIdResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryDenomPoolIdResponse.Merge(m, src)
+func (m *QueryDenomPoolIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDenomPoolIDResponse.Merge(m, src)
 }
-func (m *QueryDenomPoolIdResponse) XXX_Size() int {
+func (m *QueryDenomPoolIDResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryDenomPoolIdResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryDenomPoolIdResponse.DiscardUnknown(m)
+func (m *QueryDenomPoolIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDenomPoolIDResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryDenomPoolIdResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryDenomPoolIDResponse proto.InternalMessageInfo
 
-func (m *QueryDenomPoolIdResponse) GetPoolID() uint64 {
+func (m *QueryDenomPoolIDResponse) GetPoolID() uint64 {
 	if m != nil {
 		return m.PoolID
 	}
@@ -281,8 +281,8 @@ func (m *QueryBaseDenomResponse) GetBaseDenom() string {
 func init() {
 	proto.RegisterType((*QueryFeeTokensRequest)(nil), "osmosis.txfees.v1beta1.QueryFeeTokensRequest")
 	proto.RegisterType((*QueryFeeTokensResponse)(nil), "osmosis.txfees.v1beta1.QueryFeeTokensResponse")
-	proto.RegisterType((*QueryDenomPoolIdRequest)(nil), "osmosis.txfees.v1beta1.QueryDenomPoolIdRequest")
-	proto.RegisterType((*QueryDenomPoolIdResponse)(nil), "osmosis.txfees.v1beta1.QueryDenomPoolIdResponse")
+	proto.RegisterType((*QueryDenomPoolIDRequest)(nil), "osmosis.txfees.v1beta1.QueryDenomPoolIDRequest")
+	proto.RegisterType((*QueryDenomPoolIDResponse)(nil), "osmosis.txfees.v1beta1.QueryDenomPoolIDResponse")
 	proto.RegisterType((*QueryBaseDenomRequest)(nil), "osmosis.txfees.v1beta1.QueryBaseDenomRequest")
 	proto.RegisterType((*QueryBaseDenomResponse)(nil), "osmosis.txfees.v1beta1.QueryBaseDenomResponse")
 }
@@ -343,7 +343,7 @@ type QueryClient interface {
 	// corresponding pools It does not include the BaseDenom, which has its own
 	// query endpoint
 	FeeTokens(ctx context.Context, in *QueryFeeTokensRequest, opts ...grpc.CallOption) (*QueryFeeTokensResponse, error)
-	DenomPoolId(ctx context.Context, in *QueryDenomPoolIdRequest, opts ...grpc.CallOption) (*QueryDenomPoolIdResponse, error)
+	DenomPoolID(ctx context.Context, in *QueryDenomPoolIDRequest, opts ...grpc.CallOption) (*QueryDenomPoolIDResponse, error)
 	BaseDenom(ctx context.Context, in *QueryBaseDenomRequest, opts ...grpc.CallOption) (*QueryBaseDenomResponse, error)
 }
 
@@ -364,9 +364,9 @@ func (c *queryClient) FeeTokens(ctx context.Context, in *QueryFeeTokensRequest, 
 	return out, nil
 }
 
-func (c *queryClient) DenomPoolId(ctx context.Context, in *QueryDenomPoolIdRequest, opts ...grpc.CallOption) (*QueryDenomPoolIdResponse, error) {
-	out := new(QueryDenomPoolIdResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.txfees.v1beta1.Query/DenomPoolId", in, out, opts...)
+func (c *queryClient) DenomPoolID(ctx context.Context, in *QueryDenomPoolIDRequest, opts ...grpc.CallOption) (*QueryDenomPoolIDResponse, error) {
+	out := new(QueryDenomPoolIDResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.txfees.v1beta1.Query/DenomPoolID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -388,7 +388,7 @@ type QueryServer interface {
 	// corresponding pools It does not include the BaseDenom, which has its own
 	// query endpoint
 	FeeTokens(context.Context, *QueryFeeTokensRequest) (*QueryFeeTokensResponse, error)
-	DenomPoolId(context.Context, *QueryDenomPoolIdRequest) (*QueryDenomPoolIdResponse, error)
+	DenomPoolID(context.Context, *QueryDenomPoolIDRequest) (*QueryDenomPoolIDResponse, error)
 	BaseDenom(context.Context, *QueryBaseDenomRequest) (*QueryBaseDenomResponse, error)
 }
 
@@ -399,8 +399,8 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) FeeTokens(ctx context.Context, req *QueryFeeTokensRequest) (*QueryFeeTokensResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FeeTokens not implemented")
 }
-func (*UnimplementedQueryServer) DenomPoolId(ctx context.Context, req *QueryDenomPoolIdRequest) (*QueryDenomPoolIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DenomPoolId not implemented")
+func (*UnimplementedQueryServer) DenomPoolID(ctx context.Context, req *QueryDenomPoolIDRequest) (*QueryDenomPoolIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomPoolID not implemented")
 }
 func (*UnimplementedQueryServer) BaseDenom(ctx context.Context, req *QueryBaseDenomRequest) (*QueryBaseDenomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BaseDenom not implemented")
@@ -428,20 +428,20 @@ func _Query_FeeTokens_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_DenomPoolId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryDenomPoolIdRequest)
+func _Query_DenomPoolID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomPoolIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).DenomPoolId(ctx, in)
+		return srv.(QueryServer).DenomPoolID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.txfees.v1beta1.Query/DenomPoolId",
+		FullMethod: "/osmosis.txfees.v1beta1.Query/DenomPoolID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).DenomPoolId(ctx, req.(*QueryDenomPoolIdRequest))
+		return srv.(QueryServer).DenomPoolID(ctx, req.(*QueryDenomPoolIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -473,8 +473,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_FeeTokens_Handler,
 		},
 		{
-			MethodName: "DenomPoolId",
-			Handler:    _Query_DenomPoolId_Handler,
+			MethodName: "DenomPoolID",
+			Handler:    _Query_DenomPoolID_Handler,
 		},
 		{
 			MethodName: "BaseDenom",
@@ -545,7 +545,7 @@ func (m *QueryFeeTokensResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryDenomPoolIdRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryDenomPoolIDRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -555,12 +555,12 @@ func (m *QueryDenomPoolIdRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryDenomPoolIdRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryDenomPoolIDRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryDenomPoolIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryDenomPoolIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -575,7 +575,7 @@ func (m *QueryDenomPoolIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryDenomPoolIdResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryDenomPoolIDResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -585,12 +585,12 @@ func (m *QueryDenomPoolIdResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryDenomPoolIdResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryDenomPoolIDResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryDenomPoolIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryDenomPoolIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -691,7 +691,7 @@ func (m *QueryFeeTokensResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryDenomPoolIdRequest) Size() (n int) {
+func (m *QueryDenomPoolIDRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -704,7 +704,7 @@ func (m *QueryDenomPoolIdRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryDenomPoolIdResponse) Size() (n int) {
+func (m *QueryDenomPoolIDResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -878,7 +878,7 @@ func (m *QueryFeeTokensResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryDenomPoolIdRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryDenomPoolIDRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -901,10 +901,10 @@ func (m *QueryDenomPoolIdRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryDenomPoolIdRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryDenomPoolIDRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryDenomPoolIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryDenomPoolIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -960,7 +960,7 @@ func (m *QueryDenomPoolIdRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryDenomPoolIdResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryDenomPoolIDResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -983,10 +983,10 @@ func (m *QueryDenomPoolIdResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryDenomPoolIdResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryDenomPoolIDResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryDenomPoolIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryDenomPoolIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

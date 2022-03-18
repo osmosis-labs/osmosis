@@ -25,7 +25,8 @@ var (
 func AbsDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	if a.GTE(b) {
 		return a.SubMut(b), false
-	} else {
+	}
+	{
 		return a.NegMut().AddMut(b), true
 	}
 }

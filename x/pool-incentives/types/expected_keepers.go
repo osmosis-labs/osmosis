@@ -23,7 +23,7 @@ type BankKeeper interface {
 }
 
 type GAMMKeeper interface {
-	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
+	GetPool(ctx sdk.Context, poolID uint64) (gammtypes.PoolI, error)
 }
 
 type IncentivesKeeper interface {
