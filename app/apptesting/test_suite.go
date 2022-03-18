@@ -11,12 +11,19 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 type KeeperTestHelper struct {
@@ -98,4 +105,107 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 func (keeperTestHelper *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: keeperTestHelper.Ctx.BlockHeight()}
 	keeperTestHelper.App.EndBlocker(keeperTestHelper.Ctx, reqEndBlock)
+}
+
+func (keeperTestHelper *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
+	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddr)
+	keeperTestHelper.Require().True(found)
+
+	// allocate reward tokens to distribution module
+	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, rewardAmt)}
+	err := simapp.FundModuleAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, distrtypes.ModuleName, coins)
+	keeperTestHelper.Require().NoError(err)
+
+	// allocate rewards to validator
+	keeperTestHelper.Ctx = keeperTestHelper.Ctx.WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
+	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
+	keeperTestHelper.App.DistrKeeper.AllocateTokensToValidator(keeperTestHelper.Ctx, validator, decTokens)
+}
+
+// SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
+func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
+	keeperTestHelper.App.GAMMKeeper.SetParams(keeperTestHelper.Ctx, gammtypes.Params{
+		PoolCreationFee: sdk.Coins{},
+	})
+
+	bondDenom := keeperTestHelper.App.StakingKeeper.BondDenom(keeperTestHelper.Ctx)
+	//TODO: use sdk crypto instead of tendermint to generate address
+	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+
+	//fund account with pool creation fee
+	poolCreationFee := keeperTestHelper.App.GAMMKeeper.GetParams(keeperTestHelper.Ctx)
+	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, poolCreationFee.PoolCreationFee)
+	keeperTestHelper.Require().NoError(err)
+
+	pools := []gammtypes.PoolI{}
+
+	for index, multiplier := range multipliers {
+		token := fmt.Sprintf("token%d", index)
+
+		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
+
+		err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, sdk.NewCoins(
+			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
+			sdk.NewInt64Coin(token, 100000),
+		))
+		keeperTestHelper.NoError(err)
+
+		var (
+			defaultFutureGovernor = ""
+
+			// pool assets
+			defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
+			}
+			defaultBarAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
+			}
+			poolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+		)
+
+		poolId, err := keeperTestHelper.App.GAMMKeeper.CreateBalancerPool(keeperTestHelper.Ctx, acc1, balancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.NewDecWithPrec(1, 2),
+		}, poolAssets, defaultFutureGovernor)
+		keeperTestHelper.Require().NoError(err)
+
+		pool, err := keeperTestHelper.App.GAMMKeeper.GetPool(keeperTestHelper.Ctx, poolId)
+		keeperTestHelper.Require().NoError(err)
+
+		pools = append(pools, pool)
+	}
+	return pools
+}
+
+// SwapAndSetSpotPrice runs a swap to set Spot price of a pool using arbitrary values
+// returns spot price after the arbitrary swap
+func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset gammtypes.PoolAsset, toAsset gammtypes.PoolAsset) sdk.Dec {
+	// create a dummy account
+	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+
+	// fund dummy account with tokens to swap
+	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Token.Denom, 100000000000000)}
+	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, coins)
+	keeperTestHelper.Require().NoError(err)
+
+	_, _, err = keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
+		keeperTestHelper.Ctx, acc1,
+		poolId, fromAsset.Token.Denom, fromAsset.Token.Amount,
+		sdk.NewCoin(toAsset.Token.Denom, toAsset.Token.Amount.Quo(sdk.NewInt(4))))
+	keeperTestHelper.Require().NoError(err)
+
+	spotPrice, err := keeperTestHelper.App.GAMMKeeper.CalculateSpotPrice(keeperTestHelper.Ctx, poolId, toAsset.Token.Denom, fromAsset.Token.Denom)
+	keeperTestHelper.Require().NoError(err)
+	return spotPrice
+}
+
+func (keeperTestHelper *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
+	msgServer := lockupkeeper.NewMsgServerImpl(keeperTestHelper.App.LockupKeeper)
+	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, addr, coins)
+	keeperTestHelper.Require().NoError(err)
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(keeperTestHelper.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	keeperTestHelper.Require().NoError(err)
+	return msgResponse.ID
 }

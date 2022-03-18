@@ -20,12 +20,16 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk
 
 func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
 	// Get total number of Osmo this account should have delegated after refresh
+	// (1) Find how many tokens total T are locked for (denom, validator) pair
 	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
+	// (2) Multiply the T tokens, by the number of superfluid osmo per token, to get the total amount
+	// of osmo we expect.
 	refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
 	return refreshedAmount
 }
 
 func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
+	// iterate over every (denom, validator) pair
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		mAddr := acc.GetAccAddress()
@@ -327,6 +331,9 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 			return err
 		}
 		err = k.bk.BurnCoins(cacheCtx, types.ModuleName, undelegatedCoins)
+		if err != nil {
+			return err
+		}
 		bondDenom := k.sk.BondDenom(cacheCtx)
 		k.bk.AddSupplyOffset(cacheCtx, bondDenom, undelegatedCoins.AmountOf(bondDenom))
 

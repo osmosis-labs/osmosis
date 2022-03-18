@@ -41,13 +41,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Features
+
+* [#1107](https://github.com/osmosis-labs/osmosis/pull/1107) Update to wasmvm v0.24.0, re-enabling building on M1 macs!
+
+### Minor improvements & Bug Fixes
+
+* [#1061](https://github.com/osmosis-labs/osmosis/pull/1061) upgrade iavl to v0.17.3-osmo-v5 with concurrent map write fix
+* [#1071](https://github.com/osmosis-labs/osmosis/pull/1071) improve Dockerfile
+* [#1095](https://github.com/osmosis-labs/osmosis/pull/1095) Fix authz being unable to use lockup & superfluid types.
+* [#1105](https://github.com/osmosis-labs/osmosis/pull/1105) Add GitHub Actions to automatically push the osmosis Docker image
+
+### SDK fork updates
+
+* [sdk-#135](https://github.com/osmosis-labs/cosmos-sdk/pull/135) upgrade iavl to v0.17.3-osmo-v5 with concurrent map write fix
+
+### IAVL fork updates
+
+* [iavl-34](https://github.com/osmosis-labs/iavl/pull/34) fix concurrent map panic when querying and committing
+
 ## [v7.0.3](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.3)
 
 ### Minor improvements & Bug Fixes
 
 * [#1024](https://github.com/osmosis-labs/osmosis/issues/1024) enable all golangci-lint literns
 * [#1022](https://github.com/osmosis-labs/osmosis/pull/1022) upgrade iavl to v0.17.3-osmo-v4 - fix state export at an old height
-* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks 
+* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks
 * [#984](https://github.com/osmosis-labs/osmosis/pull/984) Add wasm support to Dockerfile
 
 ## [v7.0.2 - Carbon](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.2)

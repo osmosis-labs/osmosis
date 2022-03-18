@@ -14,12 +14,12 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // Params returns the superfluid module params
-func (k Keeper) Params(goCtx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	params := k.GetParams(ctx)
 
-	return &types.ParamsResponse{
+	return &types.QueryParamsResponse{
 		Params: params,
 	}, nil
 }
@@ -79,6 +79,17 @@ func (k Keeper) ConnectedIntermediaryAccount(goCtx context.Context, req *types.C
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	address := k.GetLockIdIntermediaryAccountConnection(ctx, req.LockId)
 	acc := k.GetIntermediaryAccount(ctx, address)
+
+	if len(acc.Denom) == 0 && acc.GaugeId == uint64(0) && len(acc.ValAddr) == 0 {
+		return &types.ConnectedIntermediaryAccountResponse{
+			Account: &types.SuperfluidIntermediaryAccountInfo{
+				Denom:   acc.Denom,
+				ValAddr: acc.ValAddr,
+				GaugeId: acc.GaugeId,
+				Address: "",
+			},
+		}, nil
+	}
 
 	return &types.ConnectedIntermediaryAccountResponse{
 		Account: &types.SuperfluidIntermediaryAccountInfo{
@@ -307,7 +318,7 @@ func (k Keeper) TotalSuperfluidDelegations(goCtx context.Context, req *types.Tot
 
 		delegation, found := k.sk.GetDelegation(ctx, intermediaryAccount.GetAccAddress(), valAddr)
 		if !found {
-			return nil, stakingtypes.ErrNoDelegation
+			continue
 		}
 
 		syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens).RoundInt()

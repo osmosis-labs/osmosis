@@ -17,6 +17,9 @@ jobs:
       matrix:
         arch: [amd64]
         targetos: [darwin, linux]
+        include:
+          - targetos: darwin
+            arch: arm64
 #        include:
 #          - targetos: windows
 #            arch: amd64
