@@ -9,16 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/go-bip39"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-
-	tmcfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -26,6 +16,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/go-bip39"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	tmcfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/cli"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
+	"github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -80,8 +78,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-
-			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
+			// An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
 
 			seeds := []string{
 				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",               // Notional
@@ -91,8 +88,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656",       // [ block pane ]
 				"6bcdbcfd5d2c6ba58460f10dbcfde58278212833@osmosis.artifact-staking.io:26656", // Artifact Staking
 			}
-
-
 			config.P2P.Seeds = strings.Join(seeds, ",")
 			config.P2P.MaxNumInboundPeers = 320
 			config.P2P.MaxNumOutboundPeers = 40

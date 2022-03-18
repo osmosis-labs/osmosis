@@ -1,14 +1,14 @@
 package app
 
 import (
+
+	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
+	"github.com/CosmWasm/wasmd/x/wasm"
+
 	// Utilities from the Cosmos-SDK other than Cosmos modules.
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	// Cosmos-SDK Modules
-	// https://github.com/cosmos/cosmos-sdk/tree/master/x
-	// NB: Osmosis uses a fork of the cosmos-sdk which can be found at: https://github.com/osmosis-labs/cosmos-sdk
 
 	// Auth: Authentication of accounts and transactions for Cosmos SDK applications.
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -41,12 +41,12 @@ import (
 	// Governance: Allows stakeholders to make decisions concering a Cosmos-SDK blockchain's economy and development.
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	// Params: Parameters that are always available.
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	// Slashing:.
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -65,13 +65,19 @@ import (
 	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v2/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
-	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 
 	// IBC: Inter-blockchain communication.
 	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
+	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
+	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
+
+	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses.
+	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
+	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
+	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
+	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
 
 	// Upgrades from earlier versions of Osmosis.
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
@@ -79,8 +85,6 @@ import (
 	// Modules that live in the Osmosis repository and are specific to Osmosis.
 	claimkeeper "github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
 	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 
 	// Epochs: gives Osmosis a sense of "clock time" so that events can be based on days instead of "number of blocks".
 	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
@@ -90,7 +94,7 @@ import (
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 
-	// Incentives: Allows Osmosis and foriegn chain communities to incentivize users to provide liquidity.
+	// Incentives: Allows Osmosis and foreign chain communities to incentivize users to provide liquidity.
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 
@@ -106,23 +110,16 @@ import (
 	poolincentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid"
 
 	// Superfluid: Allows users to stake gamm (bonded liquidity).
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 
 	// Txfees: Allows Osmosis to charge transaction fees without harming IBC user experience.
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
-
-	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
-	"github.com/CosmWasm/wasmd/x/wasm"
-
-	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses.
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
-	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
-	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
 )
 
 type appKeepers struct {

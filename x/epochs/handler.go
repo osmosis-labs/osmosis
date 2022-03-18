@@ -12,7 +12,7 @@ import (
 // NewHandler returns a handler for epochs module messages.
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
+		ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
 		default:

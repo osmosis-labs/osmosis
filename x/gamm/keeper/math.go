@@ -1,9 +1,8 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/osmomath"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/osmomath"
 )
 
 // Don't EVER change after initializing

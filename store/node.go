@@ -3,9 +3,8 @@ package store
 import (
 	"bytes"
 
-	"github.com/gogo/protobuf/proto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 )
 
 func NewLeaf(key []byte, acc sdk.Int) *Leaf {

@@ -47,6 +47,7 @@ func (m MsgSuperfluidDelegate) GetSignBytes() []byte {
 
 func (m MsgSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+
 	return []sdk.AccAddress{sender}
 }
 
@@ -78,6 +79,7 @@ func (m MsgSuperfluidUndelegate) GetSignBytes() []byte {
 
 func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+
 	return []sdk.AccAddress{sender}
 }
 
@@ -145,6 +147,7 @@ func (m MsgSuperfluidUnbondLock) GetSignBytes() []byte {
 
 func (m MsgSuperfluidUnbondLock) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+
 	return []sdk.AccAddress{sender}
 }
 

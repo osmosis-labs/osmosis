@@ -3,11 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Keeper provides a way to manage module storage.

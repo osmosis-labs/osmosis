@@ -36,6 +36,7 @@ func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
 func (k Keeper) GetModuleBalance(ctx sdk.Context) sdk.Coins {
 	// TODO: should add invariant test for module balance and lock items
 	acc := k.ak.GetModuleAccount(ctx, types.ModuleName)
+
 	return k.bk.GetAllBalances(ctx, acc.GetAddress())
 }
 
@@ -51,12 +52,14 @@ func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
 // query.Duration.
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
 	beginKey := accumulationKey(query.Duration)
+
 	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
 }
 
 // BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins.
 func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, error) {
 	locks, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
+
 	return locks, err
 }
 

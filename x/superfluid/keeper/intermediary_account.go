@@ -79,6 +79,7 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	}, ctx.BlockTime(), 1)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
+
 		return types.SuperfluidIntermediaryAccount{}, err
 	}
 

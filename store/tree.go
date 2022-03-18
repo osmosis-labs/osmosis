@@ -7,11 +7,10 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 )
 
 // Tree is an augmented B+ tree implementation.

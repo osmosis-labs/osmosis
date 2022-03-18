@@ -1,9 +1,8 @@
 package rest
 
 import (
-	"github.com/gorilla/mux"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/gorilla/mux"
 )
 
 const (

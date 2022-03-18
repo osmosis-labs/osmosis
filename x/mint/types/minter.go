@@ -36,5 +36,6 @@ func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
 // provisions rate.
 func (m Minter) EpochProvision(params Params) sdk.Coin {
 	provisionAmt := m.EpochProvisions
+
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

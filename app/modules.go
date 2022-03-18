@@ -1,12 +1,13 @@
 package app
 
 import (
+
+	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+
 	// Utilities from the Cosmos-SDK other than Cosmos modules.
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	// Cosmos-SDK Modules
-	// https://github.com/cosmos/cosmos-sdk/tree/master/x
-	// NB: Osmosis uses a fork of the cosmos-sdk which can be found at: https://github.com/osmosis-labs/cosmos-sdk
 
 	// Auth: Authentication of accounts and transactions for Cosmos SDK applications.
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -77,6 +78,11 @@ import (
 	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 
+	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses.
+	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
+	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
+	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
+
 	// Osmosis application prarmeters.
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 
@@ -95,7 +101,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 
-	// Incentives: Allows Osmosis and foriegn chain communities to incentivize users to provide liquidity.
+	// Incentives: Allows Osmosis and foreign chain communities to incentivize users to provide liquidity.
 	"github.com/osmosis-labs/osmosis/v7/x/incentives"
 	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 
@@ -120,15 +126,6 @@ import (
 	// txfees: Allows Osmosis to charge transaction fees without harming IBC user experience
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
-
-	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
-
-	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses.
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
 )
 
 // appModuleBasics returns ModuleBasics for the module BasicManager.

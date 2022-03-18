@@ -1,6 +1,7 @@
 package app
 
 import (
+
 	// Imports from the Go Standard Library.
 	"fmt"
 	"io"
@@ -9,22 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	// HTTP Router.
-	"github.com/gorilla/mux"
-
-	// Used to serve OpenAPI information.
-	"github.com/rakyll/statik/fs"
-
-	// A CLI helper.
-	"github.com/spf13/cast"
-
-	// Imports from Tendermint, Osmosis' consensus protocol.
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
+	"github.com/CosmWasm/wasmd/x/wasm"
 
 	// Utilities from the Cosmos-SDK other than Cosmos modules.
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -42,10 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	// Cosmos-SDK Modules
-	// https://github.com/cosmos/cosmos-sdk/tree/master/x
-	// NB: Osmosis uses a fork of the cosmos-sdk which can be found at: https://github.com/osmosis-labs/cosmos-sdk
-
 	// Auth: Authentication of accounts and transactions for Cosmos SDK applications.
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
@@ -57,8 +40,6 @@ import (
 	// Crisis: Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	// Evidence handling for double signing, misbehaviour, etc.
-
 	// Params: Parameters that are always available.
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -67,6 +48,9 @@ import (
 
 	// IBC Transfer: Defines the "transfer" IBC port.
 	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+
+	// HTTP Router.
+	"github.com/gorilla/mux"
 
 	// Osmosis application prarmeters.
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
@@ -80,8 +64,19 @@ import (
 	// Superfluid: Allows users to stake gamm (bonded liquidity).
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
-	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
-	"github.com/CosmWasm/wasmd/x/wasm"
+	// Used to serve OpenAPI information.
+	"github.com/rakyll/statik/fs"
+
+	// A CLI helper.
+	"github.com/spf13/cast"
+
+	// Imports from Tendermint, Osmosis' consensus protocol.
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 const appName = "OsmosisApp"

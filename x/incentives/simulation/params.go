@@ -16,7 +16,7 @@ const (
 )
 
 // TODO: remove hardcoded params
-// refer x/epochs/simulation/genesis.go
+// refer x/epochs/simulation/genesis.go.
 var epochIdentifiers = []string{"day", "hour"}
 
 // ParamChanges defines the parameters that can be modified by param change proposals

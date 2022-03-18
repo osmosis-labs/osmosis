@@ -96,5 +96,6 @@ func (m MsgAddToGauge) GetSignBytes() []byte {
 
 func (m MsgAddToGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+
 	return []sdk.AccAddress{owner}
 }

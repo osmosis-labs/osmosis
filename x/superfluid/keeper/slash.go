@@ -63,6 +63,7 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		// These tokens get moved to the community pool.
 		_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, slashCoins)
+
 		return err
 	})
 }

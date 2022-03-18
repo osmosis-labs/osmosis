@@ -6,9 +6,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"gopkg.in/yaml.v2"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"gopkg.in/yaml.v2"
 )
 
 var KeyMintedDenom = []byte("MintedDenom")
@@ -38,6 +37,7 @@ func (p Params) Validate() error {
 // String implements the Stringer interface.
 func (p Params) String() string {
 	out, _ := yaml.Marshal(p)
+
 	return string(out)
 }
 

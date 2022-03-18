@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v7/store"
 )
 

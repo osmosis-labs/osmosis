@@ -132,6 +132,7 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 // GetParams returns the total set of minting parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
+
 	return params
 }
 

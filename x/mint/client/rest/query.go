@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/gorilla/mux"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 

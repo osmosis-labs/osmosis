@@ -3,12 +3,11 @@ package cli
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 
 	// "github.com/cosmos/cosmos-sdk/client/flags".
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/spf13/cobra"
 )
 
 // GetTxCmd returns the transaction commands for this module.

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 

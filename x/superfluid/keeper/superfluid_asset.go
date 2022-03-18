@@ -25,6 +25,7 @@ func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asse
 // It will move towards per pool functions.
 func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.SuperfluidAsset, amount sdk.Int) sdk.Int {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
+
 	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt())
 }
 
@@ -34,6 +35,7 @@ func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.Superfluid
 
 func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount sdk.Dec) sdk.Dec {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
+
 	return amount.Quo(sdk.OneDec().Sub(minRiskFactor))
 }
 

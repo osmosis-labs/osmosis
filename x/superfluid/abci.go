@@ -1,11 +1,10 @@
 package superfluid
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // BeginBlocker is called on every block.

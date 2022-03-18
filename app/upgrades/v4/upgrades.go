@@ -3,12 +3,10 @@ package v4
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 

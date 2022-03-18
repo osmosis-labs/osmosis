@@ -3,9 +3,8 @@ package cmd
 // DONTCOVER
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/spf13/cobra"
 )
 
 var flagBech32Prefix = "prefix"

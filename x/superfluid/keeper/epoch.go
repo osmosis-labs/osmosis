@@ -6,10 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-
 	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
@@ -61,6 +60,7 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 		// we use cacheCtx and apply the changes later
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
+
 			return err
 		})
 

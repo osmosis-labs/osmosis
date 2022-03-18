@@ -7,9 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -17,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 )
 
 func NewTxCmd() *cobra.Command {

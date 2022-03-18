@@ -47,6 +47,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
 		if !allocatingAmount.IsPositive() {
 			logger.Info(fmt.Sprintf("allocating amount for (%d, %s) record is not positive", record.GaugeId, record.Weight.String()))
+
 			continue
 		}
 
@@ -54,6 +55,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 			if err := k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount)); err != nil {
 				return err
 			}
+
 			continue
 		}
 

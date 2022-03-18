@@ -60,7 +60,6 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
 
 		if refreshedAmount.GT(currentAmount) {
-
 			adjustment := refreshedAmount.Sub(currentAmount)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
@@ -296,8 +295,10 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 		_, err = k.sk.Delegate(cacheCtx,
 			intermediaryAccount.GetAccAddress(),
 			osmoAmount, stakingtypes.Unbonded, validator, true)
+
 		return err
 	})
+
 	return err
 }
 
