@@ -280,7 +280,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 	testCases := []struct {
 		name      string
 		owner     string
-		lockIds   string
+		lockIDs   string
 		endEpoch  int64
 		expectErr bool
 		respType  proto.Message
@@ -317,7 +317,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 
 			args := []string{
 				fmt.Sprintf("--%s=%s", cli.FlagOwner, tc.owner),
-				fmt.Sprintf("--%s=%s", cli.FlagLockIds, tc.lockIds),
+				fmt.Sprintf("--%s=%s", cli.FlagLockIDs, tc.lockIDs),
 				fmt.Sprintf("--%s=%d", cli.FlagEndEpoch, tc.endEpoch),
 			}
 

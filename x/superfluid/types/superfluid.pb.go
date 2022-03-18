@@ -275,23 +275,23 @@ func (m *SuperfluidDelegationRecord) GetDelegationAmount() types.Coin {
 	return types.Coin{}
 }
 
-type LockIdIntermediaryAccountConnection struct {
-	LockId              uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
+type LockIDIntermediaryAccountConnection struct {
+	LockID              uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockID,proto3" json:"lock_id,omitempty"`
 	IntermediaryAccount string `protobuf:"bytes,2,opt,name=intermediary_account,json=intermediaryAccount,proto3" json:"intermediary_account,omitempty"`
 }
 
-func (m *LockIdIntermediaryAccountConnection) Reset()         { *m = LockIdIntermediaryAccountConnection{} }
-func (m *LockIdIntermediaryAccountConnection) String() string { return proto.CompactTextString(m) }
-func (*LockIdIntermediaryAccountConnection) ProtoMessage()    {}
-func (*LockIdIntermediaryAccountConnection) Descriptor() ([]byte, []int) {
+func (m *LockIDIntermediaryAccountConnection) Reset()         { *m = LockIDIntermediaryAccountConnection{} }
+func (m *LockIDIntermediaryAccountConnection) String() string { return proto.CompactTextString(m) }
+func (*LockIDIntermediaryAccountConnection) ProtoMessage()    {}
+func (*LockIDIntermediaryAccountConnection) Descriptor() ([]byte, []int) {
 	return fileDescriptor_79d3c29d82dbb734, []int{4}
 }
-func (m *LockIdIntermediaryAccountConnection) XXX_Unmarshal(b []byte) error {
+func (m *LockIDIntermediaryAccountConnection) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *LockIdIntermediaryAccountConnection) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *LockIDIntermediaryAccountConnection) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_LockIdIntermediaryAccountConnection.Marshal(b, m, deterministic)
+		return xxx_messageInfo_LockIDIntermediaryAccountConnection.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -301,26 +301,26 @@ func (m *LockIdIntermediaryAccountConnection) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *LockIdIntermediaryAccountConnection) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LockIdIntermediaryAccountConnection.Merge(m, src)
+func (m *LockIDIntermediaryAccountConnection) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LockIDIntermediaryAccountConnection.Merge(m, src)
 }
-func (m *LockIdIntermediaryAccountConnection) XXX_Size() int {
+func (m *LockIDIntermediaryAccountConnection) XXX_Size() int {
 	return m.Size()
 }
-func (m *LockIdIntermediaryAccountConnection) XXX_DiscardUnknown() {
-	xxx_messageInfo_LockIdIntermediaryAccountConnection.DiscardUnknown(m)
+func (m *LockIDIntermediaryAccountConnection) XXX_DiscardUnknown() {
+	xxx_messageInfo_LockIDIntermediaryAccountConnection.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_LockIdIntermediaryAccountConnection proto.InternalMessageInfo
+var xxx_messageInfo_LockIDIntermediaryAccountConnection proto.InternalMessageInfo
 
-func (m *LockIdIntermediaryAccountConnection) GetLockId() uint64 {
+func (m *LockIDIntermediaryAccountConnection) GetLockID() uint64 {
 	if m != nil {
-		return m.LockId
+		return m.LockID
 	}
 	return 0
 }
 
-func (m *LockIdIntermediaryAccountConnection) GetIntermediaryAccount() string {
+func (m *LockIDIntermediaryAccountConnection) GetIntermediaryAccount() string {
 	if m != nil {
 		return m.IntermediaryAccount
 	}
@@ -333,7 +333,7 @@ func init() {
 	proto.RegisterType((*SuperfluidIntermediaryAccount)(nil), "osmosis.superfluid.SuperfluidIntermediaryAccount")
 	proto.RegisterType((*OsmoEquivalentMultiplierRecord)(nil), "osmosis.superfluid.OsmoEquivalentMultiplierRecord")
 	proto.RegisterType((*SuperfluidDelegationRecord)(nil), "osmosis.superfluid.SuperfluidDelegationRecord")
-	proto.RegisterType((*LockIdIntermediaryAccountConnection)(nil), "osmosis.superfluid.LockIdIntermediaryAccountConnection")
+	proto.RegisterType((*LockIDIntermediaryAccountConnection)(nil), "osmosis.superfluid.LockIDIntermediaryAccountConnection")
 }
 
 func init() {
@@ -580,7 +580,7 @@ func (m *SuperfluidDelegationRecord) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *LockIdIntermediaryAccountConnection) Marshal() (dAtA []byte, err error) {
+func (m *LockIDIntermediaryAccountConnection) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -590,12 +590,12 @@ func (m *LockIdIntermediaryAccountConnection) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *LockIdIntermediaryAccountConnection) MarshalTo(dAtA []byte) (int, error) {
+func (m *LockIDIntermediaryAccountConnection) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *LockIdIntermediaryAccountConnection) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *LockIDIntermediaryAccountConnection) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -607,8 +607,8 @@ func (m *LockIdIntermediaryAccountConnection) MarshalToSizedBuffer(dAtA []byte) 
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.LockId != 0 {
-		i = encodeVarintSuperfluid(dAtA, i, uint64(m.LockId))
+	if m.LockID != 0 {
+		i = encodeVarintSuperfluid(dAtA, i, uint64(m.LockID))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -699,14 +699,14 @@ func (m *SuperfluidDelegationRecord) Size() (n int) {
 	return n
 }
 
-func (m *LockIdIntermediaryAccountConnection) Size() (n int) {
+func (m *LockIDIntermediaryAccountConnection) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.LockId != 0 {
-		n += 1 + sovSuperfluid(uint64(m.LockId))
+	if m.LockID != 0 {
+		n += 1 + sovSuperfluid(uint64(m.LockID))
 	}
 	l = len(m.IntermediaryAccount)
 	if l > 0 {
@@ -1237,7 +1237,7 @@ func (m *SuperfluidDelegationRecord) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *LockIdIntermediaryAccountConnection) Unmarshal(dAtA []byte) error {
+func (m *LockIDIntermediaryAccountConnection) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1260,17 +1260,17 @@ func (m *LockIdIntermediaryAccountConnection) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: LockIdIntermediaryAccountConnection: wiretype end group for non-group")
+			return fmt.Errorf("proto: LockIDIntermediaryAccountConnection: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: LockIdIntermediaryAccountConnection: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: LockIDIntermediaryAccountConnection: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LockID", wireType)
 			}
-			m.LockId = 0
+			m.LockID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSuperfluid
@@ -1280,7 +1280,7 @@ func (m *LockIdIntermediaryAccountConnection) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LockId |= uint64(b&0x7F) << shift
+				m.LockID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

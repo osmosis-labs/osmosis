@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []types.PoolAsset{
+	poolID, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []types.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -74,24 +74,24 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 		},
 	}, "")
 	suite.NoError(err)
-	return poolId
+	return poolID
 }
 
 func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
-	poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
+	poolID := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})
 
-	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, "foo", "bar")
+	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolID, "foo", "bar")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDec(2).String(), spotPrice.String())
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, "bar", "baz")
+	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolID, "bar", "baz")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, "baz", "foo")
+	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolID, "baz", "foo")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), spotPrice.String())
 
-	return poolId
+	return poolID
 }

@@ -537,7 +537,7 @@ func (m *AllIntermediaryAccountsResponse) GetPagination() *query.PageResponse {
 }
 
 type ConnectedIntermediaryAccountRequest struct {
-	LockId uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
+	LockID uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockID,proto3" json:"lock_id,omitempty"`
 }
 
 func (m *ConnectedIntermediaryAccountRequest) Reset()         { *m = ConnectedIntermediaryAccountRequest{} }
@@ -573,9 +573,9 @@ func (m *ConnectedIntermediaryAccountRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ConnectedIntermediaryAccountRequest proto.InternalMessageInfo
 
-func (m *ConnectedIntermediaryAccountRequest) GetLockId() uint64 {
+func (m *ConnectedIntermediaryAccountRequest) GetLockID() uint64 {
 	if m != nil {
-		return m.LockId
+		return m.LockID
 	}
 	return 0
 }
@@ -2258,8 +2258,8 @@ func (m *ConnectedIntermediaryAccountRequest) MarshalToSizedBuffer(dAtA []byte) 
 	_ = i
 	var l int
 	_ = l
-	if m.LockId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.LockId))
+	if m.LockID != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.LockID))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -2937,8 +2937,8 @@ func (m *ConnectedIntermediaryAccountRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.LockId != 0 {
-		n += 1 + sovQuery(uint64(m.LockId))
+	if m.LockID != 0 {
+		n += 1 + sovQuery(uint64(m.LockID))
 	}
 	return n
 }
@@ -4148,9 +4148,9 @@ func (m *ConnectedIntermediaryAccountRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LockID", wireType)
 			}
-			m.LockId = 0
+			m.LockID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -4160,7 +4160,7 @@ func (m *ConnectedIntermediaryAccountRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LockId |= uint64(b&0x7F) << shift
+				m.LockID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

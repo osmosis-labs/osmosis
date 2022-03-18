@@ -110,14 +110,14 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	suite.Require().Equal(sdk.NewInt(40000000), totalSuperfluidDelegationsRes.TotalDelegations)
 
 	for _, lockID := range locks {
-		connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: lockID.ID})
+		connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockID: lockID.ID})
 		suite.Require().NoError(err)
 		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Denom)
 		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Address)
 		suite.Require().NotEqual(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
 
 	}
-	connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: 123})
+	connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockID: 123})
 	suite.Require().NoError(err)
 	suite.Require().Equal("", connectedIntermediaryAccountRes.Account.Denom)
 	suite.Require().Equal("", connectedIntermediaryAccountRes.Account.ValAddr)

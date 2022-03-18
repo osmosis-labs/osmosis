@@ -99,11 +99,11 @@ func (k Keeper) CreateBalancerPool(
 func (k Keeper) JoinPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId uint64,
+	poolID uint64,
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
 ) (err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
 	}
@@ -172,11 +172,11 @@ func (k Keeper) JoinPool(
 func (k Keeper) JoinSwapExternAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId uint64,
+	poolID uint64,
 	tokenIn sdk.Coin,
 	shareOutMinAmount sdk.Int,
 ) (shareOutAmount sdk.Int, err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -239,12 +239,12 @@ func (k Keeper) JoinSwapExternAmountIn(
 func (k Keeper) JoinSwapShareAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId uint64,
+	poolID uint64,
 	tokenInDenom string,
 	shareOutAmount sdk.Int,
 	tokenInMaxAmount sdk.Int,
 ) (tokenInAmount sdk.Int, err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -307,11 +307,11 @@ func (k Keeper) JoinSwapShareAmountOut(
 func (k Keeper) ExitPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId uint64,
+	poolID uint64,
 	shareInAmount sdk.Int,
 	tokenOutMins sdk.Coins,
 ) (err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
 	}
@@ -391,12 +391,12 @@ func (k Keeper) ExitPool(
 func (k Keeper) ExitSwapShareAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId uint64,
+	poolID uint64,
 	tokenOutDenom string,
 	shareInAmount sdk.Int,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return sdk.Int{}, err
 	}

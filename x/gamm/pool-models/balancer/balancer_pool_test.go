@@ -36,9 +36,9 @@ func testTotalWeight(t *testing.T, expected sdk.Int, pool Pool) {
 }
 
 func TestBalancerPoolShareDenom(t *testing.T) {
-	var poolId uint64 = 10
+	var poolID uint64 = 10
 
-	pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewBalancerPool(poolID, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	require.Equal(t, "gamm/pool/10", pacc.GetTotalShares().Denom)
@@ -88,7 +88,7 @@ func TestBalancerPoolParams(t *testing.T) {
 
 // TODO: Refactor this into multiple tests
 func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
-	var poolId uint64 = 10
+	var poolID uint64 = 10
 
 	initialAssets := []types.PoolAsset{
 		{
@@ -101,7 +101,7 @@ func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 		},
 	}
 
-	pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, initialAssets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := NewBalancerPool(poolID, defaultBalancerPoolParams, initialAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	_, err = pacc.GetPoolAsset("unknown")
@@ -250,10 +250,10 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 	}
 
-	var poolId uint64 = 10
+	var poolID uint64 = 10
 
 	for i, tc := range tests {
-		pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
+		pacc, err := NewBalancerPool(poolID, defaultBalancerPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
 		if tc.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 		} else {
@@ -578,7 +578,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 }
 
 func TestBalancerPoolParamStartTime(t *testing.T) {
-	var poolId uint64 = 10
+	var poolID uint64 = 10
 
 	type testCase struct {
 		blockTime time.Time
@@ -593,7 +593,7 @@ func TestBalancerPoolParamStartTime(t *testing.T) {
 
 	for tcn, tc := range testCases {
 		params := defaultBalancerPoolParams
-		pool, err := NewBalancerPool(poolId, params, dummyPoolAssets, defaultFutureGovernor, tc.blockTime)
+		pool, err := NewBalancerPool(poolID, params, dummyPoolAssets, defaultFutureGovernor, tc.blockTime)
 		require.NoError(t, err)
 
 		require.Equal(t, tc.valid, pool.IsActive(tc.blockTime),

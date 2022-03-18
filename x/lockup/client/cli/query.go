@@ -437,7 +437,7 @@ $ %s query lockup lock-by-id <id>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: id})
+			res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockID: id})
 			if err != nil {
 				return err
 			}
@@ -479,7 +479,7 @@ $ %s query lockup synthetic-lockups-by-lock-id <id>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.SyntheticLockupsByLockupID(cmd.Context(), &types.SyntheticLockupsByLockupIDRequest{LockId: id})
+			res, err := queryClient.SyntheticLockupsByLockupID(cmd.Context(), &types.SyntheticLockupsByLockupIDRequest{LockID: id})
 			if err != nil {
 				return err
 			}
@@ -714,7 +714,7 @@ $ %s query lockup output-all-locks <max lock ID>
 			results := []LockResult{}
 			for i := 0; i <= int(maxLockID); i++ {
 				curLockResult := LockResult{ID: i}
-				res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: uint64(i)})
+				res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockID: uint64(i)})
 				if err != nil {
 					curLockResult.Status = doesntExistStatus
 					results = append(results, curLockResult)

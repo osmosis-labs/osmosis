@@ -11,7 +11,7 @@ import (
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId uint64,
+	poolID uint64,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -20,7 +20,7 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolId, tokenIn.Denom, tokenOutDenom)
+	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolID, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -64,7 +64,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolId uint64,
+	poolID uint64,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -73,7 +73,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOut.Denom)
+	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolID, tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -164,8 +164,8 @@ func (k Keeper) updatePoolForSwap(
 	return err
 }
 
-func (k Keeper) CalculateSpotPriceWithSwapFee(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
-	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
+func (k Keeper) CalculateSpotPriceWithSwapFee(ctx sdk.Context, poolID uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
+	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolID, tokenInDenom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -179,8 +179,8 @@ func (k Keeper) CalculateSpotPriceWithSwapFee(ctx sdk.Context, poolId uint64, to
 	), nil
 }
 
-func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
-	_, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
+func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolID uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
+	_, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolID, tokenInDenom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}

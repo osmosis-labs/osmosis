@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/duration.proto";
 
-import "osmosis/txfees/v1beta1/feetoken.proto";
+import "feetoken.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/txfees/types";
 

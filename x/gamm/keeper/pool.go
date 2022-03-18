@@ -20,11 +20,11 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+func (k Keeper) GetPool(ctx sdk.Context, poolID uint64) (types.PoolI, error) {
 	store := ctx.KVStore(k.storeKey)
-	poolKey := types.GetKeyPrefixPools(poolId)
+	poolKey := types.GetKeyPrefixPools(poolID)
 	if !store.Has(poolKey) {
-		return nil, fmt.Errorf("pool with ID %d does not exist", poolId)
+		return nil, fmt.Errorf("pool with ID %d does not exist", poolID)
 	}
 
 	bz := store.Get(poolKey)
@@ -77,11 +77,11 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	return nil
 }
 
-func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
+func (k Keeper) DeletePool(ctx sdk.Context, poolID uint64) error {
 	store := ctx.KVStore(k.storeKey)
-	poolKey := types.GetKeyPrefixPools(poolId)
+	poolKey := types.GetKeyPrefixPools(poolID)
 	if !store.Has(poolKey) {
-		return fmt.Errorf("pool with ID %d does not exist", poolId)
+		return fmt.Errorf("pool with ID %d does not exist", poolID)
 	}
 
 	store.Delete(poolKey)
@@ -95,11 +95,11 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 //
 // All locks on this pool share must be unlocked prior to execution. Use LockupKeeper.ForceUnlock
 // on remaining locks before calling this function.
-func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
+func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIDs []uint64, excludedModules []string) (err error) {
 	pools := make(map[string]types.PoolI)
 	totalShares := make(map[string]sdk.Int)
-	for _, poolId := range poolIds {
-		pool, err := k.GetPool(ctx, poolId)
+	for _, poolID := range poolIDs {
+		pool, err := k.GetPool(ctx, poolID)
 		if err != nil {
 			return err
 		}
@@ -183,16 +183,16 @@ func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedM
 // newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
 // parameters, initial assets, and future governor.
 func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
-	poolId := k.GetNextPoolNumberAndIncrement(ctx)
+	poolID := k.GetNextPoolNumberAndIncrement(ctx)
 
-	pool, err := balancer.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
+	pool, err := balancer.NewBalancerPool(poolID, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
 	if err != nil {
 		return nil, err
 	}
 
 	acc := k.accountKeeper.GetAccount(ctx, pool.GetAddress())
 	if acc != nil {
-		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
+		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolID)
 	}
 
 	err = k.SetPool(ctx, &pool)
@@ -243,7 +243,7 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 }
 
 func (k Keeper) getPoolAndInOutAssets(
-	ctx sdk.Context, poolId uint64,
+	ctx sdk.Context, poolID uint64,
 	tokenInDenom string,
 	tokenOutDenom string) (
 	pool types.PoolI,
@@ -251,7 +251,7 @@ func (k Keeper) getPoolAndInOutAssets(
 	outAsset types.PoolAsset,
 	err error,
 ) {
-	pool, err = k.GetPool(ctx, poolId)
+	pool, err = k.GetPool(ctx, poolID)
 	if err != nil {
 		return
 	}

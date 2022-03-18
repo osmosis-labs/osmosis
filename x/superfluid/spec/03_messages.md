@@ -11,7 +11,7 @@ Owners of superfluid asset locks can submit `MsgSuperfluidDelegate` transactions
 ```go
 type MsgSuperfluidDelegate struct {
  Sender  string
- LockId  uint64
+ LockID  uint64
  ValAddr string
 }
 ```
@@ -40,7 +40,7 @@ type MsgSuperfluidDelegate struct {
 ```go
 type MsgSuperfluidUndelegate struct {
  Sender string
- LockId uint64
+ LockID uint64
 }
 ```
 
@@ -83,8 +83,8 @@ outputted by `MsgLockTokens` as an input into the `MsgSuperfluidDelegate` prior 
 
 ```go
 type MsgSuperfluidUnbondLock struct {
-	Sender string
-	LockId uint64
+ Sender string
+ LockID uint64
 }
 ```
 

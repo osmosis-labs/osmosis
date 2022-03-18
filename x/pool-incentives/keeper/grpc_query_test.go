@@ -28,12 +28,12 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	lockableDurations := suite.app.PoolIncentivesKeeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	poolId := suite.prepareBalancerPool()
-	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	poolID := suite.prepareBalancerPool()
+	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolID)
 	suite.NoError(err)
 
 	res, err := queryClient.GaugeIds(context.Background(), &types.QueryGaugeIdsRequest{
-		PoolId: poolId,
+		PoolId: poolID,
 	})
 	suite.NoError(err)
 	suite.Equal(3, len(res.GaugeIdsWithDuration))
@@ -81,19 +81,19 @@ func (suite *KeeperTestSuite) TestDistrInfo2() {
 	keeper := suite.app.PoolIncentivesKeeper
 	queryClient := suite.queryClient
 
-	poolId := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[0])
 	suite.NoError(err)
 
-	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[1])
 	suite.NoError(err)
 
-	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 3 records
@@ -160,23 +160,23 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	keeper := suite.app.PoolIncentivesKeeper
 	queryClient := suite.queryClient
 
-	poolId := suite.prepareBalancerPool()
-	poolId2 := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
+	poolID2 := suite.prepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[0])
 	suite.NoError(err)
 
-	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[1])
 	suite.NoError(err)
 
-	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[2])
 	suite.NoError(err)
 
-	gauge4Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId2, lockableDurations[2])
+	gauge4Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID2, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 4 records
@@ -200,19 +200,19 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 
 	suite.Equal(4, len(res.IncentivizedPools))
 
-	suite.Equal(poolId, res.IncentivizedPools[0].PoolId)
+	suite.Equal(poolID, res.IncentivizedPools[0].PoolId)
 	suite.Equal(gauge1Id, res.IncentivizedPools[0].GaugeId)
 	suite.Equal(time.Hour, res.IncentivizedPools[0].LockableDuration)
 
-	suite.Equal(poolId, res.IncentivizedPools[1].PoolId)
+	suite.Equal(poolID, res.IncentivizedPools[1].PoolId)
 	suite.Equal(gauge2Id, res.IncentivizedPools[1].GaugeId)
 	suite.Equal(time.Hour*3, res.IncentivizedPools[1].LockableDuration)
 
-	suite.Equal(poolId, res.IncentivizedPools[2].PoolId)
+	suite.Equal(poolID, res.IncentivizedPools[2].PoolId)
 	suite.Equal(gauge3Id, res.IncentivizedPools[2].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[2].LockableDuration)
 
-	suite.Equal(poolId2, res.IncentivizedPools[3].PoolId)
+	suite.Equal(poolID2, res.IncentivizedPools[3].PoolId)
 	suite.Equal(gauge4Id, res.IncentivizedPools[3].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[3].LockableDuration)
 
@@ -249,19 +249,19 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 
 	suite.Equal(4, len(res.IncentivizedPools))
 
-	suite.Equal(poolId, res.IncentivizedPools[0].PoolId)
+	suite.Equal(poolID, res.IncentivizedPools[0].PoolId)
 	suite.Equal(gauge1Id, res.IncentivizedPools[0].GaugeId)
 	suite.Equal(time.Hour, res.IncentivizedPools[0].LockableDuration)
 
-	suite.Equal(poolId, res.IncentivizedPools[1].PoolId)
+	suite.Equal(poolID, res.IncentivizedPools[1].PoolId)
 	suite.Equal(gauge2Id, res.IncentivizedPools[1].GaugeId)
 	suite.Equal(time.Hour*3, res.IncentivizedPools[1].LockableDuration)
 
-	suite.Equal(poolId, res.IncentivizedPools[2].PoolId)
+	suite.Equal(poolID, res.IncentivizedPools[2].PoolId)
 	suite.Equal(gauge3Id, res.IncentivizedPools[2].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[2].LockableDuration)
 
-	suite.Equal(poolId2, res.IncentivizedPools[3].PoolId)
+	suite.Equal(poolID2, res.IncentivizedPools[3].PoolId)
 	suite.Equal(gauge4Id, res.IncentivizedPools[3].GaugeId)
 	suite.Equal(time.Hour*7, res.IncentivizedPools[3].LockableDuration)
 

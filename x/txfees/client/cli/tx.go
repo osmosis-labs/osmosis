@@ -30,7 +30,7 @@ func NewTxCmd() *cobra.Command {
 
 func NewCmdSubmitUpdateFeeTokenProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-fee-token [denom] [poolId]",
+		Use:   "update-fee-token [denom] [poolID]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit an update to a fee token to be usable for tx fees",
 		RunE: func(cmd *cobra.Command, args []string) error {

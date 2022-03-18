@@ -144,8 +144,8 @@ func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) 
 	if err != nil {
 		return nil, err
 	}
-	locks := make([]lockuptypes.PeriodLock, 0, len(req.LockIds))
-	for _, lockID := range req.LockIds {
+	locks := make([]lockuptypes.PeriodLock, 0, len(req.LockIDs))
+	for _, lockID := range req.LockIDs {
 		lock, err := k.lk.GetLockByID(ctx, lockID)
 		if err != nil {
 			return nil, err

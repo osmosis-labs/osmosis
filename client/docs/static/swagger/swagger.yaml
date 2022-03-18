@@ -649,7 +649,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolId}':
+  '/osmosis/gamm/v1beta1/pools/{poolID}':
     get:
       summary: Per Pool gRPC Endpoints
       operationId: Pool
@@ -1020,14 +1020,14 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: poolId
+        - name: poolID
           in: path
           required: true
           type: string
           format: uint64
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolId}/params':
+  '/osmosis/gamm/v1beta1/pools/{poolID}/params':
     get:
       operationId: PoolParams
       responses:
@@ -1354,14 +1354,14 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: poolId
+        - name: poolID
           in: path
           required: true
           type: string
           format: uint64
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolId}/prices':
+  '/osmosis/gamm/v1beta1/pools/{poolID}/prices':
     get:
       operationId: SpotPrice
       responses:
@@ -1563,7 +1563,7 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: poolId
+        - name: poolID
           in: path
           required: true
           type: string
@@ -1582,7 +1582,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolId}/tokens':
+  '/osmosis/gamm/v1beta1/pools/{poolID}/tokens':
     get:
       operationId: PoolAssets
       responses:
@@ -1803,14 +1803,14 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: poolId
+        - name: poolID
           in: path
           required: true
           type: string
           format: uint64
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolId}/total_share':
+  '/osmosis/gamm/v1beta1/pools/{poolID}/total_share':
     get:
       operationId: TotalShare
       responses:
@@ -2024,7 +2024,7 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: poolId
+        - name: poolID
           in: path
           required: true
           type: string
@@ -2248,7 +2248,7 @@ paths:
                         }
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in':
+  '/osmosis/gamm/v1beta1/{poolID}/estimate/swap_exact_amount_in':
     get:
       summary: Estimate the swap.
       operationId: EstimateSwapExactAmountIn
@@ -2450,7 +2450,7 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: poolId
+        - name: poolID
           in: path
           required: true
           type: string
@@ -2465,7 +2465,7 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out':
+  '/osmosis/gamm/v1beta1/{poolID}/estimate/swap_exact_amount_out':
     get:
       operationId: EstimateSwapExactAmountOut
       responses:
@@ -2666,7 +2666,7 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: poolId
+        - name: poolID
           in: path
           required: true
           type: string
@@ -26560,7 +26560,7 @@ definitions:
   osmosis.gamm.v1beta1.SwapAmountInRoute:
     type: object
     properties:
-      poolId:
+      poolID:
         type: string
         format: uint64
       tokenOutDenom:
@@ -26569,7 +26569,7 @@ definitions:
   osmosis.gamm.v1beta1.SwapAmountOutRoute:
     type: object
     properties:
-      poolId:
+      poolID:
         type: string
         format: uint64
       tokenInDenom:

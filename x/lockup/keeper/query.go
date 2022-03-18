@@ -200,7 +200,7 @@ func queryLockedByID(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	lock, err := k.GetLockByID(ctx, params.LockId)
+	lock, err := k.GetLockByID(ctx, params.LockID)
 	if err != nil {
 		return nil, err
 	}

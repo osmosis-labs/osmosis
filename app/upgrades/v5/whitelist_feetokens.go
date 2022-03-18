@@ -49,13 +49,13 @@ func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []typ
 	for _, asset := range assets {
 		base10 := 10
 		bitLen := 64
-		poolIdStr := strings.TrimSpace(asset[2])
-		poolId, err := strconv.ParseUint(poolIdStr, base10, bitLen)
+		poolIDStr := strings.TrimSpace(asset[2])
+		poolID, err := strconv.ParseUint(poolIDStr, base10, bitLen)
 		if err != nil {
 			panic(err)
 		}
 
-		pool, poolExistsErr := gamm.GetPool(ctx, poolId)
+		pool, poolExistsErr := gamm.GetPool(ctx, poolID)
 		if poolExistsErr != nil {
 			continue
 		}
@@ -70,7 +70,7 @@ func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []typ
 
 		feeToken := types.FeeToken{
 			Denom:  asset[1],
-			PoolID: poolId,
+			PoolID: poolID,
 		}
 
 		feeTokens = append(feeTokens, feeToken)

@@ -22,6 +22,6 @@ var (
 	// KeyPrefixIntermediaryAccount defines prefix to set intermediary account struct to its address.
 	KeyPrefixIntermediaryAccount = []byte{0x04}
 
-	// KeyPrefixLockIntermediaryAccAddr defines prefix to connect lockId and intermediary account address.
+	// KeyPrefixLockIntermediaryAccAddr defines prefix to connect lockID and intermediary account address.
 	KeyPrefixLockIntermediaryAccAddr = []byte{0x05}
 )

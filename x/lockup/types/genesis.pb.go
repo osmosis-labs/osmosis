@@ -25,7 +25,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the lockup module's genesis state.
 type GenesisState struct {
-	LastLockId     uint64          `protobuf:"varint,1,opt,name=last_lock_id,json=lastLockId,proto3" json:"last_lock_id,omitempty"`
+	LastLockID     uint64          `protobuf:"varint,1,opt,name=last_lock_id,json=lastLockID,proto3" json:"last_lock_id,omitempty"`
 	Locks          []PeriodLock    `protobuf:"bytes,2,rep,name=locks,proto3" json:"locks"`
 	SyntheticLocks []SyntheticLock `protobuf:"bytes,3,rep,name=synthetic_locks,json=syntheticLocks,proto3" json:"synthetic_locks"`
 }
@@ -63,9 +63,9 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
-func (m *GenesisState) GetLastLockId() uint64 {
+func (m *GenesisState) GetLastLockID() uint64 {
 	if m != nil {
-		return m.LastLockId
+		return m.LastLockID
 	}
 	return 0
 }
@@ -159,8 +159,8 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x12
 		}
 	}
-	if m.LastLockId != 0 {
-		i = encodeVarintGenesis(dAtA, i, uint64(m.LastLockId))
+	if m.LastLockID != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.LastLockID))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -184,8 +184,8 @@ func (m *GenesisState) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.LastLockId != 0 {
-		n += 1 + sovGenesis(uint64(m.LastLockId))
+	if m.LastLockID != 0 {
+		n += 1 + sovGenesis(uint64(m.LastLockID))
 	}
 	if len(m.Locks) > 0 {
 		for _, e := range m.Locks {
@@ -239,9 +239,9 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LastLockId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LastLockID", wireType)
 			}
-			m.LastLockId = 0
+			m.LastLockID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -251,7 +251,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LastLockId |= uint64(b&0x7F) << shift
+				m.LastLockID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

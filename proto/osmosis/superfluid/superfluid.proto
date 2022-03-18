@@ -61,7 +61,7 @@ message SuperfluidDelegationRecord {
   ];
 }
 
-message LockIdIntermediaryAccountConnection {
+message LockIDIntermediaryAccountConnection {
   uint64 lock_id = 1;
   string intermediary_account = 2;
 }

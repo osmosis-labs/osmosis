@@ -53,9 +53,9 @@ func (suite *KeeperTestSuite) measureAvgAndMaxJoinPoolGas(
 // so we can easily track changes
 func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.SetupTest()
-	poolId := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
 
-	poolIDFn := func(int) uint64 { return poolId }
+	poolIDFn := func(int) uint64 { return poolID }
 	minShareOutAmountFn := func(int) sdk.Int { return minShareOutAmount }
 	maxCoinsFn := func(int) sdk.Coins { return defaultCoins }
 	startAveragingAt := 1000
@@ -70,11 +70,11 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	))
 	suite.Require().NoError(err)
 
-	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, poolId, minShareOutAmount, defaultCoins)
+	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, poolID, minShareOutAmount, defaultCoins)
 	suite.Assert().LessOrEqual(int(firstJoinGas), 100000)
 
 	for i := 1; i < startAveragingAt; i++ {
-		err := suite.app.GAMMKeeper.JoinPool(suite.ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
+		err := suite.app.GAMMKeeper.JoinPool(suite.ctx, defaultAddr, poolID, minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 

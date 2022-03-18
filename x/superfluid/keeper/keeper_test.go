@@ -80,8 +80,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {
 	bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
-	poolId := suite.createGammPool([]string{bondDenom, "foo"})
-	suite.Require().Equal(poolId, uint64(1))
+	poolID := suite.createGammPool([]string{bondDenom, "foo"})
+	suite.Require().Equal(poolID, uint64(1))
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
@@ -110,14 +110,14 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, coins)
 	suite.Require().NoError(err)
 
-	poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(
+	poolID, err := suite.App.GAMMKeeper.CreateBalancerPool(
 		suite.Ctx, acc1, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, poolAssets, "")
 	suite.Require().NoError(err)
 
-	return poolId
+	return poolID
 }
 
 func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	pools := suite.SetupGammPoolsWithBondDenomMultiplier(multipliers)
 
 	denoms := []string{}
-	poolIds := []uint64{}
+	poolIDs := []uint64{}
 	for _, pool := range pools {
 		denom := pool.GetTotalShares().Denom
 
@@ -149,10 +149,10 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 		})
 
 		denoms = append(denoms, denom)
-		poolIds = append(poolIds, pool.GetID())
+		poolIDs = append(poolIDs, pool.GetID())
 	}
 
-	return denoms, poolIds
+	return denoms, poolIDs
 }
 
 func TestKeeperTestSuite(t *testing.T) {

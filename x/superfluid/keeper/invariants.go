@@ -51,8 +51,8 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 		totalExpectedSuperfluidAmount := sdk.ZeroInt()
 		connections := keeper.GetAllLockIDIntermediaryAccountConnections(ctx)
 		for _, connection := range connections {
-			lockId := connection.LockId
-			lock, err := keeper.lk.GetLockByID(ctx, lockId)
+			lockID := connection.LockID
+			lock, err := keeper.lk.GetLockByID(ctx, lockID)
 			if err != nil || lock == nil {
 				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
 					"\tinvalid superfluid lock id exists with no actual lockup"), true

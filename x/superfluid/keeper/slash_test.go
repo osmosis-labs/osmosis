@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 		validatorStats        []stakingtypes.BondStatus
 		delegatorNumber       int
 		superDelegations      []superfluidDelegation
-		superUnbondingLockIds []uint64
+		superUnbondingLockIDs []uint64
 	}{
 		{
 			"happy path with single validator and multiple superfluid delegations",
@@ -156,11 +156,11 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
-			for _, lockId := range tc.superUnbondingLockIds {
-				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+			for _, lockID := range tc.superUnbondingLockIDs {
+				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 				suite.Require().NoError(err)
 				// superfluid undelegate
-				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockId)
+				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockID)
 				suite.Require().NoError(err)
 			}
 
@@ -179,8 +179,8 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			suite.Require().False(broken, reason)
 
 			// check check unbonding lockup changes
-			for _, lockId := range tc.superUnbondingLockIds {
-				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+			for _, lockID := range tc.superUnbondingLockIDs {
+				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 				suite.Require().NoError(err)
 				suite.Require().Equal(gotLock.Coins[0].Amount.String(), sdk.NewInt(950000).String())
 			}

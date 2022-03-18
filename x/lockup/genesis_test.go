@@ -18,7 +18,7 @@ var now = time.Now().UTC()
 var acc1 = sdk.AccAddress([]byte("addr1---------------"))
 var acc2 = sdk.AccAddress([]byte("addr2---------------"))
 var testGenesis = types.GenesisState{
-	LastLockId: 10,
+	LastLockID: 10,
 	Locks: []types.PeriodLock{
 		{
 			ID:       1,
@@ -61,8 +61,8 @@ func TestInitGenesis(t *testing.T) {
 	// coins = app.LockupKeeper.GetModuleBalance(ctx)
 	// require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 30000000).String())
 
-	lastLockId := app.LockupKeeper.GetLastLockID(ctx)
-	require.Equal(t, lastLockId, uint64(10))
+	lastLockID := app.LockupKeeper.GetLastLockID(ctx)
+	require.Equal(t, lastLockID, uint64(10))
 }
 
 func TestExportGenesis(t *testing.T) {
@@ -81,7 +81,7 @@ func TestExportGenesis(t *testing.T) {
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 10000000).String())
 
 	genesisExported := lockup.ExportGenesis(ctx, *app.LockupKeeper)
-	require.Equal(t, genesisExported.LastLockId, uint64(11))
+	require.Equal(t, genesisExported.LastLockID, uint64(11))
 	require.Equal(t, genesisExported.Locks, []types.PeriodLock{
 		{
 			ID:       1,

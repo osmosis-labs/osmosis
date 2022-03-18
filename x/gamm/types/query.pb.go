@@ -36,7 +36,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 //=============================== Pool
 type QueryPoolRequest struct {
-	PoolId uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId uint64 `protobuf:"varint,1,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 }
 
 func (m *QueryPoolRequest) Reset()         { *m = QueryPoolRequest{} }
@@ -305,7 +305,7 @@ func (m *QueryNumPoolsResponse) GetNumPools() uint64 {
 
 //=============================== PoolParams
 type QueryPoolParamsRequest struct {
-	PoolId uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId uint64 `protobuf:"varint,1,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 }
 
 func (m *QueryPoolParamsRequest) Reset()         { *m = QueryPoolParamsRequest{} }
@@ -394,7 +394,7 @@ func (m *QueryPoolParamsResponse) GetParams() *types.Any {
 
 //=============================== TotalShares
 type QueryTotalSharesRequest struct {
-	PoolId uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId uint64 `protobuf:"varint,1,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 }
 
 func (m *QueryTotalSharesRequest) Reset()         { *m = QueryTotalSharesRequest{} }
@@ -483,7 +483,7 @@ func (m *QueryTotalSharesResponse) GetTotalShares() types1.Coin {
 
 //=============================== PoolAssets
 type QueryPoolAssetsRequest struct {
-	PoolId uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId uint64 `protobuf:"varint,1,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 }
 
 func (m *QueryPoolAssetsRequest) Reset()         { *m = QueryPoolAssetsRequest{} }
@@ -572,7 +572,7 @@ func (m *QueryPoolAssetsResponse) GetPoolAssets() []PoolAsset {
 
 //=============================== SpotPrice
 type QuerySpotPriceRequest struct {
-	PoolId        uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId        uint64 `protobuf:"varint,1,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	TokenInDenom  string `protobuf:"bytes,2,opt,name=tokenInDenom,proto3" json:"tokenInDenom,omitempty" yaml:"token_in_denom"`
 	TokenOutDenom string `protobuf:"bytes,3,opt,name=tokenOutDenom,proto3" json:"tokenOutDenom,omitempty" yaml:"token_out_denom"`
 	WithSwapFee   bool   `protobuf:"varint,4,opt,name=withSwapFee,proto3" json:"withSwapFee,omitempty" yaml:"with_swap_fee"`
@@ -687,7 +687,7 @@ func (m *QuerySpotPriceResponse) GetSpotPrice() string {
 //=============================== EstimateSwapExactAmountIn
 type QuerySwapExactAmountInRequest struct {
 	Sender  string              `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId  uint64              `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId  uint64              `protobuf:"varint,2,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	TokenIn string              `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn,omitempty" yaml:"token_in"`
 	Routes  []SwapAmountInRoute `protobuf:"bytes,4,rep,name=routes,proto3" json:"routes" yaml:"routes"`
 }
@@ -793,7 +793,7 @@ var xxx_messageInfo_QuerySwapExactAmountInResponse proto.InternalMessageInfo
 //=============================== EstimateSwapExactAmountOut
 type QuerySwapExactAmountOutRequest struct {
 	Sender   string               `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId   uint64               `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId   uint64               `protobuf:"varint,2,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	Routes   []SwapAmountOutRoute `protobuf:"bytes,3,rep,name=routes,proto3" json:"routes" yaml:"routes"`
 	TokenOut string               `protobuf:"bytes,4,opt,name=tokenOut,proto3" json:"tokenOut,omitempty" yaml:"token_out"`
 }

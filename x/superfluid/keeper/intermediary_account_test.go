@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
 	suite.Require().Len(accs, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
+func (suite *KeeperTestSuite) TestLockIDIntermediaryAccountConnection() {
 	suite.SetupTest()
 
 	// get account

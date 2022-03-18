@@ -216,7 +216,7 @@ $ %s query superfluid connected-intermediary-account 1
 			}
 
 			res, err := queryClient.ConnectedIntermediaryAccount(cmd.Context(), &types.ConnectedIntermediaryAccountRequest{
-				LockId: uint64(lockID),
+				LockID: uint64(lockID),
 			})
 			if err != nil {
 				return err

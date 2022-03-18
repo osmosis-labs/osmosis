@@ -33,7 +33,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type MsgSuperfluidDelegate struct {
 	Sender  string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LockId  uint64 `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
+	LockID  uint64 `protobuf:"varint,2,opt,name=lock_id,json=lockID,proto3" json:"lock_id,omitempty"`
 	ValAddr string `protobuf:"bytes,3,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
 }
 
@@ -77,9 +77,9 @@ func (m *MsgSuperfluidDelegate) GetSender() string {
 	return ""
 }
 
-func (m *MsgSuperfluidDelegate) GetLockId() uint64 {
+func (m *MsgSuperfluidDelegate) GetLockID() uint64 {
 	if m != nil {
-		return m.LockId
+		return m.LockID
 	}
 	return 0
 }
@@ -129,7 +129,7 @@ var xxx_messageInfo_MsgSuperfluidDelegateResponse proto.InternalMessageInfo
 
 type MsgSuperfluidUndelegate struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LockId uint64 `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
+	LockID uint64 `protobuf:"varint,2,opt,name=lock_id,json=lockID,proto3" json:"lock_id,omitempty"`
 }
 
 func (m *MsgSuperfluidUndelegate) Reset()         { *m = MsgSuperfluidUndelegate{} }
@@ -172,9 +172,9 @@ func (m *MsgSuperfluidUndelegate) GetSender() string {
 	return ""
 }
 
-func (m *MsgSuperfluidUndelegate) GetLockId() uint64 {
+func (m *MsgSuperfluidUndelegate) GetLockID() uint64 {
 	if m != nil {
-		return m.LockId
+		return m.LockID
 	}
 	return 0
 }
@@ -217,7 +217,7 @@ var xxx_messageInfo_MsgSuperfluidUndelegateResponse proto.InternalMessageInfo
 
 type MsgSuperfluidUnbondLock struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LockId uint64 `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
+	LockID uint64 `protobuf:"varint,2,opt,name=lock_id,json=lockID,proto3" json:"lock_id,omitempty"`
 }
 
 func (m *MsgSuperfluidUnbondLock) Reset()         { *m = MsgSuperfluidUnbondLock{} }
@@ -260,9 +260,9 @@ func (m *MsgSuperfluidUnbondLock) GetSender() string {
 	return ""
 }
 
-func (m *MsgSuperfluidUnbondLock) GetLockId() uint64 {
+func (m *MsgSuperfluidUnbondLock) GetLockID() uint64 {
 	if m != nil {
-		return m.LockId
+		return m.LockID
 	}
 	return 0
 }
@@ -684,8 +684,8 @@ func (m *MsgSuperfluidDelegate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if m.LockId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.LockId))
+	if m.LockID != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockID))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -742,8 +742,8 @@ func (m *MsgSuperfluidUndelegate) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
-	if m.LockId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.LockId))
+	if m.LockID != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockID))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -800,8 +800,8 @@ func (m *MsgSuperfluidUnbondLock) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
-	if m.LockId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.LockId))
+	if m.LockID != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockID))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -938,8 +938,8 @@ func (m *MsgSuperfluidDelegate) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.LockId != 0 {
-		n += 1 + sovTx(uint64(m.LockId))
+	if m.LockID != 0 {
+		n += 1 + sovTx(uint64(m.LockID))
 	}
 	l = len(m.ValAddr)
 	if l > 0 {
@@ -967,8 +967,8 @@ func (m *MsgSuperfluidUndelegate) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.LockId != 0 {
-		n += 1 + sovTx(uint64(m.LockId))
+	if m.LockID != 0 {
+		n += 1 + sovTx(uint64(m.LockID))
 	}
 	return n
 }
@@ -992,8 +992,8 @@ func (m *MsgSuperfluidUnbondLock) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.LockId != 0 {
-		n += 1 + sovTx(uint64(m.LockId))
+	if m.LockID != 0 {
+		n += 1 + sovTx(uint64(m.LockID))
 	}
 	return n
 }
@@ -1111,9 +1111,9 @@ func (m *MsgSuperfluidDelegate) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LockID", wireType)
 			}
-			m.LockId = 0
+			m.LockID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1123,7 +1123,7 @@ func (m *MsgSuperfluidDelegate) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LockId |= uint64(b&0x7F) << shift
+				m.LockID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1294,9 +1294,9 @@ func (m *MsgSuperfluidUndelegate) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LockID", wireType)
 			}
-			m.LockId = 0
+			m.LockID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1306,7 +1306,7 @@ func (m *MsgSuperfluidUndelegate) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LockId |= uint64(b&0x7F) << shift
+				m.LockID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1445,9 +1445,9 @@ func (m *MsgSuperfluidUnbondLock) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LockID", wireType)
 			}
-			m.LockId = 0
+			m.LockID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1457,7 +1457,7 @@ func (m *MsgSuperfluidUnbondLock) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LockId |= uint64(b&0x7F) << shift
+				m.LockID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

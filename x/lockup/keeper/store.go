@@ -31,8 +31,8 @@ func (k Keeper) SetLastLockID(ctx sdk.Context, id uint64) {
 }
 
 // lockStoreKey returns action store key from ID.
-func lockStoreKey(ID uint64) []byte {
-	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(ID))
+func lockStoreKey(id uint64) []byte {
+	return combineKeys(types.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(id))
 }
 
 // syntheticLockStoreKey returns synthetic store key from ID and synth denom.

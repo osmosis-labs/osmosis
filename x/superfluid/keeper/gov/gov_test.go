@@ -30,14 +30,14 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, acc1, coins)
 	suite.Require().NoError(err)
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(
+	poolID, err := suite.app.GAMMKeeper.CreateBalancerPool(
 		suite.ctx, acc1, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, poolAssets, "")
 	suite.Require().NoError(err)
 
-	return poolId
+	return poolID
 }
 
 func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {

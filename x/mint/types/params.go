@@ -30,7 +30,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
-	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
+	reductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
 	weightedDevRewardsReceivers []WeightedAddress, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 	return Params{
@@ -38,7 +38,7 @@ func NewParams(
 		GenesisEpochProvisions:               genesisEpochProvisions,
 		EpochIdentifier:                      epochIdentifier,
 		ReductionPeriodInEpochs:              reductionPeriodInEpochs,
-		ReductionFactor:                      ReductionFactor,
+		ReductionFactor:                      reductionFactor,
 		DistributionProportions:              distrProportions,
 		WeightedDeveloperRewardsReceivers:    weightedDevRewardsReceivers,
 		MintingRewardsDistributionStartEpoch: mintingRewardsDistributionStartEpoch,

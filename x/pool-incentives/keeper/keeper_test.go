@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []gammtypes.PoolAsset{
+	poolID, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []gammtypes.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -77,26 +77,26 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 		},
 	}, "")
 	suite.NoError(err)
-	return poolId
+	return poolID
 }
 
 func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
-	poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
+	poolID := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	})
 
-	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "foo", "bar")
+	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolID, "foo", "bar")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDec(2).String(), spotPrice.String())
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "bar", "baz")
+	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolID, "bar", "baz")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
+	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolID, "baz", "foo")
 	suite.NoError(err)
 	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), spotPrice.String())
 
-	return poolId
+	return poolID
 }
 
 func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
@@ -109,12 +109,12 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 	suite.Equal(3, len(lockableDurations))
 
 	for i := 0; i < 3; i++ {
-		poolId := suite.prepareBalancerPool()
-		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+		poolID := suite.prepareBalancerPool()
+		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolID)
 		suite.NoError(err)
 
 		// Same amount of gauges as lockableDurations must be created for every pool created.
-		gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
+		gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[0])
 		suite.NoError(err)
 		gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
-		gaugeId, err = keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[1])
+		gaugeId, err = keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[1])
 		suite.NoError(err)
 		gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
-		gaugeId, err = keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[2])
+		gaugeId, err = keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[2])
 		suite.NoError(err)
 		gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)

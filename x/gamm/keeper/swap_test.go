@@ -80,25 +80,25 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.prepareBalancerPool()
+		poolID := suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
 		if test.expectPass {
-			spotPriceBefore, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+			spotPriceBefore, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolID, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 			suite.NoError(err, "test: %v", test.name)
 
-			tokenOutAmount, _, err := keeper.SwapExactAmountIn(suite.ctx, acc1, poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
+			tokenOutAmount, _, err := keeper.SwapExactAmountIn(suite.ctx, acc1, poolID, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
 			suite.NoError(err, "test: %v", test.name)
 
-			spotPriceAfter, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+			spotPriceAfter, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolID, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 			suite.NoError(err, "test: %v", test.name)
 
 			// Ratio of the token out should be between the before spot price and after spot price.
 			tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 			suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 		} else {
-			_, _, err := keeper.SwapExactAmountIn(suite.ctx, acc1, poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
+			_, _, err := keeper.SwapExactAmountIn(suite.ctx, acc1, poolID, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
 			suite.Error(err, "test: %v", test.name)
 		}
 	}
@@ -175,25 +175,25 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.prepareBalancerPool()
+		poolID := suite.prepareBalancerPool()
 
 		keeper := suite.app.GAMMKeeper
 
 		if test.expectPass {
-			spotPriceBefore, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
+			spotPriceBefore, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolID, test.param.tokenInDenom, test.param.tokenOut.Denom)
 			suite.NoError(err, "test: %v", test.name)
 
-			tokenInAmount, _, err := keeper.SwapExactAmountOut(suite.ctx, acc1, poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
+			tokenInAmount, _, err := keeper.SwapExactAmountOut(suite.ctx, acc1, poolID, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
 			suite.NoError(err, "test: %v", test.name)
 
-			spotPriceAfter, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
+			spotPriceAfter, err := keeper.CalculateSpotPriceWithSwapFee(suite.ctx, poolID, test.param.tokenInDenom, test.param.tokenOut.Denom)
 			suite.NoError(err, "test: %v", test.name)
 
 			// Ratio of the token out should be between the before spot price and after spot price.
 			tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
 			suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 		} else {
-			_, _, err := keeper.SwapExactAmountOut(suite.ctx, acc1, poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
+			_, _, err := keeper.SwapExactAmountOut(suite.ctx, acc1, poolID, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
 			suite.Error(err, "test: %v", test.name)
 		}
 	}
@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 				panic(err)
 			}
 
-			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			poolID := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})
@@ -235,14 +235,14 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 
 			if tc.expectPass {
-				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolID, foocoin, "bar", sdk.ZeroInt())
 				suite.Require().NoError(err)
-				_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolID, "bar", sdk.NewInt(1000000000000000000), foocoin)
 				suite.Require().NoError(err)
 			} else {
-				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolID, foocoin, "bar", sdk.ZeroInt())
 				suite.Require().Error(err)
-				_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				_, _, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolID, "bar", sdk.NewInt(1000000000000000000), foocoin)
 				suite.Require().Error(err)
 			}
 		}

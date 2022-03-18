@@ -107,7 +107,7 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 
 		msg := types.MsgSuperfluidDelegate{
 			Sender:  lock.Owner,
-			LockId:  lock.ID,
+			LockID:  lock.ID,
 			ValAddr: validator.OperatorAddress,
 		}
 
@@ -135,7 +135,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 
 		msg := types.MsgSuperfluidUndelegate{
 			Sender: simAccount.Address.String(),
-			LockId: lock.ID,
+			LockID: lock.ID,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -170,7 +170,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 
 // 		msg := types.MsgSuperfluidRedelegate{
 // 			Sender:     lock.Owner,
-// 			LockId:     lock.ID,
+// 			LockID:     lock.ID,
 // 			NewValAddr: validator.OperatorAddress,
 // 		}
 

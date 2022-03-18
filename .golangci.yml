@@ -26,7 +26,7 @@ linters:
     - exhaustive
 #    - exhaustivestruct <- disabled because we don't want to use every element of every struct
     - exportloopref
-    - forbidigo
+#    - forbidigo <- forbids fmt.Print* by default
     - forcetypeassert
 #    - funlen <- some of our functions are longer than this by necessity
     - gci
@@ -43,7 +43,7 @@ linters:
     - gofumpt
     - goheader
     - goimports
-    - gomoddirectives
+#    - gomoddirectives <- disables replaces
     - gomodguard
     - goprintffuncname
     - gosec

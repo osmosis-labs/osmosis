@@ -33,7 +33,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // ===================== MsgJoinPool
 type MsgJoinPool struct {
 	Sender         string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId         uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId         uint64                                 `protobuf:"varint,2,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	ShareOutAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=shareOutAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareOutAmount" yaml:"pool_amount_out"`
 	TokenInMaxs    []types.Coin                           `protobuf:"bytes,4,rep,name=tokenInMaxs,proto3" json:"tokenInMaxs" yaml:"token_in_max_amounts"`
 }
@@ -131,7 +131,7 @@ var xxx_messageInfo_MsgJoinPoolResponse proto.InternalMessageInfo
 // ===================== MsgExitPool
 type MsgExitPool struct {
 	Sender        string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId        uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId        uint64                                 `protobuf:"varint,2,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	ShareInAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=shareInAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareInAmount" yaml:"share_in_amount"`
 	TokenOutMins  []types.Coin                           `protobuf:"bytes,4,rep,name=tokenOutMins,proto3" json:"tokenOutMins" yaml:"token_out_min_amounts"`
 }
@@ -228,7 +228,7 @@ var xxx_messageInfo_MsgExitPoolResponse proto.InternalMessageInfo
 
 // ===================== MsgSwapExactAmountIn
 type SwapAmountInRoute struct {
-	PoolId        uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId        uint64 `protobuf:"varint,1,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	TokenOutDenom string `protobuf:"bytes,2,opt,name=tokenOutDenom,proto3" json:"tokenOutDenom,omitempty" yaml:"token_out_denom"`
 }
 
@@ -378,7 +378,7 @@ var xxx_messageInfo_MsgSwapExactAmountInResponse proto.InternalMessageInfo
 
 // ===================== MsgSwapExactAmountOut
 type SwapAmountOutRoute struct {
-	PoolId       uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId       uint64 `protobuf:"varint,1,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	TokenInDenom string `protobuf:"bytes,2,opt,name=tokenInDenom,proto3" json:"tokenInDenom,omitempty" yaml:"token_out_denom"`
 }
 
@@ -529,7 +529,7 @@ var xxx_messageInfo_MsgSwapExactAmountOutResponse proto.InternalMessageInfo
 // ===================== MsgJoinSwapExternAmountIn
 type MsgJoinSwapExternAmountIn struct {
 	Sender            string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	TokenIn           types.Coin                             `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn" yaml:"token_in"`
 	ShareOutMinAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=shareOutMinAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareOutMinAmount" yaml:"share_out_min_amount"`
 }
@@ -627,7 +627,7 @@ var xxx_messageInfo_MsgJoinSwapExternAmountInResponse proto.InternalMessageInfo
 // ===================== MsgJoinSwapShareAmountOut
 type MsgJoinSwapShareAmountOut struct {
 	Sender           string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId           uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId           uint64                                 `protobuf:"varint,2,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	TokenInDenom     string                                 `protobuf:"bytes,3,opt,name=tokenInDenom,proto3" json:"tokenInDenom,omitempty" yaml:"token_in_denom"`
 	ShareOutAmount   github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=shareOutAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareOutAmount" yaml:"share_out_amount"`
 	TokenInMaxAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=tokenInMaxAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenInMaxAmount" yaml:"token_in_max_amount"`
@@ -726,7 +726,7 @@ var xxx_messageInfo_MsgJoinSwapShareAmountOutResponse proto.InternalMessageInfo
 // ===================== MsgExitSwapShareAmountIn
 type MsgExitSwapShareAmountIn struct {
 	Sender            string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	TokenOutDenom     string                                 `protobuf:"bytes,3,opt,name=tokenOutDenom,proto3" json:"tokenOutDenom,omitempty" yaml:"token_out_denom"`
 	ShareInAmount     github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=shareInAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareInAmount" yaml:"share_in_amount"`
 	TokenOutMinAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=tokenOutMinAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenOutMinAmount" yaml:"token_out_min_amount"`
@@ -825,7 +825,7 @@ var xxx_messageInfo_MsgExitSwapShareAmountInResponse proto.InternalMessageInfo
 // ===================== MsgExitSwapExternAmountOut
 type MsgExitSwapExternAmountOut struct {
 	Sender           string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId           uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	PoolId           uint64                                 `protobuf:"varint,2,opt,name=poolID,proto3" json:"poolID,omitempty" yaml:"pool_id"`
 	TokenOut         types.Coin                             `protobuf:"bytes,3,opt,name=tokenOut,proto3" json:"tokenOut" yaml:"token_out"`
 	ShareInMaxAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=shareInMaxAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareInMaxAmount" yaml:"share_in_max_amount"`
 }

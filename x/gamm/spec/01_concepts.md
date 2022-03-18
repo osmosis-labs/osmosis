@@ -10,7 +10,7 @@ The concept of the `gamm` module is designed to handle assets of a chain using t
 
 ### Creation of Pool
 
-At an initial creation of the pool, a fixed amount of 100 share token is minted in the pool and sent to the creator of the pool's account. Pool share denom is in the format of gamm/pool/{poolId} and is displayed in the format of GAMM-{poolId} to the user. Pool assets are sorted in alphabetical order by defualt.
+At an initial creation of the pool, a fixed amount of 100 share token is minted in the pool and sent to the creator of the pool's account. Pool share denom is in the format of gamm/pool/{poolID} and is displayed in the format of GAMM-{poolID} to the user. Pool assets are sorted in alphabetical order by defualt.
 
 ### Joining Pool
 

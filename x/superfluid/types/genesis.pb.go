@@ -29,7 +29,7 @@ type GenesisState struct {
 	SuperfluidAssets              []SuperfluidAsset                     `protobuf:"bytes,2,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
 	OsmoEquivalentMultipliers     []OsmoEquivalentMultiplierRecord      `protobuf:"bytes,3,rep,name=osmo_equivalent_multipliers,json=osmoEquivalentMultipliers,proto3" json:"osmo_equivalent_multipliers"`
 	IntermediaryAccounts          []SuperfluidIntermediaryAccount       `protobuf:"bytes,4,rep,name=intermediary_accounts,json=intermediaryAccounts,proto3" json:"intermediary_accounts"`
-	IntemediaryAccountConnections []LockIdIntermediaryAccountConnection `protobuf:"bytes,5,rep,name=intemediary_account_connections,json=intemediaryAccountConnections,proto3" json:"intemediary_account_connections"`
+	IntemediaryAccountConnections []LockIDIntermediaryAccountConnection `protobuf:"bytes,5,rep,name=intemediary_account_connections,json=intemediaryAccountConnections,proto3" json:"intemediary_account_connections"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -93,7 +93,7 @@ func (m *GenesisState) GetIntermediaryAccounts() []SuperfluidIntermediaryAccount
 	return nil
 }
 
-func (m *GenesisState) GetIntemediaryAccountConnections() []LockIdIntermediaryAccountConnection {
+func (m *GenesisState) GetIntemediaryAccountConnections() []LockIDIntermediaryAccountConnection {
 	if m != nil {
 		return m.IntemediaryAccountConnections
 	}
@@ -468,7 +468,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.IntemediaryAccountConnections = append(m.IntemediaryAccountConnections, LockIdIntermediaryAccountConnection{})
+			m.IntemediaryAccountConnections = append(m.IntemediaryAccountConnections, LockIDIntermediaryAccountConnection{})
 			if err := m.IntemediaryAccountConnections[len(m.IntemediaryAccountConnections)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

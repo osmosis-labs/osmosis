@@ -100,7 +100,7 @@ A `SyntheticLock` is a single unit of synthetic lockup. Each synthetic lockup ha
 
 ```go
 type SyntheticLock struct {
- LockId  uint64
+ LockID  uint64
  Suffix  string
  EndTime time.Time
 }
@@ -123,4 +123,4 @@ For end time keys, they are converted to sortable string by using `sdk.FormatTim
 
 **Note:**
 To implement the auto removal of synthetic lockups that is already finished, we manage a separate time basis queue at
-`{KeyPrefixSyntheticLockTimestamp}{EndTime}{LockId}{Suffix}`
+`{KeyPrefixSyntheticLockTimestamp}{EndTime}{LockID}{Suffix}`

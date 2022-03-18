@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	}
 	suite.app.MintKeeper.SetParams(suite.ctx, params)
 
-	poolId := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
@@ -75,13 +75,13 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		suite.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
 	}
 
-	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[0])
 	suite.NoError(err)
 
-	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[1])
 	suite.NoError(err)
 
-	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 3 records
@@ -216,13 +216,13 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() uint64 {
 	})
 	suite.Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state for testing
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
+	gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[0])
 	suite.NoError(err)
 
 	err = keeper.ReplaceDistrRecords(suite.ctx, types.DistrRecord{
@@ -288,13 +288,13 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 	})
 	suite.Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state for testing
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
+	gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolID, lockableDurations[0])
 	suite.NoError(err)
 
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{

@@ -24,7 +24,7 @@ var ymlAssetTest = []types.PoolAsset{
 }
 
 func TestPoolJson(t *testing.T) {
-	var poolId uint64 = 10
+	var poolID uint64 = 10
 
 	jsonAssetTest := []types.PoolAsset{
 		{
@@ -36,7 +36,7 @@ func TestPoolJson(t *testing.T) {
 			Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
 		},
 	}
-	pacc, err := NewBalancerPool(poolId, PoolParams{
+	pacc, err := NewBalancerPool(poolID, PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}, jsonAssetTest, defaultFutureGovernor, defaultCurBlockTime)

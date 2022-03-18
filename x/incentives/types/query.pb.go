@@ -687,7 +687,7 @@ func (m *UpcomingGaugesResponse) GetPagination() *query.PageResponse {
 
 type RewardsEstRequest struct {
 	Owner    string   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
-	LockIds  []uint64 `protobuf:"varint,2,rep,packed,name=lock_ids,json=lockIds,proto3" json:"lock_ids,omitempty"`
+	LockIDs  []uint64 `protobuf:"varint,2,rep,packed,name=lock_ids,json=lockIDs,proto3" json:"lock_ids,omitempty"`
 	EndEpoch int64    `protobuf:"varint,3,opt,name=end_epoch,json=endEpoch,proto3" json:"end_epoch,omitempty"`
 }
 
@@ -731,9 +731,9 @@ func (m *RewardsEstRequest) GetOwner() string {
 	return ""
 }
 
-func (m *RewardsEstRequest) GetLockIds() []uint64 {
+func (m *RewardsEstRequest) GetLockIDs() []uint64 {
 	if m != nil {
-		return m.LockIds
+		return m.LockIDs
 	}
 	return nil
 }
@@ -1901,10 +1901,10 @@ func (m *RewardsEstRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x18
 	}
-	if len(m.LockIds) > 0 {
-		dAtA11 := make([]byte, len(m.LockIds)*10)
+	if len(m.LockIDs) > 0 {
+		dAtA11 := make([]byte, len(m.LockIDs)*10)
 		var j10 int
-		for _, num := range m.LockIds {
+		for _, num := range m.LockIDs {
 			for num >= 1<<7 {
 				dAtA11[j10] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
@@ -2250,9 +2250,9 @@ func (m *RewardsEstRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if len(m.LockIds) > 0 {
+	if len(m.LockIDs) > 0 {
 		l = 0
-		for _, e := range m.LockIds {
+		for _, e := range m.LockIDs {
 			l += sovQuery(uint64(e))
 		}
 		n += 1 + sovQuery(uint64(l)) + l
@@ -3665,7 +3665,7 @@ func (m *RewardsEstRequest) Unmarshal(dAtA []byte) error {
 						break
 					}
 				}
-				m.LockIds = append(m.LockIds, v)
+				m.LockIDs = append(m.LockIDs, v)
 			} else if wireType == 2 {
 				var packedLen int
 				for shift := uint(0); ; shift += 7 {
@@ -3700,8 +3700,8 @@ func (m *RewardsEstRequest) Unmarshal(dAtA []byte) error {
 					}
 				}
 				elementCount = count
-				if elementCount != 0 && len(m.LockIds) == 0 {
-					m.LockIds = make([]uint64, 0, elementCount)
+				if elementCount != 0 && len(m.LockIDs) == 0 {
+					m.LockIDs = make([]uint64, 0, elementCount)
 				}
 				for iNdEx < postIndex {
 					var v uint64
@@ -3719,10 +3719,10 @@ func (m *RewardsEstRequest) Unmarshal(dAtA []byte) error {
 							break
 						}
 					}
-					m.LockIds = append(m.LockIds, v)
+					m.LockIDs = append(m.LockIDs, v)
 				}
 			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field LockIds", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LockIDs", wireType)
 			}
 		case 3:
 			if wireType != 0 {

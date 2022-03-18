@@ -347,12 +347,12 @@ $ %s query incentives rewards-estimation
 				return err
 			}
 
-			lockIdsCombined, err := cmd.Flags().GetString(FlagLockIds)
+			lockIDsCombined, err := cmd.Flags().GetString(FlagLockIDs)
 			if err != nil {
 				return err
 			}
 
-			lockIDStrs := strings.Split(lockIdsCombined, ",")
+			lockIDStrs := strings.Split(lockIDsCombined, ",")
 			lockIDs := []uint64{}
 			for _, lockIDStr := range lockIDStrs {
 				lockID, err := strconv.ParseUint(lockIDStr, 10, 64)
@@ -368,8 +368,8 @@ $ %s query incentives rewards-estimation
 			}
 
 			res, err := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
-				Owner:    owner, // owner is used only when lockIds are empty
-				LockIds:  lockIDs,
+				Owner:    owner, // owner is used only when lockIDs are empty
+				LockIDs:  lockIDs,
 				EndEpoch: endEpoch,
 			})
 			if err != nil {
@@ -382,7 +382,7 @@ $ %s query incentives rewards-estimation
 
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().String(FlagOwner, "", "Owner to receive rewards, optionally used when lock-ids flag is NOT set")
-	cmd.Flags().String(FlagLockIds, "", "the lock ids to receive rewards, when it is empty, all lock ids of the owner are used")
+	cmd.Flags().String(FlagLockIDs, "", "the lock ids to receive rewards, when it is empty, all lock ids of the owner are used")
 	cmd.Flags().Int64(FlagEndEpoch, 0, "the end epoch number to participate in rewards calculation")
 
 	return cmd

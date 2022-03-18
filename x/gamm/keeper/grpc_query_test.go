@@ -24,16 +24,16 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 	suite.Require().Error(err)
 
 	for i := 0; i < 10; i++ {
-		poolId := suite.prepareBalancerPool()
+		poolID := suite.prepareBalancerPool()
 		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
-			PoolId: poolId,
+			PoolId: poolID,
 		})
 		suite.Require().NoError(err)
 		var pool types.PoolI
 		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(poolId, pool.GetID())
-		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolID, pool.GetID())
+		suite.Require().Equal(types.NewPoolAddress(poolID).String(), pool.GetAddress().String())
 	}
 }
 
@@ -41,16 +41,16 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	queryClient := suite.queryClient
 
 	for i := 0; i < 10; i++ {
-		poolId := suite.prepareBalancerPool()
+		poolID := suite.prepareBalancerPool()
 		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
-			PoolId: poolId,
+			PoolId: poolID,
 		})
 		suite.Require().NoError(err)
 		var pool types.PoolI
 		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(poolId, pool.GetID())
-		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolID, pool.GetID())
+		suite.Require().Equal(types.NewPoolAddress(poolID).String(), pool.GetAddress().String())
 	}
 
 	res, err := queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
@@ -111,21 +111,21 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	_, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: 1})
 	suite.Require().Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
 
 	// Share Token would be minted as 100.000000000000000000 share token initially.
-	res, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
+	res, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolID})
 	suite.Require().NoError(err)
 	suite.Require().Equal(types.InitPoolSharesSupply.String(), res.TotalShares.Amount.String())
 
 	// Mint more share token.
-	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolID)
 	suite.Require().NoError(err)
 	err = suite.app.GAMMKeeper.MintPoolShareToAccount(suite.ctx, pool, acc1, types.OneShare.MulRaw(10))
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.app.GAMMKeeper.SetPool(suite.ctx, pool))
 
-	res, err = queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
+	res, err = queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolID})
 	suite.Require().NoError(err)
 	suite.Require().Equal(types.InitPoolSharesSupply.Add(types.OneShare.MulRaw(10)).String(), res.TotalShares.Amount.String())
 }
@@ -153,9 +153,9 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolPoolAssets() {
 	_, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: 1})
 	suite.Require().Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
 
-	res, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: poolId})
+	res, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: poolID})
 	suite.Require().NoError(err)
 
 	/*
@@ -195,10 +195,10 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	})
 	suite.Require().Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolID := suite.prepareBalancerPool()
 
 	// Invalid params
-	_, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{PoolId: poolId})
+	_, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{PoolId: poolID})
 	suite.Require().Error(err)
 	_, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{TokenInDenom: "foo"})
 	suite.Require().Error(err)
@@ -206,7 +206,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	suite.Require().Error(err)
 
 	res, err := queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{
-		PoolId:        poolId,
+		PoolId:        poolID,
 		TokenInDenom:  "foo",
 		TokenOutDenom: "bar",
 	})
@@ -214,7 +214,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	suite.Equal(sdk.NewDec(2).String(), res.SpotPrice)
 
 	res, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{
-		PoolId:        poolId,
+		PoolId:        poolID,
 		TokenInDenom:  "bar",
 		TokenOutDenom: "baz",
 	})
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), res.SpotPrice)
 
 	res, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{
-		PoolId:        poolId,
+		PoolId:        poolID,
 		TokenInDenom:  "baz",
 		TokenOutDenom: "foo",
 	})

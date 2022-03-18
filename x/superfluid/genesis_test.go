@@ -39,9 +39,9 @@ var testGenesis = types.GenesisState{
 			GaugeId: 1,
 		},
 	},
-	IntemediaryAccountConnections: []types.LockIdIntermediaryAccountConnection{
+	IntemediaryAccountConnections: []types.LockIDIntermediaryAccountConnection{
 		{
-			LockId:              1,
+			LockID:              1,
 			IntermediaryAccount: "osmo1hpgapnfl3thkevvl0jp3wqtk8jw7mpqumuuc2f",
 		},
 	},

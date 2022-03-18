@@ -38,7 +38,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 		return nil, err
 	}
 
-	poolId, err := server.keeper.CreateBalancerPool(ctx, sender, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
+	poolID, err := server.keeper.CreateBalancerPool(ctx, sender, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(poolID, 10)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

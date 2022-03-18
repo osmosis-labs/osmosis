@@ -15,7 +15,7 @@ const (
 
 	FlagTimestamp = "timestamp"
 	FlagOwner     = "owner"
-	FlagLockIds   = "lock-ids"
+	FlagLockIDs   = "lock-ids"
 	FlagEndEpoch  = "end-epoch"
 )
 

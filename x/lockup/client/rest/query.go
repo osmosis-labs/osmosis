@@ -227,7 +227,7 @@ func queryLockedByIDFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		params := types.LockedRequest{LockId: lockID}
+		params := types.LockedRequest{LockID: lockID}
 
 		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {

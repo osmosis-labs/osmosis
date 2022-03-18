@@ -35,7 +35,7 @@ var _ = time.Kitchen
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type QueryGaugeIdsRequest struct {
-	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolID,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
 
 func (m *QueryGaugeIdsRequest) Reset()         { *m = QueryGaugeIdsRequest{} }
@@ -455,7 +455,7 @@ func (m *QueryIncentivizedPoolsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryIncentivizedPoolsRequest proto.InternalMessageInfo
 
 type IncentivizedPool struct {
-	PoolId           uint64        `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	PoolId           uint64        `protobuf:"varint,1,opt,name=pool_id,json=poolID,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 	LockableDuration time.Duration `protobuf:"bytes,2,opt,name=lockable_duration,json=lockableDuration,proto3,stdduration" json:"lockable_duration" yaml:"lockable_duration"`
 	GaugeId          uint64        `protobuf:"varint,3,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty" yaml:"gauge_id"`
 }

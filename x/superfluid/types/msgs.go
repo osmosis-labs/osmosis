@@ -21,7 +21,7 @@ var _ sdk.Msg = &MsgSuperfluidDelegate{}
 func NewMsgSuperfluidDelegate(sender sdk.AccAddress, lockID uint64, valAddr sdk.ValAddress) *MsgSuperfluidDelegate {
 	return &MsgSuperfluidDelegate{
 		Sender:  sender.String(),
-		LockId:  lockID,
+		LockID:  lockID,
 		ValAddr: valAddr.String(),
 	}
 }
@@ -32,8 +32,8 @@ func (m MsgSuperfluidDelegate) ValidateBasic() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender should not be an empty address")
 	}
-	if m.LockId == 0 {
-		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
+	if m.LockID == 0 {
+		return fmt.Errorf("lock id should be positive: %d < 0", m.LockID)
 	}
 	if m.ValAddr == "" {
 		return fmt.Errorf("ValAddr should not be empty")
@@ -57,7 +57,7 @@ var _ sdk.Msg = &MsgSuperfluidUndelegate{}
 func NewMsgSuperfluidUndelegate(sender sdk.AccAddress, lockID uint64) *MsgSuperfluidUndelegate {
 	return &MsgSuperfluidUndelegate{
 		Sender: sender.String(),
-		LockId: lockID,
+		LockID: lockID,
 	}
 }
 
@@ -67,8 +67,8 @@ func (m MsgSuperfluidUndelegate) ValidateBasic() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender should not be an empty address")
 	}
-	if m.LockId == 0 {
-		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
+	if m.LockID == 0 {
+		return fmt.Errorf("lock id should be positive: %d < 0", m.LockID)
 	}
 	return nil
 }
@@ -86,10 +86,10 @@ func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 // var _ sdk.Msg = &MsgSuperfluidRedelegate{}
 
 // // NewMsgSuperfluidRedelegate creates a message to do superfluid redelegation
-// func NewMsgSuperfluidRedelegate(sender sdk.AccAddress, lockId uint64, newValAddr sdk.ValAddress) *MsgSuperfluidRedelegate {
+// func NewMsgSuperfluidRedelegate(sender sdk.AccAddress, lockID uint64, newValAddr sdk.ValAddress) *MsgSuperfluidRedelegate {
 // 	return &MsgSuperfluidRedelegate{
 // 		Sender:     sender.String(),
-// 		LockId:     lockId,
+// 		LockID:     lockID,
 // 		NewValAddr: newValAddr.String(),
 // 	}
 // }
@@ -100,8 +100,8 @@ func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 // 	if m.Sender == "" {
 // 		return fmt.Errorf("sender should not be an empty address")
 // 	}
-// 	if m.LockId == 0 {
-// 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
+// 	if m.LockID == 0 {
+// 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockID)
 // 	}
 // 	if m.NewValAddr == "" {
 // 		return fmt.Errorf("NewValAddr should not be empty")
@@ -122,7 +122,7 @@ var _ sdk.Msg = &MsgSuperfluidUnbondLock{}
 func NewMsgSuperfluidUnbondLock(sender sdk.AccAddress, lockID uint64) *MsgSuperfluidUnbondLock {
 	return &MsgSuperfluidUnbondLock{
 		Sender: sender.String(),
-		LockId: lockID,
+		LockID: lockID,
 	}
 }
 
@@ -135,7 +135,7 @@ func (m MsgSuperfluidUnbondLock) ValidateBasic() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender should not be an empty address")
 	}
-	if m.LockId == 0 {
+	if m.LockID == 0 {
 		return fmt.Errorf("lockID should be set")
 	}
 	return nil

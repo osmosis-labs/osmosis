@@ -69,13 +69,13 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
+func (suite *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolID uint64) error {
 	upgradeProp := types.NewUpdateFeeTokenProposal(
 		"Test Proposal",
 		"test",
 		types.FeeToken{
 			Denom:  feeToken,
-			PoolID: poolId,
+			PoolID: poolID,
 		},
 	)
 	return suite.app.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.ctx, &upgradeProp)
@@ -99,18 +99,18 @@ func (suite *KeeperTestSuite) PreparePoolWithAssets(asset1, asset2 sdk.Coin) uin
 func (suite *KeeperTestSuite) preparePool(assets []gammtypes.PoolAsset) uint64 {
 	suite.Require().Len(assets, 2)
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1,
+	poolID, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1,
 		balancertypes.PoolParams{
 			SwapFee: sdk.NewDec(0),
 			ExitFee: sdk.NewDec(0),
 		}, assets, "")
 	suite.NoError(err)
 
-	_, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, assets[0].Token.Denom, assets[1].Token.Denom)
+	_, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolID, assets[0].Token.Denom, assets[1].Token.Denom)
 	suite.NoError(err)
 
-	_, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, assets[1].Token.Denom, assets[0].Token.Denom)
+	_, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolID, assets[1].Token.Denom, assets[0].Token.Denom)
 	suite.NoError(err)
 
-	return poolId
+	return poolID
 }

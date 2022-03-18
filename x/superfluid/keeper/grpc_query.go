@@ -77,7 +77,7 @@ func (k Keeper) AllIntermediaryAccounts(goCtx context.Context, req *types.AllInt
 // ConnectedIntermediaryAccount returns intermediary account connected to a superfluid staked lock by id.
 func (k Keeper) ConnectedIntermediaryAccount(goCtx context.Context, req *types.ConnectedIntermediaryAccountRequest) (*types.ConnectedIntermediaryAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	address := k.GetLockIDIntermediaryAccountConnection(ctx, req.LockId)
+	address := k.GetLockIDIntermediaryAccountConnection(ctx, req.LockID)
 	acc := k.GetIntermediaryAccount(ctx, address)
 
 	if len(acc.Denom) == 0 && acc.GaugeId == uint64(0) && len(acc.ValAddr) == 0 {

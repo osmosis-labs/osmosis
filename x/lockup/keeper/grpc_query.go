@@ -98,14 +98,14 @@ func (k Keeper) AccountLockedPastTimeDenom(goCtx context.Context, req *types.Acc
 // LockedByID Returns lock by lock ID.
 func (k Keeper) LockedByID(goCtx context.Context, req *types.LockedRequest) (*types.LockedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	lock, err := k.GetLockByID(ctx, req.LockId)
+	lock, err := k.GetLockByID(ctx, req.LockID)
 	return &types.LockedResponse{Lock: lock}, err
 }
 
 // SyntheticLockupsByLockupID returns synthetic lockups by native lockup id.
 func (k Keeper) SyntheticLockupsByLockupID(goCtx context.Context, req *types.SyntheticLockupsByLockupIDRequest) (*types.SyntheticLockupsByLockupIDResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, req.LockId)
+	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, req.LockID)
 	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: synthLocks}, nil
 }
 

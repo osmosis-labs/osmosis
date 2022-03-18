@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			// we create two additional pools: total three pools, 10 gauges
-			denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, poolIDs := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(1)
@@ -34,10 +34,10 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			// run swap and set spot price
-			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolIds[0])
+			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolIDs[0])
 			suite.Require().NoError(err)
 			poolAssets := pool.GetAllPoolAssets()
-			suite.SwapAndSetSpotPrice(poolIds[0], poolAssets[1], poolAssets[0])
+			suite.SwapAndSetSpotPrice(poolIDs[0], poolAssets[1], poolAssets[0])
 
 			// run epoch actions
 			suite.BeginNewBlock(true)
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 		name             string
 // 		validatorStats   []stakingtypes.BondStatus
 // 		superDelegations []superfluidDelegation
-// 		unbondingLockIds []uint64
+// 		unbondingLockIDs []uint64
 // 		expUnbondingErr  []bool
 // 	}{
 // 		{
@@ -130,8 +130,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 		suite.Run(tc.name, func() {
 // 			suite.SetupTest()
 
-// 			poolId := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
-// 			suite.Require().Equal(poolId, uint64(1))
+// 			poolID := suite.createGammPool([]string{appparams.BaseCoinUnit, "foo"})
+// 			suite.Require().Equal(poolID, uint64(1))
 
 // 			// Generate delegator addresses
 // 			delAddrs := CreateRandomAccounts(1)
@@ -143,14 +143,14 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations)
 // 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
-// 			for index, lockId := range tc.unbondingLockIds {
+// 			for index, lockID := range tc.unbondingLockIDs {
 // 				// get intermediary account
-// 				accAddr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lockId)
+// 				accAddr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lockID)
 // 				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
 // 				valAddr := intermediaryAcc.ValAddr
 
 // 				// unlock native lockup
-// 				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+// 				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 // 				if err == nil {
 // 					err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, *lock, nil)
 // 				}
@@ -161,19 +161,19 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 				}
 // 				suite.Require().NoError(err)
 
-// 				// check lockId and intermediary account connection deletion
-// 				addr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lockId)
+// 				// check lockID and intermediary account connection deletion
+// 				addr := suite.App.SuperfluidKeeper.GetLockIDIntermediaryAccountConnection(suite.Ctx, lockID)
 // 				suite.Require().Equal(addr.String(), "")
 
 // 				// check bonding synthetic lockup deletion
-// 				_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+// 				_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().Error(err)
 
 // 				// check unbonding synthetic lockup creation
 // 				unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
-// 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+// 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().NoError(err)
-// 				suite.Require().Equal(synthLock.UnderlyingLockID, lockId)
+// 				suite.Require().Equal(synthLock.UnderlyingLockID, lockID)
 // 				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 // 				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 // 			}
@@ -187,10 +187,10 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 		validatorStats        []stakingtypes.BondStatus
 		delegatorNumber       int
 		superDelegations      []superfluidDelegation
-		superUnbondingLockIds []uint64
+		superUnbondingLockIDs []uint64
 		slashedValIndexes     []int64
-		expSlashedLockIds     []uint64
-		expUnslashedLockIds   []uint64
+		expSlashedLockIDs     []uint64
+		expUnslashedLockIDs   []uint64
 	}{
 		{
 			"happy path with single validator and multiple superfluid delegations",
@@ -244,12 +244,12 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
-			for _, lockId := range tc.superUnbondingLockIds {
-				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+			for _, lockID := range tc.superUnbondingLockIDs {
+				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 				suite.Require().NoError(err)
 
 				// superfluid undelegate
-				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockId)
+				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockID)
 				suite.Require().NoError(err)
 			}
 
@@ -267,15 +267,15 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			}
 
 			// check slashed lockups
-			for _, lockId := range tc.expSlashedLockIds {
-				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+			for _, lockID := range tc.expSlashedLockIDs {
+				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 				suite.Require().NoError(err)
 				suite.Require().Equal(sdk.NewInt(950000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
 			}
 
 			// check unslashed lockups
-			for _, lockId := range tc.expUnslashedLockIds {
-				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+			for _, lockID := range tc.expUnslashedLockIDs {
+				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 				suite.Require().NoError(err)
 				suite.Require().Equal(sdk.NewInt(1000000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
 			}

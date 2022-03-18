@@ -433,7 +433,7 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 
 			res, err := queryClient.EstimateSwapExactAmountIn(cmd.Context(), &types.QuerySwapExactAmountInRequest{
 				Sender:  args[1],        // TODO: where sender is used?
-				PoolId:  uint64(poolID), // TODO: is this poolId used?
+				PoolId:  uint64(poolID), // TODO: is this poolID used?
 				TokenIn: args[2],
 				Routes:  routes,
 			})
@@ -486,7 +486,7 @@ $ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz8
 
 			res, err := queryClient.EstimateSwapExactAmountOut(cmd.Context(), &types.QuerySwapExactAmountOutRequest{
 				Sender:   args[1],        // TODO: where sender is used?
-				PoolId:   uint64(poolID), // TODO: is this poolId used?
+				PoolId:   uint64(poolID), // TODO: is this poolID used?
 				Routes:   routes,
 				TokenOut: args[2],
 			})
