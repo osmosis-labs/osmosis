@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.NoError(err)
 
 		// Same amount of gauges as lockableDurations must be created for every pool created.
-		gaugeId, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
+		gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
 		suite.NoError(err)
 		gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
-		gaugeId, err = keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
+		gaugeId, err = keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[1])
 		suite.NoError(err)
 		gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
-		gaugeId, err = keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
+		gaugeId, err = keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[2])
 		suite.NoError(err)
 		gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeId)
 		suite.NoError(err)

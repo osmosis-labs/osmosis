@@ -32,7 +32,7 @@ func (k Keeper) deleteSyntheticLockupObject(ctx sdk.Context, lockID uint64, synt
 }
 
 func (k Keeper) GetUnderlyingLock(ctx sdk.Context, synthlock types.SyntheticLock) types.PeriodLock {
-	lock, err := k.GetLockByID(ctx, synthlock.underlyingLockID)
+	lock, err := k.GetLockByID(ctx, synthlock.UnderlyingLockID)
 	if err != nil {
 		panic(err) // Synthetic lock MUST have underlying lock
 	}

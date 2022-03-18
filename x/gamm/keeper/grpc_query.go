@@ -71,7 +71,7 @@ func (k Keeper) Pools(
 		}
 
 		// Use GetPool function because it runs PokeWeights
-		poolI, err = k.GetPool(sdkCtx, poolI.GetId())
+		poolI, err = k.GetPool(sdkCtx, poolI.GetID())
 		if err != nil {
 			return err
 		}

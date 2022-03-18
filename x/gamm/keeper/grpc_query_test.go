@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 		var pool types.PoolI
 		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(poolId, pool.GetId())
+		suite.Require().Equal(poolId, pool.GetID())
 		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
 	}
 }
@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		var pool types.PoolI
 		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(poolId, pool.GetId())
+		suite.Require().Equal(poolId, pool.GetID())
 		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
 	}
 
@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
-		suite.Require().Equal(uint64(1), pool.GetId())
+		suite.Require().Equal(uint64(1), pool.GetID())
 	}
 
 	res, err = queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
-		suite.Require().Equal(uint64(i+1), pool.GetId())
+		suite.Require().Equal(uint64(i+1), pool.GetID())
 	}
 }
 

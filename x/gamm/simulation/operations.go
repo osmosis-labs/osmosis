@@ -239,10 +239,10 @@ func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, to
 					continue
 				}
 				res = append(res, types.SwapAmountInRoute{
-					PoolId:        pool.GetId(),
+					PoolId:        pool.GetID(),
 					TokenOutDenom: asset.Token.Denom,
 				})
-				sp, err := k.CalculateSpotPriceWithSwapFee(ctx, pool.GetId(), tokenIn.Denom, asset.Token.Denom)
+				sp, err := k.CalculateSpotPriceWithSwapFee(ctx, pool.GetID(), tokenIn.Denom, asset.Token.Denom)
 				if err != nil {
 					panic(err)
 				}

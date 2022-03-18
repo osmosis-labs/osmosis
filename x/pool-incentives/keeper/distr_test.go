@@ -75,13 +75,13 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		suite.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
 	}
 
-	gauge1Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	gauge2Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[1])
 	suite.NoError(err)
 
-	gauge3Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 3 records
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() uint64 {
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gaugeId, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
+	gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
 	err = keeper.ReplaceDistrRecords(suite.ctx, types.DistrRecord{
@@ -294,7 +294,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gaugeId, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
+	gaugeId, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
 	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{

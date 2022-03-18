@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 					Sub(sdk.Coins{
 						sdk.NewCoin("bar", sdk.NewInt(10000)),
 						sdk.NewCoin("foo", sdk.NewInt(10000)),
-					}).Add(sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)).String(),
+					}).Add(sdk.NewCoin(types.GetPoolShareDenom(pool.GetID()), types.InitPoolSharesSupply)).String(),
 			)
 
 			liquidity := suite.app.GAMMKeeper.GetTotalLiquidity(suite.ctx)

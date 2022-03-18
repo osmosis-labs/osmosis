@@ -51,7 +51,7 @@ func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 			if !assetCoins.IsEqual(accCoins) {
 				return sdk.FormatInvariant(types.ModuleName, poolBalanceInvariantName,
 					fmt.Sprintf("\tgamm pool id %d\n\tasset coins: %s\n\taccount coins: %s\n",
-						pool.GetId(), assetCoins, accCoins)), true
+						pool.GetID(), assetCoins, accCoins)), true
 			}
 		}
 
@@ -78,7 +78,7 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 			if !totalWeight.Equal(pool.GetTotalWeight()) {
 				return sdk.FormatInvariant(types.ModuleName, "pool-total-weight",
 					fmt.Sprintf("\tgamm pool id %d\n\tcalculated weight sum %s\n\tpool total weight: %s\n",
-						pool.GetId(), totalWeight, pool.GetTotalWeight())), true
+						pool.GetID(), totalWeight, pool.GetTotalWeight())), true
 			}
 		}
 
@@ -131,19 +131,19 @@ func PoolProductConstantInvariant(keeper Keeper) sdk.Invariant {
 		}
 
 		for _, pool := range newpools {
-			oldpool, ok := pools[pool.GetId()]
+			oldpool, ok := pools[pool.GetID()]
 			if !ok {
-				pools[pool.GetId()] = pool
+				pools[pool.GetID()] = pool
 				continue
 			}
 
 			change := constantChange(oldpool, pool)
 			if !(sdk.OneDec().Sub(errorMargin).LT(change) && change.LT(sdk.OneDec().Add(errorMargin))) {
 				return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
-					fmt.Sprintf("\tgamm pool id %d product constant changed\n\tdelta: %s\n", pool.GetId(), change.String())), true
+					fmt.Sprintf("\tgamm pool id %d product constant changed\n\tdelta: %s\n", pool.GetID(), change.String())), true
 			}
 
-			pools[pool.GetId()] = pool
+			pools[pool.GetID()] = pool
 		}
 
 		return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",

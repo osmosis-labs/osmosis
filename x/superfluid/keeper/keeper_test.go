@@ -149,7 +149,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 		})
 
 		denoms = append(denoms, denom)
-		poolIds = append(poolIds, pool.GetId())
+		poolIds = append(poolIds, pool.GetID())
 	}
 
 	return denoms, poolIds

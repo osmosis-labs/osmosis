@@ -93,7 +93,7 @@ func underlyingCoinsForSelectPools(
 			continue
 		}
 		pool := pools[coin.Denom]
-		coinPoolID := pool.GetId()
+		coinPoolID := pool.GetID()
 
 		isSelectPoolID := false
 		// check if poolID in select pool IDs

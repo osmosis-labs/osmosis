@@ -50,7 +50,7 @@ func TestGammInitGenesis(t *testing.T) {
 	require.Equal(t, app.GAMMKeeper.GetNextPoolNumberAndIncrement(ctx), uint64(2))
 	poolStored, err := app.GAMMKeeper.GetPool(ctx, 1)
 	require.NoError(t, err)
-	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
+	require.Equal(t, balancerPool.GetID(), poolStored.GetID())
 	require.Equal(t, balancerPool.GetAddress(), poolStored.GetAddress())
 	require.Equal(t, balancerPool.GetPoolSwapFee(), poolStored.GetPoolSwapFee())
 	require.Equal(t, balancerPool.GetPoolExitFee(), poolStored.GetPoolExitFee())

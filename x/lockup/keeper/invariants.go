@@ -18,14 +18,14 @@ func SyntheticLockupInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		synthlocks := keeper.GetAllSyntheticLockups(ctx)
 		for _, synthlock := range synthlocks {
-			baselock, err := keeper.GetLockByID(ctx, synthlock.underlyingLockID)
+			baselock, err := keeper.GetLockByID(ctx, synthlock.UnderlyingLockID)
 			if err != nil {
 				panic(err)
 			}
-			if baselock.ID != synthlock.underlyingLockID {
+			if baselock.ID != synthlock.UnderlyingLockID {
 				return sdk.FormatInvariant(types.ModuleName, "synthetic-lockup-invariant",
 					fmt.Sprintf("\tSynthetic lock denom %s\n\tUnderlying lock ID: %d\n\tActual underying lock ID: %d\n",
-						synthlock.SynthDenom, synthlock.underlyingLockID, baselock.ID,
+						synthlock.SynthDenom, synthlock.UnderlyingLockID, baselock.ID,
 					)), true
 			}
 		}

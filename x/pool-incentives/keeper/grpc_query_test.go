@@ -87,13 +87,13 @@ func (suite *KeeperTestSuite) TestDistrInfo2() {
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gauge1Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	gauge2Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[1])
 	suite.NoError(err)
 
-	gauge3Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 3 records
@@ -167,16 +167,16 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	lockableDurations := keeper.GetLockableDurations(suite.ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gauge1Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	gauge2Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[1])
 	suite.NoError(err)
 
-	gauge3Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId, lockableDurations[2])
 	suite.NoError(err)
 
-	gauge4Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId2, lockableDurations[2])
+	gauge4Id, err := keeper.GetPoolGaugeID(suite.ctx, poolId2, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 4 records
