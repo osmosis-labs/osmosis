@@ -332,7 +332,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o600)
 			return err
 		},
 	}

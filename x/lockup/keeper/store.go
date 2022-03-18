@@ -25,9 +25,9 @@ func (k Keeper) GetLastLockID(ctx sdk.Context) uint64 {
 }
 
 // SetLastLockID save ID used by last lock.
-func (k Keeper) SetLastLockID(ctx sdk.Context, ID uint64) {
+func (k Keeper) SetLastLockID(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.KeyLastLockID, sdk.Uint64ToBigEndian(ID))
+	store.Set(types.KeyLastLockID, sdk.Uint64ToBigEndian(id))
 }
 
 // lockStoreKey returns action store key from ID.

@@ -431,7 +431,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 }
 
 func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+	poolID, err := fs.GetUint64(FlagPoolId)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -462,7 +462,7 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	msg := &types.MsgJoinPool{
 		Sender:         clientCtx.GetFromAddress().String(),
-		PoolId:         poolId,
+		PoolId:         poolID,
 		ShareOutAmount: shareAmountOut,
 		TokenInMaxs:    maxAmountsIn,
 	}
@@ -471,7 +471,7 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 }
 
 func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+	poolID, err := fs.GetUint64(FlagPoolId)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -502,7 +502,7 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	msg := &types.MsgExitPool{
 		Sender:        clientCtx.GetFromAddress().String(),
-		PoolId:        poolId,
+		PoolId:        poolID,
 		ShareInAmount: shareAmountIn,
 		TokenOutMins:  minAmountsOut,
 	}

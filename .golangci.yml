@@ -14,7 +14,7 @@ linters:
     - bidichk
     - bodyclose
     - contextcheck
-    - cyclop
+#    - cyclop
     - deadcode
     - depguard
     - dogsled
@@ -31,7 +31,7 @@ linters:
     - funlen
     - gci
 #    - gochecknoglobals <- disabled because we want some globals
-    - gochecknoinits
+#    - gochecknoinits <- disabled because we want to use init()
     - gocognit
     - goconst
     - gocritic

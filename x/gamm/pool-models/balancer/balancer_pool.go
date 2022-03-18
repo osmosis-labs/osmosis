@@ -99,17 +99,17 @@ func (pa *Pool) SubTotalShares(amt sdk.Int) {
 // If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
 // TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic().
-func (pa *Pool) setInitialPoolAssets(PoolAssets []types.PoolAsset) error {
+func (pa *Pool) setInitialPoolAssets(poolassets []types.PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
 		exists[asset.Token.Denom] = true
 	}
 
 	newTotalWeight := pa.TotalWeight
-	scaledPoolAssets := make([]types.PoolAsset, 0, len(PoolAssets))
+	scaledPoolAssets := make([]types.PoolAsset, 0, len(poolassets))
 
 	// TODO: Refactor this into PoolAsset.validate()
-	for _, asset := range PoolAssets {
+	for _, asset := range poolassets {
 		if asset.Token.Amount.LTE(sdk.ZeroInt()) {
 			return fmt.Errorf("can't add the zero or negative balance of token")
 		}
