@@ -43,7 +43,6 @@ linters:
     - gofumpt
     - goheader
     - goimports
-    - golint
     - gomnd
     - gomoddirectives
     - gomodguard
@@ -54,11 +53,9 @@ linters:
     - ifshort
     - importas
     - ineffassign
-    - interfacer
     - ireturn
     - lll
     - makezero
-    - maligned
     - misspell
     - nakedret
     - nestif
@@ -73,7 +70,6 @@ linters:
     - promlinter
     - revive
     - rowserrcheck
-    - scopelint
     - sqlclosecheck
     - staticcheck
     - structcheck
@@ -88,10 +84,10 @@ linters:
     - unparam
     - unused
     - varcheck
-    - varnamelen
+#    - varnamelen
     - wastedassign
     - whitespace
-    - wrapcheck
+#    - wrapcheck 
     - wsl
 
 issues:

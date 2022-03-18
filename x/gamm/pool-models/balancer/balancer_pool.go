@@ -18,7 +18,7 @@ import (
 // (This is handled in ValidateBasic)
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
-// * poolID doesn't already exist
+// * poolID doesn't already exist.
 func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []types.PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
 	poolAddr := types.NewPoolAddress(poolId)
 
@@ -99,7 +99,7 @@ func (pa *Pool) SubTotalShares(amt sdk.Int) {
 // It is only designed to be called at the pool's creation.
 // If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
-// TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
+// TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic().
 func (pa *Pool) setInitialPoolAssets(PoolAssets []types.PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
@@ -142,7 +142,7 @@ func (pa *Pool) setInitialPoolAssets(PoolAssets []types.PoolAsset) error {
 	return nil
 }
 
-// setInitialPoolParams
+// setInitialPoolParams.
 func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []types.PoolAsset, curBlockTime time.Time) error {
 	pa.PoolParams = params
 	if params.SmoothWeightChangeParams != nil {
@@ -385,7 +385,6 @@ func (pa Pool) NumAssets() int {
 }
 
 func (pa Pool) IsActive(curBlockTime time.Time) bool {
-
 	// Add frozen pool checking, etc...
 
 	return true
@@ -537,7 +536,7 @@ func addPoolAssetWeights(base []types.PoolAsset, other []types.PoolAsset) []type
 	return weightSum
 }
 
-// assumes 0 < d < 1
+// assumes 0 < d < 1.
 func poolAssetsMulDec(base []types.PoolAsset, d sdk.Dec) []types.PoolAsset {
 	newWeights := make([]types.PoolAsset, len(base))
 	for i, asset := range base {

@@ -13,7 +13,7 @@ import (
 
 const poolBalanceInvariantName = "pool-account-balance-equals-expected"
 
-// RegisterInvariants registers all governance invariants
+// RegisterInvariants registers all governance invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKeeper) {
 	ir.RegisterRoute(types.ModuleName, poolBalanceInvariantName, PoolAccountInvariant(keeper, bk))
 	ir.RegisterRoute(types.ModuleName, "pool-total-weight", PoolTotalWeightInvariant(keeper, bk))
@@ -21,7 +21,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKe
 	// ir.RegisterRoute(types.ModuleName, "spot-price", SpotPriceInvariant(keeper, bk))
 }
 
-// AllInvariants runs all invariants of the gamm module
+// AllInvariants runs all invariants of the gamm module.
 func AllInvariants(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broke := PoolAccountInvariant(keeper, bk)(ctx)
@@ -37,7 +37,7 @@ func AllInvariants(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 }
 
 // PoolAccountInvariant checks that the pool account balance reflects the sum of
-// pool assets
+// pool assets.
 func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		pools, err := keeper.GetPools(ctx)
@@ -62,7 +62,7 @@ func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 }
 
 // PoolTotalWeightInvariant checks that the pool total weight reflect the sum of
-// pool weights
+// pool weights.
 func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		pools, err := keeper.GetPools(ctx)
@@ -96,7 +96,7 @@ func genericPow(base, exp sdk.Dec) sdk.Dec {
 }
 
 // constantChange returns the multiplicative factor difference in the pool constant, between two different pools.
-// For a Balancer pool, the pool constant is prod_{t in tokens} t.bal^{t.weight}
+// For a Balancer pool, the pool constant is prod_{t in tokens} t.bal^{t.weight}.
 func constantChange(p1, p2 types.PoolI) sdk.Dec {
 	product := sdk.OneDec()
 	totalWeight := p1.GetTotalWeight()
@@ -115,9 +115,7 @@ func constantChange(p1, p2 types.PoolI) sdk.Dec {
 	return product
 }
 
-var (
-	errorMargin, _ = sdk.NewDecFromStr("0.0001") // 0.01%
-)
+var errorMargin, _ = sdk.NewDecFromStr("0.0001") // 0.01%
 
 // PoolProductContantInvariant chekcs that the pool constant invariant V where
 // V = product([asset_balance_n^asset_weight_n]) holds.

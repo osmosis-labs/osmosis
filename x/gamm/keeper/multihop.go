@@ -8,7 +8,7 @@ import (
 
 // MultihopSwapExactAmountIn defines the input denom and input amount for the first pool,
 // the output of the first pool is chained as the input for the next routed pool
-// transaction succeeds when final amount out is greater than tokenOutMinAmount defined
+// transaction succeeds when final amount out is greater than tokenOutMinAmount defined.
 func (k Keeper) MultihopSwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -68,14 +68,13 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	return
 }
 
-// TODO: Document this function
+// TODO: Document this function.
 func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) ([]sdk.Int, error) {
 	insExpected := make([]sdk.Int, len(routes))
 	for i := len(routes) - 1; i >= 0; i-- {
 		route := routes[i]
 
-		pool, inAsset, outAsset, err :=
-			k.getPoolAndInOutAssets(ctx, route.PoolId, route.TokenInDenom, tokenOut.Denom)
+		pool, inAsset, outAsset, err := k.getPoolAndInOutAssets(ctx, route.PoolId, route.TokenInDenom, tokenOut.Denom)
 		if err != nil {
 			return nil, err
 		}

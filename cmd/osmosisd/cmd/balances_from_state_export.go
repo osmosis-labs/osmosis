@@ -79,12 +79,12 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 }
 
 // pools is a map from LP share string -> pool.
-// TODO: Make a separate type for this
+// TODO: Make a separate type for this.
 func underlyingCoinsForSelectPools(
 	originCoins sdk.Coins,
 	pools map[string]gammtypes.PoolI,
-	selectPoolIDs []uint64) map[uint64]sdk.Coins {
-
+	selectPoolIDs []uint64,
+) map[uint64]sdk.Coins {
 	balancesByPool := make(map[uint64]sdk.Coins)
 
 	for _, coin := range originCoins {
@@ -140,7 +140,7 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 	return genState, nil
 }
 
-// ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
+// ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json.
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-derive-balances [input-genesis-file] [output-snapshot-json]",
@@ -332,7 +332,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

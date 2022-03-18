@@ -1,7 +1,7 @@
 package app
 
 import (
-	// Utilities from the Cosmos-SDK other than Cosmos modules
+	// Utilities from the Cosmos-SDK other than Cosmos modules.
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,11 +17,11 @@ import (
 	// Authz: Authorization for accounts to perform actions on behalf of other accounts.
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 
-	// Bank: allows users to transfer tokens
+	// Bank: allows users to transfer tokens.
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	// Capability: allows developers to atomically define what a module can and cannot do
+	// Capability: allows developers to atomically define what a module can and cannot do.
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
@@ -38,17 +38,17 @@ import (
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 
-	// Governance: Allows stakeholders to make decisions concering a Cosmos-SDK blockchain's economy and development
+	// Governance: Allows stakeholders to make decisions concering a Cosmos-SDK blockchain's economy and development.
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
-	// Params: Parameters that are always available
+	// Params: Parameters that are always available.
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	// Slashing:
+	// Slashing:.
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
@@ -61,64 +61,64 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	// IBC Transfer: Defines the "transfer" IBC port
+	// IBC Transfer: Defines the "transfer" IBC port.
 	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v2/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 
-	// IBC: Inter-blockchain communication
+	// IBC: Inter-blockchain communication.
 	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
 
-	// Upgrades from earlier versions of Osmosis
+	// Upgrades from earlier versions of Osmosis.
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 
-	// Modules that live in the Osmosis repository and are specific to Osmosis
+	// Modules that live in the Osmosis repository and are specific to Osmosis.
 	claimkeeper "github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
 	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 
-	// Epochs: gives Osmosis a sense of "clock time" so that events can be based on days instead of "number of blocks"
+	// Epochs: gives Osmosis a sense of "clock time" so that events can be based on days instead of "number of blocks".
 	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 
-	// Generalized Automated Market Maker
+	// Generalized Automated Market Maker.
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 
-	// Incentives: Allows Osmosis and foriegn chain communities to incentivize users to provide liquidity
+	// Incentives: Allows Osmosis and foriegn chain communities to incentivize users to provide liquidity.
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 
-	// Lockup: allows tokens to be locked (made non-transferrable)
+	// Lockup: allows tokens to be locked (made non-transferrable).
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
-	// Mint: Our modified version of github.com/cosmos/cosmos-sdk/x/mint
+	// Mint: Our modified version of github.com/cosmos/cosmos-sdk/x/mint.
 	mintkeeper "github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 
-	// Pool incentives:
+	// Pool incentives:.
 	poolincentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 
-	// Superfluid: Allows users to stake gamm (bonded liquidity)
+	// Superfluid: Allows users to stake gamm (bonded liquidity).
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
-	// Txfees: Allows Osmosis to charge transaction fees without harming IBC user experience
+	// Txfees: Allows Osmosis to charge transaction fees without harming IBC user experience.
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
-	// Wasm: Allows Osmosis to interact with web assembly smart contracts
+	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
 	"github.com/CosmWasm/wasmd/x/wasm"
 
-	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses
+	// Modules related to bech32-ibc, which allows new ibc funcationality based on the bech32 prefix of addresses.
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
@@ -205,7 +205,7 @@ func (app *OsmosisApp) InitSpecialKeepers(
 	app.UpgradeKeeper = &upgradeKeeper
 }
 
-// Note: I put x/wasm here as I need to write it up to these other ones
+// Note: I put x/wasm here as I need to write it up to these other ones.
 func (app *OsmosisApp) InitNormalKeepers(
 	wasmDir string,
 	wasmConfig wasm.Config,
@@ -479,7 +479,7 @@ func (app *OsmosisApp) SetupHooks() {
 	)
 }
 
-// initParamsKeeper init params keeper and its subspaces
+// initParamsKeeper init params keeper and its subspaces.
 func (app *OsmosisApp) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 

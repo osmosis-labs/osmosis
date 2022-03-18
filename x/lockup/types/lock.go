@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// NewPeriodLock returns a new instance of period lock
+// NewPeriodLock returns a new instance of period lock.
 func NewPeriodLock(ID uint64, owner sdk.AccAddress, duration time.Duration, endTime time.Time, coins sdk.Coins) PeriodLock {
 	return PeriodLock{
 		ID:       ID,
@@ -19,17 +19,17 @@ func NewPeriodLock(ID uint64, owner sdk.AccAddress, duration time.Duration, endT
 	}
 }
 
-// IsUnlocking returns lock started unlocking already
+// IsUnlocking returns lock started unlocking already.
 func (p PeriodLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
 }
 
-// IsUnlocking returns lock started unlocking already
+// IsUnlocking returns lock started unlocking already.
 func (p SyntheticLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
 }
 
-// OwnerAddress returns locks owner address
+// OwnerAddress returns locks owner address.
 func (p PeriodLock) OwnerAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(p.Owner)
 	if err != nil {
@@ -58,7 +58,7 @@ func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 	return sum
 }
 
-// quick fix for getting native denom from synthetic denom
+// quick fix for getting native denom from synthetic denom.
 func NativeDenom(denom string) string {
 	if strings.Contains(denom, "/superbonding") {
 		return strings.Split(denom, "/superbonding")[0]

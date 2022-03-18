@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// get cmd to convert any bech32 address to an osmo prefix
+// get cmd to convert any bech32 address to an osmo prefix.
 func StateExportToTestnetGenesis() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnetify [state_export_path] -p [testnet_params]",

@@ -24,5 +24,4 @@ func AddGenesisWasmMsgCmd(defaultNodeHome string) *cobra.Command {
 		wasmcli.GenesisListCodesCmd(defaultNodeHome, genesisIO),
 	)
 	return txCmd
-
 }

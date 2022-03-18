@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
-// RandomizedGenState generates a random GenesisState for mint
+// RandomizedGenState generates a random GenesisState for mint.
 func RandomizedGenState(simState *module.SimulationState) {
 	epochs := []types.EpochInfo{
 		{

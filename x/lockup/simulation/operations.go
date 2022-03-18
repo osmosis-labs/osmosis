@@ -17,7 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-// Simulation operation weights constants
+// Simulation operation weights constants.
 const (
 	DefaultWeightMsgLockTokens        int = 10
 	DefaultWeightMsgBeginUnlockingAll int = 10
@@ -27,7 +27,7 @@ const (
 	OpWeightMsgBeginUnlocking             = "op_weight_msg_begin_unlocking"
 )
 
-// WeightedOperations returns all the operations from the module with their respective weights
+// WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
 	bk stakingTypes.BankKeeper, k keeper.Keeper,
@@ -89,7 +89,7 @@ func Max(x, y int) int {
 	return y
 }
 
-// SimulateMsgLockTokens generates a MsgLockTokens with random values
+// SimulateMsgLockTokens generates a MsgLockTokens with random values.
 func SimulateMsgLockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -135,7 +135,6 @@ func SimulateMsgBeginUnlockingAll(ak stakingTypes.AccountKeeper, bk stakingTypes
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
-
 	}
 }
 
@@ -164,7 +163,6 @@ func SimulateMsgBeginUnlocking(ak stakingTypes.AccountKeeper, bk stakingTypes.Ba
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
-
 	}
 }
 

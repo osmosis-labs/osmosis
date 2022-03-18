@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-// RandomizedGenState generates a random GenesisState for staking
+// RandomizedGenState generates a random GenesisState for staking.
 func RandomizedGenState(simState *module.SimulationState) {
 	superfluidGenesis := &types.GenesisState{
 		Params: types.Params{

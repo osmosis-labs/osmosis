@@ -15,7 +15,6 @@ type PoolI interface {
 
 	GetAddress() sdk.AccAddress
 	String() string
-
 	GetId() uint64
 	GetPoolSwapFee() sdk.Dec
 	GetPoolExitFee() sdk.Dec

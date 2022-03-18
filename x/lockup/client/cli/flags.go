@@ -4,14 +4,14 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-// flags for lockup module tx commands
+// flags for lockup module tx commands.
 const (
 	FlagDuration    = "duration"
 	FlagMinDuration = "min-duration"
 	FlagAmount      = "amount"
 )
 
-// FlagSetLockTokens returns flags for LockTokens msg builder
+// FlagSetLockTokens returns flags for LockTokens msg builder.
 func FlagSetLockTokens() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 

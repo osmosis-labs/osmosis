@@ -5,7 +5,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// NewSuperfluidAsset returns a new instance of SuperfluidAsset
+// NewSuperfluidAsset returns a new instance of SuperfluidAsset.
 func NewSuperfluidAsset(assetType SuperfluidAssetType, denom string) SuperfluidAsset {
 	return SuperfluidAsset{
 		AssetType: assetType,

@@ -26,8 +26,10 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
-var _ types.MsgServer = msgServer{}
-var _ balancer.MsgServer = msgServer{}
+var (
+	_ types.MsgServer    = msgServer{}
+	_ balancer.MsgServer = msgServer{}
+)
 
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

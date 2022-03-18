@@ -8,7 +8,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 )
 
-// Parameter store keys
+// Parameter store keys.
 var (
 	KeyPoolCreationFee = []byte("PoolCreationFee")
 )
@@ -24,24 +24,23 @@ func NewParams(poolCreationFee sdk.Coins) Params {
 	}
 }
 
-// default gamm module parameters
+// default gamm module parameters.
 func DefaultParams() Params {
 	return Params{
 		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
 	}
 }
 
-// validate params
+// validate params.
 func (p Params) Validate() error {
 	if err := validatePoolCreationFee(p.PoolCreationFee); err != nil {
 		return err
 	}
 
 	return nil
-
 }
 
-// Implements params.ParamSet
+// Implements params.ParamSet.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPoolCreationFee, &p.PoolCreationFee, validatePoolCreationFee),

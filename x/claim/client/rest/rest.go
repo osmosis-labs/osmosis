@@ -10,6 +10,6 @@ const (
 	MethodGet = "GET"
 )
 
-// RegisterRoutes registers claim-related REST handlers to a router
+// RegisterRoutes registers claim-related REST handlers to a router.
 func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 }

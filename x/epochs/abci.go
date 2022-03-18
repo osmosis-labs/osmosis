@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
-// BeginBlocker of epochs module
+// BeginBlocker of epochs module.
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {

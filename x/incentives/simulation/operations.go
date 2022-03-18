@@ -18,7 +18,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-// Simulation operation weights constants
+// Simulation operation weights constants.
 const (
 	DefaultWeightMsgCreateGauge int = 10
 	DefaultWeightMsgAddToGauge  int = 10
@@ -26,7 +26,7 @@ const (
 	OpWeightMsgAddToGauge           = "op_weight_msg_add_to_gauge"
 )
 
-// WeightedOperations returns all the operations from the module with their respective weights
+// WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
 	bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
@@ -107,7 +107,7 @@ func Max(x, y int) int {
 	return y
 }
 
-// SimulateMsgCreateGauge generates a MsgCreateGauge with random values
+// SimulateMsgCreateGauge generates a MsgCreateGauge with random values.
 func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

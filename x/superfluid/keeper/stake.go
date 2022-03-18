@@ -60,7 +60,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
 
 		if refreshedAmount.GT(currentAmount) {
-			//need to mint and delegate
+
 			adjustment := refreshedAmount.Sub(currentAmount)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
@@ -157,7 +157,7 @@ func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (sta
 	return validator, nil
 }
 
-// TODO: Merge a lot of logic with IncreaseSuperfluidDelegation
+// TODO: Merge a lot of logic with IncreaseSuperfluidDelegation.
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -270,7 +270,7 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 	return len(synthLocks) > 0
 }
 
-// mint osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account
+// mint osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account.
 func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, intermediaryAccount types.SuperfluidIntermediaryAccount) error {
 	validator, err := k.validateValAddrForDelegate(ctx, intermediaryAccount.ValAddr)
 	if err != nil {

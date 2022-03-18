@@ -13,7 +13,7 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-// NewMsgServerImpl returns an instance of MsgServer
+// NewMsgServerImpl returns an instance of MsgServer.
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,

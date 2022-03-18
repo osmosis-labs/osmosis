@@ -85,7 +85,6 @@ func GenAndDeliverTx(
 		[]uint64{account.GetSequence()},
 		simAccount.PrivKey,
 	)
-
 	if err != nil {
 		return simtypes.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
@@ -96,5 +95,4 @@ func GenAndDeliverTx(
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
-
 }

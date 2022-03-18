@@ -13,7 +13,7 @@ import (
 // 3) We record all denoms seen across all swaps, and see if any duplicates. (TODO)
 // 4) Contains both JoinPool and ExitPool messages in one tx.
 //    - Has some false positives, but they seem relatively contrived.
-// TODO: Move the first component to a future router module
+// TODO: Move the first component to a future router module.
 func IsArbTxLoose(tx sdk.Tx) bool {
 	msgs := tx.GetMsgs()
 

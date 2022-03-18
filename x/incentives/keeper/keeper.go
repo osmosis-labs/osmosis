@@ -36,7 +36,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Sub
 	}
 }
 
-// Set the gamm hooks
+// Set the gamm hooks.
 func (k *Keeper) SetHooks(ih types.IncentiveHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set incentive hooks twice")

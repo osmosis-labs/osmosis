@@ -5,11 +5,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	flagTestnetParams = "empty"
-)
+var flagTestnetParams = "empty"
 
-// TODO: Add params for min num validators for consensus
+// TODO: Add params for min num validators for consensus.
 type TestnetParams struct {
 	ValidatorConsensusPubkeys []string
 	ValidatorOperatorPubkeys  []string

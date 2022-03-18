@@ -24,7 +24,6 @@ func migrateBranchValue(oldValueBz []byte) *store.Node {
 	var oldValue Children
 	fmt.Println(string(oldValueBz))
 	err := json.Unmarshal(oldValueBz, &oldValue)
-
 	if err != nil {
 		panic(err)
 	}
