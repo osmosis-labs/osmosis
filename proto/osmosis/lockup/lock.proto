@@ -73,7 +73,7 @@ message QueryCondition {
 // allowing partial unlocks of synthetic lockups.
 message SyntheticLock {
   // underlying native lockup id for this synthetic lockup
-  uint64 underlyingLockID = 1;
+  uint64 UnderlyingLockID = 1;
   string synthDenom = 2;
   // used for unbonding synthetic lockups, for active synthetic lockups, this
   // value is set to uninitialized value

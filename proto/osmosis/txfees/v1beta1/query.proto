@@ -30,7 +30,7 @@ service Query {
 message QueryFeeTokensRequest {}
 message QueryFeeTokensResponse {
 
-  repeated FeeToken fee_tokens = 1 [
+  repeated FeeToken feeTokens = 1 [
     (gogoproto.moretags) = "yaml:\"fee_tokens\"",
     (gogoproto.nullable) = false
   ];
