@@ -17,19 +17,19 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// ModuleToDistributeCoins returns coins that is going to be distributed
+// ModuleToDistributeCoins returns coins that is going to be distributed.
 func (k Keeper) ModuleToDistributeCoins(goCtx context.Context, req *types.ModuleToDistributeCoinsRequest) (*types.ModuleToDistributeCoinsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.ModuleToDistributeCoinsResponse{Coins: k.GetModuleToDistributeCoins(ctx)}, nil
 }
 
-// ModuleDistributedCoins returns coins that are distributed by module so far
+// ModuleDistributedCoins returns coins that are distributed by module so far.
 func (k Keeper) ModuleDistributedCoins(goCtx context.Context, req *types.ModuleDistributedCoinsRequest) (*types.ModuleDistributedCoinsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.ModuleDistributedCoinsResponse{Coins: k.GetModuleDistributedCoins(ctx)}, nil
 }
 
-// GaugeByID returns Gauge by id
+// GaugeByID returns Gauge by id.
 func (k Keeper) GaugeByID(goCtx context.Context, req *types.GaugeByIDRequest) (*types.GaugeByIDResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauge, err := k.GetGaugeByID(ctx, req.Id)
@@ -39,7 +39,7 @@ func (k Keeper) GaugeByID(goCtx context.Context, req *types.GaugeByIDRequest) (*
 	return &types.GaugeByIDResponse{Gauge: gauge}, nil
 }
 
-// Gauges returns gauges both upcoming and active
+// Gauges returns gauges both upcoming and active.
 func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.GaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauges := []types.Gauge{}
@@ -55,7 +55,6 @@ func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -63,7 +62,7 @@ func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.
 	return &types.GaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// ActiveGauges returns active gauges
+// ActiveGauges returns active gauges.
 func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesRequest) (*types.ActiveGaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauges := []types.Gauge{}
@@ -79,7 +78,6 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -87,7 +85,7 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 	return &types.ActiveGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// ActiveGaugesPerDenom returns active gauges for the specified denom
+// ActiveGaugesPerDenom returns active gauges for the specified denom.
 func (k Keeper) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGaugesPerDenomRequest) (*types.ActiveGaugesPerDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauges := []types.Gauge{}
@@ -103,7 +101,6 @@ func (k Keeper) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGau
 		}
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -111,7 +108,7 @@ func (k Keeper) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGau
 	return &types.ActiveGaugesPerDenomResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// UpcomingGauges returns scheduled gauges
+// UpcomingGauges returns scheduled gauges.
 func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesRequest) (*types.UpcomingGaugesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauges := []types.Gauge{}
@@ -127,7 +124,6 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -135,7 +131,7 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 	return &types.UpcomingGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// RewardsEst returns rewards estimation at a future specific time
+// RewardsEst returns rewards estimation at a future specific time.
 func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	diff := req.EndEpoch - k.GetEpochInfo(ctx).CurrentEpoch
@@ -163,7 +159,7 @@ func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDur
 	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
 }
 
-// getGaugeFromIDJsonBytes returns gauges from gauge id json bytes
+// getGaugeFromIDJsonBytes returns gauges from gauge id json bytes.
 func (k Keeper) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
 	gaugeIDs := []uint64{}
