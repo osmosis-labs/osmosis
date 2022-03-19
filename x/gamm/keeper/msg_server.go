@@ -65,7 +65,7 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 		return nil, err
 	}
 
-	err = server.keeper.JoinPool(ctx, sender, msg.PoolId, msg.ShareOutAmount, msg.TokenInMaxs)
+	err = server.keeper.JoinPoolNoSwap(ctx, sender, msg.PoolId, msg.ShareOutAmount, msg.TokenInMaxs)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,8 @@ func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	shareOutAmount, err := server.keeper.JoinSwapExternAmountIn(ctx, sender, msg.PoolId, msg.TokenIn, msg.ShareOutMinAmount)
+	tokensIn := sdk.Coins{msg.TokenIn}
+	shareOutAmount, err := server.keeper.JoinSwapExactAmountIn(ctx, sender, msg.PoolId, tokensIn, msg.ShareOutMinAmount)
 	if err != nil {
 		return nil, err
 	}

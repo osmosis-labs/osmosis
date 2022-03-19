@@ -290,6 +290,18 @@ func (pa *Pool) UpdatePoolAssetBalances(coins sdk.Coins) error {
 	return nil
 }
 
+func (pa *Pool) addToPoolAssetBalances(coins sdk.Coins) error {
+	for _, coin := range coins {
+		i, poolAsset, err := pa.getPoolAssetAndIndex(coin.Denom)
+		if err != nil {
+			return err
+		}
+		poolAsset.Token.Amount = poolAsset.Token.Amount.Add(coin.Amount)
+		pa.PoolAssets[i] = poolAsset
+	}
+	return nil
+}
+
 func (pa Pool) GetPoolAssets(denoms ...string) ([]types.PoolAsset, error) {
 	result := make([]types.PoolAsset, 0, len(denoms))
 

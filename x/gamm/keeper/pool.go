@@ -42,6 +42,18 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	return pool, nil
 }
 
+func (k Keeper) GetPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	pool, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return &balancer.Pool{}, err
+	}
+
+	if !pool.IsActive(ctx.BlockTime()) {
+		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "join swap on inactive pool")
+	}
+	return pool, nil
+}
+
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, prefix)
