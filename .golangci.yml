@@ -14,7 +14,7 @@ linters:
     - bidichk
     - bodyclose
     - contextcheck
-    #o    - cyclop
+    #    - cyclop
     - deadcode
     - depguard
     #    - dogsled <- disabled because we would like to participate in the iditerod
