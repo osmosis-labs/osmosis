@@ -14,7 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	osmo_simulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
+	osmosimulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
 )
 
 // Simulation operation weights constants.
@@ -141,7 +141,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
@@ -173,7 +173,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName,
 		)
 	}

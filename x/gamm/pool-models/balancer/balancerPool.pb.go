@@ -200,34 +200,34 @@ type Pool struct {
 	TotalWeight github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=totalWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"totalWeight" yaml:"total_weight"`
 }
 
-func (m *Pool) Reset()      { *m = Pool{} }
+func (pa *Pool) Reset()     { *pa = Pool{} }
 func (*Pool) ProtoMessage() {}
 func (*Pool) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7e991f749f68c2a4, []int{2}
 }
-func (m *Pool) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+func (pa *Pool) XXX_Unmarshal(b []byte) error {
+	return pa.Unmarshal(b)
 }
-func (m *Pool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (pa *Pool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Pool.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Pool.Marshal(b, pa, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
+		n, err := pa.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (m *Pool) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Pool.Merge(m, src)
+func (pa *Pool) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Pool.Merge(pa, src)
 }
-func (m *Pool) XXX_Size() int {
-	return m.Size()
+func (pa *Pool) XXX_Size() int {
+	return pa.Size()
 }
-func (m *Pool) XXX_DiscardUnknown() {
-	xxx_messageInfo_Pool.DiscardUnknown(m)
+func (pa *Pool) XXX_DiscardUnknown() {
+	xxx_messageInfo_Pool.DiscardUnknown(pa)
 }
 
 var xxx_messageInfo_Pool proto.InternalMessageInfo
@@ -417,40 +417,40 @@ func (m *PoolParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *Pool) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
+func (pa *Pool) Marshal() (dAtA []byte, err error) {
+	size := pa.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	n, err := pa.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
 	return dAtA[:n], nil
 }
 
-func (m *Pool) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
+func (pa *Pool) MarshalTo(dAtA []byte) (int, error) {
+	size := pa.Size()
+	return pa.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (pa *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size := m.TotalWeight.Size()
+		size := pa.TotalWeight.Size()
 		i -= size
-		if _, err := m.TotalWeight.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := pa.TotalWeight.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintBalancerPool(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x3a
-	if len(m.PoolAssets) > 0 {
-		for iNdEx := len(m.PoolAssets) - 1; iNdEx >= 0; iNdEx-- {
+	if len(pa.PoolAssets) > 0 {
+		for iNdEx := len(pa.PoolAssets) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.PoolAssets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := pa.PoolAssets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -462,7 +462,7 @@ func (m *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	{
-		size, err := m.TotalShares.MarshalToSizedBuffer(dAtA[:i])
+		size, err := pa.TotalShares.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -471,15 +471,15 @@ func (m *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x2a
-	if len(m.FuturePoolGovernor) > 0 {
-		i -= len(m.FuturePoolGovernor)
-		copy(dAtA[i:], m.FuturePoolGovernor)
-		i = encodeVarintBalancerPool(dAtA, i, uint64(len(m.FuturePoolGovernor)))
+	if len(pa.FuturePoolGovernor) > 0 {
+		i -= len(pa.FuturePoolGovernor)
+		copy(dAtA[i:], pa.FuturePoolGovernor)
+		i = encodeVarintBalancerPool(dAtA, i, uint64(len(pa.FuturePoolGovernor)))
 		i--
 		dAtA[i] = 0x22
 	}
 	{
-		size, err := m.PoolParams.MarshalToSizedBuffer(dAtA[:i])
+		size, err := pa.PoolParams.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -488,15 +488,15 @@ func (m *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	if m.Id != 0 {
-		i = encodeVarintBalancerPool(dAtA, i, uint64(m.Id))
+	if pa.Id != 0 {
+		i = encodeVarintBalancerPool(dAtA, i, uint64(pa.Id))
 		i--
 		dAtA[i] = 0x10
 	}
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintBalancerPool(dAtA, i, uint64(len(m.Address)))
+	if len(pa.Address) > 0 {
+		i -= len(pa.Address)
+		copy(dAtA[i:], pa.Address)
+		i = encodeVarintBalancerPool(dAtA, i, uint64(len(pa.Address)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -556,34 +556,34 @@ func (m *PoolParams) Size() (n int) {
 	return n
 }
 
-func (m *Pool) Size() (n int) {
-	if m == nil {
+func (pa *Pool) Size() (n int) {
+	if pa == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Address)
+	l = len(pa.Address)
 	if l > 0 {
 		n += 1 + l + sovBalancerPool(uint64(l))
 	}
-	if m.Id != 0 {
-		n += 1 + sovBalancerPool(uint64(m.Id))
+	if pa.Id != 0 {
+		n += 1 + sovBalancerPool(uint64(pa.Id))
 	}
-	l = m.PoolParams.Size()
+	l = pa.PoolParams.Size()
 	n += 1 + l + sovBalancerPool(uint64(l))
-	l = len(m.FuturePoolGovernor)
+	l = len(pa.FuturePoolGovernor)
 	if l > 0 {
 		n += 1 + l + sovBalancerPool(uint64(l))
 	}
-	l = m.TotalShares.Size()
+	l = pa.TotalShares.Size()
 	n += 1 + l + sovBalancerPool(uint64(l))
-	if len(m.PoolAssets) > 0 {
-		for _, e := range m.PoolAssets {
+	if len(pa.PoolAssets) > 0 {
+		for _, e := range pa.PoolAssets {
 			l = e.Size()
 			n += 1 + l + sovBalancerPool(uint64(l))
 		}
 	}
-	l = m.TotalWeight.Size()
+	l = pa.TotalWeight.Size()
 	n += 1 + l + sovBalancerPool(uint64(l))
 	return n
 }
@@ -932,7 +932,7 @@ func (m *PoolParams) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Pool) Unmarshal(dAtA []byte) error {
+func (pa *Pool) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -991,13 +991,13 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Address = string(dAtA[iNdEx:postIndex])
+			pa.Address = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
-			m.Id = 0
+			pa.Id = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowBalancerPool
@@ -1007,7 +1007,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				pa.Id |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1041,7 +1041,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.PoolParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := pa.PoolParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1075,7 +1075,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FuturePoolGovernor = string(dAtA[iNdEx:postIndex])
+			pa.FuturePoolGovernor = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -1106,7 +1106,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TotalShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := pa.TotalShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1139,8 +1139,8 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PoolAssets = append(m.PoolAssets, types.PoolAsset{})
-			if err := m.PoolAssets[len(m.PoolAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			pa.PoolAssets = append(pa.PoolAssets, types.PoolAsset{})
+			if err := pa.PoolAssets[len(pa.PoolAssets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1174,7 +1174,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TotalWeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := pa.TotalWeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

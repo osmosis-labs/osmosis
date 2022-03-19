@@ -13,7 +13,7 @@ import (
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	osmo_simulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
+	osmosimulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
 )
 
 // Simulation operation weights constants.
@@ -112,7 +112,7 @@ func SimulateMsgLockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, lockTokens, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
@@ -133,7 +133,7 @@ func SimulateMsgBeginUnlockingAll(ak stakingTypes.AccountKeeper, bk stakingTypes
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
@@ -161,7 +161,7 @@ func SimulateMsgBeginUnlocking(ak stakingTypes.AccountKeeper, bk stakingTypes.Ba
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }

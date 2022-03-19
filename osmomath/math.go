@@ -11,11 +11,11 @@ import (
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 // Singletons.
-var oneHalf sdk.Dec = sdk.MustNewDecFromStr("0.5")
+var oneHalf = sdk.MustNewDecFromStr("0.5")
 
 var (
-	one sdk.Dec = sdk.OneDec()
-	two sdk.Dec = sdk.MustNewDecFromStr("2")
+	one = sdk.OneDec()
+	two = sdk.MustNewDecFromStr("2")
 )
 
 /*********************************************************/

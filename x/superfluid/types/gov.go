@@ -43,6 +43,7 @@ func (p *SetSuperfluidAssetsProposal) ProposalType() string {
 	return ProposalTypeSetSuperfluidAssets
 }
 
+//nolint:exhaustive
 func (p *SetSuperfluidAssetsProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {

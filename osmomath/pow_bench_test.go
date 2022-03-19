@@ -76,11 +76,11 @@ func BenchmarkSqrtPow(b *testing.B) {
 			base: sdk.MustNewDecFromStr("1.65976735939"),
 		},
 	}
-	one_half := sdk.MustNewDecFromStr("0.5")
+	oneHalf := sdk.MustNewDecFromStr("0.5")
 
 	for i := 0; i < b.N; i++ {
 		for _, test := range tests {
-			Pow(test.base, one_half)
+			Pow(test.base, oneHalf)
 		}
 	}
 }

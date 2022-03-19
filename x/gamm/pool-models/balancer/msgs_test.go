@@ -45,14 +45,14 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		return after(*msg)
 	}
 
-	default_msg := createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+	defaultMsg := createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, default_msg.Route(), types.RouterKey)
-	require.Equal(t, default_msg.Type(), "create_balancer_pool")
-	signers := default_msg.GetSigners()
+	require.Equal(t, defaultMsg.Route(), types.RouterKey)
+	require.Equal(t, defaultMsg.Type(), "create_balancer_pool")
+	signers := defaultMsg.GetSigners()
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
 

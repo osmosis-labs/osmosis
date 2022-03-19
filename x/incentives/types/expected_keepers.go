@@ -1,7 +1,7 @@
 package types
 
 import (
-	time "time"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"

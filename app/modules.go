@@ -69,7 +69,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	// IBC Transfer: Defines the "transfer" IBC port.
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 
 	// IBC: Inter-blockchain communication.
@@ -118,7 +118,7 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 
 	// Superfluid: Allows users to stake gamm (bonded liquidity).
-	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v7/x/superfluid/client"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 

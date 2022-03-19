@@ -486,7 +486,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		suite.Require().Equal(0, balances.Len())
 
 		// test that synth lock finish does not mean underlying lock is finished
-		suite.Ctx = suite.Ctx.WithBlockTime((startTime.Add(unbondingDuration)))
+		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(unbondingDuration))
 		suite.App.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.Ctx)
 		suite.App.LockupKeeper.WithdrawAllMaturedLocks(suite.Ctx)
 		_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))

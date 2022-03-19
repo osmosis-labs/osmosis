@@ -234,6 +234,7 @@ func (pa *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	return nil
 }
 
+//nolint:errorlint
 func (pa *Pool) UpdatePoolAssetBalances(coins sdk.Coins) error {
 	// Ensures that there are no duplicate denoms, all denom's are valid,
 	// and amount is > 0
@@ -312,7 +313,7 @@ func (pa *Pool) updateAllWeights(newWeights []types.PoolAsset) {
 // and if so, does so.
 func (pa *Pool) PokeTokenWeights(blockTime time.Time) {
 	// Pool weights aren't changing, do nothing.
-	poolWeightsChanging := (pa.PoolParams.SmoothWeightChangeParams != nil)
+	poolWeightsChanging := pa.PoolParams.SmoothWeightChangeParams != nil
 	if !poolWeightsChanging {
 		return
 	}

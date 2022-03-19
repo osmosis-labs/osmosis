@@ -203,6 +203,7 @@ func (ptr *ptr) pull(key []byte) {
 	}
 }
 
+//nolint:stylecheck
 func (node Node) accumulate() (res sdk.Int) {
 	res = sdk.ZeroInt()
 	for _, child := range node.Children {
@@ -238,7 +239,7 @@ func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
 	return node
 }
 
-//nolint:revive
+//nolint:revive,gocritic
 func (cs *Node) insert(idx int, c *Child) *Node {
 	arr := append(cs.Children[:idx], append([]*Child{c}, cs.Children[idx:]...)...)
 	return NewNode(arr...)

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v7/v043_temp/address"
 )
 
@@ -39,8 +39,8 @@ type PoolI interface {
 }
 
 var (
-	MaxUserSpecifiedWeight    sdk.Int = sdk.NewIntFromUint64(1 << 20)
-	GuaranteedWeightPrecision int64   = 1 << 30
+	MaxUserSpecifiedWeight          = sdk.NewIntFromUint64(1 << 20)
+	GuaranteedWeightPrecision int64 = 1 << 30
 )
 
 func NewPoolAddress(poolID uint64) sdk.AccAddress {

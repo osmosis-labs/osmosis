@@ -2,7 +2,7 @@ package types
 
 import (
 	"testing"
-	time "time"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"

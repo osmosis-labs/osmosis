@@ -8,6 +8,7 @@ import (
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
+//nolint:gosec
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	k.SetLockableDurations(ctx, genState.LockableDurations)

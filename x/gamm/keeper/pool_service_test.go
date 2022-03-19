@@ -20,16 +20,16 @@ var (
 	defaultFutureGovernor = ""
 
 	// pool assets
-	defaultFooAsset types.PoolAsset = types.PoolAsset{
+	defaultFooAsset = types.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}
-	defaultBarAsset types.PoolAsset = types.PoolAsset{
+	defaultBarAsset = types.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}
-	defaultPoolAssets []types.PoolAsset = []types.PoolAsset{defaultFooAsset, defaultBarAsset}
-	defaultAcctFunds  sdk.Coins         = sdk.NewCoins(
+	defaultPoolAssets = []types.PoolAsset{defaultFooAsset, defaultBarAsset}
+	defaultAcctFunds  = sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000000)),

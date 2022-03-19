@@ -12,15 +12,15 @@ import (
 )
 
 var (
-	defaultLPDenom      string        = "lptoken"
-	defaultLPTokens     sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
-	defaultLiquidTokens sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	defaultLockDuration time.Duration = time.Second
-	oneLockupUser       userLocks     = userLocks{
+	defaultLPDenom      = "lptoken"
+	defaultLPTokens     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
+	defaultLiquidTokens = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	defaultLockDuration = time.Second
+	oneLockupUser       = userLocks{
 		lockDurations: []time.Duration{time.Second},
 		lockAmounts:   []sdk.Coins{defaultLPTokens},
 	}
-	defaultRewardDenom string = "rewardDenom"
+	defaultRewardDenom = "rewardDenom"
 )
 
 // TODO: Switch more code to use userLocks and perpGaugeDesc

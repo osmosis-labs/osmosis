@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestRelock() {
 	coins2 := sdk.Coins{sdk.NewInt64Coin("stake2", 10)}
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins2)
 	suite.Require().NoError(err)
-	err = keeper.AdminKeeper{*suite.app.LockupKeeper}.Relock(suite.ctx, lock.ID, coins2)
+	err = keeper.AdminKeeper{Keeper: *suite.app.LockupKeeper}.Relock(suite.ctx, lock.ID, coins2)
 	suite.Require().NoError(err)
 
 	storedLock, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) BreakLock() {
 	suite.Require().NoError(err)
 
 	// break lock
-	err = keeper.AdminKeeper{*suite.app.LockupKeeper}.BreakLock(suite.ctx, lock.ID)
+	err = keeper.AdminKeeper{Keeper: *suite.app.LockupKeeper}.BreakLock(suite.ctx, lock.ID)
 	suite.Require().NoError(err)
 
 	_, err = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)

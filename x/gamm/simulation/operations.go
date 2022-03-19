@@ -13,7 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	osmo_simulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
+	osmosimulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
 )
 
 // Simulation operation weights constants.
@@ -155,7 +155,7 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 		spentCoins := types.PoolAssetsCoins(poolAssets)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, msg, spentCoins, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
@@ -198,7 +198,7 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, sdk.Coins{tokenIn}, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }

@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
 			if i == 0 {
 				amount = amount.MulRaw(10000)
 			}
-			coins[i] = sdk.Coin{denoms[i], amount}
+			coins[i] = sdk.Coin{Denom: denoms[i], Amount: amount}
 		}
 		coinOf[acc.String()] = coins
 		coins = append(coins, sdk.NewCoin("uosmo", sdk.NewInt(1000000000)))

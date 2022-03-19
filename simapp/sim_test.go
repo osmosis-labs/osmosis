@@ -46,7 +46,7 @@ func TestFullAppSimulation(t *testing.T) {
 	fullAppSimulation(t, true)
 }
 
-func fullAppSimulation(tb testing.TB, is_testing bool) {
+func fullAppSimulation(tb testing.TB, isTesting bool) {
 	config, db, dir, logger, _, err := sdkSimapp.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
@@ -63,7 +63,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
 	// an IAVLStore for faster simulation speed.
 	fauxMerkleModeOpt := func(bapp *baseapp.BaseApp) {
-		if is_testing {
+		if isTesting {
 			bapp.SetFauxMerkleMode()
 		}
 	}
