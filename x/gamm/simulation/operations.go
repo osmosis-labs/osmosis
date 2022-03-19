@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -86,7 +85,7 @@ func genPoolAssets(r *rand.Rand, coins sdk.Coins) []types.PoolAsset {
 	return assets
 }
 
-func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) balancer.PoolParams {
+func genBalancerPoolParams(r *rand.Rand) balancer.PoolParams {
 	// swapFeeInt := int64(r.Intn(1e5))
 	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -128,7 +127,7 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 		}
 
 		poolAssets := genPoolAssets(r, simCoins)
-		poolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
+		poolParams := genBalancerPoolParams(r)
 
 		// Commented out as genFuturePoolGovernor() panics on empty denom slice.
 		// TODO: fix and provide proper denom types.
@@ -259,5 +258,5 @@ func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, to
 	}
 
 	tokenOut = tokenIn
-	return
+	return res, tokenOut
 }

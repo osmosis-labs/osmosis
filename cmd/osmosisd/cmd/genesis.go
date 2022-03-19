@@ -78,6 +78,7 @@ Example:
 			}
 
 			// validate genesis state
+			//nolint:govet,errorlint
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
 				return fmt.Errorf("error validating genesis file: %s", err.Error())
 			}

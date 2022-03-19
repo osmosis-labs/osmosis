@@ -14,7 +14,7 @@ import (
 // Notably, Tick is not on this list because the osmo pool has $76 of liquidity.
 // Cheq'd and KRT are also not on this, due to neither having osmo pairings.
 //nolint:gosec
-var feetoken_whitelist_data = `
+var feetokenWhitelistData = `
 ion,uion,2
 atom,ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2,1
 akt,ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,3
@@ -40,7 +40,7 @@ boot,ibc/FE2CD1E6828EC0FAB8AF39BAC45BC25B965BA67CCBC50C13A14BD610B0D1E2C4,597
 `
 
 func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []types.FeeToken {
-	r := csv.NewReader(strings.NewReader(feetoken_whitelist_data))
+	r := csv.NewReader(strings.NewReader(feetokenWhitelistData))
 	assets, err := r.ReadAll()
 	if err != nil {
 		panic(err)

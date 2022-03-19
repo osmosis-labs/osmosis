@@ -72,7 +72,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v7.0.2 - Carbon](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.2)
 
 This release fixes an instance of undefined behaviour present in v7.0.0.
-Parts of the code use a function called [`ApplyFuncIfNoErr`]() whose purpose is to catch errors, and if found undo state updates during its execution.
+Parts of the code use a function called
+
+```go
+[`ApplyFuncIfNoErr`]() 
+```
+
+whose purpose is to catch errors, and if found undo state updates during its execution.
 It is intended to also catch panics and undo the problematic code's execution.
 Right now a panic in this code block would halt the node, as it would not know how to proceed.
 (But no state change would be committed)
