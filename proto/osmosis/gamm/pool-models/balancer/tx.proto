@@ -25,4 +25,6 @@ message MsgCreateBalancerPool {
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
-message MsgCreateBalancerPoolResponse {}
+message MsgCreateBalancerPoolResponse {
+  uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
+}
