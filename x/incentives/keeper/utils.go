@@ -7,25 +7,25 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
-func findIndex(ids []uint64, id uint64) int {
-	for index, id := range ids {
-		if id == id {
+func findIndex(IDs []uint64, ID uint64) int {
+	for index, id := range IDs {
+		if id == ID {
 			return index
 		}
 	}
 	return -1
 }
 
-func removeValue(ids []uint64, id uint64) ([]uint64, int) {
-	index := findIndex(ids, id)
+func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
+	index := findIndex(IDs, ID)
 	if index < 0 {
-		return ids, index
+		return IDs, index
 	}
-	ids[index] = ids[len(ids)-1] // set last element to index
-	return ids[:len(ids)-1], index
+	IDs[index] = IDs[len(IDs)-1] // set last element to index
+	return IDs[:len(IDs)-1], index
 }
 
-// getTimeKey returns the key used for getting a set of gauges.
+// getTimeKey returns the key used for getting a set of gauges
 func getTimeKey(timestamp time.Time) []byte {
 	timeBz := sdk.FormatTimeBytes(timestamp)
 	timeBzL := len(timeBz)
@@ -44,7 +44,7 @@ func getTimeKey(timestamp time.Time) []byte {
 	return bz
 }
 
-// combineKeys combine bytes array into a single bytes.
+// combineKeys combine bytes array into a single bytes
 func combineKeys(keys ...[]byte) []byte {
 	combined := []byte{}
 	for i, key := range keys {

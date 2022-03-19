@@ -14,7 +14,7 @@ import (
 func (k Keeper) CreateBalancerPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	BalancerPoolParams balancer.PoolParams,
+	balancerPoolParams balancer.PoolParams,
 	poolAssets []types.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {
@@ -36,7 +36,7 @@ func (k Keeper) CreateBalancerPool(
 		return 0, err
 	}
 
-	pool, err := k.newBalancerPool(ctx, BalancerPoolParams, poolAssets, futurePoolGovernor)
+	pool, err := k.newBalancerPool(ctx, balancerPoolParams, poolAssets, futurePoolGovernor)
 	if err != nil {
 		return 0, err
 	}
