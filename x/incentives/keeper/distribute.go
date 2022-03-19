@@ -181,7 +181,7 @@ func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error
 		d.idToDistrCoins[id] = rewards.Add(oldDistrCoins...)
 	} else {
 		id := d.nextID
-		d.nextID += 1
+		d.nextID++
 		d.lockOwnerAddrToID[owner] = id
 		decodedOwnerAddr, err := sdk.AccAddressFromBech32(owner)
 		if err != nil {
