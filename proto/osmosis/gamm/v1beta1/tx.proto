@@ -79,7 +79,13 @@ message MsgSwapExactAmountIn {
   ];
 }
 
-message MsgSwapExactAmountInResponse {}
+message MsgSwapExactAmountInResponse {
+  string tokenOutAmount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
 
 // ===================== MsgSwapExactAmountOut
 message SwapAmountOutRoute {
@@ -101,7 +107,13 @@ message MsgSwapExactAmountOut {
   ];
 }
 
-message MsgSwapExactAmountOutResponse {}
+message MsgSwapExactAmountOutResponse {
+  string tokenInAmount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
 
 // ===================== MsgJoinSwapExternAmountIn
 // TODO: Delete this one
@@ -119,7 +131,13 @@ message MsgJoinSwapExternAmountIn {
   ];
 }
 
-message MsgJoinSwapExternAmountInResponse {}
+message MsgJoinSwapExternAmountInResponse {
+  string shareOutAmount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
 
 // ===================== MsgJoinSwapShareAmountOut
 message MsgJoinSwapShareAmountOut {
@@ -138,7 +156,13 @@ message MsgJoinSwapShareAmountOut {
   ];
 }
 
-message MsgJoinSwapShareAmountOutResponse {}
+message MsgJoinSwapShareAmountOutResponse {
+  string tokenInAmount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
 
 // ===================== MsgExitSwapShareAmountIn
 message MsgExitSwapShareAmountIn {
@@ -158,7 +182,13 @@ message MsgExitSwapShareAmountIn {
   ];
 }
 
-message MsgExitSwapShareAmountInResponse {}
+message MsgExitSwapShareAmountInResponse {
+  string tokenOutAmount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
 
 // ===================== MsgExitSwapExternAmountOut
 message MsgExitSwapExternAmountOut {
@@ -175,4 +205,10 @@ message MsgExitSwapExternAmountOut {
   ];
 }
 
-message MsgExitSwapExternAmountOutResponse {}
+message MsgExitSwapExternAmountOutResponse {
+  string shareInAmount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}

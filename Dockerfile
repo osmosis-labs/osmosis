@@ -1,27 +1,27 @@
 # syntax=docker/dockerfile:1
 
-## Build
+## Build Image
 FROM golang:1.17-bullseye as build
 
 WORKDIR /osmosis
 COPY . /osmosis
-RUN make build
 
-## Deploy
-FROM gcr.io/distroless/base-debian11
+# From https://github.com/CosmWasm/wasmd/blob/master/Dockerfile
+# For more details see https://github.com/CosmWasm/wasmvm#builds-of-libwasmvm 
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0-beta7/libwasmvm_muslc.a /lib/libwasmvm_muslc.a
+RUN sha256sum /lib/libwasmvm_muslc.a | grep d0152067a5609bfdfb3f0d5d6c0f2760f79d5f2cd7fd8513cafa9932d22eb350
+RUN BUILD_TAGS=muslc make build
 
-WORKDIR /
+## Deploy image
+FROM gcr.io/distroless/base-debian11:nonroot
 
-# wasm dependencies
-COPY --from=build /go/pkg/mod/github.com/!cosm!wasm/wasmvm@v1.0.0-beta5/api/libwasmvm.so /lib/
-COPY --from=build /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/
+COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 
-# osmosisd binary
-COPY --from=build /osmosis/build/osmosisd /osmosisd
+ENV HOME /osmosis
+WORKDIR $HOME
 
-EXPOSE 26656
+EXPOSE 26656 
 EXPOSE 26657
-EXPOSE 1317
-EXPOSE 9090
+EXPOSE 1317  
 
-ENTRYPOINT ["/osmosisd"]
+ENTRYPOINT ["osmosisd"]
