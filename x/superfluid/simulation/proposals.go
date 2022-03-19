@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
+//nolint:gosec
 const (
 	OpWeightSetSuperfluidAssetsProposal    = "op_weight_set_superfluid_assets_proposal"
 	OpWeightRemoveSuperfluidAssetsProposal = "op_weight_remove_superfluid_assets_proposal"

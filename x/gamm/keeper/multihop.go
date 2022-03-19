@@ -64,7 +64,7 @@ func (k Keeper) MultihopSwapExactAmountOut(
 		}
 	}
 
-	return
+	return tokenInAmount, nil
 }
 
 // TODO: Document this function.
