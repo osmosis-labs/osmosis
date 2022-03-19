@@ -29,6 +29,7 @@ func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.Superflui
 	return refreshedAmount
 }
 
+//nolint:gocritic
 func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 	// iterate over every (denom, validator) pair
 	accs := k.GetAllIntermediaryAccounts(ctx)

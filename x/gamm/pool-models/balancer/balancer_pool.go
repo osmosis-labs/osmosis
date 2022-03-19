@@ -311,6 +311,7 @@ func (pa *Pool) updateAllWeights(newWeights []types.PoolAsset) {
 
 // PokeTokenWeights checks to see if the pool's token weights need to be updated,
 // and if so, does so.
+//nolint:gocritic
 func (pa *Pool) PokeTokenWeights(blockTime time.Time) {
 	// Pool weights aren't changing, do nothing.
 	poolWeightsChanging := pa.PoolParams.SmoothWeightChangeParams != nil

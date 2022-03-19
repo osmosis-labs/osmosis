@@ -73,6 +73,7 @@ func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combined
 	return nil
 }
 
+//nolint:gocritic
 func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 	err := k.setGauge(ctx, gauge)
 	if err != nil {

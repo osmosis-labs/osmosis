@@ -29,6 +29,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
+//nolint:gocritic
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",
