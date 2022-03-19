@@ -38,7 +38,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 					),
 				)
 				k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
-				epochInfo.CurrentEpoch += 1
+				epochInfo.CurrentEpoch++
 				epochInfo.CurrentEpochStartTime = epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
 				logger.Info(fmt.Sprintf("Starting epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 			}

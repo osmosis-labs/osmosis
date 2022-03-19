@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -105,7 +106,7 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 }
 
 // basic validation for locks, that sender is correct, and that the lock length is correct.
-func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
+func (k Keeper) validateLockForSF(lock *lockuptypes.PeriodLock, sender string) error {
 	if lock.Owner != sender {
 		return lockuptypes.ErrNotLockOwner
 	}
@@ -116,7 +117,7 @@ func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock,
 }
 
 func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
-	err := k.validateLockForSF(ctx, lock, sender)
+	err := k.validateLockForSF(lock, sender)
 	if err != nil {
 		return err
 	}
@@ -203,7 +204,7 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	if err != nil {
 		return err
 	}
-	err = k.validateLockForSF(ctx, lock, sender)
+	err = k.validateLockForSF(lock, sender)
 	if err != nil {
 		return err
 	}
@@ -239,7 +240,7 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockID uint64, s
 	if err != nil {
 		return err
 	}
-	err = k.validateLockForSF(ctx, lock, sender)
+	err = k.validateLockForSF(lock, sender)
 	if err != nil {
 		return err
 	}
@@ -316,7 +317,7 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	shares, err := k.sk.ValidateUnbondAmount(
 		ctx, intermediaryAcc.GetAccAddress(), valAddr, osmoAmount,
 	)
-	if err == stakingtypes.ErrNoDelegation {
+	if errors.Is(err, stakingtypes.ErrNoDelegation) {
 		return nil
 	} else if err != nil {
 		return err

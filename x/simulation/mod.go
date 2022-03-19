@@ -12,6 +12,7 @@ import (
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+//nolint:revive
 type SimulationContext struct {
 	R          *rand.Rand
 	SdkCtx     sdk.Context

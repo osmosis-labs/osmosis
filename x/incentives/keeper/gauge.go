@@ -44,6 +44,7 @@ func (k Keeper) getCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	return coins
 }
 
+//nolint:unused
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }

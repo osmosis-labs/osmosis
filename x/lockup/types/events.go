@@ -1,6 +1,7 @@
 package types
 
 // event types.
+//nolint:gosec
 const (
 	TypeEvtLockTokens      = "lock_tokens"
 	TypeEvtAddTokensToLock = "add_tokens_to_lock"

@@ -4,7 +4,7 @@ order: 1
 
 # Concepts
 
-The concept of the `gamm` module is designed to handle assets of a chain using the AMM and its concept of pool shares. 
+The concept of the `gamm` module is designed to handle assets of a chain using the AMM and its concept of pool shares.
 
 ## Pool
 
@@ -18,19 +18,19 @@ When joining a pool, users provide maximum amount of tokens willing to deposit, 
 
 ### Exiting Pool
 
-When exiting the pool, the user also probides the minimum amount of tokens they are willing to receive as they are returning the share of the pool. However, unlike joining a pool, exiting a pool requires the user to pay the exit fee, which is set as the param of the pool. The share of the user gets burnt. Exiting the pool using a single asset is also possible. 
+When exiting the pool, the user also probides the minimum amount of tokens they are willing to receive as they are returning the share of the pool. However, unlike joining a pool, exiting a pool requires the user to pay the exit fee, which is set as the param of the pool. The share of the user gets burnt. Exiting the pool using a single asset is also possible.
 
 +++[https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/pool_service.go](https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/pool_service.go)
 
 ## Swap
 
-During the process of swapping a specific asset, the token user is putting into the pool is justified as `tokenIn`, while the token that would be omitted after the swap is justified as `tokenOut`  throughout the module.
+During the process of swapping a specific asset, the token user is putting into the pool is justified as `tokenIn`, while the token that would be omitted after the swap is justified as `tokenOut` throughout the module.
 
 Given a tokenIn, the following calculations are done to calculate how much tokens are to be swapped and ommitted from the pool.
 
 - `tokenBalanceOut * [ 1 - { tokenBalanceIn / (tokenBalanceIn+(1-swapFee) * tokenAmountIn)}^(tokenWeightIn/tokenWeightOut)]`
 
-The whole process is also able vice versa, the case where user provides tokenOut. The calculation  for the amount of token that the user should be putting in is done through the following formula.
+The whole process is also able vice versa, the case where user provides tokenOut. The calculation for the amount of token that the user should be putting in is done through the following formula.
 
 - `tokenBalanceIn * [{tokenBalanceOut / (tokenBalanceOut - tokenAmountOut)}^(tokenWeightOut/tokenWeightIn)-1] / tokenAmountIn`
 
@@ -40,7 +40,7 @@ Meanwhile, calculation of the spot price with a swap fee is done using the follo
 
 - `spotPrice / (1-swapFee)`
 
-where spotPrice is 
+where spotPrice is
 
 - `(tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)`
 

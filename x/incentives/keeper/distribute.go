@@ -149,7 +149,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	}
 
 	// increase filled epochs after distribution
-	gauge.FilledEpochs += 1
+	gauge.FilledEpochs++
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(remainCoinsPerEpoch...)
 
 	return gauge, filteredDistrCoins, nil
@@ -334,7 +334,7 @@ func (k Keeper) distributeInternal(
 
 func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, newlyDistributedCoins sdk.Coins) error {
 	// increase filled epochs after distribution
-	gauge.FilledEpochs += 1
+	gauge.FilledEpochs++
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(newlyDistributedCoins...)
 	if err := k.setGauge(ctx, &gauge); err != nil {
 		return err

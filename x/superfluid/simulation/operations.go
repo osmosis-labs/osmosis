@@ -17,6 +17,7 @@ import (
 )
 
 // Simulation operation weights constants.
+//nolint:gosec
 const (
 	DefaultWeightMsgSuperfluidDelegate          int = 100
 	DefaultWeightMsgSuperfluidUndelegate        int = 50

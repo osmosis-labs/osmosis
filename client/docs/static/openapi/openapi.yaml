@@ -86,7 +86,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -252,7 +253,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -437,7 +439,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -650,7 +653,8 @@ paths:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
                     description: >-
                       `Any` contains an arbitrary serialized protocol buffer
@@ -817,7 +821,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -1114,7 +1119,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -1304,7 +1310,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -1525,7 +1532,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -1726,7 +1734,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -1929,7 +1938,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -2112,7 +2122,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -2311,7 +2322,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -4815,7 +4827,8 @@ paths:
 
                         signatures required by gogoproto.
                     description: params defines the parameters of the module.
-                description: QueryParamsResponse is the response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is the response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -4868,7 +4881,8 @@ paths:
                       claim_denom:
                         type: string
                         title: denom of claimable asset
-                description: QueryParamsResponse is the response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is the response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -5042,7 +5056,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -5214,7 +5229,8 @@ paths:
                         type: string
                         format: int64
                         title: start epoch to distribute minting rewards
-                description: QueryParamsResponse is the response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is the response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -5284,7 +5300,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -5450,9 +5467,11 @@ paths:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
-                description: QueryAccountResponse is the response type for the Query/Account RPC
+                description:
+                  QueryAccountResponse is the response type for the Query/Account RPC
                   method.
         default:
           description: An unexpected error response.
@@ -5522,7 +5541,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -5661,7 +5681,8 @@ paths:
                       sig_verify_cost_secp256k1:
                         type: string
                         format: uint64
-                description: QueryParamsResponse is the response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is the response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -5731,7 +5752,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -5984,7 +6006,8 @@ paths:
                         type: string
                       amount:
                         type: string
-                description: QueryBalanceResponse is the response type for the Query/Balance RPC
+                description:
+                  QueryBalanceResponse is the response type for the Query/Balance RPC
                   method.
         default:
           description: An unexpected error response.
@@ -6027,7 +6050,8 @@ paths:
         - Query
   /cosmos/bank/v1beta1/denoms_metadata:
     get:
-      summary: DenomsMetadata queries the client metadata for all registered coin
+      summary:
+        DenomsMetadata queries the client metadata for all registered coin
         denominations.
       operationId: DenomsMetadata
       responses:
@@ -6052,7 +6076,8 @@ paths:
                             properties:
                               denom:
                                 type: string
-                                description: denom represents the string name of the given denom unit (e.g
+                                description:
+                                  denom represents the string name of the given denom unit (e.g
                                   uatom).
                               exponent:
                                 type: integer
@@ -6081,7 +6106,8 @@ paths:
                           title: denom_units represents the list of DenomUnit's for a given coin
                         base:
                           type: string
-                          description: base represents the base denom (should be the DenomUnit with
+                          description:
+                            base represents the base denom (should be the DenomUnit with
                             exponent = 0).
                         display:
                           type: string
@@ -6091,7 +6117,8 @@ paths:
                       description: |-
                         Metadata represents a struct that describes
                         a basic token.
-                    description: metadata provides the client information for all the registered
+                    description:
+                      metadata provides the client information for all the registered
                       tokens.
                   pagination:
                     description: pagination defines the pagination in the response.
@@ -6203,7 +6230,8 @@ paths:
                 type: object
                 properties:
                   metadata:
-                    description: metadata describes and provides all the client information for the
+                    description:
+                      metadata describes and provides all the client information for the
                       requested token.
                     type: object
                     properties:
@@ -6216,7 +6244,8 @@ paths:
                           properties:
                             denom:
                               type: string
-                              description: denom represents the string name of the given denom unit (e.g
+                              description:
+                                denom represents the string name of the given denom unit (e.g
                                 uatom).
                             exponent:
                               type: integer
@@ -6243,7 +6272,8 @@ paths:
                         title: denom_units represents the list of DenomUnit's for a given coin
                       base:
                         type: string
-                        description: base represents the base denom (should be the DenomUnit with
+                        description:
+                          base represents the base denom (should be the DenomUnit with
                           exponent = 0).
                       display:
                         type: string
@@ -6320,7 +6350,8 @@ paths:
                       default_send_enabled:
                         type: boolean
                     description: Params defines the parameters for the bank module.
-                description: QueryParamsResponse defines the response type for querying x/bank
+                description:
+                  QueryParamsResponse defines the response type for querying x/bank
                   parameters.
         default:
           description: An unexpected error response.
@@ -6428,7 +6459,8 @@ paths:
                         type: string
                       amount:
                         type: string
-                description: QuerySupplyOfResponse is the response type for the Query/SupplyOf
+                description:
+                  QuerySupplyOfResponse is the response type for the Query/SupplyOf
                   RPC method.
         default:
           description: An unexpected error response.
@@ -6824,7 +6856,8 @@ paths:
                         type: string
                       withdraw_addr_enabled:
                         type: boolean
-                description: QueryParamsResponse is the response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is the response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -7080,7 +7113,8 @@ paths:
           schema:
             type: string
         - name: starting_height
-          description: starting_height defines the optional starting height to query the
+          description:
+            starting_height defines the optional starting height to query the
             slashes.
           in: query
           required: false
@@ -7088,7 +7122,8 @@ paths:
             type: string
             format: uint64
         - name: ending_height
-          description: starting_height defines the optional ending height to query the
+          description:
+            starting_height defines the optional ending height to query the
             slashes.
           in: query
           required: false
@@ -7210,7 +7245,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -7401,7 +7437,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -7615,9 +7652,11 @@ paths:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
-                description: QueryEvidenceResponse is the response type for the Query/Evidence
+                description:
+                  QueryEvidenceResponse is the response type for the Query/Evidence
                   RPC method.
         default:
           description: An unexpected error response.
@@ -7687,7 +7726,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -7857,7 +7897,8 @@ paths:
                       threshold:
                         type: string
                         format: byte
-                        description: "Minimum proportion of Yes votes for proposal to pass. Default
+                        description:
+                          "Minimum proportion of Yes votes for proposal to pass. Default
                           value: 0.5."
                       veto_threshold:
                         type: string
@@ -7866,7 +7907,8 @@ paths:
                           Minimum value of Veto votes to Total votes ratio for
                           proposal to be
                            vetoed. Default value: 1/3.
-                description: QueryParamsResponse is the response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is the response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -7936,7 +7978,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -8120,7 +8163,8 @@ paths:
                             value:
                               type: string
                               format: byte
-                              description: Must be a valid serialized protocol buffer of the above specified
+                              description:
+                                Must be a valid serialized protocol buffer of the above specified
                                 type.
                           description: >-
                             `Any` contains an arbitrary serialized protocol
@@ -8377,7 +8421,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -8635,7 +8680,8 @@ paths:
                           value:
                             type: string
                             format: byte
-                            description: Must be a valid serialized protocol buffer of the above specified
+                            description:
+                              Must be a valid serialized protocol buffer of the above specified
                               type.
                         description: >-
                           `Any` contains an arbitrary serialized protocol buffer
@@ -8801,7 +8847,8 @@ paths:
                         type: string
                         format: date-time
                     description: Proposal defines the core field members of a governance proposal.
-                description: QueryProposalResponse is the response type for the Query/Proposal
+                description:
+                  QueryProposalResponse is the response type for the Query/Proposal
                   RPC method.
         default:
           description: An unexpected error response.
@@ -8871,7 +8918,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -9042,7 +9090,8 @@ paths:
                           PageRequest.count_total
 
                           was set, its value is undefined otherwise
-                description: QueryDepositsResponse is the response type for the Query/Deposits
+                description:
+                  QueryDepositsResponse is the response type for the Query/Deposits
                   RPC method.
         default:
           description: An unexpected error response.
@@ -9112,7 +9161,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -9306,7 +9356,8 @@ paths:
                             NOTE: The amount field is an Int which implements the custom method
 
                             signatures required by gogoproto.
-                description: QueryDepositResponse is the response type for the Query/Deposit RPC
+                description:
+                  QueryDepositResponse is the response type for the Query/Deposit RPC
                   method.
         default:
           description: An unexpected error response.
@@ -9376,7 +9427,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -9515,7 +9567,8 @@ paths:
                         type: string
                       no_with_veto:
                         type: string
-                description: QueryTallyResultResponse is the response type for the Query/Tally
+                description:
+                  QueryTallyResultResponse is the response type for the Query/Tally
                   RPC method.
         default:
           description: An unexpected error response.
@@ -9585,7 +9638,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -9757,7 +9811,8 @@ paths:
                           PageRequest.count_total
 
                           was set, its value is undefined otherwise
-                description: QueryVotesResponse is the response type for the Query/Votes RPC
+                description:
+                  QueryVotesResponse is the response type for the Query/Votes RPC
                   method.
         default:
           description: An unexpected error response.
@@ -9827,7 +9882,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -10022,7 +10078,8 @@ paths:
                            - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
                            - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
                            - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
-                description: QueryVoteResponse is the response type for the Query/Vote RPC
+                description:
+                  QueryVoteResponse is the response type for the Query/Vote RPC
                   method.
         default:
           description: An unexpected error response.
@@ -10092,7 +10149,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -10231,7 +10289,8 @@ paths:
                         type: string
                       value:
                         type: string
-                description: QueryParamsResponse is response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -10624,7 +10683,8 @@ paths:
                         that it contains a
 
                         balance in addition to shares which is more suitable for client responses.
-                    description: delegation_responses defines all the delegations' info of a
+                    description:
+                      delegation_responses defines all the delegations' info of a
                       delegator.
                   pagination:
                     description: pagination defines the pagination in the response.
@@ -10715,7 +10775,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -10895,11 +10956,13 @@ paths:
                               description: delegator_address is the bech32-encoded address of the delegator.
                             validator_src_address:
                               type: string
-                              description: validator_src_address is the validator redelegation source operator
+                              description:
+                                validator_src_address is the validator redelegation source operator
                                 address.
                             validator_dst_address:
                               type: string
-                              description: validator_dst_address is the validator redelegation destination
+                              description:
+                                validator_dst_address is the validator redelegation destination
                                 operator address.
                             entries:
                               type: array
@@ -10909,7 +10972,8 @@ paths:
                                   creation_height:
                                     type: string
                                     format: int64
-                                    description: creation_height  defines the height which the redelegation took
+                                    description:
+                                      creation_height  defines the height which the redelegation took
                                       place.
                                   completion_time:
                                     type: string
@@ -10917,13 +10981,16 @@ paths:
                                     description: completion_time defines the unix time for redelegation completion.
                                   initial_balance:
                                     type: string
-                                    description: initial_balance defines the initial balance when redelegation
+                                    description:
+                                      initial_balance defines the initial balance when redelegation
                                       started.
                                   shares_dst:
                                     type: string
-                                    description: shares_dst is the amount of destination-validator shares created by
+                                    description:
+                                      shares_dst is the amount of destination-validator shares created by
                                       redelegation.
-                                description: RedelegationEntry defines a redelegation object with relevant
+                                description:
+                                  RedelegationEntry defines a redelegation object with relevant
                                   metadata.
                               description: entries are the redelegation entries.
                           description: >-
@@ -10942,7 +11009,8 @@ paths:
                                   creation_height:
                                     type: string
                                     format: int64
-                                    description: creation_height  defines the height which the redelegation took
+                                    description:
+                                      creation_height  defines the height which the redelegation took
                                       place.
                                   completion_time:
                                     type: string
@@ -10950,13 +11018,16 @@ paths:
                                     description: completion_time defines the unix time for redelegation completion.
                                   initial_balance:
                                     type: string
-                                    description: initial_balance defines the initial balance when redelegation
+                                    description:
+                                      initial_balance defines the initial balance when redelegation
                                       started.
                                   shares_dst:
                                     type: string
-                                    description: shares_dst is the amount of destination-validator shares created by
+                                    description:
+                                      shares_dst is the amount of destination-validator shares created by
                                       redelegation.
-                                description: RedelegationEntry defines a redelegation object with relevant
+                                description:
+                                  RedelegationEntry defines a redelegation object with relevant
                                   metadata.
                               balance:
                                 type: string
@@ -11065,7 +11136,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -11274,12 +11346,14 @@ paths:
                                 description: completion_time is the unix time for unbonding completion.
                               initial_balance:
                                 type: string
-                                description: initial_balance defines the tokens initially scheduled to receive
+                                description:
+                                  initial_balance defines the tokens initially scheduled to receive
                                   at completion.
                               balance:
                                 type: string
                                 description: balance defines the tokens to receive at completion.
-                            description: UnbondingDelegationEntry defines an unbonding object with relevant
+                            description:
+                              UnbondingDelegationEntry defines an unbonding object with relevant
                               metadata.
                           description: entries are the unbonding delegation entries.
                       description: >-
@@ -11378,7 +11452,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -11554,10 +11629,12 @@ paths:
                       properties:
                         operator_address:
                           type: string
-                          description: operator_address defines the address of the validator's operator;
+                          description:
+                            operator_address defines the address of the validator's operator;
                             bech encoded in JSON.
                         consensus_pubkey:
-                          description: consensus_pubkey is the consensus public key of the validator, as a
+                          description:
+                            consensus_pubkey is the consensus public key of the validator, as a
                             Protobuf Any.
                           type: object
                           properties:
@@ -11610,11 +11687,13 @@ paths:
                             value:
                               type: string
                               format: byte
-                              description: Must be a valid serialized protocol buffer of the above specified
+                              description:
+                                Must be a valid serialized protocol buffer of the above specified
                                 type.
                         jailed:
                           type: boolean
-                          description: jailed defined whether the validator has been jailed from bonded
+                          description:
+                            jailed defined whether the validator has been jailed from bonded
                             status or not.
                         status:
                           description: status is the validator status (bonded/unbonding/unbonded).
@@ -11630,7 +11709,8 @@ paths:
                           description: tokens define the delegated tokens (incl. self-delegation).
                         delegator_shares:
                           type: string
-                          description: delegator_shares defines total shares issued to a validator's
+                          description:
+                            delegator_shares defines total shares issued to a validator's
                             delegators.
                         description:
                           description: description defines the description terms for the validator.
@@ -11641,7 +11721,8 @@ paths:
                               description: moniker defines a human-readable name for the validator.
                             identity:
                               type: string
-                              description: identity defines an optional identity signature (ex. UPort or
+                              description:
+                                identity defines an optional identity signature (ex. UPort or
                                 Keybase).
                             website:
                               type: string
@@ -11655,19 +11736,22 @@ paths:
                         unbonding_height:
                           type: string
                           format: int64
-                          description: unbonding_height defines, if unbonding, the height at which this
+                          description:
+                            unbonding_height defines, if unbonding, the height at which this
                             validator has begun unbonding.
                         unbonding_time:
                           type: string
                           format: date-time
-                          description: unbonding_time defines, if unbonding, the min time for the
+                          description:
+                            unbonding_time defines, if unbonding, the min time for the
                             validator to complete unbonding.
                         commission:
                           description: commission defines the commission parameters.
                           type: object
                           properties:
                             commission_rates:
-                              description: commission_rates defines the initial commission rates to be used
+                              description:
+                                commission_rates defines the initial commission rates to be used
                                 for creating a validator.
                               type: object
                               properties:
@@ -11676,11 +11760,13 @@ paths:
                                   description: rate is the commission rate charged to delegators, as a fraction.
                                 max_rate:
                                   type: string
-                                  description: max_rate defines the maximum commission rate which validator can
+                                  description:
+                                    max_rate defines the maximum commission rate which validator can
                                     ever charge, as a fraction.
                                 max_change_rate:
                                   type: string
-                                  description: max_change_rate defines the maximum daily increase of the validator
+                                  description:
+                                    max_change_rate defines the maximum daily increase of the validator
                                     commission, as a fraction.
                             update_time:
                               type: string
@@ -11688,7 +11774,8 @@ paths:
                               description: update_time is the last time the commission rate was changed.
                         min_self_delegation:
                           type: string
-                          description: min_self_delegation is the validator's self declared minimum self
+                          description:
+                            min_self_delegation is the validator's self declared minimum self
                             delegation.
                       description: >-
                         Validator defines a validator, together with the total
@@ -11797,7 +11884,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -11972,10 +12060,12 @@ paths:
                     properties:
                       operator_address:
                         type: string
-                        description: operator_address defines the address of the validator's operator;
+                        description:
+                          operator_address defines the address of the validator's operator;
                           bech encoded in JSON.
                       consensus_pubkey:
-                        description: consensus_pubkey is the consensus public key of the validator, as a
+                        description:
+                          consensus_pubkey is the consensus public key of the validator, as a
                           Protobuf Any.
                         type: object
                         properties:
@@ -12028,11 +12118,13 @@ paths:
                           value:
                             type: string
                             format: byte
-                            description: Must be a valid serialized protocol buffer of the above specified
+                            description:
+                              Must be a valid serialized protocol buffer of the above specified
                               type.
                       jailed:
                         type: boolean
-                        description: jailed defined whether the validator has been jailed from bonded
+                        description:
+                          jailed defined whether the validator has been jailed from bonded
                           status or not.
                       status:
                         description: status is the validator status (bonded/unbonding/unbonded).
@@ -12048,7 +12140,8 @@ paths:
                         description: tokens define the delegated tokens (incl. self-delegation).
                       delegator_shares:
                         type: string
-                        description: delegator_shares defines total shares issued to a validator's
+                        description:
+                          delegator_shares defines total shares issued to a validator's
                           delegators.
                       description:
                         description: description defines the description terms for the validator.
@@ -12059,7 +12152,8 @@ paths:
                             description: moniker defines a human-readable name for the validator.
                           identity:
                             type: string
-                            description: identity defines an optional identity signature (ex. UPort or
+                            description:
+                              identity defines an optional identity signature (ex. UPort or
                               Keybase).
                           website:
                             type: string
@@ -12073,19 +12167,22 @@ paths:
                       unbonding_height:
                         type: string
                         format: int64
-                        description: unbonding_height defines, if unbonding, the height at which this
+                        description:
+                          unbonding_height defines, if unbonding, the height at which this
                           validator has begun unbonding.
                       unbonding_time:
                         type: string
                         format: date-time
-                        description: unbonding_time defines, if unbonding, the min time for the
+                        description:
+                          unbonding_time defines, if unbonding, the min time for the
                           validator to complete unbonding.
                       commission:
                         description: commission defines the commission parameters.
                         type: object
                         properties:
                           commission_rates:
-                            description: commission_rates defines the initial commission rates to be used
+                            description:
+                              commission_rates defines the initial commission rates to be used
                               for creating a validator.
                             type: object
                             properties:
@@ -12094,11 +12191,13 @@ paths:
                                 description: rate is the commission rate charged to delegators, as a fraction.
                               max_rate:
                                 type: string
-                                description: max_rate defines the maximum commission rate which validator can
+                                description:
+                                  max_rate defines the maximum commission rate which validator can
                                   ever charge, as a fraction.
                               max_change_rate:
                                 type: string
-                                description: max_change_rate defines the maximum daily increase of the validator
+                                description:
+                                  max_change_rate defines the maximum daily increase of the validator
                                   commission, as a fraction.
                           update_time:
                             type: string
@@ -12106,7 +12205,8 @@ paths:
                             description: update_time is the last time the commission rate was changed.
                       min_self_delegation:
                         type: string
-                        description: min_self_delegation is the validator's self declared minimum self
+                        description:
+                          min_self_delegation is the validator's self declared minimum self
                           delegation.
                 description: |-
                   QueryDelegatorValidatorResponse response type for the
@@ -12179,7 +12279,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -12392,10 +12493,12 @@ paths:
                           properties:
                             operator_address:
                               type: string
-                              description: operator_address defines the address of the validator's operator;
+                              description:
+                                operator_address defines the address of the validator's operator;
                                 bech encoded in JSON.
                             consensus_pubkey:
-                              description: consensus_pubkey is the consensus public key of the validator, as a
+                              description:
+                                consensus_pubkey is the consensus public key of the validator, as a
                                 Protobuf Any.
                               type: object
                               properties:
@@ -12448,11 +12551,13 @@ paths:
                                 value:
                                   type: string
                                   format: byte
-                                  description: Must be a valid serialized protocol buffer of the above specified
+                                  description:
+                                    Must be a valid serialized protocol buffer of the above specified
                                     type.
                             jailed:
                               type: boolean
-                              description: jailed defined whether the validator has been jailed from bonded
+                              description:
+                                jailed defined whether the validator has been jailed from bonded
                                 status or not.
                             status:
                               description: status is the validator status (bonded/unbonding/unbonded).
@@ -12468,7 +12573,8 @@ paths:
                               description: tokens define the delegated tokens (incl. self-delegation).
                             delegator_shares:
                               type: string
-                              description: delegator_shares defines total shares issued to a validator's
+                              description:
+                                delegator_shares defines total shares issued to a validator's
                                 delegators.
                             description:
                               description: description defines the description terms for the validator.
@@ -12479,7 +12585,8 @@ paths:
                                   description: moniker defines a human-readable name for the validator.
                                 identity:
                                   type: string
-                                  description: identity defines an optional identity signature (ex. UPort or
+                                  description:
+                                    identity defines an optional identity signature (ex. UPort or
                                     Keybase).
                                 website:
                                   type: string
@@ -12493,19 +12600,22 @@ paths:
                             unbonding_height:
                               type: string
                               format: int64
-                              description: unbonding_height defines, if unbonding, the height at which this
+                              description:
+                                unbonding_height defines, if unbonding, the height at which this
                                 validator has begun unbonding.
                             unbonding_time:
                               type: string
                               format: date-time
-                              description: unbonding_time defines, if unbonding, the min time for the
+                              description:
+                                unbonding_time defines, if unbonding, the min time for the
                                 validator to complete unbonding.
                             commission:
                               description: commission defines the commission parameters.
                               type: object
                               properties:
                                 commission_rates:
-                                  description: commission_rates defines the initial commission rates to be used
+                                  description:
+                                    commission_rates defines the initial commission rates to be used
                                     for creating a validator.
                                   type: object
                                   properties:
@@ -12514,11 +12624,13 @@ paths:
                                       description: rate is the commission rate charged to delegators, as a fraction.
                                     max_rate:
                                       type: string
-                                      description: max_rate defines the maximum commission rate which validator can
+                                      description:
+                                        max_rate defines the maximum commission rate which validator can
                                         ever charge, as a fraction.
                                     max_change_rate:
                                       type: string
-                                      description: max_change_rate defines the maximum daily increase of the validator
+                                      description:
+                                        max_change_rate defines the maximum daily increase of the validator
                                         commission, as a fraction.
                                 update_time:
                                   type: string
@@ -12526,7 +12638,8 @@ paths:
                                   description: update_time is the last time the commission rate was changed.
                             min_self_delegation:
                               type: string
-                              description: min_self_delegation is the validator's self declared minimum self
+                              description:
+                                min_self_delegation is the validator's self declared minimum self
                                 delegation.
                           description: >-
                             Validator defines a validator, together with the
@@ -12618,7 +12731,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -12753,7 +12867,8 @@ paths:
                       max_entries:
                         type: integer
                         format: int64
-                        description: max_entries is the max entries for either unbonding delegation or
+                        description:
+                          max_entries is the max entries for either unbonding delegation or
                           redelegation (per pair/trio).
                       historical_entries:
                         type: integer
@@ -12764,13 +12879,16 @@ paths:
                         description: bond_denom defines the bondable coin denomination.
                       power_reduction:
                         type: string
-                        title: power_reduction is the amount of staking tokens required for 1 unit of
+                        title:
+                          power_reduction is the amount of staking tokens required for 1 unit of
                           consensus-engine power
                       min_commission_rate:
                         type: string
-                        title: min_commission_rate is the chain-wide minimum commission rate that a
+                        title:
+                          min_commission_rate is the chain-wide minimum commission rate that a
                           validator can charge their delegators
-                description: QueryParamsResponse is response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -12840,7 +12958,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -13030,7 +13149,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -13150,10 +13270,12 @@ paths:
                       properties:
                         operator_address:
                           type: string
-                          description: operator_address defines the address of the validator's operator;
+                          description:
+                            operator_address defines the address of the validator's operator;
                             bech encoded in JSON.
                         consensus_pubkey:
-                          description: consensus_pubkey is the consensus public key of the validator, as a
+                          description:
+                            consensus_pubkey is the consensus public key of the validator, as a
                             Protobuf Any.
                           type: object
                           properties:
@@ -13206,11 +13328,13 @@ paths:
                             value:
                               type: string
                               format: byte
-                              description: Must be a valid serialized protocol buffer of the above specified
+                              description:
+                                Must be a valid serialized protocol buffer of the above specified
                                 type.
                         jailed:
                           type: boolean
-                          description: jailed defined whether the validator has been jailed from bonded
+                          description:
+                            jailed defined whether the validator has been jailed from bonded
                             status or not.
                         status:
                           description: status is the validator status (bonded/unbonding/unbonded).
@@ -13226,7 +13350,8 @@ paths:
                           description: tokens define the delegated tokens (incl. self-delegation).
                         delegator_shares:
                           type: string
-                          description: delegator_shares defines total shares issued to a validator's
+                          description:
+                            delegator_shares defines total shares issued to a validator's
                             delegators.
                         description:
                           description: description defines the description terms for the validator.
@@ -13237,7 +13362,8 @@ paths:
                               description: moniker defines a human-readable name for the validator.
                             identity:
                               type: string
-                              description: identity defines an optional identity signature (ex. UPort or
+                              description:
+                                identity defines an optional identity signature (ex. UPort or
                                 Keybase).
                             website:
                               type: string
@@ -13251,19 +13377,22 @@ paths:
                         unbonding_height:
                           type: string
                           format: int64
-                          description: unbonding_height defines, if unbonding, the height at which this
+                          description:
+                            unbonding_height defines, if unbonding, the height at which this
                             validator has begun unbonding.
                         unbonding_time:
                           type: string
                           format: date-time
-                          description: unbonding_time defines, if unbonding, the min time for the
+                          description:
+                            unbonding_time defines, if unbonding, the min time for the
                             validator to complete unbonding.
                         commission:
                           description: commission defines the commission parameters.
                           type: object
                           properties:
                             commission_rates:
-                              description: commission_rates defines the initial commission rates to be used
+                              description:
+                                commission_rates defines the initial commission rates to be used
                                 for creating a validator.
                               type: object
                               properties:
@@ -13272,11 +13401,13 @@ paths:
                                   description: rate is the commission rate charged to delegators, as a fraction.
                                 max_rate:
                                   type: string
-                                  description: max_rate defines the maximum commission rate which validator can
+                                  description:
+                                    max_rate defines the maximum commission rate which validator can
                                     ever charge, as a fraction.
                                 max_change_rate:
                                   type: string
-                                  description: max_change_rate defines the maximum daily increase of the validator
+                                  description:
+                                    max_change_rate defines the maximum daily increase of the validator
                                     commission, as a fraction.
                             update_time:
                               type: string
@@ -13284,7 +13415,8 @@ paths:
                               description: update_time is the last time the commission rate was changed.
                         min_self_delegation:
                           type: string
-                          description: min_self_delegation is the validator's self declared minimum self
+                          description:
+                            min_self_delegation is the validator's self declared minimum self
                             delegation.
                       description: >-
                         Validator defines a validator, together with the total
@@ -13322,7 +13454,8 @@ paths:
                           PageRequest.count_total
 
                           was set, its value is undefined otherwise
-                title: QueryValidatorsResponse is response type for the Query/Validators RPC
+                title:
+                  QueryValidatorsResponse is response type for the Query/Validators RPC
                   method
         default:
           description: An unexpected error response.
@@ -13392,7 +13525,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -13565,10 +13699,12 @@ paths:
                     properties:
                       operator_address:
                         type: string
-                        description: operator_address defines the address of the validator's operator;
+                        description:
+                          operator_address defines the address of the validator's operator;
                           bech encoded in JSON.
                       consensus_pubkey:
-                        description: consensus_pubkey is the consensus public key of the validator, as a
+                        description:
+                          consensus_pubkey is the consensus public key of the validator, as a
                           Protobuf Any.
                         type: object
                         properties:
@@ -13621,11 +13757,13 @@ paths:
                           value:
                             type: string
                             format: byte
-                            description: Must be a valid serialized protocol buffer of the above specified
+                            description:
+                              Must be a valid serialized protocol buffer of the above specified
                               type.
                       jailed:
                         type: boolean
-                        description: jailed defined whether the validator has been jailed from bonded
+                        description:
+                          jailed defined whether the validator has been jailed from bonded
                           status or not.
                       status:
                         description: status is the validator status (bonded/unbonding/unbonded).
@@ -13641,7 +13779,8 @@ paths:
                         description: tokens define the delegated tokens (incl. self-delegation).
                       delegator_shares:
                         type: string
-                        description: delegator_shares defines total shares issued to a validator's
+                        description:
+                          delegator_shares defines total shares issued to a validator's
                           delegators.
                       description:
                         description: description defines the description terms for the validator.
@@ -13652,7 +13791,8 @@ paths:
                             description: moniker defines a human-readable name for the validator.
                           identity:
                             type: string
-                            description: identity defines an optional identity signature (ex. UPort or
+                            description:
+                              identity defines an optional identity signature (ex. UPort or
                               Keybase).
                           website:
                             type: string
@@ -13666,19 +13806,22 @@ paths:
                       unbonding_height:
                         type: string
                         format: int64
-                        description: unbonding_height defines, if unbonding, the height at which this
+                        description:
+                          unbonding_height defines, if unbonding, the height at which this
                           validator has begun unbonding.
                       unbonding_time:
                         type: string
                         format: date-time
-                        description: unbonding_time defines, if unbonding, the min time for the
+                        description:
+                          unbonding_time defines, if unbonding, the min time for the
                           validator to complete unbonding.
                       commission:
                         description: commission defines the commission parameters.
                         type: object
                         properties:
                           commission_rates:
-                            description: commission_rates defines the initial commission rates to be used
+                            description:
+                              commission_rates defines the initial commission rates to be used
                               for creating a validator.
                             type: object
                             properties:
@@ -13687,11 +13830,13 @@ paths:
                                 description: rate is the commission rate charged to delegators, as a fraction.
                               max_rate:
                                 type: string
-                                description: max_rate defines the maximum commission rate which validator can
+                                description:
+                                  max_rate defines the maximum commission rate which validator can
                                   ever charge, as a fraction.
                               max_change_rate:
                                 type: string
-                                description: max_change_rate defines the maximum daily increase of the validator
+                                description:
+                                  max_change_rate defines the maximum daily increase of the validator
                                   commission, as a fraction.
                           update_time:
                             type: string
@@ -13699,9 +13844,11 @@ paths:
                             description: update_time is the last time the commission rate was changed.
                       min_self_delegation:
                         type: string
-                        description: min_self_delegation is the validator's self declared minimum self
+                        description:
+                          min_self_delegation is the validator's self declared minimum self
                           delegation.
-                title: QueryValidatorResponse is response type for the Query/Validator RPC
+                title:
+                  QueryValidatorResponse is response type for the Query/Validator RPC
                   method
         default:
           description: An unexpected error response.
@@ -13771,7 +13918,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -14024,7 +14172,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -14229,7 +14378,8 @@ paths:
                           NOTE: The amount field is an Int which implements the custom method
 
                           signatures required by gogoproto.
-                description: QueryDelegationResponse is response type for the Query/Delegation
+                description:
+                  QueryDelegationResponse is response type for the Query/Delegation
                   RPC method.
         default:
           description: An unexpected error response.
@@ -14299,7 +14449,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -14452,12 +14603,14 @@ paths:
                               description: completion_time is the unix time for unbonding completion.
                             initial_balance:
                               type: string
-                              description: initial_balance defines the tokens initially scheduled to receive
+                              description:
+                                initial_balance defines the tokens initially scheduled to receive
                                 at completion.
                             balance:
                               type: string
                               description: balance defines the tokens to receive at completion.
-                          description: UnbondingDelegationEntry defines an unbonding object with relevant
+                          description:
+                            UnbondingDelegationEntry defines an unbonding object with relevant
                             metadata.
                         description: entries are the unbonding delegation entries.
                 description: >-
@@ -14533,7 +14686,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -14686,12 +14840,14 @@ paths:
                                 description: completion_time is the unix time for unbonding completion.
                               initial_balance:
                                 type: string
-                                description: initial_balance defines the tokens initially scheduled to receive
+                                description:
+                                  initial_balance defines the tokens initially scheduled to receive
                                   at completion.
                               balance:
                                 type: string
                                 description: balance defines the tokens to receive at completion.
-                            description: UnbondingDelegationEntry defines an unbonding object with relevant
+                            description:
+                              UnbondingDelegationEntry defines an unbonding object with relevant
                               metadata.
                           description: entries are the unbonding delegation entries.
                       description: >-
@@ -14790,7 +14946,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -15034,7 +15191,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -15258,7 +15416,8 @@ paths:
                           value:
                             type: string
                             format: byte
-                            description: Must be a valid serialized protocol buffer of the above specified
+                            description:
+                              Must be a valid serialized protocol buffer of the above specified
                               type.
                         description: >-
                           `Any` contains an arbitrary serialized protocol buffer
@@ -15430,7 +15589,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -15599,7 +15759,8 @@ paths:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
                     description: >-
                       `Any` contains an arbitrary serialized protocol buffer
@@ -15771,7 +15932,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -15942,7 +16104,8 @@ paths:
                           properties:
                             port_id:
                               type: string
-                              description: port on the counterparty chain which owns the other end of the
+                              description:
+                                port on the counterparty chain which owns the other end of the
                                 channel.
                             channel_id:
                               type: string
@@ -16022,7 +16185,8 @@ paths:
                       In these cases, the RevisionNumber is incremented so that height continues to
 
                       be monitonically increasing even as the RevisionHeight gets reset
-                description: QueryChannelsResponse is the response type for the Query/Channels
+                description:
+                  QueryChannelsResponse is the response type for the Query/Channels
                   RPC method.
         default:
           description: An unexpected error response.
@@ -16092,7 +16256,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -16300,7 +16465,8 @@ paths:
                         properties:
                           port_id:
                             type: string
-                            description: port on the counterparty chain which owns the other end of the
+                            description:
+                              port on the counterparty chain which owns the other end of the
                               channel.
                           channel_id:
                             type: string
@@ -16426,7 +16592,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -16616,7 +16783,8 @@ paths:
                           value:
                             type: string
                             format: byte
-                            description: Must be a valid serialized protocol buffer of the above specified
+                            description:
+                              Must be a valid serialized protocol buffer of the above specified
                               type.
                         description: >-
                           `Any` contains an arbitrary serialized protocol buffer
@@ -16818,7 +16986,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -16999,7 +17168,8 @@ paths:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
                     description: >-
                       `Any` contains an arbitrary serialized protocol buffer
@@ -17199,7 +17369,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -17442,7 +17613,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -17722,7 +17894,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -18001,7 +18174,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -18286,7 +18460,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -18563,7 +18738,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -18804,7 +18980,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -19047,7 +19224,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -19170,7 +19348,8 @@ paths:
         - Query
   "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}":
     get:
-      summary: PacketReceipt queries if a given packet sequence has been received on
+      summary:
+        PacketReceipt queries if a given packet sequence has been received on
         the queried chain
       operationId: PacketReceipt
       responses:
@@ -19286,7 +19465,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -19469,7 +19649,8 @@ paths:
                           properties:
                             port_id:
                               type: string
-                              description: port on the counterparty chain which owns the other end of the
+                              description:
+                                port on the counterparty chain which owns the other end of the
                                 channel.
                             channel_id:
                               type: string
@@ -19620,7 +19801,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -19796,7 +19978,8 @@ paths:
                         items:
                           type: string
                         description: allowed_clients defines the list of allowed client state types.
-                description: QueryClientParamsResponse is the response type for the
+                description:
+                  QueryClientParamsResponse is the response type for the
                   Query/ClientParams RPC method.
         default:
           description: An unexpected error response.
@@ -19866,7 +20049,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -20040,7 +20224,8 @@ paths:
                             value:
                               type: string
                               format: byte
-                              description: Must be a valid serialized protocol buffer of the above specified
+                              description:
+                                Must be a valid serialized protocol buffer of the above specified
                                 type.
                           description: >-
                             `Any` contains an arbitrary serialized protocol
@@ -20246,7 +20431,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -20460,7 +20646,8 @@ paths:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
                     description: >-
                       `Any` contains an arbitrary serialized protocol buffer
@@ -20661,7 +20848,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -20864,7 +21052,8 @@ paths:
                             value:
                               type: string
                               format: byte
-                              description: Must be a valid serialized protocol buffer of the above specified
+                              description:
+                                Must be a valid serialized protocol buffer of the above specified
                                 type.
                           description: >-
                             `Any` contains an arbitrary serialized protocol
@@ -20963,7 +21152,8 @@ paths:
                                   "@type": "type.googleapis.com/google.protobuf.Duration",
                                   "value": "1.212s"
                                 }
-                      description: ConsensusStateWithHeight defines a consensus state with an
+                      description:
+                        ConsensusStateWithHeight defines a consensus state with an
                         additional height field.
                     title: consensus states associated with the identifier
                   pagination:
@@ -21065,7 +21255,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -21289,7 +21480,8 @@ paths:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
                     description: >-
                       `Any` contains an arbitrary serialized protocol buffer
@@ -21488,7 +21680,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -21737,7 +21930,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -22065,7 +22259,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -22415,7 +22610,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -22597,7 +22793,8 @@ paths:
                           value:
                             type: string
                             format: byte
-                            description: Must be a valid serialized protocol buffer of the above specified
+                            description:
+                              Must be a valid serialized protocol buffer of the above specified
                               type.
                         description: >-
                           `Any` contains an arbitrary serialized protocol buffer
@@ -22801,7 +22998,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -22976,7 +23174,8 @@ paths:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
                     description: >-
                       `Any` contains an arbitrary serialized protocol buffer
@@ -23178,7 +23377,8 @@ paths:
                         value:
                           type: string
                           format: byte
-                          description: Must be a valid serialized protocol buffer of the above specified
+                          description:
+                            Must be a valid serialized protocol buffer of the above specified
                             type.
                       description: >-
                         `Any` contains an arbitrary serialized protocol buffer
@@ -23522,7 +23722,8 @@ paths:
                           token transfers to this
 
                           chain.
-                description: QueryParamsResponse is the response type for the Query/Params RPC
+                description:
+                  QueryParamsResponse is the response type for the Query/Params RPC
                   method.
         default:
           description: An unexpected error response.
@@ -23687,7 +23888,8 @@ components:
         value:
           type: string
           format: byte
-          description: Must be a valid serialized protocol buffer of the above specified
+          description:
+            Must be a valid serialized protocol buffer of the above specified
             type.
       description: >-
         `Any` contains an arbitrary serialized protocol buffer message along
@@ -23850,7 +24052,8 @@ components:
               value:
                 type: string
                 format: byte
-                description: Must be a valid serialized protocol buffer of the above specified
+                description:
+                  Must be a valid serialized protocol buffer of the above specified
                   type.
             description: >-
               `Any` contains an arbitrary serialized protocol buffer message
@@ -24269,7 +24472,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -24425,7 +24629,8 @@ components:
               value:
                 type: string
                 format: byte
-                description: Must be a valid serialized protocol buffer of the above specified
+                description:
+                  Must be a valid serialized protocol buffer of the above specified
                   type.
             description: >-
               `Any` contains an arbitrary serialized protocol buffer message
@@ -26252,9 +26457,11 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
-      description: QueryAccountResponse is the response type for the Query/Account RPC
+      description:
+        QueryAccountResponse is the response type for the Query/Account RPC
         method.
     cosmos.auth.v1beta1.QueryParamsResponse:
       type: object
@@ -26318,7 +26525,8 @@ components:
             properties:
               denom:
                 type: string
-                description: denom represents the string name of the given denom unit (e.g
+                description:
+                  denom represents the string name of the given denom unit (e.g
                   uatom).
               exponent:
                 type: integer
@@ -26344,7 +26552,8 @@ components:
           title: denom_units represents the list of DenomUnit's for a given coin
         base:
           type: string
-          description: base represents the base denom (should be the DenomUnit with
+          description:
+            base represents the base denom (should be the DenomUnit with
             exponent = 0).
         display:
           type: string
@@ -26428,13 +26637,15 @@ components:
               type: string
             amount:
               type: string
-      description: QueryBalanceResponse is the response type for the Query/Balance RPC
+      description:
+        QueryBalanceResponse is the response type for the Query/Balance RPC
         method.
     cosmos.bank.v1beta1.QueryDenomMetadataResponse:
       type: object
       properties:
         metadata:
-          description: metadata describes and provides all the client information for the
+          description:
+            metadata describes and provides all the client information for the
             requested token.
           type: object
           properties:
@@ -26447,7 +26658,8 @@ components:
                 properties:
                   denom:
                     type: string
-                    description: denom represents the string name of the given denom unit (e.g
+                    description:
+                      denom represents the string name of the given denom unit (e.g
                       uatom).
                   exponent:
                     type: integer
@@ -26473,7 +26685,8 @@ components:
               title: denom_units represents the list of DenomUnit's for a given coin
             base:
               type: string
-              description: base represents the base denom (should be the DenomUnit with
+              description:
+                base represents the base denom (should be the DenomUnit with
                 exponent = 0).
             display:
               type: string
@@ -26502,7 +26715,8 @@ components:
                   properties:
                     denom:
                       type: string
-                      description: denom represents the string name of the given denom unit (e.g
+                      description:
+                        denom represents the string name of the given denom unit (e.g
                         uatom).
                     exponent:
                       type: integer
@@ -26528,7 +26742,8 @@ components:
                 title: denom_units represents the list of DenomUnit's for a given coin
               base:
                 type: string
-                description: base represents the base denom (should be the DenomUnit with
+                description:
+                  base represents the base denom (should be the DenomUnit with
                   exponent = 0).
               display:
                 type: string
@@ -26538,7 +26753,8 @@ components:
             description: |-
               Metadata represents a struct that describes
               a basic token.
-          description: metadata provides the client information for all the registered
+          description:
+            metadata provides the client information for all the registered
             tokens.
         pagination:
           description: pagination defines the pagination in the response.
@@ -26586,7 +26802,8 @@ components:
             default_send_enabled:
               type: boolean
           description: Params defines the parameters for the bank module.
-      description: QueryParamsResponse defines the response type for querying x/bank
+      description:
+        QueryParamsResponse defines the response type for querying x/bank
         parameters.
     cosmos.bank.v1beta1.QuerySupplyOfResponse:
       type: object
@@ -26599,7 +26816,8 @@ components:
               type: string
             amount:
               type: string
-      description: QuerySupplyOfResponse is the response type for the Query/SupplyOf
+      description:
+        QuerySupplyOfResponse is the response type for the Query/SupplyOf
         RPC method.
     cosmos.bank.v1beta1.QueryTotalSupplyResponse:
       type: object
@@ -27033,7 +27251,8 @@ components:
               value:
                 type: string
                 format: byte
-                description: Must be a valid serialized protocol buffer of the above specified
+                description:
+                  Must be a valid serialized protocol buffer of the above specified
                   type.
             description: >-
               `Any` contains an arbitrary serialized protocol buffer message
@@ -27212,9 +27431,11 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
-      description: QueryEvidenceResponse is the response type for the Query/Evidence
+      description:
+        QueryEvidenceResponse is the response type for the Query/Evidence
         RPC method.
     cosmos.gov.v1beta1.Deposit:
       type: object
@@ -27328,7 +27549,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -27544,7 +27766,8 @@ components:
                   NOTE: The amount field is an Int which implements the custom method
 
                   signatures required by gogoproto.
-      description: QueryDepositResponse is the response type for the Query/Deposit RPC
+      description:
+        QueryDepositResponse is the response type for the Query/Deposit RPC
         method.
     cosmos.gov.v1beta1.QueryDepositsResponse:
       type: object
@@ -27598,7 +27821,8 @@ components:
                 PageRequest.count_total
 
                 was set, its value is undefined otherwise
-      description: QueryDepositsResponse is the response type for the Query/Deposits
+      description:
+        QueryDepositsResponse is the response type for the Query/Deposits
         RPC method.
     cosmos.gov.v1beta1.QueryParamsResponse:
       type: object
@@ -27651,7 +27875,8 @@ components:
             threshold:
               type: string
               format: byte
-              description: "Minimum proportion of Yes votes for proposal to pass. Default
+              description:
+                "Minimum proportion of Yes votes for proposal to pass. Default
                 value: 0.5."
             veto_threshold:
               type: string
@@ -27722,7 +27947,8 @@ components:
                 value:
                   type: string
                   format: byte
-                  description: Must be a valid serialized protocol buffer of the above specified
+                  description:
+                    Must be a valid serialized protocol buffer of the above specified
                     type.
               description: >-
                 `Any` contains an arbitrary serialized protocol buffer message
@@ -27886,7 +28112,8 @@ components:
               type: string
               format: date-time
           description: Proposal defines the core field members of a governance proposal.
-      description: QueryProposalResponse is the response type for the Query/Proposal
+      description:
+        QueryProposalResponse is the response type for the Query/Proposal
         RPC method.
     cosmos.gov.v1beta1.QueryProposalsResponse:
       type: object
@@ -27951,7 +28178,8 @@ components:
                   value:
                     type: string
                     format: byte
-                    description: Must be a valid serialized protocol buffer of the above specified
+                    description:
+                      Must be a valid serialized protocol buffer of the above specified
                       type.
                 description: >-
                   `Any` contains an arbitrary serialized protocol buffer message
@@ -28151,7 +28379,8 @@ components:
               type: string
             no_with_veto:
               type: string
-      description: QueryTallyResultResponse is the response type for the Query/Tally
+      description:
+        QueryTallyResultResponse is the response type for the Query/Tally
         RPC method.
     cosmos.gov.v1beta1.QueryVoteResponse:
       type: object
@@ -28250,7 +28479,8 @@ components:
         threshold:
           type: string
           format: byte
-          description: "Minimum proportion of Yes votes for proposal to pass. Default
+          description:
+            "Minimum proportion of Yes votes for proposal to pass. Default
             value: 0.5."
         veto_threshold:
           type: string
@@ -28258,7 +28488,8 @@ components:
           description: |-
             Minimum value of Veto votes to Total votes ratio for proposal to be
              vetoed. Default value: 1/3.
-      description: TallyParams defines the params for tallying votes on governance
+      description:
+        TallyParams defines the params for tallying votes on governance
         proposals.
     cosmos.gov.v1beta1.TallyResult:
       type: object
@@ -28555,7 +28786,8 @@ components:
       type: object
       properties:
         commission_rates:
-          description: commission_rates defines the initial commission rates to be used
+          description:
+            commission_rates defines the initial commission rates to be used
             for creating a validator.
           type: object
           properties:
@@ -28564,11 +28796,13 @@ components:
               description: rate is the commission rate charged to delegators, as a fraction.
             max_rate:
               type: string
-              description: max_rate defines the maximum commission rate which validator can
+              description:
+                max_rate defines the maximum commission rate which validator can
                 ever charge, as a fraction.
             max_change_rate:
               type: string
-              description: max_change_rate defines the maximum daily increase of the validator
+              description:
+                max_change_rate defines the maximum daily increase of the validator
                 commission, as a fraction.
         update_time:
           type: string
@@ -28583,11 +28817,13 @@ components:
           description: rate is the commission rate charged to delegators, as a fraction.
         max_rate:
           type: string
-          description: max_rate defines the maximum commission rate which validator can
+          description:
+            max_rate defines the maximum commission rate which validator can
             ever charge, as a fraction.
         max_change_rate:
           type: string
-          description: max_change_rate defines the maximum daily increase of the validator
+          description:
+            max_change_rate defines the maximum daily increase of the validator
             commission, as a fraction.
       description: >-
         CommissionRates defines the initial commission rates to be used for
@@ -28655,7 +28891,8 @@ components:
           description: moniker defines a human-readable name for the validator.
         identity:
           type: string
-          description: identity defines an optional identity signature (ex. UPort or
+          description:
+            identity defines an optional identity signature (ex. UPort or
             Keybase).
         website:
           type: string
@@ -28753,10 +28990,12 @@ components:
             properties:
               operator_address:
                 type: string
-                description: operator_address defines the address of the validator's operator;
+                description:
+                  operator_address defines the address of the validator's operator;
                   bech encoded in JSON.
               consensus_pubkey:
-                description: consensus_pubkey is the consensus public key of the validator, as a
+                description:
+                  consensus_pubkey is the consensus public key of the validator, as a
                   Protobuf Any.
                 type: object
                 properties:
@@ -28809,11 +29048,13 @@ components:
                   value:
                     type: string
                     format: byte
-                    description: Must be a valid serialized protocol buffer of the above specified
+                    description:
+                      Must be a valid serialized protocol buffer of the above specified
                       type.
               jailed:
                 type: boolean
-                description: jailed defined whether the validator has been jailed from bonded
+                description:
+                  jailed defined whether the validator has been jailed from bonded
                   status or not.
               status:
                 description: status is the validator status (bonded/unbonding/unbonded).
@@ -28829,7 +29070,8 @@ components:
                 description: tokens define the delegated tokens (incl. self-delegation).
               delegator_shares:
                 type: string
-                description: delegator_shares defines total shares issued to a validator's
+                description:
+                  delegator_shares defines total shares issued to a validator's
                   delegators.
               description:
                 description: description defines the description terms for the validator.
@@ -28840,7 +29082,8 @@ components:
                     description: moniker defines a human-readable name for the validator.
                   identity:
                     type: string
-                    description: identity defines an optional identity signature (ex. UPort or
+                    description:
+                      identity defines an optional identity signature (ex. UPort or
                       Keybase).
                   website:
                     type: string
@@ -28854,19 +29097,22 @@ components:
               unbonding_height:
                 type: string
                 format: int64
-                description: unbonding_height defines, if unbonding, the height at which this
+                description:
+                  unbonding_height defines, if unbonding, the height at which this
                   validator has begun unbonding.
               unbonding_time:
                 type: string
                 format: date-time
-                description: unbonding_time defines, if unbonding, the min time for the
+                description:
+                  unbonding_time defines, if unbonding, the min time for the
                   validator to complete unbonding.
               commission:
                 description: commission defines the commission parameters.
                 type: object
                 properties:
                   commission_rates:
-                    description: commission_rates defines the initial commission rates to be used
+                    description:
+                      commission_rates defines the initial commission rates to be used
                       for creating a validator.
                     type: object
                     properties:
@@ -28875,11 +29121,13 @@ components:
                         description: rate is the commission rate charged to delegators, as a fraction.
                       max_rate:
                         type: string
-                        description: max_rate defines the maximum commission rate which validator can
+                        description:
+                          max_rate defines the maximum commission rate which validator can
                           ever charge, as a fraction.
                       max_change_rate:
                         type: string
-                        description: max_change_rate defines the maximum daily increase of the validator
+                        description:
+                          max_change_rate defines the maximum daily increase of the validator
                           commission, as a fraction.
                   update_time:
                     type: string
@@ -28887,7 +29135,8 @@ components:
                     description: update_time is the last time the commission rate was changed.
               min_self_delegation:
                 type: string
-                description: min_self_delegation is the validator's self declared minimum self
+                description:
+                  min_self_delegation is the validator's self declared minimum self
                   delegation.
             description: >-
               Validator defines a validator, together with the total amount of
@@ -28928,7 +29177,8 @@ components:
         max_entries:
           type: integer
           format: int64
-          description: max_entries is the max entries for either unbonding delegation or
+          description:
+            max_entries is the max entries for either unbonding delegation or
             redelegation (per pair/trio).
         historical_entries:
           type: integer
@@ -28939,11 +29189,13 @@ components:
           description: bond_denom defines the bondable coin denomination.
         power_reduction:
           type: string
-          title: power_reduction is the amount of staking tokens required for 1 unit of
+          title:
+            power_reduction is the amount of staking tokens required for 1 unit of
             consensus-engine power
         min_commission_rate:
           type: string
-          title: min_commission_rate is the chain-wide minimum commission rate that a
+          title:
+            min_commission_rate is the chain-wide minimum commission rate that a
             validator can charge their delegators
       description: Params defines the parameters for the staking module.
     cosmos.staking.v1beta1.Pool:
@@ -28996,7 +29248,8 @@ components:
                 NOTE: The amount field is an Int which implements the custom method
 
                 signatures required by gogoproto.
-      description: QueryDelegationResponse is response type for the Query/Delegation
+      description:
+        QueryDelegationResponse is response type for the Query/Delegation
         RPC method.
     cosmos.staking.v1beta1.QueryDelegatorDelegationsResponse:
       type: object
@@ -29044,7 +29297,8 @@ components:
               contains a
 
               balance in addition to shares which is more suitable for client responses.
-          description: delegation_responses defines all the delegations' info of a
+          description:
+            delegation_responses defines all the delegations' info of a
             delegator.
         pagination:
           description: pagination defines the pagination in the response.
@@ -29096,12 +29350,14 @@ components:
                       description: completion_time is the unix time for unbonding completion.
                     initial_balance:
                       type: string
-                      description: initial_balance defines the tokens initially scheduled to receive
+                      description:
+                        initial_balance defines the tokens initially scheduled to receive
                         at completion.
                     balance:
                       type: string
                       description: balance defines the tokens to receive at completion.
-                  description: UnbondingDelegationEntry defines an unbonding object with relevant
+                  description:
+                    UnbondingDelegationEntry defines an unbonding object with relevant
                     metadata.
                 description: entries are the unbonding delegation entries.
             description: >-
@@ -29139,10 +29395,12 @@ components:
           properties:
             operator_address:
               type: string
-              description: operator_address defines the address of the validator's operator;
+              description:
+                operator_address defines the address of the validator's operator;
                 bech encoded in JSON.
             consensus_pubkey:
-              description: consensus_pubkey is the consensus public key of the validator, as a
+              description:
+                consensus_pubkey is the consensus public key of the validator, as a
                 Protobuf Any.
               type: object
               properties:
@@ -29195,11 +29453,13 @@ components:
                 value:
                   type: string
                   format: byte
-                  description: Must be a valid serialized protocol buffer of the above specified
+                  description:
+                    Must be a valid serialized protocol buffer of the above specified
                     type.
             jailed:
               type: boolean
-              description: jailed defined whether the validator has been jailed from bonded
+              description:
+                jailed defined whether the validator has been jailed from bonded
                 status or not.
             status:
               description: status is the validator status (bonded/unbonding/unbonded).
@@ -29215,7 +29475,8 @@ components:
               description: tokens define the delegated tokens (incl. self-delegation).
             delegator_shares:
               type: string
-              description: delegator_shares defines total shares issued to a validator's
+              description:
+                delegator_shares defines total shares issued to a validator's
                 delegators.
             description:
               description: description defines the description terms for the validator.
@@ -29226,7 +29487,8 @@ components:
                   description: moniker defines a human-readable name for the validator.
                 identity:
                   type: string
-                  description: identity defines an optional identity signature (ex. UPort or
+                  description:
+                    identity defines an optional identity signature (ex. UPort or
                     Keybase).
                 website:
                   type: string
@@ -29240,19 +29502,22 @@ components:
             unbonding_height:
               type: string
               format: int64
-              description: unbonding_height defines, if unbonding, the height at which this
+              description:
+                unbonding_height defines, if unbonding, the height at which this
                 validator has begun unbonding.
             unbonding_time:
               type: string
               format: date-time
-              description: unbonding_time defines, if unbonding, the min time for the
+              description:
+                unbonding_time defines, if unbonding, the min time for the
                 validator to complete unbonding.
             commission:
               description: commission defines the commission parameters.
               type: object
               properties:
                 commission_rates:
-                  description: commission_rates defines the initial commission rates to be used
+                  description:
+                    commission_rates defines the initial commission rates to be used
                     for creating a validator.
                   type: object
                   properties:
@@ -29261,11 +29526,13 @@ components:
                       description: rate is the commission rate charged to delegators, as a fraction.
                     max_rate:
                       type: string
-                      description: max_rate defines the maximum commission rate which validator can
+                      description:
+                        max_rate defines the maximum commission rate which validator can
                         ever charge, as a fraction.
                     max_change_rate:
                       type: string
-                      description: max_change_rate defines the maximum daily increase of the validator
+                      description:
+                        max_change_rate defines the maximum daily increase of the validator
                         commission, as a fraction.
                 update_time:
                   type: string
@@ -29273,7 +29540,8 @@ components:
                   description: update_time is the last time the commission rate was changed.
             min_self_delegation:
               type: string
-              description: min_self_delegation is the validator's self declared minimum self
+              description:
+                min_self_delegation is the validator's self declared minimum self
                 delegation.
       description: |-
         QueryDelegatorValidatorResponse response type for the
@@ -29288,10 +29556,12 @@ components:
             properties:
               operator_address:
                 type: string
-                description: operator_address defines the address of the validator's operator;
+                description:
+                  operator_address defines the address of the validator's operator;
                   bech encoded in JSON.
               consensus_pubkey:
-                description: consensus_pubkey is the consensus public key of the validator, as a
+                description:
+                  consensus_pubkey is the consensus public key of the validator, as a
                   Protobuf Any.
                 type: object
                 properties:
@@ -29344,11 +29614,13 @@ components:
                   value:
                     type: string
                     format: byte
-                    description: Must be a valid serialized protocol buffer of the above specified
+                    description:
+                      Must be a valid serialized protocol buffer of the above specified
                       type.
               jailed:
                 type: boolean
-                description: jailed defined whether the validator has been jailed from bonded
+                description:
+                  jailed defined whether the validator has been jailed from bonded
                   status or not.
               status:
                 description: status is the validator status (bonded/unbonding/unbonded).
@@ -29364,7 +29636,8 @@ components:
                 description: tokens define the delegated tokens (incl. self-delegation).
               delegator_shares:
                 type: string
-                description: delegator_shares defines total shares issued to a validator's
+                description:
+                  delegator_shares defines total shares issued to a validator's
                   delegators.
               description:
                 description: description defines the description terms for the validator.
@@ -29375,7 +29648,8 @@ components:
                     description: moniker defines a human-readable name for the validator.
                   identity:
                     type: string
-                    description: identity defines an optional identity signature (ex. UPort or
+                    description:
+                      identity defines an optional identity signature (ex. UPort or
                       Keybase).
                   website:
                     type: string
@@ -29389,19 +29663,22 @@ components:
               unbonding_height:
                 type: string
                 format: int64
-                description: unbonding_height defines, if unbonding, the height at which this
+                description:
+                  unbonding_height defines, if unbonding, the height at which this
                   validator has begun unbonding.
               unbonding_time:
                 type: string
                 format: date-time
-                description: unbonding_time defines, if unbonding, the min time for the
+                description:
+                  unbonding_time defines, if unbonding, the min time for the
                   validator to complete unbonding.
               commission:
                 description: commission defines the commission parameters.
                 type: object
                 properties:
                   commission_rates:
-                    description: commission_rates defines the initial commission rates to be used
+                    description:
+                      commission_rates defines the initial commission rates to be used
                       for creating a validator.
                     type: object
                     properties:
@@ -29410,11 +29687,13 @@ components:
                         description: rate is the commission rate charged to delegators, as a fraction.
                       max_rate:
                         type: string
-                        description: max_rate defines the maximum commission rate which validator can
+                        description:
+                          max_rate defines the maximum commission rate which validator can
                           ever charge, as a fraction.
                       max_change_rate:
                         type: string
-                        description: max_change_rate defines the maximum daily increase of the validator
+                        description:
+                          max_change_rate defines the maximum daily increase of the validator
                           commission, as a fraction.
                   update_time:
                     type: string
@@ -29422,7 +29701,8 @@ components:
                     description: update_time is the last time the commission rate was changed.
               min_self_delegation:
                 type: string
-                description: min_self_delegation is the validator's self declared minimum self
+                description:
+                  min_self_delegation is the validator's self declared minimum self
                   delegation.
             description: >-
               Validator defines a validator, together with the total amount of
@@ -29553,10 +29833,12 @@ components:
                 properties:
                   operator_address:
                     type: string
-                    description: operator_address defines the address of the validator's operator;
+                    description:
+                      operator_address defines the address of the validator's operator;
                       bech encoded in JSON.
                   consensus_pubkey:
-                    description: consensus_pubkey is the consensus public key of the validator, as a
+                    description:
+                      consensus_pubkey is the consensus public key of the validator, as a
                       Protobuf Any.
                     type: object
                     properties:
@@ -29609,11 +29891,13 @@ components:
                       value:
                         type: string
                         format: byte
-                        description: Must be a valid serialized protocol buffer of the above specified
+                        description:
+                          Must be a valid serialized protocol buffer of the above specified
                           type.
                   jailed:
                     type: boolean
-                    description: jailed defined whether the validator has been jailed from bonded
+                    description:
+                      jailed defined whether the validator has been jailed from bonded
                       status or not.
                   status:
                     description: status is the validator status (bonded/unbonding/unbonded).
@@ -29629,7 +29913,8 @@ components:
                     description: tokens define the delegated tokens (incl. self-delegation).
                   delegator_shares:
                     type: string
-                    description: delegator_shares defines total shares issued to a validator's
+                    description:
+                      delegator_shares defines total shares issued to a validator's
                       delegators.
                   description:
                     description: description defines the description terms for the validator.
@@ -29640,7 +29925,8 @@ components:
                         description: moniker defines a human-readable name for the validator.
                       identity:
                         type: string
-                        description: identity defines an optional identity signature (ex. UPort or
+                        description:
+                          identity defines an optional identity signature (ex. UPort or
                           Keybase).
                       website:
                         type: string
@@ -29654,19 +29940,22 @@ components:
                   unbonding_height:
                     type: string
                     format: int64
-                    description: unbonding_height defines, if unbonding, the height at which this
+                    description:
+                      unbonding_height defines, if unbonding, the height at which this
                       validator has begun unbonding.
                   unbonding_time:
                     type: string
                     format: date-time
-                    description: unbonding_time defines, if unbonding, the min time for the
+                    description:
+                      unbonding_time defines, if unbonding, the min time for the
                       validator to complete unbonding.
                   commission:
                     description: commission defines the commission parameters.
                     type: object
                     properties:
                       commission_rates:
-                        description: commission_rates defines the initial commission rates to be used
+                        description:
+                          commission_rates defines the initial commission rates to be used
                           for creating a validator.
                         type: object
                         properties:
@@ -29675,11 +29964,13 @@ components:
                             description: rate is the commission rate charged to delegators, as a fraction.
                           max_rate:
                             type: string
-                            description: max_rate defines the maximum commission rate which validator can
+                            description:
+                              max_rate defines the maximum commission rate which validator can
                               ever charge, as a fraction.
                           max_change_rate:
                             type: string
-                            description: max_change_rate defines the maximum daily increase of the validator
+                            description:
+                              max_change_rate defines the maximum daily increase of the validator
                               commission, as a fraction.
                       update_time:
                         type: string
@@ -29687,7 +29978,8 @@ components:
                         description: update_time is the last time the commission rate was changed.
                   min_self_delegation:
                     type: string
-                    description: min_self_delegation is the validator's self declared minimum self
+                    description:
+                      min_self_delegation is the validator's self declared minimum self
                       delegation.
                 description: >-
                   Validator defines a validator, together with the total amount
@@ -29728,7 +30020,8 @@ components:
             max_entries:
               type: integer
               format: int64
-              description: max_entries is the max entries for either unbonding delegation or
+              description:
+                max_entries is the max entries for either unbonding delegation or
                 redelegation (per pair/trio).
             historical_entries:
               type: integer
@@ -29739,11 +30032,13 @@ components:
               description: bond_denom defines the bondable coin denomination.
             power_reduction:
               type: string
-              title: power_reduction is the amount of staking tokens required for 1 unit of
+              title:
+                power_reduction is the amount of staking tokens required for 1 unit of
                 consensus-engine power
             min_commission_rate:
               type: string
-              title: min_commission_rate is the chain-wide minimum commission rate that a
+              title:
+                min_commission_rate is the chain-wide minimum commission rate that a
                 validator can charge their delegators
       description: QueryParamsResponse is response type for the Query/Params RPC method.
     cosmos.staking.v1beta1.QueryPoolResponse:
@@ -29774,11 +30069,13 @@ components:
                     description: delegator_address is the bech32-encoded address of the delegator.
                   validator_src_address:
                     type: string
-                    description: validator_src_address is the validator redelegation source operator
+                    description:
+                      validator_src_address is the validator redelegation source operator
                       address.
                   validator_dst_address:
                     type: string
-                    description: validator_dst_address is the validator redelegation destination
+                    description:
+                      validator_dst_address is the validator redelegation destination
                       operator address.
                   entries:
                     type: array
@@ -29788,7 +30085,8 @@ components:
                         creation_height:
                           type: string
                           format: int64
-                          description: creation_height  defines the height which the redelegation took
+                          description:
+                            creation_height  defines the height which the redelegation took
                             place.
                         completion_time:
                           type: string
@@ -29796,13 +30094,16 @@ components:
                           description: completion_time defines the unix time for redelegation completion.
                         initial_balance:
                           type: string
-                          description: initial_balance defines the initial balance when redelegation
+                          description:
+                            initial_balance defines the initial balance when redelegation
                             started.
                         shares_dst:
                           type: string
-                          description: shares_dst is the amount of destination-validator shares created by
+                          description:
+                            shares_dst is the amount of destination-validator shares created by
                             redelegation.
-                      description: RedelegationEntry defines a redelegation object with relevant
+                      description:
+                        RedelegationEntry defines a redelegation object with relevant
                         metadata.
                     description: entries are the redelegation entries.
                 description: >-
@@ -29821,7 +30122,8 @@ components:
                         creation_height:
                           type: string
                           format: int64
-                          description: creation_height  defines the height which the redelegation took
+                          description:
+                            creation_height  defines the height which the redelegation took
                             place.
                         completion_time:
                           type: string
@@ -29829,13 +30131,16 @@ components:
                           description: completion_time defines the unix time for redelegation completion.
                         initial_balance:
                           type: string
-                          description: initial_balance defines the initial balance when redelegation
+                          description:
+                            initial_balance defines the initial balance when redelegation
                             started.
                         shares_dst:
                           type: string
-                          description: shares_dst is the amount of destination-validator shares created by
+                          description:
+                            shares_dst is the amount of destination-validator shares created by
                             redelegation.
-                      description: RedelegationEntry defines a redelegation object with relevant
+                      description:
+                        RedelegationEntry defines a redelegation object with relevant
                         metadata.
                     balance:
                       type: string
@@ -29904,12 +30209,14 @@ components:
                     description: completion_time is the unix time for unbonding completion.
                   initial_balance:
                     type: string
-                    description: initial_balance defines the tokens initially scheduled to receive
+                    description:
+                      initial_balance defines the tokens initially scheduled to receive
                       at completion.
                   balance:
                     type: string
                     description: balance defines the tokens to receive at completion.
-                description: UnbondingDelegationEntry defines an unbonding object with relevant
+                description:
+                  UnbondingDelegationEntry defines an unbonding object with relevant
                   metadata.
               description: entries are the unbonding delegation entries.
       description: >-
@@ -29993,10 +30300,12 @@ components:
           properties:
             operator_address:
               type: string
-              description: operator_address defines the address of the validator's operator;
+              description:
+                operator_address defines the address of the validator's operator;
                 bech encoded in JSON.
             consensus_pubkey:
-              description: consensus_pubkey is the consensus public key of the validator, as a
+              description:
+                consensus_pubkey is the consensus public key of the validator, as a
                 Protobuf Any.
               type: object
               properties:
@@ -30049,11 +30358,13 @@ components:
                 value:
                   type: string
                   format: byte
-                  description: Must be a valid serialized protocol buffer of the above specified
+                  description:
+                    Must be a valid serialized protocol buffer of the above specified
                     type.
             jailed:
               type: boolean
-              description: jailed defined whether the validator has been jailed from bonded
+              description:
+                jailed defined whether the validator has been jailed from bonded
                 status or not.
             status:
               description: status is the validator status (bonded/unbonding/unbonded).
@@ -30069,7 +30380,8 @@ components:
               description: tokens define the delegated tokens (incl. self-delegation).
             delegator_shares:
               type: string
-              description: delegator_shares defines total shares issued to a validator's
+              description:
+                delegator_shares defines total shares issued to a validator's
                 delegators.
             description:
               description: description defines the description terms for the validator.
@@ -30080,7 +30392,8 @@ components:
                   description: moniker defines a human-readable name for the validator.
                 identity:
                   type: string
-                  description: identity defines an optional identity signature (ex. UPort or
+                  description:
+                    identity defines an optional identity signature (ex. UPort or
                     Keybase).
                 website:
                   type: string
@@ -30094,19 +30407,22 @@ components:
             unbonding_height:
               type: string
               format: int64
-              description: unbonding_height defines, if unbonding, the height at which this
+              description:
+                unbonding_height defines, if unbonding, the height at which this
                 validator has begun unbonding.
             unbonding_time:
               type: string
               format: date-time
-              description: unbonding_time defines, if unbonding, the min time for the
+              description:
+                unbonding_time defines, if unbonding, the min time for the
                 validator to complete unbonding.
             commission:
               description: commission defines the commission parameters.
               type: object
               properties:
                 commission_rates:
-                  description: commission_rates defines the initial commission rates to be used
+                  description:
+                    commission_rates defines the initial commission rates to be used
                     for creating a validator.
                   type: object
                   properties:
@@ -30115,11 +30431,13 @@ components:
                       description: rate is the commission rate charged to delegators, as a fraction.
                     max_rate:
                       type: string
-                      description: max_rate defines the maximum commission rate which validator can
+                      description:
+                        max_rate defines the maximum commission rate which validator can
                         ever charge, as a fraction.
                     max_change_rate:
                       type: string
-                      description: max_change_rate defines the maximum daily increase of the validator
+                      description:
+                        max_change_rate defines the maximum daily increase of the validator
                         commission, as a fraction.
                 update_time:
                   type: string
@@ -30127,7 +30445,8 @@ components:
                   description: update_time is the last time the commission rate was changed.
             min_self_delegation:
               type: string
-              description: min_self_delegation is the validator's self declared minimum self
+              description:
+                min_self_delegation is the validator's self declared minimum self
                 delegation.
       title: QueryValidatorResponse is response type for the Query/Validator RPC
         method
@@ -30160,12 +30479,14 @@ components:
                       description: completion_time is the unix time for unbonding completion.
                     initial_balance:
                       type: string
-                      description: initial_balance defines the tokens initially scheduled to receive
+                      description:
+                        initial_balance defines the tokens initially scheduled to receive
                         at completion.
                     balance:
                       type: string
                       description: balance defines the tokens to receive at completion.
-                  description: UnbondingDelegationEntry defines an unbonding object with relevant
+                  description:
+                    UnbondingDelegationEntry defines an unbonding object with relevant
                     metadata.
                 description: entries are the unbonding delegation entries.
             description: >-
@@ -30204,10 +30525,12 @@ components:
             properties:
               operator_address:
                 type: string
-                description: operator_address defines the address of the validator's operator;
+                description:
+                  operator_address defines the address of the validator's operator;
                   bech encoded in JSON.
               consensus_pubkey:
-                description: consensus_pubkey is the consensus public key of the validator, as a
+                description:
+                  consensus_pubkey is the consensus public key of the validator, as a
                   Protobuf Any.
                 type: object
                 properties:
@@ -30260,11 +30583,13 @@ components:
                   value:
                     type: string
                     format: byte
-                    description: Must be a valid serialized protocol buffer of the above specified
+                    description:
+                      Must be a valid serialized protocol buffer of the above specified
                       type.
               jailed:
                 type: boolean
-                description: jailed defined whether the validator has been jailed from bonded
+                description:
+                  jailed defined whether the validator has been jailed from bonded
                   status or not.
               status:
                 description: status is the validator status (bonded/unbonding/unbonded).
@@ -30280,7 +30605,8 @@ components:
                 description: tokens define the delegated tokens (incl. self-delegation).
               delegator_shares:
                 type: string
-                description: delegator_shares defines total shares issued to a validator's
+                description:
+                  delegator_shares defines total shares issued to a validator's
                   delegators.
               description:
                 description: description defines the description terms for the validator.
@@ -30291,7 +30617,8 @@ components:
                     description: moniker defines a human-readable name for the validator.
                   identity:
                     type: string
-                    description: identity defines an optional identity signature (ex. UPort or
+                    description:
+                      identity defines an optional identity signature (ex. UPort or
                       Keybase).
                   website:
                     type: string
@@ -30305,19 +30632,22 @@ components:
               unbonding_height:
                 type: string
                 format: int64
-                description: unbonding_height defines, if unbonding, the height at which this
+                description:
+                  unbonding_height defines, if unbonding, the height at which this
                   validator has begun unbonding.
               unbonding_time:
                 type: string
                 format: date-time
-                description: unbonding_time defines, if unbonding, the min time for the
+                description:
+                  unbonding_time defines, if unbonding, the min time for the
                   validator to complete unbonding.
               commission:
                 description: commission defines the commission parameters.
                 type: object
                 properties:
                   commission_rates:
-                    description: commission_rates defines the initial commission rates to be used
+                    description:
+                      commission_rates defines the initial commission rates to be used
                       for creating a validator.
                     type: object
                     properties:
@@ -30326,11 +30656,13 @@ components:
                         description: rate is the commission rate charged to delegators, as a fraction.
                       max_rate:
                         type: string
-                        description: max_rate defines the maximum commission rate which validator can
+                        description:
+                          max_rate defines the maximum commission rate which validator can
                           ever charge, as a fraction.
                       max_change_rate:
                         type: string
-                        description: max_change_rate defines the maximum daily increase of the validator
+                        description:
+                          max_change_rate defines the maximum daily increase of the validator
                           commission, as a fraction.
                   update_time:
                     type: string
@@ -30338,7 +30670,8 @@ components:
                     description: update_time is the last time the commission rate was changed.
               min_self_delegation:
                 type: string
-                description: min_self_delegation is the validator's self declared minimum self
+                description:
+                  min_self_delegation is the validator's self declared minimum self
                   delegation.
             description: >-
               Validator defines a validator, together with the total amount of
@@ -30376,7 +30709,8 @@ components:
                 PageRequest.count_total
 
                 was set, its value is undefined otherwise
-      title: QueryValidatorsResponse is response type for the Query/Validators RPC
+      title:
+        QueryValidatorsResponse is response type for the Query/Validators RPC
         method
     cosmos.staking.v1beta1.Redelegation:
       type: object
@@ -30386,11 +30720,13 @@ components:
           description: delegator_address is the bech32-encoded address of the delegator.
         validator_src_address:
           type: string
-          description: validator_src_address is the validator redelegation source operator
+          description:
+            validator_src_address is the validator redelegation source operator
             address.
         validator_dst_address:
           type: string
-          description: validator_dst_address is the validator redelegation destination
+          description:
+            validator_dst_address is the validator redelegation destination
             operator address.
         entries:
           type: array
@@ -30400,7 +30736,8 @@ components:
               creation_height:
                 type: string
                 format: int64
-                description: creation_height  defines the height which the redelegation took
+                description:
+                  creation_height  defines the height which the redelegation took
                   place.
               completion_time:
                 type: string
@@ -30408,13 +30745,16 @@ components:
                 description: completion_time defines the unix time for redelegation completion.
               initial_balance:
                 type: string
-                description: initial_balance defines the initial balance when redelegation
+                description:
+                  initial_balance defines the initial balance when redelegation
                   started.
               shares_dst:
                 type: string
-                description: shares_dst is the amount of destination-validator shares created by
+                description:
+                  shares_dst is the amount of destination-validator shares created by
                   redelegation.
-            description: RedelegationEntry defines a redelegation object with relevant
+            description:
+              RedelegationEntry defines a redelegation object with relevant
               metadata.
           description: entries are the redelegation entries.
       description: >-
@@ -30428,7 +30768,8 @@ components:
         creation_height:
           type: string
           format: int64
-          description: creation_height  defines the height which the redelegation took
+          description:
+            creation_height  defines the height which the redelegation took
             place.
         completion_time:
           type: string
@@ -30436,11 +30777,13 @@ components:
           description: completion_time defines the unix time for redelegation completion.
         initial_balance:
           type: string
-          description: initial_balance defines the initial balance when redelegation
+          description:
+            initial_balance defines the initial balance when redelegation
             started.
         shares_dst:
           type: string
-          description: shares_dst is the amount of destination-validator shares created by
+          description:
+            shares_dst is the amount of destination-validator shares created by
             redelegation.
       description: RedelegationEntry defines a redelegation object with relevant metadata.
     cosmos.staking.v1beta1.RedelegationEntryResponse:
@@ -30452,7 +30795,8 @@ components:
             creation_height:
               type: string
               format: int64
-              description: creation_height  defines the height which the redelegation took
+              description:
+                creation_height  defines the height which the redelegation took
                 place.
             completion_time:
               type: string
@@ -30460,13 +30804,16 @@ components:
               description: completion_time defines the unix time for redelegation completion.
             initial_balance:
               type: string
-              description: initial_balance defines the initial balance when redelegation
+              description:
+                initial_balance defines the initial balance when redelegation
                 started.
             shares_dst:
               type: string
-              description: shares_dst is the amount of destination-validator shares created by
+              description:
+                shares_dst is the amount of destination-validator shares created by
                 redelegation.
-          description: RedelegationEntry defines a redelegation object with relevant
+          description:
+            RedelegationEntry defines a redelegation object with relevant
             metadata.
         balance:
           type: string
@@ -30488,11 +30835,13 @@ components:
               description: delegator_address is the bech32-encoded address of the delegator.
             validator_src_address:
               type: string
-              description: validator_src_address is the validator redelegation source operator
+              description:
+                validator_src_address is the validator redelegation source operator
                 address.
             validator_dst_address:
               type: string
-              description: validator_dst_address is the validator redelegation destination
+              description:
+                validator_dst_address is the validator redelegation destination
                 operator address.
             entries:
               type: array
@@ -30502,7 +30851,8 @@ components:
                   creation_height:
                     type: string
                     format: int64
-                    description: creation_height  defines the height which the redelegation took
+                    description:
+                      creation_height  defines the height which the redelegation took
                       place.
                   completion_time:
                     type: string
@@ -30510,13 +30860,16 @@ components:
                     description: completion_time defines the unix time for redelegation completion.
                   initial_balance:
                     type: string
-                    description: initial_balance defines the initial balance when redelegation
+                    description:
+                      initial_balance defines the initial balance when redelegation
                       started.
                   shares_dst:
                     type: string
-                    description: shares_dst is the amount of destination-validator shares created by
+                    description:
+                      shares_dst is the amount of destination-validator shares created by
                       redelegation.
-                description: RedelegationEntry defines a redelegation object with relevant
+                description:
+                  RedelegationEntry defines a redelegation object with relevant
                   metadata.
               description: entries are the redelegation entries.
           description: >-
@@ -30535,7 +30888,8 @@ components:
                   creation_height:
                     type: string
                     format: int64
-                    description: creation_height  defines the height which the redelegation took
+                    description:
+                      creation_height  defines the height which the redelegation took
                       place.
                   completion_time:
                     type: string
@@ -30543,13 +30897,16 @@ components:
                     description: completion_time defines the unix time for redelegation completion.
                   initial_balance:
                     type: string
-                    description: initial_balance defines the initial balance when redelegation
+                    description:
+                      initial_balance defines the initial balance when redelegation
                       started.
                   shares_dst:
                     type: string
-                    description: shares_dst is the amount of destination-validator shares created by
+                    description:
+                      shares_dst is the amount of destination-validator shares created by
                       redelegation.
-                description: RedelegationEntry defines a redelegation object with relevant
+                description:
+                  RedelegationEntry defines a redelegation object with relevant
                   metadata.
               balance:
                 type: string
@@ -30591,12 +30948,14 @@ components:
                 description: completion_time is the unix time for unbonding completion.
               initial_balance:
                 type: string
-                description: initial_balance defines the tokens initially scheduled to receive
+                description:
+                  initial_balance defines the tokens initially scheduled to receive
                   at completion.
               balance:
                 type: string
                 description: balance defines the tokens to receive at completion.
-            description: UnbondingDelegationEntry defines an unbonding object with relevant
+            description:
+              UnbondingDelegationEntry defines an unbonding object with relevant
               metadata.
           description: entries are the unbonding delegation entries.
       description: |-
@@ -30615,22 +30974,26 @@ components:
           description: completion_time is the unix time for unbonding completion.
         initial_balance:
           type: string
-          description: initial_balance defines the tokens initially scheduled to receive
+          description:
+            initial_balance defines the tokens initially scheduled to receive
             at completion.
         balance:
           type: string
           description: balance defines the tokens to receive at completion.
-      description: UnbondingDelegationEntry defines an unbonding object with relevant
+      description:
+        UnbondingDelegationEntry defines an unbonding object with relevant
         metadata.
     cosmos.staking.v1beta1.Validator:
       type: object
       properties:
         operator_address:
           type: string
-          description: operator_address defines the address of the validator's operator;
+          description:
+            operator_address defines the address of the validator's operator;
             bech encoded in JSON.
         consensus_pubkey:
-          description: consensus_pubkey is the consensus public key of the validator, as a
+          description:
+            consensus_pubkey is the consensus public key of the validator, as a
             Protobuf Any.
           type: object
           properties:
@@ -30683,11 +31046,13 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
         jailed:
           type: boolean
-          description: jailed defined whether the validator has been jailed from bonded
+          description:
+            jailed defined whether the validator has been jailed from bonded
             status or not.
         status:
           description: status is the validator status (bonded/unbonding/unbonded).
@@ -30703,7 +31068,8 @@ components:
           description: tokens define the delegated tokens (incl. self-delegation).
         delegator_shares:
           type: string
-          description: delegator_shares defines total shares issued to a validator's
+          description:
+            delegator_shares defines total shares issued to a validator's
             delegators.
         description:
           description: description defines the description terms for the validator.
@@ -30714,7 +31080,8 @@ components:
               description: moniker defines a human-readable name for the validator.
             identity:
               type: string
-              description: identity defines an optional identity signature (ex. UPort or
+              description:
+                identity defines an optional identity signature (ex. UPort or
                 Keybase).
             website:
               type: string
@@ -30728,19 +31095,22 @@ components:
         unbonding_height:
           type: string
           format: int64
-          description: unbonding_height defines, if unbonding, the height at which this
+          description:
+            unbonding_height defines, if unbonding, the height at which this
             validator has begun unbonding.
         unbonding_time:
           type: string
           format: date-time
-          description: unbonding_time defines, if unbonding, the min time for the
+          description:
+            unbonding_time defines, if unbonding, the min time for the
             validator to complete unbonding.
         commission:
           description: commission defines the commission parameters.
           type: object
           properties:
             commission_rates:
-              description: commission_rates defines the initial commission rates to be used
+              description:
+                commission_rates defines the initial commission rates to be used
                 for creating a validator.
               type: object
               properties:
@@ -30749,11 +31119,13 @@ components:
                   description: rate is the commission rate charged to delegators, as a fraction.
                 max_rate:
                   type: string
-                  description: max_rate defines the maximum commission rate which validator can
+                  description:
+                    max_rate defines the maximum commission rate which validator can
                     ever charge, as a fraction.
                 max_change_rate:
                   type: string
-                  description: max_change_rate defines the maximum daily increase of the validator
+                  description:
+                    max_change_rate defines the maximum daily increase of the validator
                     commission, as a fraction.
             update_time:
               type: string
@@ -30761,7 +31133,8 @@ components:
               description: update_time is the last time the commission rate was changed.
         min_self_delegation:
           type: string
-          description: min_self_delegation is the validator's self declared minimum self
+          description:
+            min_self_delegation is the validator's self declared minimum self
             delegation.
       description: >-
         Validator defines a validator, together with the total amount of the
@@ -30998,7 +31371,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -31097,7 +31471,8 @@ components:
                   "@type": "type.googleapis.com/google.protobuf.Duration",
                   "value": "1.212s"
                 }
-      description: Plan specifies information about a planned upgrade and when it
+      description:
+        Plan specifies information about a planned upgrade and when it
         should occur.
     cosmos.upgrade.v1beta1.QueryAppliedPlanResponse:
       type: object
@@ -31216,7 +31591,8 @@ components:
                 value:
                   type: string
                   format: byte
-                  description: Must be a valid serialized protocol buffer of the above specified
+                  description:
+                    Must be a valid serialized protocol buffer of the above specified
                     type.
               description: >-
                 `Any` contains an arbitrary serialized protocol buffer message
@@ -31375,7 +31751,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -31523,7 +31900,8 @@ components:
           properties:
             port_id:
               type: string
-              description: port on the counterparty chain which owns the other end of the
+              description:
+                port on the counterparty chain which owns the other end of the
                 channel.
             channel_id:
               type: string
@@ -31552,7 +31930,8 @@ components:
       properties:
         port_id:
           type: string
-          description: port on the counterparty chain which owns the other end of the
+          description:
+            port on the counterparty chain which owns the other end of the
             channel.
         channel_id:
           type: string
@@ -31602,7 +31981,8 @@ components:
           properties:
             port_id:
               type: string
-              description: port on the counterparty chain which owns the other end of the
+              description:
+                port on the counterparty chain which owns the other end of the
                 channel.
             channel_id:
               type: string
@@ -31729,7 +32109,8 @@ components:
                 value:
                   type: string
                   format: byte
-                  description: Must be a valid serialized protocol buffer of the above specified
+                  description:
+                    Must be a valid serialized protocol buffer of the above specified
                     type.
               description: >-
                 `Any` contains an arbitrary serialized protocol buffer message
@@ -31919,7 +32300,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -32099,7 +32481,8 @@ components:
               properties:
                 port_id:
                   type: string
-                  description: port on the counterparty chain which owns the other end of the
+                  description:
+                    port on the counterparty chain which owns the other end of the
                     channel.
                 channel_id:
                   type: string
@@ -32206,7 +32589,8 @@ components:
                 properties:
                   port_id:
                     type: string
-                    description: port on the counterparty chain which owns the other end of the
+                    description:
+                      port on the counterparty chain which owns the other end of the
                       channel.
                   channel_id:
                     type: string
@@ -32284,7 +32668,8 @@ components:
             In these cases, the RevisionNumber is incremented so that height continues to
 
             be monitonically increasing even as the RevisionHeight gets reset
-      description: QueryChannelsResponse is the response type for the Query/Channels
+      description:
+        QueryChannelsResponse is the response type for the Query/Channels
         RPC method.
     ibc.core.channel.v1.QueryConnectionChannelsResponse:
       type: object
@@ -32335,7 +32720,8 @@ components:
                 properties:
                   port_id:
                     type: string
-                    description: port on the counterparty chain which owns the other end of the
+                    description:
+                      port on the counterparty chain which owns the other end of the
                       channel.
                   channel_id:
                     type: string
@@ -32919,7 +33305,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -33100,7 +33487,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -33280,7 +33668,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -33477,7 +33866,8 @@ components:
                   value:
                     type: string
                     format: byte
-                    description: Must be a valid serialized protocol buffer of the above specified
+                    description:
+                      Must be a valid serialized protocol buffer of the above specified
                       type.
                 description: >-
                   `Any` contains an arbitrary serialized protocol buffer message
@@ -33669,7 +34059,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along
@@ -33884,7 +34275,8 @@ components:
                   value:
                     type: string
                     format: byte
-                    description: Must be a valid serialized protocol buffer of the above specified
+                    description:
+                      Must be a valid serialized protocol buffer of the above specified
                       type.
                 description: >-
                   `Any` contains an arbitrary serialized protocol buffer message
@@ -33983,7 +34375,8 @@ components:
                         "@type": "type.googleapis.com/google.protobuf.Duration",
                         "value": "1.212s"
                       }
-            description: ConsensusStateWithHeight defines a consensus state with an
+            description:
+              ConsensusStateWithHeight defines a consensus state with an
               additional height field.
           title: consensus states associated with the identifier
         pagination:
@@ -34321,7 +34714,8 @@ components:
                 value:
                   type: string
                   format: byte
-                  description: Must be a valid serialized protocol buffer of the above specified
+                  description:
+                    Must be a valid serialized protocol buffer of the above specified
                     type.
               description: >-
                 `Any` contains an arbitrary serialized protocol buffer message
@@ -34511,7 +34905,8 @@ components:
             value:
               type: string
               format: byte
-              description: Must be a valid serialized protocol buffer of the above specified
+              description:
+                Must be a valid serialized protocol buffer of the above specified
                 type.
           description: >-
             `Any` contains an arbitrary serialized protocol buffer message along

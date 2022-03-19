@@ -17,6 +17,7 @@ import (
 )
 
 // Simulation operation weights constants.
+//nolint:gosec
 const (
 	DefaultWeightMsgLockTokens        int = 10
 	DefaultWeightMsgBeginUnlockingAll int = 10
@@ -61,7 +62,7 @@ func WeightedOperations(
 	}
 }
 
-func genLockTokens(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) (res sdk.Coins) {
+func genLockTokens(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 6))
 	denomIndices := r.Perm(numCoins)
 	for i := 0; i < numCoins; i++ {
@@ -99,7 +100,7 @@ func SimulateMsgLockTokens(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgLockTokens, "Account have no coin"), nil, nil
 		}
-		lockTokens := genLockTokens(r, simAccount, simCoins)
+		lockTokens := genLockTokens(r, simCoins)
 
 		durationSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		duration := time.Duration(durationSecs) * time.Second

@@ -1,7 +1,6 @@
 package app
 
 import (
-
 	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"

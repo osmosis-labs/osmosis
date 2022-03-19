@@ -89,7 +89,7 @@ type MsgSuperfluidUnbondLock struct {
 ```
 
 This message does all the functionality of `MsgSuperfluidUndelegate` but also starts unbonding the underlying
-lock as well, allowing both the unstaking and unlocking to complete at the same time.  Without using this function, a user will not be able to start unbonding their underlying lock until after the the unstaking has finished.
+lock as well, allowing both the unstaking and unlocking to complete at the same time. Without using this function, a user will not be able to start unbonding their underlying lock until after the the unstaking has finished.
 
 **State Modifications:**
 

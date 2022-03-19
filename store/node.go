@@ -211,6 +211,7 @@ func (node Node) accumulate() (res sdk.Int) {
 	return
 }
 
+//nolint:revive
 func NewNode(cs ...*Child) *Node {
 	return &Node{Children: cs}
 }
@@ -237,6 +238,7 @@ func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
 	return node
 }
 
+//nolint:revive
 func (cs *Node) insert(idx int, c *Child) *Node {
 	arr := append(cs.Children[:idx], append([]*Child{c}, cs.Children[idx:]...)...)
 	return NewNode(arr...)

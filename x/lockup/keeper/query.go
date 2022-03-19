@@ -18,10 +18,10 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 
 		switch path[0] {
 		case types.QueryModuleBalance:
-			return queryModuleBalance(ctx, req, k, legacyQuerierCdc)
+			return queryModuleBalance(ctx, k, legacyQuerierCdc)
 
 		case types.QueryModuleLockedAmount:
-			return queryModuleLockedAmount(ctx, req, k, legacyQuerierCdc)
+			return queryModuleLockedAmount(ctx, k, legacyQuerierCdc)
 
 		case types.QueryAccountUnlockableCoins:
 			return queryAccountUnlockableCoins(ctx, req, k, legacyQuerierCdc)
@@ -55,7 +55,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	}
 }
 
-func queryModuleBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryModuleBalance(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	coins := k.GetModuleBalance(ctx)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
@@ -66,7 +66,7 @@ func queryModuleBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacy
 	return res, nil
 }
 
-func queryModuleLockedAmount(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryModuleLockedAmount(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	coins := k.GetModuleLockedCoins(ctx)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)

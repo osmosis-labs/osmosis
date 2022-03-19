@@ -1,14 +1,14 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Osmosis - gRPC Gateway docs
-  description: 'A REST interface for state queries, legacy transactions'
+  description: "A REST interface for state queries, legacy transactions"
   version: 1.0.0
 paths:
   /osmosis/gamm/v1beta1/num_pools:
     get:
       operationId: NumPools
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -211,7 +211,7 @@ paths:
     get:
       operationId: Pools
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -649,12 +649,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolID}':
+  "/osmosis/gamm/v1beta1/pools/{poolID}":
     get:
       summary: Per Pool gRPC Endpoints
       operationId: Pool
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1027,11 +1027,11 @@ paths:
           format: uint64
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolID}/params':
+  "/osmosis/gamm/v1beta1/pools/{poolID}/params":
     get:
       operationId: PoolParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1361,11 +1361,11 @@ paths:
           format: uint64
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolID}/prices':
+  "/osmosis/gamm/v1beta1/pools/{poolID}/prices":
     get:
       operationId: SpotPrice
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1582,11 +1582,11 @@ paths:
           type: boolean
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolID}/tokens':
+  "/osmosis/gamm/v1beta1/pools/{poolID}/tokens":
     get:
       operationId: PoolAssets
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1810,11 +1810,11 @@ paths:
           format: uint64
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/pools/{poolID}/total_share':
+  "/osmosis/gamm/v1beta1/pools/{poolID}/total_share":
     get:
       operationId: TotalShare
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2035,7 +2035,7 @@ paths:
     get:
       operationId: TotalLiquidity
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2248,12 +2248,12 @@ paths:
                         }
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/{poolID}/estimate/swap_exact_amount_in':
+  "/osmosis/gamm/v1beta1/{poolID}/estimate/swap_exact_amount_in":
     get:
       summary: Estimate the swap.
       operationId: EstimateSwapExactAmountIn
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2465,11 +2465,11 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/gamm/v1beta1/{poolID}/estimate/swap_exact_amount_out':
+  "/osmosis/gamm/v1beta1/{poolID}/estimate/swap_exact_amount_out":
     get:
       operationId: EstimateSwapExactAmountOut
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2686,7 +2686,7 @@ paths:
       summary: CurrentEpoch provide current epoch of specified identifier
       operationId: CurrentEpoch
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2728,7 +2728,7 @@ paths:
       summary: EpochInfos provide running epochInfos
       operationId: EpochInfos
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2783,7 +2783,7 @@ paths:
     get:
       operationId: DistrInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2827,14 +2827,14 @@ paths:
                       format: byte
       tags:
         - Query
-  '/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}':
+  "/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}":
     get:
       summary: >-
         GaugeIds takes the pool id and returns the matching gauge ids and
         durations
       operationId: GaugeIds
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2883,7 +2883,7 @@ paths:
     get:
       operationId: IncentivizedPools
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2929,7 +2929,7 @@ paths:
     get:
       operationId: LockableDurations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2966,7 +2966,7 @@ paths:
     get:
       operationId: PoolIncentivesParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3011,12 +3011,12 @@ paths:
                       format: byte
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_locked_coins/{owner}':
+  "/osmosis/lockup/v1beta1/account_locked_coins/{owner}":
     get:
       summary: Return a locked coins that can't be withdrawn
       operationId: AccountLockedCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3067,12 +3067,12 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}':
+  "/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}":
     get:
       summary: Returns account locked records with longer duration
       operationId: AccountLockedLongerDuration
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3151,12 +3151,12 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}':
+  "/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}":
     get:
       summary: Returns account's locked records for a denom with longer duration
       operationId: AccountLockedLongerDurationDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3239,14 +3239,14 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_locked_longer_duration_not_unlocking_only/{owner}':
+  "/osmosis/lockup/v1beta1/account_locked_longer_duration_not_unlocking_only/{owner}":
     get:
       summary: |-
         Returns account locked records with longer duration excluding tokens
         started unlocking
       operationId: AccountLockedLongerDurationNotUnlockingOnly
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3325,12 +3325,12 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_locked_pasttime/{owner}':
+  "/osmosis/lockup/v1beta1/account_locked_pasttime/{owner}":
     get:
       summary: Returns locked records of an account with unlock time beyond timestamp
       operationId: AccountLockedPastTime
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3410,12 +3410,12 @@ paths:
           format: date-time
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_locked_pasttime_denom/{owner}':
+  "/osmosis/lockup/v1beta1/account_locked_pasttime_denom/{owner}":
     get:
-      summary: 'Returns lock records by address, timestamp, denom'
+      summary: "Returns lock records by address, timestamp, denom"
       operationId: AccountLockedPastTimeDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3499,14 +3499,14 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_locked_pasttime_not_unlocking_only/{owner}':
+  "/osmosis/lockup/v1beta1/account_locked_pasttime_not_unlocking_only/{owner}":
     get:
       summary: |-
         Returns locked records of an account with unlock time beyond timestamp
         excluding tokens started unlocking
       operationId: AccountLockedPastTimeNotUnlockingOnly
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3586,12 +3586,12 @@ paths:
           format: date-time
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_unlockable_coins/{owner}':
+  "/osmosis/lockup/v1beta1/account_unlockable_coins/{owner}":
     get:
       summary: Returns unlockable coins which are not withdrawn yet
       operationId: AccountUnlockableCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3642,12 +3642,12 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_unlocked_before_time/{owner}':
+  "/osmosis/lockup/v1beta1/account_unlocked_before_time/{owner}":
     get:
       summary: Returns unlocked records with unlock time before timestamp
       operationId: AccountUnlockedBeforeTime
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3727,12 +3727,12 @@ paths:
           format: date-time
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/account_unlocking_coins/{owner}':
+  "/osmosis/lockup/v1beta1/account_unlocking_coins/{owner}":
     get:
       summary: Returns unlocking coins
       operationId: AccountUnlockingCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3783,12 +3783,12 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/lockup/v1beta1/locked_by_id/{lock_id}':
+  "/osmosis/lockup/v1beta1/locked_by_id/{lock_id}":
     get:
       summary: Returns lock record by id
       operationId: LockedByID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3866,7 +3866,7 @@ paths:
       summary: Return full balance of the module
       operationId: ModuleBalance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3917,7 +3917,7 @@ paths:
       summary: Return locked balance of the module
       operationId: ModuleLockedAmount
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3968,7 +3968,7 @@ paths:
       summary: returns active gauges
       operationId: ActiveGauges
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4143,12 +4143,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/osmosis/incentives/v1beta1/gauge_by_id/{id}':
+  "/osmosis/incentives/v1beta1/gauge_by_id/{id}":
     get:
       summary: returns Gauge by id
       operationId: GaugeByID
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4265,7 +4265,7 @@ paths:
       summary: returns gauges both upcoming and active
       operationId: Gauges
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4445,7 +4445,7 @@ paths:
       summary: returns coins that are distributed by module so far
       operationId: ModuleDistributedCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4496,7 +4496,7 @@ paths:
       summary: returns coins that is going to be distributed
       operationId: ModuleToDistributeCoins
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4542,7 +4542,7 @@ paths:
                       format: byte
       tags:
         - Query
-  '/osmosis/incentives/v1beta1/rewards_est/{owner}':
+  "/osmosis/incentives/v1beta1/rewards_est/{owner}":
     get:
       summary: |-
         RewardsEst returns an estimate of the rewards at a future specific time.
@@ -4550,7 +4550,7 @@ paths:
         for which they want to find the associated rewards.
       operationId: RewardsEst
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4619,7 +4619,7 @@ paths:
       summary: returns scheduled gauges
       operationId: UpcomingGauges
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4794,11 +4794,11 @@ paths:
           type: boolean
       tags:
         - Query
-  '/osmosis/claim/v1beta1/claim_record/{address}':
+  "/osmosis/claim/v1beta1/claim_record/{address}":
     get:
       operationId: ClaimRecord
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4864,11 +4864,11 @@ paths:
           type: string
       tags:
         - Query
-  '/osmosis/claim/v1beta1/claimable_for_action/{address}/{action}':
+  "/osmosis/claim/v1beta1/claimable_for_action/{address}/{action}":
     get:
       operationId: ClaimableForAction
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4932,7 +4932,7 @@ paths:
     get:
       operationId: ModuleAccountBalance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4986,7 +4986,7 @@ paths:
     get:
       operationId: ClaimParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5032,11 +5032,11 @@ paths:
                       format: byte
       tags:
         - Query
-  '/osmosis/claim/v1beta1/total_claimable/{address}':
+  "/osmosis/claim/v1beta1/total_claimable/{address}":
     get:
       operationId: TotalClaimable
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5092,7 +5092,7 @@ paths:
       summary: EpochProvisions current minting epoch provisions value.
       operationId: EpochProvisions
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5302,7 +5302,7 @@ paths:
       summary: Params returns the total set of minting parameters.
       operationId: MintParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5562,12 +5562,12 @@ paths:
                         }
       tags:
         - Query
-  '/cosmos/auth/v1beta1/accounts/{address}':
+  "/cosmos/auth/v1beta1/accounts/{address}":
     get:
       summary: Account returns account details based on address.
       operationId: Account
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5844,7 +5844,7 @@ paths:
       summary: Params queries all parameters.
       operationId: AuthParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6062,12 +6062,12 @@ paths:
                         }
       tags:
         - Query
-  '/cosmos/bank/v1beta1/balances/{address}':
+  "/cosmos/bank/v1beta1/balances/{address}":
     get:
       summary: AllBalances queries the balance of all coins for a single account.
       operationId: AllBalances
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6189,12 +6189,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/bank/v1beta1/balances/{address}/{denom}':
+  "/cosmos/bank/v1beta1/balances/{address}/{denom}":
     get:
       summary: Balance queries the balance of a single coin for a single account.
       operationId: Balance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6252,7 +6252,7 @@ paths:
         denominations.
       operationId: DenomsMetadata
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6413,12 +6413,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/bank/v1beta1/denoms_metadata/{denom}':
+  "/cosmos/bank/v1beta1/denoms_metadata/{denom}":
     get:
       summary: DenomsMetadata queries the client metadata of a given coin denomination.
       operationId: DenomMetadata
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6520,7 +6520,7 @@ paths:
       summary: Params queries the parameters of x/bank module.
       operationId: BankParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6577,7 +6577,7 @@ paths:
       summary: TotalSupply queries the total supply of all coins.
       operationId: TotalSupply
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6629,12 +6629,12 @@ paths:
                       format: byte
       tags:
         - Query
-  '/cosmos/bank/v1beta1/supply/{denom}':
+  "/cosmos/bank/v1beta1/supply/{denom}":
     get:
       summary: SupplyOf queries the supply of a single coin.
       operationId: SupplyOf
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6685,7 +6685,7 @@ paths:
       summary: CommunityPool queries the community pool coins.
       operationId: CommunityPool
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6738,14 +6738,14 @@ paths:
                       format: byte
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards':
+  "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards":
     get:
       summary: |-
         DelegationTotalRewards queries the total rewards accrued by a each
         validator.
       operationId: DelegationTotalRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6831,12 +6831,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}':
+  "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}":
     get:
       summary: DelegationRewards queries the total rewards accrued by a delegation.
       operationId: DelegationRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6898,12 +6898,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators':
+  "/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators":
     get:
       summary: DelegatorValidators queries the validators of a delegator.
       operationId: DelegatorValidators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6948,12 +6948,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address':
+  "/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address":
     get:
       summary: DelegatorWithdrawAddress queries withdraw address of a delegator.
       operationId: DelegatorWithdrawAddress
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6999,7 +6999,7 @@ paths:
       summary: Params queries params of the distribution module.
       operationId: DistributionParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7043,12 +7043,12 @@ paths:
                       format: byte
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/validators/{validator_address}/commission':
+  "/cosmos/distribution/v1beta1/validators/{validator_address}/commission":
     get:
       summary: ValidatorCommission queries accumulated commission for a validator.
       operationId: ValidatorCommission
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7108,12 +7108,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards':
+  "/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards":
     get:
       summary: ValidatorOutstandingRewards queries rewards of a validator address.
       operationId: ValidatorOutstandingRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7180,12 +7180,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/validators/{validator_address}/slashes':
+  "/cosmos/distribution/v1beta1/validators/{validator_address}/slashes":
     get:
       summary: ValidatorSlashes queries slash events of a validator.
       operationId: ValidatorSlashes
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7329,7 +7329,7 @@ paths:
       summary: AllEvidence queries all evidence.
       operationId: AllEvidence
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7773,12 +7773,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/evidence/v1beta1/evidence/{evidence_hash}':
+  "/cosmos/evidence/v1beta1/evidence/{evidence_hash}":
     get:
       summary: Evidence queries evidence based on evidence hash.
       operationId: Evidence
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8051,12 +8051,12 @@ paths:
           format: byte
       tags:
         - Query
-  '/cosmos/gov/v1beta1/params/{params_type}':
+  "/cosmos/gov/v1beta1/params/{params_type}":
     get:
       summary: Params queries all parameters of the gov module.
       operationId: GovParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8329,7 +8329,7 @@ paths:
       summary: Proposals queries all proposals based on given status.
       operationId: Proposals
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8547,11 +8547,11 @@ paths:
                     final_tally_result:
                       type: object
                       properties:
-                        'yes':
+                        "yes":
                           type: string
                         abstain:
                           type: string
-                        'no':
+                        "no":
                           type: string
                         no_with_veto:
                           type: string
@@ -8888,12 +8888,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}":
     get:
       summary: Proposal queries proposal details based on ProposalID.
       operationId: Proposal
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9107,11 +9107,11 @@ paths:
                   final_tally_result:
                     type: object
                     properties:
-                      'yes':
+                      "yes":
                         type: string
                       abstain:
                         type: string
-                      'no':
+                      "no":
                         type: string
                       no_with_veto:
                         type: string
@@ -9351,12 +9351,12 @@ paths:
           format: uint64
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits":
     get:
       summary: Deposits queries all deposits of a single proposal.
       operationId: Deposits
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9659,14 +9659,14 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}":
     get:
       summary: >-
         Deposit queries single deposit information based proposalID,
         depositAddr.
       operationId: Deposit
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9903,12 +9903,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/tally':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/tally":
     get:
       summary: TallyResult queries the tally of a proposal vote.
       operationId: TallyResult
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9917,11 +9917,11 @@ paths:
                 description: tally defines the requested tally.
                 type: object
                 properties:
-                  'yes':
+                  "yes":
                     type: string
                   abstain:
                     type: string
-                  'no':
+                  "no":
                     type: string
                   no_with_veto:
                     type: string
@@ -10126,12 +10126,12 @@ paths:
           format: uint64
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes":
     get:
       summary: Votes queries votes of a given proposal.
       operationId: Votes
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10435,12 +10435,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}":
     get:
-      summary: 'Vote queries voted information based on proposalID, voterAddr.'
+      summary: "Vote queries voted information based on proposalID, voterAddr."
       operationId: Vote
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10685,7 +10685,7 @@ paths:
         key.
       operationId: Params
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10743,7 +10743,7 @@ paths:
       summary: Params queries the parameters of slashing module
       operationId: SlashingParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10800,7 +10800,7 @@ paths:
       summary: SigningInfos queries signing info of all validators
       operationId: SigningInfos
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10948,12 +10948,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/slashing/v1beta1/signing_infos/{cons_address}':
+  "/cosmos/slashing/v1beta1/signing_infos/{cons_address}":
     get:
       summary: SigningInfo queries the signing info of given cons address
       operationId: SigningInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11033,14 +11033,14 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegations/{delegator_addr}':
+  "/cosmos/staking/v1beta1/delegations/{delegator_addr}":
     get:
       summary: >-
         DelegatorDelegations queries all delegations of a given delegator
         address.
       operationId: DelegatorDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11362,12 +11362,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations':
+  "/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations":
     get:
       summary: Redelegations queries redelegations of given address.
       operationId: Redelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11761,7 +11761,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations':
+  "/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations":
     get:
       summary: >-
         DelegatorUnbondingDelegations queries all unbonding delegations of a
@@ -11770,7 +11770,7 @@ paths:
         delegator address.
       operationId: DelegatorUnbondingDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12092,14 +12092,14 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators':
+  "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators":
     get:
       summary: |-
         DelegatorValidators queries all validators info for given delegator
         address.
       operationId: StakingDelegatorValidators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12574,14 +12574,14 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}':
+  "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}":
     get:
       summary: |-
         DelegatorValidator queries validator info for given delegator validator
         pair.
       operationId: DelegatorValidator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12971,12 +12971,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/historical_info/{height}':
+  "/cosmos/staking/v1beta1/historical_info/{height}":
     get:
       summary: HistoricalInfo queries the historical info for given height.
       operationId: HistoricalInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13476,7 +13476,7 @@ paths:
       summary: Parameters queries the staking parameters.
       operationId: StakingParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13716,7 +13716,7 @@ paths:
       summary: Pool queries the pool info.
       operationId: StakingPool
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13926,7 +13926,7 @@ paths:
       summary: Validators queries all validators that match the given status.
       operationId: Validators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14401,12 +14401,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}":
     get:
       summary: Validator queries validator info for given validator address.
       operationId: Validator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14791,12 +14791,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations":
     get:
       summary: ValidatorDelegations queries delegate info for given validator.
       operationId: ValidatorDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15115,12 +15115,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}":
     get:
       summary: Delegation queries delegate info for given validator delegator pair.
       operationId: Delegation
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15375,14 +15375,14 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation":
     get:
       summary: |-
         UnbondingDelegation queries unbonding info for given validator delegator
         pair.
       operationId: UnbondingDelegation
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15637,14 +15637,14 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations":
     get:
       summary: >-
         ValidatorUnbondingDelegations queries unbonding delegations of a
         validator.
       operationId: ValidatorUnbondingDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15966,12 +15966,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmos/upgrade/v1beta1/applied_plan/{name}':
+  "/cosmos/upgrade/v1beta1/applied_plan/{name}":
     get:
       summary: AppliedPlan queries a previously applied upgrade plan by its name.
       operationId: AppliedPlan
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -16187,7 +16187,7 @@ paths:
       summary: CurrentPlan queries the current upgrade plan.
       operationId: CurrentPlan
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -16625,7 +16625,7 @@ paths:
                         }
       tags:
         - Query
-  '/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}':
+  "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}":
     get:
       summary: |-
         UpgradedConsensusState queries the consensus state that will serve
@@ -16634,7 +16634,7 @@ paths:
         UpgradedConsensusState RPC not supported with legacy querier
       operationId: UpgradedConsensusState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17020,7 +17020,7 @@ paths:
       summary: Channels queries all the IBC channels of a chain.
       operationId: Channels
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17401,12 +17401,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}":
     get:
       summary: Channel queries an IBC Channel.
       operationId: Channel
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17726,7 +17726,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/client_state':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/client_state":
     get:
       summary: >-
         ChannelClientState queries for the client state for the channel
@@ -17735,7 +17735,7 @@ paths:
         with the provided channel identifiers.
       operationId: ChannelClientState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -18164,14 +18164,14 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/{revision_number}/height/{revision_height}':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/{revision_number}/height/{revision_height}":
     get:
       summary: |-
         ChannelConsensusState queries for the consensus state for the channel
         associated with the provided channel identifiers.
       operationId: ChannelConsensusState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -18599,14 +18599,14 @@ paths:
           format: uint64
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence":
     get:
       summary: >-
         NextSequenceReceive returns the next receive sequence for a given
         channel.
       operationId: NextSequenceReceive
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -18851,7 +18851,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements":
     get:
       summary: >-
         PacketAcknowledgements returns all the packet acknowledgements
@@ -18860,7 +18860,7 @@ paths:
         with a channel.
       operationId: PacketAcknowledgements
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19200,12 +19200,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}":
     get:
       summary: PacketAcknowledgement queries a stored packet acknowledgement hash.
       operationId: PacketAcknowledgement
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19460,14 +19460,14 @@ paths:
           format: uint64
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments":
     get:
       summary: |-
         PacketCommitments returns all the packet commitments hashes associated
         with a channel.
       operationId: PacketCommitments
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19807,7 +19807,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_ack_sequences}/unreceived_acks':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_ack_sequences}/unreceived_acks":
     get:
       summary: >-
         UnreceivedAcks returns all the unreceived IBC acknowledgements
@@ -19816,7 +19816,7 @@ paths:
         channel and sequences.
       operationId: UnreceivedAcks
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20069,7 +20069,7 @@ paths:
           minItems: 1
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/unreceived_packets':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/unreceived_packets":
     get:
       summary: >-
         UnreceivedPackets returns all the unreceived IBC packets associated with
@@ -20078,7 +20078,7 @@ paths:
         channel and sequences.
       operationId: UnreceivedPackets
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20331,12 +20331,12 @@ paths:
           minItems: 1
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}":
     get:
       summary: PacketCommitment queries a stored packet commitment hash.
       operationId: PacketCommitment
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20592,14 +20592,14 @@ paths:
           format: uint64
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}':
+  "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}":
     get:
       summary: >-
         PacketReceipt queries if a given packet sequence has been received on
         the queried chain
       operationId: PacketReceipt
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20854,14 +20854,14 @@ paths:
           format: uint64
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/connections/{connection}/channels':
+  "/ibc/core/channel/v1beta1/connections/{connection}/channels":
     get:
       summary: |-
         ConnectionChannels queries all the channels associated with a connection
         end.
       operationId: ConnectionChannels
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -21252,7 +21252,7 @@ paths:
       summary: ClientParams queries all parameters of the ibc client.
       operationId: ClientParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -21467,7 +21467,7 @@ paths:
       summary: ClientStates queries all the IBC light clients of a chain.
       operationId: ClientStates
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -21935,12 +21935,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/core/client/v1beta1/client_states/{client_id}':
+  "/ibc/core/client/v1beta1/client_states/{client_id}":
     get:
       summary: ClientState queries an IBC light client.
       operationId: ClientState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -22353,14 +22353,14 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/core/client/v1beta1/consensus_states/{client_id}':
+  "/ibc/core/client/v1beta1/consensus_states/{client_id}":
     get:
       summary: |-
         ConsensusStates queries all the consensus state associated with a given
         client.
       operationId: ConsensusStates
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -22853,7 +22853,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/core/client/v1beta1/consensus_states/{client_id}/revision/{revision_number}/height/{revision_height}':
+  "/ibc/core/client/v1beta1/consensus_states/{client_id}/revision/{revision_number}/height/{revision_height}":
     get:
       summary: >-
         ConsensusState queries a consensus state associated with a client state
@@ -22862,7 +22862,7 @@ paths:
         a given height.
       operationId: ConsensusState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -23295,14 +23295,14 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/core/connection/v1beta1/client_connections/{client_id}':
+  "/ibc/core/connection/v1beta1/client_connections/{client_id}":
     get:
       summary: |-
         ClientConnections queries the connection paths associated with a client
         state.
       operationId: ClientConnections
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -23548,7 +23548,7 @@ paths:
       summary: Connections queries all the IBC connections of a chain.
       operationId: Connections
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -23938,12 +23938,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/core/connection/v1beta1/connections/{connection_id}':
+  "/ibc/core/connection/v1beta1/connections/{connection_id}":
     get:
       summary: Connection queries an IBC connection end.
       operationId: Connection
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -24275,14 +24275,14 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/core/connection/v1beta1/connections/{connection_id}/client_state':
+  "/ibc/core/connection/v1beta1/connections/{connection_id}/client_state":
     get:
       summary: |-
         ConnectionClientState queries the client state associated with the
         connection.
       operationId: ConnectionClientState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -24706,14 +24706,14 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/core/connection/v1beta1/connections/{connection_id}/consensus_state/revision/{revision_number}/height/{revision_height}':
+  "/ibc/core/connection/v1beta1/connections/{connection_id}/consensus_state/revision/{revision_number}/height/{revision_height}":
     get:
       summary: |-
         ConnectionConsensusState queries the consensus state associated with the
         connection.
       operationId: ConnectionConsensusState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25139,7 +25139,7 @@ paths:
       summary: DenomTraces queries all denomination traces.
       operationId: DenomTraces
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25259,12 +25259,12 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/applications/transfer/v1beta1/denom_traces/{hash}':
+  "/ibc/applications/transfer/v1beta1/denom_traces/{hash}":
     get:
       summary: DenomTrace queries a denomination trace information.
       operationId: DenomTrace
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -25325,7 +25325,7 @@ paths:
       summary: Params queries all parameters of the ibc-transfer module.
       operationId: IBCTransferParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -26565,7 +26565,7 @@ definitions:
         format: uint64
       tokenOutDenom:
         type: string
-    title: '===================== MsgSwapExactAmountIn'
+    title: "===================== MsgSwapExactAmountIn"
   osmosis.gamm.v1beta1.SwapAmountOutRoute:
     type: object
     properties:
@@ -26574,7 +26574,7 @@ definitions:
         format: uint64
       tokenInDenom:
         type: string
-    title: '===================== MsgSwapExactAmountOut'
+    title: "===================== MsgSwapExactAmountOut"
   osmosis.epochs.v1beta1.EpochInfo:
     type: object
     properties:
@@ -29376,11 +29376,11 @@ definitions:
       final_tally_result:
         type: object
         properties:
-          'yes':
+          "yes":
             type: string
           abstain:
             type: string
-          'no':
+          "no":
             type: string
           no_with_veto:
             type: string
@@ -29788,11 +29788,11 @@ definitions:
           final_tally_result:
             type: object
             properties:
-              'yes':
+              "yes":
                 type: string
               abstain:
                 type: string
-              'no':
+              "no":
                 type: string
               no_with_veto:
                 type: string
@@ -30037,11 +30037,11 @@ definitions:
             final_tally_result:
               type: object
               properties:
-                'yes':
+                "yes":
                   type: string
                 abstain:
                   type: string
-                'no':
+                "no":
                   type: string
                 no_with_veto:
                   type: string
@@ -30104,11 +30104,11 @@ definitions:
         description: tally defines the requested tally.
         type: object
         properties:
-          'yes':
+          "yes":
             type: string
           abstain:
             type: string
-          'no':
+          "no":
             type: string
           no_with_veto:
             type: string
@@ -30225,11 +30225,11 @@ definitions:
   cosmos.gov.v1beta1.TallyResult:
     type: object
     properties:
-      'yes':
+      "yes":
         type: string
       abstain:
         type: string
-      'no':
+      "no":
         type: string
       no_with_veto:
         type: string
@@ -30524,7 +30524,7 @@ definitions:
         properties:
           rate:
             type: string
-            description: 'rate is the commission rate charged to delegators, as a fraction.'
+            description: "rate is the commission rate charged to delegators, as a fraction."
           max_rate:
             type: string
             description: >-
@@ -30545,7 +30545,7 @@ definitions:
     properties:
       rate:
         type: string
-        description: 'rate is the commission rate charged to delegators, as a fraction.'
+        description: "rate is the commission rate charged to delegators, as a fraction."
       max_rate:
         type: string
         description: >-
@@ -33856,7 +33856,7 @@ definitions:
           this channel will travel
       version:
         type: string
-        title: 'opaque channel version, which is agreed upon during the handshake'
+        title: "opaque channel version, which is agreed upon during the handshake"
     description: |-
       Channel defines pipeline for exactly-once packet delivery between specific
       modules on separate blockchains, which has at least one end capable of
@@ -33931,7 +33931,7 @@ definitions:
           this channel will travel
       version:
         type: string
-        title: 'opaque channel version, which is agreed upon during the handshake'
+        title: "opaque channel version, which is agreed upon during the handshake"
       port_id:
         type: string
         title: port identifier
@@ -34449,7 +34449,7 @@ definitions:
               this channel will travel
           version:
             type: string
-            title: 'opaque channel version, which is agreed upon during the handshake'
+            title: "opaque channel version, which is agreed upon during the handshake"
         description: >-
           Channel defines pipeline for exactly-once packet delivery between
           specific

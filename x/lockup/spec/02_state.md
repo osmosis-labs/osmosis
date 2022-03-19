@@ -78,9 +78,9 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 
 Synthetic Lockups are a concept that serve the following roles:
 
-* Add "restrictions" to an underlying PeriodLock, so that its bond status must be managed by a module rather than a BeginUnlockMessage
-* Allow issuing of a locked, "synthetic" denom type
-* Allow distribution of rewards to locked synthetic denominations.
+- Add "restrictions" to an underlying PeriodLock, so that its bond status must be managed by a module rather than a BeginUnlockMessage
+- Allow issuing of a locked, "synthetic" denom type
+- Allow distribution of rewards to locked synthetic denominations.
 
 The first goal can eventually be pushed into a new data structure, as it doesn't really relate to the synthetic component.
 

@@ -18,6 +18,7 @@ import (
 )
 
 // Simulation operation weights constants.
+//nolint:gosec
 const (
 	OpWeightMsgCreatePool              = "op_weight_create_pool"
 	OpWeightMsgSwapExactAmountIn       = "op_weight_swap_exact_amount_in"
@@ -69,7 +70,7 @@ func WeightedOperations(
 	}
 }
 
-func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
+func genPoolAssets(r *rand.Rand, coins sdk.Coins) []types.PoolAsset {
 	// selecting random number between [2, Min(coins.Len, 6)]
 	numCoins := 2 + r.Intn(Min(coins.Len(), 6)-1)
 	denomIndices := r.Perm(coins.Len())
@@ -126,7 +127,7 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 				types.ModuleName, balancer.TypeMsgCreateBalancerPool, "Account doesn't have 2 different coin types"), nil, nil
 		}
 
-		poolAssets := genPoolAssets(r, simAccount, simCoins)
+		poolAssets := genPoolAssets(r, simCoins)
 		poolParams := genBalancerPoolParams(r, ctx.BlockTime(), poolAssets)
 
 		// Commented out as genFuturePoolGovernor() panics on empty denom slice.

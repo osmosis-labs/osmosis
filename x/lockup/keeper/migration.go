@@ -100,7 +100,7 @@ func MergeLockupsForSimilarDurations(
 				}
 				k.SetLastLockID(ctx, normalID)
 				normals[key] = normalID
-				numLocksCreated += 1
+				numLocksCreated++
 			} else {
 				normalLockPtr, err := k.GetLockByID(ctx, normalID)
 				if err != nil {

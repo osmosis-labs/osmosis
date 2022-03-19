@@ -14,55 +14,55 @@ linters:
     - bidichk
     - bodyclose
     - contextcheck
-#o    - cyclop
+    #o    - cyclop
     - deadcode
     - depguard
-#    - dogsled <- disabled because we would like to participate in the iditerod
+    #    - dogsled <- disabled because we would like to participate in the iditerod
     - dupl
     - durationcheck
     - errcheck
     - errname
     - errorlint
     - exhaustive
-#    - exhaustivestruct <- disabled because we don't want to use every element of every struct
+    #    - exhaustivestruct <- disabled because we don't want to use every element of every struct
     - exportloopref
-#    - forbidigo <- forbids fmt.Print* by default
+    #    - forbidigo <- forbids fmt.Print* by default
     - forcetypeassert
-#    - funlen <- some of our functions are longer than this by necessity
-    - gci
-#    - gochecknoglobals <- disabled because we want some globals
-#    - gochecknoinits <- disabled because we want to use init()
-#    - gocognit <- disabled for same reason as gocyclo
+    #    - funlen <- some of our functions are longer than this by necessity
+#    - gci <- questionable utility
+    #    - gochecknoglobals <- disabled because we want some globals
+    #    - gochecknoinits <- disabled because we want to use init()
+    #    - gocognit <- disabled for same reason as gocyclo
     - goconst
     - gocritic
-#    - gocyclo <- disabled because it won't work with how we cosmos
+    #    - gocyclo <- disabled because it won't work with how we cosmos
     - godot
-#    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
-#    - goerr113 <- disabled due to lack of comprehension
+    #    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
+    #    - goerr113 <- disabled due to lack of comprehension
     - gofmt
     - gofumpt
     - goheader
     - goimports
-#    - gomoddirectives <- disables replaces
+    #    - gomoddirectives <- disables replaces
     - gomodguard
     - goprintffuncname
     - gosec
     - gosimple
     - govet
-#   - ifshort <- seems to be of questionable value
+    #   - ifshort <- seems to be of questionable value
     - importas
     - ineffassign
-#    - ireturn <- disabled because we want to return interfaces
-#    - lll <- disabled as it is a bit much.  Maybe we have a desired limit?
+    #    - ireturn <- disabled because we want to return interfaces
+    #    - lll <- disabled as it is a bit much.  Maybe we have a desired limit?
     - makezero
     - misspell
     - nakedret
-    - nestif
+#    - nestif <- ?
     - nilerr
     - nilnil
-#    - nlreturn <- disabled as it doesn't auto-fix something simple and doesn't add anything useful
+    #    - nlreturn <- disabled as it doesn't auto-fix something simple and doesn't add anything useful
     - noctx
-#    - nolintlint <- disabled because we use nolint in some places
+    #    - nolintlint <- disabled because we use nolint in some places
     - paralleltest
     - prealloc
     - predeclared
@@ -73,7 +73,7 @@ linters:
     - staticcheck
     - structcheck
     - stylecheck
-#    - tagliatelle <- disabled for defying cosmos idiom
+    #    - tagliatelle <- disabled for defying cosmos idiom
     - tenv
     - testpackage
     - thelper
@@ -83,10 +83,10 @@ linters:
     - unparam
     - unused
     - varcheck
-#    - varnamelen <- disabled because defies idiom
-#    - wastedassign
+    #    - varnamelen <- disabled because defies idiom
+    #    - wastedassign
     - whitespace
-#    - wrapcheck 
+#    - wrapcheck
 #    - wsl
 
 issues:
@@ -96,4 +96,3 @@ issues:
         - errcheck
   max-issues-per-linter: 10000
   max-same-issues: 10000
-

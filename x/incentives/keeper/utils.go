@@ -7,22 +7,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
-func findIndex(IDs []uint64, ID uint64) int {
-	for index, id := range IDs {
-		if id == ID {
+func findIndex(ids []uint64, oneID uint64) int {
+	for index, id := range ids {
+		if id == oneID {
 			return index
 		}
 	}
 	return -1
 }
 
-func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
-	index := findIndex(IDs, ID)
+func removeValue(ids []uint64, oneID uint64) ([]uint64, int) {
+	index := findIndex(ids, oneID)
 	if index < 0 {
-		return IDs, index
+		return ids, index
 	}
-	IDs[index] = IDs[len(IDs)-1] // set last element to index
-	return IDs[:len(IDs)-1], index
+	ids[index] = ids[len(ids)-1] // set last element to index
+	return ids[:len(ids)-1], index
 }
 
 // getTimeKey returns the key used for getting a set of gauges.
