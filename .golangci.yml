@@ -94,5 +94,6 @@ issues:
     - path: bench_test\.go
       linters:
         - errcheck
+    - path: client/docs
   max-issues-per-linter: 10000
   max-same-issues: 10000
