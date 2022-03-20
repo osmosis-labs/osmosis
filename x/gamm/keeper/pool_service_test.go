@@ -239,7 +239,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestJoinPool() {
+func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	tests := []struct {
 		fn func(poolId uint64)
 	}{
@@ -247,7 +247,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.app.GAMMKeeper
 				balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc2)
-				err := keeper.JoinPool(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
+				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 				suite.Require().NoError(err)
 				suite.Require().Equal(types.OneShare.MulRaw(50).String(), suite.app.BankKeeper.GetBalance(suite.ctx, acc2, "gamm/pool/1").Amount.String())
 				balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc2)
@@ -265,14 +265,14 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 		{
 			fn: func(poolId uint64) {
 				keeper := suite.app.GAMMKeeper
-				err := keeper.JoinPool(suite.ctx, acc2, poolId, sdk.NewInt(0), sdk.Coins{})
+				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, sdk.NewInt(0), sdk.Coins{})
 				suite.Require().Error(err, "can't join the pool with requesting 0 share amount")
 			},
 		},
 		{
 			fn: func(poolId uint64) {
 				keeper := suite.app.GAMMKeeper
-				err := keeper.JoinPool(suite.ctx, acc2, poolId, sdk.NewInt(-1), sdk.Coins{})
+				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, sdk.NewInt(-1), sdk.Coins{})
 				suite.Require().Error(err, "can't join the pool with requesting negative share amount")
 			},
 		},
@@ -281,7 +281,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 				keeper := suite.app.GAMMKeeper
 				// Test the "tokenInMaxs"
 				// In this case, to get the 50 * OneShare amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
-				err := keeper.JoinPool(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
+				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("foo", sdk.NewInt(4999)),
 				})
 				suite.Require().Error(err)
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 				keeper := suite.app.GAMMKeeper
 				// Test the "tokenInMaxs"
 				// In this case, to get the 50 * OneShare amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
-				err := keeper.JoinPool(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
+				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("foo", sdk.NewInt(5000)),
 				})
 				suite.Require().NoError(err)
@@ -448,15 +448,16 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
 
 			// uneffected by start time
-			err = suite.app.GAMMKeeper.JoinPool(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
+			err = suite.app.GAMMKeeper.JoinPoolNoSwap(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
 			_, err = suite.app.GAMMKeeper.ExitPool(suite.ctx, acc1, poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
 			suite.Require().NoError(err)
 
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
+			foocoins := sdk.Coins{foocoin}
 
 			if tc.expectPass {
-				_, err = suite.app.GAMMKeeper.JoinSwapExternAmountIn(suite.ctx, acc1, poolId, foocoin, sdk.ZeroInt())
+				_, err = suite.app.GAMMKeeper.JoinSwapExactAmountIn(suite.ctx, acc1, poolId, foocoins, sdk.ZeroInt())
 				suite.Require().NoError(err)
 				_, err = suite.app.GAMMKeeper.JoinSwapShareAmountOut(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
 				suite.Require().NoError(err)
@@ -465,7 +466,6 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 				_, err = suite.app.GAMMKeeper.ExitSwapExternAmountOut(suite.ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
 				suite.Require().NoError(err)
 			} else {
-				_, err = suite.app.GAMMKeeper.JoinSwapExternAmountIn(suite.ctx, acc1, poolId, foocoin, sdk.ZeroInt())
 				suite.Require().Error(err)
 				_, err = suite.app.GAMMKeeper.JoinSwapShareAmountOut(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
 				suite.Require().Error(err)

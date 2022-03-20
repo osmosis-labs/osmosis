@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) measureJoinPoolGas(
 	poolID uint64,
 	shareOutAmountMax sdk.Int, maxCoins sdk.Coins) uint64 {
 	alreadySpent := suite.ctx.GasMeter().GasConsumed()
-	err := suite.app.GAMMKeeper.JoinPool(suite.ctx, addr, poolID, shareOutAmountMax, maxCoins)
+	err := suite.app.GAMMKeeper.JoinPoolNoSwap(suite.ctx, addr, poolID, shareOutAmountMax, maxCoins)
 	suite.Require().NoError(err)
 	newSpent := suite.ctx.GasMeter().GasConsumed()
 	spentNow := newSpent - alreadySpent
@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.Assert().LessOrEqual(int(firstJoinGas), 100000)
 
 	for i := 1; i < startAveragingAt; i++ {
-		err := suite.app.GAMMKeeper.JoinPool(suite.ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
+		err := suite.app.GAMMKeeper.JoinPoolNoSwap(suite.ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 
@@ -135,7 +135,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, initialPoolId, minShareOutAmount, defaultCoins)
 
 	for i := 2; i < denomNumber; i++ {
-		err := suite.app.GAMMKeeper.JoinPool(suite.ctx, defaultAddr, uint64(i), minShareOutAmount, sdk.Coins{})
+		err := suite.app.GAMMKeeper.JoinPoolNoSwap(suite.ctx, defaultAddr, uint64(i), minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 

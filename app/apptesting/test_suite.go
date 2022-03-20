@@ -181,22 +181,22 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 
 // SwapAndSetSpotPrice runs a swap to set Spot price of a pool using arbitrary values
 // returns spot price after the arbitrary swap
-func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset gammtypes.PoolAsset, toAsset gammtypes.PoolAsset) sdk.Dec {
+func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) sdk.Dec {
 	// create a dummy account
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 	// fund dummy account with tokens to swap
-	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Token.Denom, 100000000000000)}
+	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, coins)
 	keeperTestHelper.Require().NoError(err)
 
-	_, _, err = keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
+	_, err = keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
 		keeperTestHelper.Ctx, acc1,
-		poolId, fromAsset.Token.Denom, fromAsset.Token.Amount,
-		sdk.NewCoin(toAsset.Token.Denom, toAsset.Token.Amount.Quo(sdk.NewInt(4))))
+		poolId, fromAsset.Denom, fromAsset.Amount,
+		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))))
 	keeperTestHelper.Require().NoError(err)
 
-	spotPrice, err := keeperTestHelper.App.GAMMKeeper.CalculateSpotPrice(keeperTestHelper.Ctx, poolId, toAsset.Token.Denom, fromAsset.Token.Denom)
+	spotPrice, err := keeperTestHelper.App.GAMMKeeper.CalculateSpotPrice(keeperTestHelper.Ctx, poolId, toAsset.Denom, fromAsset.Denom)
 	keeperTestHelper.Require().NoError(err)
 	return spotPrice
 }
