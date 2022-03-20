@@ -1,7 +1,6 @@
 package wasm
 
 import (
-	"fmt"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"math"
 
@@ -25,43 +24,6 @@ func NewQueryPlugin(
 	return &QueryPlugin{
 		gammKeeper: gammK,
 	}
-}
-
-func (qp QueryPlugin) GetFullDenom(ctx sdk.Context, contract string, subDenom string) (string, error) {
-	err := ValidateAddress(contract)
-	if err != nil {
-		return "", sdkerrors.Wrap(err, "validate address")
-	}
-	err = ValidateSubDenom(subDenom)
-	if err != nil {
-		return "", sdkerrors.Wrap(err, "validate sub-denom")
-	}
-
-	// TODO: Confirm "cw" prefix
-	fullDenom := fmt.Sprintf("cw/%s/%s", contract, subDenom)
-
-	return fullDenom, nil
-}
-
-func ValidateAddress(address string) error {
-	addr, err := sdk.AccAddressFromBech32(address)
-	if err != nil {
-		return sdkerrors.Wrap(err, "address from bech32")
-	}
-
-	err = sdk.VerifyAddressFormat(addr)
-	if err != nil {
-		return sdkerrors.Wrap(err, "verify address format")
-	}
-	return nil
-}
-
-func ValidateSubDenom(subDenom string) error {
-	if len(subDenom) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty sub-denom")
-	}
-	// TODO: Extra validations
-	return nil
 }
 
 func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolId uint64) (*types.PoolState, error) {
@@ -97,6 +59,8 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *bindings.SpotPric
 	return &price, nil
 }
 
+// TODO: this is very close to MintTokenMessenger.swapTokens, maybe we can pull out common code into one function
+// that these both use? at least the routes / token In/Out calculation
 func (qp QueryPlugin) EstimatePrice(ctx sdk.Context, estimatePrice *bindings.EstimatePrice) (*bindings.SwapAmount, error) {
 	sender := estimatePrice.Contract
 	poolId := estimatePrice.First.PoolId

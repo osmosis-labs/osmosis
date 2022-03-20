@@ -22,7 +22,7 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 			contract := contractQuery.FullDenom.Contract
 			subDenom := contractQuery.FullDenom.SubDenom
 
-			fullDenom, err := osmoKeeper.GetFullDenom(ctx, contract, subDenom)
+			fullDenom, err := GetFullDenom(contract, subDenom)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo full denom query")
 			}
