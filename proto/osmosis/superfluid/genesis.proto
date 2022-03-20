@@ -16,6 +16,6 @@ message GenesisState {
       [ (gogoproto.nullable) = false ];
   repeated SuperfluidIntermediaryAccount intermediary_accounts = 4
       [ (gogoproto.nullable) = false ];
-  repeated LockIdIntermediaryAccountConnection intemediary_account_connections = 5
-      [ (gogoproto.nullable) = false ];
+  repeated LockIdIntermediaryAccountConnection intemediary_account_connections =
+      5 [ (gogoproto.nullable) = false ];
 }
