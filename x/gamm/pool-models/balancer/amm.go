@@ -69,10 +69,11 @@ func (p Pool) CalcInAmtGivenOut(
 
 	// delta balanceOut is positive(tokens inside the pool decreases)
 	poolTokenOutBalance := poolAssetOut.Token.Amount.ToDec()
-	poolPreSwapOutBalance := poolTokenOutBalance.Sub(tokenOut.Amount.ToDec())
+	poolPostSwapOutBalance := poolTokenOutBalance.Sub(tokenOut.Amount.ToDec())
+	// (x_0)(y_0) = (x_0 + in)(y_0 - out)
 	tokenAmountIn := solveConstantFunctionInvariant(
-		poolTokenOutBalance, poolPreSwapOutBalance, poolAssetOut.Weight.ToDec(),
-		poolAssetIn.Token.Amount.ToDec(), poolAssetIn.Weight.ToDec())
+		poolTokenOutBalance, poolPostSwapOutBalance, poolAssetOut.Weight.ToDec(),
+		poolAssetIn.Token.Amount.ToDec(), poolAssetIn.Weight.ToDec()).Neg()
 
 	// We deduct a swap fee on the input asset. The swap happens by following the invariant curve on the input * (1 - swap fee)
 	// and then the swap fee is added to the pool.
@@ -101,14 +102,14 @@ func (p *Pool) ApplySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 // SpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
 // so spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
-func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset string, baseAsset string) (sdk.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec, error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	numerator := base.Token.Amount.ToDec().QuoInt(base.Weight)
-	denom := quote.Token.Amount.ToDec().QuoInt(quote.Weight)
+	numerator := base.Token.Amount.ToDec().Quo(base.Weight.ToDec())
+	denom := quote.Token.Amount.ToDec().Quo(quote.Weight.ToDec())
 	ratio := numerator.Quo(denom)
 
 	return ratio, nil
@@ -253,7 +254,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 		refundedShares = oneSubExitFee.MulInt(exitingShares).TruncateInt()
 	}
 
-	shareOutRatio := totalShares.ToDec().QuoInt(refundedShares)
+	shareOutRatio := refundedShares.ToDec().QuoInt(totalShares)
 	// Make it shareOutRatio * pool LP balances
 	exitedCoins = sdk.Coins{}
 	balances := p.GetTotalLpBalances(ctx)

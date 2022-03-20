@@ -14,13 +14,13 @@ import (
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
-	quoteAssetDenom string,
-	baseAssetDenom string) (sdk.Dec, error) {
+	baseAssetDenom string,
+	quoteAssetDenom string) (sdk.Dec, error) {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
+	return pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
 }
 
 func (k Keeper) CreateBalancerPool(
@@ -143,9 +143,12 @@ func (k Keeper) JoinPoolNoSwap(
 		neededLpLiquidity = neededLpLiquidity.Add(neededCoin)
 	}
 	// if neededLPLiquidity >= tokenInMaxs, return err
-	if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs) && tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
-		return sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
-			" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
+	// if tokenInMaxs == 0, don't do this check.
+	if tokenInMaxs.Len() != 0 {
+		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs) && tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
+			return sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
+		}
 	}
 
 	sharesOut, err := pool.JoinPool(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
@@ -246,7 +249,7 @@ func (k Keeper) ExitPool(
 	}
 
 	totalSharesAmount := pool.GetTotalShares()
-	if shareInAmount.GTE(totalSharesAmount) {
+	if shareInAmount.GTE(totalSharesAmount) || shareInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 	exitFee := pool.GetExitFee(ctx)

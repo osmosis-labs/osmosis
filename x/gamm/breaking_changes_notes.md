@@ -12,6 +12,8 @@
 ## Messages
 
 * (TODO) Rename JoinPool -> JoinPoolNoSwap
+* JoinPoolNoSwap
+  * TokenInMaxs must either contain every token in pool, or no tokens
 * JoinPoolSwapExternAmountIn
   * Replace sdk.Coin w/ sdk.Coins
   * (TODO) Consider renaming to JoinPool, hesistant due to collison with old message

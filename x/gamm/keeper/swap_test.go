@@ -14,6 +14,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
 		tokenOutMinAmount sdk.Int
+		expectedTokenOut  sdk.Int
 	}
 
 	tests := []struct {
@@ -27,6 +28,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
 				tokenOutDenom:     "bar",
 				tokenOutMinAmount: sdk.NewInt(1),
+				expectedTokenOut:  sdk.NewInt(49262),
 			},
 			expectPass: true,
 		},
@@ -36,6 +38,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tokenIn:           sdk.NewCoin("bar", sdk.NewInt(2451783)),
 				tokenOutDenom:     "baz",
 				tokenOutMinAmount: sdk.NewInt(1),
+				expectedTokenOut:  sdk.NewInt(1167843),
 			},
 			expectPass: true,
 		},
@@ -82,17 +85,16 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		suite.SetupTest()
 		poolId := suite.prepareBalancerPool()
 		keeper := suite.app.GAMMKeeper
-		pool, err := keeper.GetPool(suite.ctx, poolId)
-		suite.Require().NoError(err)
 
 		if test.expectPass {
-			spotPriceBefore, err := pool.SpotPrice(suite.ctx, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+			spotPriceBefore, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 			suite.NoError(err, "test: %v", test.name)
 
 			tokenOutAmount, err := keeper.SwapExactAmountIn(suite.ctx, acc1, poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
 			suite.NoError(err, "test: %v", test.name)
+			suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
 
-			spotPriceAfter, err := pool.SpotPrice(suite.ctx, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+			spotPriceAfter, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 			suite.NoError(err, "test: %v", test.name)
 
 			// Ratio of the token out should be between the before spot price and after spot price.
@@ -107,9 +109,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	type param struct {
-		tokenInDenom     string
-		tokenInMaxAmount sdk.Int
-		tokenOut         sdk.Coin
+		tokenInDenom          string
+		tokenInMaxAmount      sdk.Int
+		tokenOut              sdk.Coin
+		expectedTokenInAmount sdk.Int
 	}
 
 	tests := []struct {
@@ -120,18 +123,20 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 		{
 			name: "Proper swap",
 			param: param{
-				tokenInDenom:     "foo",
-				tokenInMaxAmount: sdk.NewInt(900000000),
-				tokenOut:         sdk.NewCoin("bar", sdk.NewInt(100000)),
+				tokenInDenom:          "foo",
+				tokenInMaxAmount:      sdk.NewInt(900000000),
+				tokenOut:              sdk.NewCoin("bar", sdk.NewInt(100000)),
+				expectedTokenInAmount: sdk.NewInt(206164),
 			},
 			expectPass: true,
 		},
 		{
 			name: "Proper swap2",
 			param: param{
-				tokenInDenom:     "foo",
-				tokenInMaxAmount: sdk.NewInt(900000000),
-				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(316721)),
+				tokenInDenom:          "foo",
+				tokenInMaxAmount:      sdk.NewInt(900000000),
+				tokenOut:              sdk.NewCoin("baz", sdk.NewInt(316721)),
+				expectedTokenInAmount: sdk.NewInt(1084570),
 			},
 			expectPass: true,
 		},
@@ -177,19 +182,20 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 		// Init suite for each test.
 		suite.SetupTest()
 		poolId := suite.prepareBalancerPool()
-		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
-		suite.Require().NoError(err)
 
 		keeper := suite.app.GAMMKeeper
 
 		if test.expectPass {
-			spotPriceBefore, err := pool.SpotPrice(suite.ctx, test.param.tokenInDenom, test.param.tokenOut.Denom)
+			spotPriceBefore, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 			suite.NoError(err, "test: %v", test.name)
 
 			tokenInAmount, err := keeper.SwapExactAmountOut(suite.ctx, acc1, poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
 			suite.NoError(err, "test: %v", test.name)
+			suite.True(tokenInAmount.Equal(test.param.expectedTokenInAmount),
+				"test: %v\n expect_eq actual: %s, expected: %s",
+				test.name, tokenInAmount, test.param.expectedTokenInAmount)
 
-			spotPriceAfter, err := pool.SpotPrice(suite.ctx, test.param.tokenInDenom, test.param.tokenOut.Denom)
+			spotPriceAfter, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 			suite.NoError(err, "test: %v", test.name)
 
 			// Ratio of the token out should be between the before spot price and after spot price.

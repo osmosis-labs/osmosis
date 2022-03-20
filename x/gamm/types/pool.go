@@ -36,7 +36,8 @@ type PoolI interface {
 	// expected to Set the pool into state as well.
 	ApplySwap(ctx sdk.Context, tokenIn sdk.Coins, tokenOut sdk.Coins) error
 
-	SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error)
+	// TODO: Swap base and quote asset around, so that it makes more sense later
+	SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
 
 	// JoinPool joins the pool, and uses all of the tokensIn provided.
 	// The AMM swaps to whatever the ratio should be and returns the number of shares created.

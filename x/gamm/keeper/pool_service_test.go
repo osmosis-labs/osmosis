@@ -239,6 +239,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}
 }
 
+// TODO: Add more edge cases around TokenInMaxs not containing every token in pool.
 func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	tests := []struct {
 		fn func(poolId uint64)
@@ -282,7 +283,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 				// Test the "tokenInMaxs"
 				// In this case, to get the 50 * OneShare amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
 				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
-					sdk.NewCoin("foo", sdk.NewInt(4999)),
+					sdk.NewCoin("bar", sdk.NewInt(4999)), sdk.NewCoin("foo", sdk.NewInt(4999)),
 				})
 				suite.Require().Error(err)
 			},
@@ -293,7 +294,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 				// Test the "tokenInMaxs"
 				// In this case, to get the 50 * OneShare amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
 				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
-					sdk.NewCoin("foo", sdk.NewInt(5000)),
+					sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)),
 				})
 				suite.Require().NoError(err)
 
