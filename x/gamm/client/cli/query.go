@@ -409,7 +409,7 @@ func GetCmdEstimateSwapExactAmountIn() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query estimate-swap-exact-amount-in.
 Example:
-$ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-amounts=100stake2 --swap-route-pool-ids=3 --swap-route-amounts=100stake
+$ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
 `,
 				version.AppName,
 			),
@@ -462,7 +462,7 @@ func GetCmdEstimateSwapExactAmountOut() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query estimate-swap-exact-amount-out.
 Example:
-$ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-amounts=100stake2 --swap-route-pool-ids=3 --swap-route-amounts=100stake
+$ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
 `,
 				version.AppName,
 			),
