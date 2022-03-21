@@ -252,6 +252,14 @@ func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
 	return Aasset, Basset, err
 }
 
+func (p *Pool) updateLiquidity(numShares sdk.Int, newLiquidity sdk.Coins) {
+	err := p.addToPoolAssetBalances(newLiquidity)
+	if err != nil {
+		panic(err)
+	}
+	p.AddTotalShares(numShares)
+}
+
 func (pa *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	// Check that PoolAsset exists.
 	assetIndex, existingAsset, err := pa.getPoolAssetAndIndex(coin.Denom)

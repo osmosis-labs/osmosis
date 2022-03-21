@@ -206,11 +206,6 @@ func (p *Pool) maximalExactRatioJoin(tokensIn sdk.Coins) (numShares sdk.Int, rem
 	return numShares, remCoins, nil
 }
 
-func (p *Pool) updateLiquidity(numShares sdk.Int, newLiquidity sdk.Coins) {
-	p.addToPoolAssetBalances(newLiquidity)
-	p.AddTotalShares(numShares)
-}
-
 func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
 	if tokensIn.Len() == 1 {
 		numShares, err = p.singleAssetJoin(tokensIn[0], swapFee)
@@ -266,7 +261,10 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 		exitedCoins = exitedCoins.Add(sdk.NewCoin(asset.Denom, exitAmt))
 		// update pool assets for this exit amount.
 		newAmt := asset.Amount.Sub(exitAmt)
-		p.UpdatePoolAssetBalance(sdk.NewCoin(asset.Denom, newAmt))
+		err = p.UpdatePoolAssetBalance(sdk.NewCoin(asset.Denom, newAmt))
+		if err != nil {
+			return sdk.Coins{}, err
+		}
 	}
 
 	p.TotalShares = sdk.NewCoin(p.TotalShares.Denom, totalShares.Sub(exitingShares))

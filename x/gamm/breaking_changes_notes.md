@@ -3,7 +3,10 @@
 ## Queries
 
 * PoolAssetsQuery
-  * ???
+  * Deleted
+  * New query is TotalLiquidity (TODO: Write this query)
+  * Or if you wanted the pool weights, you must now query the pool itself.
+    * Please give feedback if more queries should be exposed that are pool-type specific
 * QuerySpotPrice
   * The `withswapfee` param is now removed. If this was needed for anything, please flag it. Its mainly removed due to not having a clear use, and a better query can probably be crafted for.
   * Rename TokenInDenom to QuoteAssetDenom
