@@ -71,7 +71,10 @@ func (qp QueryPlugin) EstimatePrice(ctx sdk.Context, estimatePrice *bindings.Est
 		return nil, wasmvmtypes.UnsupportedRequest{Kind: "TODO: multi-hop swap price estimation"}
 	}
 
-	var senderAddress = sdk.AccAddress(sender)
+	senderAddress, err := sdk.AccAddressFromBech32(sender)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate price sender address")
+	}
 
 	if estimatePrice.Amount.In != nil {
 		tokenIn := sdk.NewCoin(denomIn, *estimatePrice.Amount.In)
