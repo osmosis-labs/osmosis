@@ -55,7 +55,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 		),
 	})
 
-	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, nil
+	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolID}, nil
 }
 
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
