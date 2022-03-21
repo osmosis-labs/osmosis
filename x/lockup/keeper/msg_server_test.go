@@ -9,6 +9,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
+// TODO: add msg_server test for MsgBeginUnlocking
+// TODO: add msg_server test for MsgBeginUnlockingAll
+
 func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	type param struct {
 		coinsToLock         sdk.Coins
@@ -42,6 +45,16 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 			},
 			expectPass: false,
 		},
+		{
+			name: "try creating multiple coin lockup",
+			param: param{
+				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("take", 10)}, // setup wallet
+				lockOwner:           sdk.AccAddress([]byte("addr1---------------")),                         // setup wallet
+				duration:            time.Second,
+				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("take", 10)},
+			},
+			expectPass: false,
+		},
 	}
 
 	for _, test := range tests {
@@ -50,7 +63,9 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
 		suite.Require().NoError(err)
 
-		_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, test.param.lockOwner, test.param.coinsToLock, test.param.duration)
+		msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.ctx)
+		_, err = msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 		if test.expectPass {
 			// creation of lock via LockTokens
