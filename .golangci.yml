@@ -29,7 +29,7 @@ linters:
     #    - forbidigo <- forbids fmt.Print* by default
     - forcetypeassert
     #    - funlen <- some of our functions are longer than this by necessity
-#    - gci <- questionable utility
+    #    - gci <- questionable utility
     #    - gochecknoglobals <- disabled because we want some globals
     #    - gochecknoinits <- disabled because we want to use init()
     #    - gocognit <- disabled for same reason as gocyclo
@@ -64,7 +64,7 @@ linters:
     - noctx
     #    - nolintlint <- disabled because we use nolint in some places
     - paralleltest
-    - prealloc
+    # - prealloc <- disabled because it makes simple code complicated
     - predeclared
     - promlinter
     - revive

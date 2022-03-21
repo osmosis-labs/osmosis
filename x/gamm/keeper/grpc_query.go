@@ -44,11 +44,11 @@ func (k Keeper) Pool(
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	any, err := codectypes.NewAnyWithValue(pool)
+	anyvalue, err := codectypes.NewAnyWithValue(pool)
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryPoolResponse{Pool: any}, nil
+	return &types.QueryPoolResponse{Pool: anyvalue}, nil
 }
 
 func (k Keeper) Pools(
@@ -82,11 +82,11 @@ func (k Keeper) Pools(
 			return fmt.Errorf("pool (%d) is not basic pool", pool.GetID())
 		}
 
-		any, err := codectypes.NewAnyWithValue(pool)
+		anyvalue, err := codectypes.NewAnyWithValue(pool)
 		if err != nil {
 			return err
 		}
-		anys = append(anys, any)
+		anys = append(anys, anyvalue)
 		return nil
 	})
 	if err != nil {
@@ -128,12 +128,12 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 
 	switch pool := pool.(type) {
 	case *balancer.Pool:
-		any, err := codectypes.NewAnyWithValue(&pool.PoolParams)
+		anyWithValue, err := codectypes.NewAnyWithValue(&pool.PoolParams)
 		if err != nil {
 			return nil, err
 		}
 		return &types.QueryPoolParamsResponse{
-			Params: any,
+			Params: anyWithValue,
 		}, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)

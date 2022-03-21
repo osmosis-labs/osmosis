@@ -42,11 +42,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 	poolAnys := []*codectypes.Any{}
 	for _, poolI := range pools {
-		any, err := codectypes.NewAnyWithValue(poolI)
+		anyWithValue, err := codectypes.NewAnyWithValue(poolI)
 		if err != nil {
 			panic(err)
 		}
-		poolAnys = append(poolAnys, any)
+		poolAnys = append(poolAnys, anyWithValue)
 	}
 	return &types.GenesisState{
 		NextPoolNumber: k.GetNextPoolNumberAndIncrement(ctx),

@@ -224,7 +224,8 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // locks is expected to be the correct set of lock recipients for this gauge.
 // TODO: Make this code have way more re-use with distribute internal (post-v7).
 func (k Keeper) distributeSyntheticInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 
@@ -289,7 +290,8 @@ func (k Keeper) distributeSyntheticInternal(
 // the distrInfo computed. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 	lockSum := lockuptypes.SumLocksByDenom(locks, denom)

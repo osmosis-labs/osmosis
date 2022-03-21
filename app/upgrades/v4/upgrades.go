@@ -13,7 +13,8 @@ import (
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 	bank bankkeeper.Keeper,
 	distr *distrkeeper.Keeper,
-	gamm *gammkeeper.Keeper) upgradetypes.UpgradeHandler {
+	gamm *gammkeeper.Keeper,
+) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// // Upgrade all of the lock storages
 		// locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)

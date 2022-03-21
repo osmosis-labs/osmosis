@@ -273,7 +273,7 @@ func NewOsmosisApp(
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
-	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig)...)
 
 	app.sm.RegisterStoreDecoders()
 

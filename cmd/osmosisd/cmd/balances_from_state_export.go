@@ -1,3 +1,4 @@
+//nolint
 package cmd
 
 import (
@@ -177,22 +178,18 @@ Example:
 			}
 
 			authGenesis := authtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["auth"], &authGenesis)
-
-			// This didn't seem to do anything, so have removed.
-			/*
-				accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
-				if err != nil {
-					panic(err)
-				}
-				sanitizedAccounts := authtypes.SanitizeGenesisAccounts(accounts)
-			*/
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["auth"], &authGenesis)
+			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
+			if err != nil {
+				panic(err)
+			}
+			accounts = authtypes.SanitizeGenesisAccounts(accounts)
 
 			// Produce the map of address to total atom balance, both staked and UnbondingStake
 			snapshotAccs := make(map[string]DerivedAccount)
 
 			bankGenesis := banktypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
 			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
@@ -205,7 +202,7 @@ Example:
 			}
 
 			stakingGenesis := stakingtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
 			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
@@ -246,7 +243,7 @@ Example:
 			}
 
 			lockupGenesis := lockuptypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
 			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
@@ -260,7 +257,7 @@ Example:
 			}
 
 			claimGenesis := claimtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
 			for _, record := range claimGenesis.ClaimRecords {
 				address := record.Address
 
@@ -279,7 +276,7 @@ Example:
 				}
 
 				for action := range claimtypes.Action_name {
-					if !record.ActionCompleted[action] {
+					if record.ActionCompleted[action] == false {
 						acc.UnclaimedAirdrop = acc.UnclaimedAirdrop.Add(claimablePerAction...)
 					}
 				}
@@ -288,7 +285,7 @@ Example:
 			}
 
 			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			clientCtx.JSONCodec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
 
 			// collect gamm pools
 			pools := make(map[string]gammtypes.PoolI)
@@ -332,7 +329,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o600)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

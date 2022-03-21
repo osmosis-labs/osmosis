@@ -307,7 +307,8 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 // force undelegate osmoAmount worth of delegation shares from delegations between intermediary account and valAddr
 // We take the returned tokens, and then immediately burn them.
 func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
-	osmoAmount sdk.Int, intermediaryAcc types.SuperfluidIntermediaryAccount) error {
+	osmoAmount sdk.Int, intermediaryAcc types.SuperfluidIntermediaryAccount,
+) error {
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {
 		return err
