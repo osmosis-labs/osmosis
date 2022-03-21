@@ -42,6 +42,14 @@ type EstimatePrice struct {
 	Amount   SwapAmount `json:"amount"`
 }
 
+func (e *EstimatePrice) ToSwapMsg() *SwapMsg {
+	return &SwapMsg{
+		First:  e.First,
+		Route:  e.Route,
+		Amount: e.Amount.Unlimited(),
+	}
+}
+
 type FullDenomResponse struct {
 	Denom string `json:"denom"`
 }
