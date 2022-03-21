@@ -18,4 +18,6 @@ message GenesisState {
       [ (gogoproto.nullable) = false ];
   repeated LockIDIntermediaryAccountConnection intemediary_account_connections = 5
       [ (gogoproto.nullable) = false ];
+  repeated LockIdIntermediaryAccountConnection intemediary_account_connections =
+      5 [ (gogoproto.nullable) = false ];
 }

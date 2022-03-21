@@ -34,8 +34,10 @@ message PeriodLock {
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  ByDuration = 0; // Queries for locks that are longer than a certain duration
-  ByTime = 1;     // Queries for lockups that started before a specific time
+  // Queries for locks that are longer than a certain duration
+  ByDuration = 0;
+  // Queries for lockups that started before a specific time
+  ByTime = 1;
 }
 
 message QueryCondition {
