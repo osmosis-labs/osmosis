@@ -123,7 +123,6 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 	}
 
 	tokenOutAmount, err := server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
-
 	if err != nil {
 		return nil, err
 	}
