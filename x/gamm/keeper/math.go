@@ -1,3 +1,4 @@
+//nolint:deadcode // NOTE: should we remove the dead code?
 package keeper
 
 import (
@@ -7,18 +8,21 @@ import (
 )
 
 // Don't EVER change after initializing
-// TODO: Analyze choice here
+// TODO: Analyze choice here.
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
-// Singletons
+// Singletons.
 var zero sdk.Dec = sdk.ZeroDec()
-var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
-var one sdk.Dec = sdk.OneDec()
-var two sdk.Dec = sdk.MustNewDecFromStr("2")
+
+var (
+	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
+	one      sdk.Dec = sdk.OneDec()
+	two      sdk.Dec = sdk.MustNewDecFromStr("2")
+)
 
 // calcSpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
-// so spot_price = (B_in / W_in) / (B_out / W_out)
+// so spot_price = (B_in / W_in) / (B_out / W_out).
 func calcSpotPrice(
 	tokenBalanceIn,
 	tokenWeightIn,
@@ -36,7 +40,7 @@ func calcSpotPrice(
 // the input taken by the swap fee.
 // This is the weight-adjusted balance of the tokens in the pool.
 // so spot_price = (B_in / W_in) / (B_out / W_out)
-// and spot_price_with_fee = spot_price / (1 - swapfee)
+// and spot_price_with_fee = spot_price / (1 - swapfee).
 func calcSpotPriceWithSwapFee(
 	tokenBalanceIn,
 	tokenWeightIn,
@@ -82,7 +86,7 @@ func solveConstantFunctionInvariant(
 }
 
 // calcOutGivenIn calculates token to be swapped out given
-// the provided amount, fee deducted, using solveConstantFunctionInvariant
+// the provided amount, fee deducted, using solveConstantFunctionInvariant.
 func calcOutGivenIn(
 	tokenBalanceIn,
 	tokenWeightIn,
@@ -99,7 +103,7 @@ func calcOutGivenIn(
 }
 
 // calcInGivenOut calculates token to be provided, fee added,
-// given the swapped out amount, using solveConstantFunctionInvariant
+// given the swapped out amount, using solveConstantFunctionInvariant.
 func calcInGivenOut(
 	tokenBalanceIn,
 	tokenWeightIn,
@@ -116,7 +120,6 @@ func calcInGivenOut(
 	// Therefore we divide by (1 - swapfee) here
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
 	return tokenAmountInBeforeFee
-
 }
 
 func feeRatio(
@@ -128,7 +131,7 @@ func feeRatio(
 }
 
 // calcSingleInGivenPoolOut calculates token to be provided, fee added,
-// given the swapped out shares amount, using solveConstantFunctionInvariant
+// given the swapped out shares amount, using solveConstantFunctionInvariant.
 func calcSingleInGivenPoolOut(
 	tokenBalanceIn,
 	normalizedTokenWeightIn,
@@ -144,7 +147,7 @@ func calcSingleInGivenPoolOut(
 	return tokenAmountInBeforeFee
 }
 
-// pAo
+// pAo.
 func calcPoolOutGivenSingleIn(
 	tokenBalanceIn,
 	normalizedTokenWeightIn,
@@ -160,7 +163,7 @@ func calcPoolOutGivenSingleIn(
 	return poolAmountOut
 }
 
-// tAo
+// tAo.
 func calcSingleOutGivenPoolIn(
 	tokenBalanceOut,
 	normalizedTokenWeightOut,
@@ -181,7 +184,7 @@ func calcSingleOutGivenPoolIn(
 	return tokenAmountOutAfterFee
 }
 
-// pAi
+// pAi.
 func calcPoolInGivenSingleOut(
 	tokenBalanceOut,
 	normalizedTokenWeightOut,

@@ -13,6 +13,7 @@ import (
 // Every asset with a liquid osmo pairing pool on Osmosis, as of 12/01/21
 // Notably, Tick is not on this list because the osmo pool has $76 of liquidity.
 // Cheq'd and KRT are also not on this, due to neither having osmo pairings.
+//nolint:gosec // nolint because these are strings of whitelisted ibc denoms
 var feetoken_whitelist_data = `
 ion,uion,2
 atom,ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2,1

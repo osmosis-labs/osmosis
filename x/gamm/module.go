@@ -61,7 +61,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 //---------------------------------------
-// Interfaces
+// Interfaces.
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 	rest.RegisterHandlers(ctx, r)
 }
@@ -102,7 +102,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper) AppModule {
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -160,7 +161,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the gamm module.
-// However, at launch the gamm module has no state, hence this is a no-op
+// However, at launch the gamm module has no state, hence this is a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	// simulation.RandomizedGenState(simState)
 }
@@ -177,9 +178,8 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	// return simulation.ParamChanges(r)
 }
 
-// RegisterStoreDecoder registers a decoder for supply module's types
+// RegisterStoreDecoder registers a decoder for supply module's types.
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	return
 }
 
 // WeightedOperations returns all the simulation operations with their respective weights.

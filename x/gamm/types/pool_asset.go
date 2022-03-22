@@ -65,7 +65,7 @@ func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
 	return assets_copy
 }
 
-// SortPoolAssetsByDenom sorts pool assets in place, by weight
+// SortPoolAssetsByDenom sorts pool assets in place, by weight.
 func SortPoolAssetsByDenom(assets []PoolAsset) {
 	sort.Slice(assets, func(i, j int) bool {
 		PoolAssetA := assets[i]
@@ -99,7 +99,7 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	return nil
 }
 
-// PoolAssetsCoins returns all the coins corresponding to a slice of pool assets
+// PoolAssetsCoins returns all the coins corresponding to a slice of pool assets.
 func PoolAssetsCoins(assets []PoolAsset) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, asset := range assets {

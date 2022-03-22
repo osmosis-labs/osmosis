@@ -16,7 +16,6 @@ func ProposalSetSuperfluidAssetsRESTHandler(clientCtx client.Context) govrest.Pr
 
 func newSetSuperfluidAssetsHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 	}
 }
 
@@ -29,6 +28,5 @@ func ProposalRemoveSuperfluidAssetsRESTHandler(clientCtx client.Context) govrest
 
 func newRemoveSuperfluidAssetsHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 	}
 }

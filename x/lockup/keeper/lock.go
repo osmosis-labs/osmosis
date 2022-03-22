@@ -32,14 +32,14 @@ func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
 	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
 }
 
-// GetModuleBalance Returns full balance of the module
+// GetModuleBalance Returns full balance of the module.
 func (k Keeper) GetModuleBalance(ctx sdk.Context) sdk.Coins {
 	// TODO: should add invariant test for module balance and lock items
 	acc := k.ak.GetModuleAccount(ctx, types.ModuleName)
 	return k.bk.GetAllBalances(ctx, acc.GetAddress())
 }
 
-// GetModuleLockedCoins Returns locked balance of the module
+// GetModuleLockedCoins Returns locked balance of the module.
 func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
 	// all not unlocking + not finished unlocking
 	notUnlockingCoins := k.getCoinsFromIterator(ctx, k.LockIterator(ctx, false))
@@ -48,13 +48,13 @@ func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
 }
 
 // GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
-// query.Duration
+// query.Duration.
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
 	beginKey := accumulationKey(query.Duration)
 	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
 }
 
-// BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
+// BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins.
 func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, error) {
 	locks, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
 	return locks, err
@@ -87,7 +87,7 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 	return nil
 }
 
-// removeTokensFromLock is called by lockup slash function - called by superfluid module only
+// removeTokensFromLock is called by lockup slash function - called by superfluid module only.
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
 	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
 	lock.Coins = lock.Coins.Sub(coins)
@@ -137,7 +137,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, coins sdk.Co
 	return lock, nil
 }
 
-// SlashTokensFromLockByID send slashed tokens to community pool - called by superfluid module only
+// SlashTokensFromLockByID send slashed tokens to community pool - called by superfluid module only.
 func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -163,7 +163,7 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	return lock, nil
 }
 
-// LockTokens lock tokens from an account for specified duration
+// LockTokens lock tokens from an account for specified duration.
 func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is set at the beginning of unlocking time
@@ -341,7 +341,7 @@ func (k Keeper) setLockAndResetLockRefs(ctx sdk.Context, lock types.PeriodLock) 
 	return k.addLockRefs(ctx, lock)
 }
 
-// setLock is a utility to store lock object into the store
+// setLock is a utility to store lock object into the store.
 func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(&lock)
@@ -352,13 +352,13 @@ func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
-// deleteLock removes the lock object from the state
+// deleteLock removes the lock object from the state.
 func (k Keeper) deleteLock(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(id))
 }
 
-// Lock is a utility to lock coins into module account
+// Lock is a utility to lock coins into module account.
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
@@ -391,7 +391,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
-// splitLock splits a lock with the given amount, and stores split new lock to the state
+// splitLock splits a lock with the given amount, and stores split new lock to the state.
 func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) (types.PeriodLock, error) {
 	if lock.IsUnlocking() {
 		return types.PeriodLock{}, fmt.Errorf("cannot split unlocking lock")
@@ -410,7 +410,7 @@ func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 	return splitLock, err
 }
 
-// BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
+// BeginUnlock is a utility to start unlocking coins from NotUnlocking queue.
 func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
 	// prohibit BeginUnlock if synthetic locks are referring to this
 	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
@@ -476,7 +476,7 @@ func (k Keeper) beginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins s
 	return nil
 }
 
-// Unlock is a utility to unlock coins from module account
+// Unlock is a utility to unlock coins from module account.
 func (k Keeper) Unlock(ctx sdk.Context, lockID uint64) error {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -497,7 +497,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lockID uint64) error {
 
 // ForceUnlock ignores unlock duration and immediately unlock and refund.
 // CONTRACT: should be used only at the chain upgrade script
-// TODO: Revisit for Superfluid Staking
+// TODO: Revisit for Superfluid Staking.
 func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	if !lock.IsUnlocking() {
 		err := k.BeginUnlock(ctx, lock.ID, nil)

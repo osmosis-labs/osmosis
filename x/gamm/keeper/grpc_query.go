@@ -20,9 +20,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-var (
-	sdkIntMaxValue = sdk.NewInt(0)
-)
+var sdkIntMaxValue = sdk.NewInt(0)
 
 func init() {
 	maxInt := big.NewInt(2)
@@ -95,7 +93,6 @@ func (k Keeper) Pools(
 		anys = append(anys, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -166,7 +163,7 @@ func (k Keeper) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequ
 	}, nil
 }
 
-// TODO: Fix
+// TODO: Fix.
 func (k Keeper) PoolAssets(ctx context.Context, req *types.QueryPoolAssetsRequest) (*types.QueryPoolAssetsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

@@ -30,7 +30,7 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-// Claimable returns claimable amount per user
+// Claimable returns claimable amount per user.
 func (k Keeper) ClaimRecord(
 	goCtx context.Context,
 	req *types.QueryClaimRecordRequest,
@@ -50,7 +50,7 @@ func (k Keeper) ClaimRecord(
 	return &types.QueryClaimRecordResponse{ClaimRecord: claimRecord}, err
 }
 
-// Activities returns activities
+// Activities returns activities.
 func (k Keeper) ClaimableForAction(
 	goCtx context.Context,
 	req *types.QueryClaimableForActionRequest,
@@ -72,7 +72,7 @@ func (k Keeper) ClaimableForAction(
 	}, err
 }
 
-// Activities returns activities
+// Activities returns activities.
 func (k Keeper) TotalClaimable(
 	goCtx context.Context,
 	req *types.QueryTotalClaimableRequest,

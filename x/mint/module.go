@@ -45,7 +45,7 @@ func (AppModuleBasic) Name() string {
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint
@@ -74,7 +74,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		return
 	}
-
 }
 
 // GetTxCmd returns no root tx command for the mint module.
@@ -96,7 +95,7 @@ type AppModule struct {
 	bankKeeper types.BankKeeper
 }
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModule object.
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},

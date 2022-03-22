@@ -10,19 +10,19 @@ import (
 
 const totalSuperfluidDelegationInvariantName = "total-superfluid-delegation-invariant-name"
 
-// RegisterInvariants registers all governance invariants
+// RegisterInvariants registers all governance invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 	ir.RegisterRoute(types.ModuleName, totalSuperfluidDelegationInvariantName, TotalSuperfluidDelegationInvariant(keeper))
 }
 
-// AllInvariants runs all invariants of the gamm module
+// AllInvariants runs all invariants of the gamm module.
 func AllInvariants(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		return TotalSuperfluidDelegationInvariant(keeper)(ctx)
 	}
 }
 
-// TotalSuperfluidDelegationInvariant checks the sum of intermediary account delegation is same as sum of individual lockup delegation
+// TotalSuperfluidDelegationInvariant checks the sum of intermediary account delegation is same as sum of individual lockup delegation.
 func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		accs := keeper.GetAllIntermediaryAccounts(ctx)

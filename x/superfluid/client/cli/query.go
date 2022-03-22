@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group superfluid queries under a subcommand
 	cmd := &cobra.Command{
@@ -70,7 +70,7 @@ $ <appd> query superfluid params
 	return cmd
 }
 
-// GetCmdAllSuperfluidAssets returns all superfluid enabled assets
+// GetCmdAllSuperfluidAssets returns all superfluid enabled assets.
 func GetCmdAllSuperfluidAssets() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "all-superfluid-assets",
@@ -106,7 +106,7 @@ $ %s query superfluid all-superfluid-assets
 	return cmd
 }
 
-// GetCmdAssetMultiplier returns multiplier of an asset by denom
+// GetCmdAssetMultiplier returns multiplier of an asset by denom.
 func GetCmdAssetMultiplier() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "asset-multiplier [denom]",
@@ -144,7 +144,7 @@ $ %s query superfluid asset-multiplier gamm/pool/1
 	return cmd
 }
 
-// GetCmdAllIntermediaryAccounts returns all superfluid intermediary accounts
+// GetCmdAllIntermediaryAccounts returns all superfluid intermediary accounts.
 func GetCmdAllIntermediaryAccounts() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "all-intermediary-accounts",
@@ -188,7 +188,7 @@ $ %s query superfluid all-intermediary-accounts
 	return cmd
 }
 
-// GetCmdConnectedIntermediaryAccount returns connected intermediary account
+// GetCmdConnectedIntermediaryAccount returns connected intermediary account.
 func GetCmdConnectedIntermediaryAccount() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "connected-intermediary-account [lock_id]",
@@ -232,7 +232,7 @@ $ %s query superfluid connected-intermediary-account 1
 }
 
 // GetCmdSuperfluidDelegationAmount returns the coins superfluid delegated for a
-// delegator, validator, denom
+// delegator, validator, denom.
 func GetCmdSuperfluidDelegationAmount() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "superfluid-delegation-amount [delegator_address] [validator_address] [denom]",
@@ -250,7 +250,6 @@ func GetCmdSuperfluidDelegationAmount() *cobra.Command {
 				ValidatorAddress: args[1],
 				Denom:            args[2],
 			})
-
 			if err != nil {
 				return err
 			}
@@ -264,7 +263,7 @@ func GetCmdSuperfluidDelegationAmount() *cobra.Command {
 	return cmd
 }
 
-// GetCmdSuperfluidDelegationsByDelegator returns the coins superfluid delegated for the specified delegator
+// GetCmdSuperfluidDelegationsByDelegator returns the coins superfluid delegated for the specified delegator.
 func GetCmdSuperfluidDelegationsByDelegator() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "superfluid-delegation-by-delegator [delegator_address]",
@@ -280,7 +279,6 @@ func GetCmdSuperfluidDelegationsByDelegator() *cobra.Command {
 			res, err := queryClient.SuperfluidDelegationsByDelegator(cmd.Context(), &types.SuperfluidDelegationsByDelegatorRequest{
 				DelegatorAddress: args[0],
 			})
-
 			if err != nil {
 				return err
 			}
@@ -294,7 +292,7 @@ func GetCmdSuperfluidDelegationsByDelegator() *cobra.Command {
 	return cmd
 }
 
-// GetCmdSuperfluidUndelegationsByDelegator returns the coins superfluid undelegated for the specified delegator
+// GetCmdSuperfluidUndelegationsByDelegator returns the coins superfluid undelegated for the specified delegator.
 func GetCmdSuperfluidUndelegationsByDelegator() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "superfluid-undelegation-by-delegator [delegator_address]",
@@ -310,7 +308,6 @@ func GetCmdSuperfluidUndelegationsByDelegator() *cobra.Command {
 			res, err := queryClient.SuperfluidUndelegationsByDelegator(cmd.Context(), &types.SuperfluidUndelegationsByDelegatorRequest{
 				DelegatorAddress: args[0],
 			})
-
 			if err != nil {
 				return err
 			}
@@ -324,7 +321,7 @@ func GetCmdSuperfluidUndelegationsByDelegator() *cobra.Command {
 	return cmd
 }
 
-// GetCmdTotalSuperfluidDelegations returns total amount of base denom delegated via superfluid staking
+// GetCmdTotalSuperfluidDelegations returns total amount of base denom delegated via superfluid staking.
 func GetCmdTotalSuperfluidDelegations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-superfluid-delegations",
@@ -338,7 +335,6 @@ func GetCmdTotalSuperfluidDelegations() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.TotalSuperfluidDelegations(cmd.Context(), &types.TotalSuperfluidDelegationsRequest{})
-
 			if err != nil {
 				return err
 			}

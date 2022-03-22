@@ -1,7 +1,7 @@
 package app
 
 import (
-	// Imports from the Go Standard Library
+	// Imports from the Go Standard Library.
 	"fmt"
 	"io"
 	"net/http"
@@ -9,16 +9,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	// HTTP Router
+	// HTTP Router.
 	"github.com/gorilla/mux"
 
-	// Used to serve OpenAPI information
+	// Used to serve OpenAPI information.
 	"github.com/rakyll/statik/fs"
 
-	// A CLI helper
+	// A CLI helper.
 	"github.com/spf13/cast"
 
-	// Imports from Tendermint, Osmosis' consensus protocol
+	// Imports from Tendermint, Osmosis' consensus protocol.
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
@@ -26,7 +26,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	// Utilities from the Cosmos-SDK other than Cosmos modules
+	// Utilities from the Cosmos-SDK other than Cosmos modules.
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -51,7 +51,7 @@ import (
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	// Capability: allows developers to atomically define what a module can and cannot do
+	// Capability: allows developers to atomically define what a module can and cannot do.
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
 	// Crisis: Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
@@ -59,28 +59,28 @@ import (
 
 	// Evidence handling for double signing, misbehaviour, etc.
 
-	// Params: Parameters that are always available
+	// Params: Parameters that are always available.
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	// Upgrade:  Software upgrades handling and coordination.
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	// IBC Transfer: Defines the "transfer" IBC port
+	// IBC Transfer: Defines the "transfer" IBC port.
 	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 
-	// Osmosis application prarmeters
+	// Osmosis application prarmeters.
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 
-	// Upgrades from earlier versions of Osmosis
+	// Upgrades from earlier versions of Osmosis.
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
 	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 
-	// Superfluid: Allows users to stake gamm (bonded liquidity)
+	// Superfluid: Allows users to stake gamm (bonded liquidity).
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
-	// Wasm: Allows Osmosis to interact with web assembly smart contracts
+	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
 	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
@@ -95,7 +95,7 @@ var (
 	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
 	EnableSpecificWasmProposals = ""
 
-	// use this for clarity in argument list
+	// use this for clarity in argument list.
 	EmptyWasmOpts []wasm.Option
 )
 
@@ -117,7 +117,7 @@ func GetWasmEnabledProposals() []wasm.ProposalType {
 }
 
 var (
-	// DefaultNodeHome default home directories for the application daemon
+	// DefaultNodeHome default home directories for the application daemon.
 	DefaultNodeHome string
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
@@ -125,10 +125,10 @@ var (
 	// and genesis verification.
 	ModuleBasics = module.NewBasicManager(appModuleBasics...)
 
-	// module account permissions
+	// module account permissions.
 	maccPerms = moduleAaccountPermissions
 
-	// module accounts that are allowed to receive tokens
+	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{}
 )
 
@@ -188,7 +188,6 @@ func NewOsmosisApp(
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -235,7 +234,7 @@ func NewOsmosisApp(
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
-	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: All module / keeper changes should happen prior to this module.NewManager line being called.
 	// However in the event any changes do need to happen after this call, ensure that that keeper
@@ -327,27 +326,27 @@ func NewOsmosisApp(
 
 // MakeCodecs constructs the *std.Codec and *codec.LegacyAmino instances used by
 // simapp. It is useful for tests and clients who do not want to construct the
-// full simapp
+// full simapp.
 func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	config := MakeEncodingConfig()
 	return config.Marshaler, config.Amino
 }
 
-// Name returns the name of the App
+// Name returns the name of the App.
 func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
-// BeginBlocker application updates every begin block
+// BeginBlocker application updates every begin block.
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
-// EndBlocker application updates every end block
+// EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
-// InitChainer application update at chain initialization
+// InitChainer application update at chain initialization.
 func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
@@ -359,7 +358,7 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
-// LoadHeight loads a particular height
+// LoadHeight loads a particular height.
 func (app *OsmosisApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
@@ -380,7 +379,7 @@ func (app *OsmosisApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns Osmosis' InterfaceRegistry
+// InterfaceRegistry returns Osmosis' InterfaceRegistry.
 func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
@@ -414,7 +413,7 @@ func (app *OsmosisApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	return subspace
 }
 
-// SimulationManager implements the SimulationApp interface
+// SimulationManager implements the SimulationApp interface.
 func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
@@ -495,7 +494,7 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 			app.AccountKeeper))
 }
 
-// RegisterSwaggerAPI registers swagger route with API Server
+// RegisterSwaggerAPI registers swagger route with API Server.
 func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
@@ -507,7 +506,7 @@ func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	rtr.PathPrefix("/swagger/").Handler(staticServer)
 }
 
-// GetMaccPerms returns a copy of the module account permissions
+// GetMaccPerms returns a copy of the module account permissions.
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)
 	for k, v := range maccPerms {

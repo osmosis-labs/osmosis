@@ -7,18 +7,18 @@ var MinterKey = []byte{0x00}
 var LastHalvenEpochKey = []byte{0x03}
 
 const (
-	// module name
+	// module name.
 	ModuleName = "mint"
-	// module acct name for developer vesting
+	// module acct name for developer vesting.
 	DeveloperVestingModuleAcctName = "developer_vesting_unvested"
 
-	// StoreKey is the default store key for mint
+	// StoreKey is the default store key for mint.
 	StoreKey = ModuleName
 
 	// QuerierRoute is the querier route for the minting store.
 	QuerierRoute = StoreKey
 
-	// Query endpoints supported by the minting querier
+	// Query endpoints supported by the minting querier.
 	QueryParameters      = "parameters"
 	QueryEpochProvisions = "epoch_provisions"
 )

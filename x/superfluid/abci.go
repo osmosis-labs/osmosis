@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-// BeginBlocker is called on every block
+// BeginBlocker is called on every block.
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper) {
 	numBlocksSinceEpochStart, err := ek.NumBlocksSinceEpochStart(ctx, k.GetEpochIdentifier(ctx))
 	if err != nil {
@@ -19,7 +19,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper) {
 	}
 }
 
-// Called every block to automatically unlock matured locks
+// Called every block to automatically unlock matured locks.
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }

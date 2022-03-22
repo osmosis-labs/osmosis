@@ -28,7 +28,6 @@ func (k Keeper) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (
 
 	for i, duration := range lockableDurations {
 		gaugeId, err := k.GetPoolGaugeId(sdkCtx, req.PoolId, duration)
-
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -83,7 +82,6 @@ func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivize
 				incentivizedPools = append(incentivizedPools, incentivizedPool)
 			}
 		}
-
 	}
 
 	return &types.QueryIncentivizedPoolsResponse{
@@ -92,7 +90,7 @@ func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivize
 }
 
 // ExternalIncentiveGauges iterates over all gauges, returns gauges externally incentivized,
-// excluding default gagues created with pool
+// excluding default gagues created with pool.
 func (k Keeper) ExternalIncentiveGauges(ctx context.Context, req *types.QueryExternalIncentiveGaugesRequest) (*types.QueryExternalIncentiveGaugesResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(k.storeKey)

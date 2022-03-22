@@ -20,7 +20,7 @@ var _ types.PoolI = &Pool{}
 // (This is handled in ValidateBasic)
 // * 2 <= len(assets) <= 8
 // * FutureGovernor is valid
-// * poolID doesn't already exist
+// * poolID doesn't already exist.
 func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []types.PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
 	poolAddr := types.NewPoolAddress(poolId)
 
@@ -105,7 +105,7 @@ func (pa *Pool) SubTotalShares(amt sdk.Int) {
 // It is only designed to be called at the pool's creation.
 // If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
-// TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
+// TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic().
 func (pa *Pool) setInitialPoolAssets(PoolAssets []types.PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
@@ -148,7 +148,7 @@ func (pa *Pool) setInitialPoolAssets(PoolAssets []types.PoolAsset) error {
 	return nil
 }
 
-// setInitialPoolParams
+// setInitialPoolParams.
 func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []types.PoolAsset, curBlockTime time.Time) error {
 	pa.PoolParams = params
 	if params.SmoothWeightChangeParams != nil {
@@ -225,7 +225,8 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, types.PoolAsset, error) 
 }
 
 func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
-	Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	Aasset types.PoolAsset, Basset types.PoolAsset, err error,
+) {
 	Aasset, found1 := types.GetPoolAssetByDenom(p.PoolAssets, tokenADenom)
 	Basset, found2 := types.GetPoolAssetByDenom(p.PoolAssets, tokenBDenom)
 	if !(found1 && found2) {
@@ -235,7 +236,8 @@ func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
 }
 
 func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
-	tokenA sdk.Coin, Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	tokenA sdk.Coin, Aasset types.PoolAsset, Basset types.PoolAsset, err error,
+) {
 	if len(tokensA) != 1 {
 		return tokenA, Aasset, Basset, errors.New("expected tokensB to be of length one")
 	}
@@ -244,7 +246,8 @@ func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
 }
 
 func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
-	Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	Aasset types.PoolAsset, Basset types.PoolAsset, err error,
+) {
 	if len(tokensB) != 1 {
 		return Aasset, Basset, errors.New("expected tokensA to be of length one")
 	}
@@ -439,7 +442,6 @@ func (pa Pool) NumAssets() int {
 }
 
 func (pa Pool) IsActive(curBlockTime time.Time) bool {
-
 	// Add frozen pool checking, etc...
 
 	return true
@@ -591,7 +593,7 @@ func addPoolAssetWeights(base []types.PoolAsset, other []types.PoolAsset) []type
 	return weightSum
 }
 
-// assumes 0 < d < 1
+// assumes 0 < d < 1.
 func poolAssetsMulDec(base []types.PoolAsset, d sdk.Dec) []types.PoolAsset {
 	newWeights := make([]types.PoolAsset, len(base))
 	for i, asset := range base {

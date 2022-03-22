@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	// Group gamm queries under a subcommand
 	cmd := &cobra.Command{
@@ -41,7 +41,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdPool returns pool
+// GetCmdPool returns pool.
 func GetCmdPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool <poolID>",
@@ -82,7 +82,7 @@ $ %s query gamm pool 1
 	return cmd
 }
 
-// TODO: Push this to the SDK
+// TODO: Push this to the SDK.
 func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	writer := ctx.Output
 	if writer == nil {
@@ -104,7 +104,7 @@ func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	return nil
 }
 
-// GetCmdPools return pools
+// GetCmdPools return pools.
 func GetCmdPools() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pools",
@@ -147,7 +147,7 @@ $ %s query gamm pools
 	return cmd
 }
 
-// GetCmdNumPools return number of pools available
+// GetCmdNumPools return number of pools available.
 func GetCmdNumPools() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "num-pools",
@@ -182,7 +182,7 @@ $ %s query gamm num-pools
 	return cmd
 }
 
-// GetCmdPoolParams return pool params
+// GetCmdPoolParams return pool params.
 func GetCmdPoolParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool-params <poolID>",
@@ -217,14 +217,12 @@ $ %s query gamm pool-params 1
 
 			if clientCtx.OutputFormat == "text" {
 				out, err := yaml.Marshal(res.GetParams())
-
 				if err != nil {
 					return err
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
 				out, err := clientCtx.Codec.MarshalJSON(res)
-
 				if err != nil {
 					return err
 				}
@@ -238,7 +236,7 @@ $ %s query gamm pool-params 1
 	return cmd
 }
 
-// GetCmdTotalShares return total share
+// GetCmdTotalShares return total share.
 func GetCmdTotalShares() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-share <poolID>",
@@ -280,7 +278,7 @@ $ %s query gamm total-share 1
 	return cmd
 }
 
-// GetCmdQueryTotalLiquidity return total liquidity
+// GetCmdQueryTotalLiquidity return total liquidity.
 func GetCmdQueryTotalLiquidity() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-liquidity",
@@ -315,7 +313,7 @@ $ %s query gamm total-liquidity
 	return cmd
 }
 
-// GetCmdPoolAssets return pool-assets for a pool
+// GetCmdPoolAssets return pool-assets for a pool.
 func GetCmdPoolAssets() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool-assets <poolID>",
@@ -357,7 +355,7 @@ $ %s query gamm pool-assets 1
 	return cmd
 }
 
-// GetCmdSpotPrice returns spot price
+// GetCmdSpotPrice returns spot price.
 func GetCmdSpotPrice() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "spot-price <poolID> <tokenInDenom> <tokenOutDenom>",
@@ -401,7 +399,7 @@ $ %s query gamm spot-price 1 stake stake2
 	return cmd
 }
 
-// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input
+// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
 func GetCmdEstimateSwapExactAmountIn() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
@@ -454,7 +452,7 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 	return cmd
 }
 
-// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output
+// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
 func GetCmdEstimateSwapExactAmountOut() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",

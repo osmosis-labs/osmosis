@@ -2,7 +2,7 @@ package types
 
 import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-// x/gamm module sentinel errors
+// x/gamm module sentinel errors.
 var (
 	ErrPoolNotFound       = sdkerrors.Register(ModuleName, 1, "pool not found")
 	ErrPoolAlreadyExist   = sdkerrors.Register(ModuleName, 2, "pool already exist")
