@@ -1,6 +1,10 @@
 package wasmbindings
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 type Swap struct {
 	PoolId   uint64 `json:"pool_id"`
@@ -18,9 +22,45 @@ type SwapAmount struct {
 	Out *sdk.Int `json:"out,omitempty"`
 }
 
+// This returns SwapAmountWithLimit with the largest possible limits (that will never be hit)
+func (s SwapAmount) Unlimited() SwapAmountWithLimit {
+	if s.In != nil {
+		return SwapAmountWithLimit{
+			ExactIn: &ExactIn{
+				Input:     *s.In,
+				MinOutput: sdk.NewInt(1),
+			},
+		}
+	}
+	if s.Out != nil {
+		return SwapAmountWithLimit{
+			ExactOut: &ExactOut{
+				Output:   *s.Out,
+				MaxInput: sdk.NewInt(math.MaxInt64),
+			},
+		}
+	}
+	panic("Must define In or Out")
+}
+
 type SwapAmountWithLimit struct {
 	ExactIn  *ExactIn  `json:"exact_in,omitempty"`
 	ExactOut *ExactOut `json:"exact_out,omitempty"`
+}
+
+// This returns the amount without min/max to use as simpler argument
+func (s SwapAmountWithLimit) RemoveLimit() SwapAmount {
+	if s.ExactIn != nil {
+		return SwapAmount{
+			In: &s.ExactIn.Input,
+		}
+	}
+	if s.ExactOut != nil {
+		return SwapAmount{
+			Out: &s.ExactOut.Output,
+		}
+	}
+	panic("Must define ExactIn or ExactOut")
 }
 
 type ExactIn struct {

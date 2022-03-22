@@ -78,8 +78,14 @@ func (m *MintTokenMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAdd
 // TODO: this is very close to QueryPlugin.EstimatePrice, maybe we can pull out common code into one function
 // that these both use? at least the routes / token In/Out calculation
 func (m *MintTokenMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) ([]sdk.Event, [][]byte, error) {
+	_, err := performSwap(m.gammKeeper, ctx, contractAddr, swap)
+	return nil, nil, sdkerrors.Wrap(err, "gamm estimate price exact amount out")
+}
+
+// This can be used both for the real swap as well as with EstimatePrice query
+func performSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) (*wasmbindings.SwapAmount, error) {
 	if len(swap.Route) != 0 {
-		return nil, nil, wasmvmtypes.UnsupportedRequest{Kind: "TODO: multi-hop swaps"}
+		return nil, wasmvmtypes.UnsupportedRequest{Kind: "TODO: multi-hop swaps"}
 	}
 	if swap.Amount.ExactIn != nil {
 		routes := []gammtypes.SwapAmountInRoute{{
@@ -91,11 +97,11 @@ func (m *MintTokenMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAdd
 			Amount: swap.Amount.ExactIn.Input,
 		}
 		tokenOutMinAmount := swap.Amount.ExactIn.MinOutput
-		_, err := m.gammKeeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
+		estimatedAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
 		if err != nil {
-			return nil, nil, sdkerrors.Wrap(err, "gamm estimate price exact amount in")
+			return nil, sdkerrors.Wrap(err, "gamm estimate price exact amount in")
 		}
-		return nil, nil, nil
+		return &wasmbindings.SwapAmount{Out: &estimatedAmount}, nil
 	} else if swap.Amount.ExactOut != nil {
 		routes := []gammtypes.SwapAmountOutRoute{{
 			PoolId:       swap.First.PoolId,
@@ -106,13 +112,13 @@ func (m *MintTokenMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAdd
 			Denom:  swap.First.DenomOut,
 			Amount: swap.Amount.ExactOut.Output,
 		}
-		_, err := m.gammKeeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
+		estimatedAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
 		if err != nil {
-			return nil, nil, sdkerrors.Wrap(err, "gamm estimate price exact amount out")
+			return nil, sdkerrors.Wrap(err, "gamm estimate price exact amount out")
 		}
-		return nil, nil, nil
+		return &wasmbindings.SwapAmount{In: &estimatedAmount}, nil
 	} else {
-		return nil, nil, wasmvmtypes.UnsupportedRequest{Kind: "must support either Swap.ExactIn or Swap.ExactOut"}
+		return nil, wasmvmtypes.UnsupportedRequest{Kind: "must support either Swap.ExactIn or Swap.ExactOut"}
 	}
 }
 
