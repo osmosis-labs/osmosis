@@ -52,7 +52,7 @@ func NewKeeper(
 }
 
 // SetInitialSupplyOffsetDuringMigration sets the supply offset based on the balance of the
-// Develop rVesting Module Account.  It should only be called one time during the initial
+// Developr Vesting Module Account.  It should only be called one time during the initial
 // migration to v7.
 func SetInitialSupplyOffsetDuringMigration(ctx sdk.Context, k Keeper) {
 	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
