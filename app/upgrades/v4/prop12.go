@@ -20,10 +20,12 @@ func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) 
 		if err != nil {
 			panic(err)
 		}
+
 		amount, err := strconv.ParseInt(strings.TrimSpace(payment[1]), 10, 64)
 		if err != nil {
 			panic(err)
 		}
+
 		coins := sdk.NewCoins(sdk.NewInt64Coin("uosmo", amount))
 		if err := bank.SendCoinsFromModuleToAccount(ctx, "distribution", addr, coins); err != nil {
 			panic(err)
@@ -31,9 +33,8 @@ func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) 
 		total += amount
 	}
 
-	//deduct from the feePool tracker
+	// deduct from the feePool tracker
 	feePool := distr.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Sub(sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", total)))
 	distr.SetFeePool(ctx, feePool)
-
 }
