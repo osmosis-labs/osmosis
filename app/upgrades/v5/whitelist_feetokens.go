@@ -56,17 +56,18 @@ func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []typ
 		}
 
 		pool, poolExistsErr := gamm.GetPool(ctx, poolId)
+		_ = pool
 		if poolExistsErr != nil {
 			continue
 		}
-		_, assetExistsErr := pool.GetPoolAsset(asset[1])
-		if assetExistsErr != nil {
-			continue
-		}
-		_, osmoExistsErr := pool.GetPoolAsset("uosmo")
-		if osmoExistsErr != nil {
-			continue
-		}
+		// _, assetExistsErr := pool.GetPoolAsset(asset[1])
+		// if assetExistsErr != nil {
+		// 	continue
+		// }
+		// _, osmoExistsErr := pool.GetPoolAsset("uosmo")
+		// if osmoExistsErr != nil {
+		// 	continue
+		// }
 
 		feeToken := types.FeeToken{
 			Denom:  asset[1],

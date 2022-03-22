@@ -6,6 +6,50 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool types.PoolI, joiner sdk.AccAddress, numShares sdk.Int, joinCoins sdk.Coins) error {
+	err := k.bankKeeper.SendCoins(ctx, joiner, pool.GetAddress(), joinCoins)
+	if err != nil {
+		return err
+	}
+
+	err = k.MintPoolShareToAccount(ctx, pool, joiner, numShares)
+	if err != nil {
+		return err
+	}
+
+	err = k.SetPool(ctx, pool)
+	if err != nil {
+		return err
+	}
+
+	k.createAddLiquidityEvent(ctx, joiner, pool.GetId(), joinCoins)
+	k.hooks.AfterJoinPool(ctx, joiner, pool.GetId(), joinCoins, numShares)
+	k.RecordTotalLiquidityIncrease(ctx, joinCoins)
+	return nil
+}
+
+func (k Keeper) applyExitPoolStateChange(ctx sdk.Context, pool types.PoolI, exiter sdk.AccAddress, numShares sdk.Int, exitCoins sdk.Coins) error {
+	err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), exiter, exitCoins)
+	if err != nil {
+		return err
+	}
+
+	err = k.BurnPoolShareFromAccount(ctx, pool, exiter, numShares)
+	if err != nil {
+		return err
+	}
+
+	err = k.SetPool(ctx, pool)
+	if err != nil {
+		return err
+	}
+
+	k.createRemoveLiquidityEvent(ctx, exiter, pool.GetId(), exitCoins)
+	k.hooks.AfterExitPool(ctx, exiter, pool.GetId(), numShares, exitCoins)
+	k.RecordTotalLiquidityDecrease(ctx, exitCoins)
+	return nil
+}
+
 func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, pool types.PoolI, addr sdk.AccAddress, amount sdk.Int) error {
 	amt := sdk.Coins{
 		sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), amount),
@@ -20,8 +64,6 @@ func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, pool types.PoolI, addr s
 	if err != nil {
 		return err
 	}
-
-	pool.AddTotalShares(amount)
 
 	return nil
 }
@@ -41,8 +83,6 @@ func (k Keeper) BurnPoolShareFromAccount(ctx sdk.Context, pool types.PoolI, addr
 	if err != nil {
 		return err
 	}
-
-	pool.SubTotalShares(amount)
 
 	return nil
 }

@@ -13,6 +13,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+var _ types.PoolI = &Pool{}
+
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
 // Invariants that are assumed to be satisfied and not checked:
 // (This is handled in ValidateBasic)
@@ -29,7 +31,7 @@ func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []type
 		Id:                 poolId,
 		PoolParams:         PoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
-		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), sdk.ZeroInt()),
+		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
@@ -67,11 +69,15 @@ func (pa Pool) GetId() uint64 {
 	return pa.Id
 }
 
-func (pa Pool) GetPoolSwapFee() sdk.Dec {
+func (pa Pool) GetSwapFee(_ sdk.Context) sdk.Dec {
 	return pa.PoolParams.SwapFee
 }
 
-func (pa Pool) GetPoolExitFee() sdk.Dec {
+func (pa Pool) GetTotalLpBalances(_ sdk.Context) sdk.Coins {
+	return types.PoolAssetsCoins(pa.PoolAssets)
+}
+
+func (pa Pool) GetExitFee(_ sdk.Context) sdk.Dec {
 	return pa.PoolParams.ExitFee
 }
 
@@ -83,8 +89,8 @@ func (pa Pool) GetTotalWeight() sdk.Int {
 	return pa.TotalWeight
 }
 
-func (pa Pool) GetTotalShares() sdk.Coin {
-	return pa.TotalShares
+func (pa Pool) GetTotalShares() sdk.Int {
+	return pa.TotalShares.Amount
 }
 
 func (pa *Pool) AddTotalShares(amt sdk.Int) {
@@ -218,6 +224,42 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, types.PoolAsset, error) 
 	return i, pa.PoolAssets[i], nil
 }
 
+func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
+	Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	Aasset, found1 := types.GetPoolAssetByDenom(p.PoolAssets, tokenADenom)
+	Basset, found2 := types.GetPoolAssetByDenom(p.PoolAssets, tokenBDenom)
+	if !(found1 && found2) {
+		return Aasset, Basset, errors.New("one of the provided pool denoms does not exist in pool")
+	}
+	return Aasset, Basset, nil
+}
+
+func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
+	tokenA sdk.Coin, Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	if len(tokensA) != 1 {
+		return tokenA, Aasset, Basset, errors.New("expected tokensB to be of length one")
+	}
+	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokensA[0].Denom, tokenBDenom)
+	return tokensA[0], Aasset, Basset, err
+}
+
+func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
+	Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
+	if len(tokensB) != 1 {
+		return Aasset, Basset, errors.New("expected tokensA to be of length one")
+	}
+	_, Aasset, Basset, err = p.parsePoolAssets(tokensA, tokensB[0].Denom)
+	return Aasset, Basset, err
+}
+
+func (p *Pool) updateLiquidity(numShares sdk.Int, newLiquidity sdk.Coins) {
+	err := p.addToPoolAssetBalances(newLiquidity)
+	if err != nil {
+		panic(err)
+	}
+	p.AddTotalShares(numShares)
+}
+
 func (pa *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	// Check that PoolAsset exists.
 	assetIndex, existingAsset, err := pa.getPoolAssetAndIndex(coin.Denom)
@@ -253,6 +295,18 @@ func (pa *Pool) UpdatePoolAssetBalances(coins sdk.Coins) error {
 		}
 	}
 
+	return nil
+}
+
+func (pa *Pool) addToPoolAssetBalances(coins sdk.Coins) error {
+	for _, coin := range coins {
+		i, poolAsset, err := pa.getPoolAssetAndIndex(coin.Denom)
+		if err != nil {
+			return err
+		}
+		poolAsset.Token.Amount = poolAsset.Token.Amount.Add(coin.Amount)
+		pa.PoolAssets[i] = poolAsset
+	}
 	return nil
 }
 

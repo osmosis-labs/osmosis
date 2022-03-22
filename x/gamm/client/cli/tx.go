@@ -457,11 +457,11 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	maxAmountsIn := sdk.Coins{}
 	for i := 0; i < len(maxAmountsInStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(maxAmountsInStrs[i])
+		parsed, err := sdk.ParseCoinsNormalized(maxAmountsInStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		maxAmountsIn = append(maxAmountsIn, parsed)
+		maxAmountsIn = maxAmountsIn.Add(parsed...)
 	}
 
 	msg := &types.MsgJoinPool{
@@ -497,11 +497,11 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	minAmountsOut := sdk.Coins{}
 	for i := 0; i < len(minAmountsOutStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(minAmountsOutStrs[i])
+		parsed, err := sdk.ParseCoinsNormalized(minAmountsOutStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		minAmountsOut = append(minAmountsOut, parsed)
+		minAmountsOut = minAmountsOut.Add(parsed...)
 	}
 
 	msg := &types.MsgExitPool{

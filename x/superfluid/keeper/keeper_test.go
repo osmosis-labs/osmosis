@@ -135,7 +135,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	denoms := []string{}
 	poolIds := []uint64{}
 	for _, pool := range pools {
-		denom := pool.GetTotalShares().Denom
+		denom := gammtypes.GetPoolShareDenom(pool.GetId())
 
 		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,

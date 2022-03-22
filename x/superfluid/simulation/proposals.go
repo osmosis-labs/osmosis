@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -47,7 +49,7 @@ func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) s
 			Description: "set superfluid assets description",
 			Assets: []types.SuperfluidAsset{
 				{
-					Denom:     pool.GetTotalShares().Denom,
+					Denom:     gammtypes.GetPoolShareDenom(pool.GetId()),
 					AssetType: types.SuperfluidAssetTypeLPShare,
 				},
 			},
