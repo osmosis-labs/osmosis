@@ -75,8 +75,6 @@ func (m *MintTokenMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAdd
 	return nil, nil, nil
 }
 
-// TODO: this is very close to QueryPlugin.EstimatePrice, maybe we can pull out common code into one function
-// that these both use? at least the routes / token In/Out calculation
 func (m *MintTokenMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) ([]sdk.Event, [][]byte, error) {
 	_, err := performSwap(m.gammKeeper, ctx, contractAddr, swap)
 	return nil, nil, sdkerrors.Wrap(err, "gamm estimate price exact amount out")
@@ -84,14 +82,17 @@ func (m *MintTokenMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAdd
 
 // This can be used both for the real swap as well as with EstimatePrice query
 func performSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) (*wasmbindings.SwapAmount, error) {
-	if len(swap.Route) != 0 {
-		return nil, wasmvmtypes.UnsupportedRequest{Kind: "TODO: multi-hop swaps"}
-	}
 	if swap.Amount.ExactIn != nil {
 		routes := []gammtypes.SwapAmountInRoute{{
 			PoolId:        swap.First.PoolId,
 			TokenOutDenom: swap.First.DenomOut,
 		}}
+		for _, step := range swap.Route {
+			routes = append(routes, gammtypes.SwapAmountInRoute{
+				PoolId:        step.PoolId,
+				TokenOutDenom: step.DenomOut,
+			})
+		}
 		tokenIn := sdk.Coin{
 			Denom:  swap.First.DenomIn,
 			Amount: swap.Amount.ExactIn.Input,
@@ -107,9 +108,17 @@ func performSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 			PoolId:       swap.First.PoolId,
 			TokenInDenom: swap.First.DenomIn,
 		}}
+		output := swap.First.DenomOut
+		for _, step := range swap.Route {
+			routes = append(routes, gammtypes.SwapAmountOutRoute{
+				PoolId:       step.PoolId,
+				TokenInDenom: output,
+			})
+			output = step.DenomOut
+		}
 		tokenInMaxAmount := swap.Amount.ExactOut.MaxInput
 		tokenOut := sdk.Coin{
-			Denom:  swap.First.DenomOut,
+			Denom:  output,
 			Amount: swap.Amount.ExactOut.Output,
 		}
 		estimatedAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)

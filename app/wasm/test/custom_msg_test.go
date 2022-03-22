@@ -209,6 +209,158 @@ func TestSwapMsg(t *testing.T) {
 				sdk.NewInt64Coin("uosmo", 2000000),
 			},
 		},
+
+		"exact in: 2 step multi-hop": {
+			msg: func(state BaseState) *wasmbindings.SwapMsg {
+				return &wasmbindings.SwapMsg{
+					First: wasmbindings.Swap{
+						PoolId:   state.StarPool,
+						DenomIn:  "ustar",
+						DenomOut: "uosmo",
+					},
+					Route: []wasmbindings.Step{{
+						PoolId:   state.AtomPool,
+						DenomOut: "uatom",
+					}},
+					Amount: wasmbindings.SwapAmountWithLimit{
+						ExactIn: &wasmbindings.ExactIn{
+							Input:     sdk.NewInt(240000000),
+							MinOutput: sdk.NewInt(1999000),
+						},
+					},
+				}
+			},
+			initFunds: sdk.NewInt64Coin("ustar", 240000000),
+			finalFunds: []sdk.Coin{
+				// 240 STAR -> 6 OSMO
+				// 6 OSMO -> 2 ATOM (with minor rounding)
+				sdk.NewInt64Coin("uatom", 1999999),
+			},
+		},
+		"exact out: 2 step multi-hop": {
+			msg: func(state BaseState) *wasmbindings.SwapMsg {
+				return &wasmbindings.SwapMsg{
+					First: wasmbindings.Swap{
+						PoolId:   state.AtomPool,
+						DenomIn:  "uosmo",
+						DenomOut: "uatom",
+					},
+					Route: []wasmbindings.Step{{
+						PoolId:   state.RegenPool,
+						DenomOut: "uregen",
+					}},
+					Amount: wasmbindings.SwapAmountWithLimit{
+						ExactOut: &wasmbindings.ExactOut{
+							MaxInput: sdk.NewInt(6000000),
+							Output:   sdk.NewInt(24000000),
+						},
+					},
+				}
+			},
+			initFunds: sdk.NewInt64Coin("uosmo", 6000000),
+			finalFunds: []sdk.Coin{
+				// 6 OSMO -> 2 ATOM
+				// 2 ATOM -> 24 REGEN (with minor rounding)
+				sdk.NewInt64Coin("uosmo", 5),
+				sdk.NewInt64Coin("uregen", 24000000),
+			},
+		},
+
+		// FIXME: this panics in GAMM module !?! hits a known TODO
+		// https://github.com/osmosis-labs/osmosis/blob/a380ab2fcd39fb94c2b10411e07daf664911257a/osmomath/math.go#L47-L51
+		// "exact out: panics on math power stuff": {
+		// 	msg: func(state BaseState) *wasmbindings.SwapMsg {
+		// 		return &wasmbindings.SwapMsg{
+		// 			First: wasmbindings.Swap{
+		// 				PoolId:   state.StarPool,
+		// 				DenomIn:  "ustar",
+		// 				DenomOut: "uosmo",
+		// 			},
+		// 			Route: []wasmbindings.Step{{
+		// 				PoolId:   state.AtomPool,
+		// 				DenomOut: "uatom",
+		// 			}},
+		// 			Amount: wasmbindings.SwapAmountWithLimit{
+		// 				ExactOut: &wasmbindings.ExactOut{
+		// 					MaxInput: sdk.NewInt(240005000),
+		// 					Output:   sdk.NewInt(2000000),
+		// 				},
+		// 			},
+		// 		}
+		// 	},
+		// 	initFunds: sdk.NewInt64Coin("ustar", 240005000),
+		// 	finalFunds: []sdk.Coin{
+		// 		// 240 STAR -> 6 OSMO
+		// 		// 6 OSMO -> 2 ATOM (with minor rounding)
+		// 		sdk.NewInt64Coin("uatom", 2000000),
+		// 		sdk.NewInt64Coin("ustar", 5000),
+		// 	},
+		// },
+
+		"exact in: 3 step multi-hop": {
+			msg: func(state BaseState) *wasmbindings.SwapMsg {
+				return &wasmbindings.SwapMsg{
+					First: wasmbindings.Swap{
+						PoolId:   state.StarPool,
+						DenomIn:  "ustar",
+						DenomOut: "uosmo",
+					},
+					Route: []wasmbindings.Step{{
+						PoolId:   state.AtomPool,
+						DenomOut: "uatom",
+					}, {
+						PoolId:   state.RegenPool,
+						DenomOut: "uregen",
+					}},
+					Amount: wasmbindings.SwapAmountWithLimit{
+						ExactIn: &wasmbindings.ExactIn{
+							Input:     sdk.NewInt(240000000),
+							MinOutput: sdk.NewInt(23900000),
+						},
+					},
+				}
+			},
+			initFunds: sdk.NewInt64Coin("ustar", 240000000),
+			finalFunds: []sdk.Coin{
+				// 240 STAR -> 6 OSMO
+				// 6 OSMO -> 2 ATOM
+				// 2 ATOM -> 24 REGEN (with minor rounding)
+				sdk.NewInt64Coin("uregen", 23999990),
+			},
+		},
+
+		"exact out: 3 step multi-hop": {
+			msg: func(state BaseState) *wasmbindings.SwapMsg {
+				return &wasmbindings.SwapMsg{
+					First: wasmbindings.Swap{
+						PoolId:   state.StarPool,
+						DenomIn:  "ustar",
+						DenomOut: "uosmo",
+					},
+					Route: []wasmbindings.Step{{
+						PoolId:   state.AtomPool,
+						DenomOut: "uatom",
+					}, {
+						PoolId:   state.RegenPool,
+						DenomOut: "uregen",
+					}},
+					Amount: wasmbindings.SwapAmountWithLimit{
+						ExactOut: &wasmbindings.ExactOut{
+							MaxInput: sdk.NewInt(240000000),
+							Output:   sdk.NewInt(24000000),
+						},
+					},
+				}
+			},
+			initFunds: sdk.NewInt64Coin("ustar", 240000000),
+			finalFunds: []sdk.Coin{
+				// 240 STAR -> 6 OSMO
+				// 6 OSMO -> 2 ATOM
+				// 2 ATOM -> 24 REGEN (with minor rounding)
+				sdk.NewInt64Coin("uregen", 24000000),
+				sdk.NewInt64Coin("ustar", 400),
+			},
+		},
 	}
 
 	for name, tc := range cases {
@@ -230,6 +382,9 @@ func TestSwapMsg(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				balances := osmosis.BankKeeper.GetAllBalances(ctx, reflect)
+				// uncomment these to debug any confusing results (show balances, not (*big.Int)(0x140005e51e0))
+				// fmt.Printf("Expected: %s\n", tc.finalFunds)
+				// fmt.Printf("Got: %s\n", balances)
 				require.EqualValues(t, tc.finalFunds, balances)
 			}
 		})
@@ -262,9 +417,9 @@ func prepareSwapState(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp) Ba
 	}
 	atomPool := preparePool(t, ctx, osmosis, actor, funds2)
 
-	// 8 regen to 1 osmo
+	// 16 regen to 1 atom
 	funds3 := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("uatom", 6000000),
 		sdk.NewInt64Coin("uregen", 96000000),
 	}
 	regenPool := preparePool(t, ctx, osmosis, actor, funds3)
