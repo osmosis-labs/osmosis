@@ -290,29 +290,27 @@ func NewOsmosisApp(
 	return app
 }
 
-// MakeCodecs constructs the *std.Codec and *codec.LegacyAmino instances used by
-// simapp. It is useful for tests and clients who do not want to construct the
-// full simapp
+// MakeCodecs returns the application codec and a legacy Amino codec.
 func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	config := MakeEncodingConfig()
 	return config.Marshaler, config.Amino
 }
 
-// Name returns the name of the App
+// Name returns the name of the App.
 func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
-// BeginBlocker application updates every begin block
+// BeginBlocker application updates every begin block.
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
-// EndBlocker application updates every end block
+// EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
-// InitChainer application update at chain initialization
+// InitChainer application update at chain initialization.
 func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
@@ -379,7 +377,7 @@ func (app *OsmosisApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	return subspace
 }
 
-// SimulationManager implements the SimulationApp interface
+// SimulationManager implements the SimulationApp interface.
 func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
@@ -411,7 +409,8 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
-// RegisterTendermintService implements the Application.RegisterTendermintService method.
+// RegisterTendermintService implements the Application.RegisterTendermintService
+// method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
@@ -437,30 +436,44 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 	// this configures a no-op upgrade handler for the v4 upgrade,
 	// which improves the lockup module's store management.
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v4.UpgradeName, v4.CreateUpgradeHandler(
-			app.mm, app.configurator,
-			*app.BankKeeper, app.DistrKeeper, app.GAMMKeeper))
+		v4.UpgradeName,
+		v4.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
+			*app.BankKeeper,
+			app.DistrKeeper,
+			app.GAMMKeeper,
+		),
+	)
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v5.UpgradeName,
 		v5.CreateUpgradeHandler(
-			app.mm, app.configurator,
-			&app.IBCKeeper.ConnectionKeeper, app.TxFeesKeeper,
-			app.GAMMKeeper, app.StakingKeeper))
+			app.mm,
+			app.configurator,
+			&app.IBCKeeper.ConnectionKeeper,
+			app.TxFeesKeeper,
+			app.GAMMKeeper,
+			app.StakingKeeper,
+		),
+	)
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v7.UpgradeName,
 		v7.CreateUpgradeHandler(
-			app.mm, app.configurator,
+			app.mm,
+			app.configurator,
 			app.WasmKeeper,
 			app.SuperfluidKeeper,
 			app.EpochsKeeper,
 			app.LockupKeeper,
 			app.MintKeeper,
-			app.AccountKeeper))
+			app.AccountKeeper,
+		),
+	)
 }
 
-// RegisterSwaggerAPI registers swagger route with API Server
+// RegisterSwaggerAPI registers swagger route with API Server.
 func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
@@ -472,11 +485,12 @@ func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	rtr.PathPrefix("/swagger/").Handler(staticServer)
 }
 
-// GetMaccPerms returns a copy of the module account permissions
+// GetMaccPerms returns a copy of the module account permissions.
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)
 	for k, v := range maccPerms {
 		dupMaccPerms[k] = v
 	}
+
 	return dupMaccPerms
 }
