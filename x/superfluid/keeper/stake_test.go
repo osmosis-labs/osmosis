@@ -807,8 +807,6 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
 
 			originMultiplier := sdk.NewDec(20)
-			targetDelegations := []sdk.Dec{}
-			targetAmounts := []sdk.Int{}
 			for index, intAccIndex := range tc.checkAccIndexes {
 				expAcc := intermediaryAccs[intAccIndex]
 				multiplier, ok := multiplierByDenom[expAcc.Denom]
@@ -816,22 +814,15 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 					multiplier = originMultiplier
 				}
 
+				// calculating the estimated delegation amount for multiplier change
 				targetDelegation := intermediaryDels[index].Mul(multiplier).Quo(originMultiplier)
 				lpTokenAmount := sdk.NewInt(1000000)
 				decAmt := multiplier.Mul(lpTokenAmount.ToDec())
 				asset := suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, expAcc.Denom)
 				targetAmount := suite.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(suite.Ctx, asset, decAmt.RoundInt())
-				targetDelegations = append(targetDelegations, targetDelegation)
-				targetAmounts = append(targetAmounts, targetAmount)
-			}
 
-			for index, intAccIndex := range tc.checkAccIndexes {
-				expAcc := intermediaryAccs[intAccIndex]
 				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
 				suite.Require().NoError(err)
-
-				targetAmount := targetAmounts[index]
-				targetDelegation := targetDelegations[index]
 
 				// check delegation changes
 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
