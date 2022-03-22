@@ -1,6 +1,7 @@
 package wasm
 
 import (
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -38,6 +39,9 @@ func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolId uint64) (*types.PoolS
 }
 
 func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *wasmbindings.SpotPrice) (*sdk.Dec, error) {
+	if spotPrice == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm spot price null"}
+	}
 	poolId := spotPrice.Swap.PoolId
 	denomIn := spotPrice.Swap.DenomIn
 	denomOut := spotPrice.Swap.DenomOut
@@ -56,9 +60,22 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *wasmbindings.Spot
 }
 
 func (qp QueryPlugin) EstimatePrice(ctx sdk.Context, estimatePrice *wasmbindings.EstimatePrice) (*wasmbindings.SwapAmount, error) {
+	if estimatePrice == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate price null"}
+	}
+	if err := sdk.ValidateDenom(estimatePrice.First.DenomIn); err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate price denom in")
+	}
+	if err := sdk.ValidateDenom(estimatePrice.First.DenomOut); err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate price denom out")
+	}
 	contractAddr, err := sdk.AccAddressFromBech32(estimatePrice.Contract)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm estimate price sender address")
+	}
+
+	if estimatePrice.Amount == (wasmbindings.SwapAmount{}) {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate price empty swap"}
 	}
 
 	estimate, err := performSwap(qp.gammKeeper, ctx, contractAddr, estimatePrice.ToSwapMsg())

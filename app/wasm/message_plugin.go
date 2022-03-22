@@ -93,6 +93,9 @@ func performSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 				TokenOutDenom: step.DenomOut,
 			})
 		}
+		if swap.Amount.ExactIn.Input.IsNegative() {
+			return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount in"}
+		}
 		tokenIn := sdk.Coin{
 			Denom:  swap.First.DenomIn,
 			Amount: swap.Amount.ExactIn.Input,
@@ -100,7 +103,7 @@ func performSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 		tokenOutMinAmount := swap.Amount.ExactIn.MinOutput
 		estimatedAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
 		if err != nil {
-			return nil, sdkerrors.Wrap(err, "gamm estimate price exact amount in")
+			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount in")
 		}
 		return &wasmbindings.SwapAmount{Out: &estimatedAmount}, nil
 	} else if swap.Amount.ExactOut != nil {
@@ -117,13 +120,16 @@ func performSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 			output = step.DenomOut
 		}
 		tokenInMaxAmount := swap.Amount.ExactOut.MaxInput
+		if swap.Amount.ExactOut.Output.IsNegative() {
+			return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount out"}
+		}
 		tokenOut := sdk.Coin{
 			Denom:  output,
 			Amount: swap.Amount.ExactOut.Output,
 		}
 		estimatedAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
 		if err != nil {
-			return nil, sdkerrors.Wrap(err, "gamm estimate price exact amount out")
+			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount out")
 		}
 		return &wasmbindings.SwapAmount{In: &estimatedAmount}, nil
 	} else {
