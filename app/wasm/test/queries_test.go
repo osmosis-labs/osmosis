@@ -24,22 +24,27 @@ func TestFullDenom(t *testing.T) {
 	}{
 		"valid address": {
 			addr:         actor.String(),
-			subDenom:     "sub_denom_1",
-			expFullDenom: fmt.Sprintf("cw/%s/sub_denom_1", actor.String()),
+			subDenom:     "subDenom1",
+			expFullDenom: fmt.Sprintf("cw/%s/subDenom1", actor.String()),
 		},
 		"empty address": {
 			addr:     "",
-			subDenom: "sub_denom_1",
+			subDenom: "subDenom1",
 			expErr:   true,
 		},
 		"invalid address": {
 			addr:     "invalid",
-			subDenom: "sub_denom_1",
+			subDenom: "subDenom1",
 			expErr:   true,
 		},
 		"empty sub-denom": {
 			addr:     actor.String(),
 			subDenom: "",
+			expErr:   true,
+		},
+		"invalid sub-denom": {
+			addr:     actor.String(),
+			subDenom: "sub_denom_1",
 			expErr:   true,
 		},
 	}

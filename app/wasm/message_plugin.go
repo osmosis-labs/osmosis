@@ -3,6 +3,7 @@ package wasm
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -147,7 +148,6 @@ func GetFullDenom(contract string, subDenom string) (string, error) {
 	if err != nil {
 		return "", sdkerrors.Wrap(err, "validate sub-denom")
 	}
-	// TODO: Confirm "cw" prefix
 	fullDenom := fmt.Sprintf("cw/%s/%s", contract, subDenom)
 
 	return fullDenom, nil
@@ -165,10 +165,18 @@ func parseAddress(addr string) (sdk.AccAddress, error) {
 	return parsed, nil
 }
 
+const reSubdenomStr = `^[a-zA-Z][a-zA-Z0-9]{2,31}$`
+
+var reSubdenom *regexp.Regexp
+
+func init() {
+	reSubdenom = regexp.MustCompile(reSubdenomStr)
+
+}
+
 func ValidateSubDenom(subDenom string) error {
-	if len(subDenom) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty sub-denom")
+	if !reSubdenom.MatchString(subDenom) {
+		return fmt.Errorf("invalid subdenom: %s", subDenom)
 	}
-	// TODO: Extra validations
 	return nil
 }
