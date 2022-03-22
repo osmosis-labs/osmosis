@@ -229,7 +229,7 @@ func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
 	Aasset, found1 := types.GetPoolAssetByDenom(p.PoolAssets, tokenADenom)
 	Basset, found2 := types.GetPoolAssetByDenom(p.PoolAssets, tokenBDenom)
 	if !(found1 && found2) {
-		return Aasset, Basset, errors.New("TODO: fill message here")
+		return Aasset, Basset, errors.New("one of the provided pool denoms does not exist in pool")
 	}
 	return Aasset, Basset, nil
 }
@@ -237,7 +237,7 @@ func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
 func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
 	tokenA sdk.Coin, Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
 	if len(tokensA) != 1 {
-		return tokenA, Aasset, Basset, errors.New("TODO: Fill message here")
+		return tokenA, Aasset, Basset, errors.New("expected tokensB to be of length one")
 	}
 	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokensA[0].Denom, tokenBDenom)
 	return tokensA[0], Aasset, Basset, err
@@ -246,7 +246,7 @@ func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
 func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
 	Aasset types.PoolAsset, Basset types.PoolAsset, err error) {
 	if len(tokensB) != 1 {
-		return Aasset, Basset, errors.New("TODO: Fill message here")
+		return Aasset, Basset, errors.New("expected tokensA to be of length one")
 	}
 	_, Aasset, Basset, err = p.parsePoolAssets(tokensA, tokensB[0].Denom)
 	return Aasset, Basset, err

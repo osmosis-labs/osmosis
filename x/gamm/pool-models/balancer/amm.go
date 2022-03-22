@@ -15,6 +15,8 @@ import (
 // balanceYDelta = balanceY * (1 - (balanceXBefore/balanceXAfter)^(weightX/weightY))
 // balanceYDelta is positive when the balance liquidity decreases.
 // balanceYDelta is negative when the balance liquidity increases.
+//
+// panics if tokenWeightUnknown is 0
 func solveConstantFunctionInvariant(
 	tokenBalanceFixedBefore,
 	tokenBalanceFixedAfter,
@@ -29,9 +31,10 @@ func solveConstantFunctionInvariant(
 	y := tokenBalanceFixedBefore.Quo(tokenBalanceFixedAfter)
 
 	// amountY = balanceY * (1 - (y ^ weightRatio))
-	foo := osmomath.Pow(y, weightRatio)
-	multiplier := sdk.OneDec().Sub(foo)
-	return tokenBalanceUnknownBefore.Mul(multiplier)
+	yToWeightRatio := osmomath.Pow(y, weightRatio)
+	paranthetical := sdk.OneDec().Sub(yToWeightRatio)
+	amountY := tokenBalanceUnknownBefore.Mul(paranthetical)
+	return amountY
 }
 
 // CalcOutAmtGivenIn calculates token to be swapped out given
@@ -85,7 +88,7 @@ func (p Pool) CalcInAmtGivenOut(
 
 // ApplySwap
 func (p *Pool) ApplySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
-	// Also ensures that len(tokensIn) = 0 = len(tokensOut)
+	// Also ensures that len(tokensIn) = 1 = len(tokensOut)
 	inPoolAsset, outPoolAsset, err := p.parsePoolAssetsCoins(tokensIn, tokensOut)
 	if err != nil {
 		return err
@@ -102,10 +105,15 @@ func (p *Pool) ApplySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 // SpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
 // so spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
+//
+// panics if pool is misconfigured and has any weight as 0.
 func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec, error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
 		return sdk.Dec{}, err
+	}
+	if base.Weight.IsZero() || quote.Weight.IsZero() {
+		return sdk.Dec{}, errors.New("pool is misconfigured, got 0 weight")
 	}
 
 	numerator := base.Token.Amount.ToDec().Quo(base.Weight.ToDec())
@@ -115,7 +123,8 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 	return ratio, nil
 }
 
-// pAo
+// balancer notation: pAo - poolshares amount out, given single asset in
+// the second argument requires the tokenWeightIn / total token weight
 func calcPoolOutGivenSingleIn(
 	tokenBalanceIn,
 	normalizedTokenWeightIn,
@@ -154,7 +163,11 @@ func (p *Pool) singleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec) (numShares sdk
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}
-	normalizedWeight := tokenInPoolAsset.Weight.ToDec().Quo(p.GetTotalWeight().ToDec())
+	totalWeight := p.GetTotalWeight()
+	if totalWeight.IsZero() {
+		return sdk.ZeroInt(), errors.New("pool misconfigured, total weight = 0")
+	}
+	normalizedWeight := tokenInPoolAsset.Weight.ToDec().Quo(totalWeight.ToDec())
 	return calcPoolOutGivenSingleIn(
 		tokenInPoolAsset.Token.Amount.ToDec(),
 		normalizedWeight,
