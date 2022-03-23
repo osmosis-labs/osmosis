@@ -3,7 +3,6 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
-import "osmosis/gamm/v1beta1/pool.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -38,10 +37,7 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/total_shares";
   }
-  rpc PoolAssets(QueryPoolAssetsRequest) returns (QueryPoolAssetsResponse) {
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/tokens";
-  }
+
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/prices";
@@ -104,21 +100,14 @@ message QueryTotalSharesResponse {
   ];
 }
 
-//=============================== PoolAssets
-message QueryPoolAssetsRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-}
-message QueryPoolAssetsResponse {
-  repeated PoolAsset poolAssets = 1 [ (gogoproto.nullable) = false ];
-}
-
 //=============================== SpotPrice
 message QuerySpotPriceRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string tokenInDenom = 2 [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
   string tokenOutDenom = 3
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
-  bool withSwapFee = 4 [ (gogoproto.moretags) = "yaml:\"with_swap_fee\"" ];
+  reserved 4;
+  reserved "withSwapFee";
 }
 message QuerySpotPriceResponse {
   // String of the Dec. Ex) 10.203uatom

@@ -31,7 +31,6 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShares(),
-		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
 		GetCmdQueryTotalLiquidity(),
 		GetCmdEstimateSwapExactAmountIn(),
@@ -315,48 +314,6 @@ $ %s query gamm total-liquidity
 	return cmd
 }
 
-// GetCmdPoolAssets return pool-assets for a pool
-func GetCmdPoolAssets() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pool-assets <poolID>",
-		Short: "Query pool-assets",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query pool assets.
-Example:
-$ %s query gamm pool-assets 1
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.PoolAssets(cmd.Context(), &types.QueryPoolAssetsRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
 // GetCmdSpotPrice returns spot price
 func GetCmdSpotPrice() *cobra.Command {
 	cmd := &cobra.Command{
@@ -409,7 +366,7 @@ func GetCmdEstimateSwapExactAmountIn() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query estimate-swap-exact-amount-in.
 Example:
-$ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-amounts=100stake2 --swap-route-pool-ids=3 --swap-route-amounts=100stake
+$ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
 `,
 				version.AppName,
 			),
@@ -462,7 +419,7 @@ func GetCmdEstimateSwapExactAmountOut() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query estimate-swap-exact-amount-out.
 Example:
-$ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-amounts=100stake2 --swap-route-pool-ids=3 --swap-route-amounts=100stake
+$ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
 `,
 				version.AppName,
 			),

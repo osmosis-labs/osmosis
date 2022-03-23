@@ -39,7 +39,6 @@ type LockupMsgServer interface {
 // GammKeeper defines the expected interface needed for superfluid module
 type GammKeeper interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error)
-	ExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, tokenOutMins sdk.Coins) (err error)
 	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 	GetPools(ctx sdk.Context) (res []gammtypes.PoolI, err error)
 }
