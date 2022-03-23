@@ -363,14 +363,14 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		return txf, nil, err
 	}
 
-	var poolAssets []types.PoolAsset
+	var poolAssets []balancer.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
 
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
 			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
 
-		poolAssets = append(poolAssets, types.PoolAsset{
+		poolAssets = append(poolAssets, balancer.PoolAsset{
 			Weight: poolAssetCoins[i].Amount.RoundInt(),
 			Token:  deposit[i],
 		})
@@ -399,14 +399,14 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 			return txf, nil, err
 		}
 
-		var targetPoolAssets []types.PoolAsset
+		var targetPoolAssets []balancer.PoolAsset
 		for i := 0; i < len(targetPoolAssetCoins); i++ {
 
 			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
 				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
 			}
 
-			targetPoolAssets = append(targetPoolAssets, types.PoolAsset{
+			targetPoolAssets = append(targetPoolAssets, balancer.PoolAsset{
 				Weight: targetPoolAssetCoins[i].Amount.RoundInt(),
 				Token:  deposit[i],
 				// TODO: This doesn't make sense. Should only use denom, not an sdk.Coin

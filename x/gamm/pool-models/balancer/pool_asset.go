@@ -1,4 +1,4 @@
-package types
+package balancer
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -78,12 +79,12 @@ func SortPoolAssetsByDenom(assets []PoolAsset) {
 func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	// The pool must be swapping between at least two assets
 	if len(assets) < 2 {
-		return ErrTooFewPoolAssets
+		return types.ErrTooFewPoolAssets
 	}
 
 	// TODO: Add the limit of binding token to the pool params?
 	if len(assets) > 8 {
-		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(assets))
+		return sdkerrors.Wrapf(types.ErrTooManyPoolAssets, "%d", len(assets))
 	}
 
 	for _, asset := range assets {

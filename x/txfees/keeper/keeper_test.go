@@ -14,8 +14,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
-	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
@@ -83,7 +82,7 @@ func (suite *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, po
 
 func (suite *KeeperTestSuite) PreparePoolWithAssets(asset1, asset2 sdk.Coin) uint64 {
 	return suite.preparePool(
-		[]gammtypes.PoolAsset{
+		[]balancer.PoolAsset{
 			{
 				Weight: sdk.NewInt(1),
 				Token:  asset1,
@@ -96,11 +95,11 @@ func (suite *KeeperTestSuite) PreparePoolWithAssets(asset1, asset2 sdk.Coin) uin
 	)
 }
 
-func (suite *KeeperTestSuite) preparePool(assets []gammtypes.PoolAsset) uint64 {
+func (suite *KeeperTestSuite) preparePool(assets []balancer.PoolAsset) uint64 {
 	suite.Require().Len(assets, 2)
 
 	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1,
-		balancertypes.PoolParams{
+		balancer.PoolParams{
 			SwapFee: sdk.NewDec(0),
 			ExitFee: sdk.NewDec(0),
 		}, assets, "")

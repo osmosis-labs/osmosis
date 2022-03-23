@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper/gov"
 
@@ -15,10 +14,10 @@ import (
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	coins := suite.app.GAMMKeeper.GetParams(suite.ctx).PoolCreationFee
-	poolAssets := []gammtypes.PoolAsset{}
+	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
-		poolAssets = append(poolAssets, gammtypes.PoolAsset{
+		poolAssets = append(poolAssets, balancer.PoolAsset{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin(denom, sdk.NewInt(1000000000000000000)),
 		})

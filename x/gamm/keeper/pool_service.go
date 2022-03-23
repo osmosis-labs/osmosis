@@ -31,7 +31,7 @@ func (k Keeper) CreateBalancerPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	BalancerPoolParams balancer.PoolParams,
-	poolAssets []types.PoolAsset,
+	poolAssets []balancer.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {
 	if len(poolAssets) < types.MinPoolAssets {
@@ -196,7 +196,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 	tokensIn sdk.Coins,
 	shareOutMinAmount sdk.Int,
 ) (shareOutAmount sdk.Int, err error) {
-	pool, err := k.GetPoolForSwap(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -228,7 +228,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	shareOutAmount sdk.Int,
 	tokenInMaxAmount sdk.Int,
 ) (tokenInAmount sdk.Int, err error) {
-	pool, err := k.GetPoolForSwap(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}

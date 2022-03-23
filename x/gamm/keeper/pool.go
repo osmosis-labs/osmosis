@@ -42,7 +42,8 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	return pool, nil
 }
 
-func (k Keeper) GetPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+// Get pool, and check if the pool is active / allowed to be swapped against
+func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return &balancer.Pool{}, err
@@ -197,7 +198,7 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 
 // newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
 // parameters, initial assets, and future governor.
-func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
+func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.PoolParams, assets []balancer.PoolAsset, futureGovernor string) (types.PoolI, error) {
 	poolId := k.GetNextPoolNumberAndIncrement(ctx)
 
 	pool, err := balancer.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
