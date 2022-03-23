@@ -34,11 +34,11 @@ linters:
     - goconst
     # - gocritic <- re enable later to catch capitalized local variables
     #    - gocyclo <- disabled because it won't work with how we cosmos
-    - godot
+    # - godot
     #    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
     #    - goerr113 <- disabled due to lack of comprehension
     - gofmt
-    - gofumpt
+    # - gofumpt
     - goheader
     - goimports
     #    - gomoddirectives <- disables replaces
