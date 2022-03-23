@@ -3,23 +3,22 @@ package wasm
 import (
 	"encoding/json"
 	"fmt"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/osmosis-labs/osmosis/v7/app/wasm"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"io/ioutil"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/app/wasm"
 	"github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 
 // we must pay this many uosmo for every pool we create
@@ -339,9 +338,9 @@ func fundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sd
 }
 
 func preparePool(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress, funds []sdk.Coin) uint64 {
-	var assets []gammtypes.PoolAsset
+	var assets []balancer.PoolAsset
 	for _, coin := range funds {
-		assets = append(assets, gammtypes.PoolAsset{
+		assets = append(assets, balancer.PoolAsset{
 			Weight: sdk.NewInt(100),
 			Token:  coin,
 		})

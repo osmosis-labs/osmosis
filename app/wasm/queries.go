@@ -8,6 +8,7 @@ import (
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	"github.com/osmosis-labs/osmosis/v7/app/wasm/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 type QueryPlugin struct {
@@ -23,18 +24,17 @@ func NewQueryPlugin(
 	}
 }
 
-func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolId uint64) (*types.PoolState, error) {
-	poolData, err := qp.gammKeeper.GetPool(ctx, poolId)
+func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*types.PoolState, error) {
+	poolData, err := qp.gammKeeper.GetPool(ctx, poolID)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm get pool")
 	}
 	var poolState types.PoolState
-	poolAssets := poolData.GetAllPoolAssets()
-	for _, asset := range poolAssets {
-		poolState.Assets = append(poolState.Assets, asset.Token)
+	poolState.Assets = poolData.GetTotalLpBalances(ctx)
+	poolState.Shares = sdk.Coin{
+		Denom:  gammtypes.GetPoolShareDenom(poolID),
+		Amount: poolData.GetTotalShares(),
 	}
-	poolState.Shares = poolData.GetTotalShares()
-
 	return &poolState, nil
 }
 
@@ -46,15 +46,16 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *wasmbindings.Spot
 	denomIn := spotPrice.Swap.DenomIn
 	denomOut := spotPrice.Swap.DenomOut
 	withSwapFee := spotPrice.WithSwapFee
-	var price sdk.Dec
-	var err error
-	if withSwapFee {
-		price, err = qp.gammKeeper.CalculateSpotPriceWithSwapFee(ctx, poolId, denomIn, denomOut)
-	} else {
-		price, err = qp.gammKeeper.CalculateSpotPrice(ctx, poolId, denomIn, denomOut)
-	}
+	price, err := qp.gammKeeper.CalculateSpotPrice(ctx, poolId, denomIn, denomOut)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm get spot price")
+	}
+	if withSwapFee {
+		poolData, err := qp.gammKeeper.GetPool(ctx, poolId)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "gamm get pool")
+		}
+		price = price.Mul(sdk.OneDec().Sub(poolData.GetSwapFee(ctx)))
 	}
 	return &price, nil
 }
