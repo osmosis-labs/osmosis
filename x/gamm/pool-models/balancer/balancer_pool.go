@@ -132,7 +132,7 @@ func (pa *Pool) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 		exists[asset.Token.Denom] = true
 
 		// Scale weight from the user provided weight to the correct internal weight
-		asset.Weight = asset.Weight.MulRaw(types.GuaranteedWeightPrecision)
+		asset.Weight = asset.Weight.MulRaw(GuaranteedWeightPrecision)
 		scaledPoolAssets = append(scaledPoolAssets, asset)
 		newTotalWeight = newTotalWeight.Add(asset.Weight)
 	}
@@ -145,6 +145,17 @@ func (pa *Pool) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 
 	pa.TotalWeight = newTotalWeight
 
+	return nil
+}
+
+func ValidateUserSpecifiedWeight(weight sdk.Int) error {
+	if !weight.IsPositive() {
+		return sdkerrors.Wrap(types.ErrNotPositiveWeight, weight.String())
+	}
+
+	if weight.GTE(MaxUserSpecifiedWeight) {
+		return sdkerrors.Wrap(types.ErrWeightTooLarge, weight.String())
+	}
 	return nil
 }
 
@@ -168,12 +179,12 @@ func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset
 
 		// scale target pool weights by GuaranteedWeightPrecision
 		for i, v := range targetPoolWeights {
-			err := types.ValidateUserSpecifiedWeight(v.Weight)
+			err := ValidateUserSpecifiedWeight(v.Weight)
 			if err != nil {
 				return err
 			}
 			pa.PoolParams.SmoothWeightChangeParams.TargetPoolWeights[i] = PoolAsset{
-				Weight: v.Weight.MulRaw(types.GuaranteedWeightPrecision),
+				Weight: v.Weight.MulRaw(GuaranteedWeightPrecision),
 				Token:  v.Token,
 			}
 		}
@@ -470,7 +481,7 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 		}
 		// Validate all user specified weights
 		for _, v := range targetWeights {
-			err := types.ValidateUserSpecifiedWeight(v.Weight)
+			err := ValidateUserSpecifiedWeight(v.Weight)
 			if err != nil {
 				return err
 			}

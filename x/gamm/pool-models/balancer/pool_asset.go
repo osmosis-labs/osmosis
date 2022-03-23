@@ -32,7 +32,7 @@ type poolAssetPretty struct {
 
 func (asset PoolAsset) prettify() poolAssetPretty {
 	return poolAssetPretty{
-		Weight: sdk.NewDecFromInt(asset.Weight).QuoInt64(types.GuaranteedWeightPrecision),
+		Weight: sdk.NewDecFromInt(asset.Weight).QuoInt64(GuaranteedWeightPrecision),
 		Token:  asset.Token,
 	}
 }
@@ -88,7 +88,7 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	}
 
 	for _, asset := range assets {
-		err := types.ValidateUserSpecifiedWeight(asset.Weight)
+		err := ValidateUserSpecifiedWeight(asset.Weight)
 		if err != nil {
 			return err
 		}

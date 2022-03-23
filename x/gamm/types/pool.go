@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v7/v043_temp/address"
 )
@@ -46,23 +45,7 @@ type PoolI interface {
 	ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
 }
 
-var (
-	MaxUserSpecifiedWeight    sdk.Int = sdk.NewIntFromUint64(1 << 20)
-	GuaranteedWeightPrecision int64   = 1 << 30
-)
-
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
 	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
 	return address.Module(ModuleName, key)
-}
-
-func ValidateUserSpecifiedWeight(weight sdk.Int) error {
-	if !weight.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveWeight, weight.String())
-	}
-
-	if weight.GTE(MaxUserSpecifiedWeight) {
-		return sdkerrors.Wrap(ErrWeightTooLarge, weight.String())
-	}
-	return nil
 }
