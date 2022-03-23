@@ -3,7 +3,6 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
-import "osmosis/gamm/v1beta1/pool.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -38,10 +37,7 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/total_shares";
   }
-  rpc PoolAssets(QueryPoolAssetsRequest) returns (QueryPoolAssetsResponse) {
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/tokens";
-  }
+
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/prices";
@@ -102,14 +98,6 @@ message QueryTotalSharesResponse {
     (gogoproto.moretags) = "yaml:\"total_shares\"",
     (gogoproto.nullable) = false
   ];
-}
-
-//=============================== PoolAssets
-message QueryPoolAssetsRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-}
-message QueryPoolAssetsResponse {
-  repeated PoolAsset poolAssets = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== SpotPrice

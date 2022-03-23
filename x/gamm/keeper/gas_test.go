@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	balanacertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, coins)
 	suite.Require().NoError(err)
 
-	defaultPoolParams := balanacertypes.PoolParams{
+	defaultPoolParams := balancertypes.PoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	}
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 		err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, coins)
 		suite.Require().NoError(err)
 
-		poolAssets := []types.PoolAsset{
+		poolAssets := []balancertypes.PoolAsset{
 			{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(prevRandToken, sdk.NewInt(10)),

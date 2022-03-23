@@ -90,7 +90,7 @@ func genericPow(base, exp sdk.Dec) sdk.Dec {
 	if !base.GTE(sdk.NewDec(2)) {
 		return osmomath.Pow(base, exp)
 	}
-	return osmomath.PowApprox(sdk.OneDec().Quo(base), exp.Neg(), powPrecision)
+	return osmomath.PowApprox(sdk.OneDec().Quo(base), exp.Neg(), osmomath.GetPowPrecision())
 }
 
 // constantChange returns the multiplicative factor difference in the pool constant, between two different pools.

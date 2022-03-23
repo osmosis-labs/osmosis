@@ -163,25 +163,6 @@ func (k Keeper) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequ
 	}, nil
 }
 
-// TODO: Fix.
-func (k Keeper) PoolAssets(ctx context.Context, req *types.QueryPoolAssetsRequest) (*types.QueryPoolAssetsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	return nil, status.Error(codes.Unimplemented, "unimplemented")
-
-	// sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	// pool, err := k.GetPool(sdkCtx, req.PoolId)
-	// if err != nil {
-	// 	return nil, status.Error(codes.Internal, err.Error())
-	// }
-	// return &types.QueryPoolAssetsResponse{
-	// 	PoolAssets: pool.GetAllPoolAssets(),
-	// }, nil
-}
-
 func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest) (*types.QuerySpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

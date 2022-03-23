@@ -85,23 +85,23 @@ func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) s
 	}
 }
 
-func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
+func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []balancer.PoolAsset {
 	// selecting random number between [2, Min(coins.Len, 6)]
 	numCoins := 2 + r.Intn(Min(coins.Len(), 6)-1)
 	denomIndices := r.Perm(coins.Len())
-	assets := []types.PoolAsset{}
+	assets := []balancer.PoolAsset{}
 	for _, denomIndex := range denomIndices[:numCoins] {
 		denom := coins[denomIndex].Denom
 		amt, _ := simtypes.RandPositiveInt(r, coins[denomIndex].Amount.QuoRaw(100))
 		reserveAmt := sdk.NewCoin(denom, amt)
 		weight := sdk.NewInt(r.Int63n(9) + 1)
-		assets = append(assets, types.PoolAsset{Token: reserveAmt, Weight: weight})
+		assets = append(assets, balancer.PoolAsset{Token: reserveAmt, Weight: weight})
 	}
 
 	return assets
 }
 
-func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) balancer.PoolParams {
+func genBalancerPoolParams(r *rand.Rand, blockTime time.Time, assets []balancer.PoolAsset) balancer.PoolParams {
 	// swapFeeInt := int64(r.Intn(1e5))
 	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -168,7 +168,7 @@ func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingType
 			FuturePoolGovernor: "",
 		}
 
-		spentCoins := types.PoolAssetsCoins(poolAssets)
+		spentCoins := balancer.PoolAssetsCoins(poolAssets)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
