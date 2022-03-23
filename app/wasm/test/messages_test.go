@@ -111,8 +111,8 @@ func TestSwap(t *testing.T) {
 	fundAccount(t, ctx, osmosis, actor, defaultFunds)
 
 	poolFunds := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
+		sdk.NewInt64Coin("uosmo", 12_000_000),
+		sdk.NewInt64Coin("ustar", 240_000_000),
 	}
 	// 20 star to 1 osmo
 	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
@@ -325,6 +325,189 @@ func TestSwap(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// when
 			gotAmount, gotErr := wasm.PerformSwap(osmosis.GAMMKeeper, ctx, actor, spec.swap)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.InEpsilonf(t, (*spec.expCost.Out).ToDec().MustFloat64(), (*gotAmount.Out).ToDec().MustFloat64(), epsilon, "exp %s but got %s", spec.expCost.Out.String(), gotAmount.Out.String())
+		})
+	}
+
+}
+
+func TestSwapMultiHop(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+	epsilon := 1e-3
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12_000_000),
+		sdk.NewInt64Coin("ustar", 240_000_000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	// 2 osmo to 1 atom
+	poolFunds2 := []sdk.Coin{
+		sdk.NewInt64Coin("uatom", 6_000_000),
+		sdk.NewInt64Coin("uosmo", 12_000_000),
+	}
+	atomPool := preparePool(t, ctx, osmosis, actor, poolFunds2)
+
+	amountIn := wasmbindings.ExactIn{
+		Input:     sdk.NewInt(1_000_000),
+		MinOutput: sdk.NewInt(20_000),
+	}
+
+	// Multi-hop
+	// Estimate 1st swap rate
+	uosmo := poolFunds[0].Amount.ToDec().MustFloat64()
+	ustar := poolFunds[1].Amount.ToDec().MustFloat64()
+	expectedOut1 := uosmo - uosmo*ustar/(ustar+amountIn.Input.ToDec().MustFloat64())
+
+	// Estimate 2nd swap rate
+	uatom2 := poolFunds2[0].Amount.ToDec().MustFloat64()
+	uosmo2 := poolFunds2[1].Amount.ToDec().MustFloat64()
+	expectedOut2 := uatom2 - uosmo2*uatom2/(uosmo2+expectedOut1)
+
+	atomAmount := sdk.NewInt(int64(expectedOut2))
+	atomSwapAmount := wasmbindings.SwapAmount{Out: &atomAmount}
+
+	specs := map[string]struct {
+		swap    *wasmbindings.SwapMsg
+		expCost *wasmbindings.SwapAmount
+		expErr  bool
+	}{
+		"valid swap (exact in, 2 step multi-hop)": {
+			swap: &wasmbindings.SwapMsg{
+				First: wasmbindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "uosmo",
+				},
+				Route: []wasmbindings.Step{{
+					PoolId:   atomPool,
+					DenomOut: "uatom",
+				}},
+				Amount: wasmbindings.SwapAmountWithLimit{
+					ExactIn: &amountIn,
+				},
+			},
+			expCost: &atomSwapAmount,
+		},
+		"non-existent step pool id": {
+			swap: &wasmbindings.SwapMsg{
+				First: wasmbindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "uosmo",
+				},
+				Route: []wasmbindings.Step{{
+					PoolId:   atomPool + 2,
+					DenomOut: "uatom",
+				}},
+				Amount: wasmbindings.SwapAmountWithLimit{
+					ExactIn: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"zero step pool id": {
+			swap: &wasmbindings.SwapMsg{
+				First: wasmbindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "uosmo",
+				},
+				Route: []wasmbindings.Step{{
+					PoolId:   0,
+					DenomOut: "uatom",
+				}},
+				Amount: wasmbindings.SwapAmountWithLimit{
+					ExactIn: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"wrong step denom out": {
+			swap: &wasmbindings.SwapMsg{
+				First: wasmbindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "uosmo",
+				},
+				Route: []wasmbindings.Step{{
+					PoolId:   atomPool,
+					DenomOut: "ATOM",
+				}},
+				Amount: wasmbindings.SwapAmountWithLimit{
+					ExactIn: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"self-swap not allowed": {
+			swap: &wasmbindings.SwapMsg{
+				First: wasmbindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "uosmo",
+				},
+				Route: []wasmbindings.Step{{
+					PoolId:   atomPool,
+					DenomOut: "uosmo", // this is same as the input (output of first swap)
+				}},
+				Amount: wasmbindings.SwapAmountWithLimit{
+					ExactIn: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"invalid step denom out": {
+			swap: &wasmbindings.SwapMsg{
+				First: wasmbindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "uosmo",
+				},
+				Route: []wasmbindings.Step{{
+					PoolId:   atomPool,
+					DenomOut: "invalid",
+				}},
+				Amount: wasmbindings.SwapAmountWithLimit{
+					ExactIn: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+		"empty step denom out": {
+			swap: &wasmbindings.SwapMsg{
+				First: wasmbindings.Swap{
+					PoolId:   starPool,
+					DenomIn:  "ustar",
+					DenomOut: "uosmo",
+				},
+				Route: []wasmbindings.Step{{
+					PoolId:   atomPool,
+					DenomOut: "",
+				}},
+				Amount: wasmbindings.SwapAmountWithLimit{
+					ExactIn: &amountIn,
+				},
+			},
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// use scratch context to avoid interference between tests
+			subCtx, _ := ctx.CacheContext()
+			// when
+			gotAmount, gotErr := wasm.PerformSwap(osmosis.GAMMKeeper, subCtx, actor, spec.swap)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
