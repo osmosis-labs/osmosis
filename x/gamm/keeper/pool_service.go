@@ -19,7 +19,8 @@ func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
 	baseAssetDenom string,
-	quoteAssetDenom string) (sdk.Dec, error) {
+	quoteAssetDenom string,
+) (sdk.Dec, error) {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -220,6 +221,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 	return shareOutAmount, nil
 }
 
+//nolint:deadcode,govet // looks like we have known dead code beneath "panic"
 func (k Keeper) JoinSwapShareAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -233,8 +235,10 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
-	panic("implement")
+	panic("implement") // I moved this past return, it caused everything beneath it to be dead code
+
 	tokenInAmount = sdk.ZeroInt()
+
 	// normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
 	// tokenInAmount = calcSingleInGivenPoolOut(
 	// 	PoolAsset.Token.Amount.ToDec(),

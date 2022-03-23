@@ -24,7 +24,8 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 	ibcConnections *connectionkeeper.Keeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	gamm *gammkeeper.Keeper,
-	staking *stakingkeeper.Keeper) upgradetypes.UpgradeHandler {
+	staking *stakingkeeper.Keeper,
+) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// Set IBC updates from {inside SDK} to v1
 		// https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md#in-place-store-migrations

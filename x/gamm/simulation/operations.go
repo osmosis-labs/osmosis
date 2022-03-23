@@ -1,3 +1,4 @@
+//nolint:gosec // nolint because this file contains strings for testing
 package simulation
 
 import (
@@ -18,7 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-// Simulation operation weights constants
+// Simulation operation weights constants.
 const (
 	OpWeightMsgCreatePool              = "op_weight_create_pool"
 	OpWeightMsgSwapExactAmountIn       = "op_weight_swap_exact_amount_in"
@@ -41,7 +42,7 @@ const (
 	DefaultWeightMsgExitSwapShareAmountIn   int = 10
 )
 
-// WeightedOperations returns all the operations from the module with their respective weights
+// WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
 	bk stakingTypes.BankKeeper, k keeper.Keeper,
@@ -129,7 +130,7 @@ func Max(x, y int) int {
 	return y
 }
 
-// SimulateMsgCreateBalancerPool generates a MsgCreatePool with random values
+// SimulateMsgCreateBalancerPool generates a MsgCreatePool with random values.
 func SimulateMsgCreateBalancerPool(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

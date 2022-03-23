@@ -20,8 +20,10 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&RemoveSuperfluidAssetsProposal{}, "osmosis/RemoveSuperfluidAssetsProposal")
 }
 
-var _ govtypes.Content = &SetSuperfluidAssetsProposal{}
-var _ govtypes.Content = &RemoveSuperfluidAssetsProposal{}
+var (
+	_ govtypes.Content = &SetSuperfluidAssetsProposal{}
+	_ govtypes.Content = &RemoveSuperfluidAssetsProposal{}
+)
 
 func NewSetSuperfluidAssetsProposal(title, description string, assets []SuperfluidAsset) govtypes.Content {
 	return &SetSuperfluidAssetsProposal{

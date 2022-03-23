@@ -453,7 +453,6 @@ func (pa Pool) NumAssets() int {
 }
 
 func (pa Pool) IsActive(curBlockTime time.Time) bool {
-
 	// Add frozen pool checking, etc...
 
 	return true

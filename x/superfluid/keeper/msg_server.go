@@ -13,7 +13,7 @@ type msgServer struct {
 	keeper *Keeper
 }
 
-// NewMsgServerImpl returns an instance of MsgServer
+// NewMsgServerImpl returns an instance of MsgServer.
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
@@ -57,7 +57,8 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 // }
 
 func (server msgServer) SuperfluidUnbondLock(goCtx context.Context, msg *types.MsgSuperfluidUnbondLock) (
-	*types.MsgSuperfluidUnbondLockResponse, error) {
+	*types.MsgSuperfluidUnbondLockResponse, error,
+) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidUnbondLock(ctx, msg.LockId, msg.Sender)

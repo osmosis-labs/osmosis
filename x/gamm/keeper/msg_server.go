@@ -26,8 +26,10 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
-var _ types.MsgServer = msgServer{}
-var _ balancer.MsgServer = msgServer{}
+var (
+	_ types.MsgServer    = msgServer{}
+	_ balancer.MsgServer = msgServer{}
+)
 
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -122,7 +124,6 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 	}
 
 	tokenOutAmount, err := server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
-
 	if err != nil {
 		return nil, err
 	}

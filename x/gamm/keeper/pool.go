@@ -23,7 +23,6 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 }
 
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
@@ -228,14 +227,14 @@ func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.Poo
 	return &pool, nil
 }
 
-// SetNextPoolNumber sets next pool number
+// SetNextPoolNumber sets next pool number.
 func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
-// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry
+// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
 func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)
