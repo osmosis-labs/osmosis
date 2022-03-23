@@ -18,7 +18,7 @@ import (
 
 func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
-		return &MintTokenMessenger{
+		return &CustomMessenger{
 			wrapped:    old,
 			bank:       bank,
 			gammKeeper: gammKeeper,
@@ -26,15 +26,15 @@ func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.Base
 	}
 }
 
-type MintTokenMessenger struct {
+type CustomMessenger struct {
 	wrapped    wasmkeeper.Messenger
 	bank       *bankkeeper.BaseKeeper
 	gammKeeper *gammkeeper.Keeper
 }
 
-var _ wasmkeeper.Messenger = (*MintTokenMessenger)(nil)
+var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
 
-func (m *MintTokenMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
+func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
 	if msg.Custom != nil {
 		// only handle the happy path where this is really minting / swapping ...
 		// leave everything else for the wrapped version
@@ -52,37 +52,56 @@ func (m *MintTokenMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAd
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
 }
 
-func (m *MintTokenMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) ([]sdk.Event, [][]byte, error) {
+func (m *CustomMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) ([]sdk.Event, [][]byte, error) {
+	err := PerformMint(m.bank, ctx, contractAddr, mint)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "perform mint")
+	}
+	return nil, nil, nil
+}
+
+func PerformMint(b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) error {
+	if mint == nil {
+		return wasmvmtypes.InvalidRequest{Err: "mint token null mint"}
+	}
 	rcpt, err := parseAddress(mint.Recipient)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
 	denom, err := GetFullDenom(contractAddr.String(), mint.SubDenom)
 	if err != nil {
-		return nil, nil, sdkerrors.Wrap(err, "mint token denom")
+		return sdkerrors.Wrap(err, "mint token denom")
+	}
+	if mint.Amount.IsNegative() {
+		return wasmvmtypes.InvalidRequest{Err: "mint token negative amount"}
 	}
 	coins := []sdk.Coin{sdk.NewCoin(denom, mint.Amount)}
 
-	err = m.bank.MintCoins(ctx, gammtypes.ModuleName, coins)
+	err = b.MintCoins(ctx, gammtypes.ModuleName, coins)
 	if err != nil {
-		return nil, nil, sdkerrors.Wrap(err, "minting coins from message")
+		return sdkerrors.Wrap(err, "minting coins from message")
 	}
-	err = m.bank.SendCoinsFromModuleToAccount(ctx, gammtypes.ModuleName, rcpt, coins)
+	err = b.SendCoinsFromModuleToAccount(ctx, gammtypes.ModuleName, rcpt, coins)
 	if err != nil {
-		return nil, nil, sdkerrors.Wrap(err, "sending newly minted coins from message")
+		return sdkerrors.Wrap(err, "sending newly minted coins from message")
 	}
+	return nil
+}
 
+func (m *CustomMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) ([]sdk.Event, [][]byte, error) {
+	_, err := PerformSwap(m.gammKeeper, ctx, contractAddr, swap)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "perform swap")
+	}
 	return nil, nil, nil
 }
 
-func (m *MintTokenMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) ([]sdk.Event, [][]byte, error) {
-	_, err := performSwap(m.gammKeeper, ctx, contractAddr, swap)
-	return nil, nil, sdkerrors.Wrap(err, "gamm estimate price exact amount out")
-}
-
-// This can be used both for the real swap as well as with EstimatePrice query
-func performSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) (*wasmbindings.SwapAmount, error) {
+// PerformSwap can be used both for the real swap, and the EstimatePrice query
+func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) (*wasmbindings.SwapAmount, error) {
+	if swap == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}
+	}
 	if swap.Amount.ExactIn != nil {
 		routes := []gammtypes.SwapAmountInRoute{{
 			PoolId:        swap.First.PoolId,
@@ -138,7 +157,7 @@ func performSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 	}
 }
 
-// this is a function, not method, so the message_plugin can use it
+// GetFullDenom is a function, not method, so the message_plugin can use it
 func GetFullDenom(contract string, subDenom string) (string, error) {
 	// Address validation
 	if _, err := parseAddress(contract); err != nil {

@@ -78,6 +78,6 @@ func (qp QueryPlugin) EstimatePrice(ctx sdk.Context, estimatePrice *wasmbindings
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate price empty swap"}
 	}
 
-	estimate, err := performSwap(qp.gammKeeper, ctx, contractAddr, estimatePrice.ToSwapMsg())
+	estimate, err := PerformSwap(qp.gammKeeper, ctx, contractAddr, estimatePrice.ToSwapMsg())
 	return estimate, err
 }
