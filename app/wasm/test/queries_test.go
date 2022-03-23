@@ -4,7 +4,6 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
-	"github.com/osmosis-labs/osmosis/v7/app/wasm/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 
@@ -84,12 +83,12 @@ func TestPoolState(t *testing.T) {
 
 	specs := map[string]struct {
 		poolId       uint64
-		expPoolState *types.PoolState
+		expPoolState *wasmbindings.PoolAssets
 		expErr       bool
 	}{
 		"existent pool id": {
 			poolId: starPool,
-			expPoolState: &types.PoolState{
+			expPoolState: &wasmbindings.PoolAssets{
 				Assets: poolFunds,
 				Shares: sdk.NewCoin(starSharesDenom, starSharedAmount),
 			},

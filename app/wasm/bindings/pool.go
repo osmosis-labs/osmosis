@@ -1,8 +1,8 @@
-package types
+package wasmbindings
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-type PoolState struct {
+type PoolAssets struct {
 	Assets []sdk.Coin
 	Shares sdk.Coin
 }

@@ -6,7 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
-	"github.com/osmosis-labs/osmosis/v7/app/wasm/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -24,18 +23,18 @@ func NewQueryPlugin(
 	}
 }
 
-func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*types.PoolState, error) {
+func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*wasmbindings.PoolAssets, error) {
 	poolData, err := qp.gammKeeper.GetPool(ctx, poolID)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm get pool")
 	}
-	var poolState types.PoolState
-	poolState.Assets = poolData.GetTotalLpBalances(ctx)
-	poolState.Shares = sdk.Coin{
+	var poolAssets wasmbindings.PoolAssets
+	poolAssets.Assets = poolData.GetTotalLpBalances(ctx)
+	poolAssets.Shares = sdk.Coin{
 		Denom:  gammtypes.GetPoolShareDenom(poolID),
 		Amount: poolData.GetTotalShares(),
 	}
-	return &poolState, nil
+	return &poolAssets, nil
 }
 
 func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *wasmbindings.SpotPrice) (*sdk.Dec, error) {
