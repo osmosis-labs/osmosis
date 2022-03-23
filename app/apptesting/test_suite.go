@@ -66,7 +66,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 }
 
 func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
-	valAddr := []byte(":^) at this distribution workaround")
+	valAddr := []byte(":^) at this distribution workaround") //nolint
 	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
@@ -91,9 +91,11 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	newCtx := keeperTestHelper.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
 	keeperTestHelper.Ctx = newCtx
 	lastCommitInfo := abci.LastCommitInfo{
-		Votes: []abci.VoteInfo{{
-			Validator:       abci.Validator{Address: valAddr, Power: 1000},
-			SignedLastBlock: true},
+		Votes: []abci.VoteInfo{
+			{
+				Validator:       abci.Validator{Address: valAddr, Power: 1000},
+				SignedLastBlock: true,
+			},
 		},
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
@@ -129,10 +131,9 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 	})
 
 	bondDenom := keeperTestHelper.App.StakingKeeper.BondDenom(keeperTestHelper.Ctx)
-	//TODO: use sdk crypto instead of tendermint to generate address
+	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	//fund account with pool creation fee
 	poolCreationFee := keeperTestHelper.App.GAMMKeeper.GetParams(keeperTestHelper.Ctx)
 	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, poolCreationFee.PoolCreationFee)
 	keeperTestHelper.Require().NoError(err)
@@ -154,15 +155,15 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 			defaultFutureGovernor = ""
 
 			// pool assets
-			defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+			defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
-			defaultBarAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+			defaultBarAsset balancer.PoolAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
 			}
-			poolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+			poolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
 
 		poolId, err := keeperTestHelper.App.GAMMKeeper.CreateBalancerPool(keeperTestHelper.Ctx, acc1, balancer.PoolParams{
@@ -180,7 +181,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 }
 
 // SwapAndSetSpotPrice runs a swap to set Spot price of a pool using arbitrary values
-// returns spot price after the arbitrary swap
+// returns spot price after the arbitrary swap.
 func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) sdk.Dec {
 	// create a dummy account
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())

@@ -7,7 +7,7 @@ import (
 	v6 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v6"
 )
 
-// BeginBlockForks is intended to be ran in
+// BeginBlockForks is intended to be ran in.
 func BeginBlockForks(ctx sdk.Context, app *OsmosisApp) {
 	switch ctx.BlockHeight() {
 	case v3.UpgradeHeight:

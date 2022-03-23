@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -20,16 +21,16 @@ var (
 	defaultFutureGovernor = ""
 
 	// pool assets
-	defaultFooAsset types.PoolAsset = types.PoolAsset{
+	defaultFooAsset = balancertypes.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}
-	defaultBarAsset types.PoolAsset = types.PoolAsset{
+	defaultBarAsset = balancertypes.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}
-	defaultPoolAssets []types.PoolAsset = []types.PoolAsset{defaultFooAsset, defaultBarAsset}
-	defaultAcctFunds  sdk.Coins         = sdk.NewCoins(
+	defaultPoolAssets           = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+	defaultAcctFunds  sdk.Coins = sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000000)),
@@ -111,7 +112,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.PoolAsset{}, defaultFutureGovernor)
+			}, []balancertypes.PoolAsset{}, defaultFutureGovernor)
 			suite.Require().Error(err, "can't create the pool with empty PoolAssets")
 		},
 	}, {
@@ -120,7 +121,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.PoolAsset{{
+			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(0),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -135,7 +136,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.PoolAsset{{
+			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(-1),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -150,7 +151,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.PoolAsset{{
+			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
 			}, {
@@ -165,7 +166,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.PoolAsset{{
+			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token: sdk.Coin{
 					Denom:  "foo",
@@ -183,7 +184,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			_, err := keeper.CreateBalancerPool(suite.ctx, acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []types.PoolAsset{{
+			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {

@@ -63,7 +63,7 @@ var (
 	// module account permissions
 	maccPerms = moduleAccountPermissions
 
-	// module accounts that are allowed to receive tokens
+	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{}
 
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
@@ -153,7 +153,6 @@ func NewOsmosisApp(
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -200,7 +199,7 @@ func NewOsmosisApp(
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
-	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: All module / keeper changes should happen prior to this module.NewManager line being called.
 	// However in the event any changes do need to happen after this call, ensure that that keeper
@@ -322,7 +321,7 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
-// LoadHeight loads a particular height
+// LoadHeight loads a particular height.
 func (app *OsmosisApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
@@ -343,7 +342,7 @@ func (app *OsmosisApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns Osmosis' InterfaceRegistry
+// InterfaceRegistry returns Osmosis' InterfaceRegistry.
 func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }

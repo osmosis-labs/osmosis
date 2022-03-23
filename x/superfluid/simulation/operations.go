@@ -17,7 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-// Simulation operation weights constants
+// Simulation operation weights constants.
 const (
 	DefaultWeightMsgSuperfluidDelegate          int = 100
 	DefaultWeightMsgSuperfluidUndelegate        int = 50
@@ -30,7 +30,7 @@ const (
 	OpWeightMsgSuperfluidRedelegate = "op_weight_msg_superfluid_redelegate"
 )
 
-// WeightedOperations returns all the operations from the module with their respective weights
+// WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingtypes.AccountKeeper,
 	bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper,
@@ -75,12 +75,11 @@ func WeightedOperations(
 	}
 }
 
-// SimulateMsgSuperfluidDelegate generates a MsgSuperfluidDelegate with random values
+// SimulateMsgSuperfluidDelegate generates a MsgSuperfluidDelegate with random values.
 func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		// select random validator
 		validator := RandomValidator(ctx, r, sk)
 		if validator == nil {
@@ -122,7 +121,6 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		lock, simAccount := RandomLockAndAccount(ctx, r, lk, accs)
 		if lock == nil {
 			return simtypes.NoOpMsg(
@@ -142,7 +140,6 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		return osmo_simulation.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
-
 	}
 }
 

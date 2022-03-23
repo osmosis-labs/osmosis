@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -59,7 +60,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []types.PoolAsset{
+	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []balancertypes.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),

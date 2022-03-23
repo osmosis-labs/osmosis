@@ -258,7 +258,7 @@ var orderEndBlockers = []string{
 	wasm.ModuleName,
 }
 
-// modulesOrderInitGenesis returns module names in order for init genesis calls
+// modulesOrderInitGenesis returns module names in order for init genesis calls.
 var modulesOrderInitGenesis = []string{
 	capabilitytypes.ModuleName,
 	authtypes.ModuleName,

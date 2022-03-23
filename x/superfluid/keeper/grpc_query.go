@@ -13,7 +13,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// Params returns the superfluid module params
+// Params returns the superfluid module params.
 func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -24,7 +24,7 @@ func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*t
 	}, nil
 }
 
-// AssetType Returns superfluid asset type
+// AssetType Returns superfluid asset type.
 func (k Keeper) AssetType(goCtx context.Context, req *types.AssetTypeRequest) (*types.AssetTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	asset := k.GetSuperfluidAsset(ctx, req.Denom)
@@ -33,7 +33,7 @@ func (k Keeper) AssetType(goCtx context.Context, req *types.AssetTypeRequest) (*
 	}, nil
 }
 
-// AllAssets Returns all superfluid assets info
+// AllAssets Returns all superfluid assets info.
 func (k Keeper) AllAssets(goCtx context.Context, req *types.AllAssetsRequest) (*types.AllAssetsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	assets := k.GetAllSuperfluidAssets(ctx)
@@ -42,7 +42,7 @@ func (k Keeper) AllAssets(goCtx context.Context, req *types.AllAssetsRequest) (*
 	}, nil
 }
 
-// AssetMultiplier returns superfluid asset multiplier
+// AssetMultiplier returns superfluid asset multiplier.
 func (k Keeper) AssetMultiplier(goCtx context.Context, req *types.AssetMultiplierRequest) (*types.AssetMultiplierResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	epochInfo := k.ek.GetEpochInfo(ctx, k.GetEpochIdentifier(ctx))
@@ -56,7 +56,7 @@ func (k Keeper) AssetMultiplier(goCtx context.Context, req *types.AssetMultiplie
 	}, nil
 }
 
-// AllIntermediaryAccounts returns all superfluid intermediary accounts
+// AllIntermediaryAccounts returns all superfluid intermediary accounts.
 func (k Keeper) AllIntermediaryAccounts(goCtx context.Context, req *types.AllIntermediaryAccountsRequest) (*types.AllIntermediaryAccountsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	accounts := k.GetAllIntermediaryAccounts(ctx)
@@ -74,7 +74,7 @@ func (k Keeper) AllIntermediaryAccounts(goCtx context.Context, req *types.AllInt
 	}, nil
 }
 
-// ConnectedIntermediaryAccount returns intermediary account connected to a superfluid staked lock by id
+// ConnectedIntermediaryAccount returns intermediary account connected to a superfluid staked lock by id.
 func (k Keeper) ConnectedIntermediaryAccount(goCtx context.Context, req *types.ConnectedIntermediaryAccountRequest) (*types.ConnectedIntermediaryAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	address := k.GetLockIdIntermediaryAccountConnection(ctx, req.LockId)
@@ -102,7 +102,7 @@ func (k Keeper) ConnectedIntermediaryAccount(goCtx context.Context, req *types.C
 }
 
 // SuperfluidDelegationAmount returns the coins superfluid delegated for a
-//delegator, validator, denom triplet
+
 func (k Keeper) SuperfluidDelegationAmount(goCtx context.Context, req *types.SuperfluidDelegationAmountRequest) (*types.SuperfluidDelegationAmountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -125,13 +125,13 @@ func (k Keeper) SuperfluidDelegationAmount(goCtx context.Context, req *types.Sup
 	periodLocks := k.lk.GetAccountLockedLongerDurationDenomNotUnlockingOnly(ctx, delAddr, syntheticDenom, time.Second)
 
 	if len(periodLocks) == 0 {
-		return &types.SuperfluidDelegationAmountResponse{sdk.NewCoins()}, nil
+		return &types.SuperfluidDelegationAmountResponse{Amount: sdk.NewCoins()}, nil
 	}
 
-	return &types.SuperfluidDelegationAmountResponse{periodLocks[0].GetCoins()}, nil
+	return &types.SuperfluidDelegationAmountResponse{Amount: periodLocks[0].GetCoins()}, nil
 }
 
-// SuperfluidDelegationsByDelegator returns all the superfluid poistions for a specific delegator
+// SuperfluidDelegationsByDelegator returns all the superfluid poistions for a specific delegator.
 func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *types.SuperfluidDelegationsByDelegatorRequest) (*types.SuperfluidDelegationsByDelegatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -174,10 +174,9 @@ func (k Keeper) SuperfluidDelegationsByDelegator(goCtx context.Context, req *typ
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
 	}
 	return &res, nil
-
 }
 
-// SuperfluidUndelegationsByDelegator returns total amount undelegating by delegator
+// SuperfluidUndelegationsByDelegator returns total amount undelegating by delegator.
 func (k Keeper) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *types.SuperfluidUndelegationsByDelegatorRequest) (*types.SuperfluidUndelegationsByDelegatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -224,7 +223,7 @@ func (k Keeper) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *t
 }
 
 // SuperfluidDelegationsByValidatorDenom returns all the superfluid positions
-// of a specific denom delegated to one validator
+// of a specific denom delegated to one validator.
 func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req *types.SuperfluidDelegationsByValidatorDenomRequest) (*types.SuperfluidDelegationsByValidatorDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -261,7 +260,7 @@ func (k Keeper) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, req
 // EstimateSuperfluidDelegatedAmountByValidatorDenom returns the amount of a
 // specific denom delegated to a specific validator
 // This is labeled an estimate, because the way it calculates the amount can
-// lead rounding errors from the true delegated amount
+// lead rounding errors from the true delegated amount.
 func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.Context, req *types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest) (*types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -298,7 +297,7 @@ func (k Keeper) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context.
 	}, nil
 }
 
-// TotalSuperfluidDelegations returns total amount of osmo delegated via superfluid staking
+// TotalSuperfluidDelegations returns total amount of osmo delegated via superfluid staking.
 func (k Keeper) TotalSuperfluidDelegations(goCtx context.Context, req *types.TotalSuperfluidDelegationsRequest) (*types.TotalSuperfluidDelegationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

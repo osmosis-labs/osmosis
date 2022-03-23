@@ -23,7 +23,6 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 }
 
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
@@ -42,7 +41,8 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	return pool, nil
 }
 
-func (k Keeper) GetPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+// Get pool, and check if the pool is active / allowed to be swapped against
+func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return &balancer.Pool{}, err
@@ -197,7 +197,7 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 
 // newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
 // parameters, initial assets, and future governor.
-func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.PoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
+func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.PoolParams, assets []balancer.PoolAsset, futureGovernor string) (types.PoolI, error) {
 	poolId := k.GetNextPoolNumberAndIncrement(ctx)
 
 	pool, err := balancer.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
@@ -227,14 +227,14 @@ func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.Poo
 	return &pool, nil
 }
 
-// SetNextPoolNumber sets next pool number
+// SetNextPoolNumber sets next pool number.
 func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
-// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry
+// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
 func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)

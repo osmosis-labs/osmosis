@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1095](https://github.com/osmosis-labs/osmosis/pull/1095) Fix authz being unable to use lockup & superfluid types.
 * [#1105](https://github.com/osmosis-labs/osmosis/pull/1105) Add GitHub Actions to automatically push the osmosis Docker image
 * [#1114](https://github.com/osmosis-labs/osmosis/pull/1114) Improve CI: remove duplicate runs of test worflow
+* [#1127](https://github.com/osmosis-labs/osmosis/pull/1127) Stricter Linting:  bump golangci-lint version and enable additional linters.
 
 ### SDK fork updates
 

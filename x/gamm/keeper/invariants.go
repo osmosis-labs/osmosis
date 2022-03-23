@@ -11,7 +11,7 @@ import (
 
 const poolBalanceInvariantName = "pool-account-balance-equals-expected"
 
-// RegisterInvariants registers all governance invariants
+// RegisterInvariants registers all governance invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKeeper) {
 	// ir.RegisterRoute(types.ModuleName, poolBalanceInvariantName, PoolAccountInvariant(keeper, bk))
 	// ir.RegisterRoute(types.ModuleName, "pool-total-weight", PoolTotalWeightInvariant(keeper, bk))
@@ -90,7 +90,7 @@ func genericPow(base, exp sdk.Dec) sdk.Dec {
 	if !base.GTE(sdk.NewDec(2)) {
 		return osmomath.Pow(base, exp)
 	}
-	return osmomath.PowApprox(sdk.OneDec().Quo(base), exp.Neg(), powPrecision)
+	return osmomath.PowApprox(sdk.OneDec().Quo(base), exp.Neg(), osmomath.GetPowPrecision())
 }
 
 // constantChange returns the multiplicative factor difference in the pool constant, between two different pools.
@@ -113,9 +113,7 @@ func genericPow(base, exp sdk.Dec) sdk.Dec {
 // 	return product
 // }
 
-var (
-	errorMargin, _ = sdk.NewDecFromStr("0.0001") // 0.01%
-)
+var errorMargin, _ = sdk.NewDecFromStr("0.0001") // 0.01%
 
 // PoolProductContantInvariant chekcs that the pool constant invariant V where
 // V = product([asset_balance_n^asset_weight_n]) holds.

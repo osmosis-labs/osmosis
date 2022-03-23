@@ -11,11 +11,16 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+// CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
+// using the specified pool.
+// E.g. if pool 1 traded 2 atom for 3 osmo, the quote asset was atom, and the base asset was osmo,
+// this would return 1.5. (Meaning that 1 atom costs 1.5 osmo)
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
 	baseAssetDenom string,
-	quoteAssetDenom string) (sdk.Dec, error) {
+	quoteAssetDenom string,
+) (sdk.Dec, error) {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -27,7 +32,7 @@ func (k Keeper) CreateBalancerPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	BalancerPoolParams balancer.PoolParams,
-	poolAssets []types.PoolAsset,
+	poolAssets []balancer.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {
 	if len(poolAssets) < types.MinPoolAssets {
@@ -109,6 +114,13 @@ func (k Keeper) CreateBalancerPool(
 	return pool.GetId(), nil
 }
 
+// JoinPoolNoSwap aims to LP exactly enough to pool #{poolId} to get shareOutAmount number of LP shares.
+// If the required tokens is greater than tokenInMaxs, returns an error & the message reverts.
+// Leftover tokens that weren't LP'd (due to being at inexact ratios) remain in the sender account.
+//
+// JoinPoolNoSwap determines the maximum amount that can be LP'd without any swap,
+// by looking at the ratio of the total LP'd assets. (e.g. 2 osmo : 1 atom)
+// It then finds the maximal amount that can be LP'd.
 func (k Keeper) JoinPoolNoSwap(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -121,27 +133,11 @@ func (k Keeper) JoinPoolNoSwap(
 		return err
 	}
 
-	totalSharesAmount := pool.GetTotalShares()
-	// shareRatio is the desired number of shares, divided by the total number of
-	// shares currently in the pool. It is intended to be used in scenarios where you want
-	// (tokens per share) * number of shares out = # tokens * (# shares out / cur total shares)
-	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
-	if shareRatio.LTE(sdk.ZeroDec()) {
-		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+	neededLpLiquidity, err := getMaximalNoSwapLPAmount(ctx, pool, shareOutAmount)
+	if err != nil {
+		return err
 	}
 
-	poolLiquidity := pool.GetTotalLpBalances(ctx)
-	neededLpLiquidity := sdk.Coins{}
-
-	for _, coin := range poolLiquidity {
-		// (coin.Amt * shareRatio).Ceil()
-		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
-		if neededAmt.LTE(sdk.ZeroInt()) {
-			return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
-		}
-		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
-		neededLpLiquidity = neededLpLiquidity.Add(neededCoin)
-	}
 	// if neededLPLiquidity >= tokenInMaxs, return err
 	// if tokenInMaxs == 0, don't do this check.
 	if tokenInMaxs.Len() != 0 {
@@ -165,6 +161,35 @@ func (k Keeper) JoinPoolNoSwap(
 	return err
 }
 
+func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
+	totalSharesAmount := pool.GetTotalShares()
+	// shareRatio is the desired number of shares, divided by the total number of
+	// shares currently in the pool. It is intended to be used in scenarios where you want
+	// (tokens per share) * number of shares out = # tokens * (# shares out / cur total shares)
+	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
+	if shareRatio.LTE(sdk.ZeroDec()) {
+		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+	}
+
+	poolLiquidity := pool.GetTotalLpBalances(ctx)
+	neededLpLiquidity = sdk.Coins{}
+
+	for _, coin := range poolLiquidity {
+		// (coin.Amt * shareRatio).Ceil()
+		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
+		if neededAmt.LTE(sdk.ZeroInt()) {
+			return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
+		}
+		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
+		neededLpLiquidity = neededLpLiquidity.Add(neededCoin)
+	}
+	return neededLpLiquidity, nil
+}
+
+// JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided tokensIn coins.
+// The underlying pool is responsible for swapping any non-even LP proportions to the correct ratios.
+// If the amount of LP shares obtained at the end is less than shareOutMinAmount,
+// then return an error and revert the message.
 func (k Keeper) JoinSwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -172,7 +197,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 	tokensIn sdk.Coins,
 	shareOutMinAmount sdk.Int,
 ) (shareOutAmount sdk.Int, err error) {
-	pool, err := k.GetPoolForSwap(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -196,6 +221,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 	return shareOutAmount, nil
 }
 
+//nolint:deadcode,govet // looks like we have known dead code beneath "panic"
 func (k Keeper) JoinSwapShareAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -204,13 +230,15 @@ func (k Keeper) JoinSwapShareAmountOut(
 	shareOutAmount sdk.Int,
 	tokenInMaxAmount sdk.Int,
 ) (tokenInAmount sdk.Int, err error) {
-	pool, err := k.GetPoolForSwap(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	panic("implement")
+	panic("implement") // I moved this past return, it caused everything beneath it to be dead code
+
 	tokenInAmount = sdk.ZeroInt()
+
 	// normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
 	// tokenInAmount = calcSingleInGivenPoolOut(
 	// 	PoolAsset.Token.Amount.ToDec(),
@@ -271,6 +299,9 @@ func (k Keeper) ExitPool(
 	return exitCoins, nil
 }
 
+// ExitSwapShareAmountIn is an Exit Pool transaction, that will exit all of the provided LP shares,
+// and then swap it all against the pool into tokenOutDenom.
+// If the amount of tokens gotten out after the swap is less than tokenOutMinAmount, return an error.
 func (k Keeper) ExitSwapShareAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
