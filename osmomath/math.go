@@ -16,6 +16,12 @@ var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 var one sdk.Dec = sdk.OneDec()
 var two sdk.Dec = sdk.MustNewDecFromStr("2")
 
+// Returns the internal "power precision".
+// All fractional exponentiation in osmosis is expected to be accurate up to
+// powPrecision.
+// *technically* the error term can be greater than this powPrecision,
+// but for small bases this bound applies. See comments in the PowApprox function
+// for more detail.
 func GetPowPrecision() sdk.Dec {
 	return powPrecision.Clone()
 }

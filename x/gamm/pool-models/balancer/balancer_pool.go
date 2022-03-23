@@ -148,6 +148,9 @@ func (pa *Pool) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 	return nil
 }
 
+// ValidateUserSpecifiedWeight ensures that a weight that is provided from user-input anywhere
+// for creating a pool obeys the expected guarantees.
+// Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
 func ValidateUserSpecifiedWeight(weight sdk.Int) error {
 	if !weight.IsPositive() {
 		return sdkerrors.Wrap(types.ErrNotPositiveWeight, weight.String())
