@@ -36,7 +36,6 @@ type PoolI interface {
 	// expected to Set the pool into state as well.
 	ApplySwap(ctx sdk.Context, tokenIn sdk.Coins, tokenOut sdk.Coins) error
 
-	// TODO: Swap base and quote asset around, so that it makes more sense later
 	SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
 
 	// JoinPool joins the pool, and uses all of the tokensIn provided.
@@ -45,36 +44,6 @@ type PoolI interface {
 	// If the function errors, or should not be mutative, then state must be reverted after this call.
 	JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
 	ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
-}
-
-// LegacyPoolI defines an interface for pools that hold tokens.
-type LegacyPoolI interface {
-	proto.Message
-
-	GetAddress() sdk.AccAddress
-	String() string
-
-	GetId() uint64
-	GetPoolSwapFee() sdk.Dec
-	GetPoolExitFee() sdk.Dec
-	GetTotalWeight() sdk.Int
-	GetTotalShares() sdk.Coin
-	AddTotalShares(amt sdk.Int)
-	SubTotalShares(amt sdk.Int)
-	GetPoolAsset(denom string) (PoolAsset, error)
-	// UpdatePoolAssetBalance updates the balances for
-	// the token with denomination coin.denom
-	UpdatePoolAssetBalance(coin sdk.Coin) error
-	// UpdatePoolAssetBalances calls UpdatePoolAssetBalance
-	// on each constituent coin.
-	UpdatePoolAssetBalances(coins sdk.Coins) error
-	GetPoolAssets(denoms ...string) ([]PoolAsset, error)
-	GetAllPoolAssets() []PoolAsset
-	PokeTokenWeights(blockTime time.Time)
-	GetTokenWeight(denom string) (sdk.Int, error)
-	GetTokenBalance(denom string) (sdk.Int, error)
-	NumAssets() int
-	IsActive(curBlockTime time.Time) bool
 }
 
 var (
