@@ -68,16 +68,16 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 				return nil, sdkerrors.Wrap(err, "osmo spot price query response")
 			}
 			return bz, nil
-		} else if contractQuery.EstimatePrice != nil {
-			swapAmount, err := osmoKeeper.EstimatePrice(ctx, contractQuery.EstimatePrice)
+		} else if contractQuery.EstimateSwap != nil {
+			swapAmount, err := osmoKeeper.EstimateSwap(ctx, contractQuery.EstimateSwap)
 			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo estimate price query")
+				return nil, sdkerrors.Wrap(err, "osmo estimate swap query")
 			}
 
 			res := bindings.EstimatePriceResponse{Amount: *swapAmount}
 			bz, err := json.Marshal(res)
 			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo estimate price query response")
+				return nil, sdkerrors.Wrap(err, "osmo estimate swap query response")
 			}
 			return bz, nil
 		}

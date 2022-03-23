@@ -255,7 +255,7 @@ func TestSpotPrice(t *testing.T) {
 	}
 }
 
-func TestEstimatePrice(t *testing.T) {
+func TestEstimateSwap(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 	epsilon := 1e-3
@@ -286,12 +286,12 @@ func TestEstimatePrice(t *testing.T) {
 	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
 
 	specs := map[string]struct {
-		estimatePrice *wasmbindings.EstimatePrice
-		expCost       *wasmbindings.SwapAmount
-		expErr        bool
+		estimateSwap *wasmbindings.EstimateSwap
+		expCost      *wasmbindings.SwapAmount
+		expErr       bool
 	}{
-		"valid estimate price (exact in)": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+		"valid estimate swap (exact in)": {
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -306,7 +306,7 @@ func TestEstimatePrice(t *testing.T) {
 			expCost: &starSwapAmount,
 		},
 		"non-existent pool id": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool + 3,
@@ -321,7 +321,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"zero pool id": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   0,
@@ -336,7 +336,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"invalid denom in": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -351,7 +351,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"empty denom in": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -366,7 +366,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"invalid denom out": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -381,7 +381,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"empty denom out": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -395,12 +395,12 @@ func TestEstimatePrice(t *testing.T) {
 			},
 			expErr: true,
 		},
-		"null estimate price": {
-			estimatePrice: nil,
-			expErr:        true,
+		"null estimate swap": {
+			estimateSwap: nil,
+			expErr:       true,
 		},
 		"empty swap amount": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -413,7 +413,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"zero amount in": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -428,7 +428,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"zero amount out": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -443,7 +443,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"negative amount in": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -458,7 +458,7 @@ func TestEstimatePrice(t *testing.T) {
 			expErr: true,
 		},
 		"negative amount out": {
-			estimatePrice: &wasmbindings.EstimatePrice{
+			estimateSwap: &wasmbindings.EstimateSwap{
 				Contract: actor.String(),
 				First: wasmbindings.Swap{
 					PoolId:   starPool,
@@ -476,7 +476,7 @@ func TestEstimatePrice(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotCost, gotErr := queryPlugin.EstimatePrice(ctx, spec.estimatePrice)
+			gotCost, gotErr := queryPlugin.EstimateSwap(ctx, spec.estimateSwap)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)

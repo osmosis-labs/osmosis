@@ -59,25 +59,25 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *wasmbindings.Spot
 	return &price, nil
 }
 
-func (qp QueryPlugin) EstimatePrice(ctx sdk.Context, estimatePrice *wasmbindings.EstimatePrice) (*wasmbindings.SwapAmount, error) {
-	if estimatePrice == nil {
-		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate price null"}
+func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *wasmbindings.EstimateSwap) (*wasmbindings.SwapAmount, error) {
+	if estimateSwap == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap null"}
 	}
-	if err := sdk.ValidateDenom(estimatePrice.First.DenomIn); err != nil {
-		return nil, sdkerrors.Wrap(err, "gamm estimate price denom in")
+	if err := sdk.ValidateDenom(estimateSwap.First.DenomIn); err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate swap denom in")
 	}
-	if err := sdk.ValidateDenom(estimatePrice.First.DenomOut); err != nil {
-		return nil, sdkerrors.Wrap(err, "gamm estimate price denom out")
+	if err := sdk.ValidateDenom(estimateSwap.First.DenomOut); err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate swap denom out")
 	}
-	contractAddr, err := sdk.AccAddressFromBech32(estimatePrice.Contract)
+	contractAddr, err := sdk.AccAddressFromBech32(estimateSwap.Contract)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "gamm estimate price sender address")
+		return nil, sdkerrors.Wrap(err, "gamm estimate swap sender address")
 	}
 
-	if estimatePrice.Amount == (wasmbindings.SwapAmount{}) {
-		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate price empty swap"}
+	if estimateSwap.Amount == (wasmbindings.SwapAmount{}) {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap empty swap"}
 	}
 
-	estimate, err := PerformSwap(qp.gammKeeper, ctx, contractAddr, estimatePrice.ToSwapMsg())
+	estimate, err := PerformSwap(qp.gammKeeper, ctx, contractAddr, estimateSwap.ToSwapMsg())
 	return estimate, err
 }

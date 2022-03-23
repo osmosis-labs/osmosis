@@ -173,7 +173,7 @@ func TestQuerySpotPrice(t *testing.T) {
 	require.InEpsilonf(t, expected+swapFee, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
 }
 
-func TestQueryEstimatePrice(t *testing.T) {
+func TestQueryEstimateSwap(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 	epsilon := 1e-3
@@ -203,7 +203,7 @@ func TestQueryEstimatePrice(t *testing.T) {
 	// Query estimate cost (Exact in. No route)
 	amountIn := sdk.NewInt(10000)
 	query := wasmbindings.OsmosisQuery{
-		EstimatePrice: &wasmbindings.EstimatePrice{
+		EstimateSwap: &wasmbindings.EstimateSwap{
 			Contract: reflect.String(),
 			First: wasmbindings.Swap{
 				PoolId:   starPool,
@@ -232,7 +232,7 @@ func TestQueryEstimatePrice(t *testing.T) {
 	// Query estimate cost (Exact out. No route)
 	amountOut := sdk.NewInt(10000)
 	query = wasmbindings.OsmosisQuery{
-		EstimatePrice: &wasmbindings.EstimatePrice{
+		EstimateSwap: &wasmbindings.EstimateSwap{
 			Contract: reflect.String(),
 			First: wasmbindings.Swap{
 				PoolId:   starPool,

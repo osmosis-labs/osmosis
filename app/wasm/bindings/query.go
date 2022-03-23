@@ -18,7 +18,7 @@ type OsmosisQuery struct {
 	/// We will add TWAP for more robust price feed.
 	SpotPrice *SpotPrice `json:"spot_price,omitempty"`
 	/// Return current spot price swapping In for Out on given pool ID.
-	EstimatePrice *EstimatePrice `json:"estimate_price,omitempty"`
+	EstimateSwap *EstimateSwap `json:"estimate_swap,omitempty"`
 }
 
 type FullDenom struct {
@@ -35,14 +35,14 @@ type SpotPrice struct {
 	WithSwapFee bool `json:"with_swap_fee"`
 }
 
-type EstimatePrice struct {
+type EstimateSwap struct {
 	Contract string     `json:"contract"`
 	First    Swap       `json:"first"`
 	Route    []Step     `json:"route"`
 	Amount   SwapAmount `json:"amount"`
 }
 
-func (e *EstimatePrice) ToSwapMsg() *SwapMsg {
+func (e *EstimateSwap) ToSwapMsg() *SwapMsg {
 	return &SwapMsg{
 		First:  e.First,
 		Route:  e.Route,
