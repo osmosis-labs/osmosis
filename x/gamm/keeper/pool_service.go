@@ -31,7 +31,7 @@ func (k Keeper) CreateBalancerPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	BalancerPoolParams balancer.PoolParams,
-	poolAssets []types.PoolAsset,
+	poolAssets []balancer.PoolAsset,
 	futurePoolGovernor string,
 ) (uint64, error) {
 	if len(poolAssets) < types.MinPoolAssets {

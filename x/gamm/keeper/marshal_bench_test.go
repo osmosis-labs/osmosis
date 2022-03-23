@@ -9,17 +9,18 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-func genPoolAssets(r *rand.Rand) []gammtypes.PoolAsset {
+func genPoolAssets(r *rand.Rand) []balancertypes.PoolAsset {
 	denoms := []string{"IBC/0123456789ABCDEF012346789ABCDEF", "IBC/denom56789ABCDEF012346789ABCDEF"}
-	assets := []gammtypes.PoolAsset{}
+	assets := []balancertypes.PoolAsset{}
 	for _, denom := range denoms {
 		amt, _ := simtypes.RandPositiveInt(r, sdk.NewIntWithDecimal(1, 40))
 		reserveAmt := sdk.NewCoin(denom, amt)
 		weight := sdk.NewInt(r.Int63n(9) + 1)
-		assets = append(assets, gammtypes.PoolAsset{Token: reserveAmt, Weight: weight})
+		assets = append(assets, balancertypes.PoolAsset{Token: reserveAmt, Weight: weight})
 	}
 
 	return assets

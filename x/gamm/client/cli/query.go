@@ -31,7 +31,6 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShares(),
-		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
 		GetCmdQueryTotalLiquidity(),
 		GetCmdEstimateSwapExactAmountIn(),
@@ -302,48 +301,6 @@ $ %s query gamm total-liquidity
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.TotalLiquidity(cmd.Context(), &types.QueryTotalLiquidityRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdPoolAssets return pool-assets for a pool
-func GetCmdPoolAssets() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pool-assets <poolID>",
-		Short: "Query pool-assets",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query pool assets.
-Example:
-$ %s query gamm pool-assets 1
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.PoolAssets(cmd.Context(), &types.QueryPoolAssetsRequest{
-				PoolId: uint64(poolID),
-			})
 			if err != nil {
 				return err
 			}

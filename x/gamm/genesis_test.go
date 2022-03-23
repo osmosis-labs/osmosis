@@ -8,7 +8,6 @@ import (
 	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -22,7 +21,7 @@ import (
 // 	balancerPool, err := balancer.NewBalancerPool(1, balancer.PoolParams{
 // 		SwapFee: sdk.NewDecWithPrec(1, 2),
 // 		ExitFee: sdk.NewDecWithPrec(1, 2),
-// 	}, []types.PoolAsset{
+// 	}, []balancerbalancer.PoolAsset{
 // 		{
 // 			Weight: sdk.NewInt(1),
 // 			Token:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 10),
@@ -79,7 +78,7 @@ func TestGammExportGenesis(t *testing.T) {
 	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []types.PoolAsset{{
+	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}, {
@@ -91,7 +90,7 @@ func TestGammExportGenesis(t *testing.T) {
 	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []types.PoolAsset{{
+	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(70),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}, {
@@ -123,7 +122,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []types.PoolAsset{{
+	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}, {
