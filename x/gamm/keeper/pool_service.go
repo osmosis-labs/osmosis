@@ -196,7 +196,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 	tokensIn sdk.Coins,
 	shareOutMinAmount sdk.Int,
 ) (shareOutAmount sdk.Int, err error) {
-	pool, err := k.GetPoolForSwap(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -228,7 +228,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	shareOutAmount sdk.Int,
 	tokenInMaxAmount sdk.Int,
 ) (tokenInAmount sdk.Int, err error) {
-	pool, err := k.GetPoolForSwap(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
