@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
@@ -62,14 +63,6 @@ func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []typ
 		if poolExistsErr != nil {
 			continue
 		}
-		// _, assetExistsErr := pool.GetPoolAsset(asset[1])
-		// if assetExistsErr != nil {
-		// 	continue
-		// }
-		// _, osmoExistsErr := pool.GetPoolAsset("uosmo")
-		// if osmoExistsErr != nil {
-		// 	continue
-		// }
 
 		feeToken := types.FeeToken{
 			Denom:  asset[1],
@@ -78,5 +71,6 @@ func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []typ
 
 		feeTokens = append(feeTokens, feeToken)
 	}
+
 	return feeTokens
 }

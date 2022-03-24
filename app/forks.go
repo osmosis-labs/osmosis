@@ -2,6 +2,7 @@ package app
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	v3 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v3"
 	v6 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v6"
 )
@@ -11,8 +12,10 @@ func BeginBlockForks(ctx sdk.Context, app *OsmosisApp) {
 	switch ctx.BlockHeight() {
 	case v3.UpgradeHeight:
 		v3.RunForkLogic(ctx, app.GovKeeper, app.StakingKeeper)
+
 	case v6.UpgradeHeight:
 		v6.RunForkLogic(ctx)
+
 	default:
 		// do nothing
 		return

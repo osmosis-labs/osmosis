@@ -1,7 +1,6 @@
 package app
 
 import (
-	// Imports from the Go Standard Library.
 	"fmt"
 	"io"
 	"net/http"
@@ -9,24 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	// HTTP Router.
-	"github.com/gorilla/mux"
-
-	// Used to serve OpenAPI information.
-	"github.com/rakyll/statik/fs"
-
-	// A CLI helper.
-	"github.com/spf13/cast"
-
-	// Imports from Tendermint, Osmosis' consensus protocol.
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
-
-	// Utilities from the Cosmos-SDK other than Cosmos modules.
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -41,83 +23,36 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
-
-	// Cosmos-SDK Modules
-	// https://github.com/cosmos/cosmos-sdk/tree/master/x
-	// NB: Osmosis uses a fork of the cosmos-sdk which can be found at: https://github.com/osmosis-labs/cosmos-sdk
-
-	// Auth: Authentication of accounts and transactions for Cosmos SDK applications.
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-
-	// Capability: allows developers to atomically define what a module can and cannot do.
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
-	// Crisis: Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-
-	// Evidence handling for double signing, misbehaviour, etc.
-
-	// Params: Parameters that are always available.
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	// Upgrade:  Software upgrades handling and coordination.
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	// IBC Transfer: Defines the "transfer" IBC port.
 	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
-	// Osmosis application prarmeters.
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-
-	// Upgrades from earlier versions of Osmosis.
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
 	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-
-	// Superfluid: Allows users to stake gamm (bonded liquidity).
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-
-	// Wasm: Allows Osmosis to interact with web assembly smart contracts.
-	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 const appName = "OsmosisApp"
 
 var (
-	// If EnableSpecificWasmProposals is "", and this is "true", then enable all x/wasm proposals.
-	// If EnableSpecificWasmProposals is "", and this is not "true", then disable all x/wasm proposals.
-	WasmProposalsEnabled = "true"
-	// If set to non-empty string it must be comma-separated list of values that are all a subset
-	// of "EnableAllProposals" (takes precedence over WasmProposalsEnabled)
-	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
-	EnableSpecificWasmProposals = ""
-
-	// use this for clarity in argument list.
-	EmptyWasmOpts []wasm.Option
-)
-
-// GetWasmEnabledProposals parses the WasmProposalsEnabled / EnableSpecificWasmProposals values to
-// produce a list of enabled proposals to pass into wasmd app.
-func GetWasmEnabledProposals() []wasm.ProposalType {
-	if EnableSpecificWasmProposals == "" {
-		if WasmProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
-		}
-		return wasm.DisableAllProposals
-	}
-	chunks := strings.Split(EnableSpecificWasmProposals, ",")
-	proposals, err := wasm.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-	return proposals
-}
-
-var (
-	// DefaultNodeHome default home directories for the application daemon.
+	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
@@ -125,28 +60,63 @@ var (
 	// and genesis verification.
 	ModuleBasics = module.NewBasicManager(appModuleBasics...)
 
-	// module account permissions.
-	maccPerms = moduleAaccountPermissions
+	// module account permissions
+	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{}
+
+	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
+	// and EnableSpecificWasmProposals is empty. Otherwise, all x/wasm proposals
+	// are disabled.
+	WasmProposalsEnabled = "true"
+
+	// EnableSpecificWasmProposals, if set, must be comma-separated list of values
+	// that are all a subset of "EnableAllProposals", which takes precedence over
+	// WasmProposalsEnabled.
+	//
+	// See: https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
+	EnableSpecificWasmProposals = ""
+
+	// EmptyWasmOpts defines a type alias for a list of wasm options.
+	EmptyWasmOpts []wasm.Option
+
+	_ App = (*OsmosisApp)(nil)
 )
 
-var _ App = (*OsmosisApp)(nil)
+// GetWasmEnabledProposals parses the WasmProposalsEnabled and
+// EnableSpecificWasmProposals values to produce a list of enabled proposals to
+// pass into the application.
+func GetWasmEnabledProposals() []wasm.ProposalType {
+	if EnableSpecificWasmProposals == "" {
+		if WasmProposalsEnabled == "true" {
+			return wasm.EnableAllProposals
+		}
 
-// Osmosis extends an ABCI application, but with most of its parameters exported.
+		return wasm.DisableAllProposals
+	}
+
+	chunks := strings.Split(EnableSpecificWasmProposals, ",")
+
+	proposals, err := wasm.ConvertToProposals(chunks)
+	if err != nil {
+		panic(err)
+	}
+
+	return proposals
+}
+
+// OsmosisApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
 type OsmosisApp struct {
 	*baseapp.BaseApp
-
 	appKeepers
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
-
-	invCheckPeriod uint
+	invCheckPeriod    uint
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -154,14 +124,9 @@ type OsmosisApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	transferModule transfer.AppModule
-	// the module manager
-	mm *module.Manager
-
-	// simulation manager
-	sm *module.SimulationManager
-
-	// module migration manager
-	configurator module.Configurator
+	mm             *module.Manager
+	sm             *module.SimulationManager
+	configurator   module.Configurator
 }
 
 func init() {
@@ -324,9 +289,7 @@ func NewOsmosisApp(
 	return app
 }
 
-// MakeCodecs constructs the *std.Codec and *codec.LegacyAmino instances used by
-// simapp. It is useful for tests and clients who do not want to construct the
-// full simapp.
+// MakeCodecs returns the application codec and a legacy Amino codec.
 func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	config := MakeEncodingConfig()
 	return config.Marshaler, config.Amino
@@ -445,7 +408,8 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
-// RegisterTendermintService implements the Application.RegisterTendermintService method.
+// RegisterTendermintService implements the Application.RegisterTendermintService
+// method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
@@ -471,27 +435,41 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 	// this configures a no-op upgrade handler for the v4 upgrade,
 	// which improves the lockup module's store management.
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v4.UpgradeName, v4.CreateUpgradeHandler(
-			app.mm, app.configurator,
-			*app.BankKeeper, app.DistrKeeper, app.GAMMKeeper))
+		v4.UpgradeName,
+		v4.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
+			*app.BankKeeper,
+			app.DistrKeeper,
+			app.GAMMKeeper,
+		),
+	)
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v5.UpgradeName,
 		v5.CreateUpgradeHandler(
-			app.mm, app.configurator,
-			&app.IBCKeeper.ConnectionKeeper, app.TxFeesKeeper,
-			app.GAMMKeeper, app.StakingKeeper))
+			app.mm,
+			app.configurator,
+			&app.IBCKeeper.ConnectionKeeper,
+			app.TxFeesKeeper,
+			app.GAMMKeeper,
+			app.StakingKeeper,
+		),
+	)
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v7.UpgradeName,
 		v7.CreateUpgradeHandler(
-			app.mm, app.configurator,
+			app.mm,
+			app.configurator,
 			app.WasmKeeper,
 			app.SuperfluidKeeper,
 			app.EpochsKeeper,
 			app.LockupKeeper,
 			app.MintKeeper,
-			app.AccountKeeper))
+			app.AccountKeeper,
+		),
+	)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server.
@@ -512,5 +490,6 @@ func GetMaccPerms() map[string][]string {
 	for k, v := range maccPerms {
 		dupMaccPerms[k] = v
 	}
+
 	return dupMaccPerms
 }
