@@ -145,6 +145,22 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 	}
 }
 
+func (k Keeper) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPoolLiquidityRequest) (*types.QueryTotalPoolLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	pool, err := k.GetPool(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryTotalPoolLiquidityResponse{
+		Liquidity: pool.GetTotalPoolLiquidity(sdkCtx),
+	}, nil
+}
+
 func (k Keeper) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequest) (*types.QueryTotalSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

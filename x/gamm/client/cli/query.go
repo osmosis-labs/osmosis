@@ -235,6 +235,48 @@ $ %s query gamm pool-params 1
 	return cmd
 }
 
+// GetCmd return total share.
+func GetCmdTotalPoolLiquidity() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-pool-liquidity <poolID>",
+		Short: "Query total-pool-liquidity",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query total-pool-liquidity.
+Example:
+$ %s query gamm total-pool-liquidity 1
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			poolID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.TotalPoolLiquidity(cmd.Context(), &types.QueryTotalPoolLiquidityRequest{
+				PoolId: uint64(poolID),
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // GetCmdTotalShares return total share.
 func GetCmdTotalShares() *cobra.Command {
 	cmd := &cobra.Command{
