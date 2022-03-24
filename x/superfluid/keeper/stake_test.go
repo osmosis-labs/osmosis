@@ -884,7 +884,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			// refresh intermediary account delegations
 			suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
 
-			// check changes after refresh operation
+			// check if intermediary accounts does not have free balance after refresh operation
 			for _, intAccIndex := range tc.checkAccIndexes {
 				expAcc := intermediaryAccs[intAccIndex]
 				// check unbonded amount is removed after refresh operation
