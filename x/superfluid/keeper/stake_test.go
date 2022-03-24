@@ -796,9 +796,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			presupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
 
 			// refresh intermediary account delegations
-			suite.NotPanics(func() {
-				suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
-			})
+			suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
 
 			// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
 			postsupply := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
@@ -815,20 +813,20 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				}
 
 				// calculating the estimated delegation amount for multiplier change
-				targetDelegation := intermediaryDels[index].Mul(multiplier).Quo(originMultiplier)
+				expDelegation := intermediaryDels[index].Mul(multiplier).Quo(originMultiplier)
 				lpTokenAmount := sdk.NewInt(1000000)
 				decAmt := multiplier.Mul(lpTokenAmount.ToDec())
 				asset := suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, expAcc.Denom)
-				targetAmount := suite.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(suite.Ctx, asset, decAmt.RoundInt())
+				expAmount := suite.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(suite.Ctx, asset, decAmt.RoundInt())
 
 				valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
 				suite.Require().NoError(err)
 
 				// check delegation changes
 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
-				if targetAmount.IsPositive() {
+				if expAmount.IsPositive() {
 					suite.Require().True(found)
-					suite.Require().Equal(delegation.Shares, targetDelegation)
+					suite.Require().Equal(delegation.Shares, expDelegation)
 				} else {
 					suite.Require().False(found)
 				}
@@ -843,22 +841,20 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 					suite.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.Ctx, 3, denom, multiplier.price)
 				}
 				// refresh intermediary account delegations
-				suite.NotPanics(func() {
-					suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
-				})
+				suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
 
 				for index, intAccIndex := range tc.checkAccIndexes {
 					expAcc := intermediaryAccs[intAccIndex]
 					valAddr, err := sdk.ValAddressFromBech32(expAcc.ValAddr)
 					suite.Require().NoError(err)
 
-					targetDelegation := intermediaryDels[index].Mul(multiplier2ByDenom[expAcc.Denom]).Quo(originMultiplier)
+					expDelegation := intermediaryDels[index].Mul(multiplier2ByDenom[expAcc.Denom]).Quo(originMultiplier)
 
 					// check delegation changes
 					delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, expAcc.GetAccAddress(), valAddr)
 
 					suite.Require().True(found)
-					suite.Require().Equal(delegation.Shares, targetDelegation)
+					suite.Require().Equal(delegation.Shares, expDelegation)
 				}
 				return
 			}
@@ -886,9 +882,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			}
 
 			// refresh intermediary account delegations
-			suite.NotPanics(func() {
-				suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
-			})
+			suite.App.SuperfluidKeeper.RefreshIntermediaryDelegationAmounts(suite.Ctx)
 
 			// check changes after refresh operation
 			for _, intAccIndex := range tc.checkAccIndexes {
