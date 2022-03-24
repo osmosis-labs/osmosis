@@ -56,8 +56,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// run swap and set spot price
 			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolIds[0])
 			suite.Require().NoError(err)
-			poolAssets := pool.GetAllPoolAssets()
-			suite.SwapAndSetSpotPrice(poolIds[0], poolAssets[1], poolAssets[0])
+			coins := pool.GetTotalLpBalances(suite.Ctx)
+			suite.SwapAndSetSpotPrice(poolIds[0], coins[1], coins[0])
 
 			// run epoch actions
 			// run begin block for each validator so that both validator gets block rewards

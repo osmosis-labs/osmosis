@@ -10,7 +10,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// EpochInfos provide running epochInfos
+// EpochInfos provide running epochInfos.
 func (k Keeper) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -19,7 +19,7 @@ func (k Keeper) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) (
 	}, nil
 }
 
-// CurrentEpoch provides current epoch of specified identifier
+// CurrentEpoch provides current epoch of specified identifier.
 func (k Keeper) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochRequest) (*types.QueryCurrentEpochResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 

@@ -9,10 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-var ymlAssetTest = []types.PoolAsset{
+var ymlAssetTest = []PoolAsset{
 	{
 		Weight: sdk.NewInt(200),
 		Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -26,7 +25,7 @@ var ymlAssetTest = []types.PoolAsset{
 func TestPoolJson(t *testing.T) {
 	var poolId uint64 = 10
 
-	jsonAssetTest := []types.PoolAsset{
+	jsonAssetTest := []PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -69,7 +68,7 @@ func TestPoolProtoMarshal(t *testing.T) {
 	require.Equal(t, pool2.PoolParams.ExitFee, defaultExitFee)
 	require.Equal(t, pool2.FuturePoolGovernor, "")
 	require.Equal(t, pool2.TotalShares, sdk.Coin{Denom: "gamm/pool/10", Amount: sdk.ZeroInt()})
-	require.Equal(t, pool2.PoolAssets, []types.PoolAsset{
+	require.Equal(t, pool2.PoolAssets, []PoolAsset{
 		{
 			Token: sdk.Coin{
 				Denom:  "test1",

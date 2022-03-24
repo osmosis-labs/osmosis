@@ -1,4 +1,4 @@
-package types
+package balancer
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -65,7 +66,7 @@ func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
 	return assets_copy
 }
 
-// SortPoolAssetsByDenom sorts pool assets in place, by weight
+// SortPoolAssetsByDenom sorts pool assets in place, by weight.
 func SortPoolAssetsByDenom(assets []PoolAsset) {
 	sort.Slice(assets, func(i, j int) bool {
 		PoolAssetA := assets[i]
@@ -78,12 +79,12 @@ func SortPoolAssetsByDenom(assets []PoolAsset) {
 func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	// The pool must be swapping between at least two assets
 	if len(assets) < 2 {
-		return ErrTooFewPoolAssets
+		return types.ErrTooFewPoolAssets
 	}
 
 	// TODO: Add the limit of binding token to the pool params?
 	if len(assets) > 8 {
-		return sdkerrors.Wrapf(ErrTooManyPoolAssets, "%d", len(assets))
+		return sdkerrors.Wrapf(types.ErrTooManyPoolAssets, "%d", len(assets))
 	}
 
 	for _, asset := range assets {
@@ -99,11 +100,20 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	return nil
 }
 
-// PoolAssetsCoins returns all the coins corresponding to a slice of pool assets
+// PoolAssetsCoins returns all the coins corresponding to a slice of pool assets.
 func PoolAssetsCoins(assets []PoolAsset) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, asset := range assets {
 		coins = coins.Add(asset.Token)
 	}
 	return coins
+}
+
+func GetPoolAssetByDenom(assets []PoolAsset, denom string) (PoolAsset, bool) {
+	for _, asset := range assets {
+		if asset.Token.Denom == denom {
+			return asset, true
+		}
+	}
+	return PoolAsset{}, false
 }

@@ -20,9 +20,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-var (
-	sdkIntMaxValue = sdk.NewInt(0)
-)
+var sdkIntMaxValue = sdk.NewInt(0)
 
 func init() {
 	maxInt := big.NewInt(2)
@@ -95,7 +93,6 @@ func (k Keeper) Pools(
 		anys = append(anys, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -160,23 +157,9 @@ func (k Keeper) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequ
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QueryTotalSharesResponse{
-		TotalShares: pool.GetTotalShares(),
-	}, nil
-}
-
-func (k Keeper) PoolAssets(ctx context.Context, req *types.QueryPoolAssetsRequest) (*types.QueryPoolAssetsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	pool, err := k.GetPool(sdkCtx, req.PoolId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	return &types.QueryPoolAssetsResponse{
-		PoolAssets: pool.GetAllPoolAssets(),
+		TotalShares: sdk.NewCoin(
+			types.GetPoolShareDenom(req.PoolId),
+			pool.GetTotalShares()),
 	}, nil
 }
 
@@ -197,18 +180,14 @@ func (k Keeper) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	var sp sdk.Dec
-	var err error
-	if req.WithSwapFee {
-		sp, err = k.CalculateSpotPriceWithSwapFee(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-	} else {
-		sp, err = k.CalculateSpotPrice(sdkCtx, req.PoolId, req.TokenInDenom, req.TokenOutDenom)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
+	pool, err := k.GetPool(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	sp, err := pool.SpotPrice(sdkCtx, req.TokenInDenom, req.TokenOutDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),

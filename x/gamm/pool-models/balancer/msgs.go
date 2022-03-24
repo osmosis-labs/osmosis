@@ -16,13 +16,12 @@ var _ sdk.Msg = &MsgCreateBalancerPool{}
 func (msg MsgCreateBalancerPool) Route() string { return types.RouterKey }
 func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
 func (msg MsgCreateBalancerPool) ValidateBasic() error {
-
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	err = types.ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
+	err = ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
 	if err != nil {
 		return err
 	}
@@ -39,9 +38,11 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 
 	return nil
 }
+
 func (msg MsgCreateBalancerPool) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

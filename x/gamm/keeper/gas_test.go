@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	balanacertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) measureJoinPoolGas(
 	poolID uint64,
 	shareOutAmountMax sdk.Int, maxCoins sdk.Coins) uint64 {
 	alreadySpent := suite.ctx.GasMeter().GasConsumed()
-	err := suite.app.GAMMKeeper.JoinPool(suite.ctx, addr, poolID, shareOutAmountMax, maxCoins)
+	err := suite.app.GAMMKeeper.JoinPoolNoSwap(suite.ctx, addr, poolID, shareOutAmountMax, maxCoins)
 	suite.Require().NoError(err)
 	newSpent := suite.ctx.GasMeter().GasConsumed()
 	spentNow := newSpent - alreadySpent
@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.Assert().LessOrEqual(int(firstJoinGas), 100000)
 
 	for i := 1; i < startAveragingAt; i++ {
-		err := suite.app.GAMMKeeper.JoinPool(suite.ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
+		err := suite.app.GAMMKeeper.JoinPoolNoSwap(suite.ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, coins)
 	suite.Require().NoError(err)
 
-	defaultPoolParams := balanacertypes.PoolParams{
+	defaultPoolParams := balancertypes.PoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	}
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 		err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, defaultAddr, coins)
 		suite.Require().NoError(err)
 
-		poolAssets := []types.PoolAsset{
+		poolAssets := []balancertypes.PoolAsset{
 			{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(prevRandToken, sdk.NewInt(10)),
@@ -135,7 +135,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, initialPoolId, minShareOutAmount, defaultCoins)
 
 	for i := 2; i < denomNumber; i++ {
-		err := suite.app.GAMMKeeper.JoinPool(suite.ctx, defaultAddr, uint64(i), minShareOutAmount, sdk.Coins{})
+		err := suite.app.GAMMKeeper.JoinPoolNoSwap(suite.ctx, defaultAddr, uint64(i), minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 

@@ -96,10 +96,10 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	coins := suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee
-	poolAssets := []gammtypes.PoolAsset{}
+	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
-		poolAssets = append(poolAssets, gammtypes.PoolAsset{
+		poolAssets = append(poolAssets, balancer.PoolAsset{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin(denom, sdk.NewInt(1000000000000000000)),
 		})
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	denoms := []string{}
 	poolIds := []uint64{}
 	for _, pool := range pools {
-		denom := pool.GetTotalShares().Denom
+		denom := gammtypes.GetPoolShareDenom(pool.GetId())
 
 		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,

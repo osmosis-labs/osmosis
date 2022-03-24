@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,25 +42,26 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.Equal(lockableDurations[1], res.GaugeIdsWithDuration[1].Duration)
 	suite.Equal(lockableDurations[2], res.GaugeIdsWithDuration[2].Duration)
 
+	poolLpDenom := gammtypes.GetPoolShareDenom(pool.GetId())
 	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[0].GaugeId)
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
-	suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 	suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[1].GaugeId)
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
-	suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 	suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
 	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[2].GaugeId)
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
-	suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
+	suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 	suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 }
 

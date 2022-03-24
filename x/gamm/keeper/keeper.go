@@ -97,7 +97,7 @@ func (k *Keeper) createRemoveLiquidityEvent(ctx sdk.Context, sender sdk.AccAddre
 	})
 }
 
-// Set the gamm hooks
+// Set the gamm hooks.
 func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set gamm hooks twice")
