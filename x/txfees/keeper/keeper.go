@@ -17,19 +17,36 @@ type (
 		cdc      codec.Codec
 		storeKey sdk.StoreKey
 
+		accountKeeper    types.AccountKeeper
+		bankKeeper       types.BankKeeper
+		epochKeeper      types.EpochKeeper
+
 		spotPriceCalculator types.SpotPriceCalculator
+
+		feeCollectorName string
+		fooCollectorName string
 	}
 )
 
 func NewKeeper(
 	cdc codec.Codec,
+	accountKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	epochKeeper types.EpochKeeper,
 	storeKey sdk.StoreKey,
 	spotPriceCalculator types.SpotPriceCalculator,
+	feeCollectorName string,
+	fooCollectorName string,
 ) Keeper {
 	return Keeper{
 		cdc:                 cdc,
+		accountKeeper: accountKeeper,
+		bankKeeper: bankKeeper,
+		epochKeeper: epochKeeper,
 		storeKey:            storeKey,
 		spotPriceCalculator: spotPriceCalculator,
+		feeCollectorName: feeCollectorName,
+		fooCollectorName: fooCollectorName,
 	}
 }
 

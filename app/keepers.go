@@ -345,6 +345,8 @@ func (app *OsmosisApp) InitNormalKeepers(
 	)
 	app.MintKeeper = &mintKeeper
 
+	
+
 	poolIncentivesKeeper := poolincentiveskeeper.NewKeeper(
 		appCodec,
 		keys[poolincentivestypes.StoreKey],
@@ -358,6 +360,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 	)
 	app.PoolIncentivesKeeper = &poolIncentivesKeeper
 
+	// TO DO: update txfees keeper here (very similar to mintkeeper above)
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appCodec,
 		keys[txfeestypes.StoreKey],
@@ -465,6 +468,7 @@ func (app *OsmosisApp) SetupHooks() {
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
+			// TO DO: add TxFeesKeeper.Hooks() for auto fee swaps
 			app.SuperfluidKeeper.Hooks(),
 			app.IncentivesKeeper.Hooks(),
 			app.MintKeeper.Hooks(),

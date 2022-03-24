@@ -1,11 +1,15 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
@@ -118,4 +122,141 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
 	return cfgMinGasPrice
+}
+
+// DeductFeeDecorator deducts fees from the first signer of the tx
+// If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
+// Call next AnteHandler if fees successfully deducted
+// CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
+type DeductFeeDecorator struct {
+	ak             types.AccountKeeper
+	bankKeeper     types.BankKeeper
+	feegrantKeeper types.FeegrantKeeper
+	txFeesKeeper   Keeper
+}
+
+func NewDeductFeeDecorator(tk Keeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper) DeductFeeDecorator {
+	return DeductFeeDecorator{
+		ak:             ak,
+		bankKeeper:     bk,
+		feegrantKeeper: fk,
+		txFeesKeeper: tk,
+	}
+}
+
+func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	
+	// checks to make sure feeTx is of the right type
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	// checks to make sure the module account has been set to collect fees in OSMO
+	// TO DO: add a second module account to send non-OSMO txn fees to for auto fees swaps
+	// Note: if we do add a second module account, we might need to update the baseapp account keeper
+	// 		 since that's what's passed into this function in ante.go
+	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
+		return ctx, fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
+	}
+
+	// checks to make sure a separate module account has been set to collect fees not in OSMO
+	if addrFoo := dfd.ak.GetModuleAddress(types.FooCollectorName); addrFoo == nil {
+		return ctx, fmt.Errorf("Foo collector module account (%s) has not been set", types.FooCollectorName)
+	}
+
+	// fee can be in any denom (checked for validity later)
+	fee := feeTx.GetFee()
+	feePayer := feeTx.FeePayer()
+	feeGranter := feeTx.FeeGranter()
+
+	// set the fee payer as the default address to deduct fees from
+	deductFeesFrom := feePayer
+
+	// if feegranter set deduct fee from feegranter account.
+	// this works with only when feegrant enabled.
+	if feeGranter != nil {
+		if dfd.feegrantKeeper == nil {
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+		} else if !feeGranter.Equals(feePayer) {
+			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
+
+			if err != nil {
+				return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+			}
+		}
+
+		// if no errors, change the account that is charged for fees to the fee granter
+		deductFeesFrom = feeGranter
+	}
+
+	// pulls account from address and makes sure it exists
+	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
+	if deductFeesFromAcc == nil {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+	}
+
+	// deducts the fees and transfer them to the module account
+	if !feeTx.GetFee().IsZero() {
+		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee())
+		if err != nil {
+			return ctx, err
+		}
+	} // no additional action/else statment needed if the fee is zero since zero-gas transactions are allowed
+
+	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
+		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
+	)}
+	ctx.EventManager().EmitEvents(events)
+
+	return next(ctx, tx, simulate)
+}
+
+// DeductFees deducts fees from the given account and transfers them to the set module account
+func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
+
+	// Checks the validity of the fee tokens (i.e. that the coins are sorted, have positive amount, with a
+	// valid and unique denomination (no duplicates))
+	if !fees.IsValid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
+	}
+
+	// for _, coin := range coins {
+	// 	// send coin
+	// 	}
+	// wrap rest in this for loop to iterate through fees (sdk.Coins type)
+	// UPDATE: not necessary since mempoolFeeDecorator makes sure one one fee token is paid per tx
+	
+	// pulls base denom from TxFeesKeeper (should be uOSMO)
+	baseDenom, err := txFeesKeeper.GetBaseDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	// checks if input fee is uOSMO - if so, sends fee directly to fee collector module account to be distributed in the next block by the staking module
+	// NOTE: assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator)
+	if fees[0].Denom == baseDenom {
+		// sends to FeeCollectorName module account
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		}
+	} else {
+		// NOTE: fee token whitelist is already checked in mempoolFeeDecorator
+
+		// sends to FooCollectorName module account
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FooCollectorName, fees)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		}
+	}
+
+	// TO DO (auto fee swaps): Else, 
+	// 1. add a check to make sure the non-OSMO fee denoms are supported on the DEX with sufficient liquidity (small arbitrary threshold)
+	// 2. run the same transfer logic as above but send tokens to a separate module account where they will be swapped into OSMO once per epoch & sent to first one using SendCoinsFromModuleToModule
+
+	// TO DO (auto fee swaps): Logic for auto swap once per epoch from the second module account (this might belong elsewhere)
+	// requires hook in txfees module
+
+	return nil
 }

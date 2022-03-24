@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -12,13 +13,15 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/app"
+	appparams "github.com/osmosis-labs/osmosis/app/params"
+	"github.com/osmosis-labs/osmosis/osmotestutils"
+	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
+	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -170,7 +173,7 @@ Example:
 			}
 			selectBondedPoolIDs := []uint64{}
 			if selectPoolIdsStr != "" {
-				selectBondedPoolIDs, err = osmoutils.ParseUint64SliceFromString(selectPoolIdsStr, ",")
+				selectBondedPoolIDs, err = osmotestutils.ParseUint64SliceFromString(selectPoolIdsStr, ",")
 				if err != nil {
 					return err
 				}
@@ -313,6 +316,29 @@ Example:
 					Add(account.Bonded...).
 					Add(account.UnclaimedAirdrop...)
 				snapshotAccs[addr] = account
+			}
+
+			app := app.Setup(false)
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now().UTC()})
+
+			// scaffolding for map creation:
+			// accountsMap := make(map[string]authtypes.GenesisAccount)
+
+			// Remove module accounts from snapshots
+			for addr, account := range snapshotAccs {
+
+				// TO DO: change the addr -> account function to a map to genesis accounts using the sanitized gen accs generated above
+				accAddr, err := sdk.AccAddressFromBech32(account.Address)
+				if err != nil {
+					return err
+				}
+				acc := app.AccountKeeper.GetAccount(ctx, accAddr)
+
+				if _, ok := acc.(*authtypes.ModuleAccount); ok {
+					//Else, remove account from list - how do we remove an item from a map in go?
+					//ASSUMING THAT "addr" IS THE KEY
+					delete(snapshotAccs, addr)
+				}
 			}
 
 			snapshot := DeriveSnapshot{
