@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// run epoch actions
 			// run begin block for each validator so that both validator gets block rewards
 			for _, valAddr := range valAddrs {
-				suite.BeginNewBlock(true, valAddr)
+				suite.BeginNewBlockWithProposer(true, valAddr)
 			}
 
 			// check lptoken twap value set
