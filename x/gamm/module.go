@@ -113,7 +113,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 
 // RegisterInvariants registers the gamm module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper, am.bk)
+	// keeper.RegisterInvariants(ir, am.keeper, am.bk)
 }
 
 // Route returns the message routing key for the gamm module.
