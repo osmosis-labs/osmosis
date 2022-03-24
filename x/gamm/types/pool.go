@@ -23,7 +23,7 @@ type PoolI interface {
 	NumAssets() int
 	IsActive(curBlockTime time.Time) bool
 	// Returns the coins in the pool owned by all LP shareholders
-	GetTotalLpBalances(ctx sdk.Context) sdk.Coins
+	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
 	// TODO: Add ctx here
 	GetTotalShares() sdk.Int
 

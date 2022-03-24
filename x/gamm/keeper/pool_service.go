@@ -171,7 +171,7 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount 
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 
-	poolLiquidity := pool.GetTotalLpBalances(ctx)
+	poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
 	neededLpLiquidity = sdk.Coins{}
 
 	for _, coin := range poolLiquidity {

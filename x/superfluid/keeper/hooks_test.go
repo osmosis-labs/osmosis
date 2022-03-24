@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// run swap and set spot price
 			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolIds[0])
 			suite.Require().NoError(err)
-			coins := pool.GetTotalLpBalances(suite.Ctx)
+			coins := pool.GetTotalPoolLiquidity(suite.Ctx)
 			suite.SwapAndSetSpotPrice(poolIds[0], coins[1], coins[0])
 
 			// run epoch actions

@@ -109,7 +109,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 
 		// get OSMO amount
 		bondDenom := k.sk.BondDenom(ctx)
-		osmoPoolAsset := pool.GetTotalLpBalances(ctx).AmountOf(bondDenom)
+		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
 		if osmoPoolAsset.IsZero() {
 			// Pool has unexpectedly removed Osmo from its assets.
 			k.Logger(ctx).Error(err.Error())
