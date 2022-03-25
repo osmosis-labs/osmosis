@@ -32,7 +32,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		} else {
 		
 			// TO DO: figure out how to cast this or get the pool ID for the main OSMO paired pool
-			feetoken := txfeestypes.FeeToken(coin)
+			feetoken, _ := k.GetFeeToken(ctx, coin.Denom)
 
 			// calculate spot price to determine minimum out for swap
 			// question: is the order of input denom and output denom correct?
@@ -42,7 +42,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 			// swap into OSMO
 			// question: is spotPrice really the minimum out for the swap?
-			k.gammKeeper.SwapExactAmountIn(ctx, addrFoo, feetoken.GetPoolId(), coin, baseDenom, placeholderMinimum)
+			k.gammKeeper.SwapExactAmountIn(ctx, addrFoo, feetoken.PoolID, coin, baseDenom, placeholderMinimum)
 		}
 	}
 
