@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
@@ -18,7 +20,7 @@ type (
 		storeKey sdk.StoreKey
 
 		accountKeeper    types.AccountKeeper
-		bankKeeper       types.BankKeeper
+		bankKeeper       *bankkeeper.BaseKeeper
 		epochKeeper      types.EpochKeeper
 
 		spotPriceCalculator types.SpotPriceCalculator
@@ -31,7 +33,7 @@ type (
 func NewKeeper(
 	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper,
+	bankKeeper *bankkeeper.BaseKeeper,
 	epochKeeper types.EpochKeeper,
 	storeKey sdk.StoreKey,
 	spotPriceCalculator types.SpotPriceCalculator,
