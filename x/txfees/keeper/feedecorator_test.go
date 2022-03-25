@@ -31,6 +31,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		gasRequested uint64
 		isCheckTx    bool
 		expectPass   bool
+		baseDenomGas bool
 	}{
 		{
 			name:         "no min gas price - checktx",
@@ -39,6 +40,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   true,
+			baseDenomGas: true,
 		},
 		{
 			name:         "no min gas price - delivertx",
@@ -47,6 +49,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    false,
 			expectPass:   true,
+			baseDenomGas: true,
 		},
 		{
 			name:  "works with valid basedenom fee",
@@ -56,6 +59,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   true,
+			baseDenomGas: true,
 		},
 		{
 			name:  "doesn't work with not enough fee in checktx",
@@ -65,6 +69,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   false,
+			baseDenomGas: true,
 		},
 		{
 			name:  "works with not enough fee in delivertx",
@@ -74,6 +79,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    false,
 			expectPass:   true,
+			baseDenomGas: true,
 		},
 		{
 			name:  "works with valid converted fee",
@@ -83,6 +89,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   true,
+			baseDenomGas: false,
 		},
 		{
 			name:  "doesn't work with not enough converted fee in checktx",
@@ -92,6 +99,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   false,
+			baseDenomGas: false,
 		},
 		{
 			name:  "works with not enough converted fee in delivertx",
@@ -101,6 +109,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    false,
 			expectPass:   true,
+			baseDenomGas: false,
 		},
 		{
 			name:         "multiple fee coins - checktx",
@@ -109,6 +118,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   false,
+			baseDenomGas: false,
 		},
 		{
 			name:         "multiple fee coins - delivertx",
@@ -117,6 +127,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    false,
 			expectPass:   false,
+			baseDenomGas: false,
 		},
 		{
 			name:         "invalid fee denom",
@@ -125,6 +136,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    false,
 			expectPass:   false,
+			baseDenomGas: false,
 		},
 		{
 			name:         "mingasprice not containing basedenom gets treated as min gas price 0",
@@ -133,6 +145,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   true,
+			baseDenomGas: false,
 		},
 		{
 			name:         "tx with gas wanted more than allowed should not pass",
@@ -141,6 +154,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: mempoolFeeOpts.MaxGasWantedPerTx + 1,
 			isCheckTx:    true,
 			expectPass:   false,
+			baseDenomGas: false,
 		},
 		{
 			name:         "tx with high gas and not enough fee should no pass",
@@ -149,6 +163,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
 			expectPass:   false,
+			baseDenomGas: false,
 		},
 		{
 			name:         "tx with high gas and enough fee should pass",
@@ -157,6 +172,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
 			expectPass:   true,
+			baseDenomGas: false,
 		},
 	}
 
@@ -171,12 +187,35 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		), []legacytx.StdSignature{}, "")
 
 		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper, mempoolFeeOpts)
-		antehandler := sdk.ChainAnteDecorators(mfd)
-		_, err := antehandler(suite.ctx, tx, false)
+		antehandlerMFD := sdk.ChainAnteDecorators(mfd)
+		_, err := antehandlerMFD(suite.ctx, tx, false)
 		if tc.expectPass {
 			suite.Require().NoError(err, "test: %s", tc.name)
 		} else {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
+
+		/* DeductFeeDecorator tests:
+
+		// Does FeeGrantKeeper need to be added to the TxFeesKeeper struct?
+
+			dfd := keeper.NewDeductFeeDecorator(*suite.app.TxFeesKeeper, *suite.app.TxFeesKeeper.accountKeeper, *suite.app.TxFeesKeeper.bankKeeper, *suite.app.TxFeesKeeper.feegrantKeeper)
+		antehandlerDFD := sdk.ChainAnteDecorators(dfd)
+		_, err = antehandlerDFD(suite.ctx, tx, false)
+		if tc.expectPass {
+			if tc.baseDenomGas {
+				// check main module account osmo balance & require no non-OSMO
+				// also require that the balance of the second module account (just get AllBalances) has not changed (suite.Require().Equalf(123, 123, "error message %s", "formatted"))
+			} else {
+				// check second module account to make sure the right fee amount has flowed there
+				// also require that the balance of the main module account (just get AllBalances) has not changed (suite.Require().Equalf(123, 123, "error message %s", "formatted"))
+			}
+			suite.Require().NoError(err, "test: %s", tc.name)
+		} else {
+			suite.Require().Error(err, "test: %s", tc.name)
+		}
+
+		*/
+
 	}
 }
