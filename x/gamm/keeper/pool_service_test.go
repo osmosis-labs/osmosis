@@ -55,9 +55,11 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		suite.Require().Error(err)
 	}()
 
-	// TODO: Refactor this to be more sensible / just create the message
-	// Well structured message, attempt message creation, see if success or not.
-	// Should also really go in balancer package.
+	// TODO: Refactor this to be more sensible.
+	// The struct should contain a MsgCreateBalancerPool.
+	// then the scaffolding should test pool creation, and check if it was a success or not.
+	// (And should be moved to balancer package)
+	// PoolCreationFee tests should get their own isolated test in this package.
 	tests := []struct {
 		fn func()
 	}{{

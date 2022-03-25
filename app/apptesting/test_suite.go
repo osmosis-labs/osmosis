@@ -152,6 +152,8 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 		keeperTestHelper.NoError(err)
 
 		var (
+			defaultFutureGovernor = ""
+
 			// pool assets
 			defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),

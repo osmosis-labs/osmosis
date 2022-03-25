@@ -65,7 +65,8 @@ func (msg MsgCreateBalancerPool) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
-// Implement the CreatePoolMsg interface
+/// Implement the CreatePoolMsg interface
+
 func (msg MsgCreateBalancerPool) PoolCreator() sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

@@ -54,22 +54,22 @@ func (k Keeper) validateCreatedPool(
 	poolId uint64,
 	pool types.PoolI) error {
 	if pool.GetId() != poolId {
-		return sdkerrors.Wrapf(types.ErrAlreadyInvalidPool,
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")
 	}
 	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
-		return sdkerrors.Wrapf(types.ErrAlreadyInvalidPool,
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
 	}
 	// Notably we use the initial pool liquidity at the start of the messages definition
 	// just in case CreatePool was mutative.
 	if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
-		return sdkerrors.Wrapf(types.ErrAlreadyInvalidPool,
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
 	}
 	// This check can be removed later, and replaced with a minimum.
 	if !pool.GetTotalShares().Equal(types.InitPoolSharesSupply) {
-		return sdkerrors.Wrapf(types.ErrAlreadyInvalidPool,
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect number of initial shares.")
 	}
 	acc := k.accountKeeper.GetAccount(ctx, pool.GetAddress())
