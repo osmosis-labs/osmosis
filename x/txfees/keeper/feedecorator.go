@@ -153,9 +153,6 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	// checks to make sure the module account has been set to collect fees in OSMO
-	// TO DO: add a second module account to send non-OSMO txn fees to for auto fees swaps
-	// Note: if we do add a second module account, we might need to update the baseapp account keeper
-	// 		 since that's what's passed into this function in ante.go
 	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
 		return ctx, fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
@@ -215,17 +212,10 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 // DeductFees deducts fees from the given account and transfers them to the set module account
 func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
 
-	// Checks the validity of the fee tokens (i.e. that the coins are sorted, have positive amount, with a
-	// valid and unique denomination (no duplicates))
+	// Checks the validity of the fee tokens (sorted, have positive amount, valid and unique denomination)
 	if !fees.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
-
-	// for _, coin := range coins {
-	// 	// send coin
-	// 	}
-	// wrap rest in this for loop to iterate through fees (sdk.Coins type)
-	// UPDATE: not necessary since mempoolFeeDecorator makes sure one one fee token is paid per tx
 	
 	// pulls base denom from TxFeesKeeper (should be uOSMO)
 	baseDenom, err := txFeesKeeper.GetBaseDenom(ctx)
@@ -233,16 +223,15 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 		return err
 	}
 
-	// checks if input fee is uOSMO - if so, sends fee directly to fee collector module account to be distributed in the next block by the staking module
-	// NOTE: assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator)
+	// checks if input fee is uOSMO (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
 	if fees[0].Denom == baseDenom {
+		
 		// sends to FeeCollectorName module account
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	} else {
-		// NOTE: fee token whitelist is already checked in mempoolFeeDecorator
 
 		// sends to FooCollectorName module account
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FooCollectorName, fees)
@@ -250,13 +239,6 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
-
-	// TO DO (auto fee swaps): Else, 
-	// 1. add a check to make sure the non-OSMO fee denoms are supported on the DEX with sufficient liquidity (small arbitrary threshold)
-	// 2. run the same transfer logic as above but send tokens to a separate module account where they will be swapped into OSMO once per epoch & sent to first one using SendCoinsFromModuleToModule
-
-	// TO DO (auto fee swaps): Logic for auto swap once per epoch from the second module account (this might belong elsewhere)
-	// requires hook in txfees module
 
 	return nil
 }
