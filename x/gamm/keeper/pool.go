@@ -49,7 +49,7 @@ func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, err
 	}
 
 	if !pool.IsActive(ctx.BlockTime()) {
-		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "join swap on inactive pool")
+		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
 	}
 	return pool, nil
 }
