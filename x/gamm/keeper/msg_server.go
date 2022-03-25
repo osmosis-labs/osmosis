@@ -32,16 +32,16 @@ var (
 )
 
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
+}
+
+func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	poolId, err = server.keeper.CreatePool(ctx, msg)
 	if err != nil {
-		return nil, err
-	}
-
-	poolId, err := server.keeper.CreateBalancerPool(ctx, sender, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
-	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -52,11 +52,11 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
 		),
 	})
 
-	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, nil
+	return poolId, nil
 }
 
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {

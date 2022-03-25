@@ -110,11 +110,11 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, coins)
 	suite.Require().NoError(err)
 
-	poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(
-		suite.Ctx, acc1, balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, poolAssets, "")
+	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
+	}, poolAssets, "")
+	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 	suite.Require().NoError(err)
 
 	return poolId
