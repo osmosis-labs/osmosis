@@ -24,6 +24,9 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 	}
 
 	spotPrice, err := k.CalcFeeSpotPrice(ctx, feeToken.Denom)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
 
 	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).Ceil().RoundInt()), nil
 }
