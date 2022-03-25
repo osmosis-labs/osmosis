@@ -21,6 +21,27 @@ func (k Keeper) FeeTokens(ctx context.Context, _ *types.QueryFeeTokensRequest) (
 	return &types.QueryFeeTokensResponse{FeeTokens: feeTokens}, nil
 }
 
+func (k Keeper) TxFeesByDenom(ctx context.Context, req *types.QueryTxFeesByDenomRequest) (*types.QueryTxFeesByDenomResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	baseDenom, err := k.GetBaseDenom(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	spotPrice, err := k.CalcFeeSpotPrice(sdkCtx, req.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	feeToken, err := k.GetFeeToken(sdkCtx, req.GetDenom())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTxFeesByDenomResponse{PoolID: feeToken.PoolID, BaseDenom: baseDenom, SpotPrice: spotPrice}, nil
+}
+
 func (k Keeper) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

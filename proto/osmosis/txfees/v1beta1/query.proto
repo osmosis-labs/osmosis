@@ -17,6 +17,12 @@ service Query {
     option (google.api.http).get = "/osmosis/txfees/v1beta1/fee_tokens";
   }
 
+  rpc TxFeesByDenom(QueryTxFeesByDenomRequest)
+      returns (QueryTxFeesByDenomResponse) {
+    option (google.api.http).get =
+        "/osmosis/txfees/v1beta1/tx_fees_by_denom/{denom}";
+  }
+
   rpc DenomPoolId(QueryDenomPoolIdRequest) returns (QueryDenomPoolIdResponse) {
     option (google.api.http).get =
         "/osmosis/txfees/v1beta1/denom_pool_id/{denom}";
@@ -29,9 +35,21 @@ service Query {
 
 message QueryFeeTokensRequest {}
 message QueryFeeTokensResponse {
-
   repeated FeeToken fee_tokens = 1 [
     (gogoproto.moretags) = "yaml:\"fee_tokens\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryTxFeesByDenomRequest {
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+}
+message QueryTxFeesByDenomResponse {
+  uint64 poolID = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string base_denom = 2 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
+  string spot_price = 3 [
+    (gogoproto.moretags) = "yaml:\"spot_price\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
 }
