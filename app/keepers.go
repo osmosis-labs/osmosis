@@ -360,11 +360,16 @@ func (app *OsmosisApp) InitNormalKeepers(
 	)
 	app.PoolIncentivesKeeper = &poolIncentivesKeeper
 
-	// TO DO: update txfees keeper here (very similar to mintkeeper above)
+	// Note: gammKeeper is expected to satisfy the SpotPriceCalculator interface parameter
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appCodec,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.EpochsKeeper,
 		keys[txfeestypes.StoreKey],
-		app.GAMMKeeper,
+		gammKeeper,
+		txfeestypes.FeeCollectorName,
+		txfeestypes.FooCollectorName,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 
