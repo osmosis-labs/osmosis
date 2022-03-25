@@ -17,20 +17,31 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
-	if tokenIn.Denom == tokenOutDenom {
-		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
-	}
-	tokensIn := sdk.Coins{tokenIn}
-
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 	swapFee := pool.GetSwapFee(ctx)
+	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+}
 
-	if !pool.IsActive(ctx.BlockTime()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
+// swapExactAmountIn is an internal method for swapping an exact amount of tokens as input to a pool,
+// using the provided swapFee.
+// This is intended to allow different swap fees as determined by multi-hops,
+// or when recovering from chain liveness failures.
+func (k Keeper) swapExactAmountIn(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	pool types.PoolI,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount sdk.Int,
+	swapFee sdk.Dec,
+) (tokenOutAmount sdk.Int, err error) {
+	if tokenIn.Denom == tokenOutDenom {
+		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
+	tokensIn := sdk.Coins{tokenIn}
 
 	tokenOutDecCoin, err := pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
@@ -62,18 +73,29 @@ func (k Keeper) SwapExactAmountOut(
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	if tokenInDenom == tokenOut.Denom {
-		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
-	}
-
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 	swapFee := pool.GetSwapFee(ctx)
+	return k.swapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+}
 
-	if !pool.IsActive(ctx.BlockTime()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
+// swapExactAmountIn is an internal method for swapping to get an exact number of tokens out of a pool,
+// using the provided swapFee.
+// This is intended to allow different swap fees as determined by multi-hops,
+// or when recovering from chain liveness failures.
+func (k Keeper) swapExactAmountOut(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	pool types.PoolI,
+	tokenInDenom string,
+	tokenInMaxAmount sdk.Int,
+	tokenOut sdk.Coin,
+	swapFee sdk.Dec,
+) (tokenInAmount sdk.Int, err error) {
+	if tokenInDenom == tokenOut.Denom {
+		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
 
 	poolOutBal := pool.GetTotalLpBalances(ctx).AmountOf(tokenOut.Denom)
