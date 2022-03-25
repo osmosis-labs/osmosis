@@ -56,6 +56,9 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	// Staking: Allows the Tendermint validator set to be chosen based on bonded stake.
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+
 	// Upgrade:  Software upgrades handling and coordination.
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -158,6 +161,7 @@ type appKeepers struct {
 	MintKeeper           *mintkeeper.Keeper
 	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
 	TxFeesKeeper         *txfeeskeeper.Keeper
+	FeeGrantKeeper 		 *feegrantkeeper.Keeper
 	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
@@ -365,12 +369,20 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.BankKeeper,
 		app.EpochsKeeper,
 		keys[txfeestypes.StoreKey],
-		gammKeeper,
-		gammKeeper,
+		app.GAMMKeeper,
+		app.GAMMKeeper,
 		txfeestypes.FeeCollectorName,
 		txfeestypes.FooCollectorName,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
+
+	// Note: gammKeeper is expected to satisfy the SpotPriceCalculator interface parameter
+	feeGrantKeeper := feegrantkeeper.NewKeeper(
+		appCodec,
+		keys[txfeestypes.StoreKey],
+		app.AccountKeeper,
+	)
+	app.FeeGrantKeeper = &feeGrantKeeper
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks

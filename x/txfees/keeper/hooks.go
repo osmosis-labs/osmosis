@@ -34,19 +34,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// TO DO: figure out how to cast this or get the pool ID for the main OSMO paired pool
 			feetoken, _ := k.GetFeeToken(ctx, coin.Denom)
 
-			// calculate spot price to determine minimum out for swap
-			// question: is the order of input denom and output denom correct?
-			// spotPrice, _ := k.spotPriceCalculator.CalculateSpotPrice(ctx, feetoken.GetPoolID(), coin.Denom, baseDenom)
-
-			placeholderMinimum := sdk.OneInt()
-
 			// swap into OSMO
 			// question: is spotPrice really the minimum out for the swap?
-			k.gammKeeper.SwapExactAmountIn(ctx, addrFoo, feetoken.PoolID, coin, baseDenom, placeholderMinimum)
+			k.gammKeeper.SwapExactAmountIn(ctx, addrFoo, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
 		}
 	}
-
-	// PLACEHOLDER – addrFee := k.accountKeeper.GetModuleAddress(txfeestypes.FeeCollectorName)
 
 	// Potential error to test for: do swaps to OSMO consolidate into a single denom in fooAccountBalances? Should be yes but keep an eye out
 
@@ -71,8 +63,8 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // epochs hooks
+// Don't do anything pre epoch start
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
 func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {

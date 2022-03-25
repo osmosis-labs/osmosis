@@ -12,6 +12,22 @@ import (
 func (suite *KeeperTestSuite) TestFeeDecorator() {
 	suite.SetupTest(false)
 
+	/*
+	// Note: gammKeeper is expected to satisfy the SpotPriceCalculator interface parameter
+	txFeesKeeper := txfeeskeeper.NewKeeper(
+		appCodec,
+		suite.app.AccountKeeper,
+		suite.app.BankKeeper,
+		suite.app.EpochsKeeper,
+		keys[txfeestypes.StoreKey],
+		app.GAMMKeeper,
+		app.GAMMKeeper,
+		txfeestypes.FeeCollectorName,
+		txfeestypes.FooCollectorName,
+	)
+	app.TxFeesKeeper = &txFeesKeeper
+	*/
+
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
 	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
@@ -195,11 +211,11 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
 
-		/* DeductFeeDecorator tests:
+		// DeductFeeDecorator tests:
 
 		// Does FeeGrantKeeper need to be added to the TxFeesKeeper struct?
 
-			dfd := keeper.NewDeductFeeDecorator(*suite.app.TxFeesKeeper, *suite.app.TxFeesKeeper.accountKeeper, *suite.app.TxFeesKeeper.bankKeeper, *suite.app.TxFeesKeeper.feegrantKeeper)
+		dfd := keeper.NewDeductFeeDecorator(*suite.app.TxFeesKeeper, *suite.app.AccountKeeper, *suite.app.BankKeeper, *suite.app.FeeGrantKeeper)
 		antehandlerDFD := sdk.ChainAnteDecorators(dfd)
 		_, err = antehandlerDFD(suite.ctx, tx, false)
 		if tc.expectPass {
@@ -214,8 +230,5 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		} else {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
-
-		*/
-
 	}
 }
