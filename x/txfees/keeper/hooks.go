@@ -6,7 +6,7 @@ import (
 	// "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	// "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
@@ -14,19 +14,37 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	
-	addrFoo := k.accountKeeper.GetModuleAddress(k.fooCollectorName);
 
-	accFoo := k.accountKeeper.GetAccount(ctx, addrFoo);
+	// get module addres for FooCollectorName
+	addrFoo := k.accountKeeper.GetModuleAddress(txfeestypes.FooCollectorName)
 
-	// loop
-	//     if OSMO, continue
-	//     otherwise, swap to OSMO and transfer to fee module account (SendModuleToModule)
+	// get balances for all denoms in the module account
+	fooAccountBalances := k.bankKeeper.GetAllBalances(ctx, addrFoo)
 
-	for coins := range [where?] {
-		// how do i get the coins array in an account?
+	// pulls base denom from TxFeesKeeper (should be uOSMO)
+	baseDenom, _ := k.GetBaseDenom(ctx)
+
+	// iterate through the resulting array and swap each denom into OSMO using the GAMM module
+	for _, coin := range fooAccountBalances {
+
+		if coin.Denom == baseDenom {
+			continue
+		} else {
+			// swap into OSMO
+
+			// idea: createSwapEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) 
+			// 		in x/gamm/keeper/keeper.go
+		}
 	}
 
+	// PLACEHOLDER – addrFee := k.accountKeeper.GetModuleAddress(txfeestypes.FeeCollectorName)
+
+	// Potential error to test for: do swaps to OSMO consolidate into a single denom in fooAccountBalances? Should be yes but keep an eye out
+
+	// send all OSMO to fee module account to be distributed in the next block
+	k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.FooCollectorName, txfeestypes.FeeCollectorName, fooAccountBalances)
+
+	// Should events be emitted at the end here?
 }
 
 // ___________________________________________________________________________________________________
