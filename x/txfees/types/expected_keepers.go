@@ -10,6 +10,10 @@ import (
 // The x/gamm keeper is expected to satisfy this interface
 type SpotPriceCalculator interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error)
+}
+
+// GammKeeper defines the contract needed for AccountKeeper related APIs.
+type GammKeeper interface {
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,

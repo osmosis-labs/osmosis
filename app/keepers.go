@@ -366,6 +366,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.EpochsKeeper,
 		keys[txfeestypes.StoreKey],
 		gammKeeper,
+		gammKeeper,
 		txfeestypes.FeeCollectorName,
 		txfeestypes.FooCollectorName,
 	)

@@ -22,6 +22,7 @@ type (
 		accountKeeper    types.AccountKeeper
 		bankKeeper       *bankkeeper.BaseKeeper
 		epochKeeper      types.EpochKeeper
+		gammKeeper		 types.GammKeeper
 
 		spotPriceCalculator types.SpotPriceCalculator
 
@@ -36,6 +37,7 @@ func NewKeeper(
 	bankKeeper *bankkeeper.BaseKeeper,
 	epochKeeper types.EpochKeeper,
 	storeKey sdk.StoreKey,
+	gammKeeper types.GammKeeper,
 	spotPriceCalculator types.SpotPriceCalculator,
 	feeCollectorName string,
 	fooCollectorName string,
@@ -45,7 +47,8 @@ func NewKeeper(
 		accountKeeper: accountKeeper,
 		bankKeeper: bankKeeper,
 		epochKeeper: epochKeeper,
-		storeKey:            storeKey,
+		storeKey: storeKey,
+		gammKeeper: gammKeeper,
 		spotPriceCalculator: spotPriceCalculator,
 		feeCollectorName: feeCollectorName,
 		fooCollectorName: fooCollectorName,
