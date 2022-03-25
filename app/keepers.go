@@ -474,6 +474,7 @@ func (app *OsmosisApp) SetupHooks() {
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
 			// TO DO: add TxFeesKeeper.Hooks() for auto fee swaps
+			app.TxFeesKeeper.Hooks(),
 			app.SuperfluidKeeper.Hooks(),
 			app.IncentivesKeeper.Hooks(),
 			app.MintKeeper.Hooks(),
