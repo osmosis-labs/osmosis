@@ -15,7 +15,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 
-	// get module addres for FooCollectorName
+	// get module address for FooCollectorName
 	addrFoo := k.accountKeeper.GetModuleAddress(txfeestypes.FooCollectorName)
 
 	// get balances for all denoms in the module account
@@ -30,10 +30,17 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		if coin.Denom == baseDenom {
 			continue
 		} else {
-			// swap into OSMO
+		
+			// TO DO: figure out how to cast this or get the pool ID for the main OSMO paired pool
+			feetoken := coin.(txfeestypes.FeeToken)
 
-			// idea: createSwapEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) 
-			// 		in x/gamm/keeper/keeper.go
+			// calculate spot price to determine minimum out for swap
+			// question: is the order of input denom and output denom correct?
+			spotPrice, _ := k.spotPriceCalculator.CalculateSpotPrice(ctx, feetoken.GetPoolID(), coin.Denom, baseDenom)
+
+			// swap into OSMO
+			// question: is spotPrice really the minimum out for the swap?
+			k.spotPriceCalculator.SwapExactAmountIn(ctx, addrFoo, feetoken.GetPoolId(), coin.Denom, baseDenom, k.spotPriceCalculator)
 		}
 	}
 

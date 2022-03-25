@@ -10,6 +10,14 @@ import (
 // The x/gamm keeper is expected to satisfy this interface
 type SpotPriceCalculator interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error)
+	SwapExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		poolId uint64,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		tokenOutMinAmount sdk.Int,
+	) (tokenOutAmount sdk.Int, spotPriceAfter sdk.Dec, err error)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
