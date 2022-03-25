@@ -234,9 +234,10 @@ lint:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofumpt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	golangci-lint run ./... --fix
 
 ###############################################################################
 ###                                Localnet                                 ###
@@ -246,3 +247,14 @@ format:
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark
+	
+	
+###############################################################################
+###                                Tools                                    ###
+###############################################################################
+
+tools:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.0
+	go install mvdan.cc/gofumpt@latest
+
+
