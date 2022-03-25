@@ -28,7 +28,10 @@ type PoolI interface {
 	GetTotalShares() sdk.Int
 
 	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.DecCoin, err error)
+	SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
+
 	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.DecCoin, err error)
+	SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 
 	// TODO: Ensure this can only be called via gamm
 	// TODO: Think through the API guarantees this is providing in conjunction with the caller being
@@ -41,8 +44,11 @@ type PoolI interface {
 	// The AMM swaps to whatever the ratio should be and returns the number of shares created.
 	// Internally the pool updates its count for the number of shares in this function.
 	// If the function errors, or should not be mutative, then state must be reverted after this call.
+	CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error)
 	JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
+
 	ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
+	CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
 }
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
