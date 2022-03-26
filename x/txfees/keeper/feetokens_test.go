@@ -177,7 +177,7 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
 			feeTokenPoolInput:   sdk.NewInt64Coin("foo", 200),
 			inputFee:            sdk.NewInt64Coin("foo", 10),
-			expectedOutput:      sdk.NewInt64Coin(baseDenom, 20),
+			expectedOutput:      sdk.NewInt64Coin(baseDenom, 5),
 			expectedConvertable: true,
 		},
 		{
