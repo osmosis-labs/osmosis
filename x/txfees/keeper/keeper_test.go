@@ -98,11 +98,11 @@ func (suite *KeeperTestSuite) PreparePoolWithAssets(asset1, asset2 sdk.Coin) uin
 func (suite *KeeperTestSuite) preparePool(assets []balancer.PoolAsset) uint64 {
 	suite.Require().Len(assets, 2)
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1,
-		balancer.PoolParams{
-			SwapFee: sdk.NewDec(0),
-			ExitFee: sdk.NewDec(0),
-		}, assets, "")
+	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
+		SwapFee: sdk.ZeroDec(),
+		ExitFee: sdk.ZeroDec(),
+	}, assets, "")
+	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
 	suite.NoError(err)
 
 	_, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, assets[0].Token.Denom, assets[1].Token.Denom)

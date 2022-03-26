@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []balancertypes.PoolAsset{
+	poolAssets := []balancertypes.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -73,7 +73,9 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 			Weight: sdk.NewInt(300),
 			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
 		},
-	}, "")
+	}
+	msg := balancer.NewMsgCreateBalancerPool(acc1, PoolParams, poolAssets, "")
+	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
 	suite.NoError(err)
 	return poolId
 }

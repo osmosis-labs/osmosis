@@ -75,7 +75,7 @@ func TestGammExportGenesis(t *testing.T) {
 	))
 	require.NoError(t, err)
 
-	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
+	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []balancer.PoolAsset{{
@@ -85,9 +85,10 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
+	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
-	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
+	msg = balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []balancer.PoolAsset{{
@@ -97,6 +98,7 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
+	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	genesis := gamm.ExportGenesis(ctx, *app.GAMMKeeper)
@@ -119,7 +121,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	))
 	require.NoError(t, err)
 
-	_, err = app.GAMMKeeper.CreateBalancerPool(ctx, acc1, balancer.PoolParams{
+	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []balancer.PoolAsset{{
@@ -129,6 +131,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
+	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	genesis := am.ExportGenesis(ctx, appCodec)
