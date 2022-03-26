@@ -173,10 +173,11 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			expectedConvertable: true,
 		},
 		{
-			name:                "unequal value",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			feeTokenPoolInput:   sdk.NewInt64Coin("foo", 200),
-			inputFee:            sdk.NewInt64Coin("foo", 10),
+			name:               "unequal value",
+			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:  sdk.NewInt64Coin("foo", 200),
+			inputFee:           sdk.NewInt64Coin("foo", 10),
+			// expected to get 5.000000000005368710 baseDenom without rounding
 			expectedOutput:      sdk.NewInt64Coin(baseDenom, 5),
 			expectedConvertable: true,
 		},
