@@ -34,7 +34,8 @@ func (suite *KeeperTestHelper) preparePool(assets []balancer.PoolAsset) uint64 {
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}
-	simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, gammPoolMakerAcc, fundCoins)
+	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, gammPoolMakerAcc, fundCoins)
+	suite.Require().NoError(err)
 
 	msg := balancer.NewMsgCreateBalancerPool(gammPoolMakerAcc, balancer.PoolParams{
 		SwapFee: sdk.ZeroDec(),
