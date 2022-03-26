@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1081](https://github.com/osmosis-labs/osmosis/pull/1081) Genesis upgrade and add invariant cherry pick
 * [#1088](https://github.com/osmosis-labs/osmosis/pull/1088) Genesis import export check for superfluid
 * [#1101](https://github.com/osmosis-labs/osmosis/pull/1101) Minor PR adding some code comments
+* [#1154](https://github.com/osmosis-labs/osmosis/pull/1154) Database stability improvements
 
 ### SDK fork updates
 
