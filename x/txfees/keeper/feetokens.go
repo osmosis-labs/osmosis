@@ -24,30 +24,11 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 	}
 
 	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
-
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
 	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).RoundInt()), nil
-}
-
-func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, error) {
-	baseDenom, err := k.GetBaseDenom(ctx)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	feeToken, err := k.GetFeeToken(ctx, inputDenom)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-	return spotPrice, nil
 }
 
 // GetFeeToken returns the fee token record for a specific denom
