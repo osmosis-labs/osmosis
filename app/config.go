@@ -12,8 +12,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/params"
 	dbm "github.com/tendermint/tm-db"
 
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
