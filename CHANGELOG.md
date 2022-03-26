@@ -39,6 +39,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Minor improvements & Bug Fixes
+
+* [#1052](https://github.com/osmosis-labs/osmosis/pull/1052) Eugen/cherry pick superfluid test scaffolding updates
+* [#1070](https://github.com/osmosis-labs/osmosis/pull/1070) Test improvisation for Superfluid
+* [#1084](https://github.com/osmosis-labs/osmosis/pull/1084) Superfluid Misc: Improve grpc_query
+* [#1081](https://github.com/osmosis-labs/osmosis/pull/1081) Genesis upgrade and add invariant cherry pick
+* [#1088](https://github.com/osmosis-labs/osmosis/pull/1088) Genesis import export check for superfluid
+* [#1101](https://github.com/osmosis-labs/osmosis/pull/1101) Minor PR adding some code comments
+
+### SDK fork updates
+
+* [sdk-#136](https://github.com/osmosis-labs/iavl/pull/136) add after validator slash hook
+* [sdk-#137](https://github.com/osmosis-labs/iavl/pull/137) backport feat: Modify grpc gateway to be concurrent
+* [sdk-#146](https://github.com/osmosis-labs/cosmos-sdk/pull/146) extra logs during commit
+* [sdk-#151](https://github.com/osmosis-labs/cosmos-sdk/pull/151) fix logs related to store keys and commit hash
+* [sdk-#140](https://github.com/osmosis-labs/cosmos-sdk/pull/140) refactor: snapshot and pruning functionality
+* [sdk-#156](https://github.com/osmosis-labs/cosmos-sdk/pull/156) feat: implement querying for commit hash and proofs
+* [sdk-#155](https://github.com/osmosis-labs/cosmos-sdk/pull/155) fix: commit info data race
+
+### IAVL fork updates
+
+* [iavl-35](https://github.com/osmosis-labs/iavl/pull/35) avoid clearing fast node cache during pruning
+* [iavl-36](https://github.com/osmosis-labs/iavl/pull/36) fix data race related to VersionExists
+
 ## [v7.0.4](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.4)
 
 ### Minor improvements & Bug Fixes
