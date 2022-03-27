@@ -44,7 +44,6 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
-		// Replaced with version from our txfees module from auth (previously "ante.NewDeductFeeDecorator(ak, bankKeeper, nil)")"
 		deductFeeDecorator,
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
