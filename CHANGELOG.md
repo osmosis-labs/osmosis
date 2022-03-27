@@ -39,7 +39,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v7.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.1.0)
 
 ### Minor improvements & Bug Fixes
 
@@ -60,11 +60,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [sdk-#140](https://github.com/osmosis-labs/cosmos-sdk/pull/140) refactor: snapshot and pruning functionality
 * [sdk-#156](https://github.com/osmosis-labs/cosmos-sdk/pull/156) feat: implement querying for commit hash and proofs
 * [sdk-#155](https://github.com/osmosis-labs/cosmos-sdk/pull/155) fix: commit info data race
+* [sdk-#158](https://github.com/osmosis-labs/cosmos-sdk/pull/158) Fixes the go race tests
+* [sdk-#160](https://github.com/osmosis-labs/cosmos-sdk/pull/160) increase setupBaseAppWithSnapshots timeout to 90 seconds
+* [sdk-#161](https://github.com/osmosis-labs/cosmos-sdk/pull/155) upgrade iavl to v0.17.3-osmo-v7 with lowered fast node cache size
 
 ### IAVL fork updates
 
 * [iavl-35](https://github.com/osmosis-labs/iavl/pull/35) avoid clearing fast node cache during pruning
 * [iavl-36](https://github.com/osmosis-labs/iavl/pull/36) fix data race related to VersionExists
+* [iavl-37](https://github.com/osmosis-labs/iavl/pull/36) hardcode fast node cache size to 100k
 
 ## [v7.0.4](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.4)
 
