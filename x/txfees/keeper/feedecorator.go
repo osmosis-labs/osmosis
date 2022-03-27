@@ -124,9 +124,10 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	return cfgMinGasPrice
 }
 
-// DeductFeeDecorator deducts fees from the first signer of the tx
-// If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
-// Call next AnteHandler if fees successfully deducted
+// DeductFeeDecorator deducts fees from the first signer of the tx.
+// If the first signer does not have the funds to pay for the fees, we return an InsufficientFunds error.
+// We call next AnteHandler if fees successfully deducted.
+//
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type DeductFeeDecorator struct {
 	ak             types.AccountKeeper
