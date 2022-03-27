@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -125,8 +126,8 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 				Token:  sdk.NewCoin(randToken, sdk.NewInt(10)),
 			},
 		}
-
-		_, err = suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, defaultAddr, defaultPoolParams, poolAssets, "")
+		msg := balancer.NewMsgCreateBalancerPool(defaultAddr, defaultPoolParams, poolAssets, "")
+		_, err = suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
 		suite.Require().NoError(err)
 	}
 

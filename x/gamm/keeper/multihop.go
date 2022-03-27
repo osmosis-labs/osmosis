@@ -74,7 +74,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.S
 	for i := len(routes) - 1; i >= 0; i-- {
 		route := routes[i]
 
-		pool, err := k.GetPool(ctx, route.PoolId)
+		pool, err := k.getPoolForSwap(ctx, route.PoolId)
 		if err != nil {
 			return nil, err
 		}

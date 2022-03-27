@@ -7,8 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogotypes "github.com/gogo/protobuf/types"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -49,7 +47,7 @@ func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, err
 	}
 
 	if !pool.IsActive(ctx.BlockTime()) {
-		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "join swap on inactive pool")
+		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
 	}
 	return pool, nil
 }
@@ -194,38 +192,6 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 
 // 	return nil
 // }
-
-// newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
-// parameters, initial assets, and future governor.
-func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.PoolParams, assets []balancer.PoolAsset, futureGovernor string) (types.PoolI, error) {
-	poolId := k.GetNextPoolNumberAndIncrement(ctx)
-
-	pool, err := balancer.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
-	if err != nil {
-		return nil, err
-	}
-
-	acc := k.accountKeeper.GetAccount(ctx, pool.GetAddress())
-	if acc != nil {
-		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
-	}
-
-	err = k.SetPool(ctx, &pool)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create and save corresponding module account to the account keeper
-	acc = k.accountKeeper.NewAccount(ctx, authtypes.NewModuleAccount(
-		authtypes.NewBaseAccountWithAddress(
-			pool.GetAddress(),
-		),
-		pool.GetAddress().String(),
-	))
-	k.accountKeeper.SetAccount(ctx, acc)
-
-	return &pool, nil
-}
 
 // SetNextPoolNumber sets next pool number.
 func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
