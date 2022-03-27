@@ -186,7 +186,6 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		deductFeesFrom = feeGranter
 	}
 
-	// pulls account from address and makes sure it exists
 	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
 	if deductFeesFromAcc == nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
@@ -198,7 +197,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		if err != nil {
 			return ctx, err
 		}
-	} // no additional action/else statment needed if the fee is zero since zero-gas transactions are allowed
+	}
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
@@ -208,7 +207,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	return next(ctx, tx, simulate)
 }
 
-// DeductFees deducts fees from the given account and transfers them to the set module account
+// DeductFees deducts fees from the given account and transfers them to the set module account.
 func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
 
 	// Checks the validity of the fee tokens (sorted, have positive amount, valid and unique denomination)
