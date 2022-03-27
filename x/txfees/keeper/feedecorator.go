@@ -170,7 +170,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// set the fee payer as the default address to deduct fees from
 	deductFeesFrom := feePayer
 
-	// if feegranter set deduct fee from feegranter account.
+	// If a fee granter was set, deduct fee from the fee granter's account.
 	// this works with only when feegrant enabled.
 	if feeGranter != nil {
 		if dfd.feegrantKeeper == nil {
