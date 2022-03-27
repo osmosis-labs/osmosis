@@ -62,10 +62,10 @@ jobs:
         if: env.GIT_DIFF
       - name: Start Local Network via Starport
         run: |
-          starport chain serve --reset-once -v -c ./starport.ci.yml
+          starport chain serve --reset-once -v -c ./starport.ci.yml > starport.out 2>&1 &
         if: env.GIT_DIFF
       - name: Test Local Network Liveness
         run: |
-          sleep 2m
+          sleep 3m
           ./contrib/scripts/test_localnet_liveness.sh 100 5 50 localhost
         if: env.GIT_DIFF
