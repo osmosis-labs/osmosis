@@ -130,6 +130,8 @@ type OsmosisApp struct {
 }
 
 func init() {
+	fmt.Println("---- DEBUG ---- DO NOT MERGE ---- ADDING TO TRIGGER CI")
+
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
