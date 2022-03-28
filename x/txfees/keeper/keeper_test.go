@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v7/app"
 	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
@@ -23,7 +23,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-	app *app.OsmosisApp
+	app *osmosisapp.OsmosisApp
 
 	clientCtx client.Context
 
@@ -36,8 +36,12 @@ var (
 	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 )
 
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
 func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
-	app := app.Setup(isCheckTx)
+	app := osmosisapp.Setup(isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -48,6 +52,13 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	suite.ctx = ctx
 
 	suite.queryClient = queryClient
+
+	encodingConfig := osmosisapp.MakeEncodingConfig()
+	suite.clientCtx = client.Context{}.
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithLegacyAmino(encodingConfig.Amino).
+		WithJSONCodec(encodingConfig.Marshaler)
 
 	// Mint some assets to the accounts.
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
@@ -63,10 +74,6 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 			panic(err)
 		}
 	}
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }
 
 func (suite *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
