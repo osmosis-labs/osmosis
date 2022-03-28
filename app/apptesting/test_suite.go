@@ -78,45 +78,18 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 		valAddr2, _ := validator.GetConsAddr()
 		valAddr = valAddr2.Bytes()
 	}
-
-	epochIdentifier := keeperTestHelper.App.SuperfluidKeeper.GetEpochIdentifier(keeperTestHelper.Ctx)
-	epoch := keeperTestHelper.App.EpochsKeeper.GetEpochInfo(keeperTestHelper.Ctx, epochIdentifier)
-	newBlockTime := keeperTestHelper.Ctx.BlockTime().Add(5 * time.Second)
-	if executeNextEpoch {
-		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
-		newBlockTime = endEpochTime.Add(time.Second)
-	}
-	// fmt.Println(executeNextEpoch, keeperTestHelper.Ctx.BlockTime(), newBlockTime)
-	header := tmproto.Header{Height: keeperTestHelper.Ctx.BlockHeight() + 1, Time: newBlockTime}
-	newCtx := keeperTestHelper.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
-	keeperTestHelper.Ctx = newCtx
-	lastCommitInfo := abci.LastCommitInfo{
-		Votes: []abci.VoteInfo{
-			{
-				Validator:       abci.Validator{Address: valAddr, Power: 1000},
-				SignedLastBlock: true,
-			},
-		},
-	}
-	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
-
-	fmt.Println("beginning block ", keeperTestHelper.Ctx.BlockHeight())
-	keeperTestHelper.App.BeginBlocker(keeperTestHelper.Ctx, reqBeginBlock)
+	keeperTestHelper.BeginNewBlockWithProposer(executeNextEpoch, valAddr)
 }
 
 func (keeperTestHelper *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
 	valAddr := []byte(":^) at this distribution workaround")
 	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, proposer)
 	if !found {
-		valAddrFancy := keeperTestHelper.SetupValidator(stakingtypes.Bonded)
-		validator, _ := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddrFancy)
-		valAddr2, _ := validator.GetConsAddr()
-		valAddr = valAddr2.Bytes()
-	} else {
-		valConsAddr, err := validator.GetConsAddr()
-		keeperTestHelper.Require().NoError(err)
-		valAddr = valConsAddr.Bytes()
+		panic("given validator not found")
 	}
+	valConsAddr, err := validator.GetConsAddr()
+	keeperTestHelper.Require().NoError(err)
+	valAddr = valConsAddr.Bytes()
 
 	epochIdentifier := keeperTestHelper.App.SuperfluidKeeper.GetEpochIdentifier(keeperTestHelper.Ctx)
 	epoch := keeperTestHelper.App.EpochsKeeper.GetEpochInfo(keeperTestHelper.Ctx, epochIdentifier)
@@ -125,7 +98,6 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlockWithProposer(executeNextE
 		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
 		newBlockTime = endEpochTime.Add(time.Second)
 	}
-	// fmt.Println(executeNextEpoch, keeperTestHelper.Ctx.BlockTime(), newBlockTime)
 	header := tmproto.Header{Height: keeperTestHelper.Ctx.BlockHeight() + 1, Time: newBlockTime}
 	newCtx := keeperTestHelper.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
 	keeperTestHelper.Ctx = newCtx
