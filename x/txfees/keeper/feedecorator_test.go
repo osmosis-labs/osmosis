@@ -186,7 +186,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
-	gasLimit := testdata.NewTestGasLimit()
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 	signerData := authsigning.SignerData{
 		ChainID: suite.ctx.ChainID(), 
@@ -202,6 +201,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 		txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
+		gasLimit := tc.gasRequested
 		sigV2, _ := clienttx.SignWithPrivKey(
 			1, 
 			signerData,
