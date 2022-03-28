@@ -1,16 +1,14 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
-
-	// "github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
-
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
 func (suite *KeeperTestSuite) TestFeeDecorator() {
@@ -180,26 +178,20 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		},
 	}
 
-	// TxBuilder Setup Start
-
-	priv0, _, addr0 := testdata.KeyTestPubAddr()
-	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-	msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
-	signerData := authsigning.SignerData{
-		ChainID: suite.ctx.ChainID(), 
-		AccountNumber: accNums[0], 
-		Sequence: accSeqs[0]} 
-
-	// TxBuilder Setup End
-
 	for _, tc := range tests {
-
 		suite.ctx = suite.ctx.WithIsCheckTx(tc.isCheckTx)
 		suite.ctx = suite.ctx.WithMinGasPrices(tc.minGasPrices)
 
 		txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+		priv0, _, addr0 := testdata.KeyTestPubAddr()
+		acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+		suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+		msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
+		privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
+		signerData := authsigning.SignerData{
+			ChainID: suite.ctx.ChainID(), 
+			AccountNumber: accNums[0], 
+			Sequence: accSeqs[0]}
 
 		gasLimit := tc.gasRequested
 		sigV2, _ := clienttx.SignWithPrivKey(
@@ -210,6 +202,10 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			suite.clientCtx.TxConfig,
 			accSeqs[0])
 
+		// DEBUG: fmt.Print("\nbalances pre-fund: ", suite.app.BankKeeper.GetBalance(suite.ctx, addr0, baseDenom), suite.app.BankKeeper.GetBalance(suite.ctx, addr0, uion))
+		simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, tc.txFee)
+		// DEBUG: fmt.Print("\nbalances post-fund: ", suite.app.BankKeeper.GetBalance(suite.ctx, addr0, baseDenom), suite.app.BankKeeper.GetBalance(suite.ctx, addr0, uion))
+		
 		txBuilder.SetMsgs(msgs[0])
 		txBuilder.SetSignatures(sigV2)
 		txBuilder.SetMemo("")
@@ -218,29 +214,10 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 		tx := txBuilder.GetTx()
 
-		/* Legacy test tx (kept for reference)
-		tx := legacytx.NewStdTx([]sdk.Msg{}, legacytx.NewStdFee(
-			tc.gasRequested,
-			tc.txFee,
-		), []legacytx.StdSignature{}, "")
-		*/
-
 		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper, mempoolFeeOpts)
-		antehandlerMFD := sdk.ChainAnteDecorators(mfd)
-		_, err := antehandlerMFD(suite.ctx, tx, false)
-		if tc.expectPass {
-			suite.Require().NoError(err, "test: %s", tc.name)
-		} else {
-			suite.Require().Error(err, "test: %s", tc.name)
-		}
-
-		/* DeductFeeDecorator tests:
-
-		// Does FeeGrantKeeper need to be added to the TxFeesKeeper struct?
-
 		dfd := keeper.NewDeductFeeDecorator(*suite.app.TxFeesKeeper, *suite.app.AccountKeeper, *suite.app.BankKeeper, *suite.app.FeeGrantKeeper)
-		antehandlerDFD := sdk.ChainAnteDecorators(dfd)
-		_, err = antehandlerDFD(suite.ctx, tx, false)
+		antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
+		_, err := antehandlerMFD(suite.ctx, tx, false)
 		if tc.expectPass {
 			if tc.baseDenomGas {
 				// check main module account osmo balance & require no non-OSMO
@@ -253,6 +230,5 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		} else {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
-		*/
 	}
 }
