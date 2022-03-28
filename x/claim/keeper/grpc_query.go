@@ -24,7 +24,7 @@ func NewQuerier(k Keeper) Querier {
 // Params returns params of the mint module.
 func (q Querier) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	moduleAccBal := sdk.NewCoins(q.GetModuleAccountBalance(ctx))
+	moduleAccBal := sdk.NewCoins(q.Keeper.GetModuleAccountBalance(ctx))
 
 	return &types.QueryModuleAccountBalanceResponse{ModuleAccountBalance: moduleAccBal}, nil
 }
@@ -32,7 +32,7 @@ func (q Querier) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAcc
 // Params returns params of the mint module.
 func (q Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	params, err := q.GetParams(ctx)
+	params, err := q.Keeper.GetParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (q Querier) ClaimRecord(
 		return nil, err
 	}
 
-	claimRecord, err := q.GetClaimRecord(ctx, addr)
+	claimRecord, err := q.Keeper.GetClaimRecord(ctx, addr)
 	return &types.QueryClaimRecordResponse{ClaimRecord: claimRecord}, err
 }
 
@@ -75,7 +75,7 @@ func (q Querier) ClaimableForAction(
 		return nil, err
 	}
 
-	coins, err := q.GetClaimableAmountForAction(ctx, addr, req.Action)
+	coins, err := q.Keeper.GetClaimableAmountForAction(ctx, addr, req.Action)
 
 	return &types.QueryClaimableForActionResponse{
 		Coins: coins,
@@ -97,7 +97,7 @@ func (q Querier) TotalClaimable(
 		return nil, err
 	}
 
-	coins, err := q.GetUserTotalClaimable(ctx, addr)
+	coins, err := q.Keeper.GetUserTotalClaimable(ctx, addr)
 
 	return &types.QueryTotalClaimableResponse{
 		Coins: coins,
