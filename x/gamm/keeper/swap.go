@@ -32,11 +32,11 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
 	}
 
-	tokenOutDecCoin, err := pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	tokenOutCoin, _ := tokenOutDecCoin.TruncateDecimal()
+
 	tokenOutAmount = tokenOutCoin.Amount
 	if tokenOutAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
@@ -81,12 +81,10 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
-
-	tokenInDecCoin, err := pool.CalcInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
+	tokenInCoin, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	tokenInCoin, _ := tokenInDecCoin.TruncateDecimal()
 	tokenInAmount = tokenInCoin.Amount
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
@@ -119,11 +117,7 @@ func (k Keeper) updatePoolForSwap(
 	tokensIn := sdk.Coins{tokenIn}
 	tokensOut := sdk.Coins{tokenOut}
 
-	err := pool.ApplySwap(ctx, tokensIn, tokensOut)
-	if err != nil {
-		return err
-	}
-	err = k.SetPool(ctx, pool)
+	err := k.SetPool(ctx, pool)
 	if err != nil {
 		return err
 	}

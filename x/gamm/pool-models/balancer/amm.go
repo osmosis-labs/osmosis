@@ -64,7 +64,7 @@ func (p Pool) CalcOutAmtGivenIn(
 }
 
 // SwapOutAmtGivenIn is a mutative method for CalcOutAmtGivenIn, which includes the actual swap
-func (p Pool) SwapOutAmtGivenIn(
+func (p *Pool) SwapOutAmtGivenIn(
 	ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (
 	tokenOut sdk.Coin, err error,
 ) {
@@ -77,7 +77,7 @@ func (p Pool) SwapOutAmtGivenIn(
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
-	err = p.ApplySwap(ctx, tokensIn, sdk.Coins{tokenOutCoin})
+	err = p.applySwap(ctx, tokensIn, sdk.Coins{tokenOutCoin})
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -112,7 +112,7 @@ func (p Pool) CalcInAmtGivenOut(
 }
 
 // SwapInAmtGivenOut is a mutative method for CalcOutAmtGivenIn, which includes the actual swap
-func (p Pool) SwapInAmtGivenOut(
+func (p *Pool) SwapInAmtGivenOut(
 	ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (
 	tokenIn sdk.Coin, err error,
 ) {
@@ -125,7 +125,7 @@ func (p Pool) SwapInAmtGivenOut(
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
-	err = p.ApplySwap(ctx, sdk.Coins{tokenInCoin}, tokensOut)
+	err = p.applySwap(ctx, sdk.Coins{tokenInCoin}, tokensOut)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -133,7 +133,7 @@ func (p Pool) SwapInAmtGivenOut(
 }
 
 // ApplySwap.
-func (p *Pool) ApplySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
+func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
 	// Also ensures that len(tokensIn) = 1 = len(tokensOut)
 	inPoolAsset, outPoolAsset, err := p.parsePoolAssetsCoins(tokensIn, tokensOut)
 	if err != nil {

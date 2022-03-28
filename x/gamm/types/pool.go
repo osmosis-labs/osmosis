@@ -33,11 +33,6 @@ type PoolI interface {
 	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.DecCoin, err error)
 	SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 
-	// TODO: Ensure this can only be called via gamm
-	// TODO: Think through the API guarantees this is providing in conjunction with the caller being
-	// expected to Set the pool into state as well.
-	ApplySwap(ctx sdk.Context, tokenIn sdk.Coins, tokenOut sdk.Coins) error
-
 	SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
 
 	// JoinPool joins the pool, and uses all of the tokensIn provided.
