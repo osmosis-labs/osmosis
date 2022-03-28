@@ -10,7 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
