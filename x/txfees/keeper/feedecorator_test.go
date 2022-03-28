@@ -4,29 +4,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-
+	// "github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
+
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func (suite *KeeperTestSuite) TestFeeDecorator() {
 	suite.SetupTest(false)
-
-	/*
-	// Note: gammKeeper is expected to satisfy the SpotPriceCalculator interface parameter
-	txFeesKeeper := txfeeskeeper.NewKeeper(
-		appCodec,
-		suite.app.AccountKeeper,
-		suite.app.BankKeeper,
-		suite.app.EpochsKeeper,
-		keys[txfeestypes.StoreKey],
-		app.GAMMKeeper,
-		app.GAMMKeeper,
-		txfeestypes.FeeCollectorName,
-		txfeestypes.FooCollectorName,
-	)
-	app.TxFeesKeeper = &txFeesKeeper
-	*/
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
@@ -192,15 +180,50 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		},
 	}
 
+	// TxBuilder Setup Start
+
+	priv0, _, addr0 := testdata.KeyTestPubAddr()
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
+	gasLimit := testdata.NewTestGasLimit()
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
+	signerData := authsigning.SignerData{
+		ChainID: suite.ctx.ChainID(), 
+		AccountNumber: accNums[0], 
+		Sequence: accSeqs[0]} 
+
+	// TxBuilder Setup End
+
 	for _, tc := range tests {
 
 		suite.ctx = suite.ctx.WithIsCheckTx(tc.isCheckTx)
 		suite.ctx = suite.ctx.WithMinGasPrices(tc.minGasPrices)
 
+		txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+
+		sigV2, _ := clienttx.SignWithPrivKey(
+			1, 
+			signerData,
+			txBuilder, 
+			privs[0], 
+			suite.clientCtx.TxConfig,
+			accSeqs[0])
+
+		txBuilder.SetMsgs(msgs[0])
+		txBuilder.SetSignatures(sigV2)
+		txBuilder.SetMemo("")
+		txBuilder.SetFeeAmount(tc.txFee)
+		txBuilder.SetGasLimit(gasLimit)
+
+		tx := txBuilder.GetTx()
+
+		/* Legacy test tx (kept for reference)
 		tx := legacytx.NewStdTx([]sdk.Msg{}, legacytx.NewStdFee(
 			tc.gasRequested,
 			tc.txFee,
 		), []legacytx.StdSignature{}, "")
+		*/
 
 		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper, mempoolFeeOpts)
 		antehandlerMFD := sdk.ChainAnteDecorators(mfd)
@@ -211,7 +234,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
 
-		// DeductFeeDecorator tests:
+		/* DeductFeeDecorator tests:
 
 		// Does FeeGrantKeeper need to be added to the TxFeesKeeper struct?
 
@@ -230,5 +253,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		} else {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
+		*/
 	}
 }
