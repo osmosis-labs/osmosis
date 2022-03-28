@@ -9,11 +9,11 @@ func (suite *KeeperTestSuite) TestBaseDenom() {
 	suite.SetupTest(false)
 
 	// Test getting basedenom (should be default from genesis)
-	baseDenom, err := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
+	baseDenom, err := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.DefaultBondDenom, baseDenom)
 
-	converted, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
+	converted, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 	suite.Require().True(converted.IsEqual(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))
 	suite.Require().NoError(err)
 }
@@ -21,24 +21,24 @@ func (suite *KeeperTestSuite) TestBaseDenom() {
 func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 	suite.SetupTest(false)
 
-	uionPoolId := suite.PreparePoolWithAssets(
+	uionPoolId := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("uion", 500),
 	)
 
-	uionPoolId2 := suite.PreparePoolWithAssets(
+	uionPoolId2 := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("uion", 500),
 	)
 
 	// Make pool with fee token but no OSMO and make sure governance proposal fails
-	noBasePoolId := suite.PreparePoolWithAssets(
+	noBasePoolId := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin("uion", 500),
 		sdk.NewInt64Coin("foo", 500),
 	)
 
 	// Create correct pool and governance proposal
-	fooPoolId := suite.PreparePoolWithAssets(
+	fooPoolId := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("foo", 1000),
 	)
@@ -101,12 +101,12 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 
 	for _, tc := range tests {
 
-		feeTokensBefore := suite.app.TxFeesKeeper.GetFeeTokens(suite.ctx)
+		feeTokensBefore := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
 
 		// Add a new whitelisted fee token via a governance proposal
 		err := suite.ExecuteUpgradeFeeTokenProposal(tc.feeToken, tc.poolId)
 
-		feeTokensAfter := suite.app.TxFeesKeeper.GetFeeTokens(suite.ctx)
+		feeTokensAfter := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
 
 		if tc.expectPass {
 			// Make sure no error during setting of proposal
@@ -117,10 +117,10 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 				// Make sure the length of fee tokens is >= before
 				suite.Require().GreaterOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
 				// Ensure that the fee token is convertable to base token
-				_, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(tc.feeToken, 10))
+				_, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
 				suite.Require().NoError(err, "test: %s", tc.name)
 				// make sure the queried poolId is the same as expected
-				queriedPoolId, err := suite.queryClient.DenomPoolId(suite.ctx.Context(),
+				queriedPoolId, err := suite.queryClient.DenomPoolId(suite.Ctx.Context(),
 					&types.QueryDenomPoolIdRequest{
 						Denom: tc.feeToken,
 					},
@@ -132,10 +132,10 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 				// ensure that the length of fee tokens is <= to before
 				suite.Require().LessOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
 				// Ensure that the fee token is not convertable to base token
-				_, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, sdk.NewInt64Coin(tc.feeToken, 10))
+				_, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
 				suite.Require().Error(err, "test: %s", tc.name)
 				// make sure the queried poolId errors
-				_, err = suite.queryClient.DenomPoolId(suite.ctx.Context(),
+				_, err = suite.queryClient.DenomPoolId(suite.Ctx.Context(),
 					&types.QueryDenomPoolIdRequest{
 						Denom: tc.feeToken,
 					},
@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 	suite.SetupTest(false)
 
-	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
+	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 
 	tests := []struct {
 		name                string
@@ -202,14 +202,14 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 	for _, tc := range tests {
 		suite.SetupTest(false)
 
-		poolId := suite.PreparePoolWithAssets(
+		poolId := suite.PrepareUni2PoolWithAssets(
 			tc.baseDenomPoolInput,
 			tc.feeTokenPoolInput,
 		)
 
 		suite.ExecuteUpgradeFeeTokenProposal(tc.feeTokenPoolInput.Denom, poolId)
 
-		converted, err := suite.app.TxFeesKeeper.ConvertToBaseToken(suite.ctx, tc.inputFee)
+		converted, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, tc.inputFee)
 		if tc.expectedConvertable {
 			suite.Require().NoError(err, "test: %s", tc.name)
 			suite.Require().True(converted.IsEqual(tc.expectedOutput), "test: %s", tc.name)
