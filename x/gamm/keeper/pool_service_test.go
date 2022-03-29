@@ -531,7 +531,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 				ctx,
 				acc1,
 				poolID,
-				defaultAcctFunds[1].Denom,
+				tc.tokensIn[0].Denom,
 				shares,
 				tc.tokenOutMinAmount,
 			)
