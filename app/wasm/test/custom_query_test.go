@@ -42,26 +42,26 @@ func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Con
 	return osmosis, ctx
 }
 
-func TestQueryFullDenom(t *testing.T) {
-	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
+// func TestQueryFullDenom(t *testing.T) {
+// 	actor := RandomAccountAddress()
+// 	osmosis, ctx := SetupCustomApp(t, actor)
 
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
+// 	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+// 	require.NotEmpty(t, reflect)
 
-	// query full denom
-	query := wasmbindings.OsmosisQuery{
-		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "ustart",
-		},
-	}
-	resp := wasmbindings.FullDenomResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+// 	// query full denom
+// 	query := wasmbindings.OsmosisQuery{
+// 		FullDenom: &wasmbindings.FullDenom{
+// 			Contract: reflect.String(),
+// 			SubDenom: "ustart",
+// 		},
+// 	}
+// 	resp := wasmbindings.FullDenomResponse{}
+// 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
-	expected := fmt.Sprintf("cw/%s/ustart", reflect.String())
-	require.EqualValues(t, expected, resp.Denom)
-}
+// 	expected := fmt.Sprintf("cw/%s/ustart", reflect.String())
+// 	require.EqualValues(t, expected, resp.Denom)
+// }
 
 func TestQueryPool(t *testing.T) {
 	actor := RandomAccountAddress()
@@ -203,7 +203,7 @@ func TestQueryEstimateSwap(t *testing.T) {
 	amountIn := sdk.NewInt(10000)
 	query := wasmbindings.OsmosisQuery{
 		EstimateSwap: &wasmbindings.EstimateSwap{
-			Contract: reflect.String(),
+			Sender: reflect.String(),
 			First: wasmbindings.Swap{
 				PoolId:   starPool,
 				DenomIn:  "uosmo",
@@ -232,7 +232,7 @@ func TestQueryEstimateSwap(t *testing.T) {
 	amountOut := sdk.NewInt(10000)
 	query = wasmbindings.OsmosisQuery{
 		EstimateSwap: &wasmbindings.EstimateSwap{
-			Contract: reflect.String(),
+			Sender: reflect.String(),
 			First: wasmbindings.Swap{
 				PoolId:   starPool,
 				DenomIn:  "uosmo",
