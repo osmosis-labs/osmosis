@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -202,9 +204,18 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			suite.clientCtx.TxConfig,
 			accSeqs[0])
 
-		// DEBUG: fmt.Print("\nbalances pre-fund: ", suite.app.BankKeeper.GetBalance(suite.ctx, addr0, baseDenom), suite.app.BankKeeper.GetBalance(suite.ctx, addr0, uion))
+		/* DEBUG: 
+		fmt.Print("\nbalances pre-fund: ", suite.app.BankKeeper.GetBalance(suite.ctx, addr0, baseDenom), suite.app.BankKeeper.GetBalance(suite.ctx, addr0, uion))
+		//fmt.Print("\nbalances pre-fund paid fee: ", suite.app.BankKeeper.GetBalance(suite.ctx, addr0, tc.txFee[0].Denom), suite.app.BankKeeper.GetBalance(suite.ctx, addr0, uion))
+		if !tc.txFee.IsZero() {
+			fmt.Print("\nDirect fee print: ", tc.txFee[0])
+		}
+		// all fees are always in 0th index of tc.txFee
+		*/
+
 		simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, tc.txFee)
-		// DEBUG: fmt.Print("\nbalances post-fund: ", suite.app.BankKeeper.GetBalance(suite.ctx, addr0, baseDenom), suite.app.BankKeeper.GetBalance(suite.ctx, addr0, uion))
+		// DEBUG: 
+		//fmt.Print("\nbalances post-fund: ", suite.app.BankKeeper.GetBalance(suite.ctx, addr0, baseDenom), suite.app.BankKeeper.GetBalance(suite.ctx, addr0, uion))
 		
 		txBuilder.SetMsgs(msgs[0])
 		txBuilder.SetSignatures(sigV2)
@@ -214,17 +225,31 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 		tx := txBuilder.GetTx()
 
+		// get osmo module acc fee balance
+		// get foo module acc fee balance
+		moduleAddr1 := suite.app.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
+		moduleAddr2 := suite.app.AccountKeeper.GetModuleAddress(types.FooCollectorName)
+		fmt.Print("\nModule balance pre-fund: ", suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr1, baseDenom), suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr2, uion))
+
 		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper, mempoolFeeOpts)
 		dfd := keeper.NewDeductFeeDecorator(*suite.app.TxFeesKeeper, *suite.app.AccountKeeper, *suite.app.BankKeeper, *suite.app.FeeGrantKeeper)
 		antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
 		_, err := antehandlerMFD(suite.ctx, tx, false)
+		fmt.Print("\nModule balance post-fund: ", suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr1, baseDenom), suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr2, uion))
+
 		if tc.expectPass {
-			if tc.baseDenomGas {
+			if tc.baseDenomGas && !tc.txFee.IsZero() {
 				// check main module account osmo balance & require no non-OSMO
 				// also require that the balance of the second module account (just get AllBalances) has not changed (suite.Require().Equalf(123, 123, "error message %s", "formatted"))
-			} else {
+				moduleAddr := suite.app.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
+				suite.Require().Equal(tc.txFee[0], suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr, baseDenom), tc.name)
+				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.FeeCollectorName, addr0, tc.txFee)
+			} else if !tc.txFee.IsZero() {
 				// check second module account to make sure the right fee amount has flowed there
 				// also require that the balance of the main module account (just get AllBalances) has not changed (suite.Require().Equalf(123, 123, "error message %s", "formatted"))
+				moduleAddr := suite.app.AccountKeeper.GetModuleAddress(types.FooCollectorName)
+				suite.Require().Equal(tc.txFee[0], suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
+				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.FooCollectorName, addr0, tc.txFee)
 			}
 			suite.Require().NoError(err, "test: %s", tc.name)
 		} else {
