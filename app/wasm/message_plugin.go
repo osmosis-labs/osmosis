@@ -119,11 +119,11 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 			Amount: swap.Amount.ExactIn.Input,
 		}
 		tokenOutMinAmount := swap.Amount.ExactIn.MinOutput
-		estimatedAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
+		tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount in")
 		}
-		return &wasmbindings.SwapAmount{Out: &estimatedAmount}, nil
+		return &wasmbindings.SwapAmount{Out: &tokenOutAmount}, nil
 	} else if swap.Amount.ExactOut != nil {
 		routes := []gammtypes.SwapAmountOutRoute{{
 			PoolId:       swap.First.PoolId,
@@ -145,11 +145,11 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 			Denom:  output,
 			Amount: swap.Amount.ExactOut.Output,
 		}
-		estimatedAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
+		tokenInAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount out")
 		}
-		return &wasmbindings.SwapAmount{In: &estimatedAmount}, nil
+		return &wasmbindings.SwapAmount{In: &tokenInAmount}, nil
 	} else {
 		return nil, wasmvmtypes.UnsupportedRequest{Kind: "must support either Swap.ExactIn or Swap.ExactOut"}
 	}
