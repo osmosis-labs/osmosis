@@ -4,17 +4,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.TxFeesKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*app.TxFeesKeeper))
 	queryClient := types.NewQueryClient(queryHelper)
 
 	suite.App = app
