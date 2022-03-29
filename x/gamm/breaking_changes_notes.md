@@ -14,15 +14,11 @@
 
 ## Messages
 
-* (TODO) Rename JoinPool -> JoinPoolNoSwap
 * JoinPoolNoSwap
   * TokenInMaxs must either contain every token in pool, or no tokens
-* JoinPoolSwapExternAmountIn
-  * Replace sdk.Coin w/ sdk.Coins
-  * (TODO) Consider renaming to JoinPool, hesistant due to collison with old message
-* (TODO) Update the version for all of gamm's proto files
+    * Before it could just apply a max constraint on one input token.
 * ExitPool
-  * Before the message would fail if you had too few shares to get a single token out for any given denom. Now you can 0 of one side out, if the min amount is also not present.
+  * Before the message would fail if you had too few shares to get a single token out for any given denom. Now you can get 0 tokens of one side out, if the min amount is also not present.
 * ExitSwapShareAmountIn
   * Switched to a more inefficient algorithm for now, so gas numbers will be much higher.
 * Messages now have responses
@@ -39,6 +35,6 @@ I anticipate there are lots of error messages that have changed. This is a best-
 
 Many are changed, need to re-review what the new normals are for each operation.
 
-# Questions for integrators
+## Questions for integrators
 
 * Would it be problematic if we renamed the message name / amino route of JoinPool to JoinPoolNoSwap
