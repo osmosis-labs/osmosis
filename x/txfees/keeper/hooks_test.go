@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	// "time"
-
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
