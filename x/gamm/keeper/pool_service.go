@@ -249,18 +249,22 @@ func (k Keeper) JoinSwapExactAmountIn(
 	}
 
 	sharesOut, err := pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
-	if err != nil {
+	switch {
+	case err != nil:
 		return sdk.ZeroInt(), err
-	} else if sharesOut.LT(shareOutMinAmount) {
-		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMinAmount,
-			"Too much slippage, needed a minimum of %s shares to pass, got %s",
-			shareOutMinAmount, sharesOut)
-	} else if sharesOut.LTE(sdk.ZeroInt()) {
+
+	case sharesOut.LT(shareOutMinAmount):
+		return sdk.ZeroInt(), sdkerrors.Wrapf(
+			types.ErrLimitMinAmount,
+			"too much slippage; needed a minimum of %s shares to pass, got %s",
+			shareOutMinAmount, sharesOut,
+		)
+
+	case sharesOut.LTE(sdk.ZeroInt()):
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
 	}
 
-	err = k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, tokensIn)
-	if err != nil {
+	if err := k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, tokensIn); err != nil {
 		return sdk.ZeroInt(), err
 	}
 

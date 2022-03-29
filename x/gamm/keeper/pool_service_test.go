@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -456,9 +457,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, defaultAcctFunds)
-			if err != nil {
-				panic(err)
-			}
+			suite.Require().NoError(err)
 
 			// Create the pool at first
 			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
@@ -496,4 +495,31 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 			}
 		}
 	}
+}
+
+func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
+	testCases := []struct {
+		name        string
+		poolSwapFee sdk.Dec
+		poolExitFee sdk.Dec
+	}{}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, defaultAcctFunds)
+			suite.Require().NoError(err)
+
+			poolID := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
+				SwapFee: tc.poolSwapFee,
+				ExitFee: tc.poolExitFee,
+			})
+		})
+	}
+
+	// JoinSwapExactAmountIn()
+	// ExitSwapShareAmountIn()
 }

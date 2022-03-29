@@ -17,6 +17,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+var (
+	acc1 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+	acc2 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
+)
+
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -37,12 +43,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
-
-var (
-	acc1 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	acc2 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-)
 
 func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balancer.PoolParams) uint64 {
 	// Mint some assets to the accounts.
