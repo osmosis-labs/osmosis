@@ -2,12 +2,13 @@ package keeper_test
 
 import (
 	// "time"
-	"fmt"
+
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gamm "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
@@ -15,68 +16,83 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	suite.SetupTest(false)
 	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
 
-	testCases := []struct {
-		name             string
-	}{
-		{
-			name: "tc name",
-		},
-	}
+	// create pools for three separate fee tokens
+	
+	defaultPooledAssetAmount := int64(500)
 
-	for _, tc := range testCases {
+	uion := "uion"
+	uionPoolId := suite.PreparePoolWithAssets(
+		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
+		sdk.NewInt64Coin(uion, defaultPooledAssetAmount),
+	)
+	suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
 
-		fmt.Print("\n", tc)
+	atom := "atom"
+	atomPoolId := suite.PreparePoolWithAssets(
+		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
+		sdk.NewInt64Coin(atom, defaultPooledAssetAmount),
+	)
+	suite.ExecuteUpgradeFeeTokenProposal(atom, atomPoolId)
 
-		// we create three pools for three separate fee tokens
-		uion := "uion"
-		uionPoolId := suite.PreparePoolWithAssets(
-			sdk.NewInt64Coin(baseDenom, 500),
-			sdk.NewInt64Coin(uion, 500),
-		)
-		suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
+	ust := "ust"
+	ustPoolId := suite.PreparePoolWithAssets(
+		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
+		sdk.NewInt64Coin(ust, defaultPooledAssetAmount),
+	)
+	suite.ExecuteUpgradeFeeTokenProposal(ust, ustPoolId)
 
-		atom := "atom"
-		atomPoolId := suite.PreparePoolWithAssets(
-			sdk.NewInt64Coin(baseDenom, 500),
-			sdk.NewInt64Coin(atom, 500),
-		)
-		suite.ExecuteUpgradeFeeTokenProposal(atom, atomPoolId)
+	coins := sdk.NewCoins(
+		sdk.NewInt64Coin(uion, 10),
+		sdk.NewInt64Coin(atom, 20),
+		sdk.NewInt64Coin(ust, 14),
+	)
 
-		ust := "ust"
-		ustPoolId := suite.PreparePoolWithAssets(
-			sdk.NewInt64Coin(baseDenom, 500),
-			sdk.NewInt64Coin(ust, 500),
-		)
-		suite.ExecuteUpgradeFeeTokenProposal(ust, ustPoolId)
+	gamm.CalcOutGivenIn(sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
+		sdk.OneDec(), 
+		sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
+		sdk.OneDec(), 
+		sdk.NewDecFromInt(coins[0].Amount), 
+		sdk.NewDec(0),
+	)
 
-		coins := sdk.NewCoins(
-			sdk.NewInt64Coin(uion, 10),
-			sdk.NewInt64Coin(atom, 20),
-			sdk.NewInt64Coin(ust, 14),
-		)
+	expectedOutput1 := gamm.CalcOutGivenIn(sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
+		sdk.OneDec(), 
+		sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
+		sdk.OneDec(), 
+		sdk.NewDecFromInt(coins[0].Amount), 
+		sdk.NewDec(0)).TruncateInt()
+	expectedOutput2 := gamm.CalcOutGivenIn(sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
+		sdk.OneDec(), 
+		sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
+		sdk.OneDec(), 
+		sdk.NewDecFromInt(coins[1].Amount), 
+		sdk.NewDec(0)).TruncateInt()
+	expectedOutput3 := gamm.CalcOutGivenIn(sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
+		sdk.OneDec(), 
+		sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
+		sdk.OneDec(), 
+		sdk.NewDecFromInt(coins[2].Amount), 
+		sdk.NewDec(0)).TruncateInt()
+	
+	fullExpectedOutput := expectedOutput1.Add(expectedOutput2).Add(expectedOutput3)
 
-		_, _, addr0 := testdata.KeyTestPubAddr()
-		simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, coins)
-		suite.app.BankKeeper.SendCoinsFromAccountToModule(suite.ctx, addr0, types.FooCollectorName, coins)
+	_, _, addr0 := testdata.KeyTestPubAddr()
+	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, coins)
+	suite.app.BankKeeper.SendCoinsFromAccountToModule(suite.ctx, addr0, types.FooCollectorName, coins)
 
-		moduleAddrFee := suite.app.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
-		moduleAddrFoo := suite.app.AccountKeeper.GetModuleAddress(types.FooCollectorName)
+	moduleAddrFee := suite.app.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
+	moduleAddrFoo := suite.app.AccountKeeper.GetModuleAddress(types.FooCollectorName)
 
-		fmt.Print("\n(pre) Main module acc balances: ", suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrFee))
-		fmt.Print("\n(pre) Second module acc balances: ", suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrFoo))
+	// make sure module account is funded with test fee tokens
+	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[0]))
+	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[1]))
+	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[2]))
 
-		// make sure module account is funded with test fee tokens
-		suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[0]))
-		suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[1]))
-		suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[2]))
+	params := suite.app.IncentivesKeeper.GetParams(suite.ctx)
+	futureCtx := suite.ctx.WithBlockTime(time.Now().Add(time.Minute))
 
-		params := suite.app.IncentivesKeeper.GetParams(suite.ctx)
-		futureCtx := suite.ctx.WithBlockTime(time.Now().Add(time.Minute))
-		suite.app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
+	suite.app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
 
-		suite.Require().Empty(suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrFoo)) 
-
-		fmt.Print("\n(post) Main module acc balances: ", suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrFee))
-		fmt.Print("\n(post) Second module acc balances: ", suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrFoo))
-	}
+	suite.Require().Empty(suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrFoo)) 
+	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddrFee, baseDenom).Amount.GTE(fullExpectedOutput))
 }
