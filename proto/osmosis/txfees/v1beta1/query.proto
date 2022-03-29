@@ -17,10 +17,9 @@ service Query {
     option (google.api.http).get = "/osmosis/txfees/v1beta1/fee_tokens";
   }
 
-  rpc TxFeesByDenom(QueryTxFeesByDenomRequest)
-      returns (QueryTxFeesByDenomResponse) {
-    option (google.api.http).get =
-        "/osmosis/txfees/v1beta1/tx_fees_by_denom/{denom}";
+  rpc DenomSpotPrice(QueryDenomSpotPriceRequest)
+      returns (QueryDenomSpotPriceResponse) {
+    option (google.api.http).get = "/osmosis/txfees/v1beta1/tx_fees_by_denom";
   }
 
   rpc DenomPoolId(QueryDenomPoolIdRequest) returns (QueryDenomPoolIdResponse) {
@@ -41,10 +40,15 @@ message QueryFeeTokensResponse {
   ];
 }
 
-message QueryTxFeesByDenomRequest {
+// QueryDenomSpotPriceRequest defines grpc request structure for querying spot
+// price for the specified tx fee denom
+message QueryDenomSpotPriceRequest {
   string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
 }
-message QueryTxFeesByDenomResponse {
+
+// QueryDenomSpotPriceRequest defines grpc response structure for querying spot
+// price for the specified tx fee denom
+message QueryDenomSpotPriceResponse {
   uint64 poolID = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string base_denom = 2 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
   string spot_price = 3 [

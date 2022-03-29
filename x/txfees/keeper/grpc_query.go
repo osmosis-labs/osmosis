@@ -21,7 +21,7 @@ func (k Keeper) FeeTokens(ctx context.Context, _ *types.QueryFeeTokensRequest) (
 	return &types.QueryFeeTokensResponse{FeeTokens: feeTokens}, nil
 }
 
-func (k Keeper) TxFeesByDenom(ctx context.Context, req *types.QueryTxFeesByDenomRequest) (*types.QueryTxFeesByDenomResponse, error) {
+func (k Keeper) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPriceRequest) (*types.QueryDenomSpotPriceResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	baseDenom, err := k.GetBaseDenom(sdkCtx)
@@ -39,7 +39,7 @@ func (k Keeper) TxFeesByDenom(ctx context.Context, req *types.QueryTxFeesByDenom
 		return nil, err
 	}
 
-	return &types.QueryTxFeesByDenomResponse{PoolID: feeToken.PoolID, BaseDenom: baseDenom, SpotPrice: spotPrice}, nil
+	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, BaseDenom: baseDenom, SpotPrice: spotPrice}, nil
 }
 
 func (k Keeper) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {
