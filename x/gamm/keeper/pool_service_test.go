@@ -499,9 +499,13 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 
 func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	testCases := []struct {
-		name        string
-		poolSwapFee sdk.Dec
-		poolExitFee sdk.Dec
+		name              string
+		poolSwapFee       sdk.Dec
+		poolExitFee       sdk.Dec
+		tokensIn          sdk.Coins
+		shareOutMinAmount sdk.Int
+		expectedSharesOut sdk.Int
+		tokenOutMinAmount sdk.Int
 	}{}
 
 	for _, tc := range testCases {
@@ -509,6 +513,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
+			ctx := suite.ctx
 
 			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, defaultAcctFunds)
 			suite.Require().NoError(err)
@@ -517,9 +522,16 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 				SwapFee: tc.poolSwapFee,
 				ExitFee: tc.poolExitFee,
 			})
+
+			shares, err := suite.app.GAMMKeeper.JoinSwapExactAmountIn(ctx, acc1, poolID, tc.tokensIn, tc.shareOutMinAmount)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedSharesOut, shares)
+
+			tokenOutAmt, err := suite.app.GAMMKeeper.ExitSwapShareAmountIn(ctx, acc1, poolID, defaultAcctFunds[1].Denom, shares, tc.tokenOutMinAmount)
+			suite.Require().NoError(err)
+
+			// outCoins * (1 - pool.SwapFee()) == tc.coins
+			fmt.Println(tokenOutAmt)
 		})
 	}
-
-	// JoinSwapExactAmountIn()
-	// ExitSwapShareAmountIn()
 }
