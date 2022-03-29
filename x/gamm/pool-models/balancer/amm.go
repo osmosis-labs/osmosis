@@ -63,9 +63,13 @@ func (p Pool) CalcOutAmtGivenIn(
 	return sdk.NewDecCoinFromDec(tokenOutDenom, tokenAmountOut), nil
 }
 
-// SwapOutAmtGivenIn is a mutative method for CalcOutAmtGivenIn, which includes the actual swap
+// SwapOutAmtGivenIn is a mutative method for CalcOutAmtGivenIn, which includes the actual swap.
 func (p *Pool) SwapOutAmtGivenIn(
-	ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (
+	ctx sdk.Context,
+	tokensIn sdk.Coins,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+) (
 	tokenOut sdk.Coin, err error,
 ) {
 	tokenOutDecCoin, err := p.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
@@ -73,8 +77,8 @@ func (p *Pool) SwapOutAmtGivenIn(
 		return sdk.Coin{}, err
 	}
 	tokenOutCoin, _ := tokenOutDecCoin.TruncateDecimal()
-	if tokenOutCoin.Amount.LTE(sdk.ZeroInt()) {
-		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+	if !tokenOutCoin.Amount.IsPositive() {
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	err = p.applySwap(ctx, tokensIn, sdk.Coins{tokenOutCoin})
@@ -111,7 +115,7 @@ func (p Pool) CalcInAmtGivenOut(
 	return sdk.NewDecCoinFromDec(tokenInDenom, tokenAmountInBeforeFee), nil
 }
 
-// SwapInAmtGivenOut is a mutative method for CalcOutAmtGivenIn, which includes the actual swap
+// SwapInAmtGivenOut is a mutative method for CalcOutAmtGivenIn, which includes the actual swap.
 func (p *Pool) SwapInAmtGivenOut(
 	ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (
 	tokenIn sdk.Coin, err error,
@@ -121,8 +125,8 @@ func (p *Pool) SwapInAmtGivenOut(
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 	tokenInCoin, _ := tokenInDecCoin.TruncateDecimal()
-	if tokenInCoin.Amount.LTE(sdk.ZeroInt()) {
-		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+	if !tokenInCoin.Amount.IsPositive() {
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	err = p.applySwap(ctx, sdk.Coins{tokenInCoin}, tokensOut)
@@ -204,11 +208,7 @@ func calcPoolOutGivenSingleIn(
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.
-func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	tokenInPoolAsset, err := p.GetPoolAsset(tokenIn.Denom)
-	if err != nil {
-		return sdk.ZeroInt(), err
-	}
+func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoolAsset PoolAsset, totalShares sdk.Int) (numShares sdk.Int, err error) {
 	totalWeight := p.GetTotalWeight()
 	if totalWeight.IsZero() {
 		return sdk.ZeroInt(), errors.New("pool misconfigured, total weight = 0")
@@ -217,7 +217,7 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec) (numShares
 	return calcPoolOutGivenSingleIn(
 		tokenInPoolAsset.Token.Amount.ToDec(),
 		normalizedWeight,
-		p.GetTotalShares().ToDec(),
+		totalShares.ToDec(),
 		tokenIn.Amount.ToDec(),
 		swapFee,
 	).TruncateInt(), nil
@@ -275,8 +275,15 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 }
 
 func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+	poolAssets := p.GetAllPoolAssets()
+	poolAssetsByDenom := make(map[string]PoolAsset)
+	for _, poolAsset := range poolAssets {
+		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
+	}
+	totalShares := p.GetTotalShares()
+
 	if tokensIn.Len() == 1 {
-		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee)
+		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
 		newLiquidity = tokensIn
 		return numShares, newLiquidity, err
 	} else if tokensIn.Len() != p.NumAssets() {
@@ -288,11 +295,19 @@ func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee 
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
+	// update liquidity for accurate calcSingleAssetJoin calculation
 	newLiquidity = tokensIn.Sub(remCoins)
+	for _, coin := range newLiquidity {
+		poolAsset := poolAssetsByDenom[coin.Denom]
+		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
+		poolAssetsByDenom[coin.Denom] = poolAsset
+	}
+	totalShares = totalShares.Add(numShares)
+
 	// if there are coins that couldn't be perfectly joined, do single asset joins for each of them.
 	if !remCoins.Empty() {
 		for _, coin := range remCoins {
-			newShares, err := p.calcSingleAssetJoin(coin, swapFee)
+			newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalShares)
 			if err != nil {
 				return sdk.ZeroInt(), sdk.NewCoins(), err
 			}
