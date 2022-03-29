@@ -9,6 +9,8 @@ const (
 	MaxPoolAssets = 8
 
 	OneShareExponent = 18
+
+	SigFigsExponent = 8
 )
 
 var (
@@ -17,4 +19,7 @@ var (
 
 	// InitPoolSharesSupply is the amount of new shares to initialize a pool with.
 	InitPoolSharesSupply = OneShare.MulRaw(100)
+
+	// SigFigs is the amount of significant figures used to calculate SpotPrice
+	SigFigs = sdk.NewDec(10).Power(SigFigsExponent)
 )

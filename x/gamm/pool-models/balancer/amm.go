@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmomath"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // solveConstantFunctionInvariant solves the constant function of an AMM
@@ -106,7 +107,10 @@ func (p *Pool) ApplySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 
 // SpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
-// so spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
+// In order reduce the propagated effect of incorrect trailing digits,
+// we take the ratio of weights and divide this by ratio of supplies
+// this is equivalent to spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
+// but cancels out the common term in weight.
 //
 // panics if pool is misconfigured and has any weight as 0.
 func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec, error) {
@@ -118,10 +122,10 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 		return sdk.Dec{}, errors.New("pool is misconfigured, got 0 weight")
 	}
 
-	numerator := base.Token.Amount.ToDec().Quo(base.Weight.ToDec())
-	denom := quote.Token.Amount.ToDec().Quo(quote.Weight.ToDec())
-	ratio := numerator.Quo(denom)
-
+	weightRatio := base.Weight.ToDec().Quo(quote.Weight.ToDec())
+	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
+	fullRatio := supplyRatio.Quo(weightRatio)
+	ratio := (fullRatio.Mul(types.SigFigs).RoundInt()).ToDec().Quo(types.SigFigs)
 	return ratio, nil
 }
 
