@@ -527,7 +527,14 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedSharesOut, shares)
 
-			tokenOutAmt, err := suite.app.GAMMKeeper.ExitSwapShareAmountIn(ctx, acc1, poolID, defaultAcctFunds[1].Denom, shares, tc.tokenOutMinAmount)
+			tokenOutAmt, err := suite.app.GAMMKeeper.ExitSwapShareAmountIn(
+				ctx,
+				acc1,
+				poolID,
+				defaultAcctFunds[1].Denom,
+				shares,
+				tc.tokenOutMinAmount,
+			)
 			suite.Require().NoError(err)
 
 			// outCoins * (1 - pool.SwapFee()) == tc.coins
