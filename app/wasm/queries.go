@@ -29,7 +29,7 @@ func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*wasmbinding
 		return nil, sdkerrors.Wrap(err, "gamm get pool")
 	}
 	var poolAssets wasmbindings.PoolAssets
-	poolAssets.Assets = poolData.GetTotalLpBalances(ctx)
+	poolAssets.Assets = poolData.GetTotalPoolLiquidity(ctx)
 	poolAssets.Shares = sdk.Coin{
 		Denom:  gammtypes.GetPoolShareDenom(poolID),
 		Amount: poolData.GetTotalShares(),

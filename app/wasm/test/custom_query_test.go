@@ -351,7 +351,8 @@ func preparePool(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sd
 		ExitFee: sdk.NewDec(0),
 	}
 
-	poolId, err := osmosis.GAMMKeeper.CreateBalancerPool(ctx, addr, poolParams, assets, "")
+	msg := balancer.NewMsgCreateBalancerPool(addr, poolParams, assets, "")
+	poolId, err := osmosis.GAMMKeeper.CreatePool(ctx, &msg)
 	require.NoError(t, err)
 	return poolId
 }
