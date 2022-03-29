@@ -90,7 +90,6 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().Equal(sdk.NewDec(7500000), delegation.Shares)
 			}
 
-			// check balances
 			for index, delAddr := range delAddrs {
 				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, delAddr)
 				suite.Require().Equal(tc.expRewards[index], balance)

@@ -66,7 +66,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 }
 
 func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
-	valAddr := []byte(":^) at this distribution workaround") //nolint
+	var valAddr []byte
 	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
@@ -82,14 +82,11 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 }
 
 func (keeperTestHelper *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
-	valAddr := []byte(":^) at this distribution workaround")
 	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, proposer)
-	if !found {
-		panic("given validator not found")
-	}
+	keeperTestHelper.Assert().True(found)
 	valConsAddr, err := validator.GetConsAddr()
 	keeperTestHelper.Require().NoError(err)
-	valAddr = valConsAddr.Bytes()
+	valAddr := valConsAddr.Bytes()
 
 	epochIdentifier := keeperTestHelper.App.SuperfluidKeeper.GetEpochIdentifier(keeperTestHelper.Ctx)
 	epoch := keeperTestHelper.App.EpochsKeeper.GetEpochInfo(keeperTestHelper.Ctx, epochIdentifier)
