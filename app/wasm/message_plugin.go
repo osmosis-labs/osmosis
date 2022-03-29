@@ -190,7 +190,6 @@ var reSubdenom *regexp.Regexp
 
 func init() {
 	reSubdenom = regexp.MustCompile(reSubdenomStr)
-
 }
 
 func ValidateSubDenom(subDenom string) error {

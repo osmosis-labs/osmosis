@@ -35,7 +35,6 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 				return nil, sdkerrors.Wrap(err, "osmo full denom query response")
 			}
 			return bz, nil
-
 		} else if contractQuery.PoolState != nil {
 			poolId := contractQuery.PoolState.PoolId
 
