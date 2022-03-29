@@ -131,6 +131,28 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 	return &types.UpcomingGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
+func (k Keeper) UpcomingGaugesPerDenom(goCtx context.Context, req *types.UpcomingGaugesPerDenomRequest) (*types.UpcomingGaugesPerDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	gauges := []types.Gauge{}
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		upcomingGauges := k.GetUpcomingGauges(ctx)
+		for _, gauge := range upcomingGauges {
+			if gauge.DistributeTo.Denom == req.Denom {
+				gauges = append(gauges, gauge)
+			}
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.UpcomingGaugesPerDenomResponse{Data: gauges, Pagination: pageRes}, nil
+}
+
 // RewardsEst returns rewards estimation at a future specific time.
 func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

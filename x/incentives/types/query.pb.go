@@ -685,6 +685,112 @@ func (m *UpcomingGaugesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+type UpcomingGaugesPerDenomRequest struct {
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// pagination defines an pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *UpcomingGaugesPerDenomRequest) Reset()         { *m = UpcomingGaugesPerDenomRequest{} }
+func (m *UpcomingGaugesPerDenomRequest) String() string { return proto.CompactTextString(m) }
+func (*UpcomingGaugesPerDenomRequest) ProtoMessage()    {}
+func (*UpcomingGaugesPerDenomRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{14}
+}
+func (m *UpcomingGaugesPerDenomRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpcomingGaugesPerDenomRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpcomingGaugesPerDenomRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpcomingGaugesPerDenomRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpcomingGaugesPerDenomRequest.Merge(m, src)
+}
+func (m *UpcomingGaugesPerDenomRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpcomingGaugesPerDenomRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpcomingGaugesPerDenomRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpcomingGaugesPerDenomRequest proto.InternalMessageInfo
+
+func (m *UpcomingGaugesPerDenomRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *UpcomingGaugesPerDenomRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type UpcomingGaugesPerDenomResponse struct {
+	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
+	// pagination defines an pagination for the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *UpcomingGaugesPerDenomResponse) Reset()         { *m = UpcomingGaugesPerDenomResponse{} }
+func (m *UpcomingGaugesPerDenomResponse) String() string { return proto.CompactTextString(m) }
+func (*UpcomingGaugesPerDenomResponse) ProtoMessage()    {}
+func (*UpcomingGaugesPerDenomResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{15}
+}
+func (m *UpcomingGaugesPerDenomResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpcomingGaugesPerDenomResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpcomingGaugesPerDenomResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpcomingGaugesPerDenomResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpcomingGaugesPerDenomResponse.Merge(m, src)
+}
+func (m *UpcomingGaugesPerDenomResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpcomingGaugesPerDenomResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpcomingGaugesPerDenomResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpcomingGaugesPerDenomResponse proto.InternalMessageInfo
+
+func (m *UpcomingGaugesPerDenomResponse) GetData() []Gauge {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+func (m *UpcomingGaugesPerDenomResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 type RewardsEstRequest struct {
 	Owner    string   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
 	LockIds  []uint64 `protobuf:"varint,2,rep,packed,name=lock_ids,json=lockIds,proto3" json:"lock_ids,omitempty"`
@@ -695,7 +801,7 @@ func (m *RewardsEstRequest) Reset()         { *m = RewardsEstRequest{} }
 func (m *RewardsEstRequest) String() string { return proto.CompactTextString(m) }
 func (*RewardsEstRequest) ProtoMessage()    {}
 func (*RewardsEstRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8124258a89427f98, []int{14}
+	return fileDescriptor_8124258a89427f98, []int{16}
 }
 func (m *RewardsEstRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -753,7 +859,7 @@ func (m *RewardsEstResponse) Reset()         { *m = RewardsEstResponse{} }
 func (m *RewardsEstResponse) String() string { return proto.CompactTextString(m) }
 func (*RewardsEstResponse) ProtoMessage()    {}
 func (*RewardsEstResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8124258a89427f98, []int{15}
+	return fileDescriptor_8124258a89427f98, []int{17}
 }
 func (m *RewardsEstResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -796,7 +902,7 @@ func (m *QueryLockableDurationsRequest) Reset()         { *m = QueryLockableDura
 func (m *QueryLockableDurationsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryLockableDurationsRequest) ProtoMessage()    {}
 func (*QueryLockableDurationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8124258a89427f98, []int{16}
+	return fileDescriptor_8124258a89427f98, []int{18}
 }
 func (m *QueryLockableDurationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -833,7 +939,7 @@ func (m *QueryLockableDurationsResponse) Reset()         { *m = QueryLockableDur
 func (m *QueryLockableDurationsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryLockableDurationsResponse) ProtoMessage()    {}
 func (*QueryLockableDurationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8124258a89427f98, []int{17}
+	return fileDescriptor_8124258a89427f98, []int{19}
 }
 func (m *QueryLockableDurationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -884,6 +990,8 @@ func init() {
 	proto.RegisterType((*ActiveGaugesPerDenomResponse)(nil), "osmosis.incentives.ActiveGaugesPerDenomResponse")
 	proto.RegisterType((*UpcomingGaugesRequest)(nil), "osmosis.incentives.UpcomingGaugesRequest")
 	proto.RegisterType((*UpcomingGaugesResponse)(nil), "osmosis.incentives.UpcomingGaugesResponse")
+	proto.RegisterType((*UpcomingGaugesPerDenomRequest)(nil), "osmosis.incentives.UpcomingGaugesPerDenomRequest")
+	proto.RegisterType((*UpcomingGaugesPerDenomResponse)(nil), "osmosis.incentives.UpcomingGaugesPerDenomResponse")
 	proto.RegisterType((*RewardsEstRequest)(nil), "osmosis.incentives.RewardsEstRequest")
 	proto.RegisterType((*RewardsEstResponse)(nil), "osmosis.incentives.RewardsEstResponse")
 	proto.RegisterType((*QueryLockableDurationsRequest)(nil), "osmosis.incentives.QueryLockableDurationsRequest")
@@ -987,6 +1095,7 @@ type QueryClient interface {
 	ActiveGaugesPerDenom(ctx context.Context, in *ActiveGaugesPerDenomRequest, opts ...grpc.CallOption) (*ActiveGaugesPerDenomResponse, error)
 	// returns scheduled gauges
 	UpcomingGauges(ctx context.Context, in *UpcomingGaugesRequest, opts ...grpc.CallOption) (*UpcomingGaugesResponse, error)
+	UpcomingGaugesPerDenom(ctx context.Context, in *UpcomingGaugesPerDenomRequest, opts ...grpc.CallOption) (*UpcomingGaugesPerDenomResponse, error)
 	// RewardsEst returns an estimate of the rewards at a future specific time.
 	// The querier either provides an address or a set of locks
 	// for which they want to find the associated rewards.
@@ -1066,6 +1175,15 @@ func (c *queryClient) UpcomingGauges(ctx context.Context, in *UpcomingGaugesRequ
 	return out, nil
 }
 
+func (c *queryClient) UpcomingGaugesPerDenom(ctx context.Context, in *UpcomingGaugesPerDenomRequest, opts ...grpc.CallOption) (*UpcomingGaugesPerDenomResponse, error) {
+	out := new(UpcomingGaugesPerDenomResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/UpcomingGaugesPerDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) RewardsEst(ctx context.Context, in *RewardsEstRequest, opts ...grpc.CallOption) (*RewardsEstResponse, error) {
 	out := new(RewardsEstResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/RewardsEst", in, out, opts...)
@@ -1099,6 +1217,7 @@ type QueryServer interface {
 	ActiveGaugesPerDenom(context.Context, *ActiveGaugesPerDenomRequest) (*ActiveGaugesPerDenomResponse, error)
 	// returns scheduled gauges
 	UpcomingGauges(context.Context, *UpcomingGaugesRequest) (*UpcomingGaugesResponse, error)
+	UpcomingGaugesPerDenom(context.Context, *UpcomingGaugesPerDenomRequest) (*UpcomingGaugesPerDenomResponse, error)
 	// RewardsEst returns an estimate of the rewards at a future specific time.
 	// The querier either provides an address or a set of locks
 	// for which they want to find the associated rewards.
@@ -1131,6 +1250,9 @@ func (*UnimplementedQueryServer) ActiveGaugesPerDenom(ctx context.Context, req *
 }
 func (*UnimplementedQueryServer) UpcomingGauges(ctx context.Context, req *UpcomingGaugesRequest) (*UpcomingGaugesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpcomingGauges not implemented")
+}
+func (*UnimplementedQueryServer) UpcomingGaugesPerDenom(ctx context.Context, req *UpcomingGaugesPerDenomRequest) (*UpcomingGaugesPerDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpcomingGaugesPerDenom not implemented")
 }
 func (*UnimplementedQueryServer) RewardsEst(ctx context.Context, req *RewardsEstRequest) (*RewardsEstResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RewardsEst not implemented")
@@ -1269,6 +1391,24 @@ func _Query_UpcomingGauges_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_UpcomingGaugesPerDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpcomingGaugesPerDenomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).UpcomingGaugesPerDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/UpcomingGaugesPerDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).UpcomingGaugesPerDenom(ctx, req.(*UpcomingGaugesPerDenomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_RewardsEst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RewardsEstRequest)
 	if err := dec(in); err != nil {
@@ -1336,6 +1476,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpcomingGauges",
 			Handler:    _Query_UpcomingGauges_Handler,
+		},
+		{
+			MethodName: "UpcomingGaugesPerDenom",
+			Handler:    _Query_UpcomingGaugesPerDenom_Handler,
 		},
 		{
 			MethodName: "RewardsEst",
@@ -1876,6 +2020,99 @@ func (m *UpcomingGaugesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
+
+func (m *UpcomingGaugesPerDenomRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpcomingGaugesPerDenomRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpcomingGaugesPerDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+
+func (m *UpcomingGaugesPerDenomResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpcomingGaugesPerDenomResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpcomingGaugesPerDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Data) > 0 {
+		for iNdEx := len(m.Data) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Data[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *RewardsEstRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2222,6 +2459,42 @@ func (m *UpcomingGaugesRequest) Size() (n int) {
 }
 
 func (m *UpcomingGaugesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Data) > 0 {
+		for _, e := range m.Data {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *UpcomingGaugesPerDenomRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *UpcomingGaugesPerDenomResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3587,6 +3860,246 @@ func (m *UpcomingGaugesResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
+func (m *UpcomingGaugesPerDenomRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpcomingGaugesPerDenomRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpcomingGaugesPerDenomRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UpcomingGaugesPerDenomResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpcomingGaugesPerDenomResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpcomingGaugesPerDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append(m.Data, Gauge{})
+			if err := m.Data[len(m.Data)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+
 func (m *RewardsEstRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
