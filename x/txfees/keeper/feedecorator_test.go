@@ -182,6 +182,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		suite.ctx = suite.ctx.WithIsCheckTx(tc.isCheckTx)
 		suite.ctx = suite.ctx.WithMinGasPrices(tc.minGasPrices)
 
+		// TxBuilder components reset for every test case
 		txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 		priv0, _, addr0 := testdata.KeyTestPubAddr()
 		acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)

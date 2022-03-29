@@ -29,6 +29,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.gammKeeper.SwapExactAmountIn(ctx, addrFoo, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
 		}
 	}
+
+	fooAccountBalances = k.bankKeeper.GetAllBalances(ctx, addrFoo)
 	
 	k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.FooCollectorName, txfeestypes.FeeCollectorName, fooAccountBalances)
 
