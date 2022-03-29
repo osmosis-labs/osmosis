@@ -77,7 +77,6 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 		Denom:    stakingSyntheticDenom(denom, valAddr),
 		Duration: k.sk.GetParams(ctx).UnbondingTime,
 	}, ctx.BlockTime(), 1)
-
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
 		return types.SuperfluidIntermediaryAccount{}, err
@@ -143,7 +142,7 @@ func (k Keeper) GetAllLockIdIntermediaryAccountConnections(ctx sdk.Context) []ty
 	return connections
 }
 
-// Returns Superfluid Intermediate Account and a bool if found / not found
+// Returns Superfluid Intermediate Account and a bool if found / not found.
 func (k Keeper) GetIntermediaryAccountFromLockId(ctx sdk.Context, lockId uint64) (types.SuperfluidIntermediaryAccount, bool) {
 	addr := k.GetLockIdIntermediaryAccountConnection(ctx, lockId)
 	if addr.Empty() {

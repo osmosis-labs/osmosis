@@ -73,7 +73,7 @@ func (pa Pool) GetSwapFee(_ sdk.Context) sdk.Dec {
 	return pa.PoolParams.SwapFee
 }
 
-func (pa Pool) GetTotalLpBalances(_ sdk.Context) sdk.Coins {
+func (pa Pool) GetTotalPoolLiquidity(_ sdk.Context) sdk.Coins {
 	return PoolAssetsCoins(pa.PoolAssets)
 }
 
@@ -453,7 +453,6 @@ func (pa Pool) NumAssets() int {
 }
 
 func (pa Pool) IsActive(curBlockTime time.Time) bool {
-
 	// Add frozen pool checking, etc...
 
 	return true

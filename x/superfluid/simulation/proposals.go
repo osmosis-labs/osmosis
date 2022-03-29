@@ -17,7 +17,7 @@ const (
 	OpWeightRemoveSuperfluidAssetsProposal = "op_weight_remove_superfluid_assets_proposal"
 )
 
-// ProposalContents defines the module weighted proposals' contents
+// ProposalContents defines the module weighted proposals' contents.
 func ProposalContents(k keeper.Keeper, gk types.GammKeeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
@@ -28,10 +28,9 @@ func ProposalContents(k keeper.Keeper, gk types.GammKeeper) []simtypes.WeightedP
 	}
 }
 
-// SimulateSetSuperfluidAssetsProposal generates random superfluid asset set proposal content
+// SimulateSetSuperfluidAssetsProposal generates random superfluid asset set proposal content.
 func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-
 		pools, err := gk.GetPools(ctx)
 		if err != nil {
 			return nil
@@ -57,10 +56,9 @@ func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) s
 	}
 }
 
-// SimulateRemoveSuperfluidAssetsProposal generates random superfluid asset removal proposal content
+// SimulateRemoveSuperfluidAssetsProposal generates random superfluid asset removal proposal content.
 func SimulateRemoveSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-
 		assets := k.GetAllSuperfluidAssets(ctx)
 
 		if len(assets) == 0 {

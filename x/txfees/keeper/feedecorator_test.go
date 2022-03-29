@@ -14,11 +14,11 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
-	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
+	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 
 	uion := "uion"
 
-	uionPoolId := suite.PreparePoolWithAssets(
+	uionPoolId := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin(uion, 500),
 	)
@@ -162,17 +162,17 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	for _, tc := range tests {
 
-		suite.ctx = suite.ctx.WithIsCheckTx(tc.isCheckTx)
-		suite.ctx = suite.ctx.WithMinGasPrices(tc.minGasPrices)
+		suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx)
+		suite.Ctx = suite.Ctx.WithMinGasPrices(tc.minGasPrices)
 
 		tx := legacytx.NewStdTx([]sdk.Msg{}, legacytx.NewStdFee(
 			tc.gasRequested,
 			tc.txFee,
 		), []legacytx.StdSignature{}, "")
 
-		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper, mempoolFeeOpts)
+		mfd := keeper.NewMempoolFeeDecorator(*suite.App.TxFeesKeeper, mempoolFeeOpts)
 		antehandler := sdk.ChainAnteDecorators(mfd)
-		_, err := antehandler(suite.ctx, tx, false)
+		_, err := antehandler(suite.Ctx, tx, false)
 		if tc.expectPass {
 			suite.Require().NoError(err, "test: %s", tc.name)
 		} else {

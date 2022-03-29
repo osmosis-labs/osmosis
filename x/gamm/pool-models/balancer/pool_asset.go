@@ -66,7 +66,7 @@ func SortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
 	return assets_copy
 }
 
-// SortPoolAssetsByDenom sorts pool assets in place, by weight
+// SortPoolAssetsByDenom sorts pool assets in place, by weight.
 func SortPoolAssetsByDenom(assets []PoolAsset) {
 	sort.Slice(assets, func(i, j int) bool {
 		PoolAssetA := assets[i]
@@ -87,6 +87,7 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		return sdkerrors.Wrapf(types.ErrTooManyPoolAssets, "%d", len(assets))
 	}
 
+	assetExistsMap := map[string]bool{}
 	for _, asset := range assets {
 		err := ValidateUserSpecifiedWeight(asset.Weight)
 		if err != nil {
@@ -96,11 +97,15 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
+		if _, exists := assetExistsMap[asset.Token.Denom]; exists {
+			return sdkerrors.Wrapf(types.ErrTooFewPoolAssets, "pool asset %s already exists", asset.Token.Denom)
+		}
+		assetExistsMap[asset.Token.Denom] = true
 	}
 	return nil
 }
 
-// PoolAssetsCoins returns all the coins corresponding to a slice of pool assets
+// PoolAssetsCoins returns all the coins corresponding to a slice of pool assets.
 func PoolAssetsCoins(assets []PoolAsset) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, asset := range assets {

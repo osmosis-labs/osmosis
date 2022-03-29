@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group epochs queries under a subcommand
 	cmd := &cobra.Command{
@@ -30,7 +30,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	return cmd
 }
 
-// GetCmdEpochsInfos provide running epochInfos
+// GetCmdEpochsInfos provide running epochInfos.
 func GetCmdEpochsInfos() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "epoch-infos",
@@ -66,7 +66,7 @@ $ %s query epochs epoch-infos
 	return cmd
 }
 
-// GetCmdCurrentEpoch provides current epoch by specified identifier
+// GetCmdCurrentEpoch provides current epoch by specified identifier.
 func GetCmdCurrentEpoch() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "current-epoch",

@@ -16,7 +16,7 @@ import (
 // balanceYDelta is positive when the balance liquidity decreases.
 // balanceYDelta is negative when the balance liquidity increases.
 //
-// panics if tokenWeightUnknown is 0
+// panics if tokenWeightUnknown is 0.
 func solveConstantFunctionInvariant(
 	tokenBalanceFixedBefore,
 	tokenBalanceFixedAfter,
@@ -38,10 +38,11 @@ func solveConstantFunctionInvariant(
 }
 
 // CalcOutAmtGivenIn calculates token to be swapped out given
-// the provided amount, fee deducted, using solveConstantFunctionInvariant
+// the provided amount, fee deducted, using solveConstantFunctionInvariant.
 func (p Pool) CalcOutAmtGivenIn(
 	ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (
-	tokenOut sdk.DecCoin, err error) {
+	tokenOut sdk.DecCoin, err error,
+) {
 	tokenIn, poolAssetIn, poolAssetOut, err := p.parsePoolAssets(tokensIn, tokenOutDenom)
 	if err != nil {
 		return sdk.DecCoin{}, err
@@ -61,10 +62,11 @@ func (p Pool) CalcOutAmtGivenIn(
 }
 
 // calcInAmtGivenOut calculates token to be provided, fee added,
-// given the swapped out amount, using solveConstantFunctionInvariant
+// given the swapped out amount, using solveConstantFunctionInvariant.
 func (p Pool) CalcInAmtGivenOut(
 	ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (
-	tokenIn sdk.DecCoin, err error) {
+	tokenIn sdk.DecCoin, err error,
+) {
 	tokenOut, poolAssetOut, poolAssetIn, err := p.parsePoolAssets(tokensOut, tokenInDenom)
 	if err != nil {
 		return sdk.DecCoin{}, err
@@ -86,7 +88,7 @@ func (p Pool) CalcInAmtGivenOut(
 	return sdk.NewDecCoinFromDec(tokenInDenom, tokenAmountInBeforeFee), nil
 }
 
-// ApplySwap
+// ApplySwap.
 func (p *Pool) ApplySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
 	// Also ensures that len(tokensIn) = 1 = len(tokensOut)
 	inPoolAsset, outPoolAsset, err := p.parsePoolAssetsCoins(tokensIn, tokensOut)
@@ -124,7 +126,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 }
 
 // balancer notation: pAo - poolshares amount out, given single asset in
-// the second argument requires the tokenWeightIn / total token weight
+// the second argument requires the tokenWeightIn / total token weight.
 func calcPoolOutGivenSingleIn(
 	tokenBalanceIn,
 	normalizedTokenWeightIn,
@@ -157,7 +159,7 @@ func calcPoolOutGivenSingleIn(
 	return poolAmountOut
 }
 
-// calcPoolOutGivenSingleIn - balance pAo
+// calcPoolOutGivenSingleIn - balance pAo.
 func (p *Pool) singleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec) (numShares sdk.Int, err error) {
 	tokenInPoolAsset, err := p.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
@@ -182,7 +184,7 @@ func (p *Pool) maximalExactRatioJoin(tokensIn sdk.Coins) (numShares sdk.Int, rem
 	minShareRatio := sdk.MaxSortableDec
 	maxShareRatio := sdk.ZeroDec()
 
-	poolLiquidity := p.GetTotalLpBalances(sdk.Context{})
+	poolLiquidity := p.GetTotalPoolLiquidity(sdk.Context{})
 
 	for i, coin := range tokensIn {
 		shareRatio := coin.Amount.ToDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
@@ -265,7 +267,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 	shareOutRatio := refundedShares.ToDec().QuoInt(totalShares)
 	// Make it shareOutRatio * pool LP balances
 	exitedCoins = sdk.Coins{}
-	balances := p.GetTotalLpBalances(ctx)
+	balances := p.GetTotalPoolLiquidity(ctx)
 	for _, asset := range balances {
 		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
 		if exitAmt.LTE(sdk.ZeroInt()) {

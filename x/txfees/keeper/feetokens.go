@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
-// ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
+// ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount.
 func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
@@ -23,12 +23,12 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 		return sdk.Coin{}, err
 	}
 
-	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
+	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).Ceil().RoundInt()), nil
+	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).RoundInt()), nil
 }
 
 // GetFeeToken returns the fee token record for a specific denom
@@ -62,7 +62,7 @@ func (k Keeper) SetBaseDenom(ctx sdk.Context, denom string) error {
 // - The denom exists
 // - The denom is not the base denom
 // - The gamm pool exists
-// - The gamm pool includes the base token and fee token
+// - The gamm pool includes the base token and fee token.
 func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
@@ -134,7 +134,6 @@ func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {
 	feeTokens := []types.FeeToken{}
 
 	for ; iterator.Valid(); iterator.Next() {
-
 		feeToken := types.FeeToken{}
 
 		err := proto.Unmarshal(iterator.Value(), &feeToken)

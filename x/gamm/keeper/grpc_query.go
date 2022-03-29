@@ -20,9 +20,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-var (
-	sdkIntMaxValue = sdk.NewInt(0)
-)
+var sdkIntMaxValue = sdk.NewInt(0)
 
 func init() {
 	maxInt := big.NewInt(2)
@@ -95,7 +93,6 @@ func (k Keeper) Pools(
 		anys = append(anys, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -146,6 +143,22 @@ func (k Keeper) PoolParams(ctx context.Context, req *types.QueryPoolParamsReques
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
+}
+
+func (k Keeper) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPoolLiquidityRequest) (*types.QueryTotalPoolLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	pool, err := k.GetPool(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryTotalPoolLiquidityResponse{
+		Liquidity: pool.GetTotalPoolLiquidity(sdkCtx),
+	}, nil
 }
 
 func (k Keeper) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequest) (*types.QueryTotalSharesResponse, error) {
