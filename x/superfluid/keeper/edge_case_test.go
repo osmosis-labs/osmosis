@@ -9,9 +9,6 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-// TODO: try creating a normal lockup when superfluid lockup for same denom exists
-// TODO: try unlocking a lockup when superfluid delegation exists
-
 func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 	testCases := []struct {
 		name                 string
@@ -88,6 +85,61 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 					gotLock.Coins.AmountOf(denoms[0]).String(),
 					sdk.NewDec(1000000).Mul(sdk.OneDec().Sub(slashFactor)).TruncateInt().String(),
 				)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
+	testCases := []struct {
+		name               string
+		validatorStats     []stakingtypes.BondStatus
+		delegatorNumber    int
+		superDelegations   []superfluidDelegation
+		expInterDelegation []sdk.Dec
+	}{
+		{
+			"with single validator and single superfluid delegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]sdk.Dec{sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+		},
+		{
+			"with single validator and additional superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
+			[]sdk.Dec{sdk.NewDec(20000000)}, // 50% x 20 x 1000000 x 2
+		},
+		{
+			"with multiple validators and multiple superfluid delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
+
+			// setup validators
+			valAddrs := suite.SetupValidators(tc.validatorStats)
+
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			// setup superfluid delegations
+			_, _, _ = delAddrs, valAddrs, denoms
+			_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
+
+			for _, lock := range locks {
+				err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, sdk.Coins{})
+				suite.Require().Error(err)
 			}
 		})
 	}
