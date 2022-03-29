@@ -55,11 +55,7 @@ import (
 	// Staking: Allows the Tendermint validator set to be chosen based on bonded stake.
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	// Staking: Allows the Tendermint validator set to be chosen based on bonded stake.
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-
-	// Upgrade:  Software upgrades handling and coordination.
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
