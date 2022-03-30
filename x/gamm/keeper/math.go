@@ -113,11 +113,11 @@ func CalcOutGivenIn(
 	tokenAmountInAfterFee := tokenAmountIn.Mul(sdk.OneDec().Sub(swapFee))
 	// delta balanceOut is positive(tokens inside the pool decreases)
 	tokenAmountOut := solveConstantFunctionInvariant(
-	  tokenBalanceIn,
-	  tokenBalanceIn.Add(tokenAmountInAfterFee),
-	  tokenWeightIn,
-	  tokenBalanceOut,
-	  tokenWeightOut,
+		tokenBalanceIn,
+		tokenBalanceIn.Add(tokenAmountInAfterFee),
+		tokenWeightIn,
+		tokenBalanceOut,
+		tokenWeightOut,
 	)
 	return tokenAmountOut
 }
