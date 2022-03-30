@@ -157,7 +157,7 @@ type appKeepers struct {
 	MintKeeper           *mintkeeper.Keeper
 	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
 	TxFeesKeeper         *txfeeskeeper.Keeper
-	FeeGrantKeeper 		 *feegrantkeeper.Keeper
+	FeeGrantKeeper       *feegrantkeeper.Keeper
 	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
