@@ -370,7 +370,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_FeeTokens_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "txfees", "v1beta1", "fee_tokens"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DenomSpotPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "txfees", "v1beta1", "tx_fees_by_denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DenomSpotPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "txfees", "v1beta1", "spot_price_by_denom"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_DenomPoolId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "txfees", "v1beta1", "denom_pool_id", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
 
