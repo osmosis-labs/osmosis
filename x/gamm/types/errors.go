@@ -13,6 +13,7 @@ var (
 	ErrLimitMinAmount     = sdkerrors.Register(ModuleName, 7, "calculated amount is lesser than min amount")
 	ErrInvalidMathApprox  = sdkerrors.Register(ModuleName, 8, "invalid calculated result")
 	ErrAlreadyInvalidPool = sdkerrors.Register(ModuleName, 9, "destruction on already invalid pool")
+	ErrInvalidPool        = sdkerrors.Register(ModuleName, 10, "attempting to create an invalid pool")
 
 	ErrEmptyRoutes              = sdkerrors.Register(ModuleName, 21, "routes not defined")
 	ErrEmptyPoolAssets          = sdkerrors.Register(ModuleName, 22, "PoolAssets not defined")
