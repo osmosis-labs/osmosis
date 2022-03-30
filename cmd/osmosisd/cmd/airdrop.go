@@ -6,13 +6,14 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
-	"github.com/spf13/cobra"
 )
 
 // GenesisStateV036 is minimum structure to import airdrop accounts
@@ -111,7 +112,6 @@ Example:
 
 			totalAtomBalance := sdk.NewInt(0)
 			for _, account := range genStateV036.AppState.Accounts {
-
 				balance := account.Coins.AmountOf(denom)
 				totalAtomBalance = totalAtomBalance.Add(balance)
 
@@ -236,7 +236,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

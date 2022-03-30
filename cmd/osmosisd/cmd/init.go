@@ -81,15 +81,15 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode.
-			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
+			// This is a slice of SEED nodes, not peers.  They must be configured in seed mode.
+			// An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
 
 			seeds := []string{
 				"63aba59a7da5197c0fbcdc13e760d7561791dca8@162.55.132.230:2000",         // Notional
 				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656", // [ block pane ]
 			}
 
-			//Override default settings in config.toml
+			// Override default settings in config.toml
 			config.P2P.Seeds = strings.Join(seeds[:], ",")
 			config.P2P.MaxNumInboundPeers = 320
 			config.P2P.MaxNumOutboundPeers = 40
@@ -99,7 +99,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			//Override default settings in app.toml
+			// Override default settings in app.toml
 			appConfig := appcfg.DefaultConfig()
 			appConfig.API.Enable = true
 			appConfig.StateSync.SnapshotInterval = 1500

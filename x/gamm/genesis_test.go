@@ -3,8 +3,6 @@ package gamm_test
 import (
 	"testing"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/osmosis-labs/osmosis/v4/app"
 	appparams "github.com/osmosis-labs/osmosis/v4/app/params"
 	"github.com/osmosis-labs/osmosis/v4/x/gamm"
@@ -13,6 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGammInitGenesis(t *testing.T) {

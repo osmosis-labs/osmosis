@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/osmosis-labs/osmosis/v4/x/pool-incentives/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/v4/x/pool-incentives/types"
 )
 
 func (k Keeper) FundCommunityPoolFromModule(ctx sdk.Context, asset sdk.Coin) error {
@@ -161,7 +162,6 @@ func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecor
 
 // This is checked for no err when a proposal is made, and executed when a proposal passes
 func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
-
 	recordsMap := make(map[uint64]types.DistrRecord)
 	totalWeight := sdk.NewInt(0)
 

@@ -1,10 +1,12 @@
 package epochs
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"time"
+
 	"github.com/osmosis-labs/osmosis/v4/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/v4/x/epochs/types"
-	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

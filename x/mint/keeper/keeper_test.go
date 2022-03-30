@@ -4,9 +4,6 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/osmosis-labs/osmosis/v4/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/v4/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v4/x/mint/types"
@@ -14,6 +11,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 type KeeperTestSuite struct {

@@ -9,6 +9,40 @@ import (
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
+	"github.com/gorilla/mux"
+	appparams "github.com/osmosis-labs/osmosis/v4/app/params"
+	_ "github.com/osmosis-labs/osmosis/v4/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v4/x/claim"
+	claimkeeper "github.com/osmosis-labs/osmosis/v4/x/claim/keeper"
+	claimtypes "github.com/osmosis-labs/osmosis/v4/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v4/x/epochs"
+	epochskeeper "github.com/osmosis-labs/osmosis/v4/x/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/v4/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v4/x/gamm"
+	gammkeeper "github.com/osmosis-labs/osmosis/v4/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v4/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v4/x/incentives"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v4/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/v4/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v4/x/lockup"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v4/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v4/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v4/x/mint"
+	mintkeeper "github.com/osmosis-labs/osmosis/v4/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v4/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v4/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v4/x/pool-incentives/client"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v4/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v4/x/pool-incentives/types"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -72,39 +106,6 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/gorilla/mux"
-	appparams "github.com/osmosis-labs/osmosis/v4/app/params"
-	_ "github.com/osmosis-labs/osmosis/v4/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v4/x/claim"
-	claimkeeper "github.com/osmosis-labs/osmosis/v4/x/claim/keeper"
-	claimtypes "github.com/osmosis-labs/osmosis/v4/x/claim/types"
-	"github.com/osmosis-labs/osmosis/v4/x/epochs"
-	epochskeeper "github.com/osmosis-labs/osmosis/v4/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v4/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v4/x/gamm"
-	gammkeeper "github.com/osmosis-labs/osmosis/v4/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v4/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v4/x/incentives"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v4/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v4/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v4/x/lockup"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v4/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v4/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v4/x/mint"
-	mintkeeper "github.com/osmosis-labs/osmosis/v4/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/v4/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v4/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v4/x/pool-incentives/client"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v4/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v4/x/pool-incentives/types"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const appName = "OsmosisApp"
@@ -232,7 +233,6 @@ func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -317,7 +317,6 @@ func NewOsmosisApp(
 			app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
 			prop12(ctx, app)
-
 		})
 
 	// Create IBC Keeper
@@ -434,7 +433,7 @@ func NewOsmosisApp(
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
-	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.

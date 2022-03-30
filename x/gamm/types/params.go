@@ -3,9 +3,10 @@ package types
 import (
 	"fmt"
 
+	appparams "github.com/osmosis-labs/osmosis/v4/app/params"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	appparams "github.com/osmosis-labs/osmosis/v4/app/params"
 )
 
 // Parameter store keys
@@ -38,7 +39,6 @@ func (p Params) Validate() error {
 	}
 
 	return nil
-
 }
 
 // Implements params.ParamSet

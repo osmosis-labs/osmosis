@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v4/x/gamm/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

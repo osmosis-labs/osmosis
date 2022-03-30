@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) LegacyLockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
@@ -59,7 +60,7 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 				suite.app.EndBlocker(suite.ctx, types.RequestEndBlock{suite.ctx.BlockHeight()})
 
 				// mint coins to distribution module / community pool so prop12 upgrade doesn't panic
-				var bal = int64(1000000000000)
+				bal := int64(1000000000000)
 				coin := sdk.NewInt64Coin("uosmo", bal)
 				coins := sdk.NewCoins(coin)
 				suite.app.BankKeeper.MintCoins(suite.ctx, "mint", coins)
@@ -159,7 +160,6 @@ func (suite *KeeperTestSuite) TestUpgradeStoreManagement() {
 			tc.pre_update()
 			tc.update()
 			tc.post_update()
-
 		})
 	}
 }

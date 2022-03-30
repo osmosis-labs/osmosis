@@ -1,11 +1,12 @@
 package keeper
 
 import (
+	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/v4/x/claim/types"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v4/x/claim/types"
 )
 
 // GetModuleAccountBalance gets the airdrop coin balance of module account
@@ -69,7 +70,6 @@ func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 
 	claimRecords := []types.ClaimRecord{}
 	for ; iterator.Valid(); iterator.Next() {
-
 		claimRecord := types.ClaimRecord{}
 
 		err := proto.Unmarshal(iterator.Value(), &claimRecord)

@@ -3,8 +3,9 @@ package types
 import (
 	"encoding/json"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type poolAssetPretty struct {
@@ -71,7 +72,6 @@ func (pa Pool) MarshalYAML() (interface{}, error) {
 		TotalShares:        pa.TotalShares,
 		PoolAssets:         pa.PoolAssets,
 	})
-
 	if err != nil {
 		return nil, err
 	}

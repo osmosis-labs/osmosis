@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v4/x/incentives/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getLastGaugeID returns ID used last time
@@ -67,7 +68,7 @@ func (k Keeper) addGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) er
 
 // deleteGaugeRefByKey removes gauge ID from an array associated to provided key
 func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
-	var index = -1
+	index := -1
 	store := ctx.KVStore(k.storeKey)
 	gaugeIDs := k.getGaugeRefs(ctx, key)
 	gaugeIDs, index = removeValue(gaugeIDs, gaugeID)

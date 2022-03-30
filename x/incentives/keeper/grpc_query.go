@@ -5,13 +5,14 @@ import (
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v4/x/lockup/types"
 
+	"github.com/osmosis-labs/osmosis/v4/x/incentives/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/osmosis-labs/osmosis/v4/x/incentives/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -54,7 +55,6 @@ func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -78,7 +78,6 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -102,7 +101,6 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

@@ -19,13 +19,14 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v4/app"
+	minttypes "github.com/osmosis-labs/osmosis/v4/x/mint/types"
+	dbm "github.com/tendermint/tm-db"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/osmosis-labs/osmosis/v4/app"
-	minttypes "github.com/osmosis-labs/osmosis/v4/x/mint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 type IntegrationTestSuite struct {

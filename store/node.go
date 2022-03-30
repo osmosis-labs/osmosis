@@ -174,7 +174,7 @@ func (ptr *ptr) pull(key []byte) {
 	}
 
 	node = node.delete(idx)
-	// For sake of efficienty on our use case, we pull only when a ptr gets
+	// For sake of efficiently on our use case, we pull only when a ptr gets
 	// empty.
 	// if len(data.Index) >= int(ptr.tree.m/2) {
 	if len(node.Children) > 0 {

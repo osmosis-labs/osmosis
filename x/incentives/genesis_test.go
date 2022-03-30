@@ -4,13 +4,14 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/osmosis-labs/osmosis/v4/app"
 	"github.com/osmosis-labs/osmosis/v4/x/incentives"
 	"github.com/osmosis-labs/osmosis/v4/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v4/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestIncentivesExportGenesis(t *testing.T) {
@@ -89,5 +90,4 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	gauges := app.IncentivesKeeper.GetGauges(ctx)
 	require.Len(t, gauges, 1)
 	require.Equal(t, gauges[0], gauge)
-
 }

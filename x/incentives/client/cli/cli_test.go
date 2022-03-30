@@ -6,11 +6,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/osmosis-labs/osmosis/v4/app"
 	"github.com/osmosis-labs/osmosis/v4/x/incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/v4/x/incentives/types"
+
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
 type IntegrationTestSuite struct {

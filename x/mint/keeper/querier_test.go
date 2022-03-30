@@ -7,9 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/osmosis-labs/osmosis/v4/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v4/x/mint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )

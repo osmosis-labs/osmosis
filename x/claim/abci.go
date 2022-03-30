@@ -1,13 +1,13 @@
 package claim
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v4/x/claim/keeper"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // EndBlocker called every block, process inflation, update validator set.
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		panic(err)

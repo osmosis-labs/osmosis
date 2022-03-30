@@ -24,7 +24,6 @@ func migrateBranchValue(oldValueBz []byte) *store.Node {
 	var oldValue Children
 	fmt.Println(string(oldValueBz))
 	err := json.Unmarshal(oldValueBz, &oldValue)
-
 	if err != nil {
 		panic(err)
 	}
@@ -32,10 +31,12 @@ func migrateBranchValue(oldValueBz []byte) *store.Node {
 	for i, oldChild := range oldValue {
 		cs[i] = &store.Child{
 			Index:        oldChild.Index,
-			Accumulation: oldChild.Acc}
+			Accumulation: oldChild.Acc,
+		}
 	}
 	return &store.Node{
-		Children: cs}
+		Children: cs,
+	}
 }
 
 func migrateLeafValue(index []byte, oldValueBz []byte) *store.Leaf {

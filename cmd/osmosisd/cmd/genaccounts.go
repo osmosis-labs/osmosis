@@ -10,6 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	appparams "github.com/osmosis-labs/osmosis/v4/app/params"
+	claimtypes "github.com/osmosis-labs/osmosis/v4/x/claim/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,8 +24,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	appparams "github.com/osmosis-labs/osmosis/v4/app/params"
-	claimtypes "github.com/osmosis-labs/osmosis/v4/x/claim/types"
 )
 
 const (
@@ -263,7 +264,6 @@ Example:
 				if _, ok := nonAirdropAccs[acc.Address]; !ok {
 					nonAirdropAccs[acc.Address] = sdk.NewCoins()
 				}
-
 			}
 
 			for addr, amt := range ionAmts {

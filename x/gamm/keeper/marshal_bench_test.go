@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/osmosis-labs/osmosis/v4/app"
 	gammtypes "github.com/osmosis-labs/osmosis/v4/x/gamm/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func genPoolAssets(r *rand.Rand) []gammtypes.PoolAsset {

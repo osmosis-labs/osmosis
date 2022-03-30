@@ -4,8 +4,12 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	osmo_simulation "github.com/osmosis-labs/osmosis/v4/x/simulation"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
+	"github.com/osmosis-labs/osmosis/v4/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v4/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -13,8 +17,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v4/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v4/x/gamm/types"
 )
 
 // Simulation operation weights constants

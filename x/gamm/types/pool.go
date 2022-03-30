@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v4/v043_temp/address"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PoolI defines an interface for pools that hold tokens.
@@ -469,7 +470,6 @@ func (pa Pool) NumAssets() int {
 }
 
 func (pa Pool) IsActive(curBlockTime time.Time) bool {
-
 	// Add frozen pool checking, etc...
 
 	return true

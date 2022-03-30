@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -18,7 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v4/store"
-	"github.com/osmosis-labs/osmosis/v4/store/legacy/v101"
+	v101 "github.com/osmosis-labs/osmosis/v4/store/legacy/v101"
 )
 
 func setupStore() sdk.KVStore {

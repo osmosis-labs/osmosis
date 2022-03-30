@@ -8,10 +8,9 @@ import (
 )
 
 func prop12(ctx sdk.Context, app *OsmosisApp) {
-
 	payments := GetProp12Payments()
 
-	var total = int64(0)
+	total := int64(0)
 
 	for _, payment := range payments {
 		addr, err := sdk.AccAddressFromBech32(payment[0])
@@ -27,9 +26,8 @@ func prop12(ctx sdk.Context, app *OsmosisApp) {
 		total += amount
 	}
 
-	//deduct from the feePool tracker
+	// deduct from the feePool tracker
 	feePool := app.DistrKeeper.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Sub(sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", total)))
 	app.DistrKeeper.SetFeePool(ctx, feePool)
-
 }

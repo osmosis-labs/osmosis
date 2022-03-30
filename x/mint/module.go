@@ -11,17 +11,18 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/osmosis-labs/osmosis/v4/x/mint/client/cli"
+	"github.com/osmosis-labs/osmosis/v4/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v4/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v4/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v4/x/mint/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/osmosis-labs/osmosis/v4/x/mint/client/cli"
-	"github.com/osmosis-labs/osmosis/v4/x/mint/client/rest"
-	"github.com/osmosis-labs/osmosis/v4/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v4/x/mint/simulation"
-	"github.com/osmosis-labs/osmosis/v4/x/mint/types"
 )
 
 var (
@@ -72,7 +73,6 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
-
 }
 
 // GetTxCmd returns no root tx command for the mint module.

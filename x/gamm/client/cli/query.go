@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/osmosis-labs/osmosis/v4/x/gamm/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -77,14 +78,12 @@ $ %s query gamm pool 1
 				var pool types.Pool
 				pool.XXX_Unmarshal(res.GetPool().Value)
 				out, err := yaml.Marshal(pool)
-
 				if err != nil {
 					return err
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
 				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
-
 				if err != nil {
 					return err
 				}
@@ -211,14 +210,12 @@ $ %s query gamm pool-params 1
 
 			if clientCtx.OutputFormat == "text" {
 				out, err := yaml.Marshal(res.GetParams())
-
 				if err != nil {
 					return err
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
 				out, err := clientCtx.JSONMarshaler.MarshalJSON(res)
-
 				if err != nil {
 					return err
 				}

@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	epochtypes "github.com/osmosis-labs/osmosis/v4/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v4/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v4/x/lockup/types"
 	db "github.com/tendermint/tm-db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Iterate over everything in a gauges iterator, until it reaches the end. Return all gauges iterated over.
@@ -369,7 +370,8 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // the distrInfo computed. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
 
@@ -562,7 +564,6 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
-
 			newGauge, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
 			if err != nil {
 				continue

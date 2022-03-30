@@ -3,9 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gogotypes "github.com/gogo/protobuf/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -22,7 +23,6 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 }
 
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {

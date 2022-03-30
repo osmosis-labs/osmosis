@@ -30,7 +30,6 @@ func TestCalcSpotPrice(t *testing.T) {
 		expected_spot_price.Sub(actual_spot_price).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
-
 }
 
 // TODO: Create test vectors with balancer contract
@@ -56,11 +55,9 @@ func TestCalcSpotPriceWithSwapFee(t *testing.T) {
 		expectedDec.Sub(s).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
-
 }
 
 func TestCalcOutGivenIn(t *testing.T) {
-
 	tokenBalanceIn, err := sdk.NewDecFromStr("100")
 	require.NoError(t, err)
 	tokenWeightIn, err := sdk.NewDecFromStr("0.1")
@@ -84,11 +81,9 @@ func TestCalcOutGivenIn(t *testing.T) {
 		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
 		"expected value & actual value's difference should less than precision*10000",
 	)
-
 }
 
 func TestCalcInGivenOut(t *testing.T) {
-
 	tokenBalanceIn, err := sdk.NewDecFromStr("100")
 	require.NoError(t, err)
 	tokenWeightIn, err := sdk.NewDecFromStr("0.1")
@@ -115,7 +110,6 @@ func TestCalcInGivenOut(t *testing.T) {
 }
 
 func TestCalcPoolOutGivenSingleIn(t *testing.T) {
-
 	tokenBalanceIn, err := sdk.NewDecFromStr("100")
 	require.NoError(t, err)
 	tokenWeightIn, err := sdk.NewDecFromStr("0.2")
@@ -171,7 +165,6 @@ func TestCalcSingleInGivenPoolOut(t *testing.T) {
 */
 
 func TestCalcSingleOutGivenPoolIn(t *testing.T) {
-
 	tokenBalanceOut, err := sdk.NewDecFromStr("200")
 	require.NoError(t, err)
 	tokenWeightOut, err := sdk.NewDecFromStr("0.8")
@@ -198,7 +191,6 @@ func TestCalcSingleOutGivenPoolIn(t *testing.T) {
 }
 
 func TestCalcPoolInGivenSingleOut(t *testing.T) {
-
 	tokenBalanceOut, err := sdk.NewDecFromStr("200")
 	require.NoError(t, err)
 	tokenWeightOut, err := sdk.NewDecFromStr("0.8")

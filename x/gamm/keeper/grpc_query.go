@@ -14,13 +14,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v4/x/gamm/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	sdkIntMaxValue = sdk.NewInt(0)
-)
+var sdkIntMaxValue = sdk.NewInt(0)
 
 func init() {
 	maxInt := big.NewInt(2)
@@ -97,7 +96,6 @@ func (k Keeper) Pools(
 		anys = append(anys, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

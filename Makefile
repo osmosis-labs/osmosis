@@ -227,49 +227,29 @@ benchmark:
 ###############################################################################
 
 lint:
-	golangci-lint run
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+	@echo "--> Running linter"
+	goglangci-lint run --timeout=10m
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name "*.pb.gw.go" -not -name "*.pb.go" | xargs gofumpt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name "*.pb.gw.go" -not -name "*.pb.go" | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name "*.pb.gw.go" -not -name "*.pb.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	golangci-lint run ./... --fix
 
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
 
-build-docker-osmosisdnode:
-	$(MAKE) -C networks/local
-
-# Run a 4-node testnet locally
-localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
-	@if ! [ -f $(BUILDDIR)/node0/osmosisd/config/genesis.json ]; \
-	then docker run --rm -v $(BUILDDIR):/osmosisd:Z osmosis-labs/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; \
-	fi
-	docker-compose up -d
-
-# Stop testnet
-localnet-stop:
-	docker-compose down
-
-clean-localnet: localnet-stop
-	rm -rf $(BUILDDIR)/node* $(BUILDDIR)/gentxs
-
-test-docker:
-	@docker build -f contrib/Dockerfile.test -t ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) .
-	@docker tag ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
-	@docker tag ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) ${TEST_DOCKER_REPO}:latest
-
-test-docker-push: test-docker
-	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD)
-	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
-	@docker push ${TEST_DOCKER_REPO}:latest
 
 .PHONY: all build-linux install format lint \
-	go-mod-cache draw-deps clean build \
-	setup-transactions setup-contract-tests-data start-osmosis run-lcd-contract-tests contract-tests \
-	test test-all test-build test-cover test-unit test-race \
-	benchmark \
-	build-docker-osmosisdnode localnet-start localnet-stop \
-	docker-single-node
+	go-mod-cache draw-deps clean build build-contract-tests-hooks \
+	test test-all test-build test-cover test-unit test-race benchmark
+	
+	
+###############################################################################
+###                                Tools                                    ###
+###############################################################################
+
+tools:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.0
+	go install mvdan.cc/gofumpt@latest
