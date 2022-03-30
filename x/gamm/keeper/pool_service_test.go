@@ -547,8 +547,8 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			)
 			suite.Require().NoError(err)
 
-			// require that tokenOutAmt * (1 - tc.poolSwapFee) == tc.tokensIn
-			suite.Require().Equal(tc.tokensIn[0].Amount, tokenOutAmt.Mul(sdk.OneInt().Sub(tc.poolSwapFee.RoundInt())))
+			// require that tokenOutAmt == tokensIn * (1 - tc.poolSwapFee)
+			suite.Require().Equal(tokenOutAmt, tc.tokensIn[0].Amount.Mul(sdk.OneInt().Sub(tc.poolSwapFee.RoundInt())))
 		})
 	}
 }
