@@ -506,7 +506,17 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		shareOutMinAmount sdk.Int
 		expectedSharesOut sdk.Int
 		tokenOutMinAmount sdk.Int
-	}{}
+	}{
+		{
+			name:              "single coin with zero swap and exit fees",
+			poolSwapFee:       sdk.ZeroDec(),
+			poolExitFee:       sdk.ZeroDec(),
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10))),
+			shareOutMinAmount: sdk.ZeroInt(),
+			expectedSharesOut: sdk.NewInt(33333305555500),
+			tokenOutMinAmount: sdk.ZeroInt(),
+		},
+	}
 
 	for _, tc := range testCases {
 		tc := tc
@@ -538,8 +548,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			suite.Require().NoError(err)
 
 			// require that tokenOutAmt * (1 - tc.poolSwapFee) == tc.tokensIn
-			fmt.Println(tokenOutAmt)
-			suite.Require().Equal(tokenOutAmt, tokenOutAmt.Mul(sdk.OneInt().Sub(tc.poolSwapFee.RoundInt())))
+			suite.Require().Equal(tc.tokensIn[0].Amount, tokenOutAmt.Mul(sdk.OneInt().Sub(tc.poolSwapFee.RoundInt())))
 		})
 	}
 }
