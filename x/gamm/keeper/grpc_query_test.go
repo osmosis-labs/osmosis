@@ -104,6 +104,21 @@ func (suite *KeeperTestSuite) TestQueryNumPools2() {
 	suite.Require().Equal(uint64(10), res.NumPools)
 }
 
+func (suite *KeeperTestSuite) TestQueryTotalPoolLiquidity() {
+	queryClient := suite.queryClient
+
+	// Pool not exist
+	_, err := queryClient.TotalPoolLiquidity(gocontext.Background(), &types.QueryTotalPoolLiquidityRequest{PoolId: 1})
+	suite.Require().Error(err)
+
+	poolId := suite.prepareBalancerPool()
+
+	res, err := queryClient.TotalPoolLiquidity(gocontext.Background(), &types.QueryTotalPoolLiquidityRequest{PoolId: poolId})
+	suite.Require().NoError(err)
+	expectedCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)), sdk.NewCoin("baz", sdk.NewInt(5000000)))
+	suite.Require().Equal(res.Liquidity, expectedCoins)
+}
+
 func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	queryClient := suite.queryClient
 

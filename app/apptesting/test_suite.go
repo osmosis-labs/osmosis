@@ -171,11 +171,12 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 			}
 			poolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
-
-		poolId, err := keeperTestHelper.App.GAMMKeeper.CreateBalancerPool(keeperTestHelper.Ctx, acc1, balancer.PoolParams{
+		poolParams := balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, poolAssets, defaultFutureGovernor)
+		}
+		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
+		poolId, err := keeperTestHelper.App.GAMMKeeper.CreatePool(keeperTestHelper.Ctx, msg)
 		keeperTestHelper.Require().NoError(err)
 
 		pool, err := keeperTestHelper.App.GAMMKeeper.GetPool(keeperTestHelper.Ctx, poolId)

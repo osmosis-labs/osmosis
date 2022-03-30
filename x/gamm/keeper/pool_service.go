@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -28,54 +28,99 @@ func (k Keeper) CalculateSpotPrice(
 	return pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
 }
 
-func (k Keeper) CreateBalancerPool(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	BalancerPoolParams balancer.PoolParams,
-	poolAssets []balancer.PoolAsset,
-	futurePoolGovernor string,
-) (uint64, error) {
-	if len(poolAssets) < types.MinPoolAssets {
-		return 0, types.ErrTooFewPoolAssets
+func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {
+	err := msg.Validate(ctx)
+	if err != nil {
+		return err
 	}
-	// TODO: Add the limit of binding token to the pool params?
-	if len(poolAssets) > types.MaxPoolAssets {
-		return 0, sdkerrors.Wrapf(
+
+	initialPoolLiquidity := msg.InitialLiquidity()
+	numAssets := initialPoolLiquidity.Len()
+	if numAssets < types.MinPoolAssets {
+		return types.ErrTooFewPoolAssets
+	}
+	if numAssets > types.MaxPoolAssets {
+		return sdkerrors.Wrapf(
 			types.ErrTooManyPoolAssets,
-			"pool has too many PoolAssets (%d)", len(poolAssets),
+			"pool has too many PoolAssets (%d)", numAssets,
 		)
 	}
+	return nil
+}
 
+func (k Keeper) validateCreatedPool(
+	ctx sdk.Context,
+	initialPoolLiquidity sdk.Coins,
+	poolId uint64,
+	pool types.PoolI) error {
+	if pool.GetId() != poolId {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created with incorrect pool ID.")
+	}
+	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created with incorrect pool address.")
+	}
+	// Notably we use the initial pool liquidity at the start of the messages definition
+	// just in case CreatePool was mutative.
+	if !pool.GetTotalPoolLiquidity(ctx).IsEqual(initialPoolLiquidity) {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created, with initial liquidity not equal to what was specified.")
+	}
+	// This check can be removed later, and replaced with a minimum.
+	if !pool.GetTotalShares().Equal(types.InitPoolSharesSupply) {
+		return sdkerrors.Wrapf(types.ErrInvalidPool,
+			"Pool was attempted to be created with incorrect number of initial shares.")
+	}
+	acc := k.accountKeeper.GetAccount(ctx, pool.GetAddress())
+	if acc != nil {
+		return sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
+	}
+	return nil
+}
+
+func (k Keeper) CreatePool(
+	ctx sdk.Context,
+	msg types.CreatePoolMsg,
+) (uint64, error) {
+	err := validateCreatePoolMsg(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
+	sender := msg.PoolCreator()
+	initialPoolLiquidity := msg.InitialLiquidity()
 	// send pool creation fee to community pool
 	params := k.GetParams(ctx)
-	err := k.distrKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender)
+	err = k.distrKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender)
 	if err != nil {
 		return 0, err
 	}
 
-	pool, err := k.newBalancerPool(ctx, BalancerPoolParams, poolAssets, futurePoolGovernor)
+	poolId := k.GetNextPoolNumberAndIncrement(ctx)
+	pool, err := msg.CreatePool(ctx, poolId)
+	if err != nil {
+		return 0, err
+	}
+	err = k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool)
 	if err != nil {
 		return 0, err
 	}
 
-	// Transfer the PoolAssets tokens to the pool's module account from the user account.
-	var coins sdk.Coins
-	for _, asset := range poolAssets {
-		coins = append(coins, asset.Token)
-	}
-	if coins == nil {
-		return 0, types.ErrTooFewPoolAssets
-	}
+	// Create and save pool's module account to the account keeper
+	acc := k.accountKeeper.NewAccount(ctx, authtypes.NewModuleAccount(
+		authtypes.NewBaseAccountWithAddress(pool.GetAddress()),
+		pool.GetAddress().String(),
+	))
+	k.accountKeeper.SetAccount(ctx, acc)
 
-	coins = coins.Sort()
-	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), coins)
+	// send initial liquidity to the pool
+	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), initialPoolLiquidity)
 	if err != nil {
 		return 0, err
 	}
 
-	// Mint the initial 100.000000000000000000 share token to the sender
-	// TODO: read number from what pool says is the number of shares
-	err = k.MintPoolShareToAccount(ctx, pool, sender, types.InitPoolSharesSupply)
+	// Mint the initial pool shares share token to the sender
+	err = k.MintPoolShareToAccount(ctx, pool, sender, pool.GetTotalShares())
 	if err != nil {
 		return 0, err
 	}
@@ -103,13 +148,14 @@ func (k Keeper) CreateBalancerPool(
 		Display: poolShareDisplayDenom,
 	})
 
+	// Set the pool
 	err = k.SetPool(ctx, pool)
 	if err != nil {
 		return 0, err
 	}
 
 	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
-	k.RecordTotalLiquidityIncrease(ctx, coins)
+	k.RecordTotalLiquidityIncrease(ctx, initialPoolLiquidity)
 
 	return pool.GetId(), nil
 }
@@ -171,7 +217,7 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount 
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 
-	poolLiquidity := pool.GetTotalLpBalances(ctx)
+	poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
 	neededLpLiquidity = sdk.Coins{}
 
 	for _, coin := range poolLiquidity {

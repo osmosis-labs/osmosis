@@ -60,7 +60,7 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 	for _, coin := range originCoins {
 		if pools[coin.Denom] != nil {
 			pool := pools[coin.Denom]
-			assets := pool.GetTotalLpBalances(sdk.Context{})
+			assets := pool.GetTotalPoolLiquidity(sdk.Context{})
 			for _, asset := range assets {
 				balances = balances.Add(sdk.NewCoin(asset.Denom, asset.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares())))
 				if pools[asset.Denom] != nil { // this happens when there's a pool for LP token swap

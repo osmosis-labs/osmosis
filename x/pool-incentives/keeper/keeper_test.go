@@ -4,20 +4,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
-
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
@@ -34,7 +31,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now().UTC()})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.PoolIncentivesKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.app.PoolIncentivesKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
@@ -62,7 +59,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []balancer.PoolAsset{
+	poolAssets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -75,7 +72,9 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 			Weight: sdk.NewInt(300),
 			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
 		},
-	}, "")
+	}
+	msg := balancer.NewMsgCreateBalancerPool(acc1, PoolParams, poolAssets, "")
+	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
 	suite.NoError(err)
 	return poolId
 }

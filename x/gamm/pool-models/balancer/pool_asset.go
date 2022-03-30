@@ -87,6 +87,7 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		return sdkerrors.Wrapf(types.ErrTooManyPoolAssets, "%d", len(assets))
 	}
 
+	assetExistsMap := map[string]bool{}
 	for _, asset := range assets {
 		err := ValidateUserSpecifiedWeight(asset.Weight)
 		if err != nil {
@@ -96,6 +97,10 @@ func ValidateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
+		if _, exists := assetExistsMap[asset.Token.Denom]; exists {
+			return sdkerrors.Wrapf(types.ErrTooFewPoolAssets, "pool asset %s already exists", asset.Token.Denom)
+		}
+		assetExistsMap[asset.Token.Denom] = true
 	}
 	return nil
 }

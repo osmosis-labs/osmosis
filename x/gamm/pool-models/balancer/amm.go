@@ -184,7 +184,7 @@ func (p *Pool) maximalExactRatioJoin(tokensIn sdk.Coins) (numShares sdk.Int, rem
 	minShareRatio := sdk.MaxSortableDec
 	maxShareRatio := sdk.ZeroDec()
 
-	poolLiquidity := p.GetTotalLpBalances(sdk.Context{})
+	poolLiquidity := p.GetTotalPoolLiquidity(sdk.Context{})
 
 	for i, coin := range tokensIn {
 		shareRatio := coin.Amount.ToDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
@@ -267,7 +267,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 	shareOutRatio := refundedShares.ToDec().QuoInt(totalShares)
 	// Make it shareOutRatio * pool LP balances
 	exitedCoins = sdk.Coins{}
-	balances := p.GetTotalLpBalances(ctx)
+	balances := p.GetTotalPoolLiquidity(ctx)
 	for _, asset := range balances {
 		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
 		if exitAmt.LTE(sdk.ZeroInt()) {
