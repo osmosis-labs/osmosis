@@ -8,7 +8,7 @@ pull_request_rules:
     conditions:
       - "#approved-reviews-by>1"
       - base=main
-      - label=automerge
+      - label=A:automerge
     actions:
       queue:
         name: default
@@ -19,7 +19,7 @@ pull_request_rules:
   - name: backport patches to v3.x branch
     conditions:
       - base=main
-      - label=backport/v3.x
+      - label=A:backport/v3.x
     actions:
       backport:
         branches:
@@ -27,7 +27,7 @@ pull_request_rules:
   - name: backport patches to v4.x branch
     conditions:
       - base=main
-      - label=backport/v4.x
+      - label=A:backport/v4.x
     actions:
       backport:
         branches:
@@ -35,7 +35,7 @@ pull_request_rules:
   - name: backport patches to v5.x branch
     conditions:
       - base=main
-      - label=backport/v5.x
+      - label=A:backport/v5.x
     actions:
       backport:
         branches:
@@ -43,7 +43,7 @@ pull_request_rules:
   - name: backport patches to v6.x branch
     conditions:
       - base=main
-      - label=backport/v6.x
+      - label=A:backport/v6.x
     actions:
       backport:
         branches:
@@ -51,7 +51,7 @@ pull_request_rules:
   - name: backport patches to v7.x branch
     conditions:
       - base=main
-      - label=backport/v7.x
+      - label=A:backport/v7.x
     actions:
       backport:
         branches:

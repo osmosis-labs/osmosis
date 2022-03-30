@@ -3,33 +3,41 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Querier{}
 
-func (k Keeper) FeeTokens(ctx context.Context, _ *types.QueryFeeTokensRequest) (*types.QueryFeeTokensResponse, error) {
+// Querier defines a wrapper around the x/txfees keeper providing gRPC method
+// handlers.
+type Querier struct {
+	Keeper
+}
+
+func NewQuerier(k Keeper) Querier {
+	return Querier{Keeper: k}
+}
+
+func (q Querier) FeeTokens(ctx context.Context, _ *types.QueryFeeTokensRequest) (*types.QueryFeeTokensResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	feeTokens := k.GetFeeTokens(sdkCtx)
+	feeTokens := q.Keeper.GetFeeTokens(sdkCtx)
 
 	return &types.QueryFeeTokensResponse{FeeTokens: feeTokens}, nil
 }
 
-func (k Keeper) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPriceRequest) (*types.QueryDenomSpotPriceResponse, error) {
+func (q Querier) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPriceRequest) (*types.QueryDenomSpotPriceResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	spotPrice, err := k.CalcFeeSpotPrice(sdkCtx, req.Denom)
+	spotPrice, err := q.CalcFeeSpotPrice(sdkCtx, req.Denom)
 	if err != nil {
 		return nil, err
 	}
 
-	feeToken, err := k.GetFeeToken(sdkCtx, req.GetDenom())
+	feeToken, err := q.GetFeeToken(sdkCtx, req.GetDenom())
 	if err != nil {
 		return nil, err
 	}
@@ -37,14 +45,14 @@ func (k Keeper) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPri
 	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, SpotPrice: spotPrice}, nil
 }
 
-func (k Keeper) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {
+func (q Querier) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	feeToken, err := k.GetFeeToken(sdkCtx, req.GetDenom())
+	feeToken, err := q.Keeper.GetFeeToken(sdkCtx, req.GetDenom())
 	if err != nil {
 		return nil, err
 	}
@@ -52,10 +60,10 @@ func (k Keeper) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequ
 	return &types.QueryDenomPoolIdResponse{PoolID: feeToken.GetPoolID()}, nil
 }
 
-func (k Keeper) BaseDenom(ctx context.Context, _ *types.QueryBaseDenomRequest) (*types.QueryBaseDenomResponse, error) {
+func (q Querier) BaseDenom(ctx context.Context, _ *types.QueryBaseDenomRequest) (*types.QueryBaseDenomResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	baseDenom, err := k.GetBaseDenom(sdkCtx)
+	baseDenom, err := q.Keeper.GetBaseDenom(sdkCtx)
 	if err != nil {
 		return nil, err
 	}
