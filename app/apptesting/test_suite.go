@@ -101,8 +101,8 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlockWithProposer(executeNextE
 	lastCommitInfo := abci.LastCommitInfo{
 		Votes: []abci.VoteInfo{{
 			Validator:       abci.Validator{Address: valAddr, Power: 1000},
-			SignedLastBlock: true},
-		},
+			SignedLastBlock: true,
+		}},
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 
