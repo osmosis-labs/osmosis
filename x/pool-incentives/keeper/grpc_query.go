@@ -81,7 +81,6 @@ func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivize
 				incentivizedPools = append(incentivizedPools, incentivizedPool)
 			}
 		}
-
 	}
 
 	return &types.QueryIncentivizedPoolsResponse{

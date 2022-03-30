@@ -111,7 +111,6 @@ Example:
 
 			totalAtomBalance := sdk.NewInt(0)
 			for _, account := range genStateV036.AppState.Accounts {
-
 				balance := account.Coins.AmountOf(denom)
 				totalAtomBalance = totalAtomBalance.Add(balance)
 

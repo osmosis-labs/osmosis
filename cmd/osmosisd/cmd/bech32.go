@@ -25,7 +25,6 @@ Example:
 	`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			bech32prefix, err := cmd.Flags().GetString(flagBech32Prefix)
 			if err != nil {
 				return err

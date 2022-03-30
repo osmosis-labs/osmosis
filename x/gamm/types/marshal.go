@@ -48,6 +48,7 @@ type poolPretty struct {
 	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
 
+//nolint:forcetypeassert
 func (pa Pool) String() string {
 	out, _ := pa.MarshalYAML()
 	return out.(string)

@@ -82,7 +82,10 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
-	k.setGauge(ctx, gauge)
+	err := k.setGauge(ctx, gauge)
+	if err != nil {
+		return err
+	}
 
 	curTime := ctx.BlockTime()
 	timeKey := getTimeKey(gauge.StartTime)
@@ -137,7 +140,10 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		return 0, err
 	}
 
-	k.setGauge(ctx, &gauge)
+	err := k.setGauge(ctx, &gauge)
+	if err != nil {
+		return 0, err
+	}
 	k.setLastGaugeID(ctx, gauge.Id)
 
 	// TODO: Do we need to be concerned with case where this should be ActiveGauges?
@@ -162,7 +168,10 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 	}
 
 	gauge.Coins = gauge.Coins.Add(coins...)
-	k.setGauge(ctx, gauge)
+	err = k.setGauge(ctx, gauge)
+	if err != nil {
+		return err
+	}
 	k.hooks.AfterAddToGauge(ctx, gauge.Id)
 	return nil
 }
@@ -312,7 +321,10 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 	// increase filled epochs after distribution
 	gauge.FilledEpochs += 1
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
-	k.setGauge(ctx, &gauge)
+	err := k.setGauge(ctx, &gauge)
+	if err != nil {
+		return nil, err
+	}
 
 	k.hooks.AfterDistribute(ctx, gauge.Id)
 	return totalDistrCoins, nil
@@ -341,7 +353,10 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 		return nil, fmt.Errorf("gauge with ID %d does not exist", gaugeID)
 	}
 	bz := store.Get(gaugeKey)
-	proto.Unmarshal(bz, &gauge)
+	err := proto.Unmarshal(bz, &gauge)
+	if err != nil {
+		return nil, err
+	}
 	return &gauge, nil
 }
 
@@ -405,7 +420,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	}
 	gauges := []types.Gauge{}
 	// initialize gauges to active and upcomings if not set
-	for s, _ := range denomSet {
+	for s := range denomSet {
 		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, s)
 		// Each gauge only rewards locks to one denom, so no duplicates
 		for _, id := range gaugeIDs {
@@ -432,7 +447,6 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
-
 			newGauge, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
 			if err != nil {
 				continue

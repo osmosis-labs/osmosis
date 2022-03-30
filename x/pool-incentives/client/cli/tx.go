@@ -68,7 +68,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 			}
 
 			if len(gaugeIds) != len(weights) {
-				return fmt.Errorf("the length of gauge ids and wieghts not matched")
+				return fmt.Errorf("the length of gauge ids and weights not matched")
 			}
 
 			if len(gaugeIds) == 0 {
@@ -122,8 +122,14 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.MarkFlagRequired(cli.FlagTitle)
-	cmd.MarkFlagRequired(cli.FlagDescription)
+	err := cmd.MarkFlagRequired(cli.FlagTitle)
+	if err != nil {
+		panic(err)
+	}
+	err = cmd.MarkFlagRequired(cli.FlagDescription)
+	if err != nil {
+		panic(err)
+	}
 
 	return cmd
 }
@@ -162,7 +168,7 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 			}
 
 			if len(gaugeIds) != len(weights) {
-				return fmt.Errorf("the length of gauge ids and wieghts not matched")
+				return fmt.Errorf("the length of gauge ids and weights not matched")
 			}
 
 			if len(gaugeIds) == 0 {
@@ -216,8 +222,14 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.MarkFlagRequired(cli.FlagTitle)
-	cmd.MarkFlagRequired(cli.FlagDescription)
+	err := cmd.MarkFlagRequired(cli.FlagTitle)
+	if err != nil {
+		panic(err)
+	}
+	err = cmd.MarkFlagRequired(cli.FlagDescription)
+	if err != nil {
+		panic(err)
+	}
 
 	return cmd
 }

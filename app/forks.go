@@ -8,7 +8,7 @@ func forks(ctx sdk.Context, app *OsmosisApp) {
 	switch ctx.BlockHeight() {
 	case 712000:
 		fix_min_deposit_denom(ctx, app)
-		fix_min_commision_rate(ctx, app)
+		fix_min_commission_rate(ctx, app)
 	default:
 		// do nothing
 		return
@@ -25,7 +25,7 @@ func fix_min_deposit_denom(ctx sdk.Context, app *OsmosisApp) {
 
 // Fixes an error where validators can be created with a commission rate
 // less than the network minimum rate.
-func fix_min_commision_rate(ctx sdk.Context, app *OsmosisApp) {
+func fix_min_commission_rate(ctx sdk.Context, app *OsmosisApp) {
 	// Upgrade every validators min-commission rate
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	minCommissionRate := app.StakingKeeper.GetParams(ctx).MinCommissionRate

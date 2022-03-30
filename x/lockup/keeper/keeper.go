@@ -48,7 +48,7 @@ func (k *Keeper) SetHooks(lh types.LockupHooks) *Keeper {
 	return k
 }
 
-// AdminKeeper defines a god priviledge keeper functions to remove tokens from locks and create new locks
+// AdminKeeper defines a god privilege keeper functions to remove tokens from locks and create new locks
 // For the governance system of token pools, we want a "ragequit" feature
 // So governance changes will take 1 week to go into effect
 // During that time, people can choose to "ragequit" which means they would leave the original pool

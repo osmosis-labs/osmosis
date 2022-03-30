@@ -68,7 +68,6 @@ var _ sdk.Msg = &MsgCreatePool{}
 func (msg MsgCreatePool) Route() string { return RouterKey }
 func (msg MsgCreatePool) Type() string  { return TypeMsgCreatePool }
 func (msg MsgCreatePool) ValidateBasic() error {
-
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)

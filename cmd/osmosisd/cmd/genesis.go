@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -35,6 +34,7 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v3/x/pool-incentives/types"
 )
 
+//nolint:ineffassign
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",
@@ -52,7 +52,7 @@ Example:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
-			cdc := depCdc.(codec.Marshaler)
+			cdc := depCdc
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
@@ -105,7 +105,7 @@ Example:
 
 func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams GenesisParams, chainID string) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
 	depCdc := clientCtx.JSONMarshaler
-	cdc := depCdc.(codec.Marshaler)
+	cdc := depCdc
 
 	// chain params genesis
 	genDoc.GenesisTime = genesisParams.GenesisTime
@@ -394,63 +394,63 @@ func MainnetGenesisParams() GenesisParams {
 	}
 	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1
 	genParams.MintParams.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
 			Weight:  sdk.MustNewDecFromStr("0.2887"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
 			Weight:  sdk.MustNewDecFromStr("0.2290"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo13lt0hzc6u3htsk7z5rs6vuurmgg4hh2ecgxqkf",
 			Weight:  sdk.MustNewDecFromStr("0.1625"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1kvc3he93ygc0us3ycslwlv2gdqry4ta73vk9hu",
 			Weight:  sdk.MustNewDecFromStr("0.109"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo19qgldlsk7hdv3ddtwwpvzff30pxqe9phq9evxf",
 			Weight:  sdk.MustNewDecFromStr("0.0995"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo19fs55cx4594een7qr8tglrjtt5h9jrxg458htd",
 			Weight:  sdk.MustNewDecFromStr("0.06"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1ssp6px3fs3kwreles3ft6c07mfvj89a544yj9k",
 			Weight:  sdk.MustNewDecFromStr("0.015"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1c5yu8498yzqte9cmfv5zcgtl07lhpjrj0skqdx",
 			Weight:  sdk.MustNewDecFromStr("0.01"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1yhj3r9t9vw7qgeg22cehfzj7enwgklw5k5v7lj",
 			Weight:  sdk.MustNewDecFromStr("0.0075"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo18nzmtyn5vy5y45dmcdnta8askldyvehx66lqgm",
 			Weight:  sdk.MustNewDecFromStr("0.007"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1z2x9z58cg96ujvhvu6ga07yv9edq2mvkxpgwmc",
 			Weight:  sdk.MustNewDecFromStr("0.005"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1tvf3373skua8e6480eyy38avv8mw3hnt8jcxg9",
 			Weight:  sdk.MustNewDecFromStr("0.0025"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n",
 			Weight:  sdk.MustNewDecFromStr("0.0025"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1djgf9p53n7m5a55hcn6gg0cm5mue4r5g3fadee",
 			Weight:  sdk.MustNewDecFromStr("0.001"),
 		},
-		minttypes.WeightedAddress{
+		{
 			Address: "osmo1488zldkrn8xcjh3z40v2mexq7d088qkna8ceze",
 			Weight:  sdk.MustNewDecFromStr("0.0008"),
 		},
@@ -527,7 +527,6 @@ func MainnetGenesisParams() GenesisParams {
 }
 
 func TestnetGenesisParams() GenesisParams {
-
 	genParams := MainnetGenesisParams()
 
 	genParams.GenesisTime = time.Now()

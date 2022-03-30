@@ -88,7 +88,6 @@ func calcInGivenOut(
 	foo = foo.Sub(one)
 	tokenAmountIn := sdk.OneDec().Sub(swapFee)
 	return (tokenBalanceIn.Mul(foo)).Quo(tokenAmountIn)
-
 }
 
 // pAo

@@ -25,7 +25,10 @@ func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
+	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {
@@ -68,7 +71,6 @@ func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 
 	claimRecords := []types.ClaimRecord{}
 	for ; iterator.Valid(); iterator.Next() {
-
 		claimRecord := types.ClaimRecord{}
 
 		err := proto.Unmarshal(iterator.Value(), &claimRecord)

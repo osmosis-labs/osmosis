@@ -92,5 +92,4 @@ func GenAndDeliverTx(
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), nil, nil
-
 }
