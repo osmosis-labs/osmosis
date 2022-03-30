@@ -7,12 +7,15 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var isPerpetual = true
-var notPerpetual = false
+var (
+	isPerpetual  = true
+	notPerpetual = false
+)
 
 func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.SetupTest()

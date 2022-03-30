@@ -3,13 +3,15 @@ package simulation
 import (
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 const (

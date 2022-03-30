@@ -3,8 +3,6 @@ package gamm_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
@@ -12,6 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // func TestGammInitGenesis(t *testing.T) {

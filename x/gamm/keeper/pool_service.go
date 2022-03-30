@@ -52,7 +52,8 @@ func (k Keeper) validateCreatedPool(
 	ctx sdk.Context,
 	initialPoolLiquidity sdk.Coins,
 	poolId uint64,
-	pool types.PoolI) error {
+	pool types.PoolI,
+) error {
 	if pool.GetId() != poolId {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")

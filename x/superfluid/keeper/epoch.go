@@ -3,10 +3,11 @@ package keeper
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"

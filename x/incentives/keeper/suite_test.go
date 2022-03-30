@@ -5,10 +5,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -106,7 +107,8 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 }
 
 func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.Coins, duration time.Duration) (
-	uint64, *types.Gauge, sdk.Coins, time.Time) {
+	uint64, *types.Gauge, sdk.Coins, time.Time,
+) {
 	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
 	startTime2 := time.Now()
 	distrTo := lockuptypes.QueryCondition{
@@ -134,7 +136,8 @@ func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (
 }
 
 func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coins, coinsPerLock sdk.Coins,
-	lockDuration time.Duration) []sdk.AccAddress {
+	lockDuration time.Duration,
+) []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, 0, numLocks)
 	randPrefix := make([]byte, 8)
 	_, _ = rand.Read(randPrefix)
