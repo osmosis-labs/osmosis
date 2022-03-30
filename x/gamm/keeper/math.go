@@ -98,7 +98,9 @@ func calcOutGivenIn(
 	return tokenAmountOut
 }
 
-// CalcOutGivenIn ...
+// CalcOutGivenIn calculates token to be provided, fee added,
+// given the swapped out amount, using solveConstantFunctionInvariant.
+// This version is exported and can be used to calculate the exact output of a swap.
 func CalcOutGivenIn(
 	tokenBalanceIn,
 	tokenWeightIn,
