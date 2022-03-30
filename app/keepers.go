@@ -372,7 +372,6 @@ func (app *OsmosisApp) InitNormalKeepers(
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 
-	// Note: gammKeeper is expected to satisfy the SpotPriceCalculator interface parameter
 	feeGrantKeeper := feegrantkeeper.NewKeeper(
 		appCodec,
 		keys[txfeestypes.StoreKey],
