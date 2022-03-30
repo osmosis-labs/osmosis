@@ -12,13 +12,13 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 
-	addrFoo := k.accountKeeper.GetModuleAddress(txfeestypes.FooCollectorName)
+	addrAltFee := k.accountKeeper.GetModuleAddress(txfeestypes.AltFeeCollectorName)
 
-	fooAccountBalances := k.bankKeeper.GetAllBalances(ctx, addrFoo)
+	altFeeAccountBalances := k.bankKeeper.GetAllBalances(ctx, addrAltFee)
 
 	baseDenom, _ := k.GetBaseDenom(ctx)
 
-	for _, coin := range fooAccountBalances {
+	for _, coin := range altFeeAccountBalances {
 
 		if coin.Denom == baseDenom {
 			continue
@@ -26,13 +26,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		
 			feetoken, _ := k.GetFeeToken(ctx, coin.Denom)
 
-			k.gammKeeper.SwapExactAmountIn(ctx, addrFoo, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
+			k.gammKeeper.SwapExactAmountIn(ctx, addrAltFee, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
 		}
 	}
 
-	fooAccountBalances = k.bankKeeper.GetAllBalances(ctx, addrFoo)
+	altFeeAccountBalances = k.bankKeeper.GetAllBalances(ctx, addrAltFee)
 	
-	k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.FooCollectorName, txfeestypes.FeeCollectorName, fooAccountBalances)
+	k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.AltFeeCollectorName, txfeestypes.FeeCollectorName, altFeeAccountBalances)
 
 	// Should events be emitted at the end here?
 }

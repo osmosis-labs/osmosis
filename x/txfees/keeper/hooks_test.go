@@ -76,21 +76,21 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 	_, _, addr0 := testdata.KeyTestPubAddr()
 	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, coins)
-	suite.app.BankKeeper.SendCoinsFromAccountToModule(suite.ctx, addr0, types.FooCollectorName, coins)
+	suite.app.BankKeeper.SendCoinsFromAccountToModule(suite.ctx, addr0, types.AltFeeCollectorName, coins)
 
 	moduleAddrFee := suite.app.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
-	moduleAddrFoo := suite.app.AccountKeeper.GetModuleAddress(types.FooCollectorName)
+	moduleAddrAltFee := suite.app.AccountKeeper.GetModuleAddress(types.AltFeeCollectorName)
 
 	// make sure module account is funded with test fee tokens
-	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[0]))
-	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[1]))
-	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrFoo, coins[2]))
+	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrAltFee, coins[0]))
+	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrAltFee, coins[1]))
+	suite.Require().True(suite.app.BankKeeper.HasBalance(suite.ctx, moduleAddrAltFee, coins[2]))
 
 	params := suite.app.IncentivesKeeper.GetParams(suite.ctx)
 	futureCtx := suite.ctx.WithBlockTime(time.Now().Add(time.Minute))
 
 	suite.app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
 
-	suite.Require().Empty(suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrFoo)) 
+	suite.Require().Empty(suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrAltFee)) 
 	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddrFee, baseDenom).Amount.GTE(fullExpectedOutput))
 }

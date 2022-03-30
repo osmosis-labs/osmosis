@@ -17,8 +17,8 @@ const (
 	// FeeCollectorName the root string for the fee collector account address
 	FeeCollectorName = "fee_collector"
 
-	// FooCollectorName the root string for the $FOO collector account address (used for auto-swapping non-OSMO tx fees)
-	FooCollectorName = "foo_collector"
+	// AltFeeCollectorName the root string for the alt fee collector account address (used for auto-swapping non-OSMO tx fees)
+	AltFeeCollectorName = "alt_fee_collector"
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName

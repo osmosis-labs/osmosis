@@ -53,9 +53,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
 	// Staking: Allows the Tendermint validator set to be chosen based on bonded stake.
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -368,7 +368,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.GAMMKeeper,
 		app.GAMMKeeper,
 		txfeestypes.FeeCollectorName,
-		txfeestypes.FooCollectorName,
+		txfeestypes.AltFeeCollectorName,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 

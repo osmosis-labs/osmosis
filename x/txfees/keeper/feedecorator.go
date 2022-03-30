@@ -158,8 +158,8 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	// checks to make sure a separate module account has been set to collect fees not in OSMO
-	if addrFoo := dfd.ak.GetModuleAddress(types.FooCollectorName); addrFoo == nil {
-		return ctx, fmt.Errorf("Foo collector module account (%s) has not been set", types.FooCollectorName)
+	if addrAltFee := dfd.ak.GetModuleAddress(types.AltFeeCollectorName); addrAltFee == nil {
+		return ctx, fmt.Errorf("Alt Fee collector module account (%s) has not been set", types.AltFeeCollectorName)
 	}
 
 	// fee can be in any denom (checked for validity later)
@@ -228,8 +228,8 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	} else {
-		// sends to FooCollectorName module account
-		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FooCollectorName, fees)
+		// sends to AltFeeCollectorName module account
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.AltFeeCollectorName, fees)
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}

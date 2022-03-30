@@ -224,9 +224,9 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				suite.Require().Equal(tc.txFee[0], suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr, baseDenom), tc.name)
 				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.FeeCollectorName, addr0, tc.txFee)
 			} else if !tc.txFee.IsZero() {
-				moduleAddr := suite.app.AccountKeeper.GetModuleAddress(types.FooCollectorName)
+				moduleAddr := suite.app.AccountKeeper.GetModuleAddress(types.AltFeeCollectorName)
 				suite.Require().Equal(tc.txFee[0], suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
-				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.FooCollectorName, addr0, tc.txFee)
+				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.AltFeeCollectorName, addr0, tc.txFee)
 			}
 			suite.Require().NoError(err, "test: %s", tc.name)
 		} else {
