@@ -245,5 +245,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 		TokenOutDenom: "foo",
 	})
 	suite.NoError(err)
-	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), res.SpotPrice)
+	s := sdk.NewDec(1).Quo(sdk.NewDec(3))
+	sp := s.Mul(types.SigFigs).RoundInt().ToDec().Quo(types.SigFigs)
+	suite.Equal(sp.String(), res.SpotPrice)
 }
