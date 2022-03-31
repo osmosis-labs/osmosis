@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper/gov"
-
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			suite.SetupTest()
 
 			// initial check
-			resp, err := suite.app.SuperfluidKeeper.AllAssets(sdk.WrapSDKContext(suite.ctx), &types.AllAssetsRequest{})
+			resp, err := suite.querier.AllAssets(sdk.WrapSDKContext(suite.ctx), &types.AllAssetsRequest{})
 			suite.Require().NoError(err)
 			suite.Require().Len(resp.Assets, 0)
 
@@ -135,13 +135,13 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				// check assets individually
 				for _, asset := range action.expectedAssets {
-					res, err := suite.app.SuperfluidKeeper.AssetType(sdk.WrapSDKContext(suite.ctx), &types.AssetTypeRequest{Denom: asset.Denom})
+					res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.ctx), &types.AssetTypeRequest{Denom: asset.Denom})
 					suite.Require().NoError(err)
 					suite.Require().Equal(res.AssetType, asset.AssetType, "tcname %s, action num %d", tc.name, i)
 				}
 
 				// check assets
-				resp, err = suite.app.SuperfluidKeeper.AllAssets(sdk.WrapSDKContext(suite.ctx), &types.AllAssetsRequest{})
+				resp, err = suite.querier.AllAssets(sdk.WrapSDKContext(suite.ctx), &types.AllAssetsRequest{})
 				fmt.Println(resp)
 				suite.Require().NoError(err)
 				suite.Require().Equal(resp.Assets, action.expectedAssets)

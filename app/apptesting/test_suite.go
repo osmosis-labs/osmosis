@@ -66,7 +66,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 }
 
 func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
-	valAddr := []byte(":^) at this distribution workaround") //nolint
+	var valAddr []byte
 	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
@@ -78,6 +78,15 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 		valAddr2, _ := validator.GetConsAddr()
 		valAddr = valAddr2.Bytes()
 	}
+	keeperTestHelper.BeginNewBlockWithProposer(executeNextEpoch, valAddr)
+}
+
+func (keeperTestHelper *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
+	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, proposer)
+	keeperTestHelper.Assert().True(found)
+	valConsAddr, err := validator.GetConsAddr()
+	keeperTestHelper.Require().NoError(err)
+	valAddr := valConsAddr.Bytes()
 
 	epochIdentifier := keeperTestHelper.App.SuperfluidKeeper.GetEpochIdentifier(keeperTestHelper.Ctx)
 	epoch := keeperTestHelper.App.EpochsKeeper.GetEpochInfo(keeperTestHelper.Ctx, epochIdentifier)
@@ -86,17 +95,14 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
 		newBlockTime = endEpochTime.Add(time.Second)
 	}
-	// fmt.Println(executeNextEpoch, keeperTestHelper.Ctx.BlockTime(), newBlockTime)
 	header := tmproto.Header{Height: keeperTestHelper.Ctx.BlockHeight() + 1, Time: newBlockTime}
 	newCtx := keeperTestHelper.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
 	keeperTestHelper.Ctx = newCtx
 	lastCommitInfo := abci.LastCommitInfo{
-		Votes: []abci.VoteInfo{
-			{
-				Validator:       abci.Validator{Address: valAddr, Power: 1000},
-				SignedLastBlock: true,
-			},
-		},
+		Votes: []abci.VoteInfo{{
+			Validator:       abci.Validator{Address: valAddr, Power: 1000},
+			SignedLastBlock: true,
+		}},
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 
