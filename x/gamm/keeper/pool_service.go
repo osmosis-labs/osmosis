@@ -262,7 +262,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 		)
 
 	case sharesOut.LTE(sdk.ZeroInt()):
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
+		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
 	}
 
 	if err := k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, tokensIn); err != nil {
