@@ -557,11 +557,13 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			suite.Require().NoError(err)
 
 			// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSwapFee))
-			adjusted := tc.tokensIn[0].Amount.Mul(sdk.OneInt().Sub(tc.poolSwapFee.RoundInt()))
-			suite.Require().True(tokenOutAmt.LTE(adjusted))
+			oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSwapFee)
+			swapFeeAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
+			suite.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
 
 			// require swapTokenOutAmt + 10 > input
-			suite.Require().True(adjusted.Sub(tokenOutAmt).LTE(sdk.NewInt(10)))
+			suite.Require().True(swapFeeAdjustedAmount.Sub(tokenOutAmt).LTE(sdk.NewInt(10)),
+				"expected out amount %s, actual out amount %s", swapFeeAdjustedAmount, tokenOutAmt)
 		})
 	}
 }
