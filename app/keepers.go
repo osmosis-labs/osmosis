@@ -45,6 +45,7 @@ import (
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
 
+	owasm "github.com/osmosis-labs/osmosis/v7/app/wasm"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 	claimkeeper "github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
 	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
@@ -346,7 +347,10 @@ func (app *OsmosisApp) InitNormalKeepers(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate"
+	supportedFeatures := "iterator,staking,stargate,osmosis"
+
+	wasmOpts = append(owasm.RegisterCustomPlugins(app.GAMMKeeper, app.BankKeeper), wasmOpts...)
+
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
