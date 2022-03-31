@@ -513,7 +513,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			poolExitFee:       sdk.ZeroDec(),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
 			shareOutMinAmount: sdk.ZeroInt(),
-			expectedSharesOut: sdk.NewInt(3085332176922511200),
+			expectedSharesOut: sdk.NewInt(6265857020099440400),
 			tokenOutMinAmount: sdk.ZeroInt(),
 		},
 		{
@@ -522,7 +522,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			poolExitFee:       sdk.ZeroDec(),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
 			shareOutMinAmount: sdk.ZeroInt(),
-			expectedSharesOut: sdk.NewInt(3061456003587429200),
+			expectedSharesOut: sdk.NewInt(6226484702880621000),
 			tokenOutMinAmount: sdk.ZeroInt(),
 		},
 	}
@@ -534,13 +534,28 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			suite.SetupTest()
 			ctx := suite.ctx
 
-			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc1, defaultAcctFunds)
-			suite.Require().NoError(err)
-
-			poolID := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: tc.poolSwapFee,
-				ExitFee: tc.poolExitFee,
-			})
+			poolID := suite.prepareCustomBalancerPool(
+				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+					sdk.NewCoin("foo", sdk.NewInt(10000000)),
+					sdk.NewCoin("bar", sdk.NewInt(10000000)),
+					sdk.NewCoin("baz", sdk.NewInt(10000000)),
+				),
+				[]balancertypes.PoolAsset{
+					{
+						Weight: sdk.NewInt(100),
+						Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+					},
+					{
+						Weight: sdk.NewInt(200),
+						Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+					},
+				},
+				balancer.PoolParams{
+					SwapFee: tc.poolSwapFee,
+					ExitFee: tc.poolExitFee,
+				},
+			)
 
 			shares, err := suite.app.GAMMKeeper.JoinSwapExactAmountIn(ctx, acc1, poolID, tc.tokensIn, tc.shareOutMinAmount)
 			suite.Require().NoError(err)
@@ -562,8 +577,11 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			suite.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
 
 			// require swapTokenOutAmt + 10 > input
-			suite.Require().True(swapFeeAdjustedAmount.Sub(tokenOutAmt).LTE(sdk.NewInt(10)),
-				"expected out amount %s, actual out amount %s", swapFeeAdjustedAmount, tokenOutAmt)
+			suite.Require().True(
+				swapFeeAdjustedAmount.Sub(tokenOutAmt).LTE(sdk.NewInt(10)),
+				"expected out amount %s, actual out amount %s",
+				swapFeeAdjustedAmount, tokenOutAmt,
+			)
 		})
 	}
 }
