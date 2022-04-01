@@ -4,7 +4,8 @@ order: 1
 
 # Concepts
 
-The concept of the `gamm` module is designed to handle assets of a chain using the AMM and its concept of pool shares. 
+The `x/gamm` module implements an AMM using Balancer style pools with varying
+amounts and weights of assets in pools.
 
 ## Pool
 

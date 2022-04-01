@@ -79,38 +79,48 @@ func (k Keeper) validateCreatedPool(
 	return nil
 }
 
-func (k Keeper) CreatePool(
-	ctx sdk.Context,
-	msg types.CreatePoolMsg,
-) (uint64, error) {
+// CreatePool attempts to create a pool returning the newly created pool ID or
+// an error upon failure. The pool creation fee is used to fund the community
+// pool. It will create a dedicated module account for the pool and sends the
+// initial liquidity to the created module account.
+//
+// After the initial liquidity is sent to the pool's account, shares are minted
+// and sent to the pool creator. The shares are created using a denomination in
+// the form of gamm/pool/{poolID}. In addition, the x/bank metadata is updated
+// to reflect the newly created GAMM share denomination.
+func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
 	err := validateCreatePoolMsg(ctx, msg)
 	if err != nil {
 		return 0, err
 	}
+
 	sender := msg.PoolCreator()
 	initialPoolLiquidity := msg.InitialLiquidity()
+
 	// send pool creation fee to community pool
 	params := k.GetParams(ctx)
-	err = k.distrKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender)
+	if err := k.distrKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
+		return 0, err
+	}
+
+	poolID := k.GetNextPoolNumberAndIncrement(ctx)
+	pool, err := msg.CreatePool(ctx, poolID)
 	if err != nil {
 		return 0, err
 	}
 
-	poolId := k.GetNextPoolNumberAndIncrement(ctx)
-	pool, err := msg.CreatePool(ctx, poolId)
-	if err != nil {
-		return 0, err
-	}
-	err = k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool)
-	if err != nil {
+	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolID, pool); err != nil {
 		return 0, err
 	}
 
-	// Create and save pool's module account to the account keeper
-	acc := k.accountKeeper.NewAccount(ctx, authtypes.NewModuleAccount(
-		authtypes.NewBaseAccountWithAddress(pool.GetAddress()),
-		pool.GetAddress().String(),
-	))
+	// create and save the pool's module account to the account keeper
+	acc := k.accountKeeper.NewAccount(
+		ctx,
+		authtypes.NewModuleAccount(
+			authtypes.NewBaseAccountWithAddress(pool.GetAddress()),
+			pool.GetAddress().String(),
+		),
+	)
 	k.accountKeeper.SetAccount(ctx, acc)
 
 	// send initial liquidity to the pool
@@ -148,9 +158,7 @@ func (k Keeper) CreatePool(
 		Display: poolShareDisplayDenom,
 	})
 
-	// Set the pool
-	err = k.SetPool(ctx, pool)
-	if err != nil {
+	if err := k.SetPool(ctx, pool); err != nil {
 		return 0, err
 	}
 
