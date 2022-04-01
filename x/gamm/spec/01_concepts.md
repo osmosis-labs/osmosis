@@ -48,28 +48,29 @@ the user, the asset that is being swapped for, after the swap is denoted as
 Given a `tokenIn`, the following calculations are done to calculate how many
 tokens are to be swapped into and removed from the pool:
 
-- `tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - swapFee) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
+`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - swapFee) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
 
 The calculation is also able to be reversed, the case where user provides `tokenOut`.
 The calculation for the amount of tokens that the user should be putting in is
 done through the following formula:
 
-- `tokenBalanceIn * [{tokenBalanceOut / (tokenBalanceOut - tokenAmountOut)} ^ (tokenWeightOut / tokenWeightIn) -1] / tokenAmountIn`
+`tokenBalanceIn * [{tokenBalanceOut / (tokenBalanceOut - tokenAmountOut)} ^ (tokenWeightOut / tokenWeightIn) -1] / tokenAmountIn`
 
 ### Spot Price
 
-Meanwhile, calculation of the spot price with a swap fee is done using the following formula
+Meanwhile, calculation of the spot price with a swap fee is done using the following
+formula:
 
-- `spotPrice / (1-swapFee)`
+`spotPrice / (1 - swapFee)`, where `spotPrice` is defined as:
 
-where spotPrice is 
-
-- `(tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)`
+`(tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)`
 
 +++[https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/swap.go](https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/swap.go)
 
-### Multihop
+### Multi-Hop
 
-All tokens are swapped using multi-hop. That is, all swaps are routed via the ultimate cost-efficient way, swapping in and out from multiple pools in the process.
+All tokens are swapped using a multi-hop mechanism. That is, all swaps are routed
+via the most cost-efficient way, swapping in and out from multiple pools in the
+process.
 
 +++[https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/multihop.go](https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/multihop.go)
