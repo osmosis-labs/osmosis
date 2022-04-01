@@ -48,7 +48,7 @@ func (k Keeper) swapExactAmountIn(
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	tokensIn := sdk.NewCoins(tokenIn)
+	tokensIn := sdk.Coins{tokenIn}
 
 	tokenOutDecCoin, err := pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
