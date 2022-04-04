@@ -9,6 +9,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+// SwapExactAmountIn attempts to swap one asset, tokenIn, for another asset
+// denominated via tokenOutDenom through a pool denoted by poolId specifying that
+// tokenOutMinAmount must be returned in the resulting asset returning an error
+// upon failure. Upon success, the resulting tokens swapped for are returned. A
+// swap fee is applied determined by the pool's parameters.
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -16,19 +21,20 @@ func (k Keeper) SwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
-) (tokenOutAmount sdk.Int, err error) {
+) (sdk.Int, error) {
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
 	swapFee := pool.GetSwapFee(ctx)
 	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 }
 
-// swapExactAmountIn is an internal method for swapping an exact amount of tokens as input to a pool,
-// using the provided swapFee.
-// This is intended to allow different swap fees as determined by multi-hops,
-// or when recovering from chain liveness failures.
+// swapExactAmountIn is an internal method for swapping an exact amount of tokens
+// as input to a pool, using the provided swapFee. This is intended to allow
+// different swap fees as determined by multi-hops, or when recovering from
+// chain liveness failures.
 func (k Keeper) swapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -41,24 +47,26 @@ func (k Keeper) swapExactAmountIn(
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
 	}
+
 	tokensIn := sdk.Coins{tokenIn}
 
 	tokenOutDecCoin, err := pool.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
 	tokenOutCoin, _ := tokenOutDecCoin.TruncateDecimal()
 	tokenOutAmount = tokenOutCoin.Amount
-	if tokenOutAmount.LTE(sdk.ZeroInt()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+
+	if !tokenOutAmount.IsPositive() {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	if tokenOutAmount.LT(tokenOutMinAmount) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
 	}
 
-	err = k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin)
-	if err != nil {
+	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
 		return sdk.Int{}, err
 	}
 

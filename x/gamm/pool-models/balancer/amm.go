@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v7/osmomath"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -38,27 +39,33 @@ func solveConstantFunctionInvariant(
 	return amountY
 }
 
-// CalcOutAmtGivenIn calculates token to be swapped out given
-// the provided amount, fee deducted, using solveConstantFunctionInvariant.
+// CalcOutAmtGivenIn calculates tokens to be swapped out given the provided
+// amount and fee deducted, using solveConstantFunctionInvariant.
 func (p Pool) CalcOutAmtGivenIn(
-	ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (
-	tokenOut sdk.DecCoin, err error,
-) {
+	ctx sdk.Context,
+	tokensIn sdk.Coins,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+) (sdk.DecCoin, error) {
 	tokenIn, poolAssetIn, poolAssetOut, err := p.parsePoolAssets(tokensIn, tokenOutDenom)
 	if err != nil {
 		return sdk.DecCoin{}, err
 	}
 
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
-
 	poolTokenInBalance := poolAssetIn.Token.Amount.ToDec()
 	poolPostSwapInBalance := poolTokenInBalance.Add(tokenAmountInAfterFee)
 
-	// deduct swapfee on the in asset
+	// deduct swapfee on the tokensIn
 	// delta balanceOut is positive(tokens inside the pool decreases)
 	tokenAmountOut := solveConstantFunctionInvariant(
-		poolTokenInBalance, poolPostSwapInBalance, poolAssetIn.Weight.ToDec(),
-		poolAssetOut.Token.Amount.ToDec(), poolAssetOut.Weight.ToDec())
+		poolTokenInBalance,
+		poolPostSwapInBalance,
+		poolAssetIn.Weight.ToDec(),
+		poolAssetOut.Token.Amount.ToDec(),
+		poolAssetOut.Weight.ToDec(),
+	)
+
 	return sdk.NewDecCoinFromDec(tokenOutDenom, tokenAmountOut), nil
 }
 
