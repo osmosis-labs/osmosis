@@ -103,13 +103,13 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	poolID := k.GetNextPoolNumberAndIncrement(ctx)
-	pool, err := msg.CreatePool(ctx, poolID)
+	poolId := k.GetNextPoolNumberAndIncrement(ctx)
+	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
 		return 0, err
 	}
 
-	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolID, pool); err != nil {
+	if err := k.validateCreatedPool(ctx, initialPoolLiquidity, poolId, pool); err != nil {
 		return 0, err
 	}
 
