@@ -14,10 +14,10 @@ const (
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
 
-	// FeeCollectorName the root string for the fee collector account address
+	// FeeCollectorName the module account name for the fee collector account address.
 	FeeCollectorName = "fee_collector"
 
-	// AltFeeCollectorName the root string for the alt fee collector account address (used for auto-swapping non-OSMO tx fees)
+	// AltFeeCollectorName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
 	AltFeeCollectorName = "alt_fee_collector"
 
 	// QuerierRoute defines the module's query routing key
