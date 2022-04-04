@@ -349,3 +349,56 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 // Eugen’s point: Only rewards message needs to be updated. Rest of messages are fine
 // Queries need to be updated
 // We can do this at the very end though, since it just relates to queries.
+
+// IterateBondedValidatorsByPower implements govtypes.StakingKeeper
+func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(int64, stakingtypes.ValidatorI) bool) {
+	k.sk.IterateBondedValidatorsByPower(ctx, fn)
+}
+
+// TotalBondedTokens implements govtypes.StakingKeeper
+func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
+	return k.sk.TotalBondedTokens(ctx)
+}
+
+// IterateDelegations implements govtypes.StakingKeeper
+func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) {
+	// we tract the global index
+	synthlocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delegator)
+	for i, lock := range synthlocks {
+		interm, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
+		if !ok {
+			panic(1234) // XXX
+		}
+		lock, err := k.lk.GetLockByID(ctx, lock.UnderlyingLockId)
+		if err != nil {
+			panic(err)
+		}
+		coin, err := lock.SingleCoin()
+		if err != nil {
+			panic(err)
+		}
+		amount := k.GetSuperfluidOSMOTokens(ctx, interm.Denom, coin.Amount)
+		valAddr, err := sdk.ValAddressFromBech32(interm.ValAddr)
+		if err != nil {
+			panic(err)
+		}
+		validator, found := k.sk.GetValidator(ctx, valAddr)
+		if !found {
+			panic(1234) // XXX: could this happen?
+		}
+		shares, err := validator.SharesFromTokens(amount)
+		if err != nil {
+			panic(err) // XXX: should we just continue? when err happens? figure out
+		}
+		delegation := stakingtypes.Delegation{
+			DelegatorAddress: delegator.String(),
+			ValidatorAddress: interm.ValAddr,
+			Shares:           shares,
+		}
+		fn(int64(i), delegation)
+	}
+
+	k.sk.IterateDelegations(ctx, delegator, func(i int64, delegation stakingtypes.DelegationI) (stop bool) {
+		return fn(int64(len(synthlocks))+i, delegation) // add len(synthlocks) to index to avoid overlapping
+	})
+}
