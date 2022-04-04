@@ -29,6 +29,22 @@ func (q Querier) FeeTokens(ctx context.Context, _ *types.QueryFeeTokensRequest) 
 	return &types.QueryFeeTokensResponse{FeeTokens: feeTokens}, nil
 }
 
+func (q Querier) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPriceRequest) (*types.QueryDenomSpotPriceResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	spotPrice, err := q.CalcFeeSpotPrice(sdkCtx, req.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	feeToken, err := q.GetFeeToken(sdkCtx, req.GetDenom())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, SpotPrice: spotPrice}, nil
+}
+
 func (q Querier) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

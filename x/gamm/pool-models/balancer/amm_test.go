@@ -28,16 +28,23 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 		{
 			name:                "1:2 ratio",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			quoteDenomPoolInput: sdk.NewInt64Coin("foo", 200),
+			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 200),
 			expectError:         false,
-			expectedOutput:      sdk.MustNewDecFromStr("0.500000000002684355"),
+			expectedOutput:      sdk.MustNewDecFromStr("0.500000000000000000"),
 		},
 		{
 			name:                "2:1 ratio",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 200),
-			quoteDenomPoolInput: sdk.NewInt64Coin("foo", 100),
+			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100),
 			expectError:         false,
-			expectedOutput:      sdk.MustNewDecFromStr("1.999999999989262582"),
+			expectedOutput:      sdk.MustNewDecFromStr("2.000000000000000000"),
+		},
+		{
+			name:                "rounding after sigfig ratio",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 220),
+			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 115),
+			expectError:         false,
+			expectedOutput:      sdk.MustNewDecFromStr("1.913043480000000000"), // ans is 1.913043478260869565, rounded is 1.91304348
 		},
 	}
 
