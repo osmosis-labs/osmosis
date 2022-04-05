@@ -108,6 +108,39 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
 }
 
+func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
+	suite.SetupTest()
+
+		// initial check
+	res, err := suite.app.IncentivesKeeper.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Data, 0)
+
+	// create a gauge
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+
+	// final check
+	res, err = suite.app.IncentivesKeeper.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Data, 1)
+	expectedGauge := types.Gauge{
+		Id:          gaugeID,
+		IsPerpetual: false,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
+		},
+		Coins:             coins,
+		NumEpochsPaidOver: 2,
+		FilledEpochs:      0,
+		DistributedCoins:  sdk.Coins{},
+		StartTime:         startTime,
+	}
+	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
+
+}
+
 func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.SetupTest()
 
@@ -121,6 +154,38 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 
 	// final check
 	res, err = suite.app.IncentivesKeeper.UpcomingGauges(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Data, 1)
+	expectedGauge := types.Gauge{
+		Id:          gaugeID,
+		IsPerpetual: false,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
+		},
+		Coins:             coins,
+		NumEpochsPaidOver: 2,
+		FilledEpochs:      0,
+		DistributedCoins:  sdk.Coins{},
+		StartTime:         startTime,
+	}
+	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
+}
+
+func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
+	suite.SetupTest()
+	
+	// initial check
+	res, err := suite.app.IncentivesKeeper.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Data, 0)
+
+	// create a gauge
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+
+	// final check
+	res, err = suite.app.IncentivesKeeper.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
