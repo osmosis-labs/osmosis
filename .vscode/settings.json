@@ -1,6 +1,6 @@
 {
     "tabnine.experimentalAutoImports": true,
-    "go.lintTool": "golint",
+    "go.lintTool": "golangci-lint",
     "go.formatTool": "gofumports",
     "go.testOnSave": true,
     "go.useLanguageServer": true,
