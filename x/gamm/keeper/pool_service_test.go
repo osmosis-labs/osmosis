@@ -516,15 +516,19 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			expectedSharesOut: sdk.NewInt(6265857020099440400),
 			tokenOutMinAmount: sdk.ZeroInt(),
 		},
-		{
-			name:              "single coin with positive swap fee and zero exit fee",
-			poolSwapFee:       sdk.NewDecWithPrec(1, 2),
-			poolExitFee:       sdk.ZeroDec(),
-			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
-			shareOutMinAmount: sdk.ZeroInt(),
-			expectedSharesOut: sdk.NewInt(6226484702880621000),
-			tokenOutMinAmount: sdk.ZeroInt(),
-		},
+		// TODO: Uncomment or remove this following test case once the referenced
+		// issue is resolved.
+		//
+		// Ref: https://github.com/osmosis-labs/osmosis/issues/1196
+		// {
+		// 	name:              "single coin with positive swap fee and zero exit fee",
+		// 	poolSwapFee:       sdk.NewDecWithPrec(1, 2),
+		// 	poolExitFee:       sdk.ZeroDec(),
+		// 	tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
+		// 	shareOutMinAmount: sdk.ZeroInt(),
+		// 	expectedSharesOut: sdk.NewInt(6226484702880621000),
+		// 	tokenOutMinAmount: sdk.ZeroInt(),
+		// },
 	}
 
 	for _, tc := range testCases {
