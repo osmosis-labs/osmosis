@@ -137,7 +137,7 @@ message UpcomingGaugesPerDenomRequest {
 }
 
 message UpcomingGaugesPerDenomResponse {
-  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge upcoming_gauges = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
