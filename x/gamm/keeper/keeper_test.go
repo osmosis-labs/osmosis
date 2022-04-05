@@ -114,7 +114,10 @@ func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
 
 	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), spotPrice.String())
+
+	s := sdk.NewDec(1).Quo(sdk.NewDec(3))
+	sp := s.Mul(types.SigFigs).RoundInt().ToDec().Quo(types.SigFigs)
+	suite.Require().Equal(sp.String(), spotPrice.String())
 
 	return poolId
 }

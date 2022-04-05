@@ -94,13 +94,18 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
+	if msg.Owner != lock.Owner {
+		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
+	}
+
 	err = server.keeper.BeginUnlock(ctx, lock.ID, msg.Coins)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	if msg.Owner != lock.Owner {
-		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, lock.Owner))
+	lock, err = server.keeper.GetLockByID(ctx, msg.ID)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
