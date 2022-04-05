@@ -17,4 +17,5 @@ jobs:
       - name: Display go version
         run: go version
       - name: Run simulation
-        run: make test-sim
+        run: |
+          make test-sim
