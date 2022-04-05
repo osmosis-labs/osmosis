@@ -221,9 +221,14 @@ test-race:
 test-cover:
 	@go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' ./...
 
+test-e2e:
+	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v ./tests/e2e
+
 benchmark:
 	@go test -mod=readonly -bench=. ./...
 
+docker-build-debug:
+	@docker build -t cosmos/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
