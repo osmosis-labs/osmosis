@@ -13,7 +13,7 @@ func (s *IntegrationTestSuite) TestQueryDenomBalance() {
 
 	s.Run("TestQueryDenomBalance", func() {
 		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
-		_, err := queryDenomBalance(chainBAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String(), "osmo") 
+		_, err := queryDenomBalance(chainBAPIEndpoint, s.chain.validators[0].keyInfo.GetAddress().String(), "osmo") 
 		s.Require().NoError(err)
 	})
 }

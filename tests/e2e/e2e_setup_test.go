@@ -40,8 +40,7 @@ type IntegrationTestSuite struct {
 	suite.Suite
 
 	tmpDirs        []string
-	chainA         *chain
-	chainB         *chain
+	chain         *chain
 	dkrPool        *dockertest.Pool
 	dkrNet         *dockertest.Network
 	hermesResource *dockertest.Resource
@@ -56,16 +55,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
 	var err error
-	s.chainA, err = newChain()
-	s.Require().NoError(err)
-
-	s.chainB, err = newChain()
+	s.chain, err = newChain()
 	s.Require().NoError(err)
 
 	s.dkrPool, err = dockertest.NewPool("")
-	s.Require().NoError(err)
-
-	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", s.chainA.id, s.chainB.id))
 	s.Require().NoError(err)
 
 	s.valResources = make(map[string][]*dockertest.Resource)
@@ -75,11 +68,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 1. Initialize Osmosis validator nodes.
 	// 2. Create and initialize Osmosis validator genesis files (one chains)
 
-	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.id, s.chainA.dataDir)
-	s.initNodes(s.chainA)
-	s.initGenesis(s.chainA)
-	s.initValidatorConfigs(s.chainA)
-	s.runValidators(s.chainA, 0)
+	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chain.id, s.chain.dataDir)
+	s.initNodes(s.chain)
+	s.initGenesis(s.chain)
+	s.initValidatorConfigs(s.chain)
+	s.runValidators(s.chain, 0)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -104,8 +97,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.Require().NoError(s.dkrPool.RemoveNetwork(s.dkrNet))
 
-	os.RemoveAll(s.chainA.dataDir)
-	os.RemoveAll(s.chainB.dataDir)
+	os.RemoveAll(s.chain.dataDir)
 
 	for _, td := range s.tmpDirs {
 		os.RemoveAll(td)
