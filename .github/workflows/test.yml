@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - "roman/e2e-single-network"
-  man
 
 jobs:
   should_run_test:
