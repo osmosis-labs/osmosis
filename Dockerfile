@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ## Build Image
-FROM golang:1.17-bullseye as build
+FROM golang:1.18-bullseye as build
 
 WORKDIR /osmosis
 COPY . /osmosis
