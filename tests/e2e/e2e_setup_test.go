@@ -257,7 +257,7 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 			Name:      val.instanceName(),
 			NetworkID: s.dkrNet.Network.ID,
 			Mounts: []string{
-				fmt.Sprintf("%s/:/root/.osmosisd", val.configDir()),
+				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.configDir()),
 			},
 			Repository: "cosmos/osmosisd-e2e",
 		}
