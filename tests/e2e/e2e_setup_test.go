@@ -27,7 +27,7 @@ import (
 
 const (
 	osmoDenom    = "osmo"
-	initBalanceStr = "110000000000stake,100000000000photon"
+	initBalanceStr = "110000000000stake,100000000000osmo"
 	minGasPrice    = "0.00001"
 )
 
@@ -43,7 +43,6 @@ type IntegrationTestSuite struct {
 	chain         *chain
 	dkrPool        *dockertest.Pool
 	dkrNet         *dockertest.Network
-	hermesResource *dockertest.Resource
 	valResources   map[string][]*dockertest.Resource
 }
 
@@ -61,12 +60,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.dkrPool, err = dockertest.NewPool("")
 	s.Require().NoError(err)
 
+	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-testnet", s.chain.id))
+	s.Require().NoError(err)
+
 	s.valResources = make(map[string][]*dockertest.Resource)
 
 	// The boostrapping phase is as follows:
 	//
 	// 1. Initialize Osmosis validator nodes.
-	// 2. Create and initialize Osmosis validator genesis files (one chains)
+	// 2. Create and initialize Osmosis validator genesis files (one chain)
 
 	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chain.id, s.chain.dataDir)
 	s.initNodes(s.chain)
@@ -86,8 +88,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	}
 
 	s.T().Log("tearing down e2e integration test suite...")
-
-	s.Require().NoError(s.dkrPool.Purge(s.hermesResource))
 
 	for _, vr := range s.valResources {
 		for _, r := range vr {

@@ -9,38 +9,35 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func (s *IntegrationTestSuite) TestQueryDenomBalance() {
-
-	s.Run("TestQueryDenomBalance", func() {
-		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
-		_, err := queryDenomBalance(chainBAPIEndpoint, s.chain.validators[0].keyInfo.GetAddress().String(), "osmo") 
-		s.Require().NoError(err)
-	})
+func (s *IntegrationTestSuite) TestQueryBalances() {
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chain.id][0].GetHostPort("1317/tcp"))
+	balances, err := queryBalances(chainAAPIEndpoint, s.chain.validators[0].keyInfo.GetAddress().String()) 
+	s.Require().NoError(err)
+	s.Require().NotNil(balances)
+	s.Require().Equal(2, len(balances))
 }
 
-func queryDenomBalance(endpoint, addr, denom string) (sdk.Coin, error) {
-	var zeroCoin sdk.Coin
-
+func queryBalances(endpoint, addr string) (sdk.Coins, error) {
 	path := fmt.Sprintf(
-		"%s/osmosis/bank/v1beta1/balances/%s/by_denom?denom=%s",
-		endpoint, addr, denom,
+		"%s/cosmos/bank/v1beta1/balances/%s",
+		endpoint, addr,
 	)
 	resp, err := http.Get(path)
 	if err != nil {
-		return zeroCoin, fmt.Errorf("failed to execute HTTP request: %w", err)
+		return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
 	}
 
 	defer resp.Body.Close()
 
 	bz, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return zeroCoin, err
+		return nil, err
 	}
 
-	var balanceResp banktypes.QueryBalanceResponse
-	if err := cdc.UnmarshalJSON(bz, &balanceResp); err != nil {
-		return zeroCoin, err
+	var balancesResp banktypes.QueryAllBalancesResponse
+	if err := cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
+		return nil, err
 	}
 
-	return *balanceResp.Balance, nil
+	return balancesResp.GetBalances(), nil
 }
