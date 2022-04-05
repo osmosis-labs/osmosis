@@ -26,28 +26,28 @@ import (
 )
 
 const (
-	osmoBalance = 200000000000
+	osmoBalance  = 200000000000
 	osmoDenom    = "uosmo"
 	stakeBalance = 110000000000
-	stakeAmount = 100000000000
-	stakeDenom = "stake"
-	minGasPrice    = "0.00001"
+	stakeAmount  = 100000000000
+	stakeDenom   = "stake"
+	minGasPrice  = "0.00001"
 )
 
 var (
-	initBalanceStr = fmt.Sprintf("%d%s,%d%s", osmoBalance, osmoDenom, stakeBalance, stakeDenom)
-	stakeAmountInt, _  = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmount))
-	stakeAmountCoin = sdk.NewCoin(stakeDenom, stakeAmountInt)
+	initBalanceStr    = fmt.Sprintf("%d%s,%d%s", osmoBalance, osmoDenom, stakeBalance, stakeDenom)
+	stakeAmountInt, _ = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmount))
+	stakeAmountCoin   = sdk.NewCoin(stakeDenom, stakeAmountInt)
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	tmpDirs        []string
-	chain         *chain
-	dkrPool        *dockertest.Pool
-	dkrNet         *dockertest.Network
-	valResources   map[string][]*dockertest.Resource
+	tmpDirs      []string
+	chain        *chain
+	dkrPool      *dockertest.Pool
+	dkrNet       *dockertest.Network
+	valResources map[string][]*dockertest.Resource
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
