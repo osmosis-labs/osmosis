@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - "roman/e2e-single-network"
+      - "**"
 
 jobs:
   should_run_test:
