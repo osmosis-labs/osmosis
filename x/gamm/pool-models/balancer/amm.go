@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/osmosis-labs/osmosis/v7/osmomath"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -39,27 +40,33 @@ func solveConstantFunctionInvariant(
 	return amountY
 }
 
-// CalcOutAmtGivenIn calculates token to be swapped out given
-// the provided amount, fee deducted, using solveConstantFunctionInvariant.
+// CalcOutAmtGivenIn calculates tokens to be swapped out given the provided
+// amount and fee deducted, using solveConstantFunctionInvariant.
 func (p Pool) CalcOutAmtGivenIn(
-	ctx sdk.Context, tokensIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (
-	tokenOut sdk.DecCoin, err error,
-) {
+	ctx sdk.Context,
+	tokensIn sdk.Coins,
+	tokenOutDenom string,
+	swapFee sdk.Dec,
+) (sdk.DecCoin, error) {
 	tokenIn, poolAssetIn, poolAssetOut, err := p.parsePoolAssets(tokensIn, tokenOutDenom)
 	if err != nil {
 		return sdk.DecCoin{}, err
 	}
 
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
-
 	poolTokenInBalance := poolAssetIn.Token.Amount.ToDec()
 	poolPostSwapInBalance := poolTokenInBalance.Add(tokenAmountInAfterFee)
 
-	// deduct swapfee on the in asset
+	// deduct swapfee on the tokensIn
 	// delta balanceOut is positive(tokens inside the pool decreases)
 	tokenAmountOut := solveConstantFunctionInvariant(
-		poolTokenInBalance, poolPostSwapInBalance, poolAssetIn.Weight.ToDec(),
-		poolAssetOut.Token.Amount.ToDec(), poolAssetOut.Weight.ToDec())
+		poolTokenInBalance,
+		poolPostSwapInBalance,
+		poolAssetIn.Weight.ToDec(),
+		poolAssetOut.Token.Amount.ToDec(),
+		poolAssetOut.Weight.ToDec(),
+	)
+
 	return sdk.NewDecCoinFromDec(tokenOutDenom, tokenAmountOut), nil
 }
 
@@ -154,7 +161,10 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 
 // SpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
-// so spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
+// In order reduce the propagated effect of incorrect trailing digits,
+// we take the ratio of weights and divide this by ratio of supplies
+// this is equivalent to spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
+// but cancels out the common term in weight.
 //
 // panics if pool is misconfigured and has any weight as 0.
 func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec, error) {
@@ -166,10 +176,12 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 		return sdk.Dec{}, errors.New("pool is misconfigured, got 0 weight")
 	}
 
-	numerator := base.Token.Amount.ToDec().Quo(base.Weight.ToDec())
-	denom := quote.Token.Amount.ToDec().Quo(quote.Weight.ToDec())
-	ratio := numerator.Quo(denom)
-
+	// spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
+	// spot_price = (weight_quote / weight_base) * (base_supply / quote_supply)
+	invWeightRatio := quote.Weight.ToDec().Quo(base.Weight.ToDec())
+	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
+	fullRatio := supplyRatio.Mul(invWeightRatio)
+	ratio := (fullRatio.Mul(types.SigFigs).RoundInt()).ToDec().Quo(types.SigFigs)
 	return ratio, nil
 }
 
