@@ -240,39 +240,44 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount 
 	return neededLpLiquidity, nil
 }
 
-// JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided tokensIn coins.
-// The underlying pool is responsible for swapping any non-even LP proportions to the correct ratios.
-// If the amount of LP shares obtained at the end is less than shareOutMinAmount,
-// then return an error and revert the message.
+// JoinSwapExactAmountIn is an LP transaction, that will LP all of the provided
+// tokensIn coins. The underlying pool is responsible for swapping any non-even
+// LP proportions to the correct ratios. An error is returned if the amount of
+// LP shares obtained at the end is less than shareOutMinAmount. Otherwise, we
+// return the total amount of shares outgoing from joining the pool.
 func (k Keeper) JoinSwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	poolId uint64,
 	tokensIn sdk.Coins,
 	shareOutMinAmount sdk.Int,
-) (shareOutAmount sdk.Int, err error) {
+) (sdk.Int, error) {
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	sharesOut, err := pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
-	if err != nil {
+	switch {
+	case err != nil:
 		return sdk.ZeroInt(), err
-	} else if sharesOut.LT(shareOutMinAmount) {
-		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMinAmount,
-			"Too much slippage, needed a minimum of %s shares to pass, got %s",
-			shareOutMinAmount, sharesOut)
-	} else if sharesOut.LTE(sdk.ZeroInt()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
+
+	case sharesOut.LT(shareOutMinAmount):
+		return sdk.ZeroInt(), sdkerrors.Wrapf(
+			types.ErrLimitMinAmount,
+			"too much slippage; needed a minimum of %s shares to pass, got %s",
+			shareOutMinAmount, sharesOut,
+		)
+
+	case sharesOut.LTE(sdk.ZeroInt()):
+		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
 	}
 
-	err = k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, tokensIn)
-	if err != nil {
+	if err := k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, tokensIn); err != nil {
 		return sdk.ZeroInt(), err
 	}
 
-	return shareOutAmount, nil
+	return sharesOut, nil
 }
 
 //nolint:deadcode,govet // looks like we have known dead code beneath "panic"
