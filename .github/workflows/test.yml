@@ -37,7 +37,8 @@ jobs:
       - name: Display go version
         run: go version
       - name: Run all tests
-        run: go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic `go list ./... | grep -E -v 'simapp|e2e'`
+        run: |
+          make test-cover
       - name: Codecov
         uses: codecov/codecov-action@v1.5.2
 
