@@ -1,0 +1,21 @@
+{
+    "tabnine.experimentalAutoImports": true,
+    "go.lintTool": "golint",
+    "go.formatTool": "gofumports",
+    "go.testOnSave": true,
+    "go.useLanguageServer": true,
+    "[go.mod]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+        }
+    },
+    "[go]": {
+        "editor.snippetSuggestions": "none",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+        }
+    },
+    "files.eol": "\n"
+}
