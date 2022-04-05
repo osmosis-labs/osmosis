@@ -26,14 +26,18 @@ import (
 )
 
 const (
-	osmoDenom    = "osmo"
-	initBalanceStr = "110000000000stake,100000000000osmo"
+	osmoBalance = 200000000000
+	osmoDenom    = "uosmo"
+	stakeBalance = 110000000000
+	stakeAmount = 100000000000
+	stakeDenom = "stake"
 	minGasPrice    = "0.00001"
 )
 
 var (
-	stakeAmount, _  = sdk.NewIntFromString("100000000000")
-	stakeAmountCoin = sdk.NewCoin("stake", stakeAmount)
+	initBalanceStr = fmt.Sprintf("%d%s,%d%s", osmoBalance, osmoDenom, stakeBalance, stakeDenom)
+	stakeAmountInt, _  = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmount))
+	stakeAmountCoin = sdk.NewCoin(stakeDenom, stakeAmountInt)
 )
 
 type IntegrationTestSuite struct {
