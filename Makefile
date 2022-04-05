@@ -224,6 +224,8 @@ test-cover:
 benchmark:
 	@go test -mod=readonly -bench=. ./...
 
+docker-build-debug:
+	@docker build -t cosmos/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
