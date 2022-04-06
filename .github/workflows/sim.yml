@@ -17,4 +17,5 @@ jobs:
       - name: Display go version
         run: go version
       - name: Run simulation
-        run: go test ./simapp
+        run: |
+          make test-sim
