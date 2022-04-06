@@ -19,9 +19,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			continue
 		} else {
 		
-			feetoken, _ := k.GetFeeToken(ctx, coin.Denom)
-
-			k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
+			feetoken, err := k.GetFeeToken(ctx, coin.Denom)
+			if err == nil {
+				_, _, err  = k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
+			}
 		}
 	}
 
