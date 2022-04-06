@@ -23,9 +23,7 @@ type (
 		bankKeeper       *bankkeeper.BaseKeeper
 		epochKeeper      types.EpochKeeper
 		gammKeeper		 types.GammKeeper
-
 		spotPriceCalculator types.SpotPriceCalculator
-
 		feeCollectorName string
 		altFeeCollectorName string
 	}

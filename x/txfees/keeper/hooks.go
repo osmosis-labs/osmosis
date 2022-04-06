@@ -6,20 +6,15 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-}
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) { }
 
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-
 	addrAltFee := k.accountKeeper.GetModuleAddress(txfeestypes.AltFeeCollectorName)
-
 	altFeeAccountBalances := k.bankKeeper.GetAllBalances(ctx, addrAltFee)
-
 	baseDenom, _ := k.GetBaseDenom(ctx)
 
 	for _, coin := range altFeeAccountBalances {
-
 		if coin.Denom == baseDenom {
 			continue
 		} else {
@@ -37,7 +32,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	// Should events be emitted at the end here?
 }
 
-// ___________________________________________________________________________________________________
 
 // Hooks wrapper struct for incentives keeper
 type Hooks struct {
@@ -51,10 +45,7 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// epochs hooks
-// Don't do anything pre epoch start
-func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-}
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {}
 
 func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
