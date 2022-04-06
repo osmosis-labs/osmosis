@@ -206,6 +206,11 @@ sync-docs:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
+PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'simapp|e2e')
+PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
+PACKAGES_SIM=$(shell go list ./... | grep '/simapp')
+TEST_PACKAGES=./...
+
 include sims.mk
 
 test: test-unit test-build
@@ -213,22 +218,25 @@ test: test-unit test-build
 test-all: check test-race test-cover
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-	@go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' ./...
+    @VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
+
+test-sim:
+	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v ./tests/e2e
+	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 benchmark:
-	@go test -mod=readonly -bench=. ./...
+	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
 docker-build-debug:
-	@docker build -t cosmos/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
+	@docker build -t osmolabs/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
