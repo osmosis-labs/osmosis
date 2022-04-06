@@ -218,25 +218,25 @@ test: test-unit test-build
 test-all: check test-race test-cover
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' PACKAGES_UNIT
+	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' PACKAGES_UNIT
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-    @VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic PACKAGES_UNIT
+    @VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
 
 test-sim:
-	@VERSION=$(VERSION) go test -mod=readonly PACKAGES_SIM
+	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v PACKAGES_E2E
+	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 benchmark:
-	@go test -mod=readonly -bench=. PACKAGES_UNIT
+	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
 docker-build-debug:
-	@docker build -t cosmos/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
+	@docker build -t osmolabs/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
