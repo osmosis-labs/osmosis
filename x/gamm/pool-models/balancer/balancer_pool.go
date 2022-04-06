@@ -452,9 +452,7 @@ func (pa Pool) NumAssets() int {
 	return len(pa.PoolAssets)
 }
 
-func (pa Pool) IsActive(curBlockTime time.Time) bool {
-	// Add frozen pool checking, etc...
-
+func (pa Pool) IsActive(ctx sdk.Context) bool {
 	return true
 }
 
