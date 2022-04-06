@@ -368,7 +368,7 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.GAMMKeeper,
 		app.GAMMKeeper,
 		txfeestypes.FeeCollectorName,
-		txfeestypes.AltFeeCollectorName,
+		txfeestypes.NonNativeFeeCollectorName,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 

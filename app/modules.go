@@ -186,7 +186,7 @@ var moduleAaccountPermissions = map[string][]string{
 	poolincentivestypes.ModuleName:           nil,
 	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	txfeestypes.ModuleName:                   nil,
-	txfeestypes.AltFeeCollectorName:          nil,
+	txfeestypes.NonNativeFeeCollectorName:          nil,
 	wasm.ModuleName:                          {authtypes.Burner},
 }
 

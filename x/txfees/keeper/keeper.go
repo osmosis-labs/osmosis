@@ -25,7 +25,7 @@ type (
 		gammKeeper		 types.GammKeeper
 		spotPriceCalculator types.SpotPriceCalculator
 		feeCollectorName string
-		altFeeCollectorName string
+		nonNativeFeeCollectorName string
 	}
 )
 
@@ -38,7 +38,7 @@ func NewKeeper(
 	gammKeeper types.GammKeeper,
 	spotPriceCalculator types.SpotPriceCalculator,
 	feeCollectorName string,
-	altFeeCollectorName string,
+	nonNativeFeeCollectorName string,
 ) Keeper {
 	return Keeper{
 		cdc:                 cdc,
@@ -49,7 +49,7 @@ func NewKeeper(
 		gammKeeper: gammKeeper,
 		spotPriceCalculator: spotPriceCalculator,
 		feeCollectorName: feeCollectorName,
-		altFeeCollectorName: altFeeCollectorName,
+		nonNativeFeeCollectorName: nonNativeFeeCollectorName,
 	}
 }
 
