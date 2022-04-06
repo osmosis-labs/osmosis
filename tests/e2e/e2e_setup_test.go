@@ -196,10 +196,7 @@ func (s *IntegrationTestSuite) initGenesis(c *chain) {
 	genTxs := make([]json.RawMessage, len(c.validators))
 	for i, val := range c.validators {
 		stakeAmountCoin := stakeAmountCoinA
-		if c.id == chainAName {
-			stakeAmountCoin = stakeAmountCoinA
-
-		} else {
+		if c.id != chainAName {
 			stakeAmountCoin = stakeAmountCoinB
 		}
 		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
