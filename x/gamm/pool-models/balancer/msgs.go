@@ -46,7 +46,7 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 	}
 
 	// validation for future owner
-	if err = ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
+	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
 	}
 
