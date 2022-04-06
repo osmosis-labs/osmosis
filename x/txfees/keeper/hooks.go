@@ -21,15 +21,20 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		
 			feetoken, err := k.GetFeeToken(ctx, coin.Denom)
 			if err == nil {
-				_, _, err  = k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
+				// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
+				// but even then the point is a bit moot.
+				// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
+				// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
+				minTokenOut := sdk.ZeroInt()
+				k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, minTokenOut)
 			}
 		}
 	}
 
 	// Get all of the txfee payout denom in the module account
-	nonNativeFeeAccountBalances = k.bankKeeper.GetBalance(ctx, addrNonNativeFee, basedenom)
+	nonNativeFeeAccountBaseDenomBalance := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, addrNonNativeFee, baseDenom))
 	
-	k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBalances)
+	k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBaseDenomBalance)
 }
 
 
