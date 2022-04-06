@@ -26,25 +26,37 @@ import (
 )
 
 const (
-	osmoBalance  = 200000000000
-	osmoDenom    = "uosmo"
-	stakeBalance = 110000000000
-	stakeAmount  = 100000000000
-	stakeDenom   = "stake"
-	minGasPrice  = "0.00001"
+	// common
+	osmoDenom   = "uosmo"
+	stakeDenom  = "stake"
+	minGasPrice = "0.00001"
+	// chainA
+	chainAName    = "osmo-test-a"
+	osmoBalanceA  = 200000000000
+	stakeBalanceA = 110000000000
+	stakeAmountA  = 100000000000
+	// chainB
+	chainBName    = "osmo-test-b"
+	osmoBalanceB  = 500000000000
+	stakeBalanceB = 440000000000
+	stakeAmountB  = 400000000000
 )
 
 var (
-	initBalanceStr    = fmt.Sprintf("%d%s,%d%s", osmoBalance, osmoDenom, stakeBalance, stakeDenom)
-	stakeAmountInt, _ = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmount))
-	stakeAmountCoin   = sdk.NewCoin(stakeDenom, stakeAmountInt)
+	initBalanceStrA    = fmt.Sprintf("%d%s,%d%s", osmoBalanceA, osmoDenom, stakeBalanceA, stakeDenom)
+	initBalanceStrB    = fmt.Sprintf("%d%s,%d%s", osmoBalanceB, osmoDenom, stakeBalanceB, stakeDenom)
+	stakeAmountIntA, _ = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmountA))
+	stakeAmountCoinA   = sdk.NewCoin(stakeDenom, stakeAmountIntA)
+	stakeAmountIntB, _ = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmountB))
+	stakeAmountCoinB   = sdk.NewCoin(stakeDenom, stakeAmountIntB)
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
 	tmpDirs      []string
-	chain        *chain
+	chainA       *chain
+	chainB       *chain
 	dkrPool      *dockertest.Pool
 	dkrNet       *dockertest.Network
 	valResources map[string][]*dockertest.Resource
@@ -58,13 +70,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
 	var err error
-	s.chain, err = newChain()
+	s.chainA, err = newChain(chainAName)
+	s.Require().NoError(err)
+
+	s.chainB, err = newChain(chainBName)
 	s.Require().NoError(err)
 
 	s.dkrPool, err = dockertest.NewPool("")
 	s.Require().NoError(err)
 
-	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-testnet", s.chain.id))
+	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", s.chainA.id, s.chainB.id))
 	s.Require().NoError(err)
 
 	s.valResources = make(map[string][]*dockertest.Resource)
@@ -74,11 +89,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 1. Initialize Osmosis validator nodes.
 	// 2. Create and initialize Osmosis validator genesis files (one chain)
 
-	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chain.id, s.chain.dataDir)
-	s.initNodes(s.chain)
-	s.initGenesis(s.chain)
-	s.initValidatorConfigs(s.chain)
-	s.runValidators(s.chain, 0)
+	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.id, s.chainA.dataDir)
+	s.initNodes(s.chainA)
+	s.initGenesis(s.chainA)
+	s.initValidatorConfigs(s.chainA)
+	s.runValidators(s.chainA, 0)
+
+	s.T().Logf("starting e2e infrastructure for chain B; chain-id: %s; datadir: %s", s.chainB.id, s.chainB.dataDir)
+	s.initNodes(s.chainB)
+	s.initGenesis(s.chainB)
+	s.initValidatorConfigs(s.chainB)
+	s.runValidators(s.chainB, 10)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -101,7 +122,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.Require().NoError(s.dkrPool.RemoveNetwork(s.dkrNet))
 
-	os.RemoveAll(s.chain.dataDir)
+	os.RemoveAll(s.chainA.dataDir)
+	os.RemoveAll(s.chainB.dataDir)
 
 	for _, td := range s.tmpDirs {
 		os.RemoveAll(td)
@@ -114,9 +136,15 @@ func (s *IntegrationTestSuite) initNodes(c *chain) {
 	// initialize a genesis file for the first validator
 	val0ConfigDir := c.validators[0].configDir()
 	for _, val := range c.validators {
-		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, val.keyInfo.GetAddress()),
-		)
+		if c.id == chainAName {
+			s.Require().NoError(
+				addGenesisAccount(val0ConfigDir, "", initBalanceStrA, val.keyInfo.GetAddress()),
+			)
+		} else if c.id == chainBName {
+			s.Require().NoError(
+				addGenesisAccount(val0ConfigDir, "", initBalanceStrB, val.keyInfo.GetAddress()),
+			)
+		}
 	}
 
 	// copy the genesis file to the remaining validators
@@ -167,6 +195,13 @@ func (s *IntegrationTestSuite) initGenesis(c *chain) {
 	// generate genesis txs
 	genTxs := make([]json.RawMessage, len(c.validators))
 	for i, val := range c.validators {
+		stakeAmountCoin := stakeAmountCoinA
+		if c.id == chainAName {
+			stakeAmountCoin = stakeAmountCoinA
+
+		} else {
+			stakeAmountCoin = stakeAmountCoinB
+		}
 		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
 		s.Require().NoError(err)
 
