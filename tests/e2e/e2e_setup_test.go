@@ -47,12 +47,12 @@ const (
 )
 
 var (
-	initBalanceStrA    = fmt.Sprintf("%d%s,%d%s", osmoBalanceA, osmoDenom, stakeBalanceA, stakeDenom)
-	initBalanceStrB    = fmt.Sprintf("%d%s,%d%s", osmoBalanceB, osmoDenom, stakeBalanceB, stakeDenom)
-	stakeAmountIntA, _ = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmountA))
-	stakeAmountCoinA   = sdk.NewCoin(stakeDenom, stakeAmountIntA)
-	stakeAmountIntB, _ = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmountB))
-	stakeAmountCoinB   = sdk.NewCoin(stakeDenom, stakeAmountIntB)
+	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", osmoBalanceA, osmoDenom, stakeBalanceA, stakeDenom)
+	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", osmoBalanceB, osmoDenom, stakeBalanceB, stakeDenom)
+	stakeAmountIntA  = sdk.NewInt(stakeAmountA)
+	stakeAmountCoinA = sdk.NewCoin(stakeDenom, stakeAmountIntA)
+	stakeAmountIntB  = sdk.NewInt(stakeAmountB)
+	stakeAmountCoinB = sdk.NewCoin(stakeDenom, stakeAmountIntB)
 )
 
 type IntegrationTestSuite struct {
@@ -92,7 +92,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// The boostrapping phase is as follows:
 	//
 	// 1. Initialize Osmosis validator nodes.
-	// 2. Create and initialize Osmosis validator genesis files (one chain)
+	// 2. Create and initialize Osmosis validator genesis files (both chains)
+	// 3. Start both networks.
 
 	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.id, s.chainA.dataDir)
 	s.initNodes(s.chainA)
@@ -205,10 +206,7 @@ func (s *IntegrationTestSuite) initGenesis(c *chain) {
 	genTxs := make([]json.RawMessage, len(c.validators))
 	for i, val := range c.validators {
 		stakeAmountCoin := stakeAmountCoinA
-		if c.id == chainAName {
-			stakeAmountCoin = stakeAmountCoinA
-
-		} else {
+		if c.id != chainAName {
 			stakeAmountCoin = stakeAmountCoinB
 		}
 		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
@@ -299,7 +297,7 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.configDir()),
 			},
-			Repository: "cosmos/osmosisd-e2e",
+			Repository: "osmolabs/osmosisd-e2e",
 		}
 
 		// expose the first validator for debugging and communication

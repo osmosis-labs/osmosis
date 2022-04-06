@@ -46,14 +46,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1107](https://github.com/osmosis-labs/osmosis/pull/1107) Update to wasmvm v0.24.0, re-enabling building on M1 macs!
 
 ### Minor improvements & Bug Fixes
+* [#1203](https://github.com/osmosis-labs/osmosis/pull/1203) cleanup Makefile and ci workflows
 * [#1177](https://github.com/osmosis-labs/osmosis/pull/1177) upgrade to go 1.18
 * [#1193](https://github.com/osmosis-labs/osmosis/pull/1193) Setup e2e tests on a single chain; add balances query test
-* [#1061](https://github.com/osmosis-labs/osmosis/pull/1061) upgrade iavl to v0.17.3-osmo-v5 with concurrent map write fix
-* [#1071](https://github.com/osmosis-labs/osmosis/pull/1071) improve Dockerfile
 * [#1095](https://github.com/osmosis-labs/osmosis/pull/1095) Fix authz being unable to use lockup & superfluid types.
 * [#1105](https://github.com/osmosis-labs/osmosis/pull/1105) Add GitHub Actions to automatically push the osmosis Docker image
 * [#1114](https://github.com/osmosis-labs/osmosis/pull/1114) Improve CI: remove duplicate runs of test worflow
 * [#1127](https://github.com/osmosis-labs/osmosis/pull/1127) Stricter Linting:  bump golangci-lint version and enable additional linters.
+* [#1184](https://github.com/osmosis-labs/osmosis/pull/1184) Fix endtime event output on BeginUnlocking
+
+## [v7.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.1.0)
+
+### Minor improvements & Bug Fixes
+
+* [#1052](https://github.com/osmosis-labs/osmosis/pull/1052) Eugen/cherry pick superfluid test scaffolding updates
+* [#1070](https://github.com/osmosis-labs/osmosis/pull/1070) Test improvisation for Superfluid
+* [#1084](https://github.com/osmosis-labs/osmosis/pull/1084) Superfluid Misc: Improve grpc_query
+* [#1081](https://github.com/osmosis-labs/osmosis/pull/1081) Genesis upgrade and add invariant cherry pick
+* [#1088](https://github.com/osmosis-labs/osmosis/pull/1088) Genesis import export check for superfluid
+* [#1101](https://github.com/osmosis-labs/osmosis/pull/1101) Minor PR adding some code comments
+* [#1154](https://github.com/osmosis-labs/osmosis/pull/1154) Database stability improvements
+
+### SDK fork updates
+
+* [sdk-#136](https://github.com/osmosis-labs/iavl/pull/136) add after validator slash hook
+* [sdk-#137](https://github.com/osmosis-labs/iavl/pull/137) backport feat: Modify grpc gateway to be concurrent
+* [sdk-#146](https://github.com/osmosis-labs/cosmos-sdk/pull/146) extra logs during commit
+* [sdk-#151](https://github.com/osmosis-labs/cosmos-sdk/pull/151) fix logs related to store keys and commit hash
+* [sdk-#140](https://github.com/osmosis-labs/cosmos-sdk/pull/140) refactor: snapshot and pruning functionality
+* [sdk-#156](https://github.com/osmosis-labs/cosmos-sdk/pull/156) feat: implement querying for commit hash and proofs
+* [sdk-#155](https://github.com/osmosis-labs/cosmos-sdk/pull/155) fix: commit info data race
+* [sdk-#158](https://github.com/osmosis-labs/cosmos-sdk/pull/158) Fixes the go race tests
+* [sdk-#160](https://github.com/osmosis-labs/cosmos-sdk/pull/160) increase setupBaseAppWithSnapshots timeout to 90 seconds
+* [sdk-#161](https://github.com/osmosis-labs/cosmos-sdk/pull/155) upgrade iavl to v0.17.3-osmo-v7 with lowered fast node cache size
+
+### IAVL fork updates
+
+* [iavl-35](https://github.com/osmosis-labs/iavl/pull/35) avoid clearing fast node cache during pruning
+* [iavl-36](https://github.com/osmosis-labs/iavl/pull/36) fix data race related to VersionExists
+* [iavl-37](https://github.com/osmosis-labs/iavl/pull/36) hardcode fast node cache size to 100k
+
+## [v7.0.4](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.4)
+
+### Minor improvements & Bug Fixes
+
+* [#1061](https://github.com/osmosis-labs/osmosis/pull/1061) upgrade iavl to v0.17.3-osmo-v5 with concurrent map write fix
+* [#1071](https://github.com/osmosis-labs/osmosis/pull/1071) improve Dockerfile
 
 ### SDK fork updates
 
@@ -68,9 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Minor improvements & Bug Fixes
 
 * [#1022](https://github.com/osmosis-labs/osmosis/pull/1022) upgrade iavl to v0.17.3-osmo-v4 - fix state export at an old height
-* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks
+* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks 
 * [#984](https://github.com/osmosis-labs/osmosis/pull/984) Add wasm support to Dockerfile
-* [#1184](https://github.com/osmosis-labs/osmosis/pull/1184) Fix endtime event output on BeginUnlocking
 
 ## [v7.0.2 - Carbon](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.2)
 
