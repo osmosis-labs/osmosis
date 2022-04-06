@@ -13,12 +13,12 @@ type PoolI interface {
 	GetAddress() sdk.AccAddress
 	String() string
 	GetId() uint64
-	// GetSwapFee returns the pools swap fee, based on the current state.
+	// GetSwapFee returns the pool's swap fee, based on the current state.
 	// Pools may choose to make their swap fees dependent upon state
 	// (prior TWAPs, network downtime, other pool states, etc.)
-	// hence swap fee is provided as an argument here.
+	// hence Context is provided as an argument.
 	GetSwapFee(ctx sdk.Context) sdk.Dec
-	// GetExitFee returns the pools exit fee, based on the current state.
+	// GetExitFee returns the pool's exit fee, based on the current state.
 	// Pools may choose to make their exit fees dependent upon state.
 	GetExitFee(ctx sdk.Context) sdk.Dec
 	// Returns whether the pool has swaps enabled at the moment
@@ -50,7 +50,7 @@ type PoolI interface {
 
 	// JoinPool joins the pool using all of the tokensIn provided.
 	// The AMM swaps to the correct internal ratio should be and returns the number of shares created.
-	// This function is mutative and updates the pools internal state if there is no error.
+	// This function is mutative and updates the pool's internal state if there is no error.
 	// It is up to pool implementation if they support LP'ing at arbitrary ratios, or a subset of ratios.
 	// Pools are expected to guarantee LP'ing at the exact ratio, and single sided LP'ing.
 	JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
