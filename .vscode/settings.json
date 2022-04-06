@@ -17,5 +17,8 @@
           "source.organizeImports": true
         }
     },
+      "gopls": {
+    "local": "github.com/osmosis-labs/osmosis"
+  },
     "files.eol": "\n"
 }
