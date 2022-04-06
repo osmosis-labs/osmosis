@@ -26,7 +26,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 	}
 
-	nonNativeFeeAccountBalances = k.bankKeeper.GetAllBalances(ctx, addrNonNativeFee)
+	// Get all of the txfee payout denom in the module account
+	nonNativeFeeAccountBalances = k.bankKeeper.GetBalance(ctx, addrNonNativeFee, basedenom)
 	
 	k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBalances)
 }
