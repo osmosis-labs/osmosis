@@ -10,7 +10,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
 
 	osmosisApp "github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/app/params"
@@ -48,14 +47,14 @@ type chain struct {
 	validators []*validator
 }
 
-func newChain() (*chain, error) {
+func newChain(name string) (*chain, error) {
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	if err != nil {
 		return nil, err
 	}
 
 	return &chain{
-		id:      "chain-" + tmrand.NewRand().Str(6),
+		id:      name,
 		dataDir: tmpDir,
 	}, nil
 }
