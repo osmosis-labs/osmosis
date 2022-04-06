@@ -43,12 +43,12 @@ const (
 )
 
 var (
-	initBalanceStrA    = fmt.Sprintf("%d%s,%d%s", osmoBalanceA, osmoDenom, stakeBalanceA, stakeDenom)
-	initBalanceStrB    = fmt.Sprintf("%d%s,%d%s", osmoBalanceB, osmoDenom, stakeBalanceB, stakeDenom)
-	stakeAmountIntA, _ = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmountA))
-	stakeAmountCoinA   = sdk.NewCoin(stakeDenom, stakeAmountIntA)
-	stakeAmountIntB, _ = sdk.NewIntFromString(fmt.Sprintf("%d", stakeAmountB))
-	stakeAmountCoinB   = sdk.NewCoin(stakeDenom, stakeAmountIntB)
+	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", osmoBalanceA, osmoDenom, stakeBalanceA, stakeDenom)
+	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", osmoBalanceB, osmoDenom, stakeBalanceB, stakeDenom)
+	stakeAmountIntA  = sdk.NewInt(stakeAmountA)
+	stakeAmountCoinA = sdk.NewCoin(stakeDenom, stakeAmountIntA)
+	stakeAmountIntB  = sdk.NewInt(stakeAmountB)
+	stakeAmountCoinB = sdk.NewCoin(stakeDenom, stakeAmountIntB)
 )
 
 type IntegrationTestSuite struct {
@@ -87,7 +87,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// The boostrapping phase is as follows:
 	//
 	// 1. Initialize Osmosis validator nodes.
-	// 2. Create and initialize Osmosis validator genesis files (one chain)
+	// 2. Create and initialize Osmosis validator genesis files (both chains)
+	// 3. Start both networks.
 
 	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.id, s.chainA.dataDir)
 	s.initNodes(s.chainA)

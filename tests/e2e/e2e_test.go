@@ -18,14 +18,14 @@ func (s *IntegrationTestSuite) TestQueryBalances() {
 		expectedBalancesB = []uint64{osmoBalanceB, stakeBalanceB - stakeAmountB}
 	)
 
-	chainAAPIEndpointA := fmt.Sprintf("http://%s", s.valResources[s.chainA.id][0].GetHostPort("1317/tcp"))
-	balancesA, err := queryBalances(chainAAPIEndpointA, s.chainA.validators[0].keyInfo.GetAddress().String())
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.id][0].GetHostPort("1317/tcp"))
+	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesA)
 	s.Require().Equal(2, len(balancesA))
 
-	chainAAPIEndpointB := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
-	balancesB, err := queryBalances(chainAAPIEndpointB, s.chainB.validators[0].keyInfo.GetAddress().String())
+	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
+	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.validators[0].keyInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesB)
 	s.Require().Equal(2, len(balancesB))
