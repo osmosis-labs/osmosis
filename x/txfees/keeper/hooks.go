@@ -20,14 +20,16 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		} else {
 		
 			feetoken, err := k.GetFeeToken(ctx, coin.Denom)
-			if err == nil {
-				// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
-				// but even then the point is a bit moot.
-				// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
-				// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
-				minTokenOut := sdk.ZeroInt()
-				k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, minTokenOut)
+			if err != nil {
+				continue
 			}
+
+			// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
+			// but even then the point is a bit moot.
+			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
+			// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
+			minTokenOut := sdk.ZeroInt()
+			k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, minTokenOut)
 		}
 	}
 
