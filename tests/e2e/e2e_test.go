@@ -13,26 +13,42 @@ import (
 
 func (s *IntegrationTestSuite) TestQueryBalances() {
 	var (
-		expectedDenoms   = []string{osmoDenom, stakeDenom}
-		expectedBalances = []uint64{osmoBalance, stakeBalance - stakeAmount}
+		expectedDenoms    = []string{osmoDenom, stakeDenom}
+		expectedBalancesA = []uint64{osmoBalanceA, stakeBalanceA - stakeAmountA}
+		expectedBalancesB = []uint64{osmoBalanceB, stakeBalanceB - stakeAmountB}
 	)
 
-	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chain.id][0].GetHostPort("1317/tcp"))
-	balances, err := queryBalances(chainAAPIEndpoint, s.chain.validators[0].keyInfo.GetAddress().String())
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.id][0].GetHostPort("1317/tcp"))
+	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String())
 	s.Require().NoError(err)
-	s.Require().NotNil(balances)
-	s.Require().Equal(2, len(balances))
+	s.Require().NotNil(balancesA)
+	s.Require().Equal(2, len(balancesA))
 
-	actualDenoms := make([]string, 0, 2)
-	actualBalances := make([]uint64, 0, 2)
+	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
+	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.validators[0].keyInfo.GetAddress().String())
+	s.Require().NoError(err)
+	s.Require().NotNil(balancesB)
+	s.Require().Equal(2, len(balancesB))
 
-	for _, balance := range balances {
-		actualDenoms = append(actualDenoms, balance.GetDenom())
-		actualBalances = append(actualBalances, balance.Amount.Uint64())
+	actualDenomsA := make([]string, 0, 2)
+	actualBalancesA := make([]uint64, 0, 2)
+	actualDenomsB := make([]string, 0, 2)
+	actualBalancesB := make([]uint64, 0, 2)
+
+	for _, balanceA := range balancesA {
+		actualDenomsA = append(actualDenomsA, balanceA.GetDenom())
+		actualBalancesA = append(actualBalancesA, balanceA.Amount.Uint64())
 	}
 
-	s.Require().ElementsMatch(expectedDenoms, actualDenoms)
-	s.Require().ElementsMatch(expectedBalances, actualBalances)
+	for _, balanceB := range balancesB {
+		actualDenomsB = append(actualDenomsB, balanceB.GetDenom())
+		actualBalancesB = append(actualBalancesB, balanceB.Amount.Uint64())
+	}
+
+	s.Require().ElementsMatch(expectedDenoms, actualDenomsA)
+	s.Require().ElementsMatch(expectedBalancesA, actualBalancesA)
+	s.Require().ElementsMatch(expectedDenoms, actualDenomsB)
+	s.Require().ElementsMatch(expectedBalancesB, actualBalancesB)
 }
 
 func queryBalances(endpoint, addr string) (sdk.Coins, error) {
