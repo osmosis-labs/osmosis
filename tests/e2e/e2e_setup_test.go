@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -54,12 +58,13 @@ var (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	tmpDirs      []string
-	chainA       *chain
-	chainB       *chain
-	dkrPool      *dockertest.Pool
-	dkrNet       *dockertest.Network
-	valResources map[string][]*dockertest.Resource
+	tmpDirs        []string
+	chainA         *chain
+	chainB         *chain
+	dkrPool        *dockertest.Pool
+	dkrNet         *dockertest.Network
+	hermesResource *dockertest.Resource
+	valResources   map[string][]*dockertest.Resource
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -100,6 +105,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.initGenesis(s.chainB)
 	s.initValidatorConfigs(s.chainB)
 	s.runValidators(s.chainB, 10)
+
+	s.runIBCRelayer()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -113,6 +120,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	}
 
 	s.T().Log("tearing down e2e integration test suite...")
+
+	s.Require().NoError(s.dkrPool.Purge(s.hermesResource))
 
 	for _, vr := range s.valResources {
 		for _, r := range vr {
@@ -340,6 +349,94 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 		time.Second,
 		"Osmosis node failed to produce blocks",
 	)
+}
+
+func (s *IntegrationTestSuite) runIBCRelayer() {
+	s.T().Log("starting Hermes relayer container...")
+
+	tmpDir, err := ioutil.TempDir("", "gaia-e2e-testnet-hermes-")
+	s.Require().NoError(err)
+	s.tmpDirs = append(s.tmpDirs, tmpDir)
+
+	gaiaAVal := s.chainA.validators[0]
+	gaiaBVal := s.chainB.validators[0]
+	hermesCfgPath := path.Join(tmpDir, "hermes")
+
+	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0755))
+	_, err = copyFile(
+		filepath.Join("./scripts/", "hermes_bootstrap.sh"),
+		filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"),
+	)
+	s.Require().NoError(err)
+
+	s.hermesResource, err = s.dkrPool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       fmt.Sprintf("%s-%s-relayer", s.chainA.id, s.chainB.id),
+			Repository: "ghcr.io/cosmos/hermes-e2e",
+			Tag:        "latest",
+			NetworkID:  s.dkrNet.Network.ID,
+			Mounts: []string{
+				fmt.Sprintf("%s/:/root/hermes", hermesCfgPath),
+			},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
+			},
+			Env: []string{
+				fmt.Sprintf("GAIA_A_E2E_CHAIN_ID=%s", s.chainA.id),
+				fmt.Sprintf("GAIA_B_E2E_CHAIN_ID=%s", s.chainB.id),
+				fmt.Sprintf("GAIA_A_E2E_VAL_MNEMONIC=%s", gaiaAVal.mnemonic),
+				fmt.Sprintf("GAIA_B_E2E_VAL_MNEMONIC=%s", gaiaBVal.mnemonic),
+				fmt.Sprintf("GAIA_A_E2E_VAL_HOST=%s", s.valResources[s.chainA.id][0].Container.Name[1:]),
+				fmt.Sprintf("GAIA_B_E2E_VAL_HOST=%s", s.valResources[s.chainB.id][0].Container.Name[1:]),
+			},
+			Entrypoint: []string{
+				"sh",
+				"-c",
+				"chmod +x /root/hermes/hermes_bootstrap.sh && /root/hermes/hermes_bootstrap.sh",
+			},
+		},
+		noRestart,
+	)
+	s.Require().NoError(err)
+
+	endpoint := fmt.Sprintf("http://%s/state", s.hermesResource.GetHostPort("3031/tcp"))
+	s.Require().Eventually(
+		func() bool {
+			resp, err := http.Get(endpoint)
+			if err != nil {
+				return false
+			}
+
+			defer resp.Body.Close()
+
+			bz, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return false
+			}
+
+			var respBody map[string]interface{}
+			if err := json.Unmarshal(bz, &respBody); err != nil {
+				return false
+			}
+
+			status := respBody["status"].(string)
+			result := respBody["result"].(map[string]interface{})
+
+			return status == "success" && len(result["chains"].([]interface{})) == 2
+		},
+		5*time.Minute,
+		time.Second,
+		"hermes relayer not healthy",
+	)
+
+	s.T().Logf("started Hermes relayer container: %s", s.hermesResource.Container.ID)
+
+	// XXX: Give time to both networks to start, otherwise we might see gRPC
+	// transport errors.
+	time.Sleep(10 * time.Second)
+
+	// create the client, connection and channel between the two Gaia chains
+	s.connectIBCChains()
 }
 
 func noRestart(config *docker.HostConfig) {
