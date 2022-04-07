@@ -3,7 +3,9 @@ package keeper
 // DONTCOVER
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,6 +64,9 @@ func AccumulationStoreInvariant(keeper Keeper) sdk.Invariant {
 				}
 
 				if !accumulation.Equal(lockupSum) {
+					problematicLocks, _ := json.MarshalIndent(locks, "", " ")
+					ioutil.WriteFile("lockup-export.json", problematicLocks, 0644)
+
 					return sdk.FormatInvariant(types.ModuleName, "accumulation-store-invariant",
 						fmt.Sprintf("\taccumulation store value does not fit actual lockup sum: %s != %s, denom=%s duration=%s\n",
 							accumulation.String(), lockupSum.String(), denom, duration.String(),
