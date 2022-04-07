@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.SetupTest()
 
-		// initial check
+	// initial check
 	res, err := suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	// final check
 	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Len(res.Data, 1)
+	suite.Require().Len(res.Data, 0)
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
 		IsPerpetual: false,
@@ -176,7 +176,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 
 func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.SetupTest()
-	
+
 	// initial check
 	res, err := suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
@@ -188,7 +188,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	// final check
 	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Len(res.Data, 1)
+	suite.Require().Len(res.Data, 0)
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
 		IsPerpetual: false,

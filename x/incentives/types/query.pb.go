@@ -2020,7 +2020,6 @@ func (m *UpcomingGaugesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-
 func (m *UpcomingGaugesPerDenomRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2062,7 +2061,6 @@ func (m *UpcomingGaugesPerDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 	}
 	return len(dAtA) - i, nil
 }
-
 
 func (m *UpcomingGaugesPerDenomResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
