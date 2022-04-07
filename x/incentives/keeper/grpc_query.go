@@ -147,7 +147,7 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	gauges := []types.Gauge{}
 	store := ctx.KVStore(q.Keeper.storeKey)
-	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		upcomingGauges := q.Keeper.GetUpcomingGauges(ctx)
