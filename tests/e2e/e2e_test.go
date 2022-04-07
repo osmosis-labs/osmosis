@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -66,7 +65,7 @@ func queryBalances(endpoint, addr string) (sdk.Coins, error) {
 		if resp.StatusCode == http.StatusServiceUnavailable {
 			retriesLeft--
 			if retriesLeft == 0 {
-				return nil, errors.New(fmt.Sprintf("exceeded retry limit of %d with %d", retriesLeft, http.StatusServiceUnavailable))
+				return nil, fmt.Errorf("exceeded retry limit of %d with %d", retriesLeft, http.StatusServiceUnavailable)
 			}
 			time.Sleep(10 * time.Second)
 		} else {

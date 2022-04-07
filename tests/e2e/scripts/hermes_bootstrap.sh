@@ -33,10 +33,10 @@ enabled = true
 host = '127.0.0.1'
 port = 3001
 [[chains]]
-id = '$GAIA_A_E2E_CHAIN_ID'
-rpc_addr = 'http://$GAIA_A_E2E_VAL_HOST:26657'
-grpc_addr = 'http://$GAIA_A_E2E_VAL_HOST:9090'
-websocket_addr = 'ws://$GAIA_A_E2E_VAL_HOST:26657/websocket'
+id = '$OSMO_A_E2E_CHAIN_ID'
+rpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:26657'
+grpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:9090'
+websocket_addr = 'ws://$OSMO_A_E2E_VAL_HOST:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'osmo'
 key_name = 'val01-gaia-a'
@@ -48,10 +48,10 @@ clock_drift = '1m' # to accomdate docker containers
 trusting_period = '14days'
 trust_threshold = { numerator = '1', denominator = '3' }
 [[chains]]
-id = '$GAIA_B_E2E_CHAIN_ID'
-rpc_addr = 'http://$GAIA_B_E2E_VAL_HOST:26657'
-grpc_addr = 'http://$GAIA_B_E2E_VAL_HOST:9090'
-websocket_addr = 'ws://$GAIA_B_E2E_VAL_HOST:26657/websocket'
+id = '$OSMO_B_E2E_CHAIN_ID'
+rpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:26657'
+grpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:9090'
+websocket_addr = 'ws://$OSMO_B_E2E_VAL_HOST:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'osmo'
 key_name = 'val01-gaia-b'
@@ -65,8 +65,8 @@ trust_threshold = { numerator = '1', denominator = '3' }
 EOF
 
 # import keys
-hermes keys restore ${GAIA_B_E2E_CHAIN_ID} -n "val01-gaia-b" -m "${GAIA_B_E2E_VAL_MNEMONIC}"
-hermes keys restore ${GAIA_A_E2E_CHAIN_ID} -n "val01-gaia-a" -m "${GAIA_A_E2E_VAL_MNEMONIC}"
+hermes keys restore ${OSMO_B_E2E_CHAIN_ID} -n "val01-gaia-b" -m "${OSMO_B_E2E_VAL_MNEMONIC}"
+hermes keys restore ${OSMO_A_E2E_CHAIN_ID} -n "val01-gaia-a" -m "${OSMO_A_E2E_VAL_MNEMONIC}"
 
 # start Hermes relayer
 hermes start

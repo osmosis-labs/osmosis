@@ -35,12 +35,12 @@ const (
 	stakeDenom  = "stake"
 	minGasPrice = "0.00001"
 	// chainA
-	chainAName    = "osmo-test-a"
+	chainAID    = "osmo-test-a"
 	osmoBalanceA  = 200000000000
 	stakeBalanceA = 110000000000
 	stakeAmountA  = 100000000000
 	// chainB
-	chainBName    = "osmo-test-b"
+	chainBID    = "osmo-test-b"
 	osmoBalanceB  = 500000000000
 	stakeBalanceB = 440000000000
 	stakeAmountB  = 400000000000
@@ -75,10 +75,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
 	var err error
-	s.chainA, err = newChain(chainAName)
+	s.chainA, err = newChain(chainAID)
 	s.Require().NoError(err)
 
-	s.chainB, err = newChain(chainBName)
+	s.chainB, err = newChain(chainBID)
 	s.Require().NoError(err)
 
 	s.dkrPool, err = dockertest.NewPool("")
@@ -146,11 +146,11 @@ func (s *IntegrationTestSuite) initNodes(c *chain) {
 	// initialize a genesis file for the first validator
 	val0ConfigDir := c.validators[0].configDir()
 	for _, val := range c.validators {
-		if c.id == chainAName {
+		if c.id == chainAID {
 			s.Require().NoError(
 				addGenesisAccount(val0ConfigDir, "", initBalanceStrA, val.keyInfo.GetAddress()),
 			)
-		} else if c.id == chainBName {
+		} else if c.id == chainBID {
 			s.Require().NoError(
 				addGenesisAccount(val0ConfigDir, "", initBalanceStrB, val.keyInfo.GetAddress()),
 			)
@@ -206,7 +206,7 @@ func (s *IntegrationTestSuite) initGenesis(c *chain) {
 	genTxs := make([]json.RawMessage, len(c.validators))
 	for i, val := range c.validators {
 		stakeAmountCoin := stakeAmountCoinA
-		if c.id != chainAName {
+		if c.id != chainAID {
 			stakeAmountCoin = stakeAmountCoinB
 		}
 		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
@@ -380,12 +380,12 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
 			},
 			Env: []string{
-				fmt.Sprintf("GAIA_A_E2E_CHAIN_ID=%s", s.chainA.id),
-				fmt.Sprintf("GAIA_B_E2E_CHAIN_ID=%s", s.chainB.id),
-				fmt.Sprintf("GAIA_A_E2E_VAL_MNEMONIC=%s", gaiaAVal.mnemonic),
-				fmt.Sprintf("GAIA_B_E2E_VAL_MNEMONIC=%s", gaiaBVal.mnemonic),
-				fmt.Sprintf("GAIA_A_E2E_VAL_HOST=%s", s.valResources[s.chainA.id][0].Container.Name[1:]),
-				fmt.Sprintf("GAIA_B_E2E_VAL_HOST=%s", s.valResources[s.chainB.id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chainA.id),
+				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chainB.id),
+				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", gaiaAVal.mnemonic),
+				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", gaiaBVal.mnemonic),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chainA.id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chainB.id][0].Container.Name[1:]),
 			},
 			Entrypoint: []string{
 				"sh",
