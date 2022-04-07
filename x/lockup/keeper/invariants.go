@@ -63,8 +63,8 @@ func AccumulationStoreInvariant(keeper Keeper) sdk.Invariant {
 
 				if !accumulation.Equal(lockupSum) {
 					return sdk.FormatInvariant(types.ModuleName, "accumulation-store-invariant",
-						fmt.Sprintf("\taccumulation store value does not fit actual lockup sum: %s != %s\n",
-							accumulation.String(), lockupSum.String(),
+						fmt.Sprintf("\taccumulation store value does not fit actual lockup sum: %s != %s, denom=%s duration=%s\n",
+							accumulation.String(), lockupSum.String(), denom, duration.String(),
 						)), true
 				}
 			}
