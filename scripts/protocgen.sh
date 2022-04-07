@@ -27,7 +27,6 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   -I "$cosmos_sdk_dir/proto" \
   --grpc-gateway_out=logtostderr=true:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
-  # command to generate docs using protoc-gen-doc
 done
 
 
@@ -39,8 +38,6 @@ buf protoc \
   --doc_out=./docs/core \
   --doc_opt=./docs/protodoc-markdown.tmpl,proto-docs.md \
   $(find "$(pwd)/proto" -maxdepth 4 -name '*.proto')
-go mod tidy
-
 
 cp -r ./github.com/osmosis-labs/osmosis/v*/x/* x/
 rm -rf ./github.com
