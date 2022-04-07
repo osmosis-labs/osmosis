@@ -31,16 +31,18 @@ import (
 
 const (
 	// common
-	osmoDenom   = "uosmo"
-	stakeDenom  = "stake"
-	minGasPrice = "0.00001"
+	osmoDenom     = "uosmo"
+	stakeDenom    = "stake"
+	ibcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+	minGasPrice   = "0.000"
+	ibcSendAmount = 3300000000
 	// chainA
-	chainAID    = "osmo-test-a"
+	chainAID      = "osmo-test-a"
 	osmoBalanceA  = 200000000000
 	stakeBalanceA = 110000000000
 	stakeAmountA  = 100000000000
 	// chainB
-	chainBID    = "osmo-test-b"
+	chainBID      = "osmo-test-b"
 	osmoBalanceB  = 500000000000
 	stakeBalanceB = 440000000000
 	stakeAmountB  = 400000000000

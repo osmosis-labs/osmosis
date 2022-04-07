@@ -11,45 +11,47 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// func (s *IntegrationTestSuite) TestQueryBalances() {
-// 	var (
-// 		expectedDenoms    = []string{osmoDenom, stakeDenom}
-// 		expectedBalancesA = []uint64{osmoBalanceA, stakeBalanceA - stakeAmountA}
-// 		expectedBalancesB = []uint64{osmoBalanceB, stakeBalanceB - stakeAmountB}
-// 	)
+func (s *IntegrationTestSuite) TestQueryBalances() {
+	var (
+		expectedDenomsA   = []string{osmoDenom, stakeDenom}
+		expectedDenomsB   = []string{osmoDenom, stakeDenom, ibcDenom}
+		expectedBalancesA = []uint64{osmoBalanceA - ibcSendAmount, stakeBalanceA - stakeAmountA}
+		expectedBalancesB = []uint64{osmoBalanceB, stakeBalanceB - stakeAmountB, ibcSendAmount}
+	)
 
-// 	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.id][0].GetHostPort("1317/tcp"))
-// 	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String())
-// 	s.Require().NoError(err)
-// 	s.Require().NotNil(balancesA)
-// 	// s.Require().Equal(2, len(balancesA))
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.id][0].GetHostPort("1317/tcp"))
+	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String())
+	s.Require().NoError(err)
+	s.Require().NotNil(balancesA)
+	// s.Require().Equal(2, len(balancesA))
 
-// 	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
-// 	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.validators[0].keyInfo.GetAddress().String())
-// 	s.Require().NoError(err)
-// 	s.Require().NotNil(balancesB)
-// 	// s.Require().Equal(2, len(balancesB))
+	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
+	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.validators[0].keyInfo.GetAddress().String())
+	s.Require().NoError(err)
+	s.Require().NotNil(balancesB)
+	// s.Require().Equal(2, len(balancesB))
 
-// 	actualDenomsA := make([]string, 0, 2)
-// 	actualBalancesA := make([]uint64, 0, 2)
-// 	actualDenomsB := make([]string, 0, 2)
-// 	actualBalancesB := make([]uint64, 0, 2)
+	actualDenomsA := make([]string, 0, 2)
+	actualBalancesA := make([]uint64, 0, 2)
+	actualDenomsB := make([]string, 0, 2)
+	actualBalancesB := make([]uint64, 0, 2)
 
-// 	for _, balanceA := range balancesA {
-// 		actualDenomsA = append(actualDenomsA, balanceA.GetDenom())
-// 		actualBalancesA = append(actualBalancesA, balanceA.Amount.Uint64())
-// 	}
+	for _, balanceA := range balancesA {
+		actualDenomsA = append(actualDenomsA, balanceA.GetDenom())
+		actualBalancesA = append(actualBalancesA, balanceA.Amount.Uint64())
+	}
 
-// 	for _, balanceB := range balancesB {
-// 		actualDenomsB = append(actualDenomsB, balanceB.GetDenom())
-// 		actualBalancesB = append(actualBalancesB, balanceB.Amount.Uint64())
-// 	}
+	for _, balanceB := range balancesB {
+		actualDenomsB = append(actualDenomsB, balanceB.GetDenom())
+		actualBalancesB = append(actualBalancesB, balanceB.Amount.Uint64())
+	}
 
-// 	s.Require().ElementsMatch(expectedDenoms, actualDenomsA)
-// 	s.Require().ElementsMatch(expectedBalancesA, actualBalancesA)
-// 	s.Require().ElementsMatch(expectedDenoms, actualDenomsB)
-// 	s.Require().ElementsMatch(expectedBalancesB, actualBalancesB)
-// }
+	s.Require().ElementsMatch(expectedDenomsA, actualDenomsA)
+	s.Require().ElementsMatch(expectedBalancesA, actualBalancesA)
+	s.Require().ElementsMatch(expectedDenomsB, actualDenomsB)
+	s.Require().ElementsMatch(expectedBalancesB, actualBalancesB)
+
+}
 
 func queryBalances(endpoint, addr string) (sdk.Coins, error) {
 	path := fmt.Sprintf(
@@ -97,7 +99,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 
 	s.Run("send_uosmo_to_chainB", func() {
 		recipient := s.chainB.validators[0].keyInfo.GetAddress().String()
-		token := sdk.NewInt64Coin(osmoDenom, 3300000000) // 3,300uosmo
+		token := sdk.NewInt64Coin(osmoDenom, ibcSendAmount) // 3,300uosmo
 		s.sendIBC(s.chainA.id, s.chainB.id, recipient, token)
 
 		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))

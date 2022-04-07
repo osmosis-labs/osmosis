@@ -3,14 +3,10 @@ package e2e
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ory/dockertest/v3/docker"
 )
 
@@ -109,77 +105,4 @@ func (s *IntegrationTestSuite) sendIBC(srcChainID, dstChainID, recipient string,
 	)
 
 	s.T().Log("successfully sent IBC tokens")
-}
-
-func queryOsmoTx(endpoint, txHash string) error {
-	resp, err := http.Get(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", endpoint, txHash))
-	if err != nil {
-		return fmt.Errorf("failed to execute HTTP request: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("tx query returned non-200 status: %d", resp.StatusCode)
-	}
-
-	var result map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	txResp := result["tx_response"].(map[string]interface{})
-	if v := txResp["code"]; v.(float64) != 0 {
-		return fmt.Errorf("tx %s failed with status code %v", txHash, v)
-	}
-
-	return nil
-}
-
-func queryOsmoAllBalances(endpoint, addr string) (sdk.Coins, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", endpoint, addr))
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	bz, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var balancesResp banktypes.QueryAllBalancesResponse
-	if err := cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
-		return nil, err
-	}
-
-	return balancesResp.Balances, nil
-}
-
-func queryOsmoDenomBalance(endpoint, addr, denom string) (sdk.Coin, error) {
-	var zeroCoin sdk.Coin
-
-	path := fmt.Sprintf(
-		"%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s",
-		endpoint, addr, denom,
-	)
-	resp, err := http.Get(path)
-	if err != nil {
-		return zeroCoin, fmt.Errorf("failed to execute HTTP request: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	bz, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return zeroCoin, err
-	}
-
-	var balanceResp banktypes.QueryBalanceResponse
-	if err := cdc.UnmarshalJSON(bz, &balanceResp); err != nil {
-		return zeroCoin, err
-	}
-
-	return *balanceResp.Balance, nil
 }
