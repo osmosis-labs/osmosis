@@ -14,20 +14,18 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
-type (
-	Keeper struct {
-		cdc      codec.Codec
-		storeKey sdk.StoreKey
+type Keeper struct {
+	cdc      codec.Codec
+	storeKey sdk.StoreKey
 
-		accountKeeper    types.AccountKeeper
-		bankKeeper       *bankkeeper.BaseKeeper
-		epochKeeper      types.EpochKeeper
-		gammKeeper		 types.GammKeeper
-		spotPriceCalculator types.SpotPriceCalculator
-		feeCollectorName string
-		nonNativeFeeCollectorName string
-	}
-)
+	accountKeeper             types.AccountKeeper
+	bankKeeper                *bankkeeper.BaseKeeper
+	epochKeeper               types.EpochKeeper
+	gammKeeper                types.GammKeeper
+	spotPriceCalculator       types.SpotPriceCalculator
+	feeCollectorName          string
+	nonNativeFeeCollectorName string
+}
 
 func NewKeeper(
 	cdc codec.Codec,
@@ -41,14 +39,14 @@ func NewKeeper(
 	nonNativeFeeCollectorName string,
 ) Keeper {
 	return Keeper{
-		cdc:                 cdc,
-		accountKeeper: accountKeeper,
-		bankKeeper: bankKeeper,
-		epochKeeper: epochKeeper,
-		storeKey: storeKey,
-		gammKeeper: gammKeeper,
-		spotPriceCalculator: spotPriceCalculator,
-		feeCollectorName: feeCollectorName,
+		cdc:                       cdc,
+		accountKeeper:             accountKeeper,
+		bankKeeper:                bankKeeper,
+		epochKeeper:               epochKeeper,
+		storeKey:                  storeKey,
+		gammKeeper:                gammKeeper,
+		spotPriceCalculator:       spotPriceCalculator,
+		feeCollectorName:          feeCollectorName,
 		nonNativeFeeCollectorName: nonNativeFeeCollectorName,
 	}
 }
