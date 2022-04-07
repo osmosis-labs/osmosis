@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )

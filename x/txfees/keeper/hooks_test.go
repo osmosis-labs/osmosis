@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		baseDenom, 
 		swapFee)
 	
-	fullExpectedOutput := (expectedOutput1.Amount.TruncateInt()).Add(expectedOutput2.Amount.TruncateInt()).Add(expectedOutput3.Amount.TruncateInt())
+	fullExpectedOutput := expectedOutput1.Add(expectedOutput2).Add(expectedOutput3)
 
 	_, _, addr0 := testdata.KeyTestPubAddr()
 	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, coins)
@@ -84,5 +84,5 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	suite.app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
 
 	suite.Require().Empty(suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAddrNonNativeFee)) 
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddrFee, baseDenom).Amount.GTE(fullExpectedOutput))
+	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddrFee, baseDenom).Amount.GTE(fullExpectedOutput.Amount.TruncateInt()))
 }
