@@ -12,7 +12,6 @@ service Msg {
       returns (MsgCreateStableswapPoolResponse);
 }
 
-// ===================== MsgCreatePool
 message MsgCreateStableswapPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
