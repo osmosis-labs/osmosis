@@ -241,7 +241,7 @@ docker-build-debug:
 # TODO: Push this to the Cosmos Dockerhub so we don't have to keep building it
 # in CI.
 docker-build-hermes:
-	@cd tests/e2e/docker; docker build -t cosmos/hermes-e2e:latest -f hermes.Dockerfile .
+	@cd tests/e2e/docker; docker build -t osmolabs/hermes-e2e:latest -f hermes.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
