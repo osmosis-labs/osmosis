@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
@@ -21,7 +22,7 @@ type GammKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
-	) (tokenOutAmount sdk.Int, spotPriceAfter sdk.Dec, err error)
+	) (tokenOutAmount sdk.Int, err error)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.

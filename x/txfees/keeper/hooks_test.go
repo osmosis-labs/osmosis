@@ -51,20 +51,20 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 	swapFee := sdk.NewDec(0)
 
-	expectedOutput1 := uionPoolI.CalcOutAmtGivenIn(suite.ctx,
+	expectedOutput1, err := uionPoolI.CalcOutAmtGivenIn(suite.ctx,
 		sdk.NewCoins(sdk.NewInt64Coin(uion, 10)), 
 		baseDenom, 
-		swapFee).Amount.TruncateInt()
-	expectedOutput2 := atomPoolI.CalcOutAmtGivenIn(suite.ctx,
+		swapFee)
+	expectedOutput2, err := atomPoolI.CalcOutAmtGivenIn(suite.ctx,
 		sdk.NewCoins(sdk.NewInt64Coin(atom, 20)), 
 		baseDenom, 
-		swapFee).Amount.TruncateInt()
-	expectedOutput3 := ustPoolI.CalcOutAmtGivenIn(suite.ctx,
+		swapFee)
+	expectedOutput3, err := ustPoolI.CalcOutAmtGivenIn(suite.ctx,
 		sdk.NewCoins(sdk.NewInt64Coin(ust, 14)), 
 		baseDenom, 
-		swapFee).TruncateInt()
+		swapFee)
 	
-	fullExpectedOutput := expectedOutput1.Add(expectedOutput2).Add(expectedOutput3)
+	fullExpectedOutput := (expectedOutput1.Amount.TruncateInt()).Add(expectedOutput2.Amount.TruncateInt()).Add(expectedOutput3.Amount.TruncateInt())
 
 	_, _, addr0 := testdata.KeyTestPubAddr()
 	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, coins)
