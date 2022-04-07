@@ -37,8 +37,10 @@ jobs:
       - name: Display go version
         run: go version
       - name: Run all tests
+        shell: bash
         run: |
-          set -e; make test-cover
+          set -e
+          make test-cover
       - name: Codecov
         uses: codecov/codecov-action@v1.5.2
 
