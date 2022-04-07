@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	// final check
 	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Len(res.Data, 0)
+	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
 		IsPerpetual: false,
@@ -188,7 +188,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	// final check
 	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Len(res.Data, 0)
+	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
 		IsPerpetual: false,
