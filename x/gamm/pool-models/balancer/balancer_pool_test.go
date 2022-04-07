@@ -5,9 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -565,29 +564,4 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		require.Nil(t, pacc.PoolParams.SmoothWeightChangeParams)
 	}
 
-}
-
-func TestBalancerPoolParamStartTime(t *testing.T) {
-	var poolId uint64 = 10
-
-	type testCase struct {
-		blockTime time.Time
-		valid     bool
-	}
-
-	testCases := []testCase{
-		{time.Unix(123456, 0), true},
-		{time.Unix(9999, 0), true},
-		{time.Unix(1, 0), true},
-	}
-
-	for tcn, tc := range testCases {
-		params := defaultBalancerPoolParams
-		pool, err := NewBalancerPool(poolId, params, dummyPoolAssets, defaultFutureGovernor, tc.blockTime)
-		require.NoError(t, err)
-
-		require.Equal(t, tc.valid, pool.IsActive(tc.blockTime),
-			"Didn't get the expectied validity, caseNumber %v", tcn,
-		)
-	}
 }

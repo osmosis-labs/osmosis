@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	pooltypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
@@ -16,12 +17,12 @@ func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// Ensure that a querying for a gauge with an ID that doesn't exist returns an error
-	res, err := suite.app.IncentivesKeeper.GaugeByID(sdk.WrapSDKContext(suite.ctx), &types.GaugeByIDRequest{Id: 1000})
+	res, err := suite.querier.GaugeByID(sdk.WrapSDKContext(suite.ctx), &types.GaugeByIDRequest{Id: 1000})
 	suite.Require().Error(err)
 	suite.Require().Equal(res, (*types.GaugeByIDResponse)(nil))
 
 	// Check that querying a gauge with an ID that exists returns the gauge.
-	res, err = suite.app.IncentivesKeeper.GaugeByID(sdk.WrapSDKContext(suite.ctx), &types.GaugeByIDRequest{Id: gaugeID})
+	res, err = suite.querier.GaugeByID(sdk.WrapSDKContext(suite.ctx), &types.GaugeByIDRequest{Id: gaugeID})
 	suite.Require().NoError(err)
 	suite.Require().NotEqual(res.Gauge, nil)
 	expectedGauge := types.Gauge{
@@ -45,7 +46,7 @@ func (suite *KeeperTestSuite) TestGRPCGauges() {
 	suite.SetupTest()
 
 	// initial check
-	res, err := suite.app.IncentivesKeeper.Gauges(sdk.WrapSDKContext(suite.ctx), &types.GaugesRequest{})
+	res, err := suite.querier.Gauges(sdk.WrapSDKContext(suite.ctx), &types.GaugesRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
 
@@ -53,7 +54,7 @@ func (suite *KeeperTestSuite) TestGRPCGauges() {
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
-	res, err = suite.app.IncentivesKeeper.Gauges(sdk.WrapSDKContext(suite.ctx), &types.GaugesRequest{})
+	res, err = suite.querier.Gauges(sdk.WrapSDKContext(suite.ctx), &types.GaugesRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
@@ -77,18 +78,18 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	suite.SetupTest()
 
 	// initial check
-	res, err := suite.app.IncentivesKeeper.ActiveGauges(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesRequest{})
+	res, err := suite.querier.ActiveGauges(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
 
 	// create a gauge
 	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	suite.ctx = suite.ctx.WithBlockTime(startTime.Add(time.Second))
-	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
+	err = suite.querier.BeginDistribution(suite.ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// final check
-	res, err = suite.app.IncentivesKeeper.ActiveGauges(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesRequest{})
+	res, err = suite.querier.ActiveGauges(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
@@ -112,7 +113,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.SetupTest()
 
 		// initial check
-	res, err := suite.app.IncentivesKeeper.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
+	res, err := suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
 
@@ -120,7 +121,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
-	res, err = suite.app.IncentivesKeeper.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
+	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
@@ -145,7 +146,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.SetupTest()
 
 	// initial check
-	res, err := suite.app.IncentivesKeeper.UpcomingGauges(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesRequest{})
+	res, err := suite.querier.UpcomingGauges(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
 
@@ -153,7 +154,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
-	res, err = suite.app.IncentivesKeeper.UpcomingGauges(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesRequest{})
+	res, err = suite.querier.UpcomingGauges(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
@@ -177,7 +178,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.SetupTest()
 	
 	// initial check
-	res, err := suite.app.IncentivesKeeper.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
+	res, err := suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
 
@@ -185,7 +186,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// final check
-	res, err = suite.app.IncentivesKeeper.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
+	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
@@ -210,7 +211,7 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 
 	// initial check
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+	res, err := suite.querier.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
 		Owner: lockOwner.String(),
 	})
 	suite.Require().NoError(err)
@@ -219,7 +220,7 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	// setup lock and gauge
 	lockOwner, _, coins, _ := suite.SetupLockAndGauge(false)
 
-	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+	res, err = suite.querier.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
 		Owner:    lockOwner.String(),
 		EndEpoch: 100,
 	})
@@ -232,7 +233,7 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 
 	// initial check
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-	res, err := suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+	res, err := suite.querier.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
 		Owner: lockOwner.String(),
 	})
 	suite.Require().NoError(err)
@@ -247,7 +248,7 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	err = suite.app.PoolIncentivesKeeper.ReplaceDistrRecords(suite.ctx, distrRecord)
 	suite.Require().NoError(err)
 
-	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+	res, err = suite.querier.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
 		Owner:    lockOwner.String(),
 		EndEpoch: 10,
 	})
@@ -260,7 +261,7 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	// TODO: Figure out what this number should be
 	mintCoins := sdk.NewCoin(coins[0].Denom, sdk.NewInt(1500000))
 
-	res, err = suite.app.IncentivesKeeper.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
+	res, err = suite.querier.RewardsEst(sdk.WrapSDKContext(suite.ctx), &types.RewardsEstRequest{
 		Owner:    lockOwner.String(),
 		EndEpoch: 10,
 	})
@@ -274,7 +275,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.SetupTest()
 
 	// initial check
-	res, err := suite.app.IncentivesKeeper.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
+	res, err := suite.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 
@@ -286,23 +287,23 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 
 	// setup a gauge
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
-	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+	gauge, err := suite.querier.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
 	gauges := []types.Gauge{*gauge}
 
 	// check after gauge creation
-	res, err = suite.app.IncentivesKeeper.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
+	res, err = suite.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
+	distrCoins, err := suite.querier.Distribute(suite.ctx, gauges)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
 
 	// check gauge changes after distribution
-	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+	gauge, err = suite.querier.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
 	suite.Require().Equal(gauge.FilledEpochs, uint64(1))
@@ -311,21 +312,21 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 
 	// start distribution
 	suite.ctx = suite.ctx.WithBlockTime(startTime)
-	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
+	err = suite.querier.BeginDistribution(suite.ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// check after distribution
-	res, err = suite.app.IncentivesKeeper.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
+	res, err = suite.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins.Sub(distrCoins))
 
 	// distribute second round to stakers
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
+	distrCoins, err = suite.querier.Distribute(suite.ctx, gauges)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 6)}, distrCoins)
 
 	// final check
-	res, err = suite.app.IncentivesKeeper.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
+	res, err = suite.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleToDistributeCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 }
@@ -334,7 +335,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.SetupTest()
 
 	// initial check
-	res, err := suite.app.IncentivesKeeper.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
+	res, err := suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 
@@ -346,28 +347,28 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 
 	// setup a gauge
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
-	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+	gauge, err := suite.querier.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
 	gauges := []types.Gauge{*gauge}
 
 	// check after gauge creation
-	res, err = suite.app.IncentivesKeeper.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
+	res, err = suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 
 	// start distribution
 	suite.ctx = suite.ctx.WithBlockTime(startTime)
-	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
+	err = suite.querier.BeginDistribution(suite.ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
-	distrCoins, err := suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
+	distrCoins, err := suite.querier.Distribute(suite.ctx, gauges)
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 4)})
 
 	// check gauge changes after distribution
-	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeID)
+	gauge, err = suite.querier.GetGaugeByID(suite.ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
 	suite.Require().Equal(gauge.FilledEpochs, uint64(1))
@@ -375,17 +376,17 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	gauges = []types.Gauge{*gauge}
 
 	// check after distribution
-	res, err = suite.app.IncentivesKeeper.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
+	res, err = suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, distrCoins)
 
 	// distribute second round to stakers
-	distrCoins, err = suite.app.IncentivesKeeper.Distribute(suite.ctx, gauges)
+	distrCoins, err = suite.querier.Distribute(suite.ctx, gauges)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 6)}, distrCoins)
 
 	// final check
-	res, err = suite.app.IncentivesKeeper.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
+	res, err = suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.ctx), &types.ModuleDistributedCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
 }
