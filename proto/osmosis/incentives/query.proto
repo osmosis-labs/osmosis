@@ -39,6 +39,7 @@ service Query {
   rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse) {
     option (google.api.http).get = "/osmosis/incentives/v1beta1/active_gauges";
   }
+  // returns active gauges per denom
   rpc ActiveGaugesPerDenom(ActiveGaugesPerDenomRequest)
       returns (ActiveGaugesPerDenomResponse) {
     option (google.api.http).get =
@@ -49,7 +50,7 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/upcoming_gauges";
   }
-
+  // returns scheduled gauges per denom
   rpc UpcomingGaugesPerDenom(UpcomingGaugesPerDenomRequest)
       returns (UpcomingGaugesPerDenomResponse) {
     option (google.api.http).get =
