@@ -74,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Minor improvements & Bug Fixes
 
+* [#1177](https://github.com/osmosis-labs/osmosis/pull/1177) upgrade to go 1.18
 * [#1061](https://github.com/osmosis-labs/osmosis/pull/1061) upgrade iavl to v0.17.3-osmo-v5 with concurrent map write fix
 * [#1071](https://github.com/osmosis-labs/osmosis/pull/1071) improve Dockerfile
 
