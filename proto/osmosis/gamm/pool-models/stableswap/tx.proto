@@ -18,7 +18,7 @@ message MsgCreateStableswapPool {
 
   PoolParams poolParams = 2 [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
 
-  repeated cosmos.base.v1beta1.Coin initialPoolLiquidity = 3 [
+  repeated cosmos.base.v1beta1.Coin initial_pool_liquidity = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
