@@ -43,7 +43,12 @@ func AccumulationStoreInvariant(keeper Keeper) sdk.Invariant {
 		balances := keeper.bk.GetAllBalances(ctx, moduleAcc.GetAddress())
 
 		// check 1s, 1 day, 1 week, 2 weeks
-		durations := []time.Duration{time.Second, time.Hour * 24, time.Hour * 24 * 7, time.Hour * 24 * 14}
+		durations := []time.Duration{
+		    time.Second,
+		    time.Hour * 24,
+		    time.Hour * 24 * 7,
+		    time.Hour * 24 * 14,
+		 }
 
 		// loop all denoms on lockup module
 		for _, coin := range balances {
