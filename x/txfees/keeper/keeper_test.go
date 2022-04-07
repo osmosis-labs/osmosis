@@ -19,10 +19,6 @@ import (
 )
 
 type KeeperTestSuite struct {
-	suite.Suite
-
-	ctx sdk.Context
-	app *osmosisapp.OsmosisApp
 	apptesting.KeeperTestHelper
 
 	clientCtx client.Context

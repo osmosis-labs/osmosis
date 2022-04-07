@@ -187,26 +187,26 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		// TxBuilder components reset for every test case
 		txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 		priv0, _, addr0 := testdata.KeyTestPubAddr()
-		acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
-		suite.app.AccountKeeper.SetAccount(suite.Ctx, acc1)
+		acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
+		suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
 		msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
 		privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 		signerData := authsigning.SignerData{
-			ChainID: suite.Ctx.ChainID(), 
-			AccountNumber: accNums[0], 
-			Sequence: accSeqs[0]}
+			ChainID:       suite.Ctx.ChainID(),
+			AccountNumber: accNums[0],
+			Sequence:      accSeqs[0]}
 
 		gasLimit := tc.gasRequested
 		sigV2, _ := clienttx.SignWithPrivKey(
-			1, 
+			1,
 			signerData,
-			txBuilder, 
-			privs[0], 
+			txBuilder,
+			privs[0],
 			suite.clientCtx.TxConfig,
 			accSeqs[0])
 
-		simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, tc.txFee)
-		
+		simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.txFee)
+
 		txBuilder.SetMsgs(msgs[0])
 		txBuilder.SetSignatures(sigV2)
 		txBuilder.SetMemo("")
@@ -215,20 +215,20 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 		tx := txBuilder.GetTx()
 
-		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper, mempoolFeeOpts)
-		dfd := keeper.NewDeductFeeDecorator(*suite.app.TxFeesKeeper, *suite.app.AccountKeeper, *suite.app.BankKeeper, *suite.app.FeeGrantKeeper)
+		mfd := keeper.NewMempoolFeeDecorator(*suite.App.TxFeesKeeper, mempoolFeeOpts)
+		dfd := keeper.NewDeductFeeDecorator(*suite.App.TxFeesKeeper, *suite.App.AccountKeeper, *suite.App.BankKeeper, *suite.App.FeeGrantKeeper)
 		antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
-		_, err := antehandlerMFD(suite.ctx, tx, false)
+		_, err := antehandlerMFD(suite.Ctx, tx, false)
 
 		if tc.expectPass {
 			if tc.baseDenomGas && !tc.txFee.IsZero() {
-				moduleAddr := suite.app.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
-				suite.Require().Equal(tc.txFee[0], suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr, baseDenom), tc.name)
-				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.FeeCollectorName, addr0, tc.txFee)
+				moduleAddr := suite.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
+				suite.Require().Equal(tc.txFee[0], suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddr, baseDenom), tc.name)
+				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, types.FeeCollectorName, addr0, tc.txFee)
 			} else if !tc.txFee.IsZero() {
-				moduleAddr := suite.app.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
-				suite.Require().Equal(tc.txFee[0], suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
-				suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.NonNativeFeeCollectorName, addr0, tc.txFee)
+				moduleAddr := suite.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
+				suite.Require().Equal(tc.txFee[0], suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
+				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, types.NonNativeFeeCollectorName, addr0, tc.txFee)
 			}
 			suite.Require().NoError(err, "test: %s", tc.name)
 		} else {
