@@ -225,7 +225,7 @@ test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-    @VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
 
 test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
