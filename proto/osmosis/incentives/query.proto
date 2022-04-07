@@ -133,7 +133,7 @@ message UpcomingGaugesResponse {
 
 message UpcomingGaugesPerDenomRequest {
   string denom = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message UpcomingGaugesPerDenomResponse {
