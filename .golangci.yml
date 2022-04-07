@@ -10,7 +10,7 @@ linters:
     - gofmt
     # - goimports
     # - golint
-    - maligned
+    # - maligned
 
 issues:
   exclude-rules:
