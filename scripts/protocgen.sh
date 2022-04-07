@@ -29,7 +29,6 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
 done
 
-
 # command to generate docs using protoc-gen-doc
 buf protoc \
   -I "proto" \
