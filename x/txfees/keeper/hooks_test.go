@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gamm "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	defaultPooledAssetAmount := int64(500)
 
 	uion := "uion"
-	uionPoolId := suite.PreparePoolWithAssets(
+	uionPoolId := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(uion, defaultPooledAssetAmount),
 	)
@@ -28,7 +28,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
 
 	atom := "atom"
-	atomPoolId := suite.PreparePoolWithAssets(
+	atomPoolId := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(atom, defaultPooledAssetAmount),
 	)
@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	suite.ExecuteUpgradeFeeTokenProposal(atom, atomPoolId)
 
 	ust := "ust"
-	ustPoolId := suite.PreparePoolWithAssets(
+	ustPoolId := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(ust, defaultPooledAssetAmount),
 	)
@@ -45,38 +45,24 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	suite.Require().NoError(err)
 	suite.ExecuteUpgradeFeeTokenProposal(ust, ustPoolId)
 
-	coins := sdk.NewCoins(
-		sdk.NewInt64Coin(uion, 10),
+	coins := sdk.NewCoins(sdk.NewInt64Coin(atom, 20),
 		sdk.NewInt64Coin(atom, 20),
-		sdk.NewInt64Coin(ust, 14),
-	)
+		sdk.NewInt64Coin(ust, 14))
 
-	gamm.CalcOutGivenIn(sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
-		sdk.OneDec(), 
-		sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
-		sdk.OneDec(), 
-		sdk.NewDecFromInt(coins[0].Amount), 
-		sdk.NewDec(0),
-	)
+	swapFee := sdk.NewDec(0)
 
-	expectedOutput1 := gamm.CalcOutGivenIn(sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
-		sdk.OneDec(), 
-		sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
-		sdk.OneDec(), 
-		sdk.NewDecFromInt(coins[0].Amount), 
-		sdk.NewDec(0)).TruncateInt()
-	expectedOutput2 := gamm.CalcOutGivenIn(sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
-		sdk.OneDec(), 
-		sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
-		sdk.OneDec(), 
-		sdk.NewDecFromInt(coins[1].Amount), 
-		sdk.NewDec(0)).TruncateInt()
-	expectedOutput3 := gamm.CalcOutGivenIn(sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
-		sdk.OneDec(), 
-		sdk.NewDecFromInt(sdk.NewInt(defaultPooledAssetAmount)), 
-		sdk.OneDec(), 
-		sdk.NewDecFromInt(coins[2].Amount), 
-		sdk.NewDec(0)).TruncateInt()
+	expectedOutput1 := uionPoolI.CalcOutAmtGivenIn(suite.ctx,
+		sdk.NewCoins(sdk.NewInt64Coin(uion, 10)), 
+		baseDenom, 
+		swapFee).Amount.TruncateInt()
+	expectedOutput2 := atomPoolI.CalcOutAmtGivenIn(suite.ctx,
+		sdk.NewCoins(sdk.NewInt64Coin(atom, 20)), 
+		baseDenom, 
+		swapFee).Amount.TruncateInt()
+	expectedOutput3 := ustPoolI.CalcOutAmtGivenIn(suite.ctx,
+		sdk.NewCoins(sdk.NewInt64Coin(ust, 14)), 
+		baseDenom, 
+		swapFee).TruncateInt()
 	
 	fullExpectedOutput := expectedOutput1.Add(expectedOutput2).Add(expectedOutput3)
 

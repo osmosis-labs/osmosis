@@ -40,6 +40,5 @@ cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["gamm"]["params"]["pool
 
 # update superfluid genesis
 cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["superfluid"]["params"]["refresh_epoch_identifier"]="min"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
-cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["superfluid"]["params"]["unbonding_duration"]="120s"' > $HOME/.osmosisd/config/tmp_genesis.json && mv $HOME/.osmosisd/config/tmp_genesis.json $HOME/.osmosisd/config/genesis.json
 
 osmosisd start --home=$HOME/.osmosisd

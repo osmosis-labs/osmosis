@@ -3,7 +3,6 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
-import "osmosis/gamm/v1beta1/pool.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer";
 
@@ -25,4 +24,6 @@ message MsgCreateBalancerPool {
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
-message MsgCreateBalancerPoolResponse {}
+message MsgCreateBalancerPoolResponse {
+  uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
+}

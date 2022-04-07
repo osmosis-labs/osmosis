@@ -12,7 +12,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-// LockupKeeper defines the expected interface needed to retrieve locks
+// LockupKeeper defines the expected interface needed to retrieve locks.
 type LockupKeeper interface {
 	GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp time.Time) []lockuptypes.PeriodLock
 	GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []lockuptypes.PeriodLock
@@ -36,10 +36,9 @@ type LockupMsgServer interface {
 	LockTokens(goCtx context.Context, msg *lockuptypes.MsgLockTokens) (*lockuptypes.MsgLockTokensResponse, error)
 }
 
-// GammKeeper defines the expected interface needed for superfluid module
+// GammKeeper defines the expected interface needed for superfluid module.
 type GammKeeper interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error)
-	ExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, tokenOutMins sdk.Coins) (err error)
 	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 	GetPools(ctx sdk.Context) (res []gammtypes.PoolI, err error)
 }
@@ -55,7 +54,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
-// StakingKeeper expected staking keeper
+// StakingKeeper expected staking keeper.
 type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
 	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
@@ -71,12 +70,12 @@ type StakingKeeper interface {
 	GetParams(ctx sdk.Context) stakingtypes.Params
 }
 
-// DistrKeeper expected distribution keeper
+// DistrKeeper expected distribution keeper.
 type DistrKeeper interface {
 	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
 }
 
-// IncentivesKeeper expected incentives keeper
+// IncentivesKeeper expected incentives keeper.
 type IncentivesKeeper interface {
 	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error

@@ -16,7 +16,7 @@ type XCreatePoolInputsExceptions struct {
 	Other *string // Other won't raise an error
 }
 
-// UnmarshalJSON should error if there are fields unexpected
+// UnmarshalJSON should error if there are fields unexpected.
 func (release *createPoolInputs) UnmarshalJSON(data []byte) error {
 	var createPoolE XCreatePoolInputsExceptions
 	dec := json.NewDecoder(bytes.NewReader(data))

@@ -25,9 +25,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 			panic(err)
 		}
 
-		poolAssets := pool.GetAllPoolAssets()
+		poolAssets := pool.GetTotalPoolLiquidity(ctx)
 		for _, asset := range poolAssets {
-			liquidity = liquidity.Add(asset.Token)
+			liquidity = liquidity.Add(asset)
 		}
 	}
 

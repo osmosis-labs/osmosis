@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
@@ -16,11 +17,11 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
-	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
+	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 
 	uion := "uion"
 
-	uionPoolId := suite.PreparePoolWithAssets(
+	uionPoolId := suite.PrepareUni2PoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin(uion, 500),
 	)
@@ -179,18 +180,19 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 	}
 
 	for _, tc := range tests {
-		suite.ctx = suite.ctx.WithIsCheckTx(tc.isCheckTx)
-		suite.ctx = suite.ctx.WithMinGasPrices(tc.minGasPrices)
+
+		suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx)
+		suite.Ctx = suite.Ctx.WithMinGasPrices(tc.minGasPrices)
 
 		// TxBuilder components reset for every test case
 		txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 		priv0, _, addr0 := testdata.KeyTestPubAddr()
-		acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+		acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
+		suite.app.AccountKeeper.SetAccount(suite.Ctx, acc1)
 		msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
 		privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 		signerData := authsigning.SignerData{
-			ChainID: suite.ctx.ChainID(), 
+			ChainID: suite.Ctx.ChainID(), 
 			AccountNumber: accNums[0], 
 			Sequence: accSeqs[0]}
 

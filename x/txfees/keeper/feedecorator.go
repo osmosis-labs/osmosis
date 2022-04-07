@@ -17,7 +17,7 @@ import (
 // If fee is too low, decorator returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next AnteHandler
-// CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator
+// CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator.
 type MempoolFeeDecorator struct {
 	TxFeesKeeper Keeper
 	Opts         types.MempoolFeeOptions
@@ -91,6 +91,8 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
+// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
+// to pay the gas cost of this tx.
 func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {

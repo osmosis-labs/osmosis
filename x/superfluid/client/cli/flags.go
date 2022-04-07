@@ -1,6 +1,6 @@
 package cli
 
-// Proposal flags
+// Proposal flags.
 const (
 	FlagSuperfluidAssets = "superfluid-assets"
 )

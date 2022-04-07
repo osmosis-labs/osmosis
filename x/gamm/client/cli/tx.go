@@ -333,7 +333,6 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 }
 
 func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-
 	pool, err := parseCreatePoolFlags(fs)
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
@@ -363,14 +362,13 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		return txf, nil, err
 	}
 
-	var poolAssets []types.PoolAsset
+	var poolAssets []balancer.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
-
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
 			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
 
-		poolAssets = append(poolAssets, types.PoolAsset{
+		poolAssets = append(poolAssets, balancer.PoolAsset{
 			Weight: poolAssetCoins[i].Amount.RoundInt(),
 			Token:  deposit[i],
 		})
@@ -399,14 +397,13 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 			return txf, nil, err
 		}
 
-		var targetPoolAssets []types.PoolAsset
+		var targetPoolAssets []balancer.PoolAsset
 		for i := 0; i < len(targetPoolAssetCoins); i++ {
-
 			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
 				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
 			}
 
-			targetPoolAssets = append(targetPoolAssets, types.PoolAsset{
+			targetPoolAssets = append(targetPoolAssets, balancer.PoolAsset{
 				Weight: targetPoolAssetCoins[i].Amount.RoundInt(),
 				Token:  deposit[i],
 				// TODO: This doesn't make sense. Should only use denom, not an sdk.Coin
@@ -457,11 +454,11 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	maxAmountsIn := sdk.Coins{}
 	for i := 0; i < len(maxAmountsInStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(maxAmountsInStrs[i])
+		parsed, err := sdk.ParseCoinsNormalized(maxAmountsInStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		maxAmountsIn = append(maxAmountsIn, parsed)
+		maxAmountsIn = maxAmountsIn.Add(parsed...)
 	}
 
 	msg := &types.MsgJoinPool{
@@ -497,11 +494,11 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	minAmountsOut := sdk.Coins{}
 	for i := 0; i < len(minAmountsOutStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(minAmountsOutStrs[i])
+		parsed, err := sdk.ParseCoinsNormalized(minAmountsOutStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		minAmountsOut = append(minAmountsOut, parsed)
+		minAmountsOut = minAmountsOut.Add(parsed...)
 	}
 
 	msg := &types.MsgExitPool{

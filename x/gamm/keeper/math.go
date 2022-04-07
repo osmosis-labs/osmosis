@@ -98,30 +98,6 @@ func calcOutGivenIn(
 	return tokenAmountOut
 }
 
-// CalcOutGivenIn calculates token to be provided, fee added,
-// given the swapped out amount, using solveConstantFunctionInvariant.
-// This version is exported and can be used to calculate the exact output of a swap.
-func CalcOutGivenIn(
-	tokenBalanceIn,
-	tokenWeightIn,
-	tokenBalanceOut,
-	tokenWeightOut,
-	tokenAmountIn,
-	swapFee sdk.Dec,
-) sdk.Dec {
-	// deduct swapfee on the in asset
-	tokenAmountInAfterFee := tokenAmountIn.Mul(sdk.OneDec().Sub(swapFee))
-	// delta balanceOut is positive(tokens inside the pool decreases)
-	tokenAmountOut := solveConstantFunctionInvariant(
-		tokenBalanceIn,
-		tokenBalanceIn.Add(tokenAmountInAfterFee),
-		tokenWeightIn,
-		tokenBalanceOut,
-		tokenWeightOut,
-	)
-	return tokenAmountOut
-}
-
 // calcInGivenOut calculates token to be provided, fee added,
 // given the swapped out amount, using solveConstantFunctionInvariant
 func calcInGivenOut(
@@ -140,7 +116,6 @@ func calcInGivenOut(
 	// Therefore we divide by (1 - swapfee) here
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
 	return tokenAmountInBeforeFee
-
 }
 
 func feeRatio(
