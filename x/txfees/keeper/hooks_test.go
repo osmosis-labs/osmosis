@@ -23,6 +23,8 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(uion, defaultPooledAssetAmount),
 	)
+	uionPoolI, err:= suite.app.GAMMKeeper.GetPool(suite.ctx, uionPoolId)
+	suite.Require().NoError(err)
 	suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
 
 	atom := "atom"
@@ -30,6 +32,8 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(atom, defaultPooledAssetAmount),
 	)
+	atomPoolI, err:= suite.app.GAMMKeeper.GetPool(suite.ctx, atomPoolId)
+	suite.Require().NoError(err)
 	suite.ExecuteUpgradeFeeTokenProposal(atom, atomPoolId)
 
 	ust := "ust"
@@ -37,6 +41,8 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(ust, defaultPooledAssetAmount),
 	)
+	ustPoolI, err:= suite.app.GAMMKeeper.GetPool(suite.ctx, ustPoolId)
+	suite.Require().NoError(err)
 	suite.ExecuteUpgradeFeeTokenProposal(ust, ustPoolId)
 
 	coins := sdk.NewCoins(
