@@ -1239,14 +1239,14 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 <a name="osmosis.gamm.v1beta1.QuerySpotPriceRequest"></a>
 
 ### QuerySpotPriceRequest
-=============================== SpotPrice
+QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice query.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolId` | [uint64](#uint64) |  |  |
-| `tokenInDenom` | [string](#string) |  |  |
-| `tokenOutDenom` | [string](#string) |  |  |
+| `base_asset_denom` | [string](#string) |  |  |
+| `quote_asset_denom` | [string](#string) |  |  |
 
 
 
@@ -1256,7 +1256,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 <a name="osmosis.gamm.v1beta1.QuerySpotPriceResponse"></a>
 
 ### QuerySpotPriceResponse
-
+QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice query.
 
 
 | Field | Type | Label | Description |
@@ -1439,7 +1439,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | `PoolParams` | [QueryPoolParamsRequest](#osmosis.gamm.v1beta1.QueryPoolParamsRequest) | [QueryPoolParamsResponse](#osmosis.gamm.v1beta1.QueryPoolParamsResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/params|
 | `TotalPoolLiquidity` | [QueryTotalPoolLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityRequest) | [QueryTotalPoolLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/total_pool_liquidity|
 | `TotalShares` | [QueryTotalSharesRequest](#osmosis.gamm.v1beta1.QueryTotalSharesRequest) | [QueryTotalSharesResponse](#osmosis.gamm.v1beta1.QueryTotalSharesResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/total_shares|
-| `SpotPrice` | [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest) | [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/prices|
+| `SpotPrice` | [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest) | [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse) | SpotPrice defines a gRPC query handler that returns the spot price given a base denomination and a quote denomination. | GET|/osmosis/gamm/v1beta1/pools/{poolId}/prices|
 | `EstimateSwapExactAmountIn` | [QuerySwapExactAmountInRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest) | [QuerySwapExactAmountInResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse) | Estimate the swap. | GET|/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in|
 | `EstimateSwapExactAmountOut` | [QuerySwapExactAmountOutRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest) | [QuerySwapExactAmountOutResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse) |  | GET|/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out|
 

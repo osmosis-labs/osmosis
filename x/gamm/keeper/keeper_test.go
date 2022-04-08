@@ -31,6 +31,10 @@ type KeeperTestSuite struct {
 	queryClient types.QueryClient
 }
 
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
@@ -38,10 +42,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.app.GAMMKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }
 
 func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
