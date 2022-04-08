@@ -31,6 +31,29 @@ var cubeRootTwo, _ = sdk.NewDec(2).ApproxRoot(3)
 //					+ 4 (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4)^3)
 // 				- 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5)^(1/3))}
 //      + {(b x + x y)/(b + y)}
+// Then notice that the two sqrt terms and surrounding items in the expression are the same.
+// So we replace them with a single term:
+// discriminant = sqrt(
+//				(-27 b^2 x^3 y - 27 b^2 x y^3 - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5)^2
+//				+ 4 (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4)^3)
+// foo = (-27 b^2 x^3 y - 27 b^2 x y^3
+//			+ discriminant
+// 			- 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5)^(1/3)
+// Thus, a is then:
+// a = {foo / (3 2^(1/3) (b + y))}
+//		- {(2^(1/3) (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4))
+//		  /(3 (b + y) foo}
+//      + {(b x + x y)/(b + y)}
+// Furthermore, it becomes clearer in this expression, that
+// (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4) is a sub-term of the discriminant.
+// thus we call it banana.
+// a = {foo / (3 2^(1/3) (b + y))}
+//		- {(2^(1/3) banana)
+//		  /(3 (b + y) foo}
+//      + {(b x + x y)/(b + y)}
+// discriminant = sqrt(
+//				(-27 b^2 x^3 y - 27 b^2 x y^3 - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5)^2
+//				+ 4 (banana)^3)
 func solveCfmm() {
 
 }
