@@ -3,7 +3,7 @@
 ARG BASE_IMG_TAG=nonroot 
 
 ## Build Image
-FROM golang:1.17-bullseye as build
+FROM golang:1.18-bullseye as build
 
 WORKDIR /osmosis
 COPY . /osmosis
