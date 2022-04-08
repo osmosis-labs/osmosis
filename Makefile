@@ -238,6 +238,9 @@ benchmark:
 docker-build-debug:
 	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
 
+docker-build-hermes:
+	@cd tests/e2e/docker; docker build -t osmolabs/hermes-e2e:latest -f hermes.Dockerfile .
+
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
