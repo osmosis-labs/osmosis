@@ -229,7 +229,7 @@ benchmark:
 	@go test -mod=readonly -bench=. ./...
 
 docker-build-debug:
-	@docker build -t cosmos/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
+	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
