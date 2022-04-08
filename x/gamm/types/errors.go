@@ -29,4 +29,6 @@ var (
 
 	ErrPoolParamsInvalidDenom     = sdkerrors.Register(ModuleName, 50, "pool params' LBP params has an invalid denomination")
 	ErrPoolParamsInvalidNumDenoms = sdkerrors.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")
+
+	ErrNotImplemented = sdkerrors.Register(ModuleName, 60, "function not implemented")
 )

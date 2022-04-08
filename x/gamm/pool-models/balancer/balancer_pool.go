@@ -517,47 +517,6 @@ func (params PoolParams) GetPoolExitFee() sdk.Dec {
 	return params.ExitFee
 }
 
-func ValidateFutureGovernor(governor string) error {
-	// allow empty governor
-	if governor == "" {
-		return nil
-	}
-
-	// validation for future owner
-	// "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
-	_, err := sdk.AccAddressFromBech32(governor)
-	if err == nil {
-		return nil
-	}
-
-	lockTimeStr := ""
-	splits := strings.Split(governor, ",")
-	if len(splits) > 2 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
-	}
-
-	// token,100h
-	if len(splits) == 2 {
-		lpTokenStr := splits[0]
-		if sdk.ValidateDenom(lpTokenStr) != nil {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
-		}
-		lockTimeStr = splits[1]
-	}
-
-	// 100h
-	if len(splits) == 1 {
-		lockTimeStr = splits[0]
-	}
-
-	// Note that a duration of 0 is allowed
-	_, err = time.ParseDuration(lockTimeStr)
-	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
-	}
-	return nil
-}
-
 // subPoolAssetWeights subtracts the weights of two different pool asset slices.
 // It assumes that both pool assets have the same token denominations,
 // with the denominations in the same order.
