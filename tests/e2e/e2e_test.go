@@ -23,13 +23,13 @@ func (s *IntegrationTestSuite) TestQueryBalances() {
 	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesA)
-	// s.Require().Equal(2, len(balancesA))
+	s.Require().Equal(2, len(balancesA))
 
 	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
 	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.validators[0].keyInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesB)
-	// s.Require().Equal(2, len(balancesB))
+	s.Require().Equal(3, len(balancesB))
 
 	actualDenomsA := make([]string, 0, 2)
 	actualBalancesA := make([]uint64, 0, 2)
