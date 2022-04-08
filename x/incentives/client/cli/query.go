@@ -8,8 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -324,11 +325,7 @@ func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 		Use:   "upcoming-gauges-per-denom [denom]",
 		Short: "Query scheduled gauges per denom",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query scheduled gauges.
-
-Example:
-$ %s query incentives upcoming-gauges-per-denom [denom]
-`,
+			fmt.Sprintf(
 				version.AppName,
 			),
 		),
