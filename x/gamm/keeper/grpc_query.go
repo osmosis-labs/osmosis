@@ -200,24 +200,22 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.TokenInDenom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if req.BaseAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
 	}
 
-	if req.TokenOutDenom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if req.QuoteAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")
 	}
-
-	// Return the spot price anyway, even if the pool is inactive.
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to get pool by ID: %s", err)
 	}
 
-	sp, err := pool.SpotPrice(sdkCtx, req.TokenInDenom, req.TokenOutDenom)
+	sp, err := pool.SpotPrice(sdkCtx, req.BaseAssetDenom, req.QuoteAssetDenom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
