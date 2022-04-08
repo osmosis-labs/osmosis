@@ -372,11 +372,18 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.hermesResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s-%s-relayer", s.chainA.id, s.chainB.id),
-			Repository: "ghcr.io/cosmos/hermes-e2e",
-			Tag:        "latest",
+			Repository: "osmolabs/hermes",
+			Tag:        "0.13.0",
 			NetworkID:  s.dkrNet.Network.ID,
+			Cmd: []string{
+				"start",
+			},
+			User: "root:root",
 			Mounts: []string{
 				fmt.Sprintf("%s/:/root/hermes", hermesCfgPath),
+			},
+			ExposedPorts: []string{
+				"3031",
 			},
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
