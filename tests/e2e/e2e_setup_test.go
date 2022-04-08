@@ -299,7 +299,7 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.configDir()),
 			},
-			Repository: "osmolabs/osmosisd-e2e",
+			Repository: "osmosis:debug",
 		}
 
 		// expose the first validator for debugging and communication
