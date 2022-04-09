@@ -7,7 +7,7 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) { }
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {}
 
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
@@ -19,7 +19,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		if coin.Denom == baseDenom {
 			continue
 		} else {
-		
+
 			feetoken, err := k.GetFeeToken(ctx, coin.Denom)
 			if err != nil {
 				return err
@@ -39,7 +39,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	// Get all of the txfee payout denom in the module account
 	nonNativeFeeAccountBaseDenomBalance := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, addrNonNativeFee, baseDenom))
-	
+
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBaseDenomBalance)
 	if err != nil {
 		return err
@@ -47,7 +47,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	return nil
 }
-
 
 // Hooks wrapper struct for incentives keeper
 type Hooks struct {

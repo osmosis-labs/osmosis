@@ -143,7 +143,7 @@ func NewDeductFeeDecorator(tk Keeper, ak types.AccountKeeper, bk types.BankKeepe
 		ak:             ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
-		txFeesKeeper: tk,
+		txFeesKeeper:   tk,
 	}
 }
 
@@ -213,7 +213,7 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 	if !fees.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
-	
+
 	// pulls base denom from TxFeesKeeper (should be uOSMO)
 	baseDenom, err := txFeesKeeper.GetBaseDenom(ctx)
 	if err != nil {
