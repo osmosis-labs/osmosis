@@ -22,6 +22,9 @@ import (
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -216,4 +219,18 @@ func (keeperTestHelper *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins 
 	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(keeperTestHelper.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	keeperTestHelper.Require().NoError(err)
 	return msgResponse.ID
+}
+
+func (keeperTestHelper *KeeperTestHelper) BuildTx(txBuilder client.TxBuilder, msgs []sdk.Msg, sigV2 signing.SignatureV2, memo string, txFee sdk.Coins, gasLimit uint64) (tx authsigning.Tx) {
+	err := txBuilder.SetMsgs(msgs[0])
+	keeperTestHelper.Require().NoError(err)
+
+	err = txBuilder.SetSignatures(sigV2)
+	keeperTestHelper.Require().NoError(err)
+
+	txBuilder.SetMemo(memo)
+	txBuilder.SetFeeAmount(txFee)
+	txBuilder.SetGasLimit(gasLimit)
+
+	return txBuilder.GetTx()
 }

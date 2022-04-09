@@ -215,13 +215,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 		simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.txFee)
 
-		txBuilder.SetMsgs(msgs[0])
-		txBuilder.SetSignatures(sigV2)
-		txBuilder.SetMemo("")
-		txBuilder.SetFeeAmount(tc.txFee)
-		txBuilder.SetGasLimit(gasLimit)
-
-		tx := txBuilder.GetTx()
+		tx := suite.BuildTx(txBuilder, msgs, sigV2, "", tc.txFee, gasLimit)
 
 		mfd := keeper.NewMempoolFeeDecorator(*suite.App.TxFeesKeeper, mempoolFeeOpts)
 		dfd := keeper.NewDeductFeeDecorator(*suite.App.TxFeesKeeper, *suite.App.AccountKeeper, *suite.App.BankKeeper, *suite.App.FeeGrantKeeper)
