@@ -114,7 +114,7 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	e := b2.Mul(x3y)                         // b^2 x^3 y
 	e = e.AddMut(b2.Mul(xy3))                // + b^2 x y^3
 	e = e.AddMut(b.Mul(x3y2).MulInt64Mut(2)) // + 2 b x^3 y^2
-	e = e.AddMut(b2.Mul(xy4).MulInt64Mut(2)) // + 2 b x y^4
+	e = e.AddMut(b.Mul(xy4).MulInt64Mut(2))  // + 2 b x y^4
 	e = e.AddMut(x3y3)                       // + x^3 y^3
 	e = e.AddMut(xy5)                        // + x y^5
 	apple := e.MulInt64(-27)                 // apple = - 27e
