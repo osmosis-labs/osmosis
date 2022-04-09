@@ -1,6 +1,7 @@
 package stableswap
 
 import (
+	fmt "fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,6 +29,13 @@ func TestCFMMInvariant(t *testing.T) {
 			sdk.NewDec(100),
 			sdk.NewDec(1),
 		},
+		{
+			sdk.NewDec(100),
+			sdk.NewDec(100),
+			sdk.NewDec(1000),
+			// returns 87.445364416281417284
+			// should return 99.84973704262359
+		},
 		// {
 		// 	sdk.NewDec(100000),
 		// 	sdk.NewDec(100000),
@@ -38,6 +46,7 @@ func TestCFMMInvariant(t *testing.T) {
 	for _, test := range tests {
 		k0 := cfmmConstant(test.xReserve, test.yReserve)
 		xOut := solveCfmm(test.xReserve, test.yReserve, test.yIn)
+		fmt.Println(xOut)
 		k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
 		decApproxEq(t, k0, k1, kErrTolerance)
 	}
