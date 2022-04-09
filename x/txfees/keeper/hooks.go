@@ -10,7 +10,7 @@ import (
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) { }
 
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	addrNonNativeFee := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorName)
 	nonNativeFeeAccountBalances := k.bankKeeper.GetAllBalances(ctx, addrNonNativeFee)
 	baseDenom, _ := k.GetBaseDenom(ctx)
@@ -22,7 +22,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		
 			feetoken, err := k.GetFeeToken(ctx, coin.Denom)
 			if err != nil {
-				continue
+				return err
 			}
 
 			// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
@@ -30,14 +30,22 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
 			// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
 			minTokenOut := sdk.ZeroInt()
-			k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, minTokenOut)
+			_, err = k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, minTokenOut)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	// Get all of the txfee payout denom in the module account
 	nonNativeFeeAccountBaseDenomBalance := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, addrNonNativeFee, baseDenom))
 	
-	k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBaseDenomBalance)
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBaseDenomBalance)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 
