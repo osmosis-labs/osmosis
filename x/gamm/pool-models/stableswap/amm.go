@@ -6,6 +6,14 @@ var cubeRootTwo, _ = sdk.NewDec(2).ApproxRoot(3)
 var threeCubeRootTwo = cubeRootTwo.MulInt64(3)
 
 // solidly CFMM is xy(x^2 + y^2) = k
+func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
+	xy := xReserve.Mul(yReserve)
+	x2 := xReserve.Mul(xReserve)
+	y2 := yReserve.Mul(yReserve)
+	return xy.Mul(x2.Add(y2))
+}
+
+// solidly CFMM is xy(x^2 + y^2) = k
 // So we want to solve for a given addition of `b` units of y into the pool,
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a`
@@ -97,7 +105,7 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	banana = banana.AddMut(b3.MulInt64(12).Mul(y))  // + 12 b^3 y
 	banana = banana.AddMut(b2.MulInt64(18).Mul(y2)) // + 18 b^2 y^2
 	banana = banana.AddMut(b.MulInt64(12).Mul(y3))  // + 12 b y^3
-	banana = banana.AddMut(y4.MulInt64(3))
+	banana = banana.AddMut(y4.MulInt64(3))          // + 3 y^4
 
 	// apple = -27 b^2 x^3 y - 27 b^2 x y^3 - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5
 	// e = -apple/27 = b^2 x^3 y + b^2 x y^3 + 2 b x^3 y^2 + 2 b x y^4 + x^3 y^3 + x y^5
