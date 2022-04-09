@@ -10,7 +10,7 @@ import (
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {}
 
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	addrNonNativeFee := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorName)
 	nonNativeFeeAccountBalances := k.bankKeeper.GetAllBalances(ctx, addrNonNativeFee)
 	baseDenom, _ := k.GetBaseDenom(ctx)
@@ -19,10 +19,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		if coin.Denom == baseDenom {
 			continue
 		} else {
-
 			feetoken, err := k.GetFeeToken(ctx, coin.Denom)
 			if err != nil {
-				return err
+				panic(err)
 			}
 
 			// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
@@ -32,7 +31,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			minTokenOut := sdk.ZeroInt()
 			_, err = k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, minTokenOut)
 			if err != nil {
-				return err
+				panic(err)
 			}
 		}
 	}
@@ -42,10 +41,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBaseDenomBalance)
 	if err != nil {
-		return err
+		panic(err)
 	}
-
-	return nil
 }
 
 // Hooks wrapper struct for incentives keeper
