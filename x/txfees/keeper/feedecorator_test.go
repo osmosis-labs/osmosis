@@ -181,6 +181,14 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	for _, tc := range tests {
 
+		// reset pool and accounts for each test
+		suite.SetupTest(false)
+		uionPoolId := suite.PrepareUni2PoolWithAssets(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
+			sdk.NewInt64Coin(uion, 500),
+		)
+		suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
+
 		suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx)
 		suite.Ctx = suite.Ctx.WithMinGasPrices(tc.minGasPrices)
 
@@ -224,11 +232,11 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			if tc.baseDenomGas && !tc.txFee.IsZero() {
 				moduleAddr := suite.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
 				suite.Require().Equal(tc.txFee[0], suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddr, baseDenom), tc.name)
-				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, types.FeeCollectorName, addr0, tc.txFee)
+				//suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, types.FeeCollectorName, addr0, tc.txFee)
 			} else if !tc.txFee.IsZero() {
 				moduleAddr := suite.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
 				suite.Require().Equal(tc.txFee[0], suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
-				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, types.NonNativeFeeCollectorName, addr0, tc.txFee)
+				//suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, types.NonNativeFeeCollectorName, addr0, tc.txFee)
 			}
 			suite.Require().NoError(err, "test: %s", tc.name)
 		} else {

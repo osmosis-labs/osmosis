@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	suite.Require().NoError(err)
 	suite.ExecuteUpgradeFeeTokenProposal(ust, ustPoolId)
 
-	coins := sdk.NewCoins(sdk.NewInt64Coin(atom, 20),
+	coins := sdk.NewCoins(sdk.NewInt64Coin(uion, 10),
 		sdk.NewInt64Coin(atom, 20),
 		sdk.NewInt64Coin(ust, 14))
 
