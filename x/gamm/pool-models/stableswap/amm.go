@@ -149,7 +149,8 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 }
 
 //nolint:unused
-func spotPrice(assetXAmount sdk.Int, assetYAmount sdk.Int) sdk.Dec {
+func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
+	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
 	// The spot price of the pool is then lim a -> 0, f_{y -> x}(a) / a
@@ -158,6 +159,12 @@ func spotPrice(assetXAmount sdk.Int, assetYAmount sdk.Int) sdk.Dec {
 	// You can work out that it follows from the above relation!
 	//
 	// Now we have to work this out for the much more complex CFMM xy(x^2 + y^2).
+	// Or we can sidestep this, by just picking a small value a, and computing f_{y -> x}(a) / a,
+	// and accept the precision error.
 
-	return sdk.ZeroDec()
+	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
+	// xReserve & yReserve.
+	a := sdk.OneDec()
+	// no need to divide by a, since a = 1.
+	return solveCfmm(baseReserve, quoteReserve, a)
 }
