@@ -69,12 +69,11 @@ func (k Keeper) GetPools(ctx sdk.Context) (res []types.PoolI, err error) {
 			return nil, err
 		}
 
-		// pool.PokeTokenWeights(ctx.BlockTime())
-
+		pool.PokeTokenWeights(ctx.BlockTime())
 		res = append(res, pool)
 	}
 
-	return
+	return res, nil
 }
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
