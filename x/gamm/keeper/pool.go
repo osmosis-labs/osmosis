@@ -34,7 +34,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 		return nil, err
 	}
 
-	// pool.PokeTokenWeights(ctx.BlockTime())
+	pool.PokeTokenWeights(ctx.BlockTime())
 
 	return pool, nil
 }

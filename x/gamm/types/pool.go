@@ -1,8 +1,11 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v7/v043_temp/address"
 )
 
@@ -65,6 +68,10 @@ type PoolI interface {
 	// CalcExitPoolShares returns how many coins ExitPool would return on these arguments.
 	// This does not mutate the pool, or state.
 	CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
+
+	// PokeTokenWeights determines if a pool's weights need to be updated and
+	// updates them if so.
+	PokeTokenWeights(blockTime time.Time)
 }
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
