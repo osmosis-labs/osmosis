@@ -386,8 +386,6 @@ func (pa *Pool) PokePool(blockTime time.Time) {
 		return
 	}
 
-	// TODO: Add intra-block cache check that we haven't already poked
-	// the block yet.
 	params := *pa.PoolParams.SmoothWeightChangeParams
 
 	// The weights w(t) for the pool at time `t` is defined in one of three
