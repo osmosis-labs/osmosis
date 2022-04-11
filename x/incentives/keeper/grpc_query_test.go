@@ -113,17 +113,16 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.SetupTest()
 
 	// initial check
-	res, err := suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
+	res, err := suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{"lptoken", nil})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
 
 	// create a gauge
 	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
-	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	suite.ctx = suite.ctx.WithBlockTime(startTime.Add(time.Second))
 	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
-	suite.Require().NoError(err)
 	// final check
-	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{})
+	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{"lptoken", nil})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
@@ -180,18 +179,17 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.SetupTest()
 
 	// initial check
-	res, err := suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
+	res, err := suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{"lptoken", nil})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
 
 	// create a gauge
 	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
-	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	suite.ctx = suite.ctx.WithBlockTime(startTime.Add(time.Second))
 	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
-	suite.Require().NoError(err)
 
 	// final check
-	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{})
+	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.UpcomingGaugesPerDenomRequest{"lptoken", nil})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
