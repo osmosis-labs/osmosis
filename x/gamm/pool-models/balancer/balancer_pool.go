@@ -400,7 +400,6 @@ func (pa *Pool) PokeTokenWeights(blockTime time.Time) {
 	//       (target_pool_weights - initial_pool_weights) / (duration)
 	//
 	// 3. t > start_time + duration: w(t) = target_pool_weights
-
 	switch {
 	case blockTime.Before(params.StartTime) || params.StartTime.Equal(blockTime):
 		// case 1: t <= start_time
