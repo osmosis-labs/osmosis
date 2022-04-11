@@ -97,7 +97,7 @@ func (s *intTestSuite) TestIntPanic() {
 	// Division-by-zero check
 	s.Require().Panics(func() { i1.Quo(NewInt(0)) })
 
-	s.Require().NotPanics(func() { Int{}.BigInt() })
+	s.Require().NotPanics(func() { BigInt{}.BigInt() })
 }
 
 // Tests below uses randomness
@@ -148,7 +148,7 @@ func (s *intTestSuite) TestArithInt() {
 		i2 := NewInt(n2)
 
 		cases := []struct {
-			ires Int
+			ires BigInt
 			nres int64
 		}{
 			{i1.Add(i2), n1 + n2},
@@ -196,28 +196,28 @@ func (s *intTestSuite) TestCompInt() {
 	}
 }
 
-func randint() Int {
+func randint() BigInt {
 	return NewInt(rand.Int63())
 }
 
 func (s *intTestSuite) TestImmutabilityAllInt() {
-	ops := []func(*Int){
-		func(i *Int) { _ = i.Add(randint()) },
-		func(i *Int) { _ = i.Sub(randint()) },
-		func(i *Int) { _ = i.Mul(randint()) },
-		func(i *Int) { _ = i.Quo(randint()) },
-		func(i *Int) { _ = i.AddRaw(rand.Int63()) },
-		func(i *Int) { _ = i.SubRaw(rand.Int63()) },
-		func(i *Int) { _ = i.MulRaw(rand.Int63()) },
-		func(i *Int) { _ = i.QuoRaw(rand.Int63()) },
-		func(i *Int) { _ = i.Neg() },
-		func(i *Int) { _ = i.Abs() },
-		func(i *Int) { _ = i.IsZero() },
-		func(i *Int) { _ = i.Sign() },
-		func(i *Int) { _ = i.Equal(randint()) },
-		func(i *Int) { _ = i.GT(randint()) },
-		func(i *Int) { _ = i.LT(randint()) },
-		func(i *Int) { _ = i.String() },
+	ops := []func(*BigInt){
+		func(i *BigInt) { _ = i.Add(randint()) },
+		func(i *BigInt) { _ = i.Sub(randint()) },
+		func(i *BigInt) { _ = i.Mul(randint()) },
+		func(i *BigInt) { _ = i.Quo(randint()) },
+		func(i *BigInt) { _ = i.AddRaw(rand.Int63()) },
+		func(i *BigInt) { _ = i.SubRaw(rand.Int63()) },
+		func(i *BigInt) { _ = i.MulRaw(rand.Int63()) },
+		func(i *BigInt) { _ = i.QuoRaw(rand.Int63()) },
+		func(i *BigInt) { _ = i.Neg() },
+		func(i *BigInt) { _ = i.Abs() },
+		func(i *BigInt) { _ = i.IsZero() },
+		func(i *BigInt) { _ = i.Sign() },
+		func(i *BigInt) { _ = i.Equal(randint()) },
+		func(i *BigInt) { _ = i.GT(randint()) },
+		func(i *BigInt) { _ = i.LT(randint()) },
+		func(i *BigInt) { _ = i.String() },
 	}
 
 	for i := 0; i < 1000; i++ {
@@ -234,10 +234,10 @@ func (s *intTestSuite) TestImmutabilityAllInt() {
 }
 
 func (s *intTestSuite) TestEncodingTableInt() {
-	var i Int
+	var i BigInt
 
 	cases := []struct {
-		i      Int
+		i      BigInt
 		jsonBz []byte
 		rawBz  []byte
 	}{
@@ -415,7 +415,7 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			rt := new(Int)
+			rt := new(BigInt)
 			if err := rt.Unmarshal(scratch[:n]); err != nil {
 				t.Fatal(err)
 			}
@@ -430,7 +430,7 @@ func (s *intTestSuite) TestEncodingRandom() {
 	for i := 0; i < 1000; i++ {
 		n := rand.Int63()
 		ni := NewInt(n)
-		var ri Int
+		var ri BigInt
 
 		str, err := ni.Marshal()
 		s.Require().Nil(err)

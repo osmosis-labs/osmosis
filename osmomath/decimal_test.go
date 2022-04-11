@@ -44,7 +44,7 @@ func TestDecApproxEq(t *testing.T) {
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")
-func (s *decimalTestSuite) mustNewDecFromStr(str string) (d Dec) {
+func (s *decimalTestSuite) mustNewDecFromStr(str string) (d BigDec) {
 	d, err := NewDecFromStr(str)
 	s.Require().NoError(err)
 
@@ -58,28 +58,28 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 	tests := []struct {
 		decimalStr string
 		expErr     bool
-		exp        Dec
+		exp        BigDec
 	}{
-		{"", true, Dec{}},
-		{"0.-75", true, Dec{}},
-		{"0", false, NewDec(0)},
-		{"1", false, NewDec(1)},
+		{"", true, BigDec{}},
+		{"0.-75", true, BigDec{}},
+		{"0", false, NewBigDec(0)},
+		{"1", false, NewBigDec(1)},
 		{"1.1", false, NewDecWithPrec(11, 1)},
 		{"0.75", false, NewDecWithPrec(75, 2)},
 		{"0.8", false, NewDecWithPrec(8, 1)},
 		{"0.11111", false, NewDecWithPrec(11111, 5)},
-		{"314460551102969.3144278234343371835", true, NewDec(3141203149163817869)},
+		{"314460551102969.3144278234343371835", true, NewBigDec(3141203149163817869)},
 		{"314460551102969314427823434337.1835718092488231350",
 			true, NewDecFromBigIntWithPrec(largeBigInt, 4)},
 		{"314460551102969314427823434337.1835",
 			false, NewDecFromBigIntWithPrec(largeBigInt, 4)},
-		{".", true, Dec{}},
-		{".0", true, NewDec(0)},
-		{"1.", true, NewDec(1)},
-		{"foobar", true, Dec{}},
-		{"0.foobar", true, Dec{}},
-		{"0.foobar.", true, Dec{}},
-		{"23258839177459420497578361852416145099316523541994177929007686373780457219628733546438113622840434097944400691400517693873107252115668992", true, Dec{}},
+		{".", true, BigDec{}},
+		{".0", true, NewBigDec(0)},
+		{"1.", true, NewBigDec(1)},
+		{"foobar", true, BigDec{}},
+		{"0.foobar", true, BigDec{}},
+		{"0.foobar.", true, BigDec{}},
+		{"23258839177459420497578361852416145099316523541994177929007686373780457219628733546438113622840434097944400691400517693873107252115668992", true, BigDec{}},
 	}
 
 	for tcIndex, tc := range tests {
@@ -97,7 +97,7 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 			s.Require().NotNil(err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			s.Require().Nil(err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			exp := tc.exp.Mul(NewDec(-1))
+			exp := tc.exp.Mul(NewBigDec(-1))
 			s.Require().True(res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v", res, exp, tcIndex)
 		}
 	}
@@ -105,13 +105,13 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 
 func (s *decimalTestSuite) TestDecString() {
 	tests := []struct {
-		d    Dec
+		d    BigDec
 		want string
 	}{
-		{NewDec(0), "0.000000000000000000"},
-		{NewDec(1), "1.000000000000000000"},
-		{NewDec(10), "10.000000000000000000"},
-		{NewDec(12340), "12340.000000000000000000"},
+		{NewBigDec(0), "0.000000000000000000"},
+		{NewBigDec(1), "1.000000000000000000"},
+		{NewBigDec(10), "10.000000000000000000"},
+		{NewBigDec(12340), "12340.000000000000000000"},
 		{NewDecWithPrec(12340, 4), "1.234000000000000000"},
 		{NewDecWithPrec(12340, 5), "0.123400000000000000"},
 		{NewDecWithPrec(12340, 8), "0.000123400000000000"},
@@ -124,13 +124,13 @@ func (s *decimalTestSuite) TestDecString() {
 
 func (s *decimalTestSuite) TestDecFloat64() {
 	tests := []struct {
-		d    Dec
+		d    BigDec
 		want float64
 	}{
-		{NewDec(0), 0.000000000000000000},
-		{NewDec(1), 1.000000000000000000},
-		{NewDec(10), 10.000000000000000000},
-		{NewDec(12340), 12340.000000000000000000},
+		{NewBigDec(0), 0.000000000000000000},
+		{NewBigDec(1), 1.000000000000000000},
+		{NewBigDec(10), 10.000000000000000000},
+		{NewBigDec(12340), 12340.000000000000000000},
 		{NewDecWithPrec(12340, 4), 1.234000000000000000},
 		{NewDecWithPrec(12340, 5), 0.123400000000000000},
 		{NewDecWithPrec(12340, 8), 0.000123400000000000},
@@ -146,10 +146,10 @@ func (s *decimalTestSuite) TestDecFloat64() {
 
 func (s *decimalTestSuite) TestEqualities() {
 	tests := []struct {
-		d1, d2     Dec
+		d1, d2     BigDec
 		gt, lt, eq bool
 	}{
-		{NewDec(0), NewDec(0), false, false, true},
+		{NewBigDec(0), NewBigDec(0), false, false, true},
 		{NewDecWithPrec(0, 2), NewDecWithPrec(0, 4), false, false, true},
 		{NewDecWithPrec(100, 0), NewDecWithPrec(100, 0), false, false, true},
 		{NewDecWithPrec(-100, 0), NewDecWithPrec(-100, 0), false, false, true},
@@ -183,18 +183,18 @@ func (s *decimalTestSuite) TestEqualities() {
 
 func (s *decimalTestSuite) TestDecsEqual() {
 	tests := []struct {
-		d1s, d2s []Dec
+		d1s, d2s []BigDec
 		eq       bool
 	}{
-		{[]Dec{NewDec(0)}, []Dec{NewDec(0)}, true},
-		{[]Dec{NewDec(0)}, []Dec{NewDec(1)}, false},
-		{[]Dec{NewDec(0)}, []Dec{}, false},
-		{[]Dec{NewDec(0), NewDec(1)}, []Dec{NewDec(0), NewDec(1)}, true},
-		{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(1), NewDec(0)}, true},
-		{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(0), NewDec(1)}, false},
-		{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(1)}, false},
-		{[]Dec{NewDec(1), NewDec(2)}, []Dec{NewDec(2), NewDec(4)}, false},
-		{[]Dec{NewDec(3), NewDec(18)}, []Dec{NewDec(1), NewDec(6)}, false},
+		{[]BigDec{NewBigDec(0)}, []BigDec{NewBigDec(0)}, true},
+		{[]BigDec{NewBigDec(0)}, []BigDec{NewBigDec(1)}, false},
+		{[]BigDec{NewBigDec(0)}, []BigDec{}, false},
+		{[]BigDec{NewBigDec(0), NewBigDec(1)}, []BigDec{NewBigDec(0), NewBigDec(1)}, true},
+		{[]BigDec{NewBigDec(1), NewBigDec(0)}, []BigDec{NewBigDec(1), NewBigDec(0)}, true},
+		{[]BigDec{NewBigDec(1), NewBigDec(0)}, []BigDec{NewBigDec(0), NewBigDec(1)}, false},
+		{[]BigDec{NewBigDec(1), NewBigDec(0)}, []BigDec{NewBigDec(1)}, false},
+		{[]BigDec{NewBigDec(1), NewBigDec(2)}, []BigDec{NewBigDec(2), NewBigDec(4)}, false},
+		{[]BigDec{NewBigDec(3), NewBigDec(18)}, []BigDec{NewBigDec(1), NewBigDec(6)}, false},
 	}
 
 	for tcIndex, tc := range tests {
@@ -205,33 +205,33 @@ func (s *decimalTestSuite) TestDecsEqual() {
 
 func (s *decimalTestSuite) TestArithmetic() {
 	tests := []struct {
-		d1, d2                                Dec
-		expMul, expMulTruncate                Dec
-		expQuo, expQuoRoundUp, expQuoTruncate Dec
-		expAdd, expSub                        Dec
+		d1, d2                                BigDec
+		expMul, expMulTruncate                BigDec
+		expQuo, expQuoRoundUp, expQuoTruncate BigDec
+		expAdd, expSub                        BigDec
 	}{
 		//  d1         d2         MUL    MulTruncate    QUO    QUORoundUp QUOTrunctate  ADD         SUB
-		{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
-		{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
-		{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
-		{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
-		{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
+		{NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0)},
+		{NewBigDec(1), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(1), NewBigDec(1)},
+		{NewBigDec(0), NewBigDec(1), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(1), NewBigDec(-1)},
+		{NewBigDec(0), NewBigDec(-1), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(-1), NewBigDec(1)},
+		{NewBigDec(-1), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(0), NewBigDec(-1), NewBigDec(-1)},
 
-		{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
-		{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
-		{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(2)},
-		{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(-2)},
+		{NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(2), NewBigDec(0)},
+		{NewBigDec(-1), NewBigDec(-1), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(-2), NewBigDec(0)},
+		{NewBigDec(1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(0), NewBigDec(2)},
+		{NewBigDec(-1), NewBigDec(1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(0), NewBigDec(-2)},
 
-		{NewDec(3), NewDec(7), NewDec(21), NewDec(21),
+		{NewBigDec(3), NewBigDec(7), NewBigDec(21), NewBigDec(21),
 			NewDecWithPrec(428571428571428571, 18), NewDecWithPrec(428571428571428572, 18), NewDecWithPrec(428571428571428571, 18),
-			NewDec(10), NewDec(-4)},
-		{NewDec(2), NewDec(4), NewDec(8), NewDec(8), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1),
-			NewDec(6), NewDec(-2)},
+			NewBigDec(10), NewBigDec(-4)},
+		{NewBigDec(2), NewBigDec(4), NewBigDec(8), NewBigDec(8), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1),
+			NewBigDec(6), NewBigDec(-2)},
 
-		{NewDec(100), NewDec(100), NewDec(10000), NewDec(10000), NewDec(1), NewDec(1), NewDec(1), NewDec(200), NewDec(0)},
+		{NewBigDec(100), NewBigDec(100), NewBigDec(10000), NewBigDec(10000), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(200), NewBigDec(0)},
 
 		{NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2), NewDecWithPrec(225, 2),
-			NewDec(1), NewDec(1), NewDec(1), NewDec(3), NewDec(0)},
+			NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(3), NewBigDec(0)},
 		{NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8), NewDecWithPrec(1109889, 8),
 			MustNewDecFromStr("10.009009009009009009"), MustNewDecFromStr("10.009009009009009010"), MustNewDecFromStr("10.009009009009009009"),
 			NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1)},
@@ -267,7 +267,7 @@ func (s *decimalTestSuite) TestArithmetic() {
 
 func (s *decimalTestSuite) TestBankerRoundChop() {
 	tests := []struct {
-		d1  Dec
+		d1  BigDec
 		exp int64
 	}{
 		{s.mustNewDecFromStr("0.25"), 0},
@@ -293,7 +293,7 @@ func (s *decimalTestSuite) TestBankerRoundChop() {
 
 func (s *decimalTestSuite) TestTruncate() {
 	tests := []struct {
-		d1  Dec
+		d1  BigDec
 		exp int64
 	}{
 		{s.mustNewDecFromStr("0"), 0},
@@ -332,13 +332,13 @@ func (s *decimalTestSuite) TestStringOverflow() {
 
 func (s *decimalTestSuite) TestDecMulInt() {
 	tests := []struct {
-		sdkDec Dec
-		sdkInt Int
-		want   Dec
+		sdkDec BigDec
+		sdkInt BigInt
+		want   BigDec
 	}{
-		{NewDec(10), NewInt(2), NewDec(20)},
-		{NewDec(1000000), NewInt(100), NewDec(100000000)},
-		{NewDecWithPrec(1, 1), NewInt(10), NewDec(1)},
+		{NewBigDec(10), NewInt(2), NewBigDec(20)},
+		{NewBigDec(1000000), NewInt(100), NewBigDec(100000000)},
+		{NewDecWithPrec(1, 1), NewInt(10), NewBigDec(1)},
 		{NewDecWithPrec(1, 5), NewInt(20), NewDecWithPrec(2, 4)},
 	}
 	for i, tc := range tests {
@@ -349,17 +349,17 @@ func (s *decimalTestSuite) TestDecMulInt() {
 
 func (s *decimalTestSuite) TestDecCeil() {
 	testCases := []struct {
-		input    Dec
-		expected Dec
+		input    BigDec
+		expected BigDec
 	}{
-		{NewDecWithPrec(1000000000000000, Precision), NewDec(1)},  // 0.001 => 1.0
-		{NewDecWithPrec(-1000000000000000, Precision), ZeroDec()}, // -0.001 => 0.0
+		{NewDecWithPrec(1000000000000000, Precision), NewBigDec(1)}, // 0.001 => 1.0
+		{NewDecWithPrec(-1000000000000000, Precision), ZeroDec()},   // -0.001 => 0.0
 		{ZeroDec(), ZeroDec()}, // 0.0 => 0.0
-		{NewDecWithPrec(900000000000000000, Precision), NewDec(1)},    // 0.9 => 1.0
-		{NewDecWithPrec(4001000000000000000, Precision), NewDec(5)},   // 4.001 => 5.0
-		{NewDecWithPrec(-4001000000000000000, Precision), NewDec(-4)}, // -4.001 => -4.0
-		{NewDecWithPrec(4700000000000000000, Precision), NewDec(5)},   // 4.7 => 5.0
-		{NewDecWithPrec(-4700000000000000000, Precision), NewDec(-4)}, // -4.7 => -4.0
+		{NewDecWithPrec(900000000000000000, Precision), NewBigDec(1)},    // 0.9 => 1.0
+		{NewDecWithPrec(4001000000000000000, Precision), NewBigDec(5)},   // 4.001 => 5.0
+		{NewDecWithPrec(-4001000000000000000, Precision), NewBigDec(-4)}, // -4.001 => -4.0
+		{NewDecWithPrec(4700000000000000000, Precision), NewBigDec(5)},   // 4.7 => 5.0
+		{NewDecWithPrec(-4700000000000000000, Precision), NewBigDec(-4)}, // -4.7 => -4.0
 	}
 
 	for i, tc := range testCases {
@@ -370,9 +370,9 @@ func (s *decimalTestSuite) TestDecCeil() {
 
 func (s *decimalTestSuite) TestPower() {
 	testCases := []struct {
-		input    Dec
+		input    BigDec
 		power    uint64
-		expected Dec
+		expected BigDec
 	}{
 		{OneDec(), 10, OneDec()},                                               // 1.0 ^ (10) => 1.0
 		{NewDecWithPrec(5, 1), 2, NewDecWithPrec(25, 2)},                       // 0.5 ^ 2 => 0.25
@@ -390,9 +390,9 @@ func (s *decimalTestSuite) TestPower() {
 
 func (s *decimalTestSuite) TestApproxRoot() {
 	testCases := []struct {
-		input    Dec
+		input    BigDec
 		root     uint64
-		expected Dec
+		expected BigDec
 	}{
 		{OneDec(), 10, OneDec()},                                                       // 1.0 ^ (0.1) => 1.0
 		{NewDecWithPrec(25, 2), 2, NewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
@@ -419,8 +419,8 @@ func (s *decimalTestSuite) TestApproxRoot() {
 
 func (s *decimalTestSuite) TestApproxSqrt() {
 	testCases := []struct {
-		input    Dec
-		expected Dec
+		input    BigDec
+		expected BigDec
 	}{
 		{OneDec(), OneDec()},                                                // 1.0 => 1.0
 		{NewDecWithPrec(25, 2), NewDecWithPrec(5, 1)},                       // 0.25 => 0.5
@@ -439,38 +439,38 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 
 func (s *decimalTestSuite) TestDecSortableBytes() {
 	tests := []struct {
-		d    Dec
+		d    BigDec
 		want []byte
 	}{
-		{NewDec(0), []byte("000000000000000000.000000000000000000")},
-		{NewDec(1), []byte("000000000000000001.000000000000000000")},
-		{NewDec(10), []byte("000000000000000010.000000000000000000")},
-		{NewDec(12340), []byte("000000000000012340.000000000000000000")},
+		{NewBigDec(0), []byte("000000000000000000.000000000000000000")},
+		{NewBigDec(1), []byte("000000000000000001.000000000000000000")},
+		{NewBigDec(10), []byte("000000000000000010.000000000000000000")},
+		{NewBigDec(12340), []byte("000000000000012340.000000000000000000")},
 		{NewDecWithPrec(12340, 4), []byte("000000000000000001.234000000000000000")},
 		{NewDecWithPrec(12340, 5), []byte("000000000000000000.123400000000000000")},
 		{NewDecWithPrec(12340, 8), []byte("000000000000000000.000123400000000000")},
 		{NewDecWithPrec(1009009009009009009, 17), []byte("000000000000000010.090090090090090090")},
 		{NewDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000010.090090090090090090")},
-		{NewDec(1000000000000000000), []byte("max")},
-		{NewDec(-1000000000000000000), []byte("--")},
+		{NewBigDec(1000000000000000000), []byte("max")},
+		{NewBigDec(-1000000000000000000), []byte("--")},
 	}
 	for tcIndex, tc := range tests {
 		s.Require().Equal(tc.want, SortableDecBytes(tc.d), "bad String(), index: %v", tcIndex)
 	}
 
-	s.Require().Panics(func() { SortableDecBytes(NewDec(1000000000000000001)) })
-	s.Require().Panics(func() { SortableDecBytes(NewDec(-1000000000000000001)) })
+	s.Require().Panics(func() { SortableDecBytes(NewBigDec(1000000000000000001)) })
+	s.Require().Panics(func() { SortableDecBytes(NewBigDec(-1000000000000000001)) })
 }
 
 func (s *decimalTestSuite) TestDecEncoding() {
 	testCases := []struct {
-		input   Dec
+		input   BigDec
 		rawBz   string
 		jsonStr string
 		yamlStr string
 	}{
 		{
-			NewDec(0), "30",
+			NewBigDec(0), "30",
 			"\"0.000000000000000000\"",
 			"\"0.000000000000000000\"\n",
 		},
@@ -505,7 +505,7 @@ func (s *decimalTestSuite) TestDecEncoding() {
 		s.Require().NoError(err)
 		s.Require().Equal(tc.rawBz, fmt.Sprintf("%X", bz))
 
-		var other Dec
+		var other BigDec
 		s.Require().NoError((&other).Unmarshal(bz))
 		s.Require().True(tc.input.Equal(other))
 
@@ -523,26 +523,26 @@ func (s *decimalTestSuite) TestDecEncoding() {
 
 // Showcase that different orders of operations causes different results.
 func (s *decimalTestSuite) TestOperationOrders() {
-	n1 := NewDec(10)
-	n2 := NewDec(1000000010)
-	s.Require().Equal(n1.Mul(n2).Quo(n2), NewDec(10))
+	n1 := NewBigDec(10)
+	n2 := NewBigDec(1000000010)
+	s.Require().Equal(n1.Mul(n2).Quo(n2), NewBigDec(10))
 	s.Require().NotEqual(n1.Mul(n2).Quo(n2), n1.Quo(n2).Mul(n2))
 }
 
 func BenchmarkMarshalTo(b *testing.B) {
 	b.ReportAllocs()
 	bis := []struct {
-		in   Dec
+		in   BigDec
 		want []byte
 	}{
 		{
-			NewDec(1e8), []byte{
+			NewBigDec(1e8), []byte{
 				0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
 				0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
 				0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
 			},
 		},
-		{NewDec(0), []byte{0x30}},
+		{NewBigDec(0), []byte{0x30}},
 	}
 	data := make([]byte, 100)
 
