@@ -86,6 +86,6 @@ func (pa Pool) CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sd
 	return sdk.Coins{}, types.ErrNotImplemented
 }
 
-func (pa *Pool) PokeTokenWeights(blockTime time.Time) {
+func (pa *Pool) PokePool(blockTime time.Time) {
 	panic("not implemented yet")
 }

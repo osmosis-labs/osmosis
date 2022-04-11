@@ -69,9 +69,9 @@ type PoolI interface {
 	// This does not mutate the pool, or state.
 	CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
 
-	// PokeTokenWeights determines if a pool's weights need to be updated and
-	// updates them if so.
-	PokeTokenWeights(blockTime time.Time)
+	// PokePool determines if a pool's weights need to be updated and updates
+	// them if so.
+	PokePool(blockTime time.Time)
 }
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {

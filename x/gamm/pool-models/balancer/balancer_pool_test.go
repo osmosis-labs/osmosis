@@ -546,7 +546,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 
 		testCases := addDefaultCases(paramsCopy, tc.cases)
 		for caseNum, testCase := range testCases {
-			pacc.PokeTokenWeights(testCase.blockTime)
+			pacc.PokePool(testCase.blockTime)
 
 			totalWeight := sdk.ZeroInt()
 
