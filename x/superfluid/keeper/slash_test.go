@@ -16,14 +16,14 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 		slashedValIndexes     []int64
 		expSlashedLockIndexes []int64
 	}{
-		// {
-		// 	"with single validator and single superfluid delegation",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	1,
-		// 	[]superfluidDelegation{{0, 0, "gamm/pool/1", 1000000}},
-		// 	[]int64{0},
-		// 	[]int64{0},
-		// },
+		{
+			"with single validator and single superfluid delegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]int64{0},
+			[]int64{0},
+		},
 		// {
 		// 	"with single validator and multiple superfluid delegations",
 		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},

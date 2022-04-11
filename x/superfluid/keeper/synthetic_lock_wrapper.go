@@ -16,7 +16,7 @@ func unstakingSyntheticDenom(denom, valAddr string) string {
 	return fmt.Sprintf("%s/superunbonding/%s", denom, valAddr)
 }
 
-// quick fix for getting the validator addresss from a synthetic denom
+// quick fix for getting the validator addresss from a synthetic denom.
 func ValidatorAddressFromSyntheticDenom(syntheticDenom string) (string, error) {
 	if strings.Contains(syntheticDenom, "superbonding") {
 		splitString := strings.Split(syntheticDenom, "/superbonding/")
@@ -39,7 +39,8 @@ const (
 )
 
 func (k Keeper) createSyntheticLockup(ctx sdk.Context,
-	underlyingLockId uint64, intermediateAcc types.SuperfluidIntermediaryAccount, lockingStat lockingStatus) error {
+	underlyingLockId uint64, intermediateAcc types.SuperfluidIntermediaryAccount, lockingStat lockingStatus,
+) error {
 	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
 	if lockingStat == unlockingStatus {
 		isUnlocking := true

@@ -9,20 +9,30 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Querier{}
+
+// Querier defines a wrapper around the x/claim keeper providing gRPC method
+// handlers.
+type Querier struct {
+	Keeper
+}
+
+func NewQuerier(k Keeper) Querier {
+	return Querier{Keeper: k}
+}
 
 // Params returns params of the mint module.
-func (k Keeper) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
+func (q Querier) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	moduleAccBal := sdk.NewCoins(k.GetModuleAccountBalance(ctx))
+	moduleAccBal := sdk.NewCoins(q.Keeper.GetModuleAccountBalance(ctx))
 
 	return &types.QueryModuleAccountBalanceResponse{ModuleAccountBalance: moduleAccBal}, nil
 }
 
 // Params returns params of the mint module.
-func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	params, err := k.GetParams(ctx)
+	params, err := q.Keeper.GetParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +40,8 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-// Claimable returns claimable amount per user
-func (k Keeper) ClaimRecord(
+// Claimable returns claimable amount per user.
+func (q Querier) ClaimRecord(
 	goCtx context.Context,
 	req *types.QueryClaimRecordRequest,
 ) (*types.QueryClaimRecordResponse, error) {
@@ -46,12 +56,12 @@ func (k Keeper) ClaimRecord(
 		return nil, err
 	}
 
-	claimRecord, err := k.GetClaimRecord(ctx, addr)
+	claimRecord, err := q.Keeper.GetClaimRecord(ctx, addr)
 	return &types.QueryClaimRecordResponse{ClaimRecord: claimRecord}, err
 }
 
-// Activities returns activities
-func (k Keeper) ClaimableForAction(
+// Activities returns activities.
+func (q Querier) ClaimableForAction(
 	goCtx context.Context,
 	req *types.QueryClaimableForActionRequest,
 ) (*types.QueryClaimableForActionResponse, error) {
@@ -65,15 +75,15 @@ func (k Keeper) ClaimableForAction(
 		return nil, err
 	}
 
-	coins, err := k.GetClaimableAmountForAction(ctx, addr, req.Action)
+	coins, err := q.Keeper.GetClaimableAmountForAction(ctx, addr, req.Action)
 
 	return &types.QueryClaimableForActionResponse{
 		Coins: coins,
 	}, err
 }
 
-// Activities returns activities
-func (k Keeper) TotalClaimable(
+// Activities returns activities.
+func (q Querier) TotalClaimable(
 	goCtx context.Context,
 	req *types.QueryTotalClaimableRequest,
 ) (*types.QueryTotalClaimableResponse, error) {
@@ -87,7 +97,7 @@ func (k Keeper) TotalClaimable(
 		return nil, err
 	}
 
-	coins, err := k.GetUserTotalClaimable(ctx, addr)
+	coins, err := q.Keeper.GetUserTotalClaimable(ctx, addr)
 
 	return &types.QueryTotalClaimableResponse{
 		Coins: coins,

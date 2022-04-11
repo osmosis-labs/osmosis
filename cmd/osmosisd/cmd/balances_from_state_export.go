@@ -60,10 +60,10 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 	for _, coin := range originCoins {
 		if pools[coin.Denom] != nil {
 			pool := pools[coin.Denom]
-			assets := pool.GetAllPoolAssets()
+			assets := pool.GetTotalPoolLiquidity(sdk.Context{})
 			for _, asset := range assets {
-				balances = balances.Add(sdk.NewCoin(asset.Token.Denom, asset.Token.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares().Amount)))
-				if pools[asset.Token.Denom] != nil { // this happens when there's a pool for LP token swap
+				balances = balances.Add(sdk.NewCoin(asset.Denom, asset.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares())))
+				if pools[asset.Denom] != nil { // this happens when there's a pool for LP token swap
 					convertAgain = true
 				}
 			}
@@ -79,12 +79,12 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 }
 
 // pools is a map from LP share string -> pool.
-// TODO: Make a separate type for this
+// TODO: Make a separate type for this.
 func underlyingCoinsForSelectPools(
 	originCoins sdk.Coins,
 	pools map[string]gammtypes.PoolI,
-	selectPoolIDs []uint64) map[uint64]sdk.Coins {
-
+	selectPoolIDs []uint64,
+) map[uint64]sdk.Coins {
 	balancesByPool := make(map[uint64]sdk.Coins)
 
 	for _, coin := range originCoins {
@@ -140,7 +140,8 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 	return genState, nil
 }
 
-// ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
+// ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json.
+//nolint:ineffassign // because of  accounts = authtypes.SanitizeGenesisAccounts(accounts)
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-derive-balances [input-genesis-file] [output-snapshot-json]",
@@ -177,7 +178,7 @@ Example:
 			}
 
 			authGenesis := authtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["auth"], &authGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["auth"], &authGenesis)
 			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
 			if err != nil {
 				panic(err)
@@ -188,7 +189,7 @@ Example:
 			snapshotAccs := make(map[string]DerivedAccount)
 
 			bankGenesis := banktypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
 			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
@@ -201,7 +202,7 @@ Example:
 			}
 
 			stakingGenesis := stakingtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
 			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
@@ -242,7 +243,7 @@ Example:
 			}
 
 			lockupGenesis := lockuptypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
 			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
@@ -256,7 +257,7 @@ Example:
 			}
 
 			claimGenesis := claimtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
 			for _, record := range claimGenesis.ClaimRecords {
 				address := record.Address
 
@@ -284,7 +285,7 @@ Example:
 			}
 
 			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
 
 			// collect gamm pools
 			pools := make(map[string]gammtypes.PoolI)
@@ -294,7 +295,7 @@ Example:
 				if err != nil {
 					panic(err)
 				}
-				pools[pool.GetTotalShares().Denom] = pool
+				pools[gammtypes.GetPoolShareDenom(pool.GetId())] = pool
 			}
 
 			// convert balances to underlying coins and sum up balances to total balance
@@ -328,7 +329,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

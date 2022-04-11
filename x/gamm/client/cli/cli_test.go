@@ -334,7 +334,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				err = clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType)
+				err = clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
 				s.Require().NoError(err, out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
@@ -373,7 +373,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			"join pool with insufficient balance",
 			[]string{
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake,100node0token"),
 				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "1000000000000000000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
@@ -387,7 +387,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			"join pool with sufficient balance",
 			[]string{ // join-pool --pool-id=1 --max-amounts-in=100stake --share-amount-out=100 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake,100node0token"),
 				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "10000000000000000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
@@ -411,7 +411,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -472,7 +472,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -536,7 +536,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -598,7 +598,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -607,113 +607,115 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
-	val := s.network.Validators[0]
+// Todo: Re-add once implemented
+// func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
+// 	val := s.network.Validators[0]
 
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
-		{
-			"exit swap extern amount out", // osmosisd tx gamm exit-swap-extern-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
-			[]string{
-				"10stake", "10000000000000000000",
-				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-	}
+// 	testCases := []struct {
+// 		name         string
+// 		args         []string
+// 		expectErr    bool
+// 		respType     proto.Message
+// 		expectedCode uint32
+// 	}{
+// 		{
+// 			"exit swap extern amount out", // osmosisd tx gamm exit-swap-extern-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+// 			[]string{
+// 				"10stake", "10000000000000000000",
+// 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+// 				// common args
+// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+// 			},
+// 			false, &sdk.TxResponse{}, 0,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		tc := tc
+// 	for _, tc := range testCases {
+// 		tc := tc
 
-		s.Run(tc.name, func() {
-			cmd := cli.NewExitSwapExternAmountOut()
-			clientCtx := val.ClientCtx
+// 		s.Run(tc.name, func() {
+// 			cmd := cli.NewExitSwapExternAmountOut()
+// 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+// 			if tc.expectErr {
+// 				s.Require().Error(err)
+// 			} else {
+// 				s.Require().NoError(err, out.String())
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-			}
-		})
-	}
-}
+// 				txResp := tc.respType.(*sdk.TxResponse)
+// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+// 			}
+// 		})
+// 	}
+// }
 
-func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
-	val := s.network.Validators[0]
+// TODO: Re-add once implemented
+// func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
+// 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English,
-		sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
+// 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English,
+// 		sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+// 	s.Require().NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+// 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
-	_, err = banktestutil.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmoutils.DefaultFeeString(s.cfg),
-	)
-	s.Require().NoError(err)
+// 	_, err = banktestutil.MsgSendExec(
+// 		val.ClientCtx,
+// 		val.Address,
+// 		newAddr,
+// 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+// 		osmoutils.DefaultFeeString(s.cfg),
+// 	)
+// 	s.Require().NoError(err)
 
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
-		{
-			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
-			[]string{
-				"stake", "50", "5000000000000000000",
-				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				// common args
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-	}
+// 	testCases := []struct {
+// 		name         string
+// 		args         []string
+// 		expectErr    bool
+// 		respType     proto.Message
+// 		expectedCode uint32
+// 	}{
+// 		{
+// 			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+// 			[]string{
+// 				"stake", "50", "5000000000000000000",
+// 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+// 				// common args
+// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+// 			},
+// 			false, &sdk.TxResponse{}, 0,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		tc := tc
+// 	for _, tc := range testCases {
+// 		tc := tc
 
-		s.Run(tc.name, func() {
-			cmd := cli.NewJoinSwapShareAmountOut()
-			clientCtx := val.ClientCtx
+// 		s.Run(tc.name, func() {
+// 			cmd := cli.NewJoinSwapShareAmountOut()
+// 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+// 			if tc.expectErr {
+// 				s.Require().Error(err)
+// 			} else {
+// 				s.Require().NoError(err, out.String())
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-			}
-		})
-	}
-}
+// 				txResp := tc.respType.(*sdk.TxResponse)
+// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+// 			}
+// 		})
+// 	}
+// }
 
 func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 	val := s.network.Validators[0]
@@ -752,7 +754,7 @@ func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -791,7 +793,7 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 			} else {
 				resp := types.QueryPoolsResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 				s.Require().Greater(len(resp.Pools), 0, out.String())
 			}
@@ -829,7 +831,7 @@ func (s *IntegrationTestSuite) TestGetCmdNumPools() {
 			} else {
 				resp := types.QueryNumPoolsResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 				s.Require().Greater(resp.NumPools, uint64(0), out.String())
 			}
@@ -869,44 +871,7 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 				s.Require().NoError(err, out.String())
 
 				resp := types.QueryPoolResponse{}
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdPoolAssets() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"query pool assets by pool id", // osmosisd query gamm pool-assets 1
-			[]string{
-				"1",
-				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-			},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdPoolAssets()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				resp := types.QueryPoolAssetsResponse{}
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
@@ -943,7 +908,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShares() {
 			} else {
 				resp := types.QueryTotalSharesResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
@@ -979,7 +944,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalLiquidity() {
 			} else {
 				resp := types.QueryTotalLiquidityResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
@@ -1016,7 +981,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 			} else {
 				resp := types.QuerySpotPriceResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
@@ -1057,7 +1022,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 // 			} else {
 // 				resp := types.QuerySwapExactAmountInResponse{}
 // 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 // 			}
 // 		})
 // 	}
@@ -1098,7 +1063,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 // 			} else {
 // 				resp := types.QuerySwapExactAmountOutResponse{}
 // 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 // 			}
 // 		})
 // 	}
@@ -1159,7 +1124,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())

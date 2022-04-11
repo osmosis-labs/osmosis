@@ -7,19 +7,32 @@ import (
 )
 
 // Don't EVER change after initializing
-// TODO: Analyze choice here
+// TODO: Analyze choice here.
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
-// Singletons
+// Singletons.
 var zero sdk.Dec = sdk.ZeroDec()
-var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
-var one sdk.Dec = sdk.OneDec()
-var two sdk.Dec = sdk.MustNewDecFromStr("2")
+
+var (
+	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
+	one      sdk.Dec = sdk.OneDec()
+	two      sdk.Dec = sdk.MustNewDecFromStr("2")
+)
+
+// Returns the internal "power precision".
+// All fractional exponentiation in osmosis is expected to be accurate up to
+// powPrecision.
+// *technically* the error term can be greater than this powPrecision,
+// but for small bases this bound applies. See comments in the PowApprox function
+// for more detail.
+func GetPowPrecision() sdk.Dec {
+	return powPrecision.Clone()
+}
 
 /*********************************************************/
 
 // AbsDifferenceWithSign returns | a - b |, (a - b).sign()
-// a is mutated and returned
+// a is mutated and returned.
 func AbsDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	if a.GTE(b) {
 		return a.SubMut(b), false
@@ -35,7 +48,7 @@ func AbsDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 // Pow computes base^(exp)
 // However since the exponent is not an integer, we must do an approximation algorithm.
 // TODO: In the future, lets add some optimized routines for common exponents, e.g. for common wIn / wOut ratios
-// Many simple exponents like 2:1 pools
+// Many simple exponents like 2:1 pools.
 func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 	// Exponentiation of a negative base with an arbitrary real exponent is not closed within the reals.
 	// You can see this by recalling that `i = (-1)^(.5)`. We have to go to complex numbers to define this.
@@ -68,7 +81,7 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 }
 
 // Contract: 0 < base <= 2
-// 0 < exp < 1
+// 0 < exp < 1.
 func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	if exp.IsZero() {
 		return sdk.ZeroDec()

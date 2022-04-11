@@ -21,7 +21,7 @@ func (k Keeper) FundCommunityPoolFromModule(ctx sdk.Context, asset sdk.Coin) err
 	return nil
 }
 
-// AllocateAsset allocates and distributes coin according a gauge’s proportional weight that is recorded in the record
+// AllocateAsset allocates and distributes coin according a gauge’s proportional weight that is recorded in the record.
 func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 	logger := k.Logger(ctx)
 	params := k.GetParams(ctx)
@@ -85,7 +85,7 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 // Validates a list of records to ensure that:
 // 1) there are no duplicates,
 // 2) the records are in sorted order.
-// 3) the records only pay to gauges that exist
+// 3) the records only pay to gauges that exist.
 func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	lastGaugeID := uint64(0)
 	gaugeIdFlags := make(map[uint64]bool)
@@ -127,7 +127,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 	return nil
 }
 
-// This is checked for no err when a proposal is made, and executed when a proposal passes
+// This is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)
 
@@ -149,9 +149,8 @@ func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecor
 	return nil
 }
 
-// This is checked for no err when a proposal is made, and executed when a proposal passes
+// This is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
-
 	recordsMap := make(map[uint64]types.DistrRecord)
 	totalWeight := sdk.NewInt(0)
 
