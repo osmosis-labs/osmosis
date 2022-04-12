@@ -766,7 +766,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(10), sdk.NewDec(10)})
 
 			// setup superfluid delegations
 			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
@@ -945,13 +945,13 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(len(tc.superDelegations))
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
-
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			for _, sfdel := range tc.superDelegations {
@@ -1001,7 +1001,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 
 				// check if the expected equals to actual
 				for validx := range tc.validatorStats {
-					suite.Equal(delegatedAmount(delidx, validx).Int64(), sharePerValidatorMap[valAddrs[validx].String()].RoundInt().Int64())
+					suite.Equal(delegatedAmount(delidx, validx).Int64()*20, sharePerValidatorMap[valAddrs[validx].String()].RoundInt().Int64())
 				}
 			}
 		})
