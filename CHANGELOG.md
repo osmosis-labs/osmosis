@@ -39,7 +39,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v7.1.1](https://github.com/osmosis-labs/osmosis/releases/tag/v7.1.1)
+## [v7.2.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.0)
 
 * [#1241](https://github.com/osmosis-labs/osmosis/pull/1241/files) chore: upgrade sdk to v0.45.0x-osmo-v7.7
 
