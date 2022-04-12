@@ -2,6 +2,7 @@ package balancer_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 
@@ -56,7 +57,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 			tc.quoteDenomPoolInput,
 		)
 
-		pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+		pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 		suite.Require().NoError(err, "test: %s", tc.name)
 		balancerPool, isPool := pool.(*balancer.Pool)
 		suite.Require().True(isPool, "test: %s", tc.name)

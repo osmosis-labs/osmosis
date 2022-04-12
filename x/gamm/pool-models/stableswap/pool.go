@@ -2,7 +2,8 @@ package stableswap
 
 import (
 	"encoding/json"
-	fmt "fmt"
+	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -83,4 +84,8 @@ func (pa *Pool) ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (e
 
 func (pa Pool) CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
 	return sdk.Coins{}, types.ErrNotImplemented
+}
+
+func (pa *Pool) PokePool(blockTime time.Time) {
+	panic("not implemented yet")
 }

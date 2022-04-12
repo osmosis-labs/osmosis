@@ -53,7 +53,7 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -85,8 +85,8 @@ func (q Querier) Pools(
 			return err
 		}
 
-		// Use GetPool function because it runs PokeWeights
-		poolI, err = q.Keeper.GetPool(sdkCtx, poolI.GetId())
+		// Use GetPoolAndPoke function because it runs PokeWeights
+		poolI, err = q.Keeper.GetPoolAndPoke(sdkCtx, poolI.GetId())
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsReque
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -159,7 +159,7 @@ func (q Querier) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPo
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -176,7 +176,7 @@ func (q Querier) TotalShares(ctx context.Context, req *types.QueryTotalSharesReq
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -203,7 +203,7 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get pool by ID: %s", err)
 	}
