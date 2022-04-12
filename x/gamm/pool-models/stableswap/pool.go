@@ -2,6 +2,7 @@ package stableswap
 
 import (
 	"encoding/json"
+	"errors"
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,9 +52,32 @@ func (pa Pool) GetTotalShares() sdk.Int {
 	return pa.TotalShares.Amount
 }
 
+// returns pool liquidity of the provided denoms, in the same order the denoms were provided in
+func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
+	result := make([]sdk.Int, len(denoms))
+	poolLiquidity := pa.PoolLiquidity
+	for i, d := range denoms {
+		amt := poolLiquidity.AmountOf(d)
+		if amt.IsZero() {
+			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", d)
+		}
+		result[i] = amt
+	}
+	return result, nil
+}
+
 // These should all get moved to amm.go
 func (pa Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.DecCoin, err error) {
-	return sdk.DecCoin{}, types.ErrNotImplemented
+	if tokenIn.Len() != 1 {
+		return sdk.DecCoin{}, errors.New("asdf")
+	}
+	reserves, err := pa.getPoolAmts(tokenIn[0].Denom, tokenOutDenom)
+	if err != nil {
+		return sdk.DecCoin{}, err
+	}
+	// document which is x vs y
+	outAmt := solveCfmm(reserves[1].ToDec(), reserves[0].ToDec(), tokenIn[0].Amount.ToDec())
+	return sdk.DecCoin{Denom: tokenOutDenom, Amount: outAmt}, nil
 }
 func (pa *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
 	return sdk.Coin{}, types.ErrNotImplemented
