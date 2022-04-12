@@ -27,12 +27,6 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockTokens) (*types.MsgLockTokensResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// we only allow locks with one denom for now
-	if msg.Coins.Len() != 1 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
-			fmt.Sprintf("Lockups can only have one denom per lockID, got %v", msg.Coins))
-	}
-
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, err
@@ -40,18 +34,9 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 
 	if len(msg.Coins) == 1 {
 		locks := server.keeper.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, msg.Coins[0].Denom, msg.Duration)
-		// if existing lock with same duration and denom exists, just add there
 		if len(locks) > 0 {
 			lock := locks[0]
-			if lock.Coins.Len() != 1 {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-			}
-
-			if lock.Owner != owner.String() {
-				return nil, types.ErrNotLockOwner
-			}
-
-			_, err = server.keeper.AddTokensToLockByID(ctx, lock.ID, msg.Coins)
+			_, err := server.keeper.AddTokensToLockByID(ctx, lock.ID, owner,  msg.Coins)
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 			}

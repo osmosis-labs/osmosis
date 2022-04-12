@@ -336,7 +336,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
 				suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, coins)
 				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, minttypes.ModuleName, lockOwner, coins)
-				_, err = suite.App.LockupKeeper.AddTokensToLockByID(suite.Ctx, lockId, coins)
+				_, err = suite.App.LockupKeeper.AddTokensToLockByID(suite.Ctx, lockId, lockOwner, coins)
 				suite.Require().NoError(err)
 			}
 
