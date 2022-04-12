@@ -145,6 +145,16 @@ func (q Querier) UpcomingGauges(goCtx context.Context, req *types.UpcomingGauges
 
 func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.UpcomingGaugesPerDenomRequest) (*types.UpcomingGaugesPerDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	if req == nil {
+		if req == nil {
+			return nil, status.Error(codes.InvalidArgument, "empty request")
+		}
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
 	gauges := []types.Gauge{}
 	store := ctx.KVStore(q.Keeper.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)

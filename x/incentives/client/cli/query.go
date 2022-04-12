@@ -324,12 +324,7 @@ func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges-per-denom [denom]",
 		Short: "Query scheduled gauges per denom",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

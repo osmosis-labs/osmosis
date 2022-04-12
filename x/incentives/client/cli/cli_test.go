@@ -284,7 +284,7 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGaugesPerDenom() {
 		respType  proto.Message
 	}{
 		{
-			"query active gauges per denom",
+			"query upcoming gauges per denom",
 			false, &types.UpcomingGaugesPerDenomResponse{},
 		},
 	}
