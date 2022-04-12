@@ -184,11 +184,10 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 0)
 
-	// create a gauge
+	// create a gauge, and check upcoming gauge is working
 	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
-
-	// final check
 	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &upcomingGaugeRequest)
+	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
@@ -205,6 +204,8 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
+
+	// final check when gauge is moved from upcoming to active
 	suite.ctx = suite.ctx.WithBlockTime(startTime.Add(time.Second))
 	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
 	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &upcomingGaugeRequest)
