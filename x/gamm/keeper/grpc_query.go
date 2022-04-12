@@ -115,14 +115,7 @@ func (q Querier) Pools(
 	}, nil
 }
 
-func (q Querier) NumPools(
-	ctx context.Context,
-	req *types.QueryNumPoolsRequest,
-) (*types.QueryNumPoolsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
+func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
@@ -225,11 +218,7 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}, nil
 }
 
-func (q Querier) TotalLiquidity(ctx context.Context, req *types.QueryTotalLiquidityRequest) (*types.QueryTotalLiquidityResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
+func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidityRequest) (*types.QueryTotalLiquidityResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryTotalLiquidityResponse{
