@@ -247,13 +247,3 @@ format:
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark
-	
-	
-###############################################################################
-###                                Tools                                    ###
-###############################################################################
-
-tools:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.0
-	go install mvdan.cc/gofumpt@latest
-
