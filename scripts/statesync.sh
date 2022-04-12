@@ -21,9 +21,9 @@ INTERVAL=1500
 
 # GET TRUST HASH AND TRUST HEIGHT
 
-LATEST_HEIGHT=$(curl -s 162.55.132.230:2001/block | jq -r .result.block.header.height);
+LATEST_HEIGHT=$(curl -s https://osmosis.validator.network/block | jq -r .result.block.header.height);
 BLOCK_HEIGHT=$(($LATEST_HEIGHT-$INTERVAL))
-TRUST_HASH=$(curl -s "162.55.132.230:2001/block?height=$BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+TRUST_HASH=$(curl -s "https://osmosis.validator.network/block?height=$BLOCK_HEIGHT" | jq -r .result.block_id.hash)
 
 
 # TELL USER WHAT WE ARE DOING
@@ -32,8 +32,9 @@ echo "TRUST HASH: $TRUST_HASH"
 
 
 # export state sync vars
+export OSMOSISD_P2P_MAX_NUM_OUTBOUND_PEERS=200
 export OSMOSISD_STATESYNC_ENABLE=true
-export OSMOSISD_STATESYNC_RPC_SERVERS="162.55.132.230:2001,162.55.132.230:2001"
+export OSMOSISD_STATESYNC_RPC_SERVERS="https://osmosis.validator.network:443,https://rpc.osmosis.notional.ventures:443,https://rpc-osmosis.ecostake.com:443"
 export OSMOSISD_STATESYNC_TRUST_HEIGHT=$BLOCK_HEIGHT
 export OSMOSISD_STATESYNC_TRUST_HASH=$TRUST_HASH
 
