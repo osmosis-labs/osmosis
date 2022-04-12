@@ -970,18 +970,8 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 				}
 				return res
 			}
-			/*
-				// total delegated amount to this validator. used to calculate share.
-				totalDelegation := func(validx int) sdk.Int {
-					res := sdk.ZeroInt()
-					for i := range tc.superDelegations {
-						res = res.Add(delegatedAmount(i, validx))
-					}
-					return res
-				}
-			*/
 			for delidx := range tc.superDelegations {
-				// map to store all actual delegations to a validator
+				// store all actual delegations to a validator
 				sharePerValidatorMap := make(map[string]sdk.Dec)
 				for validx := range tc.validatorStats {
 					sharePerValidatorMap[valAddrs[validx].String()] = sdk.ZeroDec()
@@ -993,15 +983,15 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 					sharePerValidatorMap[val.String()] = share
 				}
 
-				// iterate delegations
+				// iterate delegations and add eligible shares to the sharePerValidatorMap
 				suite.App.SuperfluidKeeper.IterateDelegations(suite.Ctx, delAddrs[delidx], func(_ int64, del stakingtypes.DelegationI) bool {
 					addToSharePerValidatorMap(del.GetValidatorAddr(), del.GetShares())
 					return false
 				})
 
-				// check if the expected equals to actual
+				// check if the expected delegated amount equals to actual
 				for validx := range tc.validatorStats {
-					suite.Equal(delegatedAmount(delidx, validx).Int64()*20, sharePerValidatorMap[valAddrs[validx].String()].RoundInt().Int64())
+					suite.Equal(delegatedAmount(delidx, validx).Int64()*10, sharePerValidatorMap[valAddrs[validx].String()].RoundInt().Int64())
 				}
 			}
 		})

@@ -367,28 +367,29 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 	for i, lock := range synthlocks {
 		interm, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
 		if !ok {
-			panic(1234) // XXX
+			panic(fmt.Sprintf("Intermediary account retrieval failed with underlying lock\nLock: %+v\n", lock))
 		}
 		lock, err := k.lk.GetLockByID(ctx, lock.UnderlyingLockId)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Lockup retrieval failed with underlying lock\nLock: %+v\nError: %s\n", lock, err))
 		}
 		coin, err := lock.SingleCoin()
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("No single coin in the lock\nLock: %+v\nError: %s\n", lock, err))
 		}
 		amount := k.GetSuperfluidOSMOTokens(ctx, interm.Denom, coin.Amount)
 		valAddr, err := sdk.ValAddressFromBech32(interm.ValAddr)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Validator address decoding failed\nLock: %+v\nAddress: %s\nError: %s\n", lock, interm.ValAddr, err))
 		}
 		validator, found := k.sk.GetValidator(ctx, valAddr)
 		if !found {
-			panic(1234) // XXX: could this happen?
+			panic(fmt.Sprintf("Validator not exists\nLock: %+v\nAddress: %s\n", lock, valAddr))
 		}
 		shares, err := validator.SharesFromTokens(amount)
 		if err != nil {
-			panic(err) // XXX: should we just continue? when err happens? figure out
+			// tokens are not valid. continue.
+			continue
 		}
 		delegation := stakingtypes.Delegation{
 			DelegatorAddress: delegator.String(),
