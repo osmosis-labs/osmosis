@@ -15,33 +15,8 @@ func BenchmarkCFMM(b *testing.B) {
 }
 
 func BenchmarkBinarySearch(b *testing.B) {
-	twoDec, _ := sdk.NewDecFromStr("2.0")
-	threshold, _ := sdk.NewDecFromStr("0.00001") // 0.001%
-	// logic copied from cfmm.py
-	approx_eq := func(a, b, tol sdk.Dec) bool {
-		diff := a.Sub(b).Abs()
-		return diff.Quo(a).LTE(tol) && diff.Quo(b).LTE(tol)
-	}
-	solve := func(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
-		k := cfmmConstant(xReserve, yReserve)
-		yf := yReserve.Add(yIn)
-		x_low_est := sdk.ZeroDec()
-		x_high_est := xReserve
-		x_est := (x_high_est.Add(x_low_est)).Quo(twoDec)
-		cur_k := cfmmConstant(x_est, yf)
-		for !approx_eq(cur_k, k, threshold) { // cap max iteration to 256
-			if cur_k.GT(k) {
-				x_high_est = x_est
-			} else if cur_k.LT(k) {
-				x_low_est = x_est
-			}
-			x_est = (x_high_est.Add(x_low_est)).Quo(twoDec)
-			cur_k = cfmmConstant(x_est, yf)
-		}
-		return xReserve.Sub(x_est)
-	}
 	for i := 0; i < b.N; i++ {
-		runCalc(solve)
+		runCalc(solveCFMMBinarySearch(cfmmConstant))
 	}
 }
 
