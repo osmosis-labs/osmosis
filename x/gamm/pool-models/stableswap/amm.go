@@ -93,19 +93,17 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 
 	b := yIn
 	b2 := b.Mul(b)
-	b3 := b2.Mul(b)
-	b4 := b3.Mul(b)
 
 	bpy := b.Add(y)
 
 	// TODO: Once we have correctness tests, can come back and optimize alot of the calculations
 
 	// banana = (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4)
-	banana := b4.MulInt64(3)                        // 3 b^4
-	banana = banana.AddMut(b3.MulInt64(12).Mul(y))  // + 12 b^3 y
-	banana = banana.AddMut(b2.MulInt64(18).Mul(y2)) // + 18 b^2 y^2
-	banana = banana.AddMut(b.MulInt64(12).Mul(y3))  // + 12 b y^3
-	banana = banana.AddMut(y4.MulInt64(3))          // + 3 y^4
+	// banana = 3 (b + y)^4
+	banana := bpy
+	banana = banana.Mul(bpy)
+	banana = banana.MulMut(banana)
+	banana = banana.MulInt64Mut(3)
 
 	// apple = -27 b^2 x^3 y - 27 b^2 x y^3 - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5
 	// e = -apple/27 = b^2 x^3 y + b^2 x y^3 + 2 b x^3 y^2 + 2 b x y^4 + x^3 y^3 + x y^5

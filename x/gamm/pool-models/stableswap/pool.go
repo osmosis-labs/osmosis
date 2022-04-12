@@ -110,6 +110,5 @@ func (pa Pool) CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sd
 	return sdk.Coins{}, types.ErrNotImplemented
 }
 
-func (pa *Pool) PokePool(blockTime time.Time) {
-	panic("not implemented yet")
-}
+// no-op for stableswap
+func (pa *Pool) PokePool(blockTime time.Time) {}
