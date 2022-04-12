@@ -70,52 +70,33 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	// and maybe in state.
 	x := xReserve
 	x2 := x.Mul(x)
-	x3 := x2.Mul(x)
 	y := yReserve
 	y2 := y.Mul(y)
-	y3 := y2.Mul(y)
-	y4 := y3.Mul(y)
-	y5 := y4.Mul(y)
 
 	xy := x.Mul(y)
 
-	x3y := x3.Mul(y)
-	// x2y2 := x2.Mul(y2)
-	xy3 := x.Mul(y3)
-
-	x3y2 := x3.Mul(y2)
-	// x2y3 := x2.Mul(y3)
-
-	xy4 := x.Mul(y4)
-
-	xy5 := x.Mul(y5)
-	x3y3 := x3.Mul(y3)
-
 	b := yIn
-	b2 := b.Mul(b)
 
 	bpy := b.Add(y)
+	bpy2 := bpy.Mul(bpy)
 
 	// TODO: Once we have correctness tests, can come back and optimize alot of the calculations
 
 	// banana = (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4)
 	// banana = 3 (b + y)^4
-	banana := bpy
-	banana = banana.Mul(bpy)
-	banana = banana.MulMut(banana)
+	banana := bpy2.Mul(bpy2) // (b + y)^4
 	banana = banana.MulInt64Mut(3)
 
 	// apple = -27 b^2 x^3 y - 27 b^2 x y^3 - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5
 	// e = -apple/27 = b^2 x^3 y + b^2 x y^3 + 2 b x^3 y^2 + 2 b x y^4 + x^3 y^3 + x y^5
+	// e = x y (b + y)^2 (x^2 + y^2)
 	// apple = -27 e
 
-	e := b2.Mul(x3y)                         // b^2 x^3 y
-	e = e.AddMut(b2.Mul(xy3))                // + b^2 x y^3
-	e = e.AddMut(b.Mul(x3y2).MulInt64Mut(2)) // + 2 b x^3 y^2
-	e = e.AddMut(b.Mul(xy4).MulInt64Mut(2))  // + 2 b x y^4
-	e = e.AddMut(x3y3)                       // + x^3 y^3
-	e = e.AddMut(xy5)                        // + x y^5
-	apple := e.MulInt64(-27)                 // apple = - 27e
+	e := xy
+	e = e.Mul(bpy2)
+	x2py2 := x2.Add(y2)
+	e = e.MulMut(x2py2)
+	apple := e.MulInt64(-27) // apple = - 27e
 
 	// d = discriminant = sqrt((apple)^2 + 4 (banana)^3)
 	// d2 = (apple)^2 + 4 (banana)^3
