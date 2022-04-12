@@ -24,7 +24,7 @@ func NewQueryPlugin(
 }
 
 func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*wasmbindings.PoolAssets, error) {
-	poolData, err := qp.gammKeeper.GetPool(ctx, poolID)
+	poolData, err := qp.gammKeeper.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm get pool")
 	}
@@ -50,7 +50,7 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *wasmbindings.Spot
 		return nil, sdkerrors.Wrap(err, "gamm get spot price")
 	}
 	if withSwapFee {
-		poolData, err := qp.gammKeeper.GetPool(ctx, poolId)
+		poolData, err := qp.gammKeeper.GetPoolAndPoke(ctx, poolId)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm get pool")
 		}

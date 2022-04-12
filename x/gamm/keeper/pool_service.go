@@ -21,10 +21,11 @@ func (k Keeper) CalculateSpotPrice(
 	baseAssetDenom string,
 	quoteAssetDenom string,
 ) (sdk.Dec, error) {
-	pool, err := k.GetPool(ctx, poolID)
+	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
+
 	return pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
 }
 
@@ -182,7 +183,7 @@ func (k Keeper) JoinPoolNoSwap(
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
 ) (err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -330,7 +331,7 @@ func (k Keeper) ExitPool(
 	shareInAmount sdk.Int,
 	tokenOutMins sdk.Coins,
 ) (exitCoins sdk.Coins, err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
