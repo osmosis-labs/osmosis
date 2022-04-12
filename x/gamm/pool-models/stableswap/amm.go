@@ -13,8 +13,8 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
 	return xy.Mul(x2.Add(y2))
-}
 
+}
 // solidly CFMM is xy(x^2 + y^2) = k
 // So we want to solve for a given addition of `b` units of y into the pool,
 // how many units `a` of x do we get out.
