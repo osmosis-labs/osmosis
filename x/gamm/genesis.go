@@ -1,11 +1,11 @@
 package gamm
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
@@ -14,30 +14,30 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 	k.SetParams(ctx, genState.Params)
 	k.SetNextPoolNumber(ctx, genState.NextPoolNumber)
 
-	// liquidity := sdk.Coins{}
-	// for _, any := range genState.Pools {
-	// 	var pool types.PoolI
-	// 	err := unpacker.UnpackAny(any, &pool)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	err = k.SetPool(ctx, pool)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+	liquidity := sdk.Coins{}
+	for _, any := range genState.Pools {
+		var pool types.PoolI
+		err := unpacker.UnpackAny(any, &pool)
+		if err != nil {
+			panic(err)
+		}
+		err = k.SetPool(ctx, pool)
+		if err != nil {
+			panic(err)
+		}
 
-	// 	poolAssets := pool.GetAllPoolAssets()
-	// 	for _, asset := range poolAssets {
-	// 		liquidity = liquidity.Add(asset.Token)
-	// 	}
-	// }
+		poolAssets := pool.GetTotalPoolLiquidity(ctx)
+		for _, asset := range poolAssets {
+			liquidity = liquidity.Add(asset)
+		}
+	}
 
-	// k.SetTotalLiquidity(ctx, liquidity)
+	k.SetTotalLiquidity(ctx, liquidity)
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	pools, err := k.GetPools(ctx)
+	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
 		panic(err)
 	}

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			poolId, err := keeper.CreatePool(suite.ctx, msg)
 			suite.Require().NoError(err)
 
-			pool, err := keeper.GetPool(suite.ctx, poolId)
+			pool, err := keeper.GetPoolAndPoke(suite.ctx, poolId)
 			suite.Require().NoError(err)
 			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
 				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
@@ -220,7 +220,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			}, defaultPoolAssets, defaultFutureGovernor)
 			_, err := keeper.CreatePool(suite.ctx, msg)
 			suite.Require().NoError(err)
-			pools, err := keeper.GetPools(suite.ctx)
+			pools, err := keeper.GetPoolsAndPoke(suite.ctx)
 			suite.Require().Len(pools, 1)
 			suite.Require().NoError(err)
 		},
@@ -236,7 +236,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			}, defaultPoolAssets, defaultFutureGovernor)
 			_, err := keeper.CreatePool(suite.ctx, msg)
 			suite.Require().NoError(err)
-			pools, err := keeper.GetPools(suite.ctx)
+			pools, err := keeper.GetPoolsAndPoke(suite.ctx)
 			suite.Require().Len(pools, 1)
 			suite.Require().NoError(err)
 		},
@@ -457,9 +457,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
 			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, defaultAcctFunds)
-			if err != nil {
-				panic(err)
-			}
+			suite.Require().NoError(err)
 
 			// Create the pool at first
 			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
@@ -496,5 +494,98 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 				suite.Require().Error(err)
 			}
 		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
+	testCases := []struct {
+		name              string
+		poolSwapFee       sdk.Dec
+		poolExitFee       sdk.Dec
+		tokensIn          sdk.Coins
+		shareOutMinAmount sdk.Int
+		expectedSharesOut sdk.Int
+		tokenOutMinAmount sdk.Int
+	}{
+		{
+			name:              "single coin with zero swap and exit fees",
+			poolSwapFee:       sdk.ZeroDec(),
+			poolExitFee:       sdk.ZeroDec(),
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
+			shareOutMinAmount: sdk.ZeroInt(),
+			expectedSharesOut: sdk.NewInt(6265857020099440400),
+			tokenOutMinAmount: sdk.ZeroInt(),
+		},
+		// TODO: Uncomment or remove this following test case once the referenced
+		// issue is resolved.
+		//
+		// Ref: https://github.com/osmosis-labs/osmosis/issues/1196
+		// {
+		// 	name:              "single coin with positive swap fee and zero exit fee",
+		// 	poolSwapFee:       sdk.NewDecWithPrec(1, 2),
+		// 	poolExitFee:       sdk.ZeroDec(),
+		// 	tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
+		// 	shareOutMinAmount: sdk.ZeroInt(),
+		// 	expectedSharesOut: sdk.NewInt(6226484702880621000),
+		// 	tokenOutMinAmount: sdk.ZeroInt(),
+		// },
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			ctx := suite.ctx
+
+			poolID := suite.prepareCustomBalancerPool(
+				sdk.NewCoins(
+					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+					sdk.NewCoin("foo", sdk.NewInt(10000000)),
+					sdk.NewCoin("bar", sdk.NewInt(10000000)),
+					sdk.NewCoin("baz", sdk.NewInt(10000000)),
+				),
+				[]balancertypes.PoolAsset{
+					{
+						Weight: sdk.NewInt(100),
+						Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+					},
+					{
+						Weight: sdk.NewInt(200),
+						Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+					},
+				},
+				balancer.PoolParams{
+					SwapFee: tc.poolSwapFee,
+					ExitFee: tc.poolExitFee,
+				},
+			)
+
+			shares, err := suite.app.GAMMKeeper.JoinSwapExactAmountIn(ctx, acc1, poolID, tc.tokensIn, tc.shareOutMinAmount)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedSharesOut, shares)
+
+			tokenOutAmt, err := suite.app.GAMMKeeper.ExitSwapShareAmountIn(
+				ctx,
+				acc1,
+				poolID,
+				tc.tokensIn[0].Denom,
+				shares,
+				tc.tokenOutMinAmount,
+			)
+			suite.Require().NoError(err)
+
+			// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSwapFee))
+			oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSwapFee)
+			swapFeeAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
+			suite.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
+
+			// require swapTokenOutAmt + 10 > input
+			suite.Require().True(
+				swapFeeAdjustedAmount.Sub(tokenOutAmt).LTE(sdk.NewInt(10)),
+				"expected out amount %s, actual out amount %s",
+				swapFeeAdjustedAmount, tokenOutAmt,
+			)
+		})
 	}
 }

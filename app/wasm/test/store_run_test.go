@@ -1,4 +1,4 @@
-package wasmtest
+package wasm
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	_, _, creator := keyPubAddr()
 
 	// upload reflect code
-	wasmCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	wasmCode, err := ioutil.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
 	_, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
 	require.Error(t, err)
@@ -35,7 +35,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 
 func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
 	govKeeper := osmosis.GovKeeper
-	wasmCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	wasmCode, err := ioutil.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
 
 	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
@@ -68,7 +68,7 @@ func TestStoreCodeProposal(t *testing.T) {
 
 	storedCode, err := wasmKeeper.GetByteCode(ctx, 1)
 	require.NoError(t, err)
-	wasmCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	wasmCode, err := ioutil.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
 	assert.Equal(t, wasmCode, storedCode)
 }

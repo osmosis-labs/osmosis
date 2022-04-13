@@ -3,15 +3,13 @@ package simulation
 import (
 	"math/rand"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 const (
@@ -33,7 +31,7 @@ func ProposalContents(k keeper.Keeper, gk types.GammKeeper) []simtypes.WeightedP
 // SimulateSetSuperfluidAssetsProposal generates random superfluid asset set proposal content.
 func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		pools, err := gk.GetPools(ctx)
+		pools, err := gk.GetPoolsAndPoke(ctx)
 		if err != nil {
 			return nil
 		}

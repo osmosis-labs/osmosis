@@ -94,7 +94,9 @@ func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
 	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
 	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
 	suite.NoError(err)
-	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), spotPrice.String())
+	s := sdk.NewDec(1).Quo(sdk.NewDec(3))
+	sp := s.Mul(gammtypes.SigFigs).RoundInt().ToDec().Quo(gammtypes.SigFigs)
+	suite.Equal(sp.String(), spotPrice.String())
 
 	return poolId
 }
@@ -110,7 +112,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 
 	for i := 0; i < 3; i++ {
 		poolId := suite.prepareBalancerPool()
-		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+		pool, err := suite.app.GAMMKeeper.GetPoolAndPoke(suite.ctx, poolId)
 		suite.NoError(err)
 
 		poolLpDenom := gammtypes.GetPoolShareDenom(pool.GetId())

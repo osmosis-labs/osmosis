@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -32,6 +34,10 @@ func (q Querier) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) 
 
 // CurrentEpoch provides current epoch of specified identifier.
 func (q Querier) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochRequest) (*types.QueryCurrentEpochResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	info := q.Keeper.GetEpochInfo(ctx, req.Identifier)

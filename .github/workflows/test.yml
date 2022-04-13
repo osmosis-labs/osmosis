@@ -37,7 +37,8 @@ jobs:
       - name: Display go version
         run: go version
       - name: Run all tests
-        run: go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic `go list ./... | grep -v simapp`
+        run: |
+          make test-cover
       - name: Codecov
         uses: codecov/codecov-action@v1.5.2
 
@@ -56,16 +57,38 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Install Starport
+      - name: Install Ignite CLI
         run: |
-          curl https://get.starport.network/starport@v0.19.5! | bash
+          curl https://get.ignite.com/cli@v0.20.0! | bash
         if: env.GIT_DIFF
-      - name: Start Local Network via Starport
+      - name: Start Local Network via Ignite CLI
         run: |
-          starport chain serve --reset-once -v -c ./starport.ci.yml > starport.out 2>&1 &
+          ignite chain serve --reset-once -v -c ./ignite.ci.yml > ignite.out 2>&1 &
         if: env.GIT_DIFF
       - name: Test Local Network Liveness
         run: |
           sleep 3m
           ./contrib/scripts/test_localnet_liveness.sh 100 5 50 localhost
+        if: env.GIT_DIFF
+  test-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-go@v2.2.0
+        with:
+          go-version: 1.17
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: Build Docker Image
+        run: |
+          make docker-build-debug
+        if: env.GIT_DIFF
+      - name: Test E2E
+        run: |
+          make test-e2e
         if: env.GIT_DIFF
