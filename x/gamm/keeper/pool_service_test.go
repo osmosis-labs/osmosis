@@ -482,8 +482,8 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 				// suite.Require().NoError(err)
 				_, err = suite.app.GAMMKeeper.ExitSwapShareAmountIn(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
 				suite.Require().NoError(err)
-				// _, err = suite.app.GAMMKeeper.ExitSwapExternAmountOut(suite.ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
-				// suite.Require().NoError(err)
+				_, err = suite.app.GAMMKeeper.ExitSwapExternAmountOut(suite.ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
+				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 				_, err = suite.app.GAMMKeeper.JoinSwapShareAmountOut(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))

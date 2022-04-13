@@ -402,13 +402,20 @@ func (k Keeper) ExitSwapExternAmountOut(
 	tokenOut sdk.Coin,
 	shareInMaxAmount sdk.Int,
 ) (shareInAmount sdk.Int, err error) {
-	// Basically what we have to do is:
-	// estimate how many LP shares this would take to do.
-	// We do so by calculating how much a swap of half of tokenOut to TokenIn would be.
-	// Then we calculate how many LP shares that'd be worth.
-	// We should have code for that once we implement JoinPoolNoSwap.
-	// Then check if the number of shares is LTE to shareInMaxAmount.
-	// if so, use the needed number of shares, do exit pool, and the swap.
+	pool, err := k.getPoolForSwap(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
-	panic("To implement later")
+	extendedPool, ok := pool.(types.PoolExternExitSwapExternAmountOutExtension)
+	if !ok {
+		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of exit", poolId)
+	}
+
+	shareInAmount, err = extendedPool.ExitSwapExternAmountOut(ctx, tokenOut, shareInMaxAmount)
+
+	if err := k.applyExitPoolStateChange(ctx, pool, sender, shareInAmount, sdk.Coins{tokenOut}); err != nil {
+		return sdk.Int{}, err
+	}
+	return shareInAmount, nil
 }

@@ -375,3 +375,62 @@ func (p *Pool) CalcExitPoolShares(ctx sdk.Context, exitingShares sdk.Int, exitFe
 	}
 	return exitedCoins, nil
 }
+
+// balancer notation: pAi - poolshares amount in, given single out
+// the second argument requires the tokenWeightOut / total token weight.
+func calcPoolInGivenSingleOut(
+	tokenBalanceOut,
+	normalizedTokenWeightOut,
+	poolSupply,
+	tokenAmountOut,
+	swapFee sdk.Dec,
+	exitFee sdk.Dec,
+) sdk.Dec {
+	feeRatio := sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedTokenWeightOut)).Mul(swapFee))
+
+	tokenAmountOutBeforeFee := tokenAmountOut.Quo(feeRatio)
+
+	// delta poolSupply is positive(total pool shares decreases)
+	// pool weight is always 1
+	poolAmountIn := solveConstantFunctionInvariant(tokenBalanceOut.Sub(tokenAmountOutBeforeFee), tokenBalanceOut, normalizedTokenWeightOut, poolSupply, sdk.OneDec())
+
+	// charge exit fee on the pool token side
+	// pAi = pAiAfterExitFee/(1-exitFee)
+	poolAmountInBeforeFee := poolAmountIn.Quo(sdk.OneDec().Sub(exitFee))
+	return poolAmountInBeforeFee
+}
+
+func (p *Pool) ExitSwapExternAmountOut(
+	ctx sdk.Context,
+	tokenOut sdk.Coin,
+	shareInMaxAmount sdk.Int,
+) (shareInAmount sdk.Int, err error) {
+	_, pAsset, err := p.getPoolAssetAndIndex(tokenOut.Denom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	poolAmountInBeforeFee := calcPoolInGivenSingleOut(
+		pAsset.Token.Amount.ToDec(),
+		pAsset.Weight.ToDec().Quo(p.TotalWeight.ToDec()),
+		p.GetTotalShares().ToDec(),
+		tokenOut.Amount.ToDec(),
+		p.GetSwapFee(ctx),
+		p.GetExitFee(ctx))
+
+	if poolAmountInBeforeFee.LTE(sdk.ZeroInt().ToDec()) {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+	}
+
+	if poolAmountInBeforeFee.GT(shareInMaxAmount.ToDec()) {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", pAsset.Token.Denom)
+	}
+
+	pAsset.Token.Amount = pAsset.Token.Amount.Sub(tokenOut.Amount)
+	err = p.UpdatePoolAssetBalance(pAsset.Token)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return poolAmountInBeforeFee.TruncateInt(), nil
+}
