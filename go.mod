@@ -37,6 +37,7 @@ require (
 	github.com/cockroachdb/sentry-go v0.6.1-cockroachdb.2 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/linxGnu/grocksdb v1.7.1-0.20220327020612-ee0c6690507f // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	golang.org/x/exp v0.0.0-20200513190911-00229845015e // indirect
 )
@@ -80,7 +81,6 @@ require (
 	github.com/confio/ics23/go v0.6.6 // indirect
 	github.com/containerd/continuity v0.2.1 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
-	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/daixiang0/gci v0.3.3 // indirect
@@ -286,7 +286,7 @@ replace (
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use janky pebbledb
-	github.com/tendermint/tm-db => github.com/osmosis-labs/tm-db v0.6.6-0.20220411171255-2c7f69d3b16d
+	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220412234503-2dd592c4de4c
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
