@@ -29,5 +29,14 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
 done
 
+# command to generate docs using protoc-gen-doc
+buf protoc \
+  -I "proto" \
+  -I "$cosmos_sdk_dir/third_party/proto" \
+  -I "$cosmos_sdk_dir/proto" \
+  --doc_out=./docs/core \
+  --doc_opt=./docs/protodoc-markdown.tmpl,proto-docs.md \
+  $(find "$(pwd)/proto" -maxdepth 4 -name '*.proto')
+
 cp -r ./github.com/osmosis-labs/osmosis/v*/x/* x/
 rm -rf ./github.com

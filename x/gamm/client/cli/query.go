@@ -9,9 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
+
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -357,22 +358,15 @@ $ %s query gamm total-liquidity
 // GetCmdSpotPrice returns spot price
 func GetCmdSpotPrice() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "spot-price <poolID> <tokenInDenom> <tokenOutDenom>",
+		Use:   "spot-price <pool-ID> <base-asset-denom> <quote-asset-denom>",
 		Short: "Query spot-price",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query spot-price.
-Example:
-$ %s query gamm spot-price 1 stake stake2
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
+
 			queryClient := types.NewQueryClient(clientCtx)
 
 			poolID, err := strconv.Atoi(args[0])
@@ -381,9 +375,9 @@ $ %s query gamm spot-price 1 stake stake2
 			}
 
 			res, err := queryClient.SpotPrice(cmd.Context(), &types.QuerySpotPriceRequest{
-				PoolId:        uint64(poolID),
-				TokenInDenom:  args[1],
-				TokenOutDenom: args[2],
+				PoolId:          uint64(poolID),
+				BaseAssetDenom:  args[1],
+				QuoteAssetDenom: args[2],
 			})
 			if err != nil {
 				return err
@@ -394,7 +388,6 @@ $ %s query gamm spot-price 1 stake stake2
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-
 	return cmd
 }
 

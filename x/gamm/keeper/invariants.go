@@ -29,7 +29,7 @@ func AllInvariants(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 // pool assets
 func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		pools, err := keeper.GetPools(ctx)
+		pools, err := keeper.GetPoolsAndPoke(ctx)
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, poolBalanceInvariantName,
 				"\tgamm pool retrieval failed"), true

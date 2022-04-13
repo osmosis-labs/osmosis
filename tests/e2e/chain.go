@@ -47,14 +47,14 @@ type chain struct {
 	validators []*validator
 }
 
-func newChain(name string) (*chain, error) {
+func newChain(id string) (*chain, error) {
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	if err != nil {
 		return nil, err
 	}
 
 	return &chain{
-		id:      name,
+		id:      id,
 		dataDir: tmpDir,
 	}, nil
 }

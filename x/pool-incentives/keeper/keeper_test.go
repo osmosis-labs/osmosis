@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 
 	for i := 0; i < 3; i++ {
 		poolId := suite.prepareBalancerPool()
-		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+		pool, err := suite.app.GAMMKeeper.GetPoolAndPoke(suite.ctx, poolId)
 		suite.NoError(err)
 
 		poolLpDenom := gammtypes.GetPoolShareDenom(pool.GetId())
