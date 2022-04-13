@@ -244,7 +244,7 @@ docker-build-debug:
 
 lint:
 	@echo "--> Running linter"
-	goglangci-lint run --timeout=10m
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
 
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name "*.pb.gw.go" -not -name "*.pb.go" | xargs gofumpt -w -s
