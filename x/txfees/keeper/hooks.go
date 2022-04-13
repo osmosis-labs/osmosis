@@ -12,33 +12,32 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	nonNativeFeeAddr := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorName)
-	nonNativeBalances := k.bankKeeper.GetAllBalances(ctx, addrNonNativeFee)
+	nonNativeBalances := k.bankKeeper.GetAllBalances(ctx, nonNativeFeeAddr)
 	baseDenom, _ := k.GetBaseDenom(ctx)
 
-	for _, coin := range nonNativeFeeAccountBalances {
+	for _, coin := range nonNativeBalances {
 		if coin.Denom == baseDenom {
 			continue
-		} else {
-			feetoken, err := k.GetFeeToken(ctx, coin.Denom)
-			if err != nil {
-				panic(err)
-			}
+		}
+		feetoken, err := k.GetFeeToken(ctx, coin.Denom)
+		if err != nil {
+			panic(err)
+		}
 
-			// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
-			// but even then the point is a bit moot.
-			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
-			// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
-			_, err = k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
-			if err != nil {
-				panic(err)
-			}
+		// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
+		// but even then the point is a bit moot.
+		// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
+		// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
+		_, err = k.gammKeeper.SwapExactAmountIn(ctx, nonNativeFeeAddr, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
+		if err != nil {
+			panic(err)
 		}
 	}
 
 	// Get all of the txfee payout denom in the module account
-	nonNativeCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, addrNonNativeFee, baseDenom))
+	nonNativeCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativeFeeAddr, baseDenom))
 
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBaseDenomBalance)
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeCoins)
 	if err != nil {
 		panic(err)
 	}

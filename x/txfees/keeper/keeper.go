@@ -19,7 +19,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	accountKeeper             types.AccountKeeper
-	bankKeeper                *bankkeeper.BaseKeeper
+	bankKeeper                types.BankKeeper
 	epochKeeper               types.EpochKeeper
 	gammKeeper                types.GammKeeper
 	spotPriceCalculator       types.SpotPriceCalculator
