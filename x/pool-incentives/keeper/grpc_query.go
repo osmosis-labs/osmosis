@@ -69,7 +69,8 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 
-	// While there are exceptions, typically the number of incentivizedPools equals to the number of incentivized gauges / number of lockable durations.
+	// While there are exceptions, typically the number of incentivizedPools
+	// equals to the number of incentivized gauges / number of lockable durations.
 	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
 
 	for _, record := range distrInfo.Records {
@@ -92,9 +93,13 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	}, nil
 }
 
-// ExternalIncentiveGauges iterates over all gauges, returns gauges externally incentivized,
-// excluding default gagues created with pool.
+// ExternalIncentiveGauges iterates over all gauges, returns gauges externally
+// incentivized, excluding default gauges created with pool.
 func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryExternalIncentiveGaugesRequest) (*types.QueryExternalIncentiveGaugesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	prefixStore := prefix.NewStore(store, []byte("pool-incentives"))
