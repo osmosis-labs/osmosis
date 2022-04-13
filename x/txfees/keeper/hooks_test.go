@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(uion, defaultPooledAssetAmount),
 	)
-	uionPoolI, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, uionPoolId)
+	uionPoolI, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, uionPoolId)
 	suite.Require().NoError(err)
 	suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
 
@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(atom, defaultPooledAssetAmount),
 	)
-	atomPoolI, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, atomPoolId)
+	atomPoolI, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, atomPoolId)
 	suite.Require().NoError(err)
 	suite.ExecuteUpgradeFeeTokenProposal(atom, atomPoolId)
 
@@ -41,7 +41,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(ust, defaultPooledAssetAmount),
 	)
-	ustPoolI, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, ustPoolId)
+	ustPoolI, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, ustPoolId)
 	suite.Require().NoError(err)
 	suite.ExecuteUpgradeFeeTokenProposal(ust, ustPoolId)
 
