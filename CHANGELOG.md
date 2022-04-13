@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+* [#1244](https://github.com/osmosis-labs/osmosis/pull/1244) refactor: ExitSwapExternAmountOut
 * [#1107](https://github.com/osmosis-labs/osmosis/pull/1107) Update to wasmvm v0.24.0, re-enabling building on M1 macs!
 
 ### Minor improvements & Bug Fixes
