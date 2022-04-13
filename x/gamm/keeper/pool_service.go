@@ -407,7 +407,7 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, err
 	}
 
-	extendedPool, ok := pool.(types.PoolExternExitSwapExternAmountOutExtension)
+	extendedPool, ok := pool.(types.PoolExitSwapExternAmountOutExtension)
 	if !ok {
 		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of exit", poolId)
 	}
