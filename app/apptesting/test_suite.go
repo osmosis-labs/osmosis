@@ -221,7 +221,13 @@ func (keeperTestHelper *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins 
 	return msgResponse.ID
 }
 
-func (keeperTestHelper *KeeperTestHelper) BuildTx(txBuilder client.TxBuilder, msgs []sdk.Msg, sigV2 signing.SignatureV2, memo string, txFee sdk.Coins, gasLimit uint64) (tx authsigning.Tx) {
+func (keeperTestHelper *KeeperTestHelper) BuildTx(
+  txBuilder client.TxBuilder,
+  msgs []sdk.Msg,
+  sigV2 signing.SignatureV2,
+  memo string, txFee sdk.Coins,
+  gasLimit uint64,
+) (authsigning.Tx) {
 	err := txBuilder.SetMsgs(msgs[0])
 	keeperTestHelper.Require().NoError(err)
 

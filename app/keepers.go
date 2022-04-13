@@ -27,8 +27,6 @@ import (
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-
-	// Staking: Allows the Tendermint validator set to be chosen based on bonded stake.
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

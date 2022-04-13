@@ -11,8 +11,8 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	addrNonNativeFee := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorName)
-	nonNativeFeeAccountBalances := k.bankKeeper.GetAllBalances(ctx, addrNonNativeFee)
+	nonNativeFeeAddr := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorName)
+	nonNativeBalances := k.bankKeeper.GetAllBalances(ctx, addrNonNativeFee)
 	baseDenom, _ := k.GetBaseDenom(ctx)
 
 	for _, coin := range nonNativeFeeAccountBalances {
@@ -28,8 +28,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// but even then the point is a bit moot.
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
 			// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
-			minTokenOut := sdk.ZeroInt()
-			_, err = k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, minTokenOut)
+			_, err = k.gammKeeper.SwapExactAmountIn(ctx, addrNonNativeFee, feetoken.PoolID, coin, baseDenom, sdk.ZeroInt())
 			if err != nil {
 				panic(err)
 			}
@@ -37,7 +36,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	}
 
 	// Get all of the txfee payout denom in the module account
-	nonNativeFeeAccountBaseDenomBalance := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, addrNonNativeFee, baseDenom))
+	nonNativeCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, addrNonNativeFee, baseDenom))
 
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorName, txfeestypes.FeeCollectorName, nonNativeFeeAccountBaseDenomBalance)
 	if err != nil {
