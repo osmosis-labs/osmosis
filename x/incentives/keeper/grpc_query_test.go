@@ -122,7 +122,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.ctx = suite.ctx.WithBlockTime(startTime.Add(time.Second))
 	err = suite.app.IncentivesKeeper.BeginDistribution(suite.ctx, *gauge)
 	// final check
-	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{"lptoken", nil})
+	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &types.ActiveGaugesPerDenomRequest{Denom:"lptoken", Pagination: nil})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Data, 1)
 	expectedGauge := types.Gauge{
@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.SetupTest()
 
-	upcomingGaugeRequest := types.UpcomingGaugesPerDenomRequest{"lptoken", nil}
+	upcomingGaugeRequest := types.UpcomingGaugesPerDenomRequest{Denom: "lptoken", Pagination: nil}
 	// initial check, no gauges when none exist
 	res, err := suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.ctx), &upcomingGaugeRequest)
 	suite.Require().NoError(err)
