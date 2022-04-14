@@ -11,14 +11,17 @@ const (
 	TypeMsgCreateStableswapPool = "create_stableswap_pool"
 )
 
-var _ sdk.Msg = &MsgCreateStableswapPool{}
-var _ types.CreatePoolMsg = &MsgCreateStableswapPool{}
+var (
+	_ sdk.Msg             = &MsgCreateStableswapPool{}
+	_ types.CreatePoolMsg = &MsgCreateStableswapPool{}
+)
 
 func NewMsgCreateStableswapPool(
 	sender sdk.AccAddress,
 	poolParams PoolParams,
 	initialLiquidity sdk.Coins,
-	futurePoolGovernor string) MsgCreateStableswapPool {
+	futurePoolGovernor string,
+) MsgCreateStableswapPool {
 	return MsgCreateStableswapPool{
 		Sender:               sender.String(),
 		PoolParams:           &poolParams,
@@ -71,6 +74,7 @@ func (msg MsgCreateStableswapPool) PoolCreator() sdk.AccAddress {
 	}
 	return sender
 }
+
 func (msg MsgCreateStableswapPool) Validate(ctx sdk.Context) error {
 	return msg.ValidateBasic()
 }

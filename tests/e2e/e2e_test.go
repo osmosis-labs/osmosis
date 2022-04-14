@@ -50,7 +50,6 @@ func (s *IntegrationTestSuite) TestQueryBalances() {
 	s.Require().ElementsMatch(expectedBalancesA, actualBalancesA)
 	s.Require().ElementsMatch(expectedDenomsB, actualDenomsB)
 	s.Require().ElementsMatch(expectedBalancesB, actualBalancesB)
-
 }
 
 func queryBalances(endpoint, addr string) (sdk.Coins, error) {

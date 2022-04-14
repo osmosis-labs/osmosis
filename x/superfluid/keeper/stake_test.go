@@ -3,13 +3,14 @@ package keeper_test
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type superfluidDelegation struct {
@@ -497,7 +498,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		_, err = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
 		suite.Require().Error(err)
 
-		// check if finished unlocking succesfully increased balance
+		// check if finished unlocking successfully increased balance
 		balances = suite.App.BankKeeper.GetAllBalances(suite.Ctx, lock.OwnerAddress())
 		suite.Require().Equal(1, balances.Len())
 		suite.Require().Equal(denoms[0], balances[0].Denom)

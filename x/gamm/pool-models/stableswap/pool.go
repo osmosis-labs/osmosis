@@ -35,6 +35,7 @@ func (pa Pool) GetId() uint64 {
 func (pa Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
 	return pa.PoolParams.SwapFee
 }
+
 func (pa Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
 	return pa.PoolParams.ExitFee
 }
@@ -56,6 +57,7 @@ func (pa Pool) GetTotalShares() sdk.Int {
 func (pa Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.DecCoin, err error) {
 	return sdk.DecCoin{}, types.ErrNotImplemented
 }
+
 func (pa *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
 	return sdk.Coin{}, types.ErrNotImplemented
 }
@@ -63,6 +65,7 @@ func (pa *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDe
 func (pa Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.DecCoin, err error) {
 	return sdk.DecCoin{}, types.ErrNotImplemented
 }
+
 func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	return sdk.Coin{}, types.ErrNotImplemented
 }
@@ -74,6 +77,7 @@ func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom
 func (pa Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	return sdk.Int{}, sdk.Coins{}, types.ErrNotImplemented
 }
+
 func (pa *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
 	return sdk.Int{}, types.ErrNotImplemented
 }
