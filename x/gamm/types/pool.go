@@ -78,11 +78,11 @@ type PoolI interface {
 // PoolExitSwapExternAmountOutExtension is an extension of the PoolI
 // interface definiting an abstraction for pools that hold tokens.
 // In addition, it supports ExitSwapExternAmountOut method.
-// See definition below. 
+// See definition below.
 type PoolExitSwapExternAmountOutExtension interface {
 	PoolI
 
-	// ExitSwapExternAmountOut removes liquidity from a specified pool with a maximum amount of LP shares (shareInMaxAmount) 
+	// ExitSwapExternAmountOut removes liquidity from a specified pool with a maximum amount of LP shares (shareInMaxAmount)
 	// and swaps to an exact amount of one of the token pairs (tokenOut)
 	ExitSwapExternAmountOut(
 		ctx sdk.Context,
