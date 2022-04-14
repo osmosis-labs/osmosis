@@ -413,6 +413,9 @@ func (k Keeper) ExitSwapExternAmountOut(
 	}
 
 	shareInAmount, err = extendedPool.ExitSwapExternAmountOut(ctx, tokenOut, shareInMaxAmount)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	if err := k.applyExitPoolStateChange(ctx, pool, sender, shareInAmount, sdk.Coins{tokenOut}); err != nil {
 		return sdk.Int{}, err
