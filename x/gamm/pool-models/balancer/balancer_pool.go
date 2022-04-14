@@ -13,8 +13,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-var _ types.PoolI = &Pool{}
-var _ types.PoolExitSwapExternAmountOutExtension = &Pool{}
+var (
+	_ types.PoolI                                = &Pool{}
+	_ types.PoolExitSwapExternAmountOutExtension = &Pool{}
+)
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
 // Invariants that are assumed to be satisfied and not checked:
