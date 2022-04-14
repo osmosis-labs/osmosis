@@ -185,7 +185,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 	return ratio, nil
 }
 
-// balancer notation: pAo - poolshares amount out, given single asset in
+// balancer notation: pAo - pool shares amount out, given single asset in
 // the second argument requires the tokenWeightIn / total token weight.
 func calcPoolOutGivenSingleIn(
 	tokenBalanceIn,
@@ -376,7 +376,7 @@ func (p *Pool) CalcExitPoolShares(ctx sdk.Context, exitingShares sdk.Int, exitFe
 	return exitedCoins, nil
 }
 
-// balancer notation: pAi - poolshares amount in, given single out
+// balancer notation: pAi - pool shares amount in, given single asset out
 // the second argument requires the tokenWeightOut / total token weight.
 func calcPoolInGivenSingleOut(
 	tokenBalanceOut,
