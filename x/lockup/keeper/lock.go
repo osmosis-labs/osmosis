@@ -536,3 +536,37 @@ func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) erro
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
+
+func (k Keeper) EditLockup(ctx sdk.Context, lock types.PeriodLock, newDuration time.Duration) error {
+	// sanity check
+
+	// check unlocking
+	if lock.IsUnlocking() {
+		return fmt.Errorf("cannot edit unlocking lockup")
+	}
+
+	// check synthetic lockup exists
+	if k.HasAnySyntheticLockups(ctx, lock.ID) {
+		return fmt.Errorf("cannot edit lockup with synthetic lock")
+	}
+
+	if newDuration != 0 {
+		// check newDuration > duration
+		if !(newDuration > lock.Duration) {
+			return fmt.Errorf("new duration should be greater than the original")
+		}
+		
+		// update accumulation store
+		for _, coin := range lock.Coins {
+			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(newDuration), coin.Amount)
+		}
+
+		lock.Duration = newDuration
+	}
+
+	// update lockup
+	k.setLockAndResetLockRefs(ctx, lock)
+
+	return nil
+}

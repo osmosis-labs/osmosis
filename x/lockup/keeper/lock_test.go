@@ -648,3 +648,58 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
 	_, err = suite.app.LockupKeeper.SlashTokensFromLockByID(suite.ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake1", 1)})
 	suite.Require().Error(err)
 }
+
+func (suite *KeeperTestSuite) TestEditLockup() {
+	suite.SetupTest()
+
+	// initial check
+	locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(locks, 0)
+
+	// lock coins
+	addr := sdk.AccAddress([]byte("addr1---------------"))
+
+	// 1 * time.Second: 10
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr, coins, time.Second)
+
+	// check accumulations
+	acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second,
+	})
+	suite.Require().Equal(int64(10), acc.Int64())
+
+	lock, _ := suite.app.LockupKeeper.GetLockByID(suite.ctx, 1)
+
+	// duration decrease should fail
+	err = suite.app.LockupKeeper.EditLockup(suite.ctx, *lock, time.Second/2)
+	suite.Require().Error(err)
+
+	// duration increase should success
+	err = suite.app.LockupKeeper.EditLockup(suite.ctx, *lock, time.Second*2)
+	suite.Require().NoError(err)
+
+	// check queries
+	lock, _ = suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
+	suite.Require().Equal(lock.Duration, time.Second*2)
+
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second)
+	suite.Require().Equal(len(locks), 1)
+
+	locks = suite.app.LockupKeeper.GetLocksLongerThanDurationDenom(suite.ctx, "stake", time.Second*2)
+	suite.Require().Equal(len(locks), 1)
+
+	// check accumulations
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second,
+	})
+	suite.Require().Equal(int64(0), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 2,
+	})
+	suite.Require().Equal(int64(10), acc.Int64())
+}

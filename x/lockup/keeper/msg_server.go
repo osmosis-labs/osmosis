@@ -155,3 +155,32 @@ func createBeginUnlockEvent(lock *types.PeriodLock) sdk.Event {
 		sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
 	)
 }
+
+func (server msgServer) EditLockup(goCtx context.Context, msg *types.MsgEditLockup) (*types.MsgEditLockupResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if msg.Owner != lock.Owner {
+		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
+	}
+
+	err = server.keeper.EditLockup(ctx, lock, lock.Duration)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtLockTokens,
+			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
+			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+		),
+	})
+
+	return &types.MsgEditLockupResponse{}, nil
+}
