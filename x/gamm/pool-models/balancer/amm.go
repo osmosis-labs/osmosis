@@ -383,7 +383,7 @@ func calcPoolInGivenSingleOut(
 	normalizedTokenWeightOut,
 	poolSupply,
 	tokenAmountOut,
-	swapFee sdk.Dec,
+	swapFee,
 	exitFee sdk.Dec,
 ) sdk.Dec {
 	feeRatio := sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedTokenWeightOut)).Mul(swapFee))
