@@ -39,5 +39,5 @@ func writeFile(path string, body []byte) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, body, 0600)
+	return ioutil.WriteFile(path, body, 0o600)
 }
