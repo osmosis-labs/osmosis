@@ -2,8 +2,10 @@ package stableswap
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-var cubeRootTwo, _ = sdk.NewDec(2).ApproxRoot(3)
-var threeCubeRootTwo = cubeRootTwo.MulInt64(3)
+var (
+	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
+	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
+)
 
 // solidly CFMM is xy(x^2 + y^2) = k
 func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
