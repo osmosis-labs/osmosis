@@ -77,7 +77,7 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	bpy3 := bpy2.Mul(bpy)
 	bpy4 := bpy2.Mul(bpy2)
 
-	// TODO: Once we have correctness tests, can come back and optimize alot of the calculations
+	// TODO: Come back and optimize alot of the calculations
 
 	// Now we compute foo
 	// foo = (-27 x y (b + y)^2 (x^2 + y^2)
