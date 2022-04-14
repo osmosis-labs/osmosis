@@ -59,15 +59,15 @@ linters:
     # - nilerr <- needs go 1.18 support
     - nilnil
     #    - nlreturn <- disabled as it doesn't auto-fix something simple and doesn't add anything useful
-    - noctx
+    # - noctx <- needs go 1.18 support
     #    - nolintlint <- disabled because we use nolint in some places
     - paralleltest
     # - prealloc <- disabled because it makes simple code complicated
 #    - predeclared <- later
     - promlinter
 #    - revive <- temporarily disabled while jacob figures out how to make poolId not trigger it.
-    - rowserrcheck
-    - sqlclosecheck
+    # - rowserrcheck <- needs go 1.18 support
+    # - sqlclosecheck <- needs go 1.18 support
 #    - staticcheck <- later
 #    - structcheck <- later
 #    - stylecheck <- enable later, atriggers on underscores in variable names and on poolId
@@ -75,7 +75,7 @@ linters:
     - tenv
     - testpackage
 #    - thelper <- later
-    - tparallel
+    # - tparallel <- needs go 1.18 support
     - typecheck
     - unconvert
 #    - unparam <- looks for unused parameters (enable later)
