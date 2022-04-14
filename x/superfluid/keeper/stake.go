@@ -362,43 +362,50 @@ func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 
 // IterateDelegations implements govtypes.StakingKeeper
 func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) {
-	// we tract the global index
 	synthlocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delegator)
 	for i, lock := range synthlocks {
-		interm, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
+		// get locked coin from the lock ID
+		interim, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
 		if !ok {
-			panic(fmt.Sprintf("Intermediary account retrieval failed with underlying lock\nLock: %+v\n", lock))
+			panic(fmt.Sprintf("intermediary account retrieval failed with underlying lock(Lock: %+v)", lock))
 		}
 		lock, err := k.lk.GetLockByID(ctx, lock.UnderlyingLockId)
 		if err != nil {
-			panic(fmt.Sprintf("Lockup retrieval failed with underlying lock\nLock: %+v\nError: %s\n", lock, err))
+			panic(fmt.Sprintf("lockup retrieval failed with underlying lock(Lock: %+v; Error: %s)", lock, err))
 		}
 		coin, err := lock.SingleCoin()
 		if err != nil {
-			panic(fmt.Sprintf("No single coin in the lock\nLock: %+v\nError: %s\n", lock, err))
+			panic(fmt.Sprintf("no single coin in the lock(Lock: %+v; Error: %s)", lock, err))
 		}
-		amount := k.GetSuperfluidOSMOTokens(ctx, interm.Denom, coin.Amount)
-		valAddr, err := sdk.ValAddressFromBech32(interm.ValAddr)
+
+		// get osmo-equivalent token amount
+		amount := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount)
+
+		// get validator shares equivalent to the token amount
+		valAddr, err := sdk.ValAddressFromBech32(interim.ValAddr)
 		if err != nil {
-			panic(fmt.Sprintf("Validator address decoding failed\nLock: %+v\nAddress: %s\nError: %s\n", lock, interm.ValAddr, err))
+			panic(fmt.Sprintf("validator address decoding failed(Lock: %+v; Address: %s; Error: %s)", lock, interim.ValAddr, err))
 		}
 		validator, found := k.sk.GetValidator(ctx, valAddr)
 		if !found {
-			panic(fmt.Sprintf("Validator not exists\nLock: %+v\nAddress: %s\n", lock, valAddr))
+			panic(fmt.Sprintf("validator not exists(Lock: %+v; Address: %s)", lock, valAddr))
 		}
 		shares, err := validator.SharesFromTokens(amount)
 		if err != nil {
 			// tokens are not valid. continue.
 			continue
 		}
+
+		// construct delegation and call callback
 		delegation := stakingtypes.Delegation{
 			DelegatorAddress: delegator.String(),
-			ValidatorAddress: interm.ValAddr,
+			ValidatorAddress: interim.ValAddr,
 			Shares:           shares,
 		}
 		fn(int64(i), delegation)
 	}
 
+	// call the callback with the non-superfluid delegations
 	k.sk.IterateDelegations(ctx, delegator, func(i int64, delegation stakingtypes.DelegationI) (stop bool) {
 		return fn(int64(len(synthlocks))+i, delegation) // add len(synthlocks) to index to avoid overlapping
 	})
