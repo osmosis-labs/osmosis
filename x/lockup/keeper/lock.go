@@ -555,7 +555,7 @@ func (k Keeper) EditLockup(ctx sdk.Context, lock types.PeriodLock, newDuration t
 		if !(newDuration > lock.Duration) {
 			return fmt.Errorf("new duration should be greater than the original")
 		}
-		
+
 		// update accumulation store
 		for _, coin := range lock.Coins {
 			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
