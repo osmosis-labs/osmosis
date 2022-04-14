@@ -332,7 +332,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 			suite.Require().NoError(err)
 		}
 
-		_, err = msgServer.EditLockup(c, types.NewMsgEditLockup(param.lockOwner, resp.ID, param.newDuration))
+		_, err = msgServer.EditLockup(c, types.NewMsgEditLockup(test.param.lockOwner, resp.ID, test.param.newDuration))
 
 		if test.expectPass {
 			suite.Require().NoError(err)

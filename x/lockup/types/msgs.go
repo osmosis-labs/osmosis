@@ -108,9 +108,11 @@ func (m MsgEditLockup) Type() string  { return TypeMsgEditLockup }
 func (m MsgEditLockup) ValidateBasic() error {
 	return nil
 }
+
 func (m MsgEditLockup) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON((&m)))
 }
+
 func (m MsgEditLockup) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}

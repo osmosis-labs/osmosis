@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v7/store"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
@@ -566,7 +567,10 @@ func (k Keeper) EditLockup(ctx sdk.Context, lock types.PeriodLock, newDuration t
 	}
 
 	// update lockup
-	k.setLockAndResetLockRefs(ctx, lock)
+	err := k.setLockAndResetLockRefs(ctx, lock)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
