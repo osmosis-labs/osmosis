@@ -418,7 +418,7 @@ func (p *Pool) ExitSwapExternAmountOut(
 		p.GetSwapFee(ctx),
 		p.GetExitFee(ctx))
 
-	if poolAmountInBeforeFee.LTE(sdk.ZeroInt().ToDec()) {
+	if poolAmountInBeforeFee.LTE(sdk.ZeroDec()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
