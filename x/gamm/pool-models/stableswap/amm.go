@@ -13,7 +13,6 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 	x2 := xReserve.Mul(xReserve)
 	y2 := yReserve.Mul(yReserve)
 	return xy.Mul(x2.Add(y2))
-
 }
 
 // solidly CFMM is xy(x^2 + y^2) = k
@@ -136,14 +135,14 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	return a
 }
 
-func approx_eq(a, b, tol sdk.Dec) bool {
+func approxDecEqual(a, b, tol sdk.Dec) bool {
 	diff := a.Sub(b).Abs()
 	return diff.Quo(a).LTE(tol) && diff.Quo(b).LTE(tol)
 }
 
 var (
-	twodec, _    = sdk.NewDecFromStr("2.0")
-	threshold, _ = sdk.NewDecFromStr("0.00001") // 0.001%
+	twodec    = sdk.MustNewDecFromStr("2.0")
+	threshold = sdk.MustNewDecFromStr("0.00001") // 0.001%
 )
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
@@ -156,7 +155,7 @@ func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func
 		x_high_est := xReserve
 		x_est := (x_high_est.Add(x_low_est)).Quo(twodec)
 		cur_k := constantFunction(x_est, yf)
-		for !approx_eq(cur_k, k, threshold) { // cap max iteration to 256
+		for !approxDecEqual(cur_k, k, threshold) { // cap max iteration to 256
 			if cur_k.GT(k) {
 				x_high_est = x_est
 			} else if cur_k.LT(k) {
