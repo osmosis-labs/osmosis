@@ -1,15 +1,16 @@
 package v5
 
 import (
+	connectionkeeper "github.com/cosmos/ibc-go/v2/modules/core/03-connection/keeper"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
+	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	connectionkeeper "github.com/cosmos/ibc-go/v2/modules/core/03-connection/keeper"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"

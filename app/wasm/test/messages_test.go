@@ -1,12 +1,13 @@
 package wasm
 
 import (
+	"math"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/app/wasm"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	"github.com/stretchr/testify/assert"
-	"math"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -334,7 +335,6 @@ func TestSwap(t *testing.T) {
 			assert.InEpsilonf(t, (*spec.expCost.Out).ToDec().MustFloat64(), (*gotAmount.Out).ToDec().MustFloat64(), epsilon, "exp %s but got %s", spec.expCost.Out.String(), gotAmount.Out.String())
 		})
 	}
-
 }
 
 func TestSwapMultiHop(t *testing.T) {
@@ -517,5 +517,4 @@ func TestSwapMultiHop(t *testing.T) {
 			assert.InEpsilonf(t, (*spec.expCost.Out).ToDec().MustFloat64(), (*gotAmount.Out).ToDec().MustFloat64(), epsilon, "exp %s but got %s", spec.expCost.Out.String(), gotAmount.Out.String())
 		})
 	}
-
 }

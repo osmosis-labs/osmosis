@@ -4,15 +4,17 @@ import (
 	"context"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
-var isPerpetual = true
-var notPerpetual = false
+var (
+	isPerpetual  = true
+	notPerpetual = false
+)
 
 func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.SetupTest()
@@ -30,7 +32,7 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.Equal(3, len(lockableDurations))
 
 	poolId := suite.prepareBalancerPool()
-	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	pool, err := suite.app.GAMMKeeper.GetPoolAndPoke(suite.ctx, poolId)
 	suite.NoError(err)
 
 	res, err := queryClient.GaugeIds(context.Background(), &types.QueryGaugeIdsRequest{

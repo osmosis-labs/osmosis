@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -27,16 +31,18 @@ import (
 
 const (
 	// common
-	osmoDenom   = "uosmo"
-	stakeDenom  = "stake"
-	minGasPrice = "0.00001"
+	osmoDenom     = "uosmo"
+	stakeDenom    = "stake"
+	ibcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+	minGasPrice   = "0.000"
+	ibcSendAmount = 3300000000
 	// chainA
-	chainAName    = "osmo-test-a"
+	chainAID      = "osmo-test-a"
 	osmoBalanceA  = 200000000000
 	stakeBalanceA = 110000000000
 	stakeAmountA  = 100000000000
 	// chainB
-	chainBName    = "osmo-test-b"
+	chainBID      = "osmo-test-b"
 	osmoBalanceB  = 500000000000
 	stakeBalanceB = 440000000000
 	stakeAmountB  = 400000000000
@@ -54,12 +60,13 @@ var (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	tmpDirs      []string
-	chainA       *chain
-	chainB       *chain
-	dkrPool      *dockertest.Pool
-	dkrNet       *dockertest.Network
-	valResources map[string][]*dockertest.Resource
+	tmpDirs        []string
+	chainA         *chain
+	chainB         *chain
+	dkrPool        *dockertest.Pool
+	dkrNet         *dockertest.Network
+	hermesResource *dockertest.Resource
+	valResources   map[string][]*dockertest.Resource
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -70,10 +77,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
 	var err error
-	s.chainA, err = newChain(chainAName)
+	s.chainA, err = newChain(chainAID)
 	s.Require().NoError(err)
 
-	s.chainB, err = newChain(chainBName)
+	s.chainB, err = newChain(chainBID)
 	s.Require().NoError(err)
 
 	s.dkrPool, err = dockertest.NewPool("")
@@ -101,6 +108,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.initGenesis(s.chainB)
 	s.initValidatorConfigs(s.chainB)
 	s.runValidators(s.chainB, 10)
+
+	s.runIBCRelayer()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -114,6 +123,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	}
 
 	s.T().Log("tearing down e2e integration test suite...")
+
+	s.Require().NoError(s.dkrPool.Purge(s.hermesResource))
 
 	for _, vr := range s.valResources {
 		for _, r := range vr {
@@ -137,11 +148,11 @@ func (s *IntegrationTestSuite) initNodes(c *chain) {
 	// initialize a genesis file for the first validator
 	val0ConfigDir := c.validators[0].configDir()
 	for _, val := range c.validators {
-		if c.id == chainAName {
+		if c.id == chainAID {
 			s.Require().NoError(
 				addGenesisAccount(val0ConfigDir, "", initBalanceStrA, val.keyInfo.GetAddress()),
 			)
-		} else if c.id == chainBName {
+		} else if c.id == chainBID {
 			s.Require().NoError(
 				addGenesisAccount(val0ConfigDir, "", initBalanceStrB, val.keyInfo.GetAddress()),
 			)
@@ -197,7 +208,7 @@ func (s *IntegrationTestSuite) initGenesis(c *chain) {
 	genTxs := make([]json.RawMessage, len(c.validators))
 	for i, val := range c.validators {
 		stakeAmountCoin := stakeAmountCoinA
-		if c.id != chainAName {
+		if c.id != chainAID {
 			stakeAmountCoin = stakeAmountCoinB
 		}
 		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
@@ -288,7 +299,8 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.configDir()),
 			},
-			Repository: "osmolabs/osmosisd-e2e",
+			Repository: "osmosis",
+			Tag:        "debug",
 		}
 
 		// expose the first validator for debugging and communication
@@ -338,6 +350,101 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 		time.Second,
 		"Osmosis node failed to produce blocks",
 	)
+}
+
+func (s *IntegrationTestSuite) runIBCRelayer() {
+	s.T().Log("starting Hermes relayer container...")
+
+	tmpDir, err := ioutil.TempDir("", "gaia-e2e-testnet-hermes-")
+	s.Require().NoError(err)
+	s.tmpDirs = append(s.tmpDirs, tmpDir)
+
+	gaiaAVal := s.chainA.validators[0]
+	gaiaBVal := s.chainB.validators[0]
+	hermesCfgPath := path.Join(tmpDir, "hermes")
+
+	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0o755))
+	_, err = copyFile(
+		filepath.Join("./scripts/", "hermes_bootstrap.sh"),
+		filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"),
+	)
+	s.Require().NoError(err)
+
+	s.hermesResource, err = s.dkrPool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       fmt.Sprintf("%s-%s-relayer", s.chainA.id, s.chainB.id),
+			Repository: "osmolabs/hermes",
+			Tag:        "0.13.0",
+			NetworkID:  s.dkrNet.Network.ID,
+			Cmd: []string{
+				"start",
+			},
+			User: "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s/:/root/hermes", hermesCfgPath),
+			},
+			ExposedPorts: []string{
+				"3031",
+			},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
+			},
+			Env: []string{
+				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chainA.id),
+				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chainB.id),
+				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", gaiaAVal.mnemonic),
+				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", gaiaBVal.mnemonic),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chainA.id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chainB.id][0].Container.Name[1:]),
+			},
+			Entrypoint: []string{
+				"sh",
+				"-c",
+				"chmod +x /root/hermes/hermes_bootstrap.sh && /root/hermes/hermes_bootstrap.sh",
+			},
+		},
+		noRestart,
+	)
+	s.Require().NoError(err)
+
+	endpoint := fmt.Sprintf("http://%s/state", s.hermesResource.GetHostPort("3031/tcp"))
+	s.Require().Eventually(
+		func() bool {
+			resp, err := http.Get(endpoint)
+			if err != nil {
+				return false
+			}
+
+			defer resp.Body.Close()
+
+			bz, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return false
+			}
+
+			var respBody map[string]interface{}
+			if err := json.Unmarshal(bz, &respBody); err != nil {
+				return false
+			}
+
+			status := respBody["status"].(string)
+			result := respBody["result"].(map[string]interface{})
+
+			return status == "success" && len(result["chains"].([]interface{})) == 2
+		},
+		5*time.Minute,
+		time.Second,
+		"hermes relayer not healthy",
+	)
+
+	s.T().Logf("started Hermes relayer container: %s", s.hermesResource.Container.ID)
+
+	// XXX: Give time to both networks to start, otherwise we might see gRPC
+	// transport errors.
+	time.Sleep(10 * time.Second)
+
+	// create the client, connection and channel between the two Gaia chains
+	s.connectIBCChains()
 }
 
 func noRestart(config *docker.HostConfig) {

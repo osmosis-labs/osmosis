@@ -1,0 +1,29 @@
+"C:x/claim":
+  - x/claim/**/*
+"C:x/epochs":
+  - x/epochs/**/*
+"C:x/gamm":
+  - x/gamm/**/*
+"C:x/incentives":
+  - x/incentives/**/*
+"C:x/lockup":
+  - x/lockup/**/*
+"C:x/mint":
+  - x/mint/**/*
+"C:x/pool-incentives":
+  - x/pool-incentives/**/*
+"C:x/superfluid":
+  - x/superfluid/**/*
+"C:x/txfees":
+  - x/txfees/**/*
+"Type:build":
+  - Makefile
+  - Dockerfile
+  - scripts/*
+"Type:CI":
+  - .github/**/*.yml
+  - .mergify.yml
+  - .golangci.yml
+"C:CLI":
+  - client/**/*
+  - x/*/client/**/*

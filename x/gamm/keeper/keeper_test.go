@@ -3,12 +3,13 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
@@ -31,6 +32,10 @@ type KeeperTestSuite struct {
 	queryClient types.QueryClient
 }
 
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
@@ -38,10 +43,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.app.GAMMKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }
 
 func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {

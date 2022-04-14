@@ -224,7 +224,7 @@ test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-    @VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
 
 test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
@@ -236,7 +236,7 @@ benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
 docker-build-debug:
-	@docker build -t osmolabs/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
+	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
@@ -247,9 +247,10 @@ lint:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name "*.pb.gw.go" -not -name "*.pb.go" | xargs gofumpt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name "*.pb.gw.go" -not -name "*.pb.go" | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name "*.pb.gw.go" -not -name "*.pb.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
 
 ###############################################################################
 ###                                Localnet                                 ###

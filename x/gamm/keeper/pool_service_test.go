@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			poolId, err := keeper.CreatePool(suite.ctx, msg)
 			suite.Require().NoError(err)
 
-			pool, err := keeper.GetPool(suite.ctx, poolId)
+			pool, err := keeper.GetPoolAndPoke(suite.ctx, poolId)
 			suite.Require().NoError(err)
 			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
 				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
@@ -220,7 +220,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			}, defaultPoolAssets, defaultFutureGovernor)
 			_, err := keeper.CreatePool(suite.ctx, msg)
 			suite.Require().NoError(err)
-			pools, err := keeper.GetPools(suite.ctx)
+			pools, err := keeper.GetPoolsAndPoke(suite.ctx)
 			suite.Require().Len(pools, 1)
 			suite.Require().NoError(err)
 		},
@@ -236,7 +236,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			}, defaultPoolAssets, defaultFutureGovernor)
 			_, err := keeper.CreatePool(suite.ctx, msg)
 			suite.Require().NoError(err)
-			pools, err := keeper.GetPools(suite.ctx)
+			pools, err := keeper.GetPoolsAndPoke(suite.ctx)
 			suite.Require().Len(pools, 1)
 			suite.Require().NoError(err)
 		},

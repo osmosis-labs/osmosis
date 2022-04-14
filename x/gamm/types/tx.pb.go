@@ -532,11 +532,9 @@ var xxx_messageInfo_MsgSwapExactAmountOutResponse proto.InternalMessageInfo
 // ===================== MsgJoinSwapExternAmountIn
 // TODO: Rename to MsgJoinSwapExactAmountIn
 type MsgJoinSwapExternAmountIn struct {
-	Sender  string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	PoolId  uint64     `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
-	TokenIn types.Coin `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn" yaml:"token_in"`
-	// reserved 3;
-	// reserved "token_in";
+	Sender            string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId            uint64                                 `protobuf:"varint,2,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
+	TokenIn           types.Coin                             `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn" yaml:"token_in"`
 	ShareOutMinAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=shareOutMinAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shareOutMinAmount" yaml:"share_out_min_amount"`
 }
 

@@ -21,10 +21,11 @@ func (k Keeper) CalculateSpotPrice(
 	baseAssetDenom string,
 	quoteAssetDenom string,
 ) (sdk.Dec, error) {
-	pool, err := k.GetPool(ctx, poolID)
+	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
+
 	return pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
 }
 
@@ -52,7 +53,8 @@ func (k Keeper) validateCreatedPool(
 	ctx sdk.Context,
 	initialPoolLiquidity sdk.Coins,
 	poolId uint64,
-	pool types.PoolI) error {
+	pool types.PoolI,
+) error {
 	if pool.GetId() != poolId {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")
@@ -182,7 +184,7 @@ func (k Keeper) JoinPoolNoSwap(
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
 ) (err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -330,7 +332,7 @@ func (k Keeper) ExitPool(
 	shareInAmount sdk.Int,
 	tokenOutMins sdk.Coins,
 ) (exitCoins sdk.Coins, err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

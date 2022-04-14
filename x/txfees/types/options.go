@@ -3,9 +3,10 @@ package types
 import (
 	"fmt"
 
+	"github.com/spf13/cast"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/cast"
 )
 
 // If Options are not set in a config somewhere,
