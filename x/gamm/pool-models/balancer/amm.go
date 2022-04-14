@@ -386,6 +386,8 @@ func calcPoolInGivenSingleOut(
 	swapFee,
 	exitFee sdk.Dec,
 ) sdk.Dec {
+	// feeRatio is defined as follows:
+	// 1 - ((1 - normalizedTokenWeightOut) * swapFee)
 	feeRatio := sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedTokenWeightOut)).Mul(swapFee))
 
 	tokenAmountOutBeforeFee := tokenAmountOut.Quo(feeRatio)
