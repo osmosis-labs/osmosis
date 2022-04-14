@@ -3,9 +3,10 @@ package keeper
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SlashLockupsForValidatorSlash should be called before the validator at valAddr is slashed.

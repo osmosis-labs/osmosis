@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -563,5 +564,4 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
 		require.Nil(t, pacc.PoolParams.SmoothWeightChangeParams)
 	}
-
 }

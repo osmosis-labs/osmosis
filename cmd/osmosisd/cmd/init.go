@@ -84,7 +84,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			seeds := []string{
 				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",               // Notional
-				"295b417f995073d09ff4c6c141bd138a7f7b5922@65.21.141.212:2000",                // Notional
+				"44ff091135ef2c69421eacfa136860472ac26e60@65.21.141.212:2000",                // Notional
 				"ec4d3571bf709ab78df61716e47b5ac03d077a1a@65.108.43.26:2000",                 // Notional
 				"4cb8e1e089bdf44741b32638591944dc15b7cce3@65.108.73.18:2000",                 // Notional
 				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656",       // [ block pane ]

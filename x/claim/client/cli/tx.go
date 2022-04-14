@@ -3,9 +3,10 @@ package cli
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // GetTxCmd returns the transaction commands for this module.
