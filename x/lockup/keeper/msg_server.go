@@ -168,7 +168,7 @@ func (server msgServer) EditLockup(goCtx context.Context, msg *types.MsgEditLock
 		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
 	}
 
-	err = server.keeper.EditLockup(ctx, lock, lock.Duration)
+	err = server.keeper.EditLockup(ctx, *lock, lock.Duration)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
