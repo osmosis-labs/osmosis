@@ -274,6 +274,40 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGauges() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetCmdUpcomingGaugesPerDenom() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"query upcoming gauges per denom",
+			false, &types.UpcomingGaugesPerDenomResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdUpcomingGaugesPerDenom()
+			clientCtx := val.ClientCtx
+
+			args := []string{s.cfg.BondDenom}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 	val := s.network.Validators[0]
 

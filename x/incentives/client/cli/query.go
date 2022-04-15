@@ -31,6 +31,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdActiveGauges(),
 		GetCmdActiveGaugesPerDenom(),
 		GetCmdUpcomingGauges(),
+		GetCmdUpcomingGaugesPerDenom(),
 		GetCmdRewardsEst(),
 	)
 
@@ -317,7 +318,43 @@ $ %s query incentives upcoming-gauges
 	return cmd
 }
 
+<<<<<<< HEAD
 // GetCmdRewardsEst returns rewards estimation
+=======
+// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "upcoming-gauges-per-denom [denom]",
+		Short: "Query scheduled gauges per denom",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.UpcomingGaugesPerDenom(cmd.Context(), &types.UpcomingGaugesPerDenomRequest{Denom: args[0], Pagination: pageReq})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "incentives")
+
+	return cmd
+}
+
+// GetCmdRewardsEst returns rewards estimation.
+>>>>>>> eb39af7 (Adding upcoming gauges query (#1195))
 func GetCmdRewardsEst() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rewards-estimation",

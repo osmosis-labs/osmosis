@@ -135,8 +135,50 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 	return &types.UpcomingGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
+<<<<<<< HEAD
 // RewardsEst returns rewards estimation at a future specific time
 func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
+=======
+func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.UpcomingGaugesPerDenomRequest) (*types.UpcomingGaugesPerDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	gauges := []types.Gauge{}
+	store := ctx.KVStore(q.Keeper.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
+
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		upcomingGauges := q.Keeper.GetUpcomingGauges(ctx)
+		for _, gauge := range upcomingGauges {
+			if gauge.DistributeTo.Denom == req.Denom {
+				gauges = append(gauges, gauge)
+			}
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.UpcomingGaugesPerDenomResponse{UpcomingGauges: gauges, Pagination: pageRes}, nil
+}
+
+// RewardsEst returns rewards estimation at a future specific time.
+func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if len(req.Owner) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+	}
+
+>>>>>>> eb39af7 (Adding upcoming gauges query (#1195))
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	diff := req.EndEpoch - k.GetEpochInfo(ctx).CurrentEpoch
 	if diff > 365 {

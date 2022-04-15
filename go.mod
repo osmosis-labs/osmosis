@@ -3,8 +3,13 @@ module github.com/osmosis-labs/osmosis/v7
 go 1.18
 
 require (
+<<<<<<< HEAD
 	github.com/CosmWasm/wasmd v0.23.0
 	github.com/cosmos/cosmos-sdk v0.45.1
+=======
+	github.com/CosmWasm/wasmd v0.24.0
+	github.com/cosmos/cosmos-sdk v0.45.3
+>>>>>>> eb39af7 (Adding upcoming gauges query (#1195))
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ibc-go/v2 v2.0.2
@@ -27,6 +32,13 @@ require (
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/golang/glog v1.0.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.0 // indirect
+	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
 require (
