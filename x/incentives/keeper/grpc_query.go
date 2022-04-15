@@ -191,7 +191,7 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.UpcomingGaugesPerDenomResponse{Data: gauges, Pagination: pageRes}, nil
+	return &types.UpcomingGaugesPerDenomResponse{UpcomingGauges: gauges, Pagination: pageRes}, nil
 }
 
 // RewardsEst returns rewards estimation at a future specific time.
