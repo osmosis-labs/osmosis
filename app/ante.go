@@ -3,8 +3,6 @@ package app
 import (
 	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	channelkeeper "github.com/cosmos/ibc-go/v2/modules/core/04-channel/keeper"
-	ibcante "github.com/cosmos/ibc-go/v2/modules/core/ante"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	channelkeeper "github.com/cosmos/ibc-go/v2/modules/core/04-channel/keeper"
 	ibcante "github.com/cosmos/ibc-go/v2/modules/core/ante"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
