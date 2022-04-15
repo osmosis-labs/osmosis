@@ -395,7 +395,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 	return tokenOutAmount, nil
 }
 
-func (k Keeper) ExitSwapExternAmountOut(
+func (k Keeper) ExitSwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	poolId uint64,
@@ -407,12 +407,12 @@ func (k Keeper) ExitSwapExternAmountOut(
 		return sdk.Int{}, err
 	}
 
-	extendedPool, ok := pool.(types.PoolExitSwapExternAmountOutExtension)
+	extendedPool, ok := pool.(types.PoolExitSwapExactAmountOutExtension)
 	if !ok {
 		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of exit", poolId)
 	}
 
-	shareInAmount, err = extendedPool.ExitSwapExternAmountOut(ctx, tokenOut, shareInMaxAmount)
+	shareInAmount, err = extendedPool.ExitSwapExactAmountOut(ctx, tokenOut, shareInMaxAmount)
 	if err != nil {
 		return sdk.Int{}, err
 	}

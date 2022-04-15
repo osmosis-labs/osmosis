@@ -15,7 +15,7 @@ import (
 
 var (
 	_ types.PoolI                                = &Pool{}
-	_ types.PoolExitSwapExternAmountOutExtension = &Pool{}
+	_ types.PoolExitSwapExactAmountOutExtension  = &Pool{}
 )
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.

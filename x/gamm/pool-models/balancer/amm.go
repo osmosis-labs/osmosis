@@ -412,7 +412,7 @@ func calcPoolSharesInGivenSingleAssetOut(
 	return sharesInFeeIncluded
 }
 
-func (p *Pool) ExitSwapExternAmountOut(
+func (p *Pool) ExitSwapExactAmountOut(
 	ctx sdk.Context,
 	tokenOut sdk.Coin,
 	shareInMaxAmount sdk.Int,
