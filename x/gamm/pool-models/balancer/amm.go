@@ -330,23 +330,23 @@ func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee 
 	return numShares, newLiquidity, nil
 }
 
-func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	exitedCoins, err = p.CalcExitPoolShares(ctx, exitingShares, exitFee)
+func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+	exitingCoins, err = p.CalcExitPoolShares(ctx, exitingShares, exitFee)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	if err := p.exitPool(ctx, exitedCoins, exitingShares); err != nil {
+	if err := p.exitPool(ctx, exitingCoins, exitingShares); err != nil {
 		return sdk.Coins{}, err
 	}
 
-	return exitedCoins, nil
+	return exitingCoins, nil
 }
 
-// exitPool exits the pool given exitedCoins and exitingShares.
+// exitPool exits the pool given exitingCoins and exitingShares.
 // updates the pool's liquidity and totalShares
-func (p *Pool) exitPool(ctx sdk.Context, exitedCoins sdk.Coins, exitingShares sdk.Int) error {
-	balances := p.GetTotalPoolLiquidity(ctx).Sub(exitedCoins)
+func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares sdk.Int) error {
+	balances := p.GetTotalPoolLiquidity(ctx).Sub(exitingCoins)
 	if err := p.UpdatePoolAssetBalances(balances); err != nil {
 		return err
 	}
