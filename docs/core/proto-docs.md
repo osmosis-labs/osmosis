@@ -125,6 +125,8 @@
     - [QueryLockableDurationsResponse](#osmosis.incentives.QueryLockableDurationsResponse)
     - [RewardsEstRequest](#osmosis.incentives.RewardsEstRequest)
     - [RewardsEstResponse](#osmosis.incentives.RewardsEstResponse)
+    - [UpcomingGaugesPerDenomRequest](#osmosis.incentives.UpcomingGaugesPerDenomRequest)
+    - [UpcomingGaugesPerDenomResponse](#osmosis.incentives.UpcomingGaugesPerDenomResponse)
     - [UpcomingGaugesRequest](#osmosis.incentives.UpcomingGaugesRequest)
     - [UpcomingGaugesResponse](#osmosis.incentives.UpcomingGaugesResponse)
   
@@ -1239,7 +1241,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 <a name="osmosis.gamm.v1beta1.QuerySpotPriceRequest"></a>
 
 ### QuerySpotPriceRequest
-QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice query.
+QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
+query.
 
 
 | Field | Type | Label | Description |
@@ -1256,7 +1259,8 @@ QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice query.
 <a name="osmosis.gamm.v1beta1.QuerySpotPriceResponse"></a>
 
 ### QuerySpotPriceResponse
-QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice query.
+QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
+query.
 
 
 | Field | Type | Label | Description |
@@ -1901,6 +1905,38 @@ GenesisState defines the incentives module's genesis state.
 
 
 
+<a name="osmosis.incentives.UpcomingGaugesPerDenomRequest"></a>
+
+### UpcomingGaugesPerDenomRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="osmosis.incentives.UpcomingGaugesPerDenomResponse"></a>
+
+### UpcomingGaugesPerDenomResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `upcoming_gauges` | [Gauge](#osmosis.incentives.Gauge) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
 <a name="osmosis.incentives.UpcomingGaugesRequest"></a>
 
 ### UpcomingGaugesRequest
@@ -1950,8 +1986,9 @@ Query defines the gRPC querier service.
 | `GaugeByID` | [GaugeByIDRequest](#osmosis.incentives.GaugeByIDRequest) | [GaugeByIDResponse](#osmosis.incentives.GaugeByIDResponse) | returns Gauge by id | GET|/osmosis/incentives/v1beta1/gauge_by_id/{id}|
 | `Gauges` | [GaugesRequest](#osmosis.incentives.GaugesRequest) | [GaugesResponse](#osmosis.incentives.GaugesResponse) | returns gauges both upcoming and active | GET|/osmosis/incentives/v1beta1/gauges|
 | `ActiveGauges` | [ActiveGaugesRequest](#osmosis.incentives.ActiveGaugesRequest) | [ActiveGaugesResponse](#osmosis.incentives.ActiveGaugesResponse) | returns active gauges | GET|/osmosis/incentives/v1beta1/active_gauges|
-| `ActiveGaugesPerDenom` | [ActiveGaugesPerDenomRequest](#osmosis.incentives.ActiveGaugesPerDenomRequest) | [ActiveGaugesPerDenomResponse](#osmosis.incentives.ActiveGaugesPerDenomResponse) |  | GET|/osmosis/incentives/v1beta1/active_gauges_per_denom|
+| `ActiveGaugesPerDenom` | [ActiveGaugesPerDenomRequest](#osmosis.incentives.ActiveGaugesPerDenomRequest) | [ActiveGaugesPerDenomResponse](#osmosis.incentives.ActiveGaugesPerDenomResponse) | returns active gauges per denom | GET|/osmosis/incentives/v1beta1/active_gauges_per_denom|
 | `UpcomingGauges` | [UpcomingGaugesRequest](#osmosis.incentives.UpcomingGaugesRequest) | [UpcomingGaugesResponse](#osmosis.incentives.UpcomingGaugesResponse) | returns scheduled gauges | GET|/osmosis/incentives/v1beta1/upcoming_gauges|
+| `UpcomingGaugesPerDenom` | [UpcomingGaugesPerDenomRequest](#osmosis.incentives.UpcomingGaugesPerDenomRequest) | [UpcomingGaugesPerDenomResponse](#osmosis.incentives.UpcomingGaugesPerDenomResponse) | returns scheduled gauges per denom | GET|/osmosis/incentives/v1beta1/upcoming_gauges_per_denom|
 | `RewardsEst` | [RewardsEstRequest](#osmosis.incentives.RewardsEstRequest) | [RewardsEstResponse](#osmosis.incentives.RewardsEstResponse) | RewardsEst returns an estimate of the rewards at a future specific time. The querier either provides an address or a set of locks for which they want to find the associated rewards. | GET|/osmosis/incentives/v1beta1/rewards_est/{owner}|
 | `LockableDurations` | [QueryLockableDurationsRequest](#osmosis.incentives.QueryLockableDurationsRequest) | [QueryLockableDurationsResponse](#osmosis.incentives.QueryLockableDurationsResponse) | returns lockable durations that are valid to give incentives | GET|/osmosis/incentives/v1beta1/lockable_durations|
 
