@@ -429,19 +429,19 @@ func (p *Pool) ExitSwapExactAmountOut(
 		tokenOut.Amount.ToDec(),
 		p.GetSwapFee(ctx),
 		p.GetExitFee(ctx),
-	)
+	).TruncateInt()
 
-	if sharesIn.LTE(sdk.ZeroDec()) {
+	if sharesIn.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
-	if sharesIn.GT(shareInMaxAmount.ToDec()) {
+	if sharesIn.GT(shareInMaxAmount) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", pAsset.Token.Denom)
 	}
 
-	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sdk.Int(sharesIn)); err != nil {
+	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {
 		return sdk.Int{}, err
 	}
 
-	return sharesIn.TruncateInt(), nil
+	return sharesIn, nil
 }
