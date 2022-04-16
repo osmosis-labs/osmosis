@@ -421,6 +421,5 @@ func (k Keeper) ExitSwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-
 	return shareInAmount, nil
 }
