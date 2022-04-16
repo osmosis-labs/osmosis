@@ -1,13 +1,13 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees/keeper"
 )
 
 func (suite *KeeperTestSuite) TestFeeDecorator() {

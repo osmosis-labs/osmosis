@@ -3,8 +3,8 @@ package epochs
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v8/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

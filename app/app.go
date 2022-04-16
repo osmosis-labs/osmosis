@@ -42,12 +42,12 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
-	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v8/app/params"
+	v4 "github.com/osmosis-labs/osmosis/v8/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v8/app/upgrades/v5"
+	v7 "github.com/osmosis-labs/osmosis/v8/app/upgrades/v7"
+	_ "github.com/osmosis-labs/osmosis/v8/client/docs/statik"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 )
 
 const appName = "OsmosisApp"

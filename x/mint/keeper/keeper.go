@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v8/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"

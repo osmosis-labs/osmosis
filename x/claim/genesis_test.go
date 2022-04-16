@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/claim"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	simapp "github.com/osmosis-labs/osmosis/v8/app"
+	"github.com/osmosis-labs/osmosis/v8/x/claim"
+	"github.com/osmosis-labs/osmosis/v8/x/claim/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"

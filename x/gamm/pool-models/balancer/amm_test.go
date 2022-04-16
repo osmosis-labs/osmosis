@@ -3,7 +3,7 @@ package balancer_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm/pool-models/balancer"
 )
 
 // This test sets up 2 asset pools, and then checks the spot price on them.

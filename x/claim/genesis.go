@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v8/x/claim/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/claim/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
