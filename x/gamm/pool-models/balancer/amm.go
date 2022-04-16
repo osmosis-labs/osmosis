@@ -344,7 +344,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 }
 
 // exitPool exits the pool given exitingCoins and exitingShares.
-// updates the pool's liquidity and totalShares
+// updates the pool's liquidity and totalShares.
 func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares sdk.Int) error {
 	balances := p.GetTotalPoolLiquidity(ctx).Sub(exitingCoins)
 	if err := p.UpdatePoolAssetBalances(balances); err != nil {
