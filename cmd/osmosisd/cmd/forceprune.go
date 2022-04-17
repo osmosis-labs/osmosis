@@ -67,7 +67,6 @@ func forceprune() *cobra.Command {
 			}
 			
 			db_bs, err := tmdb.NewGoLevelDBWithOpts("blockstore", db_path, &opts)
-			defer db_bs.Close()
 			if err != nil {
 				return err
 			}
@@ -82,6 +81,8 @@ func forceprune() *cobra.Command {
 				return err
 			}
 			fmt.Println("Pruned Block Store ...", prunedBlocks)
+			db_bs.Close()
+			
 			fmt.Println("Compacting Block Store ...")
 			
 			db, err := leveldb.OpenFile(db_path+"/blockstore.db", &opts)
