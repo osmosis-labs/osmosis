@@ -267,7 +267,6 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 	locked = suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
 	suite.Require().Equal(len(locked), 1)
 	suite.Require().Equal(locked[0].Amount.Int64(), int64(9))
-
 }
 
 func (suite *KeeperTestSuite) TestModuleLockedCoins() {

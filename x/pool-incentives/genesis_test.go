@@ -13,26 +13,28 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var now = time.Now().UTC()
-var testGenesis = types.GenesisState{
-	Params: types.Params{
-		MintedDenom: "uosmo",
-	},
-	LockableDurations: []time.Duration{
-		time.Second,
-		time.Minute,
-		time.Hour,
-	},
-	DistrInfo: &types.DistrInfo{
-		TotalWeight: sdk.NewInt(1),
-		Records: []types.DistrRecord{
-			{
-				GaugeId: 1,
-				Weight:  sdk.NewInt(1),
+var (
+	now         = time.Now().UTC()
+	testGenesis = types.GenesisState{
+		Params: types.Params{
+			MintedDenom: "uosmo",
+		},
+		LockableDurations: []time.Duration{
+			time.Second,
+			time.Minute,
+			time.Hour,
+		},
+		DistrInfo: &types.DistrInfo{
+			TotalWeight: sdk.NewInt(1),
+			Records: []types.DistrRecord{
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(1),
+				},
 			},
 		},
-	},
-}
+	}
+)
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	app := simapp.Setup(false)
@@ -54,7 +56,6 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := pool_incentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
-
 	})
 }
 

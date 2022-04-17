@@ -395,7 +395,7 @@ func TestSwapMsg(t *testing.T) {
 func prepareSwapState(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp) BaseState {
 	actor := RandomAccountAddress()
 
-	var swapperFunds = sdk.NewCoins(
+	swapperFunds := sdk.NewCoins(
 		sdk.NewInt64Coin("uatom", 333000000),
 		sdk.NewInt64Coin("uosmo", 555000000+3*poolFee),
 		sdk.NewInt64Coin("uregen", 777000000),

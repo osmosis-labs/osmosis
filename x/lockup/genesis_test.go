@@ -14,35 +14,37 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var now = time.Now().UTC()
-var acc1 = sdk.AccAddress([]byte("addr1---------------"))
-var acc2 = sdk.AccAddress([]byte("addr2---------------"))
-var testGenesis = types.GenesisState{
-	LastLockId: 10,
-	Locks: []types.PeriodLock{
-		{
-			ID:       1,
-			Owner:    acc1.String(),
-			Duration: time.Second,
-			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
+var (
+	now         = time.Now().UTC()
+	acc1        = sdk.AccAddress([]byte("addr1---------------"))
+	acc2        = sdk.AccAddress([]byte("addr2---------------"))
+	testGenesis = types.GenesisState{
+		LastLockId: 10,
+		Locks: []types.PeriodLock{
+			{
+				ID:       1,
+				Owner:    acc1.String(),
+				Duration: time.Second,
+				EndTime:  time.Time{},
+				Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
+			},
+			{
+				ID:       2,
+				Owner:    acc1.String(),
+				Duration: time.Hour,
+				EndTime:  time.Time{},
+				Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
+			},
+			{
+				ID:       3,
+				Owner:    acc2.String(),
+				Duration: time.Minute,
+				EndTime:  time.Time{},
+				Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
+			},
 		},
-		{
-			ID:       2,
-			Owner:    acc1.String(),
-			Duration: time.Hour,
-			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
-		},
-		{
-			ID:       3,
-			Owner:    acc2.String(),
-			Duration: time.Minute,
-			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
-		},
-	},
-}
+	}
+)
 
 func TestInitGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)

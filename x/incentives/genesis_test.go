@@ -97,5 +97,4 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	gauges := app.IncentivesKeeper.GetGauges(ctx)
 	require.Len(t, gauges, 1)
 	require.Equal(t, gauges[0], gauge)
-
 }
