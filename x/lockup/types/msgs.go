@@ -12,7 +12,7 @@ const (
 	TypeMsgLockTokens        = "lock_tokens"
 	TypeMsgBeginUnlockingAll = "begin_unlocking_all"
 	TypeMsgBeginUnlocking    = "begin_unlocking"
-	TypeMsgEditLockup        = "edit_lockup"
+	TypeMsgExtendLockup      = "edit_lockup"
 )
 
 var _ sdk.Msg = &MsgLockTokens{}
@@ -94,26 +94,26 @@ func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{owner}
 }
 
-// NewMsgEditLockup creates a message to edit the properties of existing locks
-func NewMsgEditLockup(owner sdk.AccAddress, id uint64, duration time.Duration) *MsgEditLockup {
-	return &MsgEditLockup{
+// NewMsgExtendLockup creates a message to edit the properties of existing locks
+func NewMsgExtendLockup(owner sdk.AccAddress, id uint64, duration time.Duration) *MsgExtendLockup {
+	return &MsgExtendLockup{
 		Owner:    owner.String(),
 		ID:       id,
 		Duration: duration,
 	}
 }
 
-func (m MsgEditLockup) Route() string { return RouterKey }
-func (m MsgEditLockup) Type() string  { return TypeMsgEditLockup }
-func (m MsgEditLockup) ValidateBasic() error {
+func (m MsgExtendLockup) Route() string { return RouterKey }
+func (m MsgExtendLockup) Type() string  { return TypeMsgExtendLockup }
+func (m MsgExtendLockup) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgEditLockup) GetSignBytes() []byte {
+func (m MsgExtendLockup) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON((&m)))
 }
 
-func (m MsgEditLockup) GetSigners() []sdk.AccAddress {
+func (m MsgExtendLockup) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }

@@ -539,7 +539,6 @@ func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) erro
 }
 
 func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration time.Duration) error {
-
 	if lock.IsUnlocking() {
 		return fmt.Errorf("cannot edit unlocking lockup")
 	}
@@ -549,7 +548,10 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration
 		return fmt.Errorf("cannot edit lockup with synthetic lock")
 	}
 
+	oldLock := lock
+
 	if newDuration != 0 {
+		fmt.Println(newDuration, lock.Duration)
 		if !(newDuration > lock.Duration) {
 			return fmt.Errorf("new duration should be greater than the original")
 		}
@@ -564,10 +566,13 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration
 	}
 
 	// update lockup
-	err := k.setLockAndResetLockRefs(ctx, lock)
+	err := k.deleteLockRefs(ctx, unlockingPrefix(oldLock.IsUnlocking()), oldLock)
 	if err != nil {
 		return err
 	}
-
-	return nil
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return err
+	}
+	return k.setLock(ctx, lock)
 }

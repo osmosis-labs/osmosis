@@ -696,10 +696,15 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 		Denom:    "stake",
 		Duration: time.Second,
 	})
-	suite.Require().Equal(int64(0), acc.Int64())
+	suite.Require().Equal(int64(10), acc.Int64())
 	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 		Denom:    "stake",
 		Duration: time.Second * 2,
 	})
 	suite.Require().Equal(int64(10), acc.Int64())
+	acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+		Denom:    "stake",
+		Duration: time.Second * 3,
+	})
+	suite.Require().Equal(int64(0), acc.Int64())
 }

@@ -168,7 +168,7 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 		return nil, sdkerrors.Wrapf(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
 	}
 
-	err = server.keeper.ExtendLockup(ctx, *lock, lock.Duration)
+	err = server.keeper.ExtendLockup(ctx, *lock, msg.Duration)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
