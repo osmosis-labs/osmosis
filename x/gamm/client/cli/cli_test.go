@@ -608,52 +608,51 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 	}
 }
 
-// Todo: Re-add once implemented
-// func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
-// 	val := s.network.Validators[0]
+func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
+	val := s.network.Validators[0]
 
-// 	testCases := []struct {
-// 		name         string
-// 		args         []string
-// 		expectErr    bool
-// 		respType     proto.Message
-// 		expectedCode uint32
-// 	}{
-// 		{
-// 			"exit swap extern amount out", // osmosisd tx gamm exit-swap-extern-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
-// 			[]string{
-// 				"10stake", "10000000000000000000",
-// 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-// 				// common args
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-// 			},
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 	}
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"exit swap extern amount out", // osmosisd tx gamm exit-swap-extern-amount-out --pool-id=1 10stake 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+			[]string{
+				"10stake", "10000000000000000000",
+				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.NewExitSwapExternAmountOut()
-// 			clientCtx := val.ClientCtx
+		s.Run(tc.name, func() {
+			cmd := cli.NewExitSwapExternAmountOut()
+			clientCtx := val.ClientCtx
 
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-// 				txResp := tc.respType.(*sdk.TxResponse)
-// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-// 			}
-// 		})
-// 	}
-// }
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
 
 // TODO: Re-add once implemented
 // func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
