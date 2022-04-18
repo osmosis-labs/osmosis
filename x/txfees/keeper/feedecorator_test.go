@@ -219,7 +219,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		tx := suite.BuildTx(txBuilder, msgs, sigV2, "", tc.txFee, gasLimit)
 
 		mfd := keeper.NewMempoolFeeDecorator(*suite.App.TxFeesKeeper, mempoolFeeOpts)
-		dfd := keeper.NewDeductFeeDecorator(*suite.App.TxFeesKeeper, *suite.App.AccountKeeper, *suite.App.BankKeeper, *suite.App.FeeGrantKeeper)
+		dfd := keeper.NewDeductFeeDecorator(*suite.App.TxFeesKeeper, *suite.App.AccountKeeper, *suite.App.BankKeeper, nil)
 		antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
 		_, err := antehandlerMFD(suite.Ctx, tx, false)
 
