@@ -7,62 +7,58 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
+
+var defaultPooledAssetAmount = int64(500)
+
+func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool gammtypes.PoolI) {
+	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
+	poolID = suite.PrepareUni2PoolWithAssets(
+		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
+		sdk.NewInt64Coin(denom, defaultPooledAssetAmount),
+	)
+	pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolID)
+	suite.Require().NoError(err)
+	suite.ExecuteUpgradeFeeTokenProposal(denom, poolID)
+	return poolID, pool
+}
 
 func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	suite.SetupTest(false)
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 
 	// create pools for three separate fee tokens
-
-	defaultPooledAssetAmount := int64(500)
-
 	uion := "uion"
-	uionPoolId := suite.PrepareUni2PoolWithAssets(
-		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
-		sdk.NewInt64Coin(uion, defaultPooledAssetAmount),
-	)
-	uionPoolI, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, uionPoolId)
-	suite.Require().NoError(err)
-	suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
-
+	_, uionPool := suite.preparePool(uion)
 	atom := "atom"
-	atomPoolId := suite.PrepareUni2PoolWithAssets(
-		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
-		sdk.NewInt64Coin(atom, defaultPooledAssetAmount),
-	)
-	atomPoolI, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, atomPoolId)
-	suite.Require().NoError(err)
-	suite.ExecuteUpgradeFeeTokenProposal(atom, atomPoolId)
-
+	_, atomPool := suite.preparePool(atom)
 	ust := "ust"
-	ustPoolId := suite.PrepareUni2PoolWithAssets(
-		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
-		sdk.NewInt64Coin(ust, defaultPooledAssetAmount),
-	)
-	ustPoolI, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, ustPoolId)
-	suite.Require().NoError(err)
-	suite.ExecuteUpgradeFeeTokenProposal(ust, ustPoolId)
+	_, ustPool := suite.preparePool(ust)
 
+	// todo make this section onwards table driven
 	coins := sdk.NewCoins(sdk.NewInt64Coin(uion, 10),
 		sdk.NewInt64Coin(atom, 20),
 		sdk.NewInt64Coin(ust, 14))
 
 	swapFee := sdk.NewDec(0)
 
-	expectedOutput1, err := uionPoolI.CalcOutAmtGivenIn(suite.Ctx,
-		sdk.NewCoins(sdk.NewInt64Coin(uion, 10)),
+	expectedOutput1, err := uionPool.CalcOutAmtGivenIn(suite.Ctx,
+		sdk.Coins{sdk.Coin{Denom: uion, Amount: coins.AmountOf(uion)}},
 		baseDenom,
 		swapFee)
-	expectedOutput2, err := atomPoolI.CalcOutAmtGivenIn(suite.Ctx,
-		sdk.NewCoins(sdk.NewInt64Coin(atom, 20)),
+	suite.Require().NoError(err)
+	expectedOutput2, err := atomPool.CalcOutAmtGivenIn(suite.Ctx,
+		sdk.Coins{sdk.Coin{Denom: atom, Amount: coins.AmountOf(atom)}},
 		baseDenom,
 		swapFee)
-	expectedOutput3, err := ustPoolI.CalcOutAmtGivenIn(suite.Ctx,
-		sdk.NewCoins(sdk.NewInt64Coin(ust, 14)),
+	suite.Require().NoError(err)
+	expectedOutput3, err := ustPool.CalcOutAmtGivenIn(suite.Ctx,
+		sdk.Coins{sdk.Coin{Denom: ust, Amount: coins.AmountOf(ust)}},
 		baseDenom,
 		swapFee)
+	suite.Require().NoError(err)
 
 	fullExpectedOutput := expectedOutput1.Add(expectedOutput2).Add(expectedOutput3)
 
