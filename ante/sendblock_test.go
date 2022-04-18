@@ -14,13 +14,14 @@ func TestSendBlockDecorator(t *testing.T) {
 		to         sdk.AccAddress
 		expectPass bool
 	}{
-		{sdk.AccAddress("1234"), sdk.AccAddress("zxcv"), true},
-		{sdk.AccAddress("asdf"), sdk.AccAddress("zxcv"), true},
-		{sdk.AccAddress("asdf"), sdk.AccAddress("bnm,"), false},
+		{sdk.AccAddress("honest-sender"), sdk.AccAddress("honest-address"), true}	
+		{sdk.AccAddress("honest-sender"), sdk.AccAddress("recovery-address"), true},
+		{sdk.AccAddress("malicious-sender"), sdk.AccAddress("recovery-address"), true},
+		{sdk.AccAddress("malicious-sender"), sdk.AccAddress("random-address"), false},
 	}
 
 	permittedOnlySendTo := map[string]string{
-		sdk.AccAddress("asdf").String(): sdk.AccAddress("zxcv").String(),
+		sdk.AccAddress("malicious-sender").String(): sdk.AccAddress("recovery-address").String(),
 	}
 	decorator := NewSendBlockDecorator(SendBlockOptions{permittedOnlySendTo})
 
