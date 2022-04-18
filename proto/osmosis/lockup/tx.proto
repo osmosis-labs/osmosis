@@ -18,7 +18,7 @@ service Msg {
   // MsgBeginUnlocking begins unlocking tokens by lock ID
   rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
   // MsgEditLockup edits the existing lockups by lock ID
-  rpc EditLockup(MsgEditLockup) returns (MsgEditLockupResponse);
+  rpc ExtendLockup(MsgExtendLockup) returns (MsgExtendLockupResponse);
 }
 
 message MsgLockTokens {
@@ -52,7 +52,7 @@ message MsgBeginUnlocking {
 }
 message MsgBeginUnlockingResponse { bool success = 1; }
 
-message MsgEditLockup {
+message MsgExtendLockup {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
 
@@ -67,4 +67,4 @@ message MsgEditLockup {
   // extend for other edit, e.g. cancel unlocking
 }
 
-message MsgEditLockupResponse { bool success = 1; }
+message MsgExtendLockupResponse { bool success = 1; }

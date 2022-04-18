@@ -156,21 +156,21 @@ func createBeginUnlockEvent(lock *types.PeriodLock) sdk.Event {
 	)
 }
 
-func (server msgServer) EditLockup(goCtx context.Context, msg *types.MsgEditLockup) (*types.MsgEditLockupResponse, error) {
+func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtendLockup) (*types.MsgExtendLockupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	if msg.Owner != lock.Owner {
-		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
+		return nil, sdkerrors.Wrapf(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
 	}
 
-	err = server.keeper.EditLockup(ctx, *lock, lock.Duration)
+	err = server.keeper.ExtendLockup(ctx, *lock, lock.Duration)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -182,5 +182,5 @@ func (server msgServer) EditLockup(goCtx context.Context, msg *types.MsgEditLock
 		),
 	})
 
-	return &types.MsgEditLockupResponse{}, nil
+	return &types.MsgExtendLockupResponse{}, nil
 }
