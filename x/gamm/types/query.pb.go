@@ -481,7 +481,6 @@ func (m *QueryTotalSharesResponse) GetTotalShares() types1.Coin {
 	return types1.Coin{}
 }
 
-<<<<<<< HEAD
 //=============================== PoolAssets
 type QueryPoolAssetsRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
@@ -572,10 +571,6 @@ func (m *QueryPoolAssetsResponse) GetPoolAssets() []PoolAsset {
 }
 
 //=============================== SpotPrice
-=======
-// QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
-// query.
->>>>>>> eb39af7 (Adding upcoming gauges query (#1195))
 type QuerySpotPriceRequest struct {
 	PoolId        uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
 	TokenInDenom  string `protobuf:"bytes,2,opt,name=tokenInDenom,proto3" json:"tokenInDenom,omitempty" yaml:"token_in_denom"`
@@ -637,7 +632,6 @@ func (m *QuerySpotPriceRequest) GetTokenOutDenom() string {
 	return ""
 }
 
-<<<<<<< HEAD
 func (m *QuerySpotPriceRequest) GetWithSwapFee() bool {
 	if m != nil {
 		return m.WithSwapFee
@@ -645,10 +639,6 @@ func (m *QuerySpotPriceRequest) GetWithSwapFee() bool {
 	return false
 }
 
-=======
-// QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
-// query.
->>>>>>> eb39af7 (Adding upcoming gauges query (#1195))
 type QuerySpotPriceResponse struct {
 	// String of the Dec. Ex) 10.203uatom
 	SpotPrice string `protobuf:"bytes,1,opt,name=spotPrice,proto3" json:"spotPrice,omitempty" yaml:"spot_price"`

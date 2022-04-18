@@ -10,9 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -135,11 +136,7 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 	return &types.UpcomingGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-<<<<<<< HEAD
-// RewardsEst returns rewards estimation at a future specific time
-func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
-=======
-func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.UpcomingGaugesPerDenomRequest) (*types.UpcomingGaugesPerDenomResponse, error) {
+func (k Keeper) UpcomingGaugesPerDenom(goCtx context.Context, req *types.UpcomingGaugesPerDenomRequest) (*types.UpcomingGaugesPerDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -150,11 +147,11 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 	}
 
 	gauges := []types.Gauge{}
-	store := ctx.KVStore(q.Keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
 
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		upcomingGauges := q.Keeper.GetUpcomingGauges(ctx)
+		upcomingGauges := k.GetUpcomingGauges(ctx)
 		for _, gauge := range upcomingGauges {
 			if gauge.DistributeTo.Denom == req.Denom {
 				gauges = append(gauges, gauge)
@@ -170,7 +167,7 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 }
 
 // RewardsEst returns rewards estimation at a future specific time.
-func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
+func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -178,7 +175,6 @@ func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
->>>>>>> eb39af7 (Adding upcoming gauges query (#1195))
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	diff := req.EndEpoch - k.GetEpochInfo(ctx).CurrentEpoch
 	if diff > 365 {

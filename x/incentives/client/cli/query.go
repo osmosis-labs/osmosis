@@ -8,8 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -318,9 +319,6 @@ $ %s query incentives upcoming-gauges
 	return cmd
 }
 
-<<<<<<< HEAD
-// GetCmdRewardsEst returns rewards estimation
-=======
 // GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
 func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
@@ -354,7 +352,6 @@ func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 }
 
 // GetCmdRewardsEst returns rewards estimation.
->>>>>>> eb39af7 (Adding upcoming gauges query (#1195))
 func GetCmdRewardsEst() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rewards-estimation",
