@@ -22,6 +22,8 @@ wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT
 
 # this will let tendermint know that we want pebble
 sed -i 's/goleveldb/pebbledb/' ~/.osmosisd/config/config.toml
+# this will let tendermint know that we want rocks (reinstate later)
+# sed -i 's/goleveldb/rocksdb/' ~/.osmosisd/config/config.toml
 
 
 # Uncomment if resyncing a server
@@ -33,9 +35,9 @@ INTERVAL=1500
 
 # GET TRUST HASH AND TRUST HEIGHT
 
-LATEST_HEIGHT=$(curl -s 162.55.132.230:2001/block | jq -r .result.block.header.height);
+LATEST_HEIGHT=$(curl -s https://osmosis.validator.network/block | jq -r .result.block.header.height);
 BLOCK_HEIGHT=$(($LATEST_HEIGHT-$INTERVAL))
-TRUST_HASH=$(curl -s "162.55.132.230:2001/block?height=$BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+TRUST_HASH=$(curl -s "https://osmosis.validator.network/block?height=$BLOCK_HEIGHT" | jq -r .result.block_id.hash)
 
 
 # TELL USER WHAT WE ARE DOING
@@ -44,26 +46,40 @@ echo "TRUST HASH: $TRUST_HASH"
 
 
 # export state sync vars
+export OSMOSISD_P2P_MAX_NUM_OUTBOUND_PEERS=200
 export OSMOSISD_STATESYNC_ENABLE=true
-export OSMOSISD_STATESYNC_RPC_SERVERS="162.55.132.230:2001,162.55.132.230:2001"
+export OSMOSISD_STATESYNC_RPC_SERVERS="https://osmosis.validator.network:443,https://rpc.osmosis.notional.ventures:443,https://rpc-osmosis.ecostake.com:443"
 export OSMOSISD_STATESYNC_TRUST_HEIGHT=$BLOCK_HEIGHT
 export OSMOSISD_STATESYNC_TRUST_HASH=$TRUST_HASH
+
 
 # Rockdb won't make this folder, so we make it 
 mkdir -p ~/.osmosisd/data/snapshots/metadata.db
 
 # THIS WILL FAIL BECAUSE THE APP VERSION IS CORRECTLY SET IN OSMOSIS
+<<<<<<< HEAD
 osmosisd start --db_backend pebbledb
+=======
+osmosisd start --db_backend pebbledb 
+>>>>>>> 239298320a1f598bcffdff3906c15d6ec884cf31
 
 
-# --db_path /tmp/osmosisd/db --db_rocksdb_options "compression=kNoCompression" --db_rocksdb_options "compaction_style=kCompactionStyleLevel" --db_rocksdb_options "level_compaction_dynamic_level_bytes=true" --db_rocksdb_options "num_levels=4" --db_rocksdb_options "max_bytes_for_level_base=104857600" --db_rocksdb_options "max_bytes_for_level_multiplier=1" --db_rocksdb_options "max_background_compactions=4" --db_rocksdb_options "max_background_flushes=4" --db_rocksdb_options "write_buffer_size=104857600" --db_rocksdb_options "target_file_size_base=104857600" --db_rocksdb_options "target_file_size_multiplier=1" --db_rocksdb_options "max_write_buffer_number=4" --db_rocksdb_options "min_write_buffer_number_to_merge=2" --db_rocksdb_options "max_grandparent_overlap_factor=10" --db_rocksdb_options "max_bytes_for_level_multiplier_additional=[4,4,4,4]" --db_rocksdb_options "compaction_pri=kOldestSmallestSeqFirst" --db_rocksdb_options "compaction_options_fifo={max_table_files_size=104857600}" --db_rocksdb_options "compaction_options_universal={size_ratio=1, min_merge_width=2, max_merge_width=2, max_size_amplification_percent=20}" --db_rocksdb_options "compaction_options_level_base={compression=kNoCompression, filter_policy=kNoFilter}" --db_rocksdb_options "compaction_options_level_base={compression=kSnappyCompression, filter_policy=
 
 # THIS WILL FIX THE APP VERSION, contributed by callum and claimens
+<<<<<<< HEAD
 #git clone https://github.com/notional-labs/tendermint
 #cd tendermint
 #git checkout remotes/origin/callum/app-version
 #go install -tags pebbledb ./...
 #tendermint set-app-version 1 --home ~/.osmosisd
+=======
+# fix after adding pebbledb support to tendermint
+# git clone https://github.com/notional-labs/tendermint
+# cd tendermint
+# git checkout remotes/origin/callum/app-version
+# go install -tags pebbledb ./...
+# tendermint set-app-version 1 --home ~/.osmosisd
+>>>>>>> 239298320a1f598bcffdff3906c15d6ec884cf31
 
 # THERE, NOW IT'S SYNCED AND YOU CAN PLAY
-osmosisd start --db_backend rocksdb
+osmosisd start --db_backend pebbledb
