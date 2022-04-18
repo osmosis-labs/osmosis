@@ -66,7 +66,7 @@ ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
 ifeq ($(LEDGER_ENABLED),true)
-	ldflags += -linkmode=external -extldflags "-L/home/roman/Downloads -lwasmvm_muslc -Wl,-z,muldefs -static"
+	ldflags += -linkmode=external -extldflags "-L/lib/ -lwasmvm_muslc -Wl,-z,muldefs -static"
 endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
@@ -97,8 +97,8 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-reproducible: go.sum
-	$(DOCKER) rm latest-build || true
-	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
+		$(DOCKER) rm latest-build || true
+		$(DOCKER) run --volume=$(CURDIR):/sources:ro \
 		--env TARGET_PLATFORMS='linux/amd64' \
 		--env APP=osmosisd \
 		--env VERSION=$(VERSION) \
