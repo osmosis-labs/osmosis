@@ -65,6 +65,9 @@ endif
 ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
+ifeq ($(LEDGER_ENABLED),true)
+	ldflags += -linkmode=external -extldflags "-L/lib/ -lwasmvm_muslc -Wl,-z,muldefs -static"
+endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
@@ -85,7 +88,7 @@ all: install lint test
 
 BUILD_TARGETS := build install
 
-build: BUILD_ARGS=-o $(BUILDDIR)/
+ build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
@@ -95,13 +98,13 @@ $(BUILDDIR)/:
 
 build-reproducible: go.sum
 	$(DOCKER) rm latest-build || true
-	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_PLATFORMS='linux/amd64' \
-        --env APP=osmosisd \
-        --env VERSION=$(VERSION) \
-        --env COMMIT=$(COMMIT) \
-        --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-        --name latest-build osmolabs/rbuilder:latest
+	$(DOCKER) run --volume=$(CURDIR):/sources \
+		--env TARGET_PLATFORMS='linux/amd64' \
+		--env APP=osmosisd \
+		--env VERSION=$(VERSION) \
+		--env COMMIT=$(COMMIT) \
+		--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+		--name latest-build osmolabs/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-linux: go.sum
@@ -125,7 +128,7 @@ draw-deps:
 	@goviz -i ./cmd/osmosisd -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -rf $(BUILDDIR)/ artifacts/
+	rm -rf $(CURDIR)/artifacts/
 
 distclean: clean
 	rm -rf vendor/
