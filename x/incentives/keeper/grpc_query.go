@@ -10,9 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -135,8 +136,45 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 	return &types.UpcomingGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// RewardsEst returns rewards estimation at a future specific time
+func (k Keeper) UpcomingGaugesPerDenom(goCtx context.Context, req *types.UpcomingGaugesPerDenomRequest) (*types.UpcomingGaugesPerDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	gauges := []types.Gauge{}
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
+
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		upcomingGauges := k.GetUpcomingGauges(ctx)
+		for _, gauge := range upcomingGauges {
+			if gauge.DistributeTo.Denom == req.Denom {
+				gauges = append(gauges, gauge)
+			}
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.UpcomingGaugesPerDenomResponse{UpcomingGauges: gauges, Pagination: pageRes}, nil
+}
+
+// RewardsEst returns rewards estimation at a future specific time.
 func (k Keeper) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if len(req.Owner) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	diff := req.EndEpoch - k.GetEpochInfo(ctx).CurrentEpoch
 	if diff > 365 {
