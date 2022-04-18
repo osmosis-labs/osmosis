@@ -160,7 +160,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	// checks to make sure a separate module account has been set to collect fees not in OSMO
 	if addrNonNativeFee := dfd.ak.GetModuleAddress(types.NonNativeFeeCollectorName); addrNonNativeFee == nil {
-		return ctx, fmt.Errorf("Alt Fee collector module account (%s) has not been set", types.NonNativeFeeCollectorName)
+		return ctx, fmt.Errorf("non native fee collector module account (%s) has not been set", types.NonNativeFeeCollectorName)
 	}
 
 	// fee can be in any denom (checked for validity later)

@@ -203,7 +203,8 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		signerData := authsigning.SignerData{
 			ChainID:       suite.Ctx.ChainID(),
 			AccountNumber: accNums[0],
-			Sequence:      accSeqs[0]}
+			Sequence:      accSeqs[0],
+		}
 
 		gasLimit := tc.gasRequested
 		sigV2, _ := clienttx.SignWithPrivKey(
@@ -212,7 +213,8 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			txBuilder,
 			privs[0],
 			suite.clientCtx.TxConfig,
-			accSeqs[0])
+			accSeqs[0],
+		)
 
 		simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.txFee)
 
