@@ -5,16 +5,36 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/spf13/cast"
+
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
-type SendBlockDecorator struct {
-	// permittedOnlySendTo stores the only permitted send destination address for a blocked address.
-	permittedOnlySendTo map[string]string // XXX: temporary. change to proper configuration
+type SendBlockOptions struct {
+	PermittedOnlySendTo map[string]string
 }
 
-func NewSendBlockDecorator(permittedOnlySendTo map[string]string) *SendBlockDecorator {
+func NewSendBlockOptions(appOpts servertypes.AppOptions) SendBlockOptions {
+	return SendBlockOptions{
+		PermittedOnlySendTo: parsePermittedOnlySendTo(appOpts),
+	}
+}
+
+func parsePermittedOnlySendTo(opts servertypes.AppOptions) map[string]string {
+	valueInterface := opts.Get("permitted-only-send-to")
+	if valueInterface == nil {
+		return make(map[string]string)
+	}
+	return cast.ToStringMapString(valueInterface) // equal with viper.GetStringMapString
+}
+
+type SendBlockDecorator struct {
+	Options SendBlockOptions
+}
+
+func NewSendBlockDecorator(options SendBlockOptions) *SendBlockDecorator {
 	return &SendBlockDecorator{
-		permittedOnlySendTo: permittedOnlySendTo, // TODO: hydrate from configuration
+		Options: options, // TODO: hydrate from configuration
 	}
 }
 
@@ -42,10 +62,13 @@ func (decorator *SendBlockDecorator) AnteHandle(
 // 2-1. msg is not a SendMsg, or
 // 2-2. msg is SendMsg and the destination is not decorator.permittedOnlySendTo[msg.Sender]
 func (decorator *SendBlockDecorator) CheckIfBlocked(msgs []sdk.Msg) error {
+	if len(decorator.Options.PermittedOnlySendTo) == 0 {
+		return nil
+	}
 	for _, msg := range msgs {
 		signers := msg.GetSigners()
 		for _, signer := range signers {
-			if permittedTo, ok := decorator.permittedOnlySendTo[signer.String()]; ok {
+			if permittedTo, ok := decorator.Options.PermittedOnlySendTo[signer.String()]; ok {
 				sendmsg, ok := msg.(*bank.MsgSend)
 				if !ok {
 					return fmt.Errorf("signer is not allowed to send transactions: %s", signer)

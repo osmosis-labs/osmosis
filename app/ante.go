@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	osmoante "github.com/osmosis-labs/osmosis/v7/ante"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
@@ -32,6 +33,8 @@ func NewAnteHandler(
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
+	sendblockOptions := osmoante.NewSendBlockOptions(appOpts)
+	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
 
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
@@ -41,6 +44,7 @@ func NewAnteHandler(
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		mempoolFeeDecorator,
+		sendblockDecorator,
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),

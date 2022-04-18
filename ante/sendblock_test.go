@@ -22,7 +22,7 @@ func TestSendBlockDecorator(t *testing.T) {
 	permittedOnlySendTo := map[string]string{
 		sdk.AccAddress("asdf").String(): sdk.AccAddress("zxcv").String(),
 	}
-	decorator := NewSendBlockDecorator(permittedOnlySendTo)
+	decorator := NewSendBlockDecorator(SendBlockOptions{permittedOnlySendTo})
 
 	for _, testCase := range testCases {
 		err := decorator.CheckIfBlocked([]sdk.Msg{bank.NewMsgSend(testCase.from, testCase.to, sdk.NewCoins(sdk.NewInt64Coin("test", 1)))})
