@@ -131,7 +131,11 @@ func (p *Pool) SwapInAmtGivenOut(
 	if err != nil {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
-	tokenInCoin, _ := tokenInDecCoin.TruncateDecimal()
+	tokenInCoin, tokenInDecimal := tokenInDecCoin.TruncateDecimal()
+	// if tokenInDecimal is non-zero, we add 1 to the tokenInCoin
+	if tokenInDecimal.Amount.IsPositive() {
+		tokenInCoin.Amount.AddRaw(1)
+	}
 	if !tokenInCoin.Amount.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
