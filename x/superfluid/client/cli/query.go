@@ -5,11 +5,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

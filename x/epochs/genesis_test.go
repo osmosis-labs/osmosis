@@ -52,7 +52,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	ctx = ctx.WithBlockTime(now)
 
-	//test genesisState validation
+	// test genesisState validation
 	genesisState := types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{

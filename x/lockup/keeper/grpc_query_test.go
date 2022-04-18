@@ -344,7 +344,7 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
-	// lock by not avaialble id check
+	// lock by not available id check
 	res, err := suite.querier.LockedByID(sdk.WrapSDKContext(suite.ctx), &types.LockedRequest{LockId: 0})
 	suite.Require().Error(err)
 
@@ -352,7 +352,7 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.LockTokens(addr1, coins, time.Second)
 
-	// lock by available availble id check
+	// lock by available available id check
 	res, err = suite.querier.LockedByID(sdk.WrapSDKContext(suite.ctx), &types.LockedRequest{LockId: 1})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Lock.ID, uint64(1))

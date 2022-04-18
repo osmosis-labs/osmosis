@@ -6,10 +6,11 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 func registerTxHandlers(clientCtx client.Context, r *mux.Router) {

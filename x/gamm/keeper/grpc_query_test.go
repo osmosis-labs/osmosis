@@ -4,7 +4,6 @@ import (
 	gocontext "context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -201,51 +200,86 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 // 	suite.Require().Equal("5000000foo", PoolAssets[2].Token.String())
 // }
 
-// TODO: Come back and make this table driven
 func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	queryClient := suite.queryClient
+	poolID := suite.prepareBalancerPool()
 
-	// Pool not exist
-	_, err := queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{
-		PoolId:        1,
-		TokenInDenom:  "foo",
-		TokenOutDenom: "bar",
-	})
-	suite.Require().Error(err)
+	testCases := []struct {
+		name      string
+		req       *types.QuerySpotPriceRequest
+		expectErr bool
+		result    string
+	}{
+		{
+			name: "non-existant pool",
+			req: &types.QuerySpotPriceRequest{
+				PoolId:          0,
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "bar",
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing asset denoms",
+			req: &types.QuerySpotPriceRequest{
+				PoolId: poolID,
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing pool ID and quote denom",
+			req: &types.QuerySpotPriceRequest{
+				BaseAssetDenom: "foo",
+			},
+			expectErr: true,
+		},
+		{
+			name: "missing pool ID and base denom",
+			req: &types.QuerySpotPriceRequest{
+				QuoteAssetDenom: "bar",
+			},
+			expectErr: true,
+		},
+		{
+			name: "valid request for foo/bar",
+			req: &types.QuerySpotPriceRequest{
+				PoolId:          poolID,
+				BaseAssetDenom:  "foo",
+				QuoteAssetDenom: "bar",
+			},
+			result: sdk.NewDec(2).String(),
+		},
+		{
+			name: "valid request for bar/baz",
+			req: &types.QuerySpotPriceRequest{
+				PoolId:          poolID,
+				BaseAssetDenom:  "bar",
+				QuoteAssetDenom: "baz",
+			},
+			result: sdk.NewDecWithPrec(15, 1).String(),
+		},
+		{
+			name: "valid request for baz/foo",
+			req: &types.QuerySpotPriceRequest{
+				PoolId:          poolID,
+				BaseAssetDenom:  "baz",
+				QuoteAssetDenom: "foo",
+			},
+			result: sdk.MustNewDecFromStr("0.333333330000000000").String(),
+		},
+	}
 
-	poolId := suite.prepareBalancerPool()
+	for _, tc := range testCases {
+		tc := tc
 
-	// Invalid params
-	_, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{PoolId: poolId})
-	suite.Require().Error(err)
-	_, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{TokenInDenom: "foo"})
-	suite.Require().Error(err)
-	_, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{TokenOutDenom: "bar"})
-	suite.Require().Error(err)
-
-	res, err := queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{
-		PoolId:        poolId,
-		TokenInDenom:  "foo",
-		TokenOutDenom: "bar",
-	})
-	suite.NoError(err)
-	suite.Equal(sdk.NewDec(2).String(), res.SpotPrice)
-
-	res, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{
-		PoolId:        poolId,
-		TokenInDenom:  "bar",
-		TokenOutDenom: "baz",
-	})
-	suite.NoError(err)
-	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), res.SpotPrice)
-
-	res, err = queryClient.SpotPrice(gocontext.Background(), &types.QuerySpotPriceRequest{
-		PoolId:        poolId,
-		TokenInDenom:  "baz",
-		TokenOutDenom: "foo",
-	})
-	suite.NoError(err)
-	s := sdk.NewDec(1).Quo(sdk.NewDec(3))
-	sp := s.Mul(types.SigFigs).RoundInt().ToDec().Quo(types.SigFigs)
-	suite.Equal(sp.String(), res.SpotPrice)
+		suite.Run(tc.name, func() {
+			result, err := queryClient.SpotPrice(gocontext.Background(), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error")
+			} else {
+				suite.Require().NoError(err, "unexpected error")
+				suite.Require().Equal(tc.result, result.SpotPrice)
+			}
+		})
+	}
 }

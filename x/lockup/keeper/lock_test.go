@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
@@ -267,7 +268,6 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 	locked = suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
 	suite.Require().Equal(len(locked), 1)
 	suite.Require().Equal(locked[0].Amount.Int64(), int64(9))
-
 }
 
 func (suite *KeeperTestSuite) TestModuleLockedCoins() {
@@ -448,7 +448,7 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 		// by GetPeriodLocksAccumulation
 		for i := 1; i <= 3; i++ {
 			for j := 1; j <= 3; j++ {
-				// get accumulation with always-qualifiing condition
+				// get accumulation with always-qualifying condition
 				acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 					Denom:    fmt.Sprintf("synth%d/%d", j, i),
 					Duration: time.Second / 10,
@@ -456,7 +456,7 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 				// amount retrieved should be equal with underlying lock's locked amount
 				suite.Require().Equal(acc.Int64(), amounts[i])
 
-				// get accumulation with non-qualifiing condition
+				// get accumulation with non-qualifying condition
 				acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 					Denom:    fmt.Sprintf("synth%d/%d", j, i),
 					Duration: time.Second * 100,

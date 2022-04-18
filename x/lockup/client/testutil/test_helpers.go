@@ -3,12 +3,13 @@ package testutil
 import (
 	"fmt"
 
+	lockupcli "github.com/osmosis-labs/osmosis/v7/x/lockup/client/cli"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	lockupcli "github.com/osmosis-labs/osmosis/v7/x/lockup/client/cli"
 )
 
 // commonArgs is args for CLI test commands.

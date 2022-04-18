@@ -486,5 +486,4 @@ func TestEstimateSwap(t *testing.T) {
 			assert.InEpsilonf(t, (*spec.expCost.Out).ToDec().MustFloat64(), (*gotCost.Out).ToDec().MustFloat64(), epsilon, "exp %s but got %s", spec.expCost.Out.String(), gotCost.Out.String())
 		})
 	}
-
 }

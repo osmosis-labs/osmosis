@@ -1,8 +1,9 @@
 package types
 
 import (
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Parameter store keys.
