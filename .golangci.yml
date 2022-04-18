@@ -86,6 +86,9 @@ linters:
     - whitespace
 #    - wrapcheck
 #    - wsl
+    # - goimports
+    # - golint
+    # - maligned
 
 issues:
   exclude-rules:

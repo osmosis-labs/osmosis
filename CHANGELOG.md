@@ -54,6 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1114](https://github.com/osmosis-labs/osmosis/pull/1114) Improve CI: remove duplicate runs of test worflow
 * [#1127](https://github.com/osmosis-labs/osmosis/pull/1127) Stricter Linting:  bump golangci-lint version and enable additional linters.
 * [#1184](https://github.com/osmosis-labs/osmosis/pull/1184) Fix endtime event output on BeginUnlocking
+## [v7.2.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.0)
+
+* [#1241](https://github.com/osmosis-labs/osmosis/pull/1241/files) chore: upgrade sdk to v0.45.0x-osmo-v7.7
 
 ## [v7.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.1.0)
 
@@ -90,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Minor improvements & Bug Fixes
 
+* [#1177](https://github.com/osmosis-labs/osmosis/pull/1177) upgrade to go 1.18
 * [#1061](https://github.com/osmosis-labs/osmosis/pull/1061) upgrade iavl to v0.17.3-osmo-v5 with concurrent map write fix
 * [#1071](https://github.com/osmosis-labs/osmosis/pull/1071) improve Dockerfile
 
