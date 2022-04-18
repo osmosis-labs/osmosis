@@ -65,7 +65,7 @@ endif
 ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
-ifeq ($(LEDGER_ENABLED),true)
+ifeq ($(LINK_STATICALLY),true)
 	ldflags += -linkmode=external -extldflags "-L/lib/ -lwasmvm_muslc -Wl,-z,muldefs -static"
 endif
 ldflags += $(LDFLAGS)
