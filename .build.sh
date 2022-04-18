@@ -24,7 +24,6 @@ for platform in ${TARGET_PLATFORMS} ; do
     # cases except when the target platform is 'windows'.
     setup_build_env_for_platform "${platform}"
 
-    make clean
     echo Building for $(go env GOOS)/$(go env GOARCH) >&2
     GOROOT_FINAL="$(go env GOROOT)" \
     make build \
