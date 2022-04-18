@@ -95,6 +95,14 @@ service Query {
     option (google.api.http).get =
         "/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}";
   }
+
+  // Returns account locked records with a specific duration
+  rpc AccountLockedDuration(AccountLockedDurationRequest)
+      returns (AccountLockedDurationResponse) {
+    option (google.api.http).get =
+        "/osmosis/lockup/v1beta1/account_locked_duration/{owner}";
+  }
+
   // Returns account locked records with longer duration excluding tokens
   // started unlocking
   rpc AccountLockedLongerDurationNotUnlockingOnly(
