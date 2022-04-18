@@ -12,10 +12,13 @@
 
 
 export OSMOSISD_PRUNING=nothing
+export OSMOSISD_DB_BACKEND=goleveldb
 
 # VERSION THREE
 echo "v3 took" > howlong
 git checkout v3.x
+osmosisd init speedrun
+wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 time osmosisd start 
 make install
 
