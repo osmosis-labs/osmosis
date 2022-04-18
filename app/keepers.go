@@ -19,7 +19,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -104,7 +103,6 @@ type appKeepers struct {
 	MintKeeper           *mintkeeper.Keeper
 	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
 	TxFeesKeeper         *txfeeskeeper.Keeper
-	FeeGrantKeeper       *feegrantkeeper.Keeper
 	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
@@ -353,13 +351,6 @@ func (app *OsmosisApp) InitNormalKeepers(
 		txfeestypes.NonNativeFeeCollectorName,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
-
-	feeGrantKeeper := feegrantkeeper.NewKeeper(
-		appCodec,
-		keys[txfeestypes.StoreKey],
-		app.AccountKeeper,
-	)
-	app.FeeGrantKeeper = &feeGrantKeeper
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
