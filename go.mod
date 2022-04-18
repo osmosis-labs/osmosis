@@ -130,7 +130,7 @@ require (
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk  v0.44.3x-osmo-v5
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.44.4-0.20220307181439-241339c0e282
-	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v4
+	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7.0.20220417014339-076dc56a4208
 	// Use osmosis-flavored IBCv2
 	github.com/cosmos/ibc-go/v2 => github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo
 
