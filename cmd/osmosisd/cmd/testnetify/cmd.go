@@ -30,7 +30,7 @@ func StateExportToTestnetGenesis() *cobra.Command {
 				return err
 			}
 			var genesis app.GenesisState
-			err = json.Unmarshal([]byte(file), &genesis)
+			err = json.Unmarshal(file, &genesis)
 			if err != nil {
 				return err
 			}

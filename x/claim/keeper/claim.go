@@ -144,7 +144,6 @@ func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 
 	claimRecords := []types.ClaimRecord{}
 	for ; iterator.Valid(); iterator.Next() {
-
 		claimRecord := types.ClaimRecord{}
 
 		err := proto.Unmarshal(iterator.Value(), &claimRecord)

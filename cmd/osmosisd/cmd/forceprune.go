@@ -45,7 +45,7 @@ func forceprune() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			conf := config.DefaultConfig()
-			db_path := string(clientCtx.HomeDir) + "/" + conf.DBPath
+			db_path := clientCtx.HomeDir + "/" + conf.DBPath
 
 			cmdr := exec.Command("osmosisd", "status")
 			err = cmdr.Run()

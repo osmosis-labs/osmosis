@@ -134,7 +134,6 @@ func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {
 	feeTokens := []types.FeeToken{}
 
 	for ; iterator.Valid(); iterator.Next() {
-
 		feeToken := types.FeeToken{}
 
 		err := proto.Unmarshal(iterator.Value(), &feeToken)

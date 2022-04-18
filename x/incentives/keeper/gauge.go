@@ -117,8 +117,6 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 		err = k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
 		return err
 	}
-
-	return nil
 }
 
 // CreateGauge create a gauge and send coins to the gauge
@@ -566,7 +564,6 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
-
 			newGauge, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
 			if err != nil {
 				continue
