@@ -5,17 +5,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-	"github.com/spf13/cobra"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -38,7 +39,7 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// NewSuperfluidDelegateCmd broadcast MsgSuperfluidDelegate
+// NewSuperfluidDelegateCmd broadcast MsgSuperfluidDelegate.
 func NewSuperfluidDelegateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [lock_id] [val_addr] [flags]",
@@ -76,7 +77,7 @@ func NewSuperfluidDelegateCmd() *cobra.Command {
 	return cmd
 }
 
-// NewSuperfluidUndelegateCmd broadcast MsgSuperfluidUndelegate
+// NewSuperfluidUndelegateCmd broadcast MsgSuperfluidUndelegate.
 func NewSuperfluidUndelegateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "undelegate [lock_id] [flags]",
@@ -108,7 +109,7 @@ func NewSuperfluidUndelegateCmd() *cobra.Command {
 	return cmd
 }
 
-// NewSuperfluidUnbondLock broadcast MsgSuperfluidUndelegate and
+// NewSuperfluidUnbondLock broadcast MsgSuperfluidUndelegate and.
 func NewSuperfluidUnbondLockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond-lock [lock_id] [flags]",

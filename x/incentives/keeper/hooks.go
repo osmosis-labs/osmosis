@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
@@ -46,19 +47,19 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for incentives keeper
+// Hooks wrapper struct for incentives keeper.
 type Hooks struct {
 	k Keeper
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
 
-// Return the wrapper struct
+// Return the wrapper struct.
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// epochs hooks
+// epochs hooks.
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }

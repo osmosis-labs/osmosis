@@ -6,24 +6,21 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-
-	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 type KeeperTestHelper struct {
@@ -66,7 +63,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 }
 
 func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
-	valAddr := []byte(":^) at this distribution workaround")
+	var valAddr []byte
 	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
@@ -78,6 +75,15 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 		valAddr2, _ := validator.GetConsAddr()
 		valAddr = valAddr2.Bytes()
 	}
+	keeperTestHelper.BeginNewBlockWithProposer(executeNextEpoch, valAddr)
+}
+
+func (keeperTestHelper *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
+	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, proposer)
+	keeperTestHelper.Assert().True(found)
+	valConsAddr, err := validator.GetConsAddr()
+	keeperTestHelper.Require().NoError(err)
+	valAddr := valConsAddr.Bytes()
 
 	epochIdentifier := keeperTestHelper.App.SuperfluidKeeper.GetEpochIdentifier(keeperTestHelper.Ctx)
 	epoch := keeperTestHelper.App.EpochsKeeper.GetEpochInfo(keeperTestHelper.Ctx, epochIdentifier)
@@ -86,15 +92,14 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
 		newBlockTime = endEpochTime.Add(time.Second)
 	}
-	// fmt.Println(executeNextEpoch, keeperTestHelper.Ctx.BlockTime(), newBlockTime)
 	header := tmproto.Header{Height: keeperTestHelper.Ctx.BlockHeight() + 1, Time: newBlockTime}
 	newCtx := keeperTestHelper.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
 	keeperTestHelper.Ctx = newCtx
 	lastCommitInfo := abci.LastCommitInfo{
 		Votes: []abci.VoteInfo{{
 			Validator:       abci.Validator{Address: valAddr, Power: 1000},
-			SignedLastBlock: true},
-		},
+			SignedLastBlock: true,
+		}},
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 
@@ -129,10 +134,9 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 	})
 
 	bondDenom := keeperTestHelper.App.StakingKeeper.BondDenom(keeperTestHelper.Ctx)
-	//TODO: use sdk crypto instead of tendermint to generate address
+	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	//fund account with pool creation fee
 	poolCreationFee := keeperTestHelper.App.GAMMKeeper.GetParams(keeperTestHelper.Ctx)
 	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, poolCreationFee.PoolCreationFee)
 	keeperTestHelper.Require().NoError(err)
@@ -154,24 +158,25 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 			defaultFutureGovernor = ""
 
 			// pool assets
-			defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+			defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
-			defaultBarAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+			defaultBarAsset balancer.PoolAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
 			}
-			poolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+			poolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
-
-		poolId, err := keeperTestHelper.App.GAMMKeeper.CreateBalancerPool(keeperTestHelper.Ctx, acc1, balancer.PoolParams{
+		poolParams := balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, poolAssets, defaultFutureGovernor)
+		}
+		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
+		poolId, err := keeperTestHelper.App.GAMMKeeper.CreatePool(keeperTestHelper.Ctx, msg)
 		keeperTestHelper.Require().NoError(err)
 
-		pool, err := keeperTestHelper.App.GAMMKeeper.GetPool(keeperTestHelper.Ctx, poolId)
+		pool, err := keeperTestHelper.App.GAMMKeeper.GetPoolAndPoke(keeperTestHelper.Ctx, poolId)
 		keeperTestHelper.Require().NoError(err)
 
 		pools = append(pools, pool)
@@ -180,23 +185,23 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 }
 
 // SwapAndSetSpotPrice runs a swap to set Spot price of a pool using arbitrary values
-// returns spot price after the arbitrary swap
-func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset gammtypes.PoolAsset, toAsset gammtypes.PoolAsset) sdk.Dec {
+// returns spot price after the arbitrary swap.
+func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) sdk.Dec {
 	// create a dummy account
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 	// fund dummy account with tokens to swap
-	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Token.Denom, 100000000000000)}
+	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
 	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, coins)
 	keeperTestHelper.Require().NoError(err)
 
-	_, _, err = keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
+	_, err = keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
 		keeperTestHelper.Ctx, acc1,
-		poolId, fromAsset.Token.Denom, fromAsset.Token.Amount,
-		sdk.NewCoin(toAsset.Token.Denom, toAsset.Token.Amount.Quo(sdk.NewInt(4))))
+		poolId, fromAsset.Denom, fromAsset.Amount,
+		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))))
 	keeperTestHelper.Require().NoError(err)
 
-	spotPrice, err := keeperTestHelper.App.GAMMKeeper.CalculateSpotPrice(keeperTestHelper.Ctx, poolId, toAsset.Token.Denom, fromAsset.Token.Denom)
+	spotPrice, err := keeperTestHelper.App.GAMMKeeper.CalculateSpotPrice(keeperTestHelper.Ctx, poolId, toAsset.Denom, fromAsset.Denom)
 	keeperTestHelper.Require().NoError(err)
 	return spotPrice
 }

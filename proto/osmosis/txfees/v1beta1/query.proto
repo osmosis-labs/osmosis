@@ -17,6 +17,12 @@ service Query {
     option (google.api.http).get = "/osmosis/txfees/v1beta1/fee_tokens";
   }
 
+  rpc DenomSpotPrice(QueryDenomSpotPriceRequest)
+      returns (QueryDenomSpotPriceResponse) {
+    option (google.api.http).get =
+        "/osmosis/txfees/v1beta1/spot_price_by_denom";
+  }
+
   rpc DenomPoolId(QueryDenomPoolIdRequest) returns (QueryDenomPoolIdResponse) {
     option (google.api.http).get =
         "/osmosis/txfees/v1beta1/denom_pool_id/{denom}";
@@ -29,9 +35,25 @@ service Query {
 
 message QueryFeeTokensRequest {}
 message QueryFeeTokensResponse {
-
   repeated FeeToken fee_tokens = 1 [
     (gogoproto.moretags) = "yaml:\"fee_tokens\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryDenomSpotPriceRequest defines grpc request structure for querying spot
+// price for the specified tx fee denom
+message QueryDenomSpotPriceRequest {
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+}
+
+// QueryDenomSpotPriceRequest defines grpc response structure for querying spot
+// price for the specified tx fee denom
+message QueryDenomSpotPriceResponse {
+  uint64 poolID = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string spot_price = 2 [
+    (gogoproto.moretags) = "yaml:\"spot_price\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
 }

@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Setup initializes a new OsmosisApp
+// Setup initializes a new OsmosisApp.
 func Setup(isCheckTx bool) *OsmosisApp {
 	db := dbm.NewMemDB()
 	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
@@ -35,7 +36,7 @@ func Setup(isCheckTx bool) *OsmosisApp {
 }
 
 // SetupTestingAppWithLevelDb initializes a new OsmosisApp intended for testing,
-// with LevelDB as a db
+// with LevelDB as a db.
 func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
 	dir := "osmosis_testing"
 	db, err := sdk.NewLevelDB("osmosis_leveldb_testing", dir)
@@ -67,5 +68,5 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 		}
 	}
 
-	return
+	return app, cleanupFn
 }

@@ -30,7 +30,8 @@ func (suite *KeeperTestSuite) measureAvgAndMaxLockGas(
 	numIterations int,
 	addr sdk.AccAddress,
 	coinsFn func(int) sdk.Coins,
-	durFn func(int) time.Duration) (avg uint64, maxGas uint64) {
+	durFn func(int) time.Duration,
+) (avg uint64, maxGas uint64) {
 	runningTotal := uint64(0)
 	maxGas = uint64(0)
 	for i := 1; i <= numIterations; i++ {

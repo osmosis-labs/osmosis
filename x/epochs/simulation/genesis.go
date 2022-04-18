@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// RandomizedGenState generates a random GenesisState for mint
+// RandomizedGenState generates a random GenesisState for mint.
 func RandomizedGenState(simState *module.SimulationState) {
 	epochs := []types.EpochInfo{
 		{

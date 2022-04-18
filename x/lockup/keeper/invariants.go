@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-// RegisterInvariants registers all governance invariants
+// RegisterInvariants registers all governance invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 	ir.RegisterRoute(types.ModuleName, "synthetic-lockup-invariant", SyntheticLockupInvariant(keeper))
 }

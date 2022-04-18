@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// combineKeys combine bytes array into a single bytes
+// combineKeys combine bytes array into a single bytes.
 func combineKeys(keys ...[]byte) []byte {
 	return bytes.Join(keys, types.KeyIndexSeparator)
 }
 
 // getTimeKey returns the key used for getting a set of period locks
-// where unlockTime is after a specific time
+// where unlockTime is after a specific time.
 func getTimeKey(timestamp time.Time) []byte {
 	timeBz := sdk.FormatTimeBytes(timestamp)
 	timeBzL := len(timeBz)
@@ -34,7 +35,7 @@ func getTimeKey(timestamp time.Time) []byte {
 }
 
 // getDurationKey returns the key used for getting a set of period locks
-// where duration is longer than a specific duration
+// where duration is longer than a specific duration.
 func getDurationKey(duration time.Duration) []byte {
 	if duration < 0 {
 		duration = 0

@@ -11,15 +11,16 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/osmosis-labs/osmosis/v7/x/claim/client/cli"
+	"github.com/osmosis-labs/osmosis/v7/x/claim/client/rest"
+	"github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/client/rest"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
 )
 
 var (
@@ -48,7 +49,7 @@ func (AppModuleBasic) Name() string {
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 }
 
@@ -117,15 +118,17 @@ func (am AppModule) Route() sdk.Route {
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// LegacyQuerierHandler returns the capability module's Querier.
+// LegacyQuerierHandler returns the x/claim module's Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
+	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
+		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
+	}
 }
 
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 }
 
 // RegisterInvariants registers the capability module's invariants.

@@ -30,7 +30,8 @@ message SuperfluidAsset {
 message SuperfluidIntermediaryAccount {
   string denom = 1;
   string val_addr = 2;
-  uint64 gauge_id = 3; // perpetual gauge for rewards distribution
+  // perpetual gauge for rewards distribution
+  uint64 gauge_id = 3;
 }
 
 // The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we
@@ -42,7 +43,8 @@ message SuperfluidIntermediaryAccount {
 // change.
 message OsmoEquivalentMultiplierRecord {
   int64 epoch_number = 1;
-  string denom = 2; // superfluid asset denom, can be LP token or native token
+  // superfluid asset denom, can be LP token or native token
+  string denom = 2;
   string multiplier = 3 [
     (gogoproto.moretags) = "yaml:\"multiplier\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

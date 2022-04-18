@@ -4,8 +4,9 @@ import (
 	"strconv"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -16,7 +17,7 @@ var (
 	BaselineDurations  = []time.Duration{DayDuration, WeekDuration, TwoWeekDuration}
 )
 
-// baselineDurations is expected to be sorted by the caller
+// baselineDurations is expected to be sorted by the caller.
 func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Duration, duration time.Duration) (time.Duration, bool) {
 	for _, base := range baselineDurations {
 		// if base > duration, continue to next base size.

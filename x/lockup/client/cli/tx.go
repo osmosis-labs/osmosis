@@ -7,14 +7,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -33,7 +34,7 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// NewLockTokensCmd lock tokens into lockup pool from user's account
+// NewLockTokensCmd lock tokens into lockup pool from user's account.
 func NewLockTokensCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lock-tokens [tokens]",
@@ -80,7 +81,7 @@ func NewLockTokensCmd() *cobra.Command {
 	return cmd
 }
 
-// NewBeginUnlockingCmd unlock all unlockable tokens from user's account
+// NewBeginUnlockingCmd unlock all unlockable tokens from user's account.
 func NewBeginUnlockingCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin-unlock-tokens",
@@ -106,7 +107,7 @@ func NewBeginUnlockingCmd() *cobra.Command {
 	return cmd
 }
 
-// NewBeginUnlockByIDCmd unlock individual period lock by ID
+// NewBeginUnlockByIDCmd unlock individual period lock by ID.
 func NewBeginUnlockByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin-unlock-by-id [id]",

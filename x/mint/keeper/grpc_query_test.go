@@ -9,7 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	simapp "github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
@@ -26,7 +28,7 @@ func (suite *MintTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.MintKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*app.MintKeeper))
 	queryClient := types.NewQueryClient(queryHelper)
 
 	suite.app = app

@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
 )
@@ -24,5 +25,4 @@ func AddGenesisWasmMsgCmd(defaultNodeHome string) *cobra.Command {
 		wasmcli.GenesisListCodesCmd(defaultNodeHome, genesisIO),
 	)
 	return txCmd
-
 }

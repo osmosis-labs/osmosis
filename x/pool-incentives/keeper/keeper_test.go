@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -14,10 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
-
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
@@ -34,7 +32,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now().UTC()})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.PoolIncentivesKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.app.PoolIncentivesKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
@@ -62,7 +60,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 		}
 	}
 
-	poolId, err := suite.app.GAMMKeeper.CreateBalancerPool(suite.ctx, acc1, PoolParams, []gammtypes.PoolAsset{
+	poolAssets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -75,7 +73,9 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(PoolParams balan
 			Weight: sdk.NewInt(300),
 			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
 		},
-	}, "")
+	}
+	msg := balancer.NewMsgCreateBalancerPool(acc1, PoolParams, poolAssets, "")
+	poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
 	suite.NoError(err)
 	return poolId
 }
@@ -94,7 +94,9 @@ func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
 	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
 	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
 	suite.NoError(err)
-	suite.Equal(sdk.NewDec(1).Quo(sdk.NewDec(3)).String(), spotPrice.String())
+	s := sdk.NewDec(1).Quo(sdk.NewDec(3))
+	sp := s.Mul(gammtypes.SigFigs).RoundInt().ToDec().Quo(gammtypes.SigFigs)
+	suite.Equal(sp.String(), spotPrice.String())
 
 	return poolId
 }
@@ -110,8 +112,10 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 
 	for i := 0; i < 3; i++ {
 		poolId := suite.prepareBalancerPool()
-		pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+		pool, err := suite.app.GAMMKeeper.GetPoolAndPoke(suite.ctx, poolId)
 		suite.NoError(err)
+
+		poolLpDenom := gammtypes.GetPoolShareDenom(pool.GetId())
 
 		// Same amount of gauges as lockableDurations must be created for every pool created.
 		gaugeId, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
@@ -120,7 +124,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
 		suite.Equal(true, gauge.IsPerpetual)
-		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
 		gaugeId, err = keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
@@ -129,7 +133,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
 		suite.Equal(true, gauge.IsPerpetual)
-		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
 		gaugeId, err = keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
@@ -138,7 +142,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
 		suite.Equal(true, gauge.IsPerpetual)
-		suite.Equal(pool.GetTotalShares().Denom, gauge.DistributeTo.Denom)
+		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 	}
 }

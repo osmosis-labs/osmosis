@@ -1,18 +1,19 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // This function calculates the osmo equivalent worth of an LP share.
 // It is intended to eventually use the TWAP of the worth of an LP share
 // once that is exposed from the gamm module.
-func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.PoolI, osmoInPool gammtypes.PoolAsset) sdk.Dec {
-	twap := osmoInPool.Token.Amount.ToDec().Quo(pool.GetTotalShares().Amount.ToDec())
+func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.PoolI, osmoInPool sdk.Int) sdk.Dec {
+	twap := osmoInPool.ToDec().Quo(pool.GetTotalShares().ToDec())
 	return twap
 }
 
