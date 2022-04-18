@@ -251,6 +251,18 @@ message AccountLockedLongerDurationResponse {
   repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
 
+message AccountLockedDurationRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+};
+message AccountLockedDurationResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
 message AccountLockedLongerDurationNotUnlockingOnlyRequest {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Duration duration = 2 [
