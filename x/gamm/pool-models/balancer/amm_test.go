@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 	}
 }
 
-func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
+func TestCalculateAmountOutAndIn_InverseRelationship_ZeroSwapFee(t *testing.T) {
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
