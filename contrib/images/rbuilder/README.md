@@ -1,7 +1,9 @@
 # Reproducible Build System
 
-This image is meant to provide a minimal deterministic
-build system for Cosmos SDK applications.
+This image and scripts are meant to provide a minimal deterministic
+build system for the Osmosis application.
+
+It was created by referencing Tendermint's [implementation](https://github.com/tendermint/images/blob/cf0d1a9f3731e30540bbfa36a36d13e4dcccf5eb/rbuilder/README.md)
 
 # Requirements And Usage
 
