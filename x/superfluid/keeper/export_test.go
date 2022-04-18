@@ -1,6 +1,4 @@
 package keeper
 
-var (
-	StakingSyntheticDenom   = stakingSyntheticDenom
-	UnstakingSyntheticDenom = unstakingSyntheticDenom
-)
+var StakingSyntheticDenom = stakingSyntheticDenom
+var UnstakingSyntheticDenom = unstakingSyntheticDenom

@@ -1,10 +1,9 @@
 package incentives
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

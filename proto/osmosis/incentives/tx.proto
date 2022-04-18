@@ -15,27 +15,23 @@ service Msg {
 }
 
 message MsgCreateGauge {
-  // flag to show if it's perpetual or multi-epoch
-  // distribution incentives by third party
-  bool is_perpetual = 1;
-
+  bool is_perpetual = 1; // flag to show if it's perpetual or multi-epoch
+                         // distribution incentives by third party
   string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  // distribute condition of a lock which meet one of these conditions
-  osmosis.lockup.QueryCondition distribute_to = 3
-      [ (gogoproto.nullable) = false ];
-  // can distribute multiple coins
+  osmosis.lockup.QueryCondition distribute_to = 3 [
+    (gogoproto.nullable) = false
+  ]; // distribute condition of a lock which meet one of these conditions
   repeated cosmos.base.v1beta1.Coin coins = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  ]; // can distribute multiple coins
   // distribution start time
   google.protobuf.Timestamp start_time = 5 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"timestamp\""
   ];
-  // number of epochs distribution will be done
-  uint64 num_epochs_paid_over = 6;
+  uint64 num_epochs_paid_over = 6; // number of epochs distribution will be done
 }
 message MsgCreateGaugeResponse {}
 

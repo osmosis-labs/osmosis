@@ -26,22 +26,20 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
-var (
-	_ types.MsgServer    = msgServer{}
-	_ balancer.MsgServer = msgServer{}
-)
+var _ types.MsgServer = msgServer{}
+var _ balancer.MsgServer = msgServer{}
 
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
-	poolId, err := server.CreatePool(goCtx, msg)
-	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
-}
-
-func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	poolId, err = server.keeper.CreatePool(ctx, msg)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return 0, err
+		return nil, err
+	}
+
+	poolId, err := server.keeper.CreateBalancerPool(ctx, sender, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
+	if err != nil {
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -52,11 +50,11 @@ func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMs
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
 
-	return poolId, nil
+	return &balancer.MsgCreateBalancerPoolResponse{}, nil
 }
 
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
@@ -67,7 +65,7 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 		return nil, err
 	}
 
-	err = server.keeper.JoinPoolNoSwap(ctx, sender, msg.PoolId, msg.ShareOutAmount, msg.TokenInMaxs)
+	err = server.keeper.JoinPool(ctx, sender, msg.PoolId, msg.ShareOutAmount, msg.TokenInMaxs)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +93,7 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 		return nil, err
 	}
 
-	_, err = server.keeper.ExitPool(ctx, sender, msg.PoolId, msg.ShareInAmount, msg.TokenOutMins)
+	err = server.keeper.ExitPool(ctx, sender, msg.PoolId, msg.ShareInAmount, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +121,8 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	tokenOutAmount, err := server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+	_, err = server.keeper.MultihopSwapExactAmountIn(ctx, sender, msg.Routes, msg.TokenIn, msg.TokenOutMinAmount)
+
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +136,7 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		),
 	})
 
-	return &types.MsgSwapExactAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
+	return &types.MsgSwapExactAmountInResponse{}, nil
 }
 
 func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.MsgSwapExactAmountOut) (*types.MsgSwapExactAmountOutResponse, error) {
@@ -148,7 +147,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	tokenInAmount, err := server.keeper.MultihopSwapExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
+	_, err = server.keeper.MultihopSwapExactAmountOut(ctx, sender, msg.Routes, msg.TokenInMaxAmount, msg.TokenOut)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +161,7 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		),
 	})
 
-	return &types.MsgSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
+	return &types.MsgSwapExactAmountOutResponse{}, nil
 }
 
 func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types.MsgJoinSwapExternAmountIn) (*types.MsgJoinSwapExternAmountInResponse, error) {
@@ -173,8 +172,7 @@ func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	tokensIn := sdk.Coins{msg.TokenIn}
-	shareOutAmount, err := server.keeper.JoinSwapExactAmountIn(ctx, sender, msg.PoolId, tokensIn, msg.ShareOutMinAmount)
+	_, err = server.keeper.JoinSwapExternAmountIn(ctx, sender, msg.PoolId, msg.TokenIn, msg.ShareOutMinAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +186,7 @@ func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types
 		),
 	})
 
-	return &types.MsgJoinSwapExternAmountInResponse{ShareOutAmount: shareOutAmount}, nil
+	return &types.MsgJoinSwapExternAmountInResponse{}, nil
 }
 
 func (server msgServer) JoinSwapShareAmountOut(goCtx context.Context, msg *types.MsgJoinSwapShareAmountOut) (*types.MsgJoinSwapShareAmountOutResponse, error) {
@@ -199,7 +197,7 @@ func (server msgServer) JoinSwapShareAmountOut(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	tokenInAmount, err := server.keeper.JoinSwapShareAmountOut(ctx, sender, msg.PoolId, msg.TokenInDenom, msg.ShareOutAmount, msg.TokenInMaxAmount)
+	_, err = server.keeper.JoinSwapShareAmountOut(ctx, sender, msg.PoolId, msg.TokenInDenom, msg.ShareOutAmount, msg.TokenInMaxAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +211,7 @@ func (server msgServer) JoinSwapShareAmountOut(goCtx context.Context, msg *types
 		),
 	})
 
-	return &types.MsgJoinSwapShareAmountOutResponse{TokenInAmount: tokenInAmount}, nil
+	return &types.MsgJoinSwapShareAmountOutResponse{}, nil
 }
 
 func (server msgServer) ExitSwapExternAmountOut(goCtx context.Context, msg *types.MsgExitSwapExternAmountOut) (*types.MsgExitSwapExternAmountOutResponse, error) {
@@ -224,7 +222,7 @@ func (server msgServer) ExitSwapExternAmountOut(goCtx context.Context, msg *type
 		return nil, err
 	}
 
-	shareInAmount, err := server.keeper.ExitSwapExternAmountOut(ctx, sender, msg.PoolId, msg.TokenOut, msg.ShareInMaxAmount)
+	_, err = server.keeper.ExitSwapExternAmountOut(ctx, sender, msg.PoolId, msg.TokenOut, msg.ShareInMaxAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +236,7 @@ func (server msgServer) ExitSwapExternAmountOut(goCtx context.Context, msg *type
 		),
 	})
 
-	return &types.MsgExitSwapExternAmountOutResponse{ShareInAmount: shareInAmount}, nil
+	return &types.MsgExitSwapExternAmountOutResponse{}, nil
 }
 
 func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.MsgExitSwapShareAmountIn) (*types.MsgExitSwapShareAmountInResponse, error) {
@@ -249,7 +247,7 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
-	tokenOutAmount, err := server.keeper.ExitSwapShareAmountIn(ctx, sender, msg.PoolId, msg.TokenOutDenom, msg.ShareInAmount, msg.TokenOutMinAmount)
+	_, err = server.keeper.ExitSwapShareAmountIn(ctx, sender, msg.PoolId, msg.TokenOutDenom, msg.ShareInAmount, msg.TokenOutMinAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -263,5 +261,5 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 		),
 	})
 
-	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
+	return &types.MsgExitSwapShareAmountInResponse{}, nil
 }

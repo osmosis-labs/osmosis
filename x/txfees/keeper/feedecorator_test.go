@@ -1,9 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 
@@ -15,11 +14,11 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
-	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
+	baseDenom, _ := suite.app.TxFeesKeeper.GetBaseDenom(suite.ctx)
 
 	uion := "uion"
 
-	uionPoolId := suite.PrepareUni2PoolWithAssets(
+	uionPoolId := suite.PreparePoolWithAssets(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin(uion, 500),
 	)
@@ -163,17 +162,17 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	for _, tc := range tests {
 
-		suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx)
-		suite.Ctx = suite.Ctx.WithMinGasPrices(tc.minGasPrices)
+		suite.ctx = suite.ctx.WithIsCheckTx(tc.isCheckTx)
+		suite.ctx = suite.ctx.WithMinGasPrices(tc.minGasPrices)
 
 		tx := legacytx.NewStdTx([]sdk.Msg{}, legacytx.NewStdFee(
 			tc.gasRequested,
 			tc.txFee,
 		), []legacytx.StdSignature{}, "")
 
-		mfd := keeper.NewMempoolFeeDecorator(*suite.App.TxFeesKeeper, mempoolFeeOpts)
+		mfd := keeper.NewMempoolFeeDecorator(*suite.app.TxFeesKeeper, mempoolFeeOpts)
 		antehandler := sdk.ChainAnteDecorators(mfd)
-		_, err := antehandler(suite.Ctx, tx, false)
+		_, err := antehandler(suite.ctx, tx, false)
 		if tc.expectPass {
 			suite.Require().NoError(err, "test: %s", tc.name)
 		} else {

@@ -8,7 +8,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// Parameter store keys.
+// Parameter store keys
 var (
 	KeyMinimumRiskFactor     = []byte("MinimumRiskFactor")
 	defaultMinimumRiskFactor = sdk.NewDecWithPrec(5, 1) // 50%
@@ -25,19 +25,19 @@ func NewParams(minimumRiskFactor sdk.Dec) Params {
 	}
 }
 
-// default minting module parameters.
+// default minting module parameters
 func DefaultParams() Params {
 	return Params{
 		MinimumRiskFactor: defaultMinimumRiskFactor, // 5%
 	}
 }
 
-// validate params.
+// validate params
 func (p Params) Validate() error {
 	return nil
 }
 
-// Implements params.ParamSet.
+// Implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMinimumRiskFactor, &p.MinimumRiskFactor, ValidateMinimumRiskFactor),

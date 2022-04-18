@@ -96,7 +96,6 @@ var xxx_messageInfo_SuperfluidAsset proto.InternalMessageInfo
 type SuperfluidIntermediaryAccount struct {
 	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	ValAddr string `protobuf:"bytes,2,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
-	// perpetual gauge for rewards distribution
 	GaugeId uint64 `protobuf:"varint,3,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty"`
 }
 
@@ -162,10 +161,9 @@ func (m *SuperfluidIntermediaryAccount) GetGaugeId() uint64 {
 // price at the boundary.  For different types of assets in the future, it could
 // change.
 type OsmoEquivalentMultiplierRecord struct {
-	EpochNumber int64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
-	// superfluid asset denom, can be LP token or native token
-	Denom      string                                 `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
-	Multiplier github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=multiplier,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"multiplier" yaml:"multiplier"`
+	EpochNumber int64                                  `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
+	Denom       string                                 `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	Multiplier  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=multiplier,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"multiplier" yaml:"multiplier"`
 }
 
 func (m *OsmoEquivalentMultiplierRecord) Reset()         { *m = OsmoEquivalentMultiplierRecord{} }

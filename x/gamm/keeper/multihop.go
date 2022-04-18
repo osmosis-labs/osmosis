@@ -8,7 +8,7 @@ import (
 
 // MultihopSwapExactAmountIn defines the input denom and input amount for the first pool,
 // the output of the first pool is chained as the input for the next routed pool
-// transaction succeeds when final amount out is greater than tokenOutMinAmount defined.
+// transaction succeeds when final amount out is greater than tokenOutMinAmount defined
 func (k Keeper) MultihopSwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -22,7 +22,7 @@ func (k Keeper) MultihopSwapExactAmountIn(
 			_outMinAmount = tokenOutMinAmount
 		}
 
-		tokenOutAmount, err = k.SwapExactAmountIn(ctx, sender, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount)
+		tokenOutAmount, _, err = k.SwapExactAmountIn(ctx, sender, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -55,7 +55,7 @@ func (k Keeper) MultihopSwapExactAmountOut(
 			_tokenOut = sdk.NewCoin(routes[i+1].TokenInDenom, insExpected[i+1])
 		}
 
-		_tokenInAmount, err := k.SwapExactAmountOut(ctx, sender, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut)
+		_tokenInAmount, _, err := k.SwapExactAmountOut(ctx, sender, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -65,28 +65,33 @@ func (k Keeper) MultihopSwapExactAmountOut(
 		}
 	}
 
-	return tokenInAmount, nil
+	return
 }
 
-// TODO: Document this function.
+// TODO: Document this function
 func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) ([]sdk.Int, error) {
 	insExpected := make([]sdk.Int, len(routes))
 	for i := len(routes) - 1; i >= 0; i-- {
 		route := routes[i]
 
-		pool, err := k.getPoolForSwap(ctx, route.PoolId)
+		pool, inAsset, outAsset, err :=
+			k.getPoolAndInOutAssets(ctx, route.PoolId, route.TokenInDenom, tokenOut.Denom)
 		if err != nil {
 			return nil, err
 		}
 
-		tokenIn, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, pool.GetSwapFee(ctx))
-		if err != nil {
-			return nil, err
-		}
+		tokenInAmount := calcInGivenOut(
+			inAsset.Token.Amount.ToDec(),
+			inAsset.Weight.ToDec(),
+			outAsset.Token.Amount.ToDec(),
+			outAsset.Weight.ToDec(),
+			tokenOut.Amount.ToDec(),
+			pool.GetPoolSwapFee(),
+		).TruncateInt()
 
-		insExpected[i] = tokenIn.Amount.TruncateInt()
+		insExpected[i] = tokenInAmount
 
-		tokenOut, _ = tokenIn.TruncateDecimal()
+		tokenOut = sdk.NewCoin(route.TokenInDenom, tokenInAmount)
 	}
 
 	return insExpected, nil

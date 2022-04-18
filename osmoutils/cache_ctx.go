@@ -16,7 +16,7 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	defer func() {
 		if recovErr := recover(); recovErr != nil {
 			fmt.Println(recovErr)
-			err = errors.New("panic occurred during execution")
+			err = errors.New("panic occured during execution")
 		}
 	}()
 	// makes a new cache context, which all state changes get wrapped inside of.

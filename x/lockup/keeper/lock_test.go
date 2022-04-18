@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
@@ -67,7 +66,7 @@ func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
 	suite.Require().Equal(locks[0].IsUnlocking(), false)
 
 	// begin unlock
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, locks[0].ID, nil)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, locks[0], nil)
 	suite.Require().NoError(err)
 
 	// check locks
@@ -114,7 +113,7 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	// unlock lock just now
 	lock, err := lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.ctx, lock.ID)
+	err = lockKeeper.Unlock(suite.ctx, *lock)
 	suite.Require().Error(err)
 
 	// move start time to 1 second in the future.
@@ -123,19 +122,19 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	// Try to finish unlocking a lock, before starting unlock.
 	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.ctx, lock.ID)
+	err = lockKeeper.Unlock(suite.ctx, *lock)
 	suite.Require().Error(err)
 
 	// begin unlock
 	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.BeginUnlock(suite.ctx, lock.ID, nil)
+	err = lockKeeper.BeginUnlock(suite.ctx, *lock, nil)
 	suite.Require().NoError(err)
 
 	// unlock 1s after begin unlock
 	lock, err = lockKeeper.GetLockByID(suite.ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second*2)), lock.ID)
+	err = lockKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second*2)), *lock)
 	suite.Require().NoError(err)
 
 	// check locks
@@ -192,14 +191,14 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	suite.Require().NoError(err)
 
 	// begin unlock with lock object
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock.ID, nil)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, nil)
 	suite.Require().NoError(err)
 
 	lockPtr, err := suite.app.LockupKeeper.GetLockByID(suite.ctx, lock.ID)
 	suite.Require().NoError(err)
 
 	// unlock with lock object
-	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), lockPtr.ID)
+	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), *lockPtr)
 	suite.Require().NoError(err)
 }
 
@@ -227,17 +226,17 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 
 	// test exceeding coins
 	exceedingCoins := sdk.Coins{sdk.NewInt64Coin("stake", 15)}
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock.ID, exceedingCoins)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, exceedingCoins)
 	suite.Require().Error(err)
 
 	// test invalid coins
 	invalidCoins := sdk.Coins{sdk.NewInt64Coin("unknown", 1)}
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock.ID, invalidCoins)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, invalidCoins)
 	suite.Require().Error(err)
 
 	// begin unlock partial amount
 	partialCoins := sdk.Coins{sdk.NewInt64Coin("stake", 1)}
-	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock.ID, partialCoins)
+	err = suite.app.LockupKeeper.BeginUnlock(suite.ctx, lock, partialCoins)
 	suite.Require().NoError(err)
 
 	// check unlocking coins
@@ -257,7 +256,7 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 
 	// Finish unlocking partial unlock
 	partialUnlock := suite.app.LockupKeeper.GetAccountPeriodLocks(suite.ctx, addr1)[1]
-	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), partialUnlock.ID)
+	err = suite.app.LockupKeeper.Unlock(suite.ctx.WithBlockTime(now.Add(time.Second)), partialUnlock)
 	suite.Require().NoError(err)
 
 	// check unlocking coins
@@ -268,6 +267,7 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 	locked = suite.app.LockupKeeper.GetAccountLockedCoins(suite.ctx, addr1)
 	suite.Require().Equal(len(locked), 1)
 	suite.Require().Equal(locked[0].Amount.Int64(), int64(9))
+
 }
 
 func (suite *KeeperTestSuite) TestModuleLockedCoins() {
@@ -448,7 +448,7 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 		// by GetPeriodLocksAccumulation
 		for i := 1; i <= 3; i++ {
 			for j := 1; j <= 3; j++ {
-				// get accumulation with always-qualifying condition
+				// get accumulation with always-qualifiing condition
 				acc := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 					Denom:    fmt.Sprintf("synth%d/%d", j, i),
 					Duration: time.Second / 10,
@@ -456,7 +456,7 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 				// amount retrieved should be equal with underlying lock's locked amount
 				suite.Require().Equal(acc.Int64(), amounts[i])
 
-				// get accumulation with non-qualifying condition
+				// get accumulation with non-qualifiing condition
 				acc = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
 					Denom:    fmt.Sprintf("synth%d/%d", j, i),
 					Duration: time.Second * 100,

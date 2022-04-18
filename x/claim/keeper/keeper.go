@@ -5,13 +5,12 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
 )
 
-// Keeper struct.
+// Keeper struct
 type Keeper struct {
 	cdc           codec.Codec
 	storeKey      sdk.StoreKey
@@ -21,7 +20,7 @@ type Keeper struct {
 	distrKeeper   types.DistrKeeper
 }
 
-// NewKeeper returns keeper.
+// NewKeeper returns keeper
 func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.DistrKeeper) *Keeper {
 	return &Keeper{
 		cdc:           cdc,
@@ -33,7 +32,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, b
 	}
 }
 
-// Logger returns logger.
+// Logger returns logger
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }

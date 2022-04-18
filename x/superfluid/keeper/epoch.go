@@ -4,12 +4,12 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+
 	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
@@ -99,7 +99,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
-		pool, err := k.gk.GetPoolAndPoke(ctx, poolId)
+		pool, err := k.gk.GetPool(ctx, poolId)
 		if err != nil {
 			// Pool has been unexpectedly deleted
 			k.Logger(ctx).Error(err.Error())
@@ -109,16 +109,16 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 
 		// get OSMO amount
 		bondDenom := k.sk.BondDenom(ctx)
-		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
-		if osmoPoolAsset.IsZero() {
+		osmoPoolAsset, err := pool.GetPoolAsset(bondDenom)
+		if err != nil {
 			// Pool has unexpectedly removed Osmo from its assets.
 			k.Logger(ctx).Error(err.Error())
 			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 			return err
 		}
 
-		multiplier := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
-		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
+		twap := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, twap)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
 		k.Logger(ctx).Error("unsupported superfluid asset type")

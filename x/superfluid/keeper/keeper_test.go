@@ -4,30 +4,28 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
 	queryClient types.QueryClient
-	querier     keeper.Querier
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -36,9 +34,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	startTime := time.Unix(1645580000, 0)
 	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.App.SuperfluidKeeper))
+	types.RegisterQueryServer(queryHelper, suite.App.SuperfluidKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
-	suite.querier = keeper.NewQuerier(*suite.App.SuperfluidKeeper)
+	suite.SetupDefaultPool()
 
 	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 
@@ -99,10 +97,10 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	coins := suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee
-	poolAssets := []balancer.PoolAsset{}
+	poolAssets := []gammtypes.PoolAsset{}
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
-		poolAssets = append(poolAssets, balancer.PoolAsset{
+		poolAssets = append(poolAssets, gammtypes.PoolAsset{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin(denom, sdk.NewInt(1000000000000000000)),
 		})
@@ -112,11 +110,11 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, coins)
 	suite.Require().NoError(err)
 
-	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
-	}, poolAssets, "")
-	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+	poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(
+		suite.Ctx, acc1, balancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.NewDecWithPrec(1, 2),
+		}, poolAssets, "")
 	suite.Require().NoError(err)
 
 	return poolId
@@ -137,7 +135,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	denoms := []string{}
 	poolIds := []uint64{}
 	for _, pool := range pools {
-		denom := gammtypes.GetPoolShareDenom(pool.GetId())
+		denom := pool.GetTotalShares().Denom
 
 		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,

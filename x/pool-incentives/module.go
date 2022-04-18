@@ -6,11 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,6 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
@@ -59,7 +58,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 //---------------------------------------
-// Interfaces.
+// Interfaces
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 	// noop
 }
@@ -90,7 +89,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
@@ -102,6 +101,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 
 // RegisterInvariants registers the pool-incentives module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	return
 }
 
 // Route returns the message routing key for the pool-incentives module.
@@ -112,11 +112,9 @@ func (am AppModule) Route() sdk.Route {
 // QuerierRoute returns the pool-incentives module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// LegacyQuerierHandler returns the x/pool-incentives's module sdk.Querier.
+// LegacyQuerierHandler returns the pool-incentives module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the pool-incentives module.
@@ -166,8 +164,9 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return simulation.ParamChanges(r)
 }
 
-// RegisterStoreDecoder registers a decoder for supply module's types.
+// RegisterStoreDecoder registers a decoder for supply module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

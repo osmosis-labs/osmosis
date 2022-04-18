@@ -4,18 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/utils"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/utils"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 type msgServer struct {
 	keeper *Keeper
 }
 
-// NewMsgServerImpl returns an instance of MsgServer.
+// NewMsgServerImpl returns an instance of MsgServer
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
@@ -95,18 +94,13 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
+	err = server.keeper.BeginUnlock(ctx, *lock, msg.Coins)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
 	if msg.Owner != lock.Owner {
-		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
-	}
-
-	err = server.keeper.BeginUnlock(ctx, lock.ID, msg.Coins)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
-	lock, err = server.keeper.GetLockByID(ctx, msg.ID)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender(%s) and lock owner(%s) does not match", msg.Owner, lock.Owner))
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

@@ -9,13 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-// GetQueryCmd returns the cli query commands for this module.
+// GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
 	// Group gamm queries under a subcommand
 	cmd := &cobra.Command{
@@ -32,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShares(),
+		GetCmdPoolAssets(),
 		GetCmdSpotPrice(),
 		GetCmdQueryTotalLiquidity(),
 		GetCmdEstimateSwapExactAmountIn(),
@@ -41,7 +41,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdPool returns pool.
+// GetCmdPool returns pool
 func GetCmdPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool <poolID>",
@@ -82,7 +82,7 @@ $ %s query gamm pool 1
 	return cmd
 }
 
-// TODO: Push this to the SDK.
+// TODO: Push this to the SDK
 func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	writer := ctx.Output
 	if writer == nil {
@@ -104,7 +104,7 @@ func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	return nil
 }
 
-// GetCmdPools return pools.
+// GetCmdPools return pools
 func GetCmdPools() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pools",
@@ -147,7 +147,7 @@ $ %s query gamm pools
 	return cmd
 }
 
-// GetCmdNumPools return number of pools available.
+// GetCmdNumPools return number of pools available
 func GetCmdNumPools() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "num-pools",
@@ -182,7 +182,7 @@ $ %s query gamm num-pools
 	return cmd
 }
 
-// GetCmdPoolParams return pool params.
+// GetCmdPoolParams return pool params
 func GetCmdPoolParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool-params <poolID>",
@@ -217,12 +217,14 @@ $ %s query gamm pool-params 1
 
 			if clientCtx.OutputFormat == "text" {
 				out, err := yaml.Marshal(res.GetParams())
+
 				if err != nil {
 					return err
 				}
 				return writeOutputBoilerplate(clientCtx, out)
 			} else {
 				out, err := clientCtx.Codec.MarshalJSON(res)
+
 				if err != nil {
 					return err
 				}
@@ -236,49 +238,7 @@ $ %s query gamm pool-params 1
 	return cmd
 }
 
-// GetCmd return total share.
-func GetCmdTotalPoolLiquidity() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "total-pool-liquidity <poolID>",
-		Short: "Query total-pool-liquidity",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query total-pool-liquidity.
-Example:
-$ %s query gamm total-pool-liquidity 1
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.TotalPoolLiquidity(cmd.Context(), &types.QueryTotalPoolLiquidityRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdTotalShares return total share.
+// GetCmdTotalShares return total share
 func GetCmdTotalShares() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-share <poolID>",
@@ -320,7 +280,7 @@ $ %s query gamm total-share 1
 	return cmd
 }
 
-// GetCmdQueryTotalLiquidity return total liquidity.
+// GetCmdQueryTotalLiquidity return total liquidity
 func GetCmdQueryTotalLiquidity() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-liquidity",
@@ -355,18 +315,25 @@ $ %s query gamm total-liquidity
 	return cmd
 }
 
-// GetCmdSpotPrice returns spot price
-func GetCmdSpotPrice() *cobra.Command {
+// GetCmdPoolAssets return pool-assets for a pool
+func GetCmdPoolAssets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "spot-price <pool-ID> <base-asset-denom> <quote-asset-denom>",
-		Short: "Query spot-price",
-		Args:  cobra.ExactArgs(3),
+		Use:   "pool-assets <poolID>",
+		Short: "Query pool-assets",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query pool assets.
+Example:
+$ %s query gamm pool-assets 1
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			poolID, err := strconv.Atoi(args[0])
@@ -374,10 +341,8 @@ func GetCmdSpotPrice() *cobra.Command {
 				return err
 			}
 
-			res, err := queryClient.SpotPrice(cmd.Context(), &types.QuerySpotPriceRequest{
-				PoolId:          uint64(poolID),
-				BaseAssetDenom:  args[1],
-				QuoteAssetDenom: args[2],
+			res, err := queryClient.PoolAssets(cmd.Context(), &types.QueryPoolAssetsRequest{
+				PoolId: uint64(poolID),
 			})
 			if err != nil {
 				return err
@@ -388,10 +353,55 @@ func GetCmdSpotPrice() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
-// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
+// GetCmdSpotPrice returns spot price
+func GetCmdSpotPrice() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "spot-price <poolID> <tokenInDenom> <tokenOutDenom>",
+		Short: "Query spot-price",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query spot-price.
+Example:
+$ %s query gamm spot-price 1 stake stake2
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			poolID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.SpotPrice(cmd.Context(), &types.QuerySpotPriceRequest{
+				PoolId:        uint64(poolID),
+				TokenInDenom:  args[1],
+				TokenOutDenom: args[2],
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input
 func GetCmdEstimateSwapExactAmountIn() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
@@ -399,7 +409,7 @@ func GetCmdEstimateSwapExactAmountIn() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query estimate-swap-exact-amount-in.
 Example:
-$ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
+$ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-amounts=100stake2 --swap-route-pool-ids=3 --swap-route-amounts=100stake
 `,
 				version.AppName,
 			),
@@ -444,7 +454,7 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 	return cmd
 }
 
-// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
+// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output
 func GetCmdEstimateSwapExactAmountOut() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
@@ -452,7 +462,7 @@ func GetCmdEstimateSwapExactAmountOut() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query estimate-swap-exact-amount-out.
 Example:
-$ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
+$ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-amounts=100stake2 --swap-route-pool-ids=3 --swap-route-amounts=100stake
 `,
 				version.AppName,
 			),

@@ -19,7 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-// GetQueryCmd returns the cli query commands for this module.
+// GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group lockup queries under a subcommand
 	cmd := &cobra.Command{
@@ -52,7 +52,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	return cmd
 }
 
-// GetCmdModuleBalance returns full balance of the module.
+// GetCmdModuleBalance returns full balance of the module
 func GetCmdModuleBalance() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "module-balance",
@@ -88,7 +88,7 @@ $ %s query lockup module-balance
 	return cmd
 }
 
-// GetCmdModuleLockedAmount returns locked balance of the module.
+// GetCmdModuleLockedAmount returns locked balance of the module
 func GetCmdModuleLockedAmount() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "module-locked-amount",
@@ -124,7 +124,7 @@ $ %s query lockup module-locked-amount
 	return cmd
 }
 
-// GetCmdAccountUnlockableCoins returns unlockable coins which are not withdrawn yet.
+// GetCmdAccountUnlockableCoins returns unlockable coins which are not withdrawn yet
 func GetCmdAccountUnlockableCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-unlockable-coins <address>",
@@ -161,7 +161,7 @@ $ %s query lockup account-unlockable-coins <address>
 	return cmd
 }
 
-// GetCmdAccountUnlockingCoins returns unlocking coins.
+// GetCmdAccountUnlockingCoins returns unlocking coins
 func GetCmdAccountUnlockingCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-unlocking-coins <address>",
@@ -198,7 +198,7 @@ $ %s query lockup account-unlocking-coins <address>
 	return cmd
 }
 
-// GetCmdAccountLockedCoins returns locked coins that can't be withdrawn.
+// GetCmdAccountLockedCoins returns locked coins that can't be withdrawn
 func GetCmdAccountLockedCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-coins <address>",
@@ -235,16 +235,16 @@ $ %s query lockup account-locked-coins <address>
 	return cmd
 }
 
-// GetCmdAccountLockedPastTime returns locked records of an account with unlock time beyond timestamp.
+// GetCmdAccountLockedPastTime returns locked records of an account with unlock time beyond timestamp
 func GetCmdAccountLockedPastTime() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "account-locked-pastime <address> <timestamp>",
+		Use:   "account-locked-pasttime <address> <timestamp>",
 		Short: "Query locked records of an account with unlock time beyond timestamp",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query locked records of an account with unlock time beyond timestamp.
 
 Example:
-$ %s query lockup account-locked-pastime <address> <timestamp>
+$ %s query lockup account-locked-pasttime <address> <timestamp>
 `,
 				version.AppName,
 			),
@@ -278,16 +278,16 @@ $ %s query lockup account-locked-pastime <address> <timestamp>
 	return cmd
 }
 
-// GetCmdAccountLockedPastTimeNotUnlockingOnly returns locked records of an account with unlock time beyond timestamp within not unlocking queue.
+// GetCmdAccountLockedPastTimeNotUnlockingOnly returns locked records of an account with unlock time beyond timestamp within not unlocking queue
 func GetCmdAccountLockedPastTimeNotUnlockingOnly() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "account-locked-pastime-not-unlocking <address> <timestamp>",
+		Use:   "account-locked-pasttime-not-unlocking <address> <timestamp>",
 		Short: "Query locked records of an account with unlock time beyond timestamp within not unlocking queue",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query locked records of an account with unlock time beyond timestamp within not unlocking queue.
 
 Example:
-$ %s query lockup account-locked-pastime-not-unlocking <address> <timestamp>
+$ %s query lockup account-locked-pasttime-not-unlocking <address> <timestamp>
 `,
 				version.AppName,
 			),
@@ -321,7 +321,7 @@ $ %s query lockup account-locked-pastime-not-unlocking <address> <timestamp>
 	return cmd
 }
 
-// GetCmdAccountUnlockedBeforeTime returns unlocked records with unlock time before timestamp.
+// GetCmdAccountUnlockedBeforeTime returns unlocked records with unlock time before timestamp
 func GetCmdAccountUnlockedBeforeTime() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-beforetime <address> <timestamp>",
@@ -330,7 +330,7 @@ func GetCmdAccountUnlockedBeforeTime() *cobra.Command {
 			fmt.Sprintf(`Query account's the total unlocked records with unlock time before timestamp.
 
 Example:
-$ %s query lockup account-locked-pastime <address> <timestamp>
+$ %s query lockup account-locked-pasttime <address> <timestamp>
 `,
 				version.AppName,
 			),
@@ -364,16 +364,16 @@ $ %s query lockup account-locked-pastime <address> <timestamp>
 	return cmd
 }
 
-// GetCmdAccountLockedPastTimeDenom returns lock records by address, timestamp, denom.
+// GetCmdAccountLockedPastTimeDenom returns lock records by address, timestamp, denom
 func GetCmdAccountLockedPastTimeDenom() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "account-locked-pastime-denom <address> <timestamp> <denom>",
+		Use:   "account-locked-pasttime-denom <address> <timestamp> <denom>",
 		Short: "Query account's lock records by address, timestamp, denom",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query account's lock records by address, timestamp, denom.
 
 Example:
-$ %s query lockup account-locked-pastime-denom <address> <timestamp> <denom>
+$ %s query lockup account-locked-pasttime-denom <address> <timestamp> <denom>
 `,
 				version.AppName,
 			),
@@ -409,7 +409,7 @@ $ %s query lockup account-locked-pastime-denom <address> <timestamp> <denom>
 	return cmd
 }
 
-// GetCmdLockedByID returns lock record by id.
+// GetCmdLockedByID returns lock record by id
 func GetCmdLockedByID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lock-by-id <id>",
@@ -451,7 +451,7 @@ $ %s query lockup lock-by-id <id>
 	return cmd
 }
 
-// GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.
+// GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id
 func GetCmdSyntheticLockupsByLockupID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "synthetic-lockups-by-lock-id <id>",
@@ -493,7 +493,7 @@ $ %s query lockup synthetic-lockups-by-lock-id <id>
 	return cmd
 }
 
-// GetCmdAccountLockedLongerDuration returns account locked records with longer duration.
+// GetCmdAccountLockedLongerDuration returns account locked records with longer duration
 func GetCmdAccountLockedLongerDuration() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-longer-duration <address> <duration>",
@@ -535,7 +535,7 @@ $ %s query lockup account-locked-longer-duration <address> <duration>
 	return cmd
 }
 
-// GetCmdAccountLockedLongerDurationNotUnlockingOnly returns account locked records with longer duration from unlocking only queue.
+// GetCmdAccountLockedLongerDurationNotUnlockingOnly returns account locked records with longer duration from unlocking only queue
 func GetCmdAccountLockedLongerDurationNotUnlockingOnly() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-longer-duration-not-unlocking <address> <duration>",
@@ -577,7 +577,7 @@ $ %s query lockup account-locked-longer-duration-not-unlocking <address> <durati
 	return cmd
 }
 
-// GetCmdAccountLockedLongerDurationDenom returns account's locked records for a denom with longer duration.
+// GetCmdAccountLockedLongerDurationDenom returns account's locked records for a denom with longer duration
 func GetCmdAccountLockedLongerDurationDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-longer-duration-denom <address> <duration> <denom>",
@@ -586,7 +586,7 @@ func GetCmdAccountLockedLongerDurationDenom() *cobra.Command {
 			fmt.Sprintf(`Query account's locked records for a denom with longer duration.
 
 Example:
-$ %s query lockup account-locked-pastime <address> <duration> <denom>
+$ %s query lockup account-locked-pasttime <address> <duration> <denom>
 `,
 				version.AppName,
 			),
@@ -621,7 +621,7 @@ $ %s query lockup account-locked-pastime <address> <duration> <denom>
 	return cmd
 }
 
-// GetCmdTotalBondedByDenom returns total amount of locked asset.
+// GetCmdTotalBondedByDenom returns total amount of locked asset
 func GetCmdTotalLockedByDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-locked-of-denom <denom>",
@@ -669,7 +669,7 @@ $ %s query lockup total-locked-of-denom <denom>
 	return cmd
 }
 
-// GetCmdOutputLocksJson outputs all locks into a file called lock_export.json.
+// GetCmdOutputLocksJson outputs all locks into a file called lock_export.json
 func GetCmdOutputLocksJson() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "output-all-locks <max lock ID>",
@@ -737,7 +737,7 @@ $ %s query lockup output-all-locks <max lock ID>
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile("lock_export.json", bz, 0o777)
+			err = ioutil.WriteFile("lock_export.json", []byte(bz), 0777)
 			if err != nil {
 				return err
 			}

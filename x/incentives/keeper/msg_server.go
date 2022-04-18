@@ -3,18 +3,17 @@ package keeper
 import (
 	"context"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/utils"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/utils"
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
 type msgServer struct {
 	keeper *Keeper
 }
 
-// NewMsgServerImpl returns an instance of MsgServer.
+// NewMsgServerImpl returns an instance of MsgServer
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,

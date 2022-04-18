@@ -6,8 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
@@ -17,7 +15,7 @@ const (
 	OpWeightRemoveSuperfluidAssetsProposal = "op_weight_remove_superfluid_assets_proposal"
 )
 
-// ProposalContents defines the module weighted proposals' contents.
+// ProposalContents defines the module weighted proposals' contents
 func ProposalContents(k keeper.Keeper, gk types.GammKeeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
@@ -28,10 +26,11 @@ func ProposalContents(k keeper.Keeper, gk types.GammKeeper) []simtypes.WeightedP
 	}
 }
 
-// SimulateSetSuperfluidAssetsProposal generates random superfluid asset set proposal content.
+// SimulateSetSuperfluidAssetsProposal generates random superfluid asset set proposal content
 func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		pools, err := gk.GetPoolsAndPoke(ctx)
+
+		pools, err := gk.GetPools(ctx)
 		if err != nil {
 			return nil
 		}
@@ -48,7 +47,7 @@ func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) s
 			Description: "set superfluid assets description",
 			Assets: []types.SuperfluidAsset{
 				{
-					Denom:     gammtypes.GetPoolShareDenom(pool.GetId()),
+					Denom:     pool.GetTotalShares().Denom,
 					AssetType: types.SuperfluidAssetTypeLPShare,
 				},
 			},
@@ -56,9 +55,10 @@ func SimulateSetSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) s
 	}
 }
 
-// SimulateRemoveSuperfluidAssetsProposal generates random superfluid asset removal proposal content.
+// SimulateRemoveSuperfluidAssetsProposal generates random superfluid asset removal proposal content
 func SimulateRemoveSuperfluidAssetsProposal(k keeper.Keeper, gk types.GammKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+
 		assets := k.GetAllSuperfluidAssets(ctx)
 
 		if len(assets) == 0 {

@@ -81,7 +81,7 @@ To prepare for the upgrade, you need to create some folders, and build and insta
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v7/bin
 cd $HOME/osmosis
 git pull
-git checkout v7.0.2
+git checkout v7.0.1
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v7/bin
 ```

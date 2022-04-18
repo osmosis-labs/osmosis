@@ -56,7 +56,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 			}
 
 			if len(gaugeIds) != len(weights) {
-				return fmt.Errorf("the length of gauge ids and weights not matched")
+				return fmt.Errorf("the length of gauge ids and wieghts not matched")
 			}
 
 			if len(gaugeIds) == 0 {
@@ -138,7 +138,7 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 			}
 
 			if len(gaugeIds) != len(weights) {
-				return fmt.Errorf("the length of gauge ids and weights not matched")
+				return fmt.Errorf("the length of gauge ids and wieghts not matched")
 			}
 
 			if len(gaugeIds) == 0 {

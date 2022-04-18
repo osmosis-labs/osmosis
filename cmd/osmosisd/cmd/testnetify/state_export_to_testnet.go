@@ -10,7 +10,7 @@ var (
 	valConsBech32     = "osmovalcons"
 )
 
-// TODO: Add params for min num validators for consensus.
+// TODO: Add params for min num validators for consensus
 type TestnetParams struct {
 	ValidatorConsensusPubkeys []string
 	ValidatorOperatorPubkeys  []string
@@ -27,7 +27,6 @@ type ValidatorDetails struct {
 	OperatorAddress string
 }
 
-//nolint:ineffassign
 func defaultTestnetParams() TestnetParams {
 	/* priv_validator_key.json file
 	{

@@ -19,7 +19,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgCreateBalancerPool) MsgCreateBalancerPool) MsgCreateBalancerPool {
-		testPoolAsset := []PoolAsset{
+		testPoolAsset := []types.PoolAsset{
 			{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("test", sdk.NewInt(100)),
@@ -88,7 +88,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "has no PoolAsset2",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []PoolAsset{}
+				msg.PoolAssets = []types.PoolAsset{}
 				return msg
 			}),
 			expectPass: false,
@@ -96,7 +96,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "has one Pool Asset",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []PoolAsset{
+				msg.PoolAssets = []types.PoolAsset{
 					msg.PoolAssets[0],
 				}
 				return msg

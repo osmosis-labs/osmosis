@@ -1,10 +1,9 @@
 package types // noalias
 
 import (
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -28,12 +27,12 @@ type BankKeeper interface {
 	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
 }
 
-// DistrKeeper defines the contract needed to be fulfilled for distribution keeper.
+// DistrKeeper defines the contract needed to be fulfilled for distribution keeper
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-// EpochKeeper defines the contract needed to be fulfilled for epochs keeper.
+// EpochKeeper defines the contract needed to be fulfilled for epochs keeper
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }

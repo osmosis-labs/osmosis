@@ -2,7 +2,7 @@ package types
 
 import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-// x/gamm module sentinel errors.
+// x/gamm module sentinel errors
 var (
 	ErrPoolNotFound       = sdkerrors.Register(ModuleName, 1, "pool not found")
 	ErrPoolAlreadyExist   = sdkerrors.Register(ModuleName, 2, "pool already exist")
@@ -13,7 +13,6 @@ var (
 	ErrLimitMinAmount     = sdkerrors.Register(ModuleName, 7, "calculated amount is lesser than min amount")
 	ErrInvalidMathApprox  = sdkerrors.Register(ModuleName, 8, "invalid calculated result")
 	ErrAlreadyInvalidPool = sdkerrors.Register(ModuleName, 9, "destruction on already invalid pool")
-	ErrInvalidPool        = sdkerrors.Register(ModuleName, 10, "attempting to create an invalid pool")
 
 	ErrEmptyRoutes              = sdkerrors.Register(ModuleName, 21, "routes not defined")
 	ErrEmptyPoolAssets          = sdkerrors.Register(ModuleName, 22, "PoolAssets not defined")
@@ -29,6 +28,4 @@ var (
 
 	ErrPoolParamsInvalidDenom     = sdkerrors.Register(ModuleName, 50, "pool params' LBP params has an invalid denomination")
 	ErrPoolParamsInvalidNumDenoms = sdkerrors.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")
-
-	ErrNotImplemented = sdkerrors.Register(ModuleName, 60, "function not implemented")
 )

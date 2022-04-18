@@ -1,15 +1,15 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestGRPCParams() {
 	suite.SetupTest()
-	res, err := suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
+	res, err := suite.App.SuperfluidKeeper.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
 }
@@ -18,22 +18,22 @@ func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.SetupTest()
 
 	// initial check
-	assets := suite.querier.GetAllSuperfluidAssets(suite.Ctx)
+	assets := suite.App.SuperfluidKeeper.GetAllSuperfluidAssets(suite.Ctx)
 	suite.Require().Len(assets, 0)
 
 	// set asset
-	suite.querier.SetSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+	suite.App.SuperfluidKeeper.SetSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 		Denom:     "gamm/pool/1",
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// get asset
-	res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: "gamm/pool/1"})
+	res, err := suite.App.SuperfluidKeeper.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: "gamm/pool/1"})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.AssetType, types.SuperfluidAssetTypeLPShare)
 
 	// check assets
-	resp, err := suite.querier.AllAssets(sdk.WrapSDKContext(suite.Ctx), &types.AllAssetsRequest{})
+	resp, err := suite.App.SuperfluidKeeper.AllAssets(sdk.WrapSDKContext(suite.Ctx), &types.AllAssetsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(resp.Assets, 1)
 }
@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
 
 	// start unbonding the superfluid delegations of denom0 from delegator0 to validator0
-	err := suite.querier.SuperfluidUndelegate(suite.Ctx, locks[0].Owner, locks[0].ID)
+	err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, locks[0].Owner, locks[0].ID)
 	suite.Require().NoError(err)
 
 	// query to make sure that the amount delegated for the now unbonding delegation is 0

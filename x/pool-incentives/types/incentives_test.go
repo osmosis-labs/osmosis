@@ -4,14 +4,14 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestParamsMarshalUnmarshal(t *testing.T) {
+
 	tests := []struct {
 		params *types.Params
 	}{
@@ -38,6 +38,7 @@ func TestParamsMarshalUnmarshal(t *testing.T) {
 }
 
 func TestLockableDurationsInfoMarshalUnmarshal(t *testing.T) {
+
 	tests := []struct {
 		durations *types.LockableDurationsInfo
 	}{
@@ -67,6 +68,7 @@ func TestLockableDurationsInfoMarshalUnmarshal(t *testing.T) {
 }
 
 func TestDistrInfoMarshalUnmarshal(t *testing.T) {
+
 	tests := []struct {
 		info *types.DistrInfo
 	}{
@@ -115,6 +117,7 @@ func TestDistrInfoMarshalUnmarshal(t *testing.T) {
 }
 
 func TestDistrRecordMarshalUnmarshal(t *testing.T) {
+
 	tests := []struct {
 		info *types.DistrRecord
 	}{

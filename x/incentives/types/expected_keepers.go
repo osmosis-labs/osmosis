@@ -3,10 +3,9 @@ package types
 import (
 	time "time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -22,7 +21,7 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
-// LockupKeeper defines the expected interface needed to retrieve locks.
+// LockupKeeper defines the expected interface needed to retrieve locks
 type LockupKeeper interface {
 	GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*lockuptypes.SyntheticLock, error)
 	GetLocksPastTimeDenom(ctx sdk.Context, denom string, timestamp time.Time) []lockuptypes.PeriodLock

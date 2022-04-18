@@ -3,14 +3,12 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type KeeperTestSuite struct {
@@ -26,7 +24,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.app.EpochsKeeper))
+	types.RegisterQueryServer(queryHelper, suite.app.EpochsKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 

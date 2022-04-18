@@ -1,6 +1,6 @@
 package types
 
-// event types.
+// event types
 const (
 	TypeEvtSetSuperfluidAsset           = "set_superfluid_asset"
 	TypeEvtRemoveSuperfluidAsset        = "remove_superfluid_asset"

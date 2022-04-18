@@ -134,4 +134,5 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	// get account
 	addr = suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, 1)
 	suite.Require().Equal(addr.String(), "")
+
 }

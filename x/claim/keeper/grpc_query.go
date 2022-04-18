@@ -3,37 +3,26 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ types.QueryServer = Querier{}
-
-// Querier defines a wrapper around the x/claim keeper providing gRPC method
-// handlers.
-type Querier struct {
-	Keeper
-}
-
-func NewQuerier(k Keeper) Querier {
-	return Querier{Keeper: k}
-}
+var _ types.QueryServer = Keeper{}
 
 // Params returns params of the mint module.
-func (q Querier) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
+func (k Keeper) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	moduleAccBal := sdk.NewCoins(q.Keeper.GetModuleAccountBalance(ctx))
+	moduleAccBal := sdk.NewCoins(k.GetModuleAccountBalance(ctx))
 
 	return &types.QueryModuleAccountBalanceResponse{ModuleAccountBalance: moduleAccBal}, nil
 }
 
 // Params returns params of the mint module.
-func (q Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	params, err := q.Keeper.GetParams(ctx)
+	params, err := k.GetParams(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +30,8 @@ func (q Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-// Claimable returns claimable amount per user.
-func (q Querier) ClaimRecord(
+// Claimable returns claimable amount per user
+func (k Keeper) ClaimRecord(
 	goCtx context.Context,
 	req *types.QueryClaimRecordRequest,
 ) (*types.QueryClaimRecordResponse, error) {
@@ -57,12 +46,12 @@ func (q Querier) ClaimRecord(
 		return nil, err
 	}
 
-	claimRecord, err := q.Keeper.GetClaimRecord(ctx, addr)
+	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	return &types.QueryClaimRecordResponse{ClaimRecord: claimRecord}, err
 }
 
-// Activities returns activities.
-func (q Querier) ClaimableForAction(
+// Activities returns activities
+func (k Keeper) ClaimableForAction(
 	goCtx context.Context,
 	req *types.QueryClaimableForActionRequest,
 ) (*types.QueryClaimableForActionResponse, error) {
@@ -76,15 +65,15 @@ func (q Querier) ClaimableForAction(
 		return nil, err
 	}
 
-	coins, err := q.Keeper.GetClaimableAmountForAction(ctx, addr, req.Action)
+	coins, err := k.GetClaimableAmountForAction(ctx, addr, req.Action)
 
 	return &types.QueryClaimableForActionResponse{
 		Coins: coins,
 	}, err
 }
 
-// Activities returns activities.
-func (q Querier) TotalClaimable(
+// Activities returns activities
+func (k Keeper) TotalClaimable(
 	goCtx context.Context,
 	req *types.QueryTotalClaimableRequest,
 ) (*types.QueryTotalClaimableResponse, error) {
@@ -98,7 +87,7 @@ func (q Querier) TotalClaimable(
 		return nil, err
 	}
 
-	coins, err := q.Keeper.GetUserTotalClaimable(ctx, addr)
+	coins, err := k.GetUserTotalClaimable(ctx, addr)
 
 	return &types.QueryTotalClaimableResponse{
 		Coins: coins,

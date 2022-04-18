@@ -3,11 +3,10 @@ package lockup
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 // NewHandler returns a handler for "lockup" type messages.

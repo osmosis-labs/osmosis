@@ -1,13 +1,12 @@
 package keeper
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Relock unlock previous lockID and create a new lock with newCoins with same duration and endtime.
+// Relock unlock previous lockID and create a new lock with newCoins with same duration and endtime
 func (ak AdminKeeper) Relock(ctx sdk.Context, lockID uint64, newCoins sdk.Coins) error {
 	lock, err := ak.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -42,7 +41,7 @@ func (ak AdminKeeper) Relock(ctx sdk.Context, lockID uint64, newCoins sdk.Coins)
 	return nil
 }
 
-// BreakLock unlock a lockID without considering time with admin privilege.
+// BreakLock unlock a lockID without considering time with admin priviledge
 func (ak AdminKeeper) BreakLock(ctx sdk.Context, lockID uint64) error {
 	lock, err := ak.GetLockByID(ctx, lockID)
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// constants.
+// constants
 const (
 	TypeMsgSuperfluidDelegate        = "superfluid_delegate"
 	TypeMsgSuperfluidUndelegate      = "superfluid_undelegate"
@@ -17,7 +17,7 @@ const (
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
 
-// NewMsgSuperfluidDelegate creates a message to do superfluid delegation.
+// NewMsgSuperfluidDelegate creates a message to do superfluid delegation
 func NewMsgSuperfluidDelegate(sender sdk.AccAddress, lockId uint64, valAddr sdk.ValAddress) *MsgSuperfluidDelegate {
 	return &MsgSuperfluidDelegate{
 		Sender:  sender.String(),
@@ -40,11 +40,9 @@ func (m MsgSuperfluidDelegate) ValidateBasic() error {
 	}
 	return nil
 }
-
 func (m MsgSuperfluidDelegate) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
-
 func (m MsgSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
@@ -52,7 +50,7 @@ func (m MsgSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgSuperfluidUndelegate{}
 
-// NewMsgSuperfluidUndelegate creates a message to do superfluid undelegation.
+// NewMsgSuperfluidUndelegate creates a message to do superfluid undelegation
 func NewMsgSuperfluidUndelegate(sender sdk.AccAddress, lockId uint64) *MsgSuperfluidUndelegate {
 	return &MsgSuperfluidUndelegate{
 		Sender: sender.String(),
@@ -71,11 +69,9 @@ func (m MsgSuperfluidUndelegate) ValidateBasic() error {
 	}
 	return nil
 }
-
 func (m MsgSuperfluidUndelegate) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
-
 func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
@@ -128,7 +124,6 @@ func (m MsgSuperfluidUnbondLock) Route() string { return RouterKey }
 func (m MsgSuperfluidUnbondLock) Type() string {
 	return TypeMsgSuperfluidUnbondLock
 }
-
 func (m MsgSuperfluidUnbondLock) ValidateBasic() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender should not be an empty address")
@@ -138,11 +133,9 @@ func (m MsgSuperfluidUnbondLock) ValidateBasic() error {
 	}
 	return nil
 }
-
 func (m MsgSuperfluidUnbondLock) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
-
 func (m MsgSuperfluidUnbondLock) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
@@ -150,7 +143,7 @@ func (m MsgSuperfluidUnbondLock) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgLockAndSuperfluidDelegate{}
 
-// NewMsgLockAndSuperfluidDelegate creates a message to create a lockup lock and superfluid delegation.
+// NewMsgLockAndSuperfluidDelegate creates a message to create a lockup lock and superfluid delegation
 func NewMsgLockAndSuperfluidDelegate(sender sdk.AccAddress, coins sdk.Coins, valAddr sdk.ValAddress) *MsgLockAndSuperfluidDelegate {
 	return &MsgLockAndSuperfluidDelegate{
 		Sender:  sender.String(),
@@ -175,11 +168,9 @@ func (m MsgLockAndSuperfluidDelegate) ValidateBasic() error {
 	}
 	return nil
 }
-
 func (m MsgLockAndSuperfluidDelegate) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
-
 func (m MsgLockAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}

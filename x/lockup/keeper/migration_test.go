@@ -5,9 +5,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 )
 
 func (suite *KeeperTestSuite) TestLockupMergeMigration() {

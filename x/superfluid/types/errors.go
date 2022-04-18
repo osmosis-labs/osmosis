@@ -4,7 +4,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// x/superfluid module errors.
+// x/superfluid module errors
 var (
 	ErrMultipleCoinsLockupNotSupported = sdkerrors.Register(ModuleName, 1, "multiple coins lockup is not supported")
 	ErrUnbondingLockupNotSupported     = sdkerrors.Register(ModuleName, 2, "unbonding lockup is not allowed to participate in superfluid staking")

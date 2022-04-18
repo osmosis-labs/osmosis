@@ -7,17 +7,6 @@ Inspired by [Balancer](http://balancer.finance/whitepaper) and Sunny Aggarwal's 
 
 Whereas most Cosmos zones have focused the  ir incentive scheme on the delegators, Osmosis attempts to align the interests of multiple stakeholders of the ecosystem such as LPs, DAO members, as well as delegators. One mechanism that is introduced is how staked liquidity providers have sovereign ownership over their pools, and through the pool governance process allow them to adjust the parameters depending on the pool’s competition and market conditions. Osmosis is a sovereign Cosmos zone that derives its sovereignty not only from its application-specific blockchain architecture but also the collective sovereignty of the LPs that has aligned interest to different tokens that they are providing liquidity for.
 
-## System Requirements
-This system spec has been tested by many users and validators and found to be comfortable:
-
-* Quad Core or larger AMD or Intel (amd64) CPU
-  * ARM CPUs like the Apple M1 are not supported at this time.
-* 64GB RAM (A lot can be in swap)
-* 1TB NVMe Storage
-* 100MBPS bidirectional internet connection
-
-You can run Osmosis on lower-spec hardware for each component, but you may find that it is not highly performant or prone to crashing.
-
 ## Documentation
 For the most up to date documentation please visit [docs.osmosis.zone](https://docs.osmosis.zone/)
 

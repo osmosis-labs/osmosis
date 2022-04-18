@@ -1,13 +1,12 @@
 package keeper
 
 import (
-	"github.com/gogo/protobuf/proto"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/gogo/protobuf/proto"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIntermediaryAccount {
@@ -78,6 +77,7 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 		Denom:    stakingSyntheticDenom(denom, valAddr),
 		Duration: k.sk.GetParams(ctx).UnbondingTime,
 	}, ctx.BlockTime(), 1)
+
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
 		return types.SuperfluidIntermediaryAccount{}, err
@@ -143,7 +143,7 @@ func (k Keeper) GetAllLockIdIntermediaryAccountConnections(ctx sdk.Context) []ty
 	return connections
 }
 
-// Returns Superfluid Intermediate Account and a bool if found / not found.
+// Returns Superfluid Intermediate Account and a bool if found / not found
 func (k Keeper) GetIntermediaryAccountFromLockId(ctx sdk.Context, lockId uint64) (types.SuperfluidIntermediaryAccount, bool) {
 	addr := k.GetLockIdIntermediaryAccountConnection(ctx, lockId)
 	if addr.Empty() {

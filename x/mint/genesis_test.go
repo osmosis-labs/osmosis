@@ -3,12 +3,11 @@ package mint_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMintInitGenesis(t *testing.T) {

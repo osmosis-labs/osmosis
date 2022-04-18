@@ -33,10 +33,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type LockQueryType int32
 
 const (
-	// Queries for locks that are longer than a certain duration
 	ByDuration LockQueryType = 0
-	// Queries for lockups that started before a specific time
-	ByTime LockQueryType = 1
+	ByTime     LockQueryType = 1
 )
 
 var LockQueryType_name = map[int32]string{

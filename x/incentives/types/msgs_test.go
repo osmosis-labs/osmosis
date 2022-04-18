@@ -4,11 +4,10 @@ import (
 	"testing"
 	time "time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgCreatePool(t *testing.T) {
@@ -16,6 +15,7 @@ func TestMsgCreatePool(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address())
 
 	createMsg := func(after func(msg MsgCreateGauge) MsgCreateGauge) MsgCreateGauge {
+
 		distributeTo := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",

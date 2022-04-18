@@ -1,0 +1,30 @@
+syntax = "proto3";
+package osmosis.gamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/types";
+
+message PoolAsset {
+  // Coins we are talking about,
+  // the denomination must be unique amongst all PoolAssets for this pool.
+  cosmos.base.v1beta1.Coin token = 1
+      [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
+  // Weight that is not normalized. This weight must be less than 2^50
+  string weight = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"weight\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // Weight that is normalized s.t. the sum of all pool assets' weights
+  // equals 1. If the user provides this value, it is ignored. This should only
+  // ever be set by the state machine. This is left as a TODO for a future PR.
+  // string normalizedWeight = 3 [
+  //  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  //  (gogoproto.moretags) = "yaml:\"normalized_weight\"",
+  //  (gogoproto.nullable) = true
+  // ];
+}

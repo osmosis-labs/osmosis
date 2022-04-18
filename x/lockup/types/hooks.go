@@ -16,7 +16,7 @@ type LockupHooks interface {
 
 var _ LockupHooks = MultiLockupHooks{}
 
-// combine multiple gamm hooks, all hook functions are run in array sequence.
+// combine multiple gamm hooks, all hook functions are run in array sequence
 type MultiLockupHooks []LockupHooks
 
 func NewMultiLockupHooks(hooks ...LockupHooks) MultiLockupHooks {
