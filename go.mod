@@ -286,7 +286,7 @@ replace (
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use janky pebbledb
-	github.com/tendermint/tm-db => github.com/osmosis-labs/tm-db v0.6.6-0.20220411171255-2c7f69d3b16d
+	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220412120027-83d85efbdf87
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

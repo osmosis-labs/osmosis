@@ -1011,6 +1011,8 @@ github.com/nishanths/predeclared v0.0.0-20190419143655-18a43bb90ffc/go.mod h1:62
 github.com/nishanths/predeclared v0.0.0-20200524104333-86fad755b4d3/go.mod h1:nt3d53pc1VYcphSCIaYAJtnPYnr3Zyn8fMq2wvPGPso=
 github.com/nishanths/predeclared v0.2.1 h1:1TXtjmy4f3YCFjTxRd8zcFHOmoUir+gp0ESzjFzG2sw=
 github.com/nishanths/predeclared v0.2.1/go.mod h1:HvkGJcA3naj4lOwnFXFDkFxVtSqQMB9sbB1usJ+xjQE=
+github.com/notional-labs/tm-db v0.6.7-0.20220412120027-83d85efbdf87 h1:vXa2qqXGWNxEdw6bgfyvuX4LZGPeJP9MHCpkZOTrJow=
+github.com/notional-labs/tm-db v0.6.7-0.20220412120027-83d85efbdf87/go.mod h1:XHgWpCTqxRKmAAAShvcV9jbs5C/uEa55G8IXJawCpRw=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
@@ -1078,8 +1080,6 @@ github.com/osmosis-labs/iavl v0.17.3-osmo-v5 h1:B6Saw2AK0StgfSSgi2rUc5B8MDa1vV1n
 github.com/osmosis-labs/iavl v0.17.3-osmo-v5/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo h1:XyYyDTjPIu7qX2nhQp9mboj7Pa9FEnjg1RXw73Ctv5U=
 github.com/osmosis-labs/ibc-go/v2 v2.0.2-osmo/go.mod h1:XUmW7wmubCRhIEAGtMGS+5IjiSSmcAwihoN/yPGd6Kk=
-github.com/osmosis-labs/tm-db v0.6.6-0.20220411171255-2c7f69d3b16d h1:qG9Mx7t+KsueVUTeOJJG8wqlpw3yVHfxRpllUJVBCfU=
-github.com/osmosis-labs/tm-db v0.6.6-0.20220411171255-2c7f69d3b16d/go.mod h1:XHgWpCTqxRKmAAAShvcV9jbs5C/uEa55G8IXJawCpRw=
 github.com/osmosis-labs/wasmd v0.24.0-osmo-rc0 h1:EDi/0U64PPAgLNp7fTdVnPh+smWyDKHrGAdNCq/Nhes=
 github.com/osmosis-labs/wasmd v0.24.0-osmo-rc0/go.mod h1:DGi9PEoNZO/PTXfWNU7h09ZZWDIYaNy6qOYdxuTQFhA=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
