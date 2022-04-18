@@ -527,7 +527,6 @@ func MainnetGenesisParams() GenesisParams {
 }
 
 func TestnetGenesisParams() GenesisParams {
-
 	genParams := MainnetGenesisParams()
 
 	genParams.GenesisTime = time.Now()

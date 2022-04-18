@@ -83,8 +83,8 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 func underlyingCoinsForSelectPools(
 	originCoins sdk.Coins,
 	pools map[string]gammtypes.PoolI,
-	selectPoolIDs []uint64) map[uint64]sdk.Coins {
-
+	selectPoolIDs []uint64,
+) map[uint64]sdk.Coins {
 	balancesByPool := make(map[uint64]sdk.Coins)
 
 	for _, coin := range originCoins {
@@ -328,7 +328,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

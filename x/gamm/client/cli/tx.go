@@ -332,7 +332,6 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 }
 
 func NewBuildCreatePoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-
 	pool, err := parseCreatePoolFlags(fs)
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)

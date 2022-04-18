@@ -13,30 +13,32 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var now = time.Now().UTC()
-var acc1 = sdk.AccAddress([]byte("addr1---------------"))
-var acc2 = sdk.AccAddress([]byte("addr2---------------"))
-var testGenesis = types.GenesisState{
-	ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 750000000),
-	Params: types.Params{
-		AirdropStartTime:   now,
-		DurationUntilDecay: types.DefaultDurationUntilDecay,
-		DurationOfDecay:    types.DefaultDurationOfDecay,
-		ClaimDenom:         types.DefaultClaimDenom, // uosmo
-	},
-	ClaimRecords: []types.ClaimRecord{
-		{
-			Address:                acc1.String(),
-			InitialClaimableAmount: sdk.Coins{sdk.NewInt64Coin(types.DefaultClaimDenom, 1000000000)},
-			ActionCompleted:        []bool{true, false, true, true},
+var (
+	now         = time.Now().UTC()
+	acc1        = sdk.AccAddress([]byte("addr1---------------"))
+	acc2        = sdk.AccAddress([]byte("addr2---------------"))
+	testGenesis = types.GenesisState{
+		ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 750000000),
+		Params: types.Params{
+			AirdropStartTime:   now,
+			DurationUntilDecay: types.DefaultDurationUntilDecay,
+			DurationOfDecay:    types.DefaultDurationOfDecay,
+			ClaimDenom:         types.DefaultClaimDenom, // uosmo
 		},
-		{
-			Address:                acc2.String(),
-			InitialClaimableAmount: sdk.Coins{sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000)},
-			ActionCompleted:        []bool{false, false, false, false},
+		ClaimRecords: []types.ClaimRecord{
+			{
+				Address:                acc1.String(),
+				InitialClaimableAmount: sdk.Coins{sdk.NewInt64Coin(types.DefaultClaimDenom, 1000000000)},
+				ActionCompleted:        []bool{true, false, true, true},
+			},
+			{
+				Address:                acc2.String(),
+				InitialClaimableAmount: sdk.Coins{sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000)},
+				ActionCompleted:        []bool{false, false, false, false},
+			},
 		},
-	},
-}
+	}
+)
 
 func TestClaimInitGenesis(t *testing.T) {
 	app := simapp.Setup(false)

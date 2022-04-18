@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cast"
@@ -12,9 +13,12 @@ import (
 
 // TODO: Bump after next minor version. (in 6.2+)
 var DefaultMinGasPriceForArbitrageTx = sdk.ZeroDec()
-var DefaultMinGasPriceForHighGasTx = sdk.ZeroDec()
-var DefaultMaxGasWantedPerTx = uint64(25 * 1000 * 1000)
-var DefaultHighGasTxThreshold = uint64(1 * 1000 * 1000)
+
+var (
+	DefaultMinGasPriceForHighGasTx = sdk.ZeroDec()
+	DefaultMaxGasWantedPerTx       = uint64(25 * 1000 * 1000)
+	DefaultHighGasTxThreshold      = uint64(1 * 1000 * 1000)
+)
 
 type MempoolFeeOptions struct {
 	MaxGasWantedPerTx         uint64

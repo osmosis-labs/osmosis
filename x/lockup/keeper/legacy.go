@@ -115,7 +115,7 @@ func (k Keeper) addLegacyLockRefByKey(ctx sdk.Context, key []byte, lockID uint64
 
 // deleteLegacyLockRefByKey removes lock ID from an array associated to provided key
 func (k Keeper) deleteLegacyLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
-	var index = -1
+	index := -1
 	store := ctx.KVStore(k.storeKey)
 	lockIDs := k.getLegacyLockRefs(ctx, key)
 	lockIDs, index = removeValue(lockIDs, lockID)

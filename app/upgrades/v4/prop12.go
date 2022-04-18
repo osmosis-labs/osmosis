@@ -13,7 +13,7 @@ import (
 func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) {
 	payments := GetProp12Payments()
 
-	var total = int64(0)
+	total := int64(0)
 
 	for _, payment := range payments {
 		addr, err := sdk.AccAddressFromBech32(payment[0])
@@ -31,9 +31,8 @@ func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) 
 		total += amount
 	}
 
-	//deduct from the feePool tracker
+	// deduct from the feePool tracker
 	feePool := distr.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Sub(sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", total)))
 	distr.SetFeePool(ctx, feePool)
-
 }

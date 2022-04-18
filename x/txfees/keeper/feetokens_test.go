@@ -216,5 +216,4 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
 	}
-
 }

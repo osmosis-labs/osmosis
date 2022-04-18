@@ -12,9 +12,12 @@ var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 // Singletons
 var zero sdk.Dec = sdk.ZeroDec()
-var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
-var one sdk.Dec = sdk.OneDec()
-var two sdk.Dec = sdk.MustNewDecFromStr("2")
+
+var (
+	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
+	one      sdk.Dec = sdk.OneDec()
+	two      sdk.Dec = sdk.MustNewDecFromStr("2")
+)
 
 // calcSpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
@@ -116,7 +119,6 @@ func calcInGivenOut(
 	// Therefore we divide by (1 - swapfee) here
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
 	return tokenAmountInBeforeFee
-
 }
 
 func feeRatio(

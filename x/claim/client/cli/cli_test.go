@@ -18,8 +18,10 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
-var addr1 sdk.AccAddress
-var addr2 sdk.AccAddress
+var (
+	addr1 sdk.AccAddress
+	addr2 sdk.AccAddress
+)
 
 func init() {
 	params.SetAddressPrefixes()

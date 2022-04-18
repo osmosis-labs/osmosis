@@ -44,7 +44,6 @@ func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoins); err != nil {
 		panic(err)
 	}
-
 }
 
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {

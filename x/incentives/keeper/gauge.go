@@ -373,7 +373,8 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // the distrInfo computed. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
 

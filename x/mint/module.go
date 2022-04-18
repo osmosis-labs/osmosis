@@ -74,7 +74,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		return
 	}
-
 }
 
 // GetTxCmd returns no root tx command for the mint module.

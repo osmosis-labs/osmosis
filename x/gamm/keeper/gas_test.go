@@ -18,7 +18,8 @@ var (
 func (suite *KeeperTestSuite) measureJoinPoolGas(
 	addr sdk.AccAddress,
 	poolID uint64,
-	shareOutAmountMax sdk.Int, maxCoins sdk.Coins) uint64 {
+	shareOutAmountMax sdk.Int, maxCoins sdk.Coins,
+) uint64 {
 	alreadySpent := suite.ctx.GasMeter().GasConsumed()
 	err := suite.app.GAMMKeeper.JoinPool(suite.ctx, addr, poolID, shareOutAmountMax, maxCoins)
 	suite.Require().NoError(err)
@@ -34,7 +35,8 @@ func (suite *KeeperTestSuite) measureAvgAndMaxJoinPoolGas(
 	addr sdk.AccAddress,
 	poolIDFn func(int) uint64,
 	shareOutAmountMaxFn func(int) sdk.Int,
-	maxCoinsFn func(int) sdk.Coins) (avg uint64, maxGas uint64) {
+	maxCoinsFn func(int) sdk.Coins,
+) (avg uint64, maxGas uint64) {
 	runningTotal := uint64(0)
 	maxGas = uint64(0)
 	for i := 1; i <= numIterations; i++ {

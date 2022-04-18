@@ -23,7 +23,6 @@ func TestCalcSpotPrice(t *testing.T) {
 		expected_spot_price.Sub(actual_spot_price).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
-
 }
 
 // TODO: Create test vectors with balancer contract
@@ -40,7 +39,6 @@ func TestCalcSpotPriceWithSwapFee(t *testing.T) {
 		expectedDec.Sub(s).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
-
 }
 
 func TestCalcOutGivenIn(t *testing.T) {
@@ -59,7 +57,6 @@ func TestCalcOutGivenIn(t *testing.T) {
 		expectedDec.Sub(s).Abs().LTE(powPrecision.MulInt64(10000)),
 		"expected value & actual value's difference should less than precision*10000",
 	)
-
 }
 
 func TestCalcInGivenOut(t *testing.T) {
