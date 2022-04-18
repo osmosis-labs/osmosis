@@ -539,9 +539,7 @@ func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) erro
 }
 
 func (k Keeper) EditLockup(ctx sdk.Context, lock types.PeriodLock, newDuration time.Duration) error {
-	// sanity check
 
-	// check unlocking
 	if lock.IsUnlocking() {
 		return fmt.Errorf("cannot edit unlocking lockup")
 	}
@@ -552,7 +550,6 @@ func (k Keeper) EditLockup(ctx sdk.Context, lock types.PeriodLock, newDuration t
 	}
 
 	if newDuration != 0 {
-		// check newDuration > duration
 		if !(newDuration > lock.Duration) {
 			return fmt.Errorf("new duration should be greater than the original")
 		}
