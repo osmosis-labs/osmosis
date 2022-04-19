@@ -17,77 +17,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
 
-func AddAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
-	serverCtx := server.NewDefaultContext()
-	config := serverCtx.Config
-
-	config.SetRoot(path)
-	config.Moniker = moniker
-
-	coins, err := sdk.ParseCoinsNormalized(amountStr)
-	if err != nil {
-		return fmt.Errorf("failed to parse coins: %w", err)
-	}
-
-	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
-	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
-
-	genFile := config.GenesisFile()
-	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
-	}
-
-	authGenState := authtypes.GetGenesisStateFromAppState(util.Cdc, appState)
-
-	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
-	if err != nil {
-		return fmt.Errorf("failed to get accounts from any: %w", err)
-	}
-
-	if accs.Contains(accAddr) {
-		return fmt.Errorf("failed to add account to genesis state; account already exists: %s", accAddr)
-	}
-
-	// Add the new account to the set of genesis accounts and sanitize the
-	// accounts afterwards.
-	accs = append(accs, genAccount)
-	accs = authtypes.SanitizeGenesisAccounts(accs)
-
-	genAccs, err := authtypes.PackAccounts(accs)
-	if err != nil {
-		return fmt.Errorf("failed to convert accounts into any's: %w", err)
-	}
-
-	authGenState.Accounts = genAccs
-
-	authGenStateBz, err := util.Cdc.MarshalJSON(&authGenState)
-	if err != nil {
-		return fmt.Errorf("failed to marshal auth genesis state: %w", err)
-	}
-
-	appState[authtypes.ModuleName] = authGenStateBz
-
-	bankGenState := banktypes.GetGenesisStateFromAppState(util.Cdc, appState)
-	bankGenState.Balances = append(bankGenState.Balances, balances)
-	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
-
-	bankGenStateBz, err := util.Cdc.MarshalJSON(bankGenState)
-	if err != nil {
-		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
-	}
-
-	appState[banktypes.ModuleName] = bankGenStateBz
-
-	appStateJSON, err := json.Marshal(appState)
-	if err != nil {
-		return fmt.Errorf("failed to marshal application genesis state: %w", err)
-	}
-
-	genDoc.AppState = appStateJSON
-	return genutil.ExportGenesisFile(genDoc, genFile)
-}
-
 func Init(c *chain.Chain) error {
 	_, cdc := util.InitEncodingConfigAndCdc()
 
@@ -180,7 +109,112 @@ func Init(c *chain.Chain) error {
 
 	// write the updated genesis file to each validator
 	for _, val := range c.Validators {
-		util.WriteFile(filepath.Join(val.ConfigDir(), "config", "genesis.json"), bz)
+		if err := util.WriteFile(filepath.Join(val.ConfigDir(), "config", "genesis.json"), bz); err != nil {
+			return err
+		}
 	}
 	return nil
+}
+
+func InitNodes(c *chain.Chain) error {
+	if err := c.CreateAndInitValidators(2); err != nil {
+		return err
+	}
+
+	// initialize a genesis file for the first validator
+	val0ConfigDir := c.Validators[0].ConfigDir()
+	for _, val := range c.Validators {
+		if c.Id == chain.ChainAID {
+			if err := addAccount(val0ConfigDir, "", chain.InitBalanceStrA, val.GetKeyInfo().GetAddress()); err != nil {
+				return err
+			}
+		} else if c.Id == chain.ChainBID {
+			if err := addAccount(val0ConfigDir, "", chain.InitBalanceStrB, val.GetKeyInfo().GetAddress()); err != nil {
+				return err
+			}
+		}
+	}
+
+	// copy the genesis file to the remaining validators
+	for _, val := range c.Validators[1:] {
+		_, err := util.CopyFile(
+			filepath.Join(val0ConfigDir, "config", "genesis.json"),
+			filepath.Join(val.ConfigDir(), "config", "genesis.json"),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
+	serverCtx := server.NewDefaultContext()
+	config := serverCtx.Config
+
+	config.SetRoot(path)
+	config.Moniker = moniker
+
+	coins, err := sdk.ParseCoinsNormalized(amountStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse coins: %w", err)
+	}
+
+	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
+	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
+
+	genFile := config.GenesisFile()
+	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+	}
+
+	authGenState := authtypes.GetGenesisStateFromAppState(util.Cdc, appState)
+
+	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
+	if err != nil {
+		return fmt.Errorf("failed to get accounts from any: %w", err)
+	}
+
+	if accs.Contains(accAddr) {
+		return fmt.Errorf("failed to add account to genesis state; account already exists: %s", accAddr)
+	}
+
+	// Add the new account to the set of genesis accounts and sanitize the
+	// accounts afterwards.
+	accs = append(accs, genAccount)
+	accs = authtypes.SanitizeGenesisAccounts(accs)
+
+	genAccs, err := authtypes.PackAccounts(accs)
+	if err != nil {
+		return fmt.Errorf("failed to convert accounts into any's: %w", err)
+	}
+
+	authGenState.Accounts = genAccs
+
+	authGenStateBz, err := util.Cdc.MarshalJSON(&authGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal auth genesis state: %w", err)
+	}
+
+	appState[authtypes.ModuleName] = authGenStateBz
+
+	bankGenState := banktypes.GetGenesisStateFromAppState(util.Cdc, appState)
+	bankGenState.Balances = append(bankGenState.Balances, balances)
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+
+	bankGenStateBz, err := util.Cdc.MarshalJSON(bankGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
+	}
+
+	appState[banktypes.ModuleName] = bankGenStateBz
+
+	appStateJSON, err := json.Marshal(appState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal application genesis state: %w", err)
+	}
+
+	genDoc.AppState = appStateJSON
+	return genutil.ExportGenesisFile(genDoc, genFile)
 }

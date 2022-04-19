@@ -1,10 +1,12 @@
 package chain
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (	
+const (
 	// common
 	OsmoDenom     = "uosmo"
 	StakeDenom    = "stake"
@@ -28,4 +30,7 @@ var (
 	StakeAmountCoinA = sdk.NewCoin(StakeDenom, StakeAmountIntA)
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(StakeDenom, StakeAmountIntB)
+
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom)
+	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom)
 )

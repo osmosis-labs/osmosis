@@ -28,11 +28,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/genesis"
 )
 
-var (
-	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", chain.OsmoBalanceA, chain.OsmoDenom, chain.StakeBalanceA, chain.StakeDenom)
-	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", chain.OsmoBalanceB, chain.OsmoDenom, chain.StakeBalanceB, chain.StakeDenom)
-)
-
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -74,14 +69,22 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 3. Start both networks.
 
 	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.Id, s.chainA.DataDir)
-	s.initNodes(s.chainA)
-	genesis.Init(s.chainA)
+	if err := genesis.InitNodes(s.chainA); err != nil {
+		s.Require().NoError(err)
+	}
+	if err := genesis.Init(s.chainA); err != nil {
+		s.Require().NoError(err)
+	}
 	s.initValidatorConfigs(s.chainA)
 	s.runValidators(s.chainA, 0)
 
 	s.T().Logf("starting e2e infrastructure for chain B; chain-id: %s; datadir: %s", s.chainB.Id, s.chainB.DataDir)
-	s.initNodes(s.chainB)
-	genesis.Init(s.chainB)
+	if err := genesis.InitNodes(s.chainB); err != nil {
+		s.Require().NoError(err)
+	}
+	if err := genesis.Init(s.chainB); err != nil {
+		s.Require().NoError(err)
+	}
 	s.initValidatorConfigs(s.chainB)
 	s.runValidators(s.chainB, 10)
 
@@ -115,33 +118,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	for _, td := range s.tmpDirs {
 		os.RemoveAll(td)
-	}
-}
-
-func (s *IntegrationTestSuite) initNodes(c *chain.Chain) {
-	s.Require().NoError(c.CreateAndInitValidators(2))
-
-	// initialize a genesis file for the first validator
-	val0ConfigDir := c.Validators[0].ConfigDir()
-	for _, val := range c.Validators {
-		if c.Id == chain.ChainAID {
-			s.Require().NoError(
-				genesis.AddAccount(val0ConfigDir, "", initBalanceStrA, val.GetKeyInfo().GetAddress()),
-			)
-		} else if c.Id == chain.ChainBID {
-			s.Require().NoError(
-				genesis.AddAccount(val0ConfigDir, "", initBalanceStrB, val.GetKeyInfo().GetAddress()),
-			)
-		}
-	}
-
-	// copy the genesis file to the remaining validators
-	for _, val := range c.Validators[1:] {
-		_, err := util.CopyFile(
-			filepath.Join(val0ConfigDir, "config", "genesis.json"),
-			filepath.Join(val.ConfigDir(), "config", "genesis.json"),
-		)
-		s.Require().NoError(err)
 	}
 }
 
