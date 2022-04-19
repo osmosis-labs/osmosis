@@ -49,54 +49,75 @@ var (
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom)
 )
 
-func initValidatorConfigs(c *Chain) error {
-	for i, val := range c.Validators {
-		tmCfgPath := filepath.Join(val.ConfigDir(), "config", "config.toml")
+func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
+	serverCtx := server.NewDefaultContext()
+	config := serverCtx.Config
 
-		vpr := viper.New()
-		vpr.SetConfigFile(tmCfgPath)
-		if err := vpr.ReadInConfig(); err != nil {
-			return err
-		}
+	config.SetRoot(path)
+	config.Moniker = moniker
 
-		valConfig := &tmconfig.Config{}
-		if err := vpr.Unmarshal(valConfig); err != nil {
-			return err
-		}
-
-		valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
-		valConfig.P2P.AddrBookStrict = false
-		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.InstanceName(), 26656)
-		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-		valConfig.StateSync.Enable = false
-		valConfig.LogLevel = "info"
-
-		var peers []string
-
-		for j := 0; j < len(c.Validators); j++ {
-			if i == j {
-				continue
-			}
-
-			peer := c.Validators[j]
-			peerID := fmt.Sprintf("%s@%s%d:26656", peer.getNodeKey().ID(), peer.GetMoniker(), j)
-			peers = append(peers, peerID)
-		}
-
-		valConfig.P2P.PersistentPeers = strings.Join(peers, ",")
-
-		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
-
-		// set application configuration
-		appCfgPath := filepath.Join(val.ConfigDir(), "config", "app.toml")
-
-		appConfig := srvconfig.DefaultConfig()
-		appConfig.API.Enable = true
-		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
-
-		srvconfig.WriteConfigFile(appCfgPath, appConfig)
+	coins, err := sdk.ParseCoinsNormalized(amountStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse coins: %w", err)
 	}
-	return nil
+
+	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
+	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
+
+	genFile := config.GenesisFile()
+	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+	}
+
+	authGenState := authtypes.GetGenesisStateFromAppState(util.Cdc, appState)
+
+	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
+	if err != nil {
+		return fmt.Errorf("failed to get accounts from any: %w", err)
+	}
+
+	if accs.Contains(accAddr) {
+		return fmt.Errorf("failed to add account to genesis state; account already exists: %s", accAddr)
+	}
+
+	// Add the new account to the set of genesis accounts and sanitize the
+	// accounts afterwards.
+	accs = append(accs, genAccount)
+	accs = authtypes.SanitizeGenesisAccounts(accs)
+
+	genAccs, err := authtypes.PackAccounts(accs)
+	if err != nil {
+		return fmt.Errorf("failed to convert accounts into any's: %w", err)
+	}
+
+	authGenState.Accounts = genAccs
+
+	authGenStateBz, err := util.Cdc.MarshalJSON(&authGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal auth genesis state: %w", err)
+	}
+
+	appState[authtypes.ModuleName] = authGenStateBz
+
+	bankGenState := banktypes.GetGenesisStateFromAppState(util.Cdc, appState)
+	bankGenState.Balances = append(bankGenState.Balances, balances)
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+
+	bankGenStateBz, err := util.Cdc.MarshalJSON(bankGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
+	}
+
+	appState[banktypes.ModuleName] = bankGenStateBz
+
+	appStateJSON, err := json.Marshal(appState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal application genesis state: %w", err)
+	}
+
+	genDoc.AppState = appStateJSON
+	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
 func initGenesis(c *Chain) error {
@@ -228,73 +249,52 @@ func initNodes(c *Chain) error {
 	return nil
 }
 
-func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
-	serverCtx := server.NewDefaultContext()
-	config := serverCtx.Config
+func initValidatorConfigs(c *Chain) error {
+	for i, val := range c.Validators {
+		tmCfgPath := filepath.Join(val.ConfigDir(), "config", "config.toml")
 
-	config.SetRoot(path)
-	config.Moniker = moniker
+		vpr := viper.New()
+		vpr.SetConfigFile(tmCfgPath)
+		if err := vpr.ReadInConfig(); err != nil {
+			return err
+		}
 
-	coins, err := sdk.ParseCoinsNormalized(amountStr)
-	if err != nil {
-		return fmt.Errorf("failed to parse coins: %w", err)
+		valConfig := &tmconfig.Config{}
+		if err := vpr.Unmarshal(valConfig); err != nil {
+			return err
+		}
+
+		valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
+		valConfig.P2P.AddrBookStrict = false
+		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.InstanceName(), 26656)
+		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
+		valConfig.StateSync.Enable = false
+		valConfig.LogLevel = "info"
+
+		var peers []string
+
+		for j := 0; j < len(c.Validators); j++ {
+			if i == j {
+				continue
+			}
+
+			peer := c.Validators[j]
+			peerID := fmt.Sprintf("%s@%s%d:26656", peer.getNodeKey().ID(), peer.GetMoniker(), j)
+			peers = append(peers, peerID)
+		}
+
+		valConfig.P2P.PersistentPeers = strings.Join(peers, ",")
+
+		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
+
+		// set application configuration
+		appCfgPath := filepath.Join(val.ConfigDir(), "config", "app.toml")
+
+		appConfig := srvconfig.DefaultConfig()
+		appConfig.API.Enable = true
+		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
+
+		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}
-
-	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
-	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
-
-	genFile := config.GenesisFile()
-	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
-	}
-
-	authGenState := authtypes.GetGenesisStateFromAppState(util.Cdc, appState)
-
-	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
-	if err != nil {
-		return fmt.Errorf("failed to get accounts from any: %w", err)
-	}
-
-	if accs.Contains(accAddr) {
-		return fmt.Errorf("failed to add account to genesis state; account already exists: %s", accAddr)
-	}
-
-	// Add the new account to the set of genesis accounts and sanitize the
-	// accounts afterwards.
-	accs = append(accs, genAccount)
-	accs = authtypes.SanitizeGenesisAccounts(accs)
-
-	genAccs, err := authtypes.PackAccounts(accs)
-	if err != nil {
-		return fmt.Errorf("failed to convert accounts into any's: %w", err)
-	}
-
-	authGenState.Accounts = genAccs
-
-	authGenStateBz, err := util.Cdc.MarshalJSON(&authGenState)
-	if err != nil {
-		return fmt.Errorf("failed to marshal auth genesis state: %w", err)
-	}
-
-	appState[authtypes.ModuleName] = authGenStateBz
-
-	bankGenState := banktypes.GetGenesisStateFromAppState(util.Cdc, appState)
-	bankGenState.Balances = append(bankGenState.Balances, balances)
-	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
-
-	bankGenStateBz, err := util.Cdc.MarshalJSON(bankGenState)
-	if err != nil {
-		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
-	}
-
-	appState[banktypes.ModuleName] = bankGenStateBz
-
-	appStateJSON, err := json.Marshal(appState)
-	if err != nil {
-		return fmt.Errorf("failed to marshal application genesis state: %w", err)
-	}
-
-	genDoc.AppState = appStateJSON
-	return genutil.ExportGenesisFile(genDoc, genFile)
+	return nil
 }
