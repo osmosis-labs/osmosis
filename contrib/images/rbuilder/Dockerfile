@@ -10,11 +10,8 @@ RUN mkdir -p /usr/local/share/osmosis/
 # Deploy the shell functions library.
 COPY buildlib.sh /usr/local/share/osmosis/
 
-# From https://github.com/CosmWasm/wasmd/blob/master/Dockerfile
-# For more details see https://github.com/CosmWasm/wasmvm#builds-of-libwasmvm 
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0-beta7/libwasmvm_muslc.a /lib/libwasmvm_muslc.a
-RUN sha256sum /lib/libwasmvm_muslc.a | grep d0152067a5609bfdfb3f0d5d6c0f2760f79d5f2cd7fd8513cafa9932d22eb350
-
+# Create the 'builder' user.
+RUN useradd -ms /bin/bash -U builder
 ARG APP
 ARG DEBUG
 ARG TARGET_PLATFORMS
@@ -26,10 +23,15 @@ ENV LEDGER_ENABLE true
 ENV TARGET_PLATFORMS ${TARGET_PLATFORMS:-linux/amd64}
 ENV BUILD_SCRIPT ${BUILD_SCRIPT:-/sources/.build.sh}
 
-WORKDIR /sources
+# From https://github.com/CosmWasm/wasmd/blob/master/Dockerfile
+# For more details see https://github.com/CosmWasm/wasmvm#builds-of-libwasmvm 
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0-beta7/libwasmvm_muslc.a /usr/local/lib/libwasmvm_muslc.a
+RUN chown builder /usr/local/lib/libwasmvm_muslc.a 
+RUN sha256sum /usr/local/lib/libwasmvm_muslc.a | grep d0152067a5609bfdfb3f0d5d6c0f2760f79d5f2cd7fd8513cafa9932d22eb350
 
-# Mount the application's sources.
-VOLUME [ "/sources" ]
+# Drop root privileges.
+USER builder:builder
+WORKDIR /sources
 
 # Run the application's build.sh.
 ENTRYPOINT [ "/bin/bash", "-c", "${BUILD_SCRIPT}" ]
