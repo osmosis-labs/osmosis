@@ -9,8 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v8/app"
+	"github.com/osmosis-labs/osmosis/v8/x/incentives/keeper"
 )
 
 type KeeperTestSuite struct {

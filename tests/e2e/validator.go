@@ -24,7 +24,7 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v7/app"
+	osmosisApp "github.com/osmosis-labs/osmosis/v8/app"
 )
 
 type validator struct {

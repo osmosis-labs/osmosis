@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v8/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 )
 
 var (

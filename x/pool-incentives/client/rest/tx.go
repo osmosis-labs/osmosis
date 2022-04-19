@@ -10,7 +10,7 @@ import (
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 )
 
 type UpdatePoolIncentivesRequest struct {

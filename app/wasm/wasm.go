@@ -6,7 +6,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	gammkeeper "github.com/osmosis-labs/osmosis/v8/x/gamm/keeper"
 )
 
 func RegisterCustomPlugins(

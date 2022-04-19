@@ -1,8 +1,8 @@
 package mint
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v8/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

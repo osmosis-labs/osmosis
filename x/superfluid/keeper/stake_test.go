@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"time"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v8/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v8/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

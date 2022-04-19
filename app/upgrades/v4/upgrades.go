@@ -7,8 +7,8 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v8/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
 )
 
 // CreateUpgradeHandler returns an x/upgrade handler for the Osmosis v4 on-chain

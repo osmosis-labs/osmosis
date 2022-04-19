@@ -10,9 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	simapp "github.com/osmosis-labs/osmosis/v8/app"
+	"github.com/osmosis-labs/osmosis/v8/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/mint/types"
 )
 
 type MintTestSuite struct {
