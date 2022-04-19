@@ -47,6 +47,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdTotalLockedByDenom(),
 		GetCmdOutputLocksJson(),
 		GetCmdSyntheticLockupsByLockupID(),
+		GetCmdAccountLockedDuration(),
 	)
 
 	return cmd
