@@ -1,10 +1,3 @@
-<!--
-order: 0
-title: "Superfluid Overview"
-parent:
-  title: "superfluid"
--->
-
 # Superfluid Staking
 
 ## Abstract
@@ -38,7 +31,7 @@ On epoch (start of every day), we read from the lockup module how much GAMM toke
 
 <br/>
 <p style="text-align:center;">
-<img src="/img/superfluiddiagram.png" height="300"/>
+<img src="https://raw.githubusercontent.com/osmosis-labs/osmosis/main/x/superfluid/spec/superfluiddiagram.png" height="300"/>
 </p>
 
 </br>
