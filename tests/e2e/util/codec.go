@@ -18,10 +18,10 @@ var (
 )
 
 func init() {
-	EncodingConfig, Cdc = InitEncodingConfigAndCdc()
+	EncodingConfig, Cdc = initEncodingConfigAndCdc()
 }
 
-func InitEncodingConfigAndCdc() (params.EncodingConfig, codec.Codec) {
+func initEncodingConfigAndCdc() (params.EncodingConfig, codec.Codec) {
 	encodingConfig := osmosisApp.MakeEncodingConfig()
 
 	encodingConfig.InterfaceRegistry.RegisterImplementations(

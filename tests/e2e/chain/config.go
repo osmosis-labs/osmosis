@@ -100,8 +100,6 @@ func initValidatorConfigs(c *Chain) error {
 }
 
 func initGenesis(c *Chain) error {
-	_, cdc := util.InitEncodingConfigAndCdc()
-
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
@@ -115,7 +113,7 @@ func initGenesis(c *Chain) error {
 	}
 
 	var bankGenState banktypes.GenesisState
-	if err := cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState); err != nil {
+	if err := util.Cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState); err != nil {
 		return err
 	}
 
@@ -133,14 +131,14 @@ func initGenesis(c *Chain) error {
 		},
 	})
 
-	bz, err := cdc.MarshalJSON(&bankGenState)
+	bz, err := util.Cdc.MarshalJSON(&bankGenState)
 	if err != nil {
 		return err
 	}
 	appGenState[banktypes.ModuleName] = bz
 
 	var genUtilGenState genutiltypes.GenesisState
-	if err := cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState); err != nil {
+	if err := util.Cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState); err != nil {
 		return err
 	}
 
@@ -161,7 +159,7 @@ func initGenesis(c *Chain) error {
 			return err
 		}
 
-		txRaw, err := cdc.MarshalJSON(signedTx)
+		txRaw, err := util.Cdc.MarshalJSON(signedTx)
 		if err != nil {
 			return err
 		}
@@ -171,7 +169,7 @@ func initGenesis(c *Chain) error {
 
 	genUtilGenState.GenTxs = genTxs
 
-	bz, err = cdc.MarshalJSON(&genUtilGenState)
+	bz, err = util.Cdc.MarshalJSON(&genUtilGenState)
 	if err != nil {
 		return err
 	}
