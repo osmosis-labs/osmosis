@@ -6,13 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 var gammPoolMakerAcc = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address().Bytes())
 
 // Returns a Univ2 pool with the initial liquidity being the provided balances
 func (suite *KeeperTestHelper) PrepareUni2PoolWithAssets(asset1, asset2 sdk.Coin) uint64 {
-	return suite.preparePool(
+	return suite.PrepareBalancerPoolWithPoolAsset(
 		[]balancer.PoolAsset{
 			{
 				Weight: sdk.NewInt(1),
@@ -26,7 +27,60 @@ func (suite *KeeperTestHelper) PrepareUni2PoolWithAssets(asset1, asset2 sdk.Coin
 	)
 }
 
-func (suite *KeeperTestHelper) preparePool(assets []balancer.PoolAsset) uint64 {
+func (suite *KeeperTestHelper) PrepareBalancerPool() uint64 {
+	poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+		SwapFee: sdk.NewDec(0),
+		ExitFee: sdk.NewDec(0),
+	})
+
+	spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, "foo", "bar")
+	suite.NoError(err)
+	suite.Equal(sdk.NewDec(2).String(), spotPrice.String())
+	spotPrice, err = suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, "bar", "baz")
+	suite.NoError(err)
+	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
+	spotPrice, err = suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, "baz", "foo")
+	suite.NoError(err)
+	s := sdk.NewDec(1).Quo(sdk.NewDec(3))
+	sp := s.Mul(gammtypes.SigFigs).RoundInt().ToDec().Quo(gammtypes.SigFigs)
+	suite.Equal(sp.String(), spotPrice.String())
+
+	return poolId
+}
+
+func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
+	// Mint some assets to the account.
+	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, gammPoolMakerAcc, sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+		sdk.NewCoin("foo", sdk.NewInt(10000000)),
+		sdk.NewCoin("bar", sdk.NewInt(10000000)),
+		sdk.NewCoin("baz", sdk.NewInt(10000000)),
+	))
+	if err != nil {
+		panic(err)
+	}
+
+	poolAssets := []balancer.PoolAsset{
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+		},
+		{
+			Weight: sdk.NewInt(200),
+			Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+		},
+		{
+			Weight: sdk.NewInt(300),
+			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
+		},
+	}
+	msg := balancer.NewMsgCreateBalancerPool(gammPoolMakerAcc, poolParams, poolAssets, "")
+	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+	suite.NoError(err)
+	return poolId
+}
+
+func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.PoolAsset) uint64 {
 	suite.Require().Len(assets, 2)
 
 	// Add coins for pool creation fee + coins needed to mint balances
