@@ -28,8 +28,7 @@ type IntegrationTestSuite struct {
 	suite.Suite
 
 	tmpDirs        []string
-	chainA         *chain.Chain
-	chainB         *chain.Chain
+	chains         []*chain.Chain
 	dkrPool        *dockertest.Pool
 	dkrNet         *dockertest.Network
 	hermesResource *dockertest.Resource
@@ -43,32 +42,23 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
-	// The boostrapping phase is as follows:
+	s.chains = make([]*chain.Chain, 0, 2)
+
+	// The e2e test flow is as follows:
 	//
-	// 1. Initialize Osmosis validator nodes.
-	// 2. Create and initialize Osmosis validator genesis files (both chains)
-	// 3. Start both networks.
-	var err error
-	s.T().Logf("starting e2e infrastructure for chain-id: %s", chain.ChainAID)
-	s.chainA, err = chain.Init(chain.ChainAID)
-	s.Require().NoError(err)
-	s.T().Logf("chain-id: %s is now configured on path: %s", chain.ChainAID, s.chainA.DataDir)
+	// 1. Configure two chains - chan A and chain B.
+	//   * For each chain, set up two validators
+	//   * Initialize configs and genesis for all validators.
+	// 2. Start both networks.
+	// 3. Run IBC relayer betweeen the two chains.
+	// 4. Execute various e2e tests, including IBC.
+	s.configureChain(chain.ChainAID)
+	s.configureChain(chain.ChainBID)
 
-	s.T().Logf("starting e2e infrastructure for chain-id: %s", chain.ChainBID)
-	s.chainB, err = chain.Init(chain.ChainBID)
-	s.Require().NoError(err)
-	s.T().Logf("chain-id: %s is now configured on path: %s", chain.ChainBID, s.chainB.DataDir)
+	s.configureDockerResources()
 
-	s.dkrPool, err = dockertest.NewPool("")
-	s.Require().NoError(err)
-
-	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", s.chainA.Id, s.chainB.Id))
-	s.Require().NoError(err)
-
-	s.valResources = make(map[string][]*dockertest.Resource)
-
-	s.runValidators(s.chainA, 0)
-	s.runValidators(s.chainB, 10)
+	s.runValidators(s.chains[0], 0)
+	s.runValidators(s.chains[1], 10)
 	s.runIBCRelayer()
 }
 
@@ -94,8 +84,9 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.Require().NoError(s.dkrPool.RemoveNetwork(s.dkrNet))
 
-	os.RemoveAll(s.chainA.DataDir)
-	os.RemoveAll(s.chainB.DataDir)
+	for _, chain := range s.chains {
+		os.RemoveAll(chain.DataDir)
+	}
 
 	for _, td := range s.tmpDirs {
 		os.RemoveAll(td)
@@ -173,8 +164,8 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
-	osmoAVal := s.chainA.Validators[0]
-	osmoBVal := s.chainB.Validators[0]
+	osmoAVal := s.chains[0].Validators[0]
+	osmoBVal := s.chains[1].Validators[0]
 	hermesCfgPath := path.Join(tmpDir, "hermes")
 
 	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0o755))
@@ -186,7 +177,7 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 
 	s.hermesResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s-%s-relayer", s.chainA.Id, s.chainB.Id),
+			Name:       fmt.Sprintf("%s-%s-relayer", s.chains[0].Id, s.chains[1].Id),
 			Repository: "osmolabs/hermes",
 			Tag:        "0.13.0",
 			NetworkID:  s.dkrNet.Network.ID,
@@ -204,12 +195,12 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
 			},
 			Env: []string{
-				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chainA.Id),
-				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chainB.Id),
+				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chains[0].Id),
+				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chains[1].Id),
 				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.GetMnemonic()),
 				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.GetMnemonic()),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chainA.Id][0].Container.Name[1:]),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chainB.Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chains[0].Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chains[1].Id][0].Container.Name[1:]),
 			},
 			Entrypoint: []string{
 				"sh",
@@ -259,6 +250,24 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 
 	// create the client, connection and channel between the two Gaia chains
 	s.connectIBCChains()
+}
+
+func (s *IntegrationTestSuite) configureChain(chainId string) {
+	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
+	newChain, err := chain.Init(chainId)
+	s.chains = append(s.chains, newChain)
+	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) configureDockerResources() {
+	var err error
+	s.dkrPool, err = dockertest.NewPool("")
+	s.Require().NoError(err)
+
+	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", s.chains[0].Id, s.chains[1].Id))
+	s.Require().NoError(err)
+
+	s.valResources = make(map[string][]*dockertest.Resource)
 }
 
 func noRestart(config *docker.HostConfig) {

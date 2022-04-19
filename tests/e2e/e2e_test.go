@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
 func (s *IntegrationTestSuite) TestQueryBalances() {
@@ -22,14 +22,14 @@ func (s *IntegrationTestSuite) TestQueryBalances() {
 		expectedBalancesB = []uint64{chain.OsmoBalanceB, chain.StakeBalanceB - chain.StakeAmountB, chain.IbcSendAmount}
 	)
 
-	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.Id][0].GetHostPort("1317/tcp"))
-	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.Validators[0].GetKeyInfo().GetAddress().String())
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[0].Id][0].GetHostPort("1317/tcp"))
+	balancesA, err := queryBalances(chainAAPIEndpoint, s.chains[0].Validators[0].GetKeyInfo().GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesA)
 	s.Require().Equal(2, len(balancesA))
 
-	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.Id][0].GetHostPort("1317/tcp"))
-	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.Validators[0].GetKeyInfo().GetAddress().String())
+	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[1].Id][0].GetHostPort("1317/tcp"))
+	balancesB, err := queryBalances(chainBAPIEndpoint, s.chains[1].Validators[0].GetKeyInfo().GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesB)
 	s.Require().Equal(3, len(balancesB))
@@ -100,11 +100,11 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	var ibcStakeDenom string
 
 	s.Run("send_uosmo_to_chainB", func() {
-		recipient := s.chainB.Validators[0].GetKeyInfo().GetAddress().String()
+		recipient := s.chains[1].Validators[0].GetKeyInfo().GetAddress().String()
 		token := sdk.NewInt64Coin(chain.OsmoDenom, chain.IbcSendAmount) // 3,300uosmo
-		s.sendIBC(s.chainA.Id, s.chainB.Id, recipient, token)
+		s.sendIBC(s.chains[0].Id, s.chains[1].Id, recipient, token)
 
-		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.Id][0].GetHostPort("1317/tcp"))
+		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[1].Id][0].GetHostPort("1317/tcp"))
 
 		// require the recipient account receives the IBC tokens (IBC packets ACKd)
 		var (
