@@ -69,17 +69,17 @@ func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	return result, nil
 }
 
-// applySwap updates the pool liquidity.
+// updatePoolLiquidityForSwap updates the pool liquidity.
 // It requires caller to validate that tokensIn and tokensOut only consist of
 // denominations in the pool.
 // The function sanity checks this, and panics if not the case.
-func (p *Pool) applySwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
+func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
 	l := p.PoolLiquidity.Len()
 	// update liquidity
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut)
 	// sanity check that no new denoms were added
 	if len(p.PoolLiquidity) != l {
-		panic("applySwap changed number of tokens in pool")
+		panic("updatePoolLiquidityForSwap changed number of tokens in pool")
 	}
 }
 
@@ -105,7 +105,7 @@ func (pa *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDe
 	if !tokenOut.Amount.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
-	pa.applySwap(tokenIn, sdk.NewCoins(tokenOut))
+	pa.updatePoolLiquidityForSwap(tokenIn, sdk.NewCoins(tokenOut))
 
 	return tokenOut, nil
 }
@@ -136,7 +136,7 @@ func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDe
 	if !tokenIn.Amount.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
-	pa.applySwap(sdk.NewCoins(tokenIn), tokenOut)
+	pa.updatePoolLiquidityForSwap(sdk.NewCoins(tokenIn), tokenOut)
 
 	return tokenIn, nil
 }
