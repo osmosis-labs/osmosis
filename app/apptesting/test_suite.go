@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,8 +27,18 @@ import (
 type KeeperTestHelper struct {
 	suite.Suite
 
-	App *app.OsmosisApp
-	Ctx sdk.Context
+	App         *app.OsmosisApp
+	Ctx         sdk.Context
+	QueryHelper *baseapp.QueryServiceTestHelper
+}
+
+func (suite *KeeperTestHelper) SetupTestApp() {
+	suite.App = app.Setup(false)
+	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{})
+	suite.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: suite.App.GRPCQueryRouter(),
+		Ctx:             suite.Ctx,
+	}
 }
 
 func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
