@@ -29,8 +29,8 @@ import (
 )
 
 var (
-	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", util.OsmoBalanceA, util.OsmoDenom, util.StakeBalanceA, util.StakeDenom)
-	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", util.OsmoBalanceB, util.OsmoDenom, util.StakeBalanceB, util.StakeDenom)
+	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", chain.OsmoBalanceA, chain.OsmoDenom, chain.StakeBalanceA, chain.StakeDenom)
+	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", chain.OsmoBalanceB, chain.OsmoDenom, chain.StakeBalanceB, chain.StakeDenom)
 )
 
 type IntegrationTestSuite struct {
@@ -53,10 +53,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
 	var err error
-	s.chainA, err = chain.New(util.ChainAID)
+	s.chainA, err = chain.New(chain.ChainAID)
 	s.Require().NoError(err)
 
-	s.chainB, err = chain.New(util.ChainBID)
+	s.chainB, err = chain.New(chain.ChainBID)
 	s.Require().NoError(err)
 
 	s.dkrPool, err = dockertest.NewPool("")
@@ -124,11 +124,11 @@ func (s *IntegrationTestSuite) initNodes(c *chain.Chain) {
 	// initialize a genesis file for the first validator
 	val0ConfigDir := c.Validators[0].ConfigDir()
 	for _, val := range c.Validators {
-		if c.Id == util.ChainAID {
+		if c.Id == chain.ChainAID {
 			s.Require().NoError(
 				genesis.AddAccount(val0ConfigDir, "", initBalanceStrA, val.GetKeyInfo().GetAddress()),
 			)
-		} else if c.Id == util.ChainBID {
+		} else if c.Id == chain.ChainBID {
 			s.Require().NoError(
 				genesis.AddAccount(val0ConfigDir, "", initBalanceStrB, val.GetKeyInfo().GetAddress()),
 			)
@@ -184,7 +184,7 @@ func (s *IntegrationTestSuite) initValidatorConfigs(c *chain.Chain) {
 
 		appConfig := srvconfig.DefaultConfig()
 		appConfig.API.Enable = true
-		appConfig.MinGasPrices = fmt.Sprintf("%s%s", util.MinGasPrice, util.OsmoDenom)
+		appConfig.MinGasPrices = fmt.Sprintf("%s%s", chain.MinGasPrice, chain.OsmoDenom)
 
 		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}

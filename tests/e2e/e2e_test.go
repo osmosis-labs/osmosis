@@ -11,14 +11,15 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
 
 func (s *IntegrationTestSuite) TestQueryBalances() {
 	var (
-		expectedDenomsA   = []string{util.OsmoDenom, util.StakeDenom}
-		expectedDenomsB   = []string{util.OsmoDenom, util.StakeDenom, util.IbcDenom}
-		expectedBalancesA = []uint64{util.OsmoBalanceA - util.IbcSendAmount, util.StakeBalanceA - util.StakeAmountA}
-		expectedBalancesB = []uint64{util.OsmoBalanceB, util.StakeBalanceB - util.StakeAmountB, util.IbcSendAmount}
+		expectedDenomsA   = []string{chain.OsmoDenom, chain.StakeDenom}
+		expectedDenomsB   = []string{chain.OsmoDenom, chain.StakeDenom, chain.IbcDenom}
+		expectedBalancesA = []uint64{chain.OsmoBalanceA - chain.IbcSendAmount, chain.StakeBalanceA - chain.StakeAmountA}
+		expectedBalancesB = []uint64{chain.OsmoBalanceB, chain.StakeBalanceB - chain.StakeAmountB, chain.IbcSendAmount}
 	)
 
 	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.Id][0].GetHostPort("1317/tcp"))
@@ -100,7 +101,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 
 	s.Run("send_uosmo_to_chainB", func() {
 		recipient := s.chainB.Validators[0].GetKeyInfo().GetAddress().String()
-		token := sdk.NewInt64Coin(util.OsmoDenom, util.IbcSendAmount) // 3,300uosmo
+		token := sdk.NewInt64Coin(chain.OsmoDenom, chain.IbcSendAmount) // 3,300uosmo
 		s.sendIBC(s.chainA.Id, s.chainB.Id, recipient, token)
 
 		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.Id][0].GetHostPort("1317/tcp"))
