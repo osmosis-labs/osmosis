@@ -97,14 +97,14 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-reproducible: go.sum
-		$(DOCKER) rm latest-build || true
-		$(DOCKER) run --volume=$(CURDIR):/sources:ro \
-		--env TARGET_PLATFORMS='linux/amd64' \
-		--env APP=osmosisd \
-		--env VERSION=$(VERSION) \
-		--env COMMIT=$(COMMIT) \
-		--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-		--name latest-build osmolabs/rbuilder:latest
+	$(DOCKER) rm latest-build || true
+	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
+	--env TARGET_PLATFORMS='linux/amd64' \
+	--env APP=osmosisd \
+	--env VERSION=$(VERSION) \
+	--env COMMIT=$(COMMIT) \
+	--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+	--name latest-build osmolabs/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/root/artifacts/ $(CURDIR)/
 
 build-linux: go.sum
