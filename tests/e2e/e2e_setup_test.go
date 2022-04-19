@@ -15,54 +15,30 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	tmconfig "github.com/tendermint/tendermint/config"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-)
 
-const (
-	// common
-	osmoDenom     = "uosmo"
-	stakeDenom    = "stake"
-	ibcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
-	minGasPrice   = "0.000"
-	ibcSendAmount = 3300000000
-	// chainA
-	chainAID      = "osmo-test-a"
-	osmoBalanceA  = 200000000000
-	stakeBalanceA = 110000000000
-	stakeAmountA  = 100000000000
-	// chainB
-	chainBID      = "osmo-test-b"
-	osmoBalanceB  = 500000000000
-	stakeBalanceB = 440000000000
-	stakeAmountB  = 400000000000
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/common"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/genesis"
 )
 
 var (
-	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", osmoBalanceA, osmoDenom, stakeBalanceA, stakeDenom)
-	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", osmoBalanceB, osmoDenom, stakeBalanceB, stakeDenom)
-	stakeAmountIntA  = sdk.NewInt(stakeAmountA)
-	stakeAmountCoinA = sdk.NewCoin(stakeDenom, stakeAmountIntA)
-	stakeAmountIntB  = sdk.NewInt(stakeAmountB)
-	stakeAmountCoinB = sdk.NewCoin(stakeDenom, stakeAmountIntB)
+	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", common.OsmoBalanceA, common.OsmoDenom, common.StakeBalanceA, common.StakeDenom)
+	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", common.OsmoBalanceB, common.OsmoDenom, common.StakeBalanceB, common.StakeDenom)
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
 	tmpDirs        []string
-	chainA         *chain
-	chainB         *chain
+	chainA         *chain.Chain
+	chainB         *chain.Chain
 	dkrPool        *dockertest.Pool
 	dkrNet         *dockertest.Network
 	hermesResource *dockertest.Resource
@@ -77,16 +53,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
 	var err error
-	s.chainA, err = newChain(chainAID)
+	s.chainA, err = chain.New(common.ChainAID)
 	s.Require().NoError(err)
 
-	s.chainB, err = newChain(chainBID)
+	s.chainB, err = chain.New(common.ChainBID)
 	s.Require().NoError(err)
 
 	s.dkrPool, err = dockertest.NewPool("")
 	s.Require().NoError(err)
 
-	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", s.chainA.id, s.chainB.id))
+	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", s.chainA.Id, s.chainB.Id))
 	s.Require().NoError(err)
 
 	s.valResources = make(map[string][]*dockertest.Resource)
@@ -97,15 +73,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 2. Create and initialize Osmosis validator genesis files (both chains)
 	// 3. Start both networks.
 
-	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.id, s.chainA.dataDir)
+	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.Id, s.chainA.DataDir)
 	s.initNodes(s.chainA)
-	s.initGenesis(s.chainA)
+	genesis.Init(s.chainA)
 	s.initValidatorConfigs(s.chainA)
 	s.runValidators(s.chainA, 0)
 
-	s.T().Logf("starting e2e infrastructure for chain B; chain-id: %s; datadir: %s", s.chainB.id, s.chainB.dataDir)
+	s.T().Logf("starting e2e infrastructure for chain B; chain-id: %s; datadir: %s", s.chainB.Id, s.chainB.DataDir)
 	s.initNodes(s.chainB)
-	s.initGenesis(s.chainB)
+	genesis.Init(s.chainB)
 	s.initValidatorConfigs(s.chainB)
 	s.runValidators(s.chainB, 10)
 
@@ -134,118 +110,44 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.Require().NoError(s.dkrPool.RemoveNetwork(s.dkrNet))
 
-	os.RemoveAll(s.chainA.dataDir)
-	os.RemoveAll(s.chainB.dataDir)
+	os.RemoveAll(s.chainA.DataDir)
+	os.RemoveAll(s.chainB.DataDir)
 
 	for _, td := range s.tmpDirs {
 		os.RemoveAll(td)
 	}
 }
 
-func (s *IntegrationTestSuite) initNodes(c *chain) {
-	s.Require().NoError(c.createAndInitValidators(2))
+func (s *IntegrationTestSuite) initNodes(c *chain.Chain) {
+	s.Require().NoError(c.CreateAndInitValidators(2))
 
 	// initialize a genesis file for the first validator
-	val0ConfigDir := c.validators[0].configDir()
-	for _, val := range c.validators {
-		if c.id == chainAID {
+	val0ConfigDir := c.Validators[0].ConfigDir()
+	for _, val := range c.Validators {
+		if c.Id == common.ChainAID {
 			s.Require().NoError(
-				addGenesisAccount(val0ConfigDir, "", initBalanceStrA, val.keyInfo.GetAddress()),
+				genesis.AddAccount(val0ConfigDir, "", initBalanceStrA, val.GetKeyInfo().GetAddress()),
 			)
-		} else if c.id == chainBID {
+		} else if c.Id == common.ChainBID {
 			s.Require().NoError(
-				addGenesisAccount(val0ConfigDir, "", initBalanceStrB, val.keyInfo.GetAddress()),
+				genesis.AddAccount(val0ConfigDir, "", initBalanceStrB, val.GetKeyInfo().GetAddress()),
 			)
 		}
 	}
 
 	// copy the genesis file to the remaining validators
-	for _, val := range c.validators[1:] {
-		_, err := copyFile(
+	for _, val := range c.Validators[1:] {
+		_, err := common.CopyFile(
 			filepath.Join(val0ConfigDir, "config", "genesis.json"),
-			filepath.Join(val.configDir(), "config", "genesis.json"),
+			filepath.Join(val.ConfigDir(), "config", "genesis.json"),
 		)
 		s.Require().NoError(err)
 	}
 }
 
-func (s *IntegrationTestSuite) initGenesis(c *chain) {
-	serverCtx := server.NewDefaultContext()
-	config := serverCtx.Config
-
-	config.SetRoot(c.validators[0].configDir())
-	config.Moniker = c.validators[0].moniker
-
-	genFilePath := config.GenesisFile()
-	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
-	s.Require().NoError(err)
-
-	var bankGenState banktypes.GenesisState
-	s.Require().NoError(cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState))
-
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
-		Description: "An example stable token",
-		Display:     osmoDenom,
-		Base:        osmoDenom,
-		Symbol:      osmoDenom,
-		Name:        osmoDenom,
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    osmoDenom,
-				Exponent: 0,
-			},
-		},
-	})
-
-	bz, err := cdc.MarshalJSON(&bankGenState)
-	s.Require().NoError(err)
-	appGenState[banktypes.ModuleName] = bz
-
-	var genUtilGenState genutiltypes.GenesisState
-	s.Require().NoError(cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState))
-
-	// generate genesis txs
-	genTxs := make([]json.RawMessage, len(c.validators))
-	for i, val := range c.validators {
-		stakeAmountCoin := stakeAmountCoinA
-		if c.id != chainAID {
-			stakeAmountCoin = stakeAmountCoinB
-		}
-		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
-		s.Require().NoError(err)
-
-		signedTx, err := val.signMsg(createValmsg)
-		s.Require().NoError(err)
-
-		txRaw, err := cdc.MarshalJSON(signedTx)
-		s.Require().NoError(err)
-
-		genTxs[i] = txRaw
-	}
-
-	genUtilGenState.GenTxs = genTxs
-
-	bz, err = cdc.MarshalJSON(&genUtilGenState)
-	s.Require().NoError(err)
-	appGenState[genutiltypes.ModuleName] = bz
-
-	bz, err = json.MarshalIndent(appGenState, "", "  ")
-	s.Require().NoError(err)
-
-	genDoc.AppState = bz
-
-	bz, err = tmjson.MarshalIndent(genDoc, "", "  ")
-	s.Require().NoError(err)
-
-	// write the updated genesis file to each validator
-	for _, val := range c.validators {
-		writeFile(filepath.Join(val.configDir(), "config", "genesis.json"), bz)
-	}
-}
-
-func (s *IntegrationTestSuite) initValidatorConfigs(c *chain) {
-	for i, val := range c.validators {
-		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
+func (s *IntegrationTestSuite) initValidatorConfigs(c *chain.Chain) {
+	for i, val := range c.Validators {
+		tmCfgPath := filepath.Join(val.ConfigDir(), "config", "config.toml")
 
 		vpr := viper.New()
 		vpr.SetConfigFile(tmCfgPath)
@@ -256,20 +158,20 @@ func (s *IntegrationTestSuite) initValidatorConfigs(c *chain) {
 
 		valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
 		valConfig.P2P.AddrBookStrict = false
-		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.instanceName(), 26656)
+		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.InstanceName(), 26656)
 		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 		valConfig.StateSync.Enable = false
 		valConfig.LogLevel = "info"
 
 		var peers []string
 
-		for j := 0; j < len(c.validators); j++ {
+		for j := 0; j < len(c.Validators); j++ {
 			if i == j {
 				continue
 			}
 
-			peer := c.validators[j]
-			peerID := fmt.Sprintf("%s@%s%d:26656", peer.nodeKey.ID(), peer.moniker, j)
+			peer := c.Validators[j]
+			peerID := fmt.Sprintf("%s@%s%d:26656", peer.GetNodeKey().ID(), peer.GetMoniker(), j)
 			peers = append(peers, peerID)
 		}
 
@@ -278,33 +180,33 @@ func (s *IntegrationTestSuite) initValidatorConfigs(c *chain) {
 		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 
 		// set application configuration
-		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
+		appCfgPath := filepath.Join(val.ConfigDir(), "config", "app.toml")
 
 		appConfig := srvconfig.DefaultConfig()
 		appConfig.API.Enable = true
-		appConfig.MinGasPrices = fmt.Sprintf("%s%s", minGasPrice, osmoDenom)
+		appConfig.MinGasPrices = fmt.Sprintf("%s%s", common.MinGasPrice, common.OsmoDenom)
 
 		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}
 }
 
-func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
-	s.T().Logf("starting Osmosis %s validator containers...", c.id)
+func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
+	s.T().Logf("starting Osmosis %s validator containers...", c.Id)
 
-	s.valResources[c.id] = make([]*dockertest.Resource, len(c.validators))
-	for i, val := range c.validators {
+	s.valResources[c.Id] = make([]*dockertest.Resource, len(c.Validators))
+	for i, val := range c.Validators {
 		runOpts := &dockertest.RunOptions{
-			Name:      val.instanceName(),
+			Name:      val.InstanceName(),
 			NetworkID: s.dkrNet.Network.ID,
 			Mounts: []string{
-				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.configDir()),
+				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir()),
 			},
 			Repository: "osmosis",
 			Tag:        "debug",
 		}
 
 		// expose the first validator for debugging and communication
-		if val.index == 0 {
+		if val.GetIndex() == 0 {
 			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
 				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
 				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
@@ -322,8 +224,8 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
 		s.Require().NoError(err)
 
-		s.valResources[c.id][i] = resource
-		s.T().Logf("started Osmosis %s validator container: %s", c.id, resource.Container.ID)
+		s.valResources[c.Id][i] = resource
+		s.T().Logf("started Osmosis %s validator container: %s", c.Id, resource.Container.ID)
 	}
 
 	rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
@@ -359,12 +261,12 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
-	gaiaAVal := s.chainA.validators[0]
-	gaiaBVal := s.chainB.validators[0]
+	osmoAVal := s.chainA.Validators[0]
+	osmoBVal := s.chainB.Validators[0]
 	hermesCfgPath := path.Join(tmpDir, "hermes")
 
 	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0o755))
-	_, err = copyFile(
+	_, err = common.CopyFile(
 		filepath.Join("./scripts/", "hermes_bootstrap.sh"),
 		filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"),
 	)
@@ -372,7 +274,7 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 
 	s.hermesResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s-%s-relayer", s.chainA.id, s.chainB.id),
+			Name:       fmt.Sprintf("%s-%s-relayer", s.chainA.Id, s.chainB.Id),
 			Repository: "osmolabs/hermes",
 			Tag:        "0.13.0",
 			NetworkID:  s.dkrNet.Network.ID,
@@ -390,12 +292,12 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
 			},
 			Env: []string{
-				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chainA.id),
-				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chainB.id),
-				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", gaiaAVal.mnemonic),
-				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", gaiaBVal.mnemonic),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chainA.id][0].Container.Name[1:]),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chainB.id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chainA.Id),
+				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chainB.Id),
+				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.GetMnemonic()),
+				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.GetMnemonic()),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chainA.Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chainB.Id][0].Container.Name[1:]),
 			},
 			Entrypoint: []string{
 				"sh",

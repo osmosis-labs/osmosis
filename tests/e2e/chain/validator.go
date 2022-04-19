@@ -1,4 +1,4 @@
-package e2e
+package chain
 
 import (
 	"encoding/json"
@@ -19,16 +19,19 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/go-bip39"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	osmosisApp "github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/common"
 )
 
-type validator struct {
-	chain            *chain
+type Validator struct {
+	chain            *Chain
 	index            int
 	moniker          string
 	mnemonic         string
@@ -39,20 +42,40 @@ type validator struct {
 	nodeKey          p2p.NodeKey
 }
 
-func (v *validator) instanceName() string {
+func (v *Validator) InstanceName() string {
 	return fmt.Sprintf("%s%d", v.moniker, v.index)
 }
 
-func (v *validator) configDir() string {
-	return fmt.Sprintf("%s/%s", v.chain.configDir(), v.instanceName())
+func (v *Validator) ConfigDir() string {
+	return fmt.Sprintf("%s/%s", v.chain.configDir(), v.InstanceName())
 }
 
-func (v *validator) createConfig() error {
-	p := path.Join(v.configDir(), "config")
+func (v *Validator) createConfig() error {
+	p := path.Join(v.ConfigDir(), "config")
 	return os.MkdirAll(p, 0o755)
 }
 
-func (v *validator) init() error {
+func (v *Validator) GetKeyInfo() keyring.Info {
+	return v.keyInfo
+}
+
+func (v *Validator) GetMoniker() string {
+	return v.moniker
+}
+
+func (v *Validator) GetMnemonic() string {
+	return v.mnemonic
+}
+
+func (v *Validator) GetNodeKey() *p2p.NodeKey {
+	return &v.nodeKey
+}
+
+func (v *Validator) GetIndex() int {
+	return v.index
+}
+
+func (v *Validator) init() error {
 	if err := v.createConfig(); err != nil {
 		return err
 	}
@@ -60,20 +83,20 @@ func (v *validator) init() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.configDir())
+	config.SetRoot(v.ConfigDir())
 	config.Moniker = v.moniker
 
-	genDoc, err := getGenDoc(v.configDir())
+	genDoc, err := v.getGenesisDoc()
 	if err != nil {
 		return err
 	}
 
-	appState, err := json.MarshalIndent(osmosisApp.ModuleBasics.DefaultGenesis(cdc), "", " ")
+	appState, err := json.MarshalIndent(osmosisApp.ModuleBasics.DefaultGenesis(common.Cdc), "", " ")
 	if err != nil {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}
 
-	genDoc.ChainID = v.chain.id
+	genDoc.ChainID = v.chain.Id
 	genDoc.Validators = nil
 	genDoc.AppState = appState
 
@@ -85,11 +108,35 @@ func (v *validator) init() error {
 	return nil
 }
 
-func (v *validator) createNodeKey() error {
+func (v *Validator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
+	serverCtx := server.NewDefaultContext()
+	config := serverCtx.Config
+	config.SetRoot(v.ConfigDir())
+
+	genFile := config.GenesisFile()
+	doc := &tmtypes.GenesisDoc{}
+
+	if _, err := os.Stat(genFile); err != nil {
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
+	} else {
+		var err error
+
+		doc, err = tmtypes.GenesisDocFromFile(genFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read genesis doc from file: %w", err)
+		}
+	}
+
+	return doc, nil
+}
+
+func (v *Validator) createNodeKey() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.configDir())
+	config.SetRoot(v.ConfigDir())
 	config.Moniker = v.moniker
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
@@ -101,11 +148,11 @@ func (v *validator) createNodeKey() error {
 	return nil
 }
 
-func (v *validator) createConsensusKey() error {
+func (v *Validator) createConsensusKey() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.configDir())
+	config.SetRoot(v.ConfigDir())
 	config.Moniker = v.moniker
 
 	pvKeyFile := config.PrivValidatorKeyFile()
@@ -124,8 +171,8 @@ func (v *validator) createConsensusKey() error {
 	return nil
 }
 
-func (v *validator) createKeyFromMnemonic(name, mnemonic string) error {
-	kb, err := keyring.New(keyringAppName, keyring.BackendTest, v.configDir(), nil)
+func (v *Validator) createKeyFromMnemonic(name, mnemonic string) error {
+	kb, err := keyring.New(keyringAppName, keyring.BackendTest, v.ConfigDir(), nil)
 	if err != nil {
 		return err
 	}
@@ -158,7 +205,7 @@ func (v *validator) createKeyFromMnemonic(name, mnemonic string) error {
 	return nil
 }
 
-func (v *validator) createKey(name string) error {
+func (v *Validator) createKey(name string) error {
 	mnemonic, err := createMnemonic()
 	if err != nil {
 		return err
@@ -167,7 +214,21 @@ func (v *validator) createKey(name string) error {
 	return v.createKeyFromMnemonic(name, mnemonic)
 }
 
-func (v *validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
+func createMnemonic() (string, error) {
+	entropySeed, err := bip39.NewEntropy(256)
+	if err != nil {
+		return "", err
+	}
+
+	mnemonic, err := bip39.NewMnemonic(entropySeed)
+	if err != nil {
+		return "", err
+	}
+
+	return mnemonic, nil
+}
+
+func (v *Validator) BuildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	description := stakingtypes.NewDescription(v.moniker, "", "", "", "")
 	commissionRates := stakingtypes.CommissionRates{
 		Rate:          sdk.MustNewDecFromStr("0.1"),
@@ -193,19 +254,19 @@ func (v *validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	)
 }
 
-func (v *validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
-	txBuilder := encodingConfig.TxConfig.NewTxBuilder()
+func (v *Validator) SignMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
+	txBuilder := common.EncodingConfig.TxConfig.NewTxBuilder()
 
 	if err := txBuilder.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
 
-	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.instanceName()))
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.InstanceName()))
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(200000)
 
 	signerData := authsigning.SignerData{
-		ChainID:       v.chain.id,
+		ChainID:       v.chain.Id,
 		AccountNumber: 0,
 		Sequence:      0,
 	}
@@ -231,7 +292,7 @@ func (v *validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 		return nil, err
 	}
 
-	bytesToSign, err := encodingConfig.TxConfig.SignModeHandler().GetSignBytes(
+	bytesToSign, err := common.EncodingConfig.TxConfig.SignModeHandler().GetSignBytes(
 		txsigning.SignMode_SIGN_MODE_DIRECT,
 		signerData,
 		txBuilder.GetTx(),
@@ -258,7 +319,7 @@ func (v *validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	}
 
 	signedTx := txBuilder.GetTx()
-	bz, err := encodingConfig.TxConfig.TxEncoder()(signedTx)
+	bz, err := common.EncodingConfig.TxConfig.TxEncoder()(signedTx)
 	if err != nil {
 		return nil, err
 	}
