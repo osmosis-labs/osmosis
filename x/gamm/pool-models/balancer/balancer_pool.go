@@ -379,6 +379,9 @@ func (pa *Pool) updateAllWeights(newWeights []PoolAsset) {
 		}
 		pa.PoolAssets[i].Weight = newWeights[i].Weight
 		totalWeight = totalWeight.Add(pa.PoolAssets[i].Weight)
+
+		newNormalizedWeight := asset.Weight.ToDec().Quo(sdk.Dec(pa.TotalWeight))
+		asset.NormalizedWeight = &newNormalizedWeight
 	}
 	pa.TotalWeight = totalWeight
 }
